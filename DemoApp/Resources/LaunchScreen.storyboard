@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22435"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="EHf-IW-A2E">
+            <objects>
+                <viewController id="01J-lp-oVM" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Ze5-6k-2hM">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <!-- Gradient Background View -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BgG-kR-gQe">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <color key="backgroundColor" red="0.4" green="0.4980392157" blue="0.91764705879999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </view>
+                            <!-- App Icon Placeholder -->
+                            <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Icon-View">
+                                <rect key="frame" x="146.66666666666666" y="300" width="100" height="100"/>
+                                <color key="backgroundColor" white="1" alpha="0.3" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="100" id="Icon-Width"/>
+                                    <constraint firstAttribute="height" constant="100" id="Icon-Height"/>
+                                </constraints>
+                            </view>
+                            <!-- App Name Label -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="WebBridgeKit" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Name-Label">
+                                <rect key="frame" x="96.666666666666671" y="420" width="200" height="36"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="30"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <!-- Subtitle Label -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Native-Web Bridge Framework" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Subtitle-Label">
+                                <rect key="frame" x="96.666666666666671" y="466" width="200" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="1" alpha="0.8" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <constraints>
+                            <!-- Background View Constraints -->
+                            <constraint firstItem="BgG-kR-gQe" firstAttribute="top" secondItem="Ze5-6k-2hM" secondAttribute="top" id="Bg-Top"/>
+                            <constraint firstAttribute="bottom" secondItem="BgG-kR-gQe" secondAttribute="bottom" id="Bg-Bottom"/>
+                            <constraint firstItem="BgG-kR-gQe" firstAttribute="leading" secondItem="Ze5-6k-2hM" secondAttribute="leading" id="Bg-Leading"/>
+                            <constraint firstAttribute="trailing" secondItem="BgG-kR-gQe" secondAttribute="trailing" id="Bg-Trailing"/>
+                            <!-- Icon View Constraints (Centered) -->
+                            <constraint firstItem="Icon-View" firstAttribute="centerX" secondItem="Ze5-6k-2hM" secondAttribute="centerX" id="Icon-CenterX"/>
+                            <constraint firstItem="Icon-View" firstAttribute="centerY" secondItem="Ze5-6k-2hM" secondAttribute="centerY" constant="-26" id="Icon-CenterY"/>
+                            <!-- Name Label Constraints -->
+                            <constraint firstItem="Name-Label" firstAttribute="centerX" secondItem="Ze5-6k-2hM" secondAttribute="centerX" id="Name-CenterX"/>
+                            <constraint firstItem="Name-Label" firstAttribute="top" secondItem="Icon-View" secondAttribute="bottom" constant="20" id="Name-Top"/>
+                            <constraint firstItem="Name-Label" firstAttribute="width" constant="200" id="Name-Width"/>
+                            <!-- Subtitle Label Constraints -->
+                            <constraint firstItem="Subtitle-Label" firstAttribute="centerX" secondItem="Ze5-6k-2hM" secondAttribute="centerX" id="Sub-CenterX"/>
+                            <constraint firstItem="Subtitle-Label" firstAttribute="top" secondItem="Name-Label" secondAttribute="bottom" constant="10" id="Sub-Top"/>
+                            <constraint firstItem="Subtitle-Label" firstAttribute="width" constant="200" id="Sub-Width"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="53" y="375"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

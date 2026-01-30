@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WebBridgeKit 测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .category {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-title .icon {
+            font-size: 20px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .test-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .test-btn:active {
+            transform: translateY(0);
+        }
+
+        .test-btn.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .test-btn.error {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .result-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            max-height: 60vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .result-panel.show {
+            transform: translateY(0);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .result-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: #f5f5f5;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .result-content {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+
+        .result-content .success {
+            color: #11998e;
+        }
+
+        .result-content .error {
+            color: #eb3349;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .status-badge.total {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-badge.passed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status-badge.failed {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        @media (max-width: 480px) {
+            .test-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌉 WebBridgeKit</h1>
+        <p>测试所有 34 个 Native 功能</p>
+        <div style="margin-top: 12px;">
+            <span class="status-badge total" id="totalBadge">总计: 34</span>
+            <span class="status-badge passed" id="passedBadge">通过: 0</span>
+            <span class="status-badge failed" id="failedBadge">失败: 0</span>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 搜索测试功能..." oninput="filterTests()">
+    </div>
+
+    <div id="testContainer"></div>
+
+    <div class="result-panel" id="resultPanel">
+        <div class="result-header">
+            <h3 id="resultTitle">测试结果</h3>
+            <button class="close-btn" onclick="closeResult()">关闭</button>
+        </div>
+        <div class="result-content" id="resultContent"></div>
+    </div>
+
+    <script src="WebBridge.js"></script>
+    <script>
+        // 测试统计
+        let stats = { total: 34, passed: 0, failed: 0 };
+
+        // 更新统计
+        function updateStats(passed, failed) {
+            if (passed) stats.passed++;
+            if (failed) stats.failed++;
+            document.getElementById('passedBadge').textContent = `通过: ${stats.passed}`;
+            document.getElementById('failedBadge').textContent = `失败: ${stats.failed}`;
+        }
+
+        // 所有测试分类
+        const testCategories = [
+            {
+                name: "系统信息",
+                icon: "📱",
+                tests: [
+                    { name: "系统信息", action: "getSystemInfo", params: {} },
+                    { name: "网络状态", action: "getNetworkInfo", params: {} },
+                    { name: "系统设置", action: "openSettings", params: {} }
+                ]
+            },
+            {
+                name: "媒体功能",
+                icon: "📷",
+                tests: [
+                    { name: "拍照", action: "camera", params: {} },
+                    { name: "录制视频", action: "camera", params: { action: "video" } },
+                    { name: "选照片", action: "photo", params: {} },
+                    { name: "实时视频流", action: "camera", params: { action: "videoStream", position: "back" } },
+                    { name: "扫描二维码", action: "scan", params: {} },
+                    { name: "音频级别", action: "audioLevel", params: {} },
+                    { name: "屏幕信息", action: "screen", params: { action: "getInfo" } }
+                ]
+            },
+            {
+                name: "AI 视觉",
+                icon: "🤖",
+                tests: [
+                    { name: "人脸追踪", action: "camera", params: { action: "videoStream", faceTracking: true } },
+                    { name: "手势追踪", action: "camera", params: { action: "videoStream", handTracking: true } },
+                    { name: "眨眼检测", action: "camera", params: { action: "videoStream", faceTracking: true, blinkDetection: true } }
+                ]
+            },
+            {
+                name: "通信能力",
+                icon: "📡",
+                tests: [
+                    { name: "蓝牙", action: "bluetooth", params: {} },
+                    { name: "位置", action: "getLocation", params: {} },
+                    { name: "剪贴板", action: "clipboard", params: { action: "get" } },
+                    { name: "分享", action: "share", params: { text: "Hello from WebBridgeKit!" } }
+                ]
+            },
+            {
+                name: "交互反馈",
+                icon: "🎯",
+                tests: [
+                    { name: "震动", action: "vibrate", params: {} },
+                    { name: "触觉反馈", action: "haptic", params: { type: "medium" } },
+                    { name: "手势", action: "gesture", params: {} }
+                ]
+            },
+            {
+                name: "页面控制",
+                icon: "📄",
+                tests: [
+                    { name: "打开页面", action: "openPage", params: { url: "https://github.com" } },
+                    { name: "关闭页面", action: "closePage", params: {} },
+                    { name: "返回", action: "goBack", params: {} },
+                    { name: "历史记录", action: "getHistory", params: {} },
+                    { name: "设置模态", action: "setModal", params: { modal: true } }
+                ]
+            },
+            {
+                name: "高级功能",
+                icon: "⚡",
+                tests: [
+                    { name: "文件", action: "file", params: {} },
+                    { name: "联系人", action: "contacts", params: {} },
+                    { name: "语音识别", action: "speech", params: { action: "start", language: "zh-CN" } },
+                    { name: "语音合成", action: "tts", params: { text: "Hello" } },
+                    { name: "投屏", action: "mirroring", params: {} },
+                    { name: "传感器", action: "sensors", params: {} },
+                    { name: "权限状态", action: "getPermissionStatus", params: { permission: "camera" } },
+                    { name: "请求权限", action: "requestPermission", params: { permission: "camera" } },
+                    { name: "布局", action: "layout", params: {} }
+                ]
+            }
+        ];
+
+        // 渲染测试按钮
+        function renderTests() {
+            const container = document.getElementById('testContainer');
+            container.innerHTML = '';
+
+            testCategories.forEach((category, index) => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                categoryDiv.dataset.category = category.name.toLowerCase();
+
+                categoryDiv.innerHTML = `
+                    <div class="category-title">
+                        <span class="icon">${category.icon}</span>
+                        ${category.name}
+                    </div>
+                    <div class="test-grid">
+                        ${category.tests.map(test => `
+                            <button class="test-btn" data-action="${test.action}" data-params='${JSON.stringify(test.params)}' onclick="runTest(this)">
+                                ${test.name}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        // 过滤测试
+        function filterTests() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const categories = document.querySelectorAll('.category');
+
+            categories.forEach(category => {
+                const buttons = category.querySelectorAll('.test-btn');
+                let hasMatch = false;
+
+                buttons.forEach(btn => {
+                    const text = btn.textContent.toLowerCase();
+                    const match = text.includes(query);
+                    btn.style.display = match ? '' : 'none';
+                    if (match) hasMatch = true;
+                });
+
+                category.style.display = hasMatch ? '' : 'none';
+            });
+        }
+
+        // 运行测试
+        async function runTest(button) {
+            const action = button.dataset.action;
+            const params = JSON.parse(button.dataset.params);
+            const originalText = button.textContent;
+
+            // 调试日志
+            console.log('=== runTest ===');
+            console.log('Button:', button);
+            console.log('Button text:', originalText);
+            console.log('data-action:', button.getAttribute('data-action'));
+            console.log('dataset.action:', action);
+            console.log('data-params:', button.getAttribute('data-params'));
+            console.log('params:', params);
+
+            // 验证 action 不为空
+            if (!action || action === '') {
+                console.error('❌ Action is empty!');
+                showResult(originalText, { error: 'Action is empty!' }, false);
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = '测试中...';
+
+            try {
+                console.log('Calling BarkBridge.callNative with:', action, params);
+                const result = await BarkBridge.callNative(action, params);
+
+                // 检查是否需要引导用户去设置
+                if (result.needsSettings) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+
+                    // 显示权限引导对话框
+                    showPermissionGuide(result, originalText);
+                    return;
+                }
+
+                button.classList.add('success');
+                button.textContent = '✓ 成功';
+                updateStats(true, false);
+
+                showResult(originalText, result, true);
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('success');
+                    button.disabled = false;
+                }, 2000);
+            } catch (error) {
+                button.classList.add('error');
+                button.textContent = '✗ 失败';
+                updateStats(false, true);
+
+                showResult(originalText, { error: error.message }, false);
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('error');
+                    button.disabled = false;
+                }, 2000);
+            }
+        }
+
+        // 显示结果
+        function showResult(name, result, success) {
+            const panel = document.getElementById('resultPanel');
+            const title = document.getElementById('resultTitle');
+            const content = document.getElementById('resultContent');
+
+            title.textContent = name;
+            content.innerHTML = `<span class="${success ? 'success' : 'error'}">${JSON.stringify(result, null, 2)}</span>`;
+            panel.classList.add('show');
+        }
+
+        // 关闭结果
+        function closeResult() {
+            document.getElementById('resultPanel').classList.remove('show');
+        }
+
+        // 显示权限引导对话框
+        function showPermissionGuide(result, testName) {
+            const panel = document.getElementById('resultPanel');
+            const title = document.getElementById('resultTitle');
+            const content = document.getElementById('resultContent');
+
+            title.textContent = '⚠️ 需要权限';
+
+            const permissionName = result.error.includes('麦克风') ? '麦克风' : '语音识别';
+            const html = `
+                <div style="text-align: center; padding: 10px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🔐</div>
+                    <p style="font-size: 16px; color: #333; margin-bottom: 20px;">
+                        <strong>${permissionName}权限已被拒绝</strong>
+                    </p>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 20px;">
+                        ${result.message || '请在设置中允许此权限'}
+                    </p>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button onclick="openSettings()" style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 10px;
+                            font-size: 14px;
+                            font-weight: 500;
+                            cursor: pointer;
+                        ">
+                            去设置开启
+                        </button>
+                        <button onclick="closeResult()" style="
+                            background: #f5f5f5;
+                            color: #666;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 10px;
+                            font-size: 14px;
+                            font-weight: 500;
+                            cursor: pointer;
+                        ">
+                            取消
+                        </button>
+                    </div>
+                    <p style="font-size: 12px; color: #999; margin-top: 16px;">
+                        开启后请重新点击"${testName}"按钮
+                    </p>
+                </div>
+            `;
+
+            content.innerHTML = html;
+            panel.classList.add('show');
+        }
+
+        // 打开系统设置
+        async function openSettings() {
+            closeResult();
+            try {
+                await BarkBridge.callNative('openSettings', {});
+                showNotification('正在打开设置...', 'info');
+            } catch (error) {
+                showNotification('打开设置失败: ' + error.message, 'error');
+            }
+        }
+
+        // 初始化
+        // 页面加载时显示调试信息
+        window.addEventListener('load', function() {
+            console.log('=== 页面加载完成 ===');
+            console.log('当前 URL:', window.location.href);
+
+            // 检查 BarkBridge 是否加载
+            if (typeof BarkBridge !== 'undefined') {
+                console.log('✅ BarkBridge 已加载');
+                showNotification('BarkBridge 加载成功', 'success');
+            } else {
+                console.error('❌ BarkBridge 未加载');
+                showNotification('警告: BarkBridge 未加载', 'error');
+            }
+
+            // 检查所有脚本是否加载
+            const scripts = document.querySelectorAll('script');
+            console.log('已加载的脚本:', Array.from(scripts).map(s => s.src));
+        });
+
+        // 监控 JavaScript 错误
+        window.addEventListener('error', function(event) {
+            console.error('页面错误:', event.error);
+            showNotification('页面错误: ' + event.message, 'error');
+        });
+
+        // 通知提示函数
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 10000;
+                animation: slideDown 0.3s ease;
+            `;
+            notification.textContent = message;
+
+            if (type === 'success') {
+                notification.style.background = '#10b981';
+                notification.style.color = 'white';
+            } else if (type === 'error') {
+                notification.style.background = '#ef4444';
+                notification.style.color = 'white';
+            } else {
+                notification.style.background = '#3b82f6';
+                notification.style.color = 'white';
+            }
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideUp 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateX(-50%) translateY(0); opacity: 1; }
+                to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        renderTests();
+    </script>
+</body>
+</html>

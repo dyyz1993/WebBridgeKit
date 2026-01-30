@@ -1,0 +1,121 @@
+name: WebBridgeKit
+options:
+  bundleIdPrefix: com.webbridgekit
+  deploymentTarget:
+    iOS: "14.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  defaultConfig: Debug
+  carthageBuildPath: Carthage/Build/iOS
+  usePods: true
+  generateEmptyDirectories: true
+  objectVersion: 56
+
+targets:
+  WebBridgeKit:
+    type: framework
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - Sources
+      - Resources
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      CURRENT_PROJECT_VERSION: "1"
+      MARKETING_VERSION: "1.0"
+      PRODUCT_NAME: WebBridgeKit
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      SWIFT_EMIT_LOC_STRINGS: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+      DEFINES_MODULE: YES
+      BUILD_LIBRARY_FOR_DISTRIBUTION: YES
+      ENABLE_PREVIEWS: YES
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
+      FRAMEWORK_SEARCH_PATHS:
+        - $(inherited)
+        - $(SDKROOT)/System/Library/Frameworks
+        - $(BUILT_PRODUCTS_DIR)/Pods
+      LIBRARY_SEARCH_PATHS:
+        - $(inherited)
+        - $(BUILT_PRODUCTS_DIR)/Pods
+    buildPhases:
+      - name: 'Copy Resources'
+        files:
+          - Resources/WebBridge.js
+        runOnlyForDeploymentPostprocessing: false
+
+  DemoApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - DemoApp/Sources
+      - DemoApp/Resources
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.demo
+      SWIFT_VERSION: "5.0"
+      TARGETED_DEVICE_FAMILY: "1,2"
+      PRODUCT_NAME: DemoApp
+      CURRENT_PROJECT_VERSION: "1"
+      MARKETING_VERSION: "1.0"
+      FRAMEWORK_SEARCH_PATHS:
+        - $(inherited)
+        - $(SDKROOT)/System/Library/Frameworks
+        - $(BUILT_PRODUCTS_DIR)/Pods
+      LIBRARY_SEARCH_PATHS:
+        - $(inherited)
+        - $(BUILT_PRODUCTS_DIR)/Pods
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: "-"
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
+      INFOPLIST_KEY_NSAppTransportSecurity: YES
+    dependencies:
+      - target: WebBridgeKit
+
+  DemoAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - DemoAppUITests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.demo.ui.tests
+      TEST_TARGET_NAME: DemoApp
+      SWIFT_VERSION: "5.0"
+    dependencies:
+      - target: DemoApp
+      - target: WebBridgeKit
+
+schemes:
+  WebBridgeKit:
+    build:
+      targets:
+        WebBridgeKit: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+  DemoApp:
+    build:
+      targets:
+        DemoApp: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+  DemoAppUITests:
+    build:
+      targets:
+        DemoAppUITests: all
+    test:
+      config: Debug
+      targets:
+        - DemoAppUITests
+      coverageTargets:
+        - DemoApp
+        - WebBridgeKit
