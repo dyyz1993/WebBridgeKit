@@ -46,6 +46,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        // 每次 App 进入前台时，尝试解析剪贴板口令
+        TokenManager.shared.parseTokenFromClipboard()
+    }
+
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         print("🔗 [AppDelegate] openURL called: \(url.absoluteString)")
         

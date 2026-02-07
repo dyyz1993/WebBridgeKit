@@ -317,6 +317,34 @@ public class WebViewController: UIViewController {
 
         // 根据显示模式调整体验
         configureBrowserFeatures(params: params)
+        
+        // 🔥 注入 payload 参数
+        if let payload = params.payload {
+            if let payloadData = try? JSONSerialization.data(withJSONObject: payload),
+               let payloadString = String(data: payloadData, encoding: .utf8) {
+                let scriptSource = "window.SuperCachePayload = \(payloadString);"
+                let userScript = WKUserScript(source: scriptSource, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+                webView.configuration.userContentController.addUserScript(userScript)
+                print("🚀 [WebViewController] Injected payload: \(payloadString)")
+            }
+            
+            // 将 payload 转换为 URL Query 参数
+            if let url = webView.url ?? self.url,
+               var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                var queryItems = components.queryItems ?? []
+                for (key, value) in payload {
+                    // 避免重复添加
+                    if !queryItems.contains(where: { $0.name == key }) {
+                        queryItems.append(URLQueryItem(name: key, value: value))
+                    }
+                }
+                components.queryItems = queryItems
+                if let newURL = components.url {
+                    self.url = newURL // 更新初始加载 URL
+                    print("🔗 [WebViewController] Appended payload to URL: \(newURL.absoluteString)")
+                }
+            }
+        }
 
         // 🔥 主动触发屏幕旋转
         if params.orientation == .landscapeLeft {

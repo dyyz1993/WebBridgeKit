@@ -194,6 +194,9 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 获取导航历史
         handlerFactories["getHistory"] = { WebGetHistoryHandler() }
 
+        // 获取透传参数
+        handlerFactories["getPayload"] = { WebPayloadHandler() }
+
         // 后退
         handlerFactories["goBack"] = { WebGoBackHandler() }
 

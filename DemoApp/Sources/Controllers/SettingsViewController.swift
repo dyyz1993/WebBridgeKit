@@ -143,31 +143,25 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             }
             .disposed(by: rx)
 
-        // 处理导航
-        output.navigateToTokenManage
-            .drive(onNext: { [weak self] in
-                self?.navigateToTokenManage()
-            })
-            .disposed(by: rx)
-
-        // 导航到服务器配置
-        output.navigateToServerConfig
-            .drive(onNext: { [weak self] in
-                self?.navigateToServerConfig()
-            })
-            .disposed(by: rx)
-
-        // 导航到密钥管理
+        // 导航处理
         output.navigateToAPIKeyManage
             .drive(onNext: { [weak self] in
-                self?.navigateToAPIKeyManage()
+                let vc = APIKeyManagementViewController()
+                self?.navigationController?.pushViewController(vc, animated: true)
             })
             .disposed(by: rx)
 
-        // 导航到关于
-        output.navigateToAbout
+        output.navigateToTokenManage
             .drive(onNext: { [weak self] in
-                self?.navigateToAbout()
+                // TODO: 实现 Token 管理页
+                print("Navigating to Token Manage")
+            })
+            .disposed(by: rx)
+
+        output.navigateToServerConfig
+            .drive(onNext: { [weak self] in
+                // TODO: 实现服务器配置页
+                print("Navigating to Server Config")
             })
             .disposed(by: rx)
     }

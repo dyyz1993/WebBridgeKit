@@ -1567,7 +1567,26 @@ extension WebBrowserViewController: WKNavigationDelegate {
     public func loadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
         print("🌐 [WebBrowserVC] Loading URL with cache: \(url.absoluteString)")
 
-        currentURL = url
+        // 🔥 处理 payload 注入 URL (如果存在)
+        var targetURL = url
+        if let browserVC = self as? WebViewController,
+           let payload = browserVC.browserConfig?.payload {
+            if var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                var queryItems = components.queryItems ?? []
+                for (key, value) in payload {
+                    if !queryItems.contains(where: { $0.name == key }) {
+                        queryItems.append(URLQueryItem(name: key, value: value))
+                    }
+                }
+                components.queryItems = queryItems
+                if let newURL = components.url {
+                    targetURL = newURL
+                    print("🔗 [WebBrowserVC] Appended payload to cache-load URL: \(newURL.absoluteString)")
+                }
+            }
+        }
+
+        currentURL = targetURL
 
         // 更新 UI 显示正在通过缓存检查
         updateCacheStatus(source: "CHECKING")

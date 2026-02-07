@@ -15,15 +15,58 @@ class TabBarController: UITabBarController {
 
     // MARK: - Lifecycle
 
+    private let disposeBag = DisposeBag()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTabs()
         setupAppearance()
+        bindMessages()
 
         // 设置初始页面
         // 默认进入首页
         self.selectedIndex = 0
     }
+
+    private func bindMessages() {
+        // 监听未读消息数，动态更新 TabBar Badge
+        MessageManager.shared.unreadCount
+            .subscribe(onNext: { [weak self] count in
+                guard let self = self, let items = self.tabBar.items, items.count > 1 else { return }
+                let messageItem = items[1]
+                messageItem.badgeValue = count > 0 ? "\(count)" : nil
+            })
+            .disposed(by: disposeBag)
+
+        // 监听推送通知，处理全局跳转逻辑
+        NotificationCenter.default.rx.notification(.didReceivePushMessage)
+            .subscribe(onNext: { [weak self] notification in
+                self?.handlePushJump(notification)
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func handlePushJump(_ notification: Notification) {
+        guard let url = notification.userInfo?["url"] as? URL else { return }
+        let message = notification.userInfo?["message"] as? WebhookMessage
+        
+        print("🚀 [TabBar] Handling push jump to: \(url.absoluteString)")
+        
+        // 切换到首页并打开浏览器
+        self.selectedIndex = 0
+        if let mainNav = viewControllers?.first as? UINavigationController {
+            WebBrowserManager.shared.openBrowserWithCache(
+                url: url,
+                params: WebBrowserParams(
+                    displayMode: .normal,
+                    payload: message?.params
+                ),
+                from: mainNav
+            )
+        }
+    }
+
+
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -69,10 +112,9 @@ class TabBarController: UITabBarController {
     private func setupTabs() {
         // 创建主要 Tab
         let mainVC = createMainViewController()
-        let webAccessVC = createWebAccessViewController()
-        let favoriteVC = createFavoriteViewController()
+        let messageVC = createMessageInboxViewController()
+        let manageVC = createManagementViewController()
         let settingsVC = createSettingsViewController()
-        let testVC = createTestCasesViewController()
 
         // 设置 Tab Bar Item
         mainVC.tabBarItem = UITabBarItem(
@@ -81,46 +123,32 @@ class TabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "house.fill")
         )
 
-        webAccessVC.tabBarItem = UITabBarItem(
-            title: "网页",
-            image: UIImage(systemName: "safari"),
-            selectedImage: UIImage(systemName: "safari.fill")
+        messageVC.tabBarItem = UITabBarItem(
+            title: "消息",
+            image: UIImage(systemName: "tray"),
+            selectedImage: UIImage(systemName: "tray.fill")
         )
 
-        favoriteVC.tabBarItem = UITabBarItem(
-            title: "收藏",
-            image: UIImage(systemName: "star"),
-            selectedImage: UIImage(systemName: "star.fill")
+
+        manageVC.tabBarItem = UITabBarItem(
+            title: "管理",
+            image: UIImage(systemName: "square.grid.2x2"),
+            selectedImage: UIImage(systemName: "square.grid.2x2.fill")
         )
 
         settingsVC.tabBarItem = UITabBarItem(
             title: "设置",
-            image: UIImage(systemName: "gearshape"),
-            selectedImage: UIImage(systemName: "gearshape.fill")
+            image: UIImage(systemName: "person"),
+            selectedImage: UIImage(systemName: "person.fill")
         )
 
-        testVC.tabBarItem = UITabBarItem(
-            title: "测试",
-            image: UIImage(systemName: "testtube.2"),
-            selectedImage: UIImage(systemName: "testtube.2")
-        )
-
-        // 包装在 NavigationController 中
-        let mainNav = UINavigationController(rootViewController: mainVC)
-        let webAccessNav = UINavigationController(rootViewController: webAccessVC)
-        let favoriteNav = UINavigationController(rootViewController: favoriteVC)
-        let settingsNav = UINavigationController(rootViewController: settingsVC)
-        let testNav = UINavigationController(rootViewController: testVC)
-
-        // 设置导航栏外观
-        configureNavigationBar(mainNav.navigationBar)
-        configureNavigationBar(webAccessNav.navigationBar)
-        configureNavigationBar(favoriteNav.navigationBar)
-        configureNavigationBar(settingsNav.navigationBar)
-        configureNavigationBar(testNav.navigationBar)
-
-        // 设置 View Controllers (包含测试 Tab)
-        viewControllers = [mainNav, webAccessNav, testNav, favoriteNav, settingsNav]
+        // 包装导航控制器
+        viewControllers = [
+            UINavigationController(rootViewController: mainVC),
+            UINavigationController(rootViewController: messageVC),
+            UINavigationController(rootViewController: manageVC),
+            UINavigationController(rootViewController: settingsVC)
+        ]
     }
 
     private func setupAppearance() {
@@ -153,31 +181,21 @@ class TabBarController: UITabBarController {
 
     // MARK: - Create ViewControllers
 
-    private func createMainViewController() -> UIViewController {
-        return MainViewController(viewModel: MainViewModel())
+    private func createMainViewController() -> MainViewController {
+        let viewModel = MainViewModel()
+        return MainViewController(viewModel: viewModel)
     }
 
-    private func createWebAccessViewController() -> UIViewController {
-        return WebAccessViewController(viewModel: WebAccessViewModel())
+    private func createMessageInboxViewController() -> MessageInboxViewController {
+        return MessageInboxViewController()
     }
 
-    private func createCacheManagementViewController() -> UIViewController {
-        return CacheManagementViewController()
+    private func createManagementViewController() -> ManagementViewController {
+        return ManagementViewController()
     }
 
-    private func createTestCasesViewController() -> UIViewController {
-        return ManifestTestCasesViewController()
-    }
-
-    private func createManifestCacheTestViewController() -> UIViewController {
-        return ManifestCacheTestViewController()
-    }
-
-    private func createFavoriteViewController() -> UIViewController {
-        return FavoriteViewController(viewModel: FavoriteViewModel())
-    }
-
-    private func createSettingsViewController() -> UIViewController {
-        return SettingsViewController(viewModel: SettingsViewModel())
+    private func createSettingsViewController() -> SettingsViewController {
+        let viewModel = SettingsViewModel()
+        return SettingsViewController(viewModel: viewModel)
     }
 }

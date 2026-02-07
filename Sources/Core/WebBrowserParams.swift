@@ -82,6 +82,9 @@ public struct WebBrowserParams {
     public let orientation: UIInterfaceOrientationMask
     public let allowJavaScriptClose: Bool
     public let customTitle: String?
+    
+    /// 附加负载数据（用于透传给网页）
+    public let payload: [String: String]?
 
     // MARK: - Initialization
 
@@ -97,7 +100,8 @@ public struct WebBrowserParams {
         disableSwipeBack: Bool = false,   // 🔥 默认允许侧滑返回
         orientation: UIInterfaceOrientationMask = .all,
         allowJavaScriptClose: Bool = true,
-        customTitle: String? = nil
+        customTitle: String? = nil,
+        payload: [String: String]? = nil
     ) {
         self.displayMode = displayMode
         self.modalSize = modalSize
@@ -111,6 +115,7 @@ public struct WebBrowserParams {
         self.orientation = orientation
         self.allowJavaScriptClose = allowJavaScriptClose
         self.customTitle = customTitle
+        self.payload = payload
     }
 
     // MARK: - Factory Methods

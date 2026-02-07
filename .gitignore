@@ -271,3 +271,4 @@ DemoAppUITests/
 /Info.plist
 
 node_modules/
+TestResults_*/*
