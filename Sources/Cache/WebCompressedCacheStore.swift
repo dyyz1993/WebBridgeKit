@@ -348,6 +348,14 @@ public class WebCompressedCacheStore {
         }
     }
 
+    /// 获取缓存目录路径
+    /// - Returns: 缓存目录 URL
+    public func getCacheDirectory() -> URL {
+        return queue.sync {
+            return cacheDirectory
+        }
+    }
+
     // MARK: - Private Methods
 
     /// 获取数据库中的条目（内部方法）

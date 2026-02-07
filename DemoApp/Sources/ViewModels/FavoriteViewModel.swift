@@ -34,7 +34,7 @@ class FavoriteViewModel: ViewModel {
 
     // MARK: - Properties
 
-    private let favoriteManager: URLFavoriteManager
+    private let favoriteService: FavoriteServiceProtocol
     private let favoritesRelay = BehaviorRelay<[URLFavoriteSection]>(value: [])
     private let isEmptyRelay = BehaviorRelay<Bool>(value: true)
     private let openURLRelay = PublishRelay<URL>()
@@ -44,8 +44,10 @@ class FavoriteViewModel: ViewModel {
 
     // MARK: - Initialization
 
-    override init() {
-        self.favoriteManager = URLFavoriteManager.shared
+    /// 指定初始化方法，支持依赖注入
+    /// - Parameter favoriteService: 收藏服务，默认使用 ServiceLocator 提供
+    init(favoriteService: FavoriteServiceProtocol = ServiceLocator.favorite) {
+        self.favoriteService = favoriteService
         super.init()
     }
 
@@ -78,7 +80,7 @@ class FavoriteViewModel: ViewModel {
         // 切换置顶
         input.pinToggle
             .do(onNext: { [weak self] id in
-                self?.favoriteManager.togglePin(id: id)
+                self?.favoriteService.togglePin(id: id)
                 self?.loadFavorites()
             })
             .drive()
@@ -88,7 +90,7 @@ class FavoriteViewModel: ViewModel {
         input.cacheModeToggle
             .do(onNext: { [weak self] args in
                 let (id, enabled) = args
-                self?.favoriteManager.updateCacheMode(id: id, enabled: enabled)
+                self?.favoriteService.updateCacheMode(id: id, enabled: enabled)
                 self?.loadFavorites()
             })
             .drive()
@@ -97,7 +99,7 @@ class FavoriteViewModel: ViewModel {
         // 删除项目
         input.itemDelete
             .do(onNext: { [weak self] id in
-                self?.favoriteManager.deleteFavorite(id: id)
+                self?.favoriteService.deleteFavorite(id: id)
                 self?.loadFavorites()
             })
             .drive()
@@ -117,7 +119,7 @@ class FavoriteViewModel: ViewModel {
     // MARK: - Private Methods
 
     private func loadFavorites() {
-        let results = favoriteManager.getAllFavorites()
+        let results = favoriteService.getAllFavorites()
         currentFavorites = Array(results)
 
         // 分组：置顶的和普通的
@@ -164,7 +166,7 @@ class FavoriteViewModel: ViewModel {
             item.sortOrder = index
         }
 
-        favoriteManager.updateSortOrder(favorites: items)
+        favoriteService.updateSortOrder(favorites: items)
         loadFavorites()
     }
 }

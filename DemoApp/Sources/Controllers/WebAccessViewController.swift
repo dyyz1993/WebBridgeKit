@@ -74,7 +74,14 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         title = "网页访问"
         view.backgroundColor = .systemBackground
 
-        setupUI()
+        // 先添加所有视图（不设置约束）
+        view.addSubview(urlInputView)
+        view.addSubview(webView)
+        view.addSubview(statusBarView)
+        view.addSubview(loadingView)
+        statusBarView.addSubview(cacheCountButton)
+        statusBarView.addSubview(separatorView)
+
         setupGestures()
 
         // MARK: - Accessibility Identifiers
@@ -84,20 +91,37 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         cacheCountButton.accessibilityIdentifier = "webAccess.cacheCountButton"
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // 在 viewWillAppear 中设置约束，此时 view hierarchy 已完全建立
+        setupUI()
+    }
+
     // MARK: - Setup UI
 
     private func setupUI() {
-        // URL 输入工具栏
+        // 先添加所有视图到视图层次结构
         view.addSubview(urlInputView)
+        view.addSubview(webView)
+        view.addSubview(statusBarView)
+        view.addSubview(loadingView)
 
+        statusBarView.addSubview(cacheCountButton)
+        statusBarView.addSubview(separatorView)
+
+        // 然后设置所有约束
         urlInputView.snp.makeConstraints { make in
             make.left.right.equalToSuperview()
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.height.equalTo(52)
         }
 
-        // WebView
-        view.addSubview(webView)
+        statusBarView.snp.makeConstraints { make in
+            make.left.right.equalToSuperview()
+            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
+            make.height.equalTo(44)
+        }
 
         webView.snp.makeConstraints { make in
             make.top.equalTo(urlInputView.snp.bottom)
@@ -105,19 +129,10 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
             make.bottom.equalTo(statusBarView.snp.top)
         }
 
-        // 下拉刷新
-        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
-        webView.scrollView.refreshControl = refreshControl
-
-        // 底部状态栏
-        view.addSubview(statusBarView)
-        statusBarView.addSubview(cacheCountButton)
-        statusBarView.addSubview(separatorView)
-
-        statusBarView.snp.makeConstraints { make in
+        loadingView.snp.makeConstraints { make in
+            make.top.equalTo(urlInputView.snp.bottom)
             make.left.right.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
-            make.height.equalTo(44)
+            make.bottom.equalTo(statusBarView.snp.top)
         }
 
         cacheCountButton.snp.makeConstraints { make in
@@ -129,18 +144,15 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
             make.height.equalTo(0.5)
         }
 
-        // Loading View
-        view.addSubview(loadingView)
-
-        loadingView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
+        // 下拉刷新
+        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        webView.scrollView.refreshControl = refreshControl
     }
 
     private func setupGestures() {
         // URL 输入回调
         urlInputView.onLoadURL = { [weak self] url in
-            self?.loadURL(url)
+            self?.loadTargetURL(url)
         }
 
         // 缓存按钮回调
@@ -257,24 +269,136 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
             .disposed(by: rx)
     }
 
-    // MARK: - Private Methods
+    // MARK: - Internal Methods
 
-    private func loadURL(_ url: URL) {
+    func loadTargetURL(_ url: URL) {
+        print("🔵 [WebAccessVC] loadURL called: \(url.absoluteString)")
         currentURL = url
+
+        // 保存上次打开的 URL（如果启用了记忆功能）
+        if UserDefaults.standard.bool(forKey: "EnableLastAppMemory") {
+            UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
+            UserDefaults.standard.synchronize()
+            print("💾 [WebAccessVC] Saved LastOpenedURL: \(url.absoluteString)")
+        }
+
+        // 🔥 Check URL parameters for fullscreen mode
+        checkURLParameters(url)
+
+        print("🔵 [WebAccessVC] Loading URL in WebView...")
         webView.load(URLRequest(url: url))
+        print("🔵 [WebAccessVC] webView.load() called successfully")
     }
 
-    private func loadWebView(url: URL) {
-        // 检查是否有离线缓存
-        if let cachedHistory = WebPageHistoryManager.shared.findHistory(url: url),
-           cachedHistory.isCached {
-            // 使用离线缓存加载
-            let cacheURL = URL(string: "bark-cache://\(cachedHistory.id)/index.html")!
-            webView.load(URLRequest(url: cacheURL))
-        } else {
-            // 加载在线版本
-            webView.load(URLRequest(url: url))
+    /// Check URL parameters for fullscreen mode
+    private func checkURLParameters(_ url: URL) {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else {
+            return
         }
+
+        for item in queryItems {
+            switch item.name.lowercased() {
+            case "hidetabbar":
+                if let value = item.value, value == "1" || value.lowercased() == "true" {
+                    setTabBarHidden(true)
+                }
+            case "mode":
+                if let value = item.value, value.lowercased() == "immersive" {
+                    setTabBarHidden(true)
+                    setNavigationBarHidden(true)
+                    setStatusBarHidden(true)
+                    hideURLInputView(true)
+                }
+            case "hidenavbar":
+                if let value = item.value, value == "1" || value.lowercased() == "true" {
+                    setNavigationBarHidden(true)
+                    hideURLInputView(true)
+                }
+            case "hidestatusbar":
+                if let value = item.value, value == "1" || value.lowercased() == "true" {
+                    setStatusBarHidden(true)
+                }
+            default:
+                break
+            }
+        }
+    }
+
+    /// Hide/show TabBar
+    private func setTabBarHidden(_ hidden: Bool) {
+        guard let tabBarController = self.tabBarController else {
+            print("⚠️ [WebAccessVC] No TabBarController found")
+            return
+        }
+
+        print("🎛️ [WebAccessVC] setTabBarHidden: \(hidden)")
+
+        // Use DispatchQueue.main to avoid threading issues
+        DispatchQueue.main.async { [weak tabBarController] in
+            tabBarController?.tabBar.isHidden = hidden
+        }
+    }
+
+    /// Hide/show navigation bar
+    private func setNavigationBarHidden(_ hidden: Bool) {
+        // Use non-animated for UI testing stability
+        navigationController?.setNavigationBarHidden(hidden, animated: false)
+        print("🎛️ [WebAccessVC] NavigationBar hidden: \(hidden)")
+    }
+
+    /// Hide/show URL input view and status bar
+    private func hideURLInputView(_ hidden: Bool) {
+        // Use immediate change without animation for stability
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.urlInputView.alpha = hidden ? 0 : 1
+            self.urlInputView.isHidden = hidden
+            self.statusBarView.alpha = hidden ? 0 : 1
+            self.statusBarView.isHidden = hidden
+        }
+        print("🎛️ [WebAccessVC] URLInputView and StatusBarView hidden: \(hidden)")
+    }
+
+    /// Hide/show status bar
+    private func setStatusBarHidden(_ hidden: Bool) {
+        isStatusBarHidden = hidden
+        setNeedsStatusBarAppearanceUpdate()
+        print("🎛️ [WebAccessVC] StatusBar hidden: \(hidden)")
+    }
+
+    // MARK: - Status Bar Appearance
+
+    public override var prefersStatusBarHidden: Bool {
+        return isStatusBarHidden
+    }
+
+    private var isStatusBarHidden: Bool = false
+
+    private func loadWebView(url: URL) {
+        print("🟢 [WebAccessVC] loadWebView called: \(url.absoluteString)")
+
+        // ============================================================
+        // NEW APPROACH: System URLCache
+        // 无需 HTML 修改或 JS 注入
+        // WKWebView 会自动使用 URLCache.shared 处理缓存
+        // ============================================================
+        print("🟢 [WebAccessVC] Loading with System URLCache")
+        webView.load(URLRequest(url: url))
+
+        // ============================================================
+        // OLD APPROACH (DISABLED): bark-cache:// URL Scheme
+        // This approach required HTML modification
+        // ============================================================
+        // if let cachedHistory = WebPageHistoryManager.shared.findHistory(url: url),
+        //    cachedHistory.isCached {
+        //     let cacheURL = URL(string: "bark-cache://\(cachedHistory.id)/index.html")!
+        //     webView.load(URLRequest(url: cacheURL))
+        // } else {
+        //     webView.load(URLRequest(url: url))
+        // }
+
+        print("🟢 [WebAccessVC] WebView load initiated")
     }
 
     private func openCacheResources() {
@@ -327,15 +451,24 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 extension WebAccessViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        print("⚠️ [WebAccessVC] WebView didStartProvisionalNavigation")
         // 通知 ViewModel 页面开始加载
         viewModel.notifyPageDidStartLoading()
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        print("✅ [WebAccessVC] WebView didFinish navigation - URL: \(webView.url?.absoluteString ?? "nil")")
         // 更新历史记录
         if let url = webView.url {
             WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webView.title)
             viewModel.refreshCacheStatus()
+
+            // 记录最后打开的 URL
+            if UserDefaults.standard.bool(forKey: "EnableLastAppMemory") {
+                UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
+                UserDefaults.standard.synchronize()
+                print("💾 [WebAccess] 记忆上次应用 URL: \(url.absoluteString)")
+            }
         }
 
         // 通知 ViewModel 页面加载完成

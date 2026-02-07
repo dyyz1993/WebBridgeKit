@@ -163,7 +163,12 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
 
         // 设置 URL
         if let url = URL(string: history.url) {
-            urlLabel.text = url.host
+            let host = url.host ?? ""
+            if host == "localhost" {
+                urlLabel.text = ""
+            } else {
+                urlLabel.text = host
+            }
         } else {
             urlLabel.text = history.url
         }

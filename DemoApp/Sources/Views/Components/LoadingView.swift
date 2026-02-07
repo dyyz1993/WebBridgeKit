@@ -72,6 +72,9 @@ class LoadingView: UIView {
     // MARK: - Setup
 
     private func setupUI() {
+        // 默认隐藏，避免显示白色面板
+        isHidden = true
+        alpha = 0
         backgroundColor = UIColor.black.withAlphaComponent(0.3)
 
         addSubview(containerView)

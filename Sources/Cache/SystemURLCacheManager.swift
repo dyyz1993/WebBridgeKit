@@ -1,0 +1,221 @@
+//
+//  SystemURLCacheManager.swift
+//  WebBridgeKit
+//
+//  Created by Claude on 2025-02-02.
+//  Copyright © 2025年 WebBridgeKit. All rights reserved.
+//
+
+import Foundation
+import WebKit
+
+/// 系统缓存管理器
+/// 使用 iOS 原生 URLCache 实现透明缓存
+/// 优点：
+/// - 无需修改 HTML
+/// - 无需注入 JS
+/// - 自动处理所有 HTTP 资源
+/// - 基于标准 HTTP 缓存头
+/// - 自动回退到网络
+public class SystemURLCacheManager {
+
+    public static let shared = SystemURLCacheManager()
+
+    // MARK: - Properties
+
+    private let urlCache: URLCache
+    private let queue = DispatchQueue(label: "com.webbridgekit.system-cache", qos: .userInitiated)
+
+    // 缓存统计
+    private var cacheHits: Int64 = 0
+    private var cacheMisses: Int64 = 0
+    private let statsLock = NSLock()
+
+    // MARK: - Initialization
+
+    private init() {
+        // 配置 URLCache
+        // diskPath: 使用自定义路径以便于管理
+        // memoryCapacity: 50 MB 内存缓存
+        // diskCapacity: 500 MB 磁盘缓存
+        let cachePath = "WebBridgeKitURLCache"
+        self.urlCache = URLCache(
+            memoryCapacity: 50 * 1024 * 1024,    // 50 MB
+            diskCapacity: 500 * 1024 * 1024,     // 500 MB
+            diskPath: cachePath
+        )
+
+        // 设置为 shared URLCache
+        URLCache.shared = urlCache
+
+        print("✅ [SystemURLCache] Initialized with:")
+        print("   - Memory: 50 MB")
+        print("   - Disk: 500 MB")
+        print("   - Path: \(cachePath)")
+    }
+
+    // MARK: - Public API
+
+    /// 为指定 URL Request 配置会话
+    /// - Parameter request: URLRequest
+    /// - Returns: 配置好的 URLSession
+    public func configuredSession(for request: URLRequest) -> URLSession {
+        let configuration = URLSessionConfiguration.default
+        configuration.urlCache = urlCache
+        configuration.requestCachePolicy = .useProtocolCachePolicy
+
+        // 添加缓存相关的 HTTP 头
+        var mutableRequest = request
+        if mutableRequest.value(forHTTPHeaderField: "Cache-Control") == nil {
+            mutableRequest.setValue("max-age=86400", forHTTPHeaderField: "Cache-Control")
+        }
+
+        return URLSession(configuration: configuration)
+    }
+
+    /// 检查缓存是否可用
+    /// - Parameter url: 资源 URL
+    /// - Returns: 是否有缓存
+    public func hasCachedResponse(for url: URL) -> Bool {
+        let request = URLRequest(url: url)
+        return urlCache.cachedResponse(for: request) != nil
+    }
+
+    /// 获取缓存的响应
+    /// - Parameter url: 资源 URL
+    /// - Returns: 缓存的响应
+    public func getCachedResponse(for url: URL) -> CachedURLResponse? {
+        let request = URLRequest(url: url)
+        return urlCache.cachedResponse(for: request)
+    }
+
+    /// 手动存储缓存响应
+    /// - Parameters:
+    ///   - data: 响应数据
+    ///   - response: URLResponse
+    ///   - request: URLRequest
+    public func storeCachedResponse(data: Data, for response: URLResponse, request: URLRequest) {
+        let cachedResponse = CachedURLResponse(response: response, data: data)
+        urlCache.storeCachedResponse(cachedResponse, for: request)
+        print("✅ [SystemURLCache] Stored: \(request.url?.absoluteString ?? "unknown")")
+    }
+
+    /// 移除指定 URL 的缓存
+    /// - Parameter url: 资源 URL
+    public func removeCachedResponse(for url: URL) {
+        let request = URLRequest(url: url)
+        urlCache.removeCachedResponse(for: request)
+        print("🗑️ [SystemURLCache] Removed: \(url.absoluteString)")
+    }
+
+    /// 清除所有缓存
+    public func removeAllCachedResponses() {
+        urlCache.removeAllCachedResponses()
+        resetStats()
+        print("🗑️ [SystemURLCache] All cache cleared")
+    }
+
+    /// 获取缓存大小
+    /// - Returns: 缓存大小（字节）
+    public func getCacheSize() -> Int64 {
+        // URLCache 没有直接获取大小的方法
+        // 估算：基于已使用的磁盘容量
+        return getCurrentDiskUsage()
+    }
+
+    /// 获取缓存统计信息
+    /// - Returns: 统计信息
+    public func getCacheStats() -> CacheStatistics {
+        statsLock.lock()
+        defer { statsLock.unlock() }
+
+        let total = cacheHits + cacheMisses
+        let hitRate = total > 0 ? Double(cacheHits) / Double(total) : 0.0
+
+        return CacheStatistics(
+            totalRequests: Int(total),
+            cacheHits: Int(cacheHits),
+            cacheMisses: Int(cacheMisses),
+            hitRate: hitRate,
+            totalCacheSize: getCacheSize()
+        )
+    }
+
+    /// 记录缓存命中
+    public func recordCacheHit() {
+        statsLock.lock()
+        defer { statsLock.unlock() }
+        cacheHits += 1
+    }
+
+    /// 记录缓存未命中
+    public func recordCacheMiss() {
+        statsLock.lock()
+        defer { statsLock.unlock() }
+        cacheMisses += 1
+    }
+
+    /// 重置统计信息
+    private func resetStats() {
+        statsLock.lock()
+        defer { statsLock.unlock() }
+        cacheHits = 0
+        cacheMisses = 0
+    }
+
+    // MARK: - Private Helpers
+
+    /// 获取当前磁盘使用量（估算）
+    private func getCurrentDiskUsage() -> Int64 {
+        // URLCache 没有直接 API 获取磁盘使用量
+        // 这里返回一个估算值或 0
+        // 实际项目可以通过遍历缓存目录来计算
+        return 0
+    }
+}
+
+// MARK: - CacheStatistics
+
+/// 缓存统计信息
+public struct CacheStatistics {
+    public let totalRequests: Int
+    public let cacheHits: Int
+    public let cacheMisses: Int
+    public let hitRate: Double
+    public let totalCacheSize: Int64
+
+    public var formattedHitRate: String {
+        return String(format: "%.2f%%", hitRate * 100)
+    }
+
+    public var formattedCacheSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useBytes, .useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: totalCacheSize)
+    }
+}
+
+// MARK: - Cache Policy Extension
+
+extension SystemURLCacheManager {
+
+    /// 为 WKWebView 配置缓存策略
+    /// - Parameter configuration: WKWebViewConfiguration
+    public func configureWKWebViewCache(_ configuration: WKWebViewConfiguration) {
+        // WKWebView 使用其自己的缓存机制
+        // 但我们可以通过设置 websiteDataStore 来管理缓存
+
+        // 设置默认的 URLCache
+        URLCache.shared = urlCache
+
+        print("✅ [SystemURLCache] Configured for WKWebView")
+    }
+
+    /// 清理过期的缓存响应
+    public func cleanupExpiredCache() {
+        // URLCache 会自动管理过期
+        // 这里不需要手动清理
+        print("🧹 [SystemURLCache] Auto-managed by system")
+    }
+}

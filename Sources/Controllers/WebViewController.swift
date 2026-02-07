@@ -19,6 +19,7 @@ public class WebViewController: UIViewController {
     public var bridge: WebJavaScriptBridge!
     public var gestureInterceptor: WebGestureInterceptor?
 
+
     /// 标记是否从池中获取的实例（用于性能优化）
     private var isPooledInstance = false
 
@@ -71,6 +72,9 @@ public class WebViewController: UIViewController {
             // 更新 bridge 的 webView 引用
             bridge.setWebView(webView)
 
+            // 设置导航代理
+            webView.navigationDelegate = self
+
             // 设置手势拦截器
             setupGestureInterceptor()
 
@@ -83,8 +87,17 @@ public class WebViewController: UIViewController {
         }
 
         setupNotifications()
+
         // 默认禁用所有浏览器特性
         applyBrowserFeatures()
+
+        // 添加缓存调试按钮
+        setupCacheDebugButton()
+
+        #if DEBUG
+        // Add cache debug floating button
+        addCacheDebugButton(at: CGPoint(x: view.bounds.width - 70, y: 100))
+        #endif
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -173,17 +186,25 @@ public class WebViewController: UIViewController {
         // 确保 view 已加载
         _ = view
 
-        // 检查是否有离线缓存
-        if let cachedHistory = WebPageHistoryManager.shared.findHistory(url: url),
-           cachedHistory.isCached {
-            // 使用离线缓存加载
-            let cacheURL = URL(string: "bark-cache://\(cachedHistory.id)/index.html")!
-            webView.load(URLRequest(url: cacheURL))
-            print("✅ [BarkWebVC] Loading from cache: \(url)")
+        print("🧪 [ManifestCache] Attempting to match URL: \(url.absoluteString)")
+
+        // 🔥 检查 URL 是否匹配缓存规则
+        if let matchResult = URLRuleMatcher.shared.match(url: url) {
+            print("✅ [ManifestCache] Rule matched!")
+            print("   - Rule ID: \(matchResult.ruleId)")
+            print("   - Match Type: \(matchResult.matchType)")
+            print("   - Manifest URL: \(matchResult.manifestURL.absoluteString)")
+
+            // 尝试下载 manifest
+            downloadAndUseManifest(from: matchResult.manifestURL, pageURL: url)
         } else {
-            // 加载在线版本
+            print("⏭️ [ManifestCache] No rule matched, using normal load")
+
+            // 🔥 新方案：使用系统 URLCache，无需 HTML 修改或 JS 注入
+            // WKWebView 会自动使用 URLCache.shared 处理缓存
+            // 基于 HTTP 缓存头，自动回退到网络
             webView.load(URLRequest(url: url))
-            print("🌐 [BarkWebVC] Loading from network: \(url)")
+            print("🌐 [BarkWebVC] Loading: \(url) (System URLCache will handle cache automatically)")
 
             // 🔥 页面加载完成后自动生成缩略图
             generateThumbnailAfterLoad(url: url)
@@ -353,7 +374,15 @@ public class WebViewController: UIViewController {
         // 禁用智能链接检测（电话、地址、日期等自动高亮）
         config.dataDetectorTypes = []
 
+        // 🔥 注册 wb-resource:// URLSchemeHandler
+        // 用于拦截资源请求并从 manifest 缓存中提供资源
+        ManifestURLSchemeHandler.register(to: config, scheme: "wb-resource")
+        print("✅ [ManifestCache] Registered wb-resource:// URLSchemeHandler")
+
         webView = WKWebView(frame: .zero, configuration: config)
+
+        // 设置导航代理
+        webView.navigationDelegate = self
 
         // 设置内容 inset 适应安全区域（默认）
         webView.scrollView.contentInsetAdjustmentBehavior = .automatic
@@ -363,7 +392,7 @@ public class WebViewController: UIViewController {
             make.edges.equalToSuperview()
         }
 
-        print("✅ [BarkWebVC] WebView initialized")
+        print("✅ [BarkWebVC] WebView initialized with Manifest cache support")
     }
 
     private func setupBridge() {
@@ -451,6 +480,7 @@ public class WebViewController: UIViewController {
 
         print("✅ [BarkWebVC] Gesture interceptor setup completed")
     }
+
 
     /// 🔥 默认禁用所有浏览器特性
     private func applyBrowserFeatures() {
@@ -610,6 +640,389 @@ public class WebViewController: UIViewController {
 
         print("🧹 [BarkWebVC] Cleaned up")
     }
+
+    // MARK: - Constants
+
+    private let customScheme = "custom"
+
+    // MARK: - Manifest Cache Integration
+
+    /// 下载并使用 Manifest
+    /// - Parameters:
+    ///   - manifestURL: manifest.json 的 URL
+    ///   - pageURL: 页面 URL
+    private func downloadAndUseManifest(from manifestURL: URL, pageURL: URL) {
+        print("📥 [ManifestCache] Downloading manifest from: \(manifestURL.absoluteString)")
+
+        let task = URLSession.shared.dataTask(with: manifestURL) { [weak self] data, response, error in
+            guard let self = self else { return }
+
+            if let error = error {
+                print("❌ [ManifestCache] Failed to download manifest: \(error.localizedDescription)")
+                // 回退到普通加载
+                self.fallbackToNormalLoad(pageURL)
+                return
+            }
+
+            guard let data = data else {
+                print("❌ [ManifestCache] Manifest data is empty")
+                self.fallbackToNormalLoad(pageURL)
+                return
+            }
+
+            do {
+                // 解析 manifest
+                let manifest = try JSONDecoder().decode(PersistentManifestLoader.WebManifest.self, from: data)
+
+                print("✅ [ManifestCache] Manifest downloaded successfully")
+                print("   - Persistent: \(manifest.persistent)")
+                print("   - Resources: \(manifest.resources.count)")
+                print("   - Version: \(manifest.version ?? "N/A")")
+
+                // 根据 persistent 字段选择加载策略
+                DispatchQueue.main.async {
+                    if manifest.persistent {
+                        print("🔥 [ManifestCache] Using PERSISTENT mode (download all resources first)")
+                        self.usePersistentMode(pageURL: pageURL, manifest: manifest)
+                    } else {
+                        print("⚡ [ManifestCache] Using LAZY mode (load HTML immediately, background download)")
+                        self.useLazyMode(pageURL: pageURL, manifest: manifest)
+                    }
+                }
+
+            } catch {
+                print("❌ [ManifestCache] Failed to decode manifest: \(error.localizedDescription)")
+                // 回退到普通加载
+                self.fallbackToNormalLoad(pageURL)
+            }
+        }
+
+        task.resume()
+    }
+
+    /// 使用持久化模式（下载所有资源后再加载）
+    private func usePersistentMode(pageURL: URL, manifest: PersistentManifestLoader.WebManifest) {
+        // 找到合适的 view controller 来显示进度弹窗
+        let presentingViewController: UIViewController
+        if let navController = self.navigationController,
+           let topVC = navController.topViewController {
+            presentingViewController = topVC
+        } else if let parentVC = self.parent {
+            presentingViewController = parentVC
+        } else {
+            presentingViewController = self
+        }
+
+        print("💾 [ManifestCache] Starting persistent mode download")
+
+        PersistentManifestLoader.load(
+            url: pageURL,
+            in: webView,
+            from: presentingViewController
+        ) { [weak self] result in
+            guard let self = self else { return }
+
+            switch result {
+            case .success:
+                print("✅ [ManifestCache] Persistent mode load completed successfully")
+            case .failure(let error):
+                print("❌ [ManifestCache] Persistent mode failed: \(error.localizedDescription)")
+                // 回退到普通加载
+                self.fallbackToNormalLoad(pageURL)
+            }
+        }
+    }
+
+    /// 使用懒加载模式（立即加载 HTML，后台下载资源）
+    private func useLazyMode(pageURL: URL, manifest: PersistentManifestLoader.WebManifest) {
+        print("⚡ [ManifestCache] Starting lazy mode load")
+
+        // 将 WebManifest 转换为 LazyManifestLoader.WebManifest
+        let lazyManifest = LazyManifestLoader.WebManifest(
+            persistent: manifest.persistent,
+            resources: manifest.resources,
+            version: manifest.version,
+            appid: manifest.appid,
+            name: manifest.name,
+            icon: manifest.icon
+        )
+
+        LazyManifestLoader.load(
+            url: pageURL,
+            in: webView
+        ) { [weak self] result in
+            guard let self = self else { return }
+
+            switch result {
+            case .success:
+                print("✅ [ManifestCache] Lazy mode load completed successfully")
+            case .failure(let error):
+                print("❌ [ManifestCache] Lazy mode failed: \(error.localizedDescription)")
+                // 回退到普通加载
+                self.fallbackToNormalLoad(pageURL)
+            }
+        }
+    }
+
+    /// 回退到普通加载模式
+    private func fallbackToNormalLoad(_ url: URL) {
+        print("⏭️ [ManifestCache] Falling back to normal load")
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.webView.load(URLRequest(url: url))
+            print("🌐 [BarkWebVC] Loading: \(url) (fallback mode)")
+
+            // 页面加载完成后自动生成缩略图
+            self.generateThumbnailAfterLoad(url: url)
+        }
+    }
+
+    // MARK: - Manifest Cache Helper Methods
+
+    /// Load a local HTML file with manifest-based resource mapping
+    /// - Parameters:
+    ///   - htmlName: HTML file name (without extension)
+    ///   - manifestName: Manifest JSON file name (without extension)
+    public func loadLocalHTML(withManifest htmlName: String, manifestName: String = "manifest") {
+        // Ensure view is loaded
+        _ = view
+
+        guard let htmlPath = Bundle.main.path(forResource: htmlName, ofType: "html") else {
+            print("❌ [BarkWebVC] HTML file not found: \(htmlName).html")
+            return
+        }
+
+        guard let manifestPath = Bundle.main.path(forResource: manifestName, ofType: "json") else {
+            print("❌ [BarkWebVC] Manifest file not found: \(manifestName).json")
+            return
+        }
+
+        do {
+            let manifestData = try Data(contentsOf: URL(fileURLWithPath: manifestPath))
+            let manifest = try JSONDecoder().decode([String: String].self, from: manifestData)
+
+            // Register manifest with ManifestURLSchemeHandler
+            if let handler = webView.configuration.urlSchemeHandler(forURLScheme: customScheme) as? ManifestURLSchemeHandler {
+                handler.registerManifest(forPage: htmlName, manifest: manifest)
+                print("✅ [BarkWebVC] Registered manifest for: \(htmlName)")
+            } else {
+                print("⚠️ [BarkWebVC] ManifestURLSchemeHandler not found")
+            }
+
+            // Load HTML with custom scheme
+            let htmlURL = URL(string: "\(customScheme)://\(htmlName).html")!
+            webView.load(URLRequest(url: htmlURL))
+            print("✅ [BarkWebVC] Loaded HTML with manifest: \(htmlName).html")
+
+        } catch {
+            print("❌ [BarkWebVC] Failed to load manifest: \(error)")
+        }
+    }
+
+    /// Load an HTML file from a custom URL with resource mapping
+    /// - Parameter customURL: The custom:// URL to load
+    public func loadCustomURL(_ customURL: URL) {
+        // Ensure view is loaded
+        _ = view
+
+        guard customURL.scheme == customScheme else {
+            print("❌ [BarkWebVC] Invalid custom scheme: \(customURL.scheme ?? "nil")")
+            return
+        }
+
+        webView.load(URLRequest(url: customURL))
+        print("✅ [BarkWebVC] Loading custom URL: \(customURL)")
+    }
+
+    /// Register a resource manifest for a specific page
+    /// - Parameters:
+    ///   - pageName: The page name (e.g., "test_page")
+    ///   - manifest: Dictionary mapping relative paths to network URLs
+    public func registerResourceManifest(forPage pageName: String, manifest: [String: String]) {
+        if let handler = webView.configuration.urlSchemeHandler(forURLScheme: customScheme) as? ManifestURLSchemeHandler {
+            handler.registerManifest(forPage: pageName, manifest: manifest)
+            print("✅ [BarkWebVC] Registered manifest for page: \(pageName)")
+        } else {
+            print("❌ [BarkWebVC] ManifestURLSchemeHandler not available")
+        }
+    }
+
+    /// Clear cached resources for a specific page
+    /// - Parameter pageName: The page name to clear cache for
+    public func clearResourceCache(forPage pageName: String) {
+        if let handler = webView.configuration.urlSchemeHandler(forURLScheme: customScheme) as? ManifestURLSchemeHandler {
+            handler.unregisterManifest(forPage: pageName)
+            print("✅ [BarkWebVC] Cleared cache for page: \(pageName)")
+        }
+    }
+
+    // MARK: - Cache Debug Methods
+
+    /// 设置缓存调试按钮
+    private func setupCacheDebugButton() {
+        let debugButton = UIBarButtonItem(
+            title: "🔍 Cache",
+            style: .plain,
+            target: self,
+            action: #selector(showCacheDebugInfo)
+        )
+        navigationItem.rightBarButtonItem = debugButton
+        print("✅ [BarkWebVC] Cache debug button added")
+    }
+
+    /// 显示缓存调试信息
+    @objc private func showCacheDebugInfo() {
+        // 获取当前页面 URL
+        let currentURL = webView.url?.absoluteString ?? "No URL loaded"
+
+        // 收集缓存信息
+        var debugInfo = """
+        🔍 WebBridgeKit Cache Debug Info
+        =================================
+
+        📍 Current Page URL:
+        \(currentURL)
+
+        🌐 System URLCache Info:
+        """
+
+        // 获取系统 URLCache 信息
+        let urlCache = URLCache.shared
+        let currentMemoryUsage = urlCache.currentMemoryUsage
+        let currentDiskUsage = urlCache.currentDiskUsage
+        debugInfo += """
+        - Memory Usage: \(ByteCountFormatter.string(fromByteCount: Int64(currentMemoryUsage), countStyle: .memory))
+        - Disk Usage: \(ByteCountFormatter.string(fromByteCount: Int64(currentDiskUsage), countStyle: .file))
+        - Memory Capacity: \(ByteCountFormatter.string(fromByteCount: Int64(urlCache.memoryCapacity), countStyle: .memory))
+        - Disk Capacity: \(ByteCountFormatter.string(fromByteCount: Int64(urlCache.diskCapacity), countStyle: .file))
+
+        📦 Compressed Cache Info:
+        """
+
+        // 获取压缩缓存信息
+        let compressedCacheInfo = WebCompressedCacheStore.shared.getMemoryInfo()
+        debugInfo += """
+        - Total Entries: \(compressedCacheInfo.totalEntries)
+        - Original Size: \(compressedCacheInfo.formattedTotalOriginalSize)
+        - Compressed Size: \(compressedCacheInfo.formattedTotalCompressedSize)
+        - Compression Ratio: \(compressedCacheInfo.formattedCompressionRatio)
+        - Saved Space: \(compressedCacheInfo.formattedSavedSpace)
+
+        📋 Cached Resources Summary:
+        """
+
+        // 获取缓存条目统计
+        let entries = WebCompressedCacheStore.shared.getAllEntries()
+        let domainGroups = Dictionary(grouping: entries) { $0.domain }
+        debugInfo += "\n- Total Cached Resources: \(entries.count)"
+        debugInfo += "\n- Cached Domains: \(domainGroups.count)"
+
+        // 显示前 5 个域名
+        let topDomains = domainGroups.sorted { $0.value.count > $1.value.count }.prefix(5)
+        for (domain, resources) in topDomains {
+            debugInfo += "\n  • \(domain): \(resources.count) resources"
+        }
+
+        debugInfo += """
+
+        📄 Page Cache Info:
+        """
+
+        // 获取页面缓存信息
+        let cachedPages = WebPageOfflineCacheManager.shared.getCachedPages()
+        debugInfo += "\n- Cached Pages: \(cachedPages.count)"
+
+        // 显示前 3 个已缓存页面
+        let topPages = cachedPages.prefix(3)
+        for page in topPages {
+            debugInfo += "\n  • \(page.title): \(ByteCountFormatter.string(fromByteCount: page.totalSize, countStyle: .file))"
+        }
+
+        debugInfo += """
+
+        📂 Cache Directory Path:
+        """
+
+        // 获取缓存目录路径
+        let cachePath = WebCompressedCacheStore.shared.getCacheDirectory()
+        debugInfo += "\n\(cachePath.path)"
+
+        // 打印到控制台
+        print(debugInfo)
+
+        // 显示 Alert
+        DispatchQueue.main.async { [weak self] in
+            let alert = UIAlertController(
+                title: "🔍 Cache Debug Info",
+                message: debugInfo,
+                preferredStyle: .actionSheet
+            )
+
+            alert.addAction(UIAlertAction(
+                title: "Copy to Clipboard",
+                style: .default
+            ) { _ in
+                UIPasteboard.general.string = debugInfo
+                self?.showToast(message: "Debug info copied to clipboard")
+            })
+
+            alert.addAction(UIAlertAction(
+                title: "Clear All Cache",
+                style: .destructive
+            ) { _ in
+                self?.clearAllCache()
+            })
+
+            alert.addAction(UIAlertAction(
+                title: "Close",
+                style: .cancel
+            ))
+
+            // 对于 iPad 支持
+            if let popoverController = alert.popoverPresentationController {
+                if let barButton = self?.navigationItem.rightBarButtonItem {
+                    popoverController.barButtonItem = barButton
+                }
+            }
+
+            self?.present(alert, animated: true)
+        }
+    }
+
+    /// 清除所有缓存
+    private func clearAllCache() {
+        // 清除压缩缓存
+        WebCompressedCacheStore.shared.clearAll()
+
+        // 清除系统 URLCache
+        URLCache.shared.removeAllCachedResponses()
+
+        // 清除 WKWebsiteDataStore
+        let dataStore = WKWebsiteDataStore.default()
+        let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+        let from = Date.distantPast
+        dataStore.removeData(ofTypes: dataTypes, modifiedSince: from) {
+            DispatchQueue.main.async { [weak self] in
+                self?.showToast(message: "All cache cleared successfully")
+                print("✅ [BarkWebVC] All cache cleared")
+            }
+        }
+    }
+
+    /// 显示 Toast 提示
+    private func showToast(message: String) {
+        let alert = UIAlertController(
+            title: nil,
+            message: message,
+            preferredStyle: .alert
+        )
+        present(alert, animated: true)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            alert.dismiss(animated: true)
+        }
+    }
 }
 
 // MARK: - UINavigationControllerDelegate
@@ -689,5 +1102,95 @@ extension WebViewController: WKScriptMessageHandler {
         default:
             bridge.sendErrorToJS("Unknown browser action: \(action)")
         }
+    }
+}
+
+// MARK: - WKNavigationDelegate
+
+extension WebViewController: WKNavigationDelegate {
+
+    /// 页面开始加载 - 更新缓存状态为下载中
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        #if DEBUG
+        if let url = webView.url {
+            updateCacheDebugStatus(
+                url: url.absoluteString,
+                status: .downloading,
+                resourceCount: 0,
+                cacheSize: 0
+            )
+        }
+        #endif
+    }
+
+    /// 页面内容开始提交 - 检查缓存状态
+    public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        #if DEBUG
+        guard let url = webView.url else { return }
+
+        // 检查是否在缓存中
+        let entries = WebCompressedCacheStore.shared.getAllEntries()
+        let isCached = entries.contains { $0.url == url.absoluteString }
+        let cacheStatus: WebCacheDebugFloatingButton.CacheStatus = isCached ? .hit : .noCache
+
+        // 获取缓存统计
+        let cacheInfo = WebCompressedCacheStore.shared.getMemoryInfo()
+
+        // 计算当前域名的缓存资源数量
+        let domainResources = entries.filter { $0.domain == url.host ?? "" }
+        let resourceCount = domainResources.count
+
+        updateCacheDebugStatus(
+            url: url.absoluteString,
+            status: cacheStatus,
+            resourceCount: resourceCount,
+            cacheSize: Int64(cacheInfo.totalCompressedSize)
+        )
+
+        print("🔍 [CacheDebug] Navigation committed - URL: \(url.absoluteString)")
+        print("   - Cache Status: \(cacheStatus.description)")
+        print("   - Cached Resources: \(resourceCount)")
+        #endif
+    }
+
+    /// 页面加载完成
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        #if DEBUG
+        if let url = webView.url {
+            print("✅ [CacheDebug] Page loaded: \(url.absoluteString)")
+        }
+        #endif
+    }
+
+    /// 页面加载失败
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        #if DEBUG
+        if let url = webView.url {
+            updateCacheDebugStatus(
+                url: url.absoluteString,
+                status: .error,
+                resourceCount: 0,
+                cacheSize: 0
+            )
+            print("❌ [CacheDebug] Navigation failed: \(url.absoluteString)")
+            print("   - Error: \(error.localizedDescription)")
+        }
+        #endif
+    }
+
+    /// 页面内容加载失败
+    public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        #if DEBUG
+        if let url = webView.url {
+            updateCacheDebugStatus(
+                url: url.absoluteString,
+                status: .error,
+                resourceCount: 0,
+                cacheSize: 0
+            )
+            print("❌ [CacheDebug] Provisional navigation failed: \(url.absoluteString)")
+            print("   - Error: \(error.localizedDescription)")
+        }
+        #endif
     }
 }

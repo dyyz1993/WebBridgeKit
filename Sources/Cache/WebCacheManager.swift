@@ -16,9 +16,9 @@ import WebKit
 // Framework imports
 
 /// 网站缓存管理器
-class WebCacheManager {
+public class WebCacheManager {
 
-    static let shared = WebCacheManager()
+    public static let shared = WebCacheManager()
 
     private let dataStore = WKWebsiteDataStore.default()
 
@@ -27,7 +27,7 @@ class WebCacheManager {
     // MARK: - 缓存统计
 
     /// 获取所有网站的缓存统计
-    func fetchCacheStatistics() -> Observable<[WebCacheStatistics]> {
+    public func fetchCacheStatistics() -> Observable<[WebCacheStatistics]> {
         return Observable.create { observer in
             let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
 
@@ -70,28 +70,50 @@ class WebCacheManager {
         }.sorted { $0.totalSize > $1.totalSize }
     }
 
-    /// 估算缓存大小
-    private func estimateSize(for record: WKWebsiteDataRecord) -> Int64 {
-        // WKWebsiteDataRecord 不直接提供大小信息
-        // 使用固定估算值（可以后续优化）
-        return 1024 * 1024 // 假设每个记录 1MB
+    /// 自动清理逻辑已在 WebPageHistoryManager 中优化：会自动忽略收藏和置顶项
+    /// 清理过期或低频使用的缓存资源
+    public func performAutoCleanup() {
+        print("🧹 [WebCacheManager] Starting auto cleanup...")
+        
+        // 1. 清理低频历史记录 (由 WebPageHistoryManager 处理)
+        WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
+        
+        // 2. 清理过期的拦截资源缓存
+        InterceptiveCacheManager.shared.cleanupExpiredCache()
+        
+        // 3. 清理未使用的资源缓存 (超过 7 天未访问)
+        WebResourceCacheManager.shared.cleanupUnusedResources(olderThan: 7 * 24 * 3600)
+        
+        print("🧹 [WebCacheManager] Auto cleanup completed")
     }
+    
+    /// 清理所有缓存
+    public func clearAll() {
+        // 1. 清理 WKWebView 网站数据
+        let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+        let dateFrom = Date(timeIntervalSince1970: 0)
+        dataStore.removeData(ofTypes: dataTypes, modifiedSince: dateFrom) {
+            print("🗑️ [WebCacheManager] Cleared all WKWebView website data")
+        }
 
-    /// 保存缓存统计到 Realm
-    private func saveCacheStatistics(_ stats: [WebCacheStatistics]) {
-        guard let realm = try? Realm() else { return }
-
-        try? realm.write {
-            for stat in stats {
-                realm.add(stat, update: .modified)
+        // 2. 清理自定义缓存管理器
+        ManifestCacheManager.shared.clearAll()
+        WebResourceCacheManager.shared.clearAll()
+        InterceptiveCacheManager.shared.clearAllCache()
+        PersistentManifestLoader.shared.clearAllCache()
+        
+        // 3. 清理 Realm 统计数据
+        if let realm = try? Realm() {
+            try? realm.write {
+                realm.delete(realm.objects(WebCacheStatistics.self))
             }
         }
+        
+        print("🗑️ [WebCacheManager] All caches cleared globally")
     }
 
-    // MARK: - 缓存清理
-
-    /// 清理指定域名的缓存
-    func clearCache(for domain: String) -> Observable<Void> {
+    /// 清理特定域名的缓存
+    public func clearCache(for domain: String) -> Observable<Void> {
         return Observable.create { observer in
             let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
 
@@ -112,7 +134,7 @@ class WebCacheManager {
     }
 
     /// 清理所有缓存
-    func clearAllCache() -> Observable<Void> {
+    public func clearAllCache() -> Observable<Void> {
         return Observable.create { observer in
             let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
             let from = Date.distantPast
@@ -132,12 +154,12 @@ class WebCacheManager {
     // MARK: - URL 缓存检查
 
     /// 检查 URL 是否已缓存
-    func isURLCached(_ url: URL) -> Bool {
+    public func isURLCached(_ url: URL) -> Bool {
         return URLCache.shared.cachedResponse(for: URLRequest(url: url)) != nil
     }
 
     /// 预加载 URL
-    func preloadURL(_ url: URL) -> Observable<Void> {
+    public func preloadURL(_ url: URL) -> Observable<Void> {
         return Observable.create { observer in
             let request = URLRequest(url: url)
             let task = URLSession.shared.dataTask(with: request) { _, response, _ in
@@ -171,14 +193,14 @@ class WebCacheManager {
     }
 
     /// 获取缓存的域名列表
-    func getCachedDomains() -> Results<WebCacheStatistics>? {
+    public func getCachedDomains() -> Results<WebCacheStatistics>? {
         guard let realm = try? Realm() else { return nil }
         return realm.objects(WebCacheStatistics.self)
             .sorted(byKeyPath: "totalSize", ascending: false)
     }
 
     /// 获取总缓存大小
-    func getTotalCacheSize() -> Int64 {
+    public func getTotalCacheSize() -> Int64 {
         guard let realm = try? Realm() else { return 0 }
         return realm.objects(WebCacheStatistics.self)
             .sum(of: \WebCacheStatistics.totalSize)
@@ -189,7 +211,7 @@ class WebCacheManager {
     /// Glob 模式删除压缩缓存
     /// - Parameter pattern: Glob 模式（如 `https://example.com/*.js`）
     /// - Returns: 删除的条目数量
-    func deleteCacheByGlob(pattern: String) -> Observable<Int> {
+    public func deleteCacheByGlob(pattern: String) -> Observable<Int> {
         return Observable.create { observer in
             do {
                 let deletedCount = try WebCompressedCacheStore.shared.deleteByGlob(pattern: pattern)
@@ -203,7 +225,7 @@ class WebCacheManager {
     }
 
     /// 获取压缩缓存的内存信息
-    func getCacheMemoryInfo() -> Observable<CacheMemoryInfo> {
+    public func getCacheMemoryInfo() -> Observable<CacheMemoryInfo> {
         return Observable.create { observer in
             let memoryInfo = WebCompressedCacheStore.shared.getMemoryInfo()
             observer.onNext(memoryInfo)
@@ -215,7 +237,7 @@ class WebCacheManager {
     /// 获取详细的压缩缓存条目
     /// - Parameter filterPattern: 可选的 Glob 过滤模式
     /// - Returns: 缓存条目信息数组
-    func getDetailedCacheEntries(filterPattern: String? = nil) -> Observable<[CacheEntryInfo]> {
+    public func getDetailedCacheEntries(filterPattern: String? = nil) -> Observable<[CacheEntryInfo]> {
         return Observable.create { observer in
             var entries = WebCompressedCacheStore.shared.getAllEntries()
 
@@ -232,7 +254,7 @@ class WebCacheManager {
 
     /// 按域名分组获取压缩缓存条目
     /// - Returns: [域名: 缓存条目数组]
-    func getCacheEntriesGroupedByDomain() -> Observable<[String: [CacheEntryInfo]]> {
+    public func getCacheEntriesGroupedByDomain() -> Observable<[String: [CacheEntryInfo]]> {
         return Observable.create { observer in
             let groupedEntries = WebCompressedCacheStore.shared.getEntriesGroupedByDomain()
             observer.onNext(groupedEntries)
@@ -244,7 +266,7 @@ class WebCacheManager {
     /// 检查资源是否已缓存（增强版，返回详细信息）
     /// - Parameter url: 资源 URL
     /// - Returns: (是否已缓存, 缓存条目信息)
-    func isResourceCached(url: URL) -> (cached: Bool, info: CacheEntryInfo?) {
+    public func isResourceCached(url: URL) -> (cached: Bool, info: CacheEntryInfo?) {
         // 生成缓存键（使用 URL 的 SHA256 hash）
         let key = url.sha256
 
@@ -258,7 +280,7 @@ class WebCacheManager {
     /// 预加载 URL 到压缩缓存
     /// - Parameter url: 要预加载的 URL
     /// - Returns: 进度 Observable
-    func preloadToCompressedCache(url: URL) -> Observable<Progress> {
+    public func preloadToCompressedCache(url: URL) -> Observable<Progress> {
         return Observable.create { observer in
             let progress = Progress(totalUnitCount: 100)
 
@@ -320,13 +342,40 @@ class WebCacheManager {
     }
 
     /// 清空所有压缩缓存
-    func clearAllCompressedCache() -> Observable<Void> {
+    public func clearAllCompressedCache() -> Observable<Void> {
         return Observable.create { observer in
             WebCompressedCacheStore.shared.clearAll()
             observer.onNext(())
             observer.onCompleted()
             return Disposables.create()
         }
+    }
+
+    // MARK: - Helper Methods
+
+    private func saveCacheStatistics(_ stats: [WebCacheStatistics]) {
+        guard let realm = try? Realm() else { return }
+        try? realm.write {
+            realm.add(stats, update: .modified)
+        }
+    }
+
+    private func estimateSize(for record: WKWebsiteDataRecord) -> Int64 {
+        // 由于 WKWebsiteDataRecord 不直接提供大小，我们只能估算
+        // 这里的估算逻辑比较简单，实际应用中可能需要更复杂的方法
+        var size: Int64 = 0
+        let dataTypes = record.dataTypes
+        
+        if dataTypes.contains(WKWebsiteDataTypeDiskCache) { size += 1024 * 1024 } // 1MB
+        if dataTypes.contains(WKWebsiteDataTypeMemoryCache) { size += 512 * 1024 } // 512KB
+        if dataTypes.contains(WKWebsiteDataTypeOfflineWebApplicationCache) { size += 2 * 1024 * 1024 } // 2MB
+        if dataTypes.contains(WKWebsiteDataTypeLocalStorage) { size += 256 * 1024 } // 256KB
+        if dataTypes.contains(WKWebsiteDataTypeCookies) { size += 4 * 1024 } // 4KB
+        if dataTypes.contains(WKWebsiteDataTypeSessionStorage) { size += 128 * 1024 } // 128KB
+        if dataTypes.contains(WKWebsiteDataTypeIndexedDBDatabases) { size += 512 * 1024 } // 512KB
+        if dataTypes.contains(WKWebsiteDataTypeWebSQLDatabases) { size += 512 * 1024 } // 512KB
+        
+        return size
     }
 }
 

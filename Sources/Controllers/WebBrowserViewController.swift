@@ -15,16 +15,9 @@ import WebKit
 // Framework imports
 
 /// 浏览器主页面 - 全屏沉浸式
-class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
+public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     // MARK: - UI Components
-
-    /// 状态栏背景视图 - 填充刘海区域
-    private let statusBarBackground: UIView = {
-        let view = UIView()
-        view.backgroundColor = WKColor.background.primary
-        return view
-    }()
 
     private lazy var webView: WKWebView = {
         return viewModel.getWebView()
@@ -37,10 +30,23 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         return progressView
     }()
 
-    /// 简化的导航栏 - 只显示标题和关闭/后退按钮
-    private let navigationBar: UIView = {
+    /// 缓存状态标签
+    private let cacheStatusLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 10, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.backgroundColor = WKColor.grey.base.withAlphaComponent(0.6)
+        label.layer.cornerRadius = 4
+        label.clipsToBounds = true
+        label.text = "LIVE"
+        label.isHidden = false // 🔥 Make it visible by default for better visibility
+        return label
+    }()
+
+    /// 标题容器
+    private let titleContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = WKColor.background.primary
         return view
     }()
 
@@ -51,6 +57,7 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         label.textColor = WKColor.grey.base
         label.textAlignment = .center
         label.numberOfLines = 1
+        label.accessibilityIdentifier = "browserManager.titleLabel"
         return label
     }()
 
@@ -61,6 +68,7 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         button.setImage(image, for: .normal)
         button.tintColor = WKColor.grey.base
+        button.accessibilityIdentifier = "browserManager.closeButton"
         return button
     }()
 
@@ -71,6 +79,7 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         let image = UIImage(systemName: "chevron.left", withConfiguration: config)
         button.setImage(image, for: .normal)
         button.tintColor = WKColor.grey.base
+        button.accessibilityIdentifier = "browserManager.backButton"
         return button
     }()
 
@@ -81,19 +90,39 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         let image = UIImage(systemName: "ellipsis.circle", withConfiguration: config)
         button.setImage(image, for: .normal)
         button.tintColor = WKColor.grey.base
+        button.accessibilityIdentifier = "browserManager.menuButton"
         return button
     }()
 
     /// 手势 - 点击底部区域关闭（当导航栏隐藏时）
     private var tapGesture: UITapGestureRecognizer?
 
+    // MARK: - Bar Buttons
+
+    private var backBarButton: UIBarButtonItem?
+    private var closeBarButton: UIBarButtonItem?
+    private var menuBarButton: UIBarButtonItem?
+
     // MARK: - Properties
+
+    /// 是否已检查URL参数
+    private var hasCheckedURLParams = false
 
     /// 是否隐藏导航栏
     private var hideNavBar = false
 
+    /// 是否隐藏状态栏
+    private var isStatusBarHidden: Bool = false {
+        didSet {
+            setNeedsStatusBarAppearanceUpdate()
+        }
+    }
+
     /// 当前 URL
     private var currentURL: URL?
+
+    /// 当前缓存来源标识
+    private var currentCacheSource: String = "LIVE"
 
     // MARK: - Initialization
 
@@ -120,16 +149,12 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     // MARK: - Setup UI
 
-    override func makeUI() {
+    public override func makeUI() {
+        print("🔧 [WebBrowserVC] makeUI called")
         view.backgroundColor = WKColor.background.primary
 
-        // 添加状态栏背景（填充刘海区域）
-        view.addSubview(statusBarBackground)
-        view.addSubview(navigationBar)
-        navigationBar.addSubview(titleLabel)
-        navigationBar.addSubview(closeButton)
-        navigationBar.addSubview(backButton)
-        navigationBar.addSubview(menuButton)
+        // 🔥 Configure system navigation bar instead of custom one
+        configureNavigationBar()
 
         // 添加进度条
         view.addSubview(progressView)
@@ -145,72 +170,148 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         backButton.isHidden = true
         closeButton.isHidden = false
 
+        // 设置通知监听 - 支持通过 JavaScript Bridge 动态切换状态栏
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("BarkStatusBarVisibilityChanged"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let hidden = notification.userInfo?["hidden"] as? Bool {
+                self?.setStatusBarHidden(hidden)
+            }
+        }
+
+        // 设置通知监听 - 缓存命中通知
+        NotificationCenter.default.addObserver(
+            forName: InterceptiveCacheManager.cacheHitNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.updateCacheStatus(source: "INTERCEPT")
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: ManifestCacheManager.cacheHitNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            let source = notification.userInfo?["source"] as? String ?? "MANIFEST"
+            self?.updateCacheStatus(source: source)
+        }
+
         // 加载初始内容
         if let initialURL = viewModel.initialURL {
-            loadURL(initialURL, checkParams: true)
+            loadURL(initialURL, checkParams: false)  // 🔥 Will check params in viewWillAppear
         } else {
             loadWelcomePage()
         }
     }
 
-    private func setupConstraints() {
-        // 状态栏背景 - 从屏幕顶部到安全区域顶部
-        statusBarBackground.snp.makeConstraints { make in
-            make.top.left.right.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.top)
+    /// 配置系统的导航栏
+    private func configureNavigationBar() {
+        // 🔥 禁用大标题，确保浏览器界面整洁
+        navigationItem.largeTitleDisplayMode = .never
+        
+        // 设置标题视图容器
+        // 🔥 给容器一个初始 frame 或 size，否则在某些 iOS 版本下不显示
+        titleContainerView.frame = CGRect(x: 0, y: 0, width: 200, height: 44)
+        titleContainerView.addSubview(titleLabel)
+        titleContainerView.addSubview(cacheStatusLabel)
+
+        titleLabel.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.centerX.equalToSuperview().offset(-20) // 给右侧的 label 留一点空间
+            make.left.greaterThanOrEqualToSuperview()
         }
 
-        // 导航栏 - 从安全区域顶部开始
-        navigationBar.snp.makeConstraints { make in
-            make.top.left.right.equalTo(view.safeAreaLayoutGuide)
-            make.height.equalTo(44)
+        cacheStatusLabel.snp.makeConstraints { make in
+            make.left.equalTo(titleLabel.snp.right).offset(6)
+            make.centerY.equalTo(titleLabel)
+            make.width.equalTo(60) // 增加宽度以适应较长的文本
+            make.height.equalTo(18)
         }
+
+        navigationItem.titleView = titleContainerView
+
+        // 🔥 使用更现代的图标和布局
+        let closeBtn = UIBarButtonItem(
+            image: UIImage(systemName: "xmark"), // 使用标准 xmark
+            style: .plain,
+            target: self,
+            action: #selector(closeButtonTapped)
+        )
+        closeBtn.tintColor = .label
+        closeBtn.accessibilityIdentifier = "browserManager.closeButton"
+        self.closeBarButton = closeBtn
+
+        // 更多按钮使用标准的三点图标
+        let menuBtn = UIBarButtonItem(
+            image: UIImage(systemName: "ellipsis"), 
+            style: .plain,
+            target: self,
+            action: #selector(menuButtonTapped)
+        )
+        menuBtn.tintColor = .label
+        menuBtn.accessibilityIdentifier = "browserManager.menuButton"
+        self.menuBarButton = menuBtn
+
+        // 后退按钮
+        let backBtn = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.backward"),
+            style: .plain,
+            target: self,
+            action: #selector(backButtonTapped)
+        )
+        backBtn.tintColor = .label
+        backBtn.accessibilityIdentifier = "browserManager.backButton"
+        self.backBarButton = backBtn
+
+        // 设置左侧按钮组：初始只显示关闭
+        navigationItem.leftBarButtonItems = [closeBtn]
+        navigationItem.rightBarButtonItem = menuBtn
+
+        // 初始状态下隐藏后退按钮
+        backBtn.isEnabled = false
+        backBtn.tintColor = .clear
+    }
+
+    @objc private func closeButtonTapped() {
+        dismissOrPop()
+    }
+
+    @objc private func backButtonTapped() {
+        webView.goBack()
+    }
+
+    @objc private func menuButtonTapped() {
+        showMenu()
+    }
+
+    private func setupConstraints() {
+        // 🔥 WebView starts from system navigation bar bottom
+        // Use guideLayout for system navigation bar
+        let safeAreaLayoutGuide = view.safeAreaLayoutGuide
 
         webView.snp.makeConstraints { make in
-            make.top.equalTo(navigationBar.snp.bottom)
+            make.top.equalTo(safeAreaLayoutGuide.snp.top)
             make.left.right.bottom.equalToSuperview()
         }
 
-        closeButton.snp.makeConstraints { make in
-            make.left.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(32)
-        }
-
-        backButton.snp.makeConstraints { make in
-            make.left.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(32)
-        }
-
-        menuButton.snp.makeConstraints { make in
-            make.right.equalToSuperview().offset(-16)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(32)
-        }
-
-        titleLabel.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.centerY.equalToSuperview()
-            make.left.greaterThanOrEqualTo(closeButton.snp.right).offset(8)
-            make.right.lessThanOrEqualTo(menuButton.snp.left).offset(-8)
-        }
+        // Note: Buttons (closeButton, backButton, menuButton) and titleLabel are now
+        // managed by UIBarButtonItem in the system navigation bar, so they don't need
+        // manual SnapKit constraints.
 
         progressView.snp.makeConstraints { make in
-            make.top.equalTo(navigationBar.snp.bottom)
+            // 🔥 Progress bar starts from system navigation bar bottom
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.left.right.equalToSuperview()
             make.height.equalTo(2)
         }
     }
 
     private func setupActions() {
-        // 关闭按钮 - 直接关闭浏览器
-        closeButton.rx.tap
-            .asDriver()
-            .drive(onNext: { [weak self] in
-                self?.dismissOrPop()
-            })
-            .disposed(by: rx)
+        // 🔥 Buttons now use target-action pattern in configureNavigationBar()
+        // No need for RxSwift binding
     }
 
     private func setupGestures() {
@@ -232,6 +333,69 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         }
     }
 
+    // MARK: - Lifecycle
+
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // 🔥 Auto-hide TabBar whenever entering webview (regardless of URL parameters)
+        // This ensures cleaner browsing experience
+        if let tabBarController = self.tabBarController {
+            tabBarController.tabBar.isHidden = true
+            tabBarController.view.setNeedsLayout()
+            tabBarController.view.layoutIfNeeded()
+            print("✅ [Browser] TabBar auto-hidden on webview entry")
+        }
+
+        // 🔥 Fix: Check URL parameters in viewWillAppear (not viewDidLoad)
+        // At this point, the view controller is in the navigation stack, so tabBarController is valid
+        // Only check once to avoid duplicate processing
+        if !hasCheckedURLParams, let currentURL = currentURL {
+            hasCheckedURLParams = true
+            checkURLParameters(currentURL)
+        }
+    }
+
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        // 🔥 Always restore TabBar when leaving webview
+        // This ensures TabBar is visible when returning to main app screens
+        restoreUIState()
+    }
+
+    /// 还原系统 NavigationBar
+    private func restoreUIState() {
+        print("🔄 [Browser] Restoring UI state...")
+        
+        // 恢复屏幕方向
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
+
+        // 还原 TabBar
+        if let tabBarController = self.tabBarController {
+            tabBarController.tabBar.isHidden = false
+            tabBarController.view.setNeedsLayout()
+            tabBarController.view.layoutIfNeeded()
+            print("✅ [Browser] TabBar restored")
+        }
+
+        // 还原系统 NavigationBar
+        if let navigationController = self.navigationController {
+            navigationController.navigationBar.isHidden = false
+            navigationController.setNavigationBarHidden(false, animated: false)
+            print("✅ [Browser] NavigationBar restored")
+        }
+
+        // 还原背景色
+        view.backgroundColor = WKColor.background.primary
+
+        // 重置状态标志
+        hideNavBar = false
+
+        print("✅ [Browser] UI state fully restored")
+    }
+
     // MARK: - URL Loading
 
     /// 加载 URL 并检查参数
@@ -251,63 +415,172 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     /// 检查 URL 参数
     private func checkURLParameters(_ url: URL) {
+        print("🔍 [WebBrowserVC] checkURLParameters called: \(url.absoluteString)")
+
+        // 重置缓存状态为 LIVE
+        updateCacheStatus(source: "LIVE")
+
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let queryItems = components.queryItems else {
+            print("⚠️ [WebBrowserVC] No query items found")
             return
         }
 
+        print("✅ [WebBrowserVC] Found \(queryItems.count) query items")
+
         for item in queryItems {
+            print("🔍 [WebBrowserVC] Processing query item: \(item.name) = \(item.value ?? "nil")")
+
             switch item.name.lowercased() {
             case "hidenavbar":
                 if let value = item.value, value == "1" || value.lowercased() == "true" {
+                    print("✅ [WebBrowserVC] Hiding navigation bar (hidenavbar)")
                     setNavigationBarHidden(true)
+                }
+            case "hidestatusbar":
+                if let value = item.value, value == "1" || value.lowercased() == "true" {
+                    print("✅ [WebBrowserVC] Hiding status bar (hidestatusbar)")
+                    setStatusBarHidden(true)
+                }
+            case "hidetabbar":
+                // 🔥 TabBar is now auto-hidden, no need to handle this parameter
+                print("⚠️ [WebBrowserVC] hidetabbar parameter ignored (TabBar auto-hidden)")
+            case "mode":
+                // 🔥 支持沉浸式模式
+                if let value = item.value, value.lowercased() == "immersive" {
+                    print("✅ [WebBrowserVC] Activating immersive mode (mode=immersive)")
+                    setNavigationBarHidden(true)
+                    setStatusBarHidden(true)
+                    // Note: TabBar is already auto-hidden, no need to call setTabBarHidden
+                }
+            case "orientation":
+                // 🔥 支持强制横屏
+                if let value = item.value, value.lowercased() == "landscape" {
+                    print("✅ [WebBrowserVC] Forcing landscape orientation")
+                    updateOrientation(.landscapeRight)
+                } else if let value = item.value, value.lowercased() == "portrait" {
+                    print("✅ [WebBrowserVC] Forcing portrait orientation")
+                    updateOrientation(.portrait)
                 }
             default:
                 break
             }
         }
+
+        print("✅ [WebBrowserVC] checkURLParameters completed")
+    }
+
+    /// 更新屏幕方向
+    private func updateOrientation(_ orientation: UIInterfaceOrientation) {
+        UIDevice.current.setValue(orientation.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
+    }
+
+    /// 设置 TabBar 隐藏状态（动态）
+    private func setTabBarHidden(_ hidden: Bool) {
+        guard let tabBarController = self.tabBarController else {
+            print("⚠️ [Browser] No TabBarController found")
+            return
+        }
+
+        print("🎛️ [Browser] setTabBarHidden called: hidden=\(hidden)")
+
+        // 隐藏/显示 TabBar
+        tabBarController.tabBar.isHidden = hidden
+
+        // 🔥 关键：强制 TabBarController 更新布局
+        tabBarController.view.setNeedsLayout()
+        tabBarController.view.layoutIfNeeded()
+
+        print("🎛️ [Browser] TabBar isHidden: \(tabBarController.tabBar.isHidden)")
+        print("🎛️ [Browser] TabBar frame: \(tabBarController.tabBar.frame)")
+        print("🎛️ [Browser] ViewController frame: \(self.view.frame)")
     }
 
     /// 设置导航栏隐藏状态
     private func setNavigationBarHidden(_ hidden: Bool) {
         hideNavBar = hidden
 
-        UIView.animate(withDuration: 0.3) {
-            self.navigationBar.alpha = hidden ? 0 : 1
-            self.navigationBar.isHidden = hidden
-            self.statusBarBackground.alpha = hidden ? 0 : 1
-            self.statusBarBackground.isHidden = hidden
-        }
+        // 🔥 Only control the system navigation bar now
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
 
-        // 更新 WebView 约束
-        webView.snp.updateConstraints { make in
-            if hidden {
-                make.top.equalToSuperview()  // 紧贴屏幕顶部
-            } else {
-                make.top.equalTo(self.navigationBar.snp.bottom)
+            // Hide/show the system navigation bar
+            self.navigationController?.navigationBar.isHidden = hidden
+            self.navigationController?.setNavigationBarHidden(hidden, animated: false)
+
+            // 如果显示导航栏，确保按钮状态正确
+            if !hidden {
+                let canGoBack = self.webView.canGoBack
+                if canGoBack {
+                    self.navigationItem.leftBarButtonItems = [self.backBarButton!, self.closeBarButton!]
+                } else {
+                    self.navigationItem.leftBarButtonItems = [self.closeBarButton!]
+                }
             }
-        }
 
-        print("🎛️ [Browser] 导航栏: \(hidden ? "隐藏" : "显示")")
+            // 🔥 Update webView constraints based on navigation bar visibility
+            self.webView.snp.remakeConstraints { make in
+                make.left.right.equalToSuperview()
+
+                if hidden {
+                    // 全屏模式：约束到屏幕边缘，不留白色空白
+                    make.top.equalTo(self.view.snp.top)
+                    make.bottom.equalTo(self.view.snp.bottom)
+                } else {
+                    // 普通模式：约束到 safe area top（under system navigation bar）
+                    make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top)
+                    make.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom)
+                }
+            }
+
+            // 🔥 Prevent webView from automatically adjusting content insets
+            self.webView.scrollView.contentInsetAdjustmentBehavior = .never
+
+            // 🔥 Set view background to black in fullscreen mode to avoid white edges
+            if hidden {
+                self.view.backgroundColor = .black
+                self.webView.backgroundColor = .clear
+                self.webView.scrollView.backgroundColor = .clear
+            } else {
+                self.view.backgroundColor = WKColor.background.primary
+                self.webView.backgroundColor = .clear
+                self.webView.scrollView.backgroundColor = .clear
+            }
+
+            self.view.layoutIfNeeded()
+
+            print("🎛️ [Browser] System NavigationBar: \(hidden ? "隐藏" : "显示")")
+        }
+    }
+
+    /// 设置状态栏隐藏状态
+    private func setStatusBarHidden(_ hidden: Bool) {
+        isStatusBarHidden = hidden
+
+        // 🔥 Hide/show system status bar
+        // Set prefersStatusBarHidden property
+        setNeedsStatusBarAppearanceUpdate()
+
+        print("📱 [Browser] 状态栏: \(hidden ? "隐藏" : "显示")")
     }
 
     private func dismissOrPop() {
-        // 检查是否在 TabBarController 中
-        if let tabBarController = tabBarController {
-            // 在 TabBar 中，切换到第一个 Tab
-            tabBarController.selectedIndex = 0
-        } else if let navigationController = navigationController, navigationController.viewControllers.count > 1 {
+        if let navigationController = navigationController, navigationController.viewControllers.count > 1 {
             // 在导航栈中，弹出当前页面
             navigationController.popViewController(animated: true)
-        } else {
+        } else if presentingViewController != nil {
             // 被 present 出来的，dismiss
             dismiss(animated: true)
+        } else if let tabBarController = tabBarController {
+            // 如果是 TabBar 的根页面且没有上一级，切换到第一个 Tab
+            tabBarController.selectedIndex = 0
         }
     }
 
     // MARK: - Bind ViewModel
 
-    override func bindViewModel() {
+    public override func bindViewModel() {
         // 设置导航代理（用于自动缓存）- 确保在 viewDidLoad 时也被设置
         webView.navigationDelegate = self
         WebBridgeLogger.shared.info("🔧 bindViewModel - navigationDelegate set")
@@ -325,25 +598,38 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         // 绑定标题
         output.title
             .drive(onNext: { [weak self] title in
-                self?.titleLabel.text = title ?? NSLocalizedString("Browser", comment: "")
-            })
-            .disposed(by: rx)
-
-        // 绑定后退状态 - 控制关闭/后退按钮显示
-        output.canGoBack
-            .drive(onNext: { [weak self] canGoBack in
-                // 当导航栏隐藏时，不显示任何按钮
-                guard self?.hideNavBar == false else { return }
-
-                if canGoBack {
-                    self?.backButton.isHidden = false
-                    self?.closeButton.isHidden = true
+                // 如果标题是 localhost，则不显示，保持界面简洁
+                if title == "localhost" {
+                    self?.titleLabel.text = ""
                 } else {
-                    self?.backButton.isHidden = true
-                    self?.closeButton.isHidden = false
+                    self?.titleLabel.text = title ?? NSLocalizedString("Browser", comment: "")
                 }
             })
             .disposed(by: rx)
+
+    /// 绑定后退状态 - 控制后退按钮显示
+    output.canGoBack
+        .drive(onNext: { [weak self] canGoBack in
+            guard let self = self else { return }
+            
+            if canGoBack {
+                self.backBarButton?.isEnabled = true
+                self.backBarButton?.tintColor = .label
+            } else {
+                self.backBarButton?.isEnabled = false
+                self.backBarButton?.tintColor = .clear
+            }
+            
+            // 🔥 根据是否可以后退来动态调整左侧按钮
+            if self.hideNavBar == false {
+                if canGoBack {
+                    self.navigationItem.leftBarButtonItems = [self.backBarButton!, self.closeBarButton!]
+                } else {
+                    self.navigationItem.leftBarButtonItems = [self.closeBarButton!]
+                }
+            }
+        })
+        .disposed(by: rx)
 
         // 绑定加载进度
         output.estimatedProgress
@@ -528,6 +814,8 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                     <div class="section-title">🎛️ URL 参数测试</div>
                     <ul class="link-list">
                         <li><a href="https://www.baidu.com?hideNavBar=1">隐藏导航栏打开百度</a></li>
+                        <li><a href="https://www.baidu.com?hideStatusBar=1">隐藏状态栏打开百度</a></li>
+                        <li><a href="https://www.baidu.com?hideNavBar=1&hideStatusBar=1">完全全屏打开百度</a></li>
                     </ul>
                 </div>
             </div>
@@ -887,6 +1175,30 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             self?.setNavigationBarHidden(!(self?.hideNavBar ?? false))
         })
 
+        // 切换状态栏显示/隐藏
+        let statusBarToggleTitle = isStatusBarHidden ? "📊 显示状态栏" : "📱 隐藏状态栏"
+        alertController.addAction(UIAlertAction(title: NSLocalizedString(statusBarToggleTitle, comment: ""), style: .default) { [weak self] _ in
+            self?.setStatusBarHidden(!(self?.isStatusBarHidden ?? false))
+        })
+
+        // 收藏/取消收藏
+        if let url = webView.url {
+            let favoriteService = ServiceLocator.favorite
+            let isFavorited = favoriteService.findFavorite(url: url) != nil
+            let favoriteTitle = isFavorited ? "⭐ 取消收藏" : "☆ 收藏页面"
+            
+            alertController.addAction(UIAlertAction(title: NSLocalizedString(favoriteTitle, comment: ""), style: .default) { [weak self] _ in
+                guard let self = self else { return }
+                if isFavorited {
+                    favoriteService.deleteFavorite(url: url)
+                } else {
+                    self.fetchFavicon { data in
+                        favoriteService.addFavorite(url: url, title: self.webView.title, favicon: data)
+                    }
+                }
+            })
+        }
+
         // 查看收藏
         alertController.addAction(UIAlertAction(title: NSLocalizedString("📚 Bookmarks", comment: ""), style: .default) { [weak self] _ in
             self?.showBookmarks()
@@ -998,7 +1310,8 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             "➡️ 可以前进": webView.canGoForward ? "是" : "否",
             "🔄 加载中": webView.isLoading ? "是" : "否",
             "📊 加载进度": String(format: "%.1f%%", webView.estimatedProgress * 100),
-            "🎛️ 导航栏": hideNavBar ? "隐藏" : "显示"
+            "🎛️ 导航栏": hideNavBar ? "隐藏" : "显示",
+            "📊 状态栏": isStatusBarHidden ? "隐藏" : "显示"
         ]
 
         let message = info.map { "\($0.key): \($0.value)" }.joined(separator: "\n")
@@ -1011,20 +1324,155 @@ class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
+    
+    /// 获取页面图标
+    /// - Parameter completion: 完成回调，返回图标数据
+    private func fetchFavicon(completion: @escaping (Data?) -> Void) {
+        // 1. 尝试从网页中提取 favicon URL
+        let script = """
+        (function() {
+            function getIcon(rel) {
+                var links = document.getElementsByTagName('link');
+                for (var i = 0; i < links.length; i++) {
+                    var r = links[i].getAttribute('rel');
+                    if (r && r.toLowerCase() === rel.toLowerCase()) {
+                        return links[i].href;
+                    }
+                }
+                return null;
+            }
+            
+            // 优先级：apple-touch-icon > icon > shortcut icon
+            var icon = getIcon('apple-touch-icon') || 
+                       getIcon('icon') || 
+                       getIcon('shortcut icon');
+            
+            if (icon) return icon;
+            
+            // 搜索包含 icon 的 rel
+            var links = document.getElementsByTagName('link');
+            for (var i = 0; i < links.length; i++) {
+                var r = links[i].getAttribute('rel');
+                if (r && r.toLowerCase().indexOf('icon') !== -1) {
+                    return links[i].href;
+                }
+            }
+            
+            return window.location.origin + '/favicon.ico';
+        })()
+        """
+        
+        webView.evaluateJavaScript(script) { [weak self] result, error in
+            guard let self = self,
+                  let urlString = result as? String,
+                  let url = URL(string: urlString) else {
+                completion(nil)
+                return
+            }
+            
+            // 2. 下载图标数据
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 5.0 // 设置超时
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                DispatchQueue.main.async {
+                    if let data = data, let _ = UIImage(data: data) {
+                        completion(data)
+                    } else {
+                        // 如果失败，尝试根目录的 favicon.ico (如果刚才不是尝试的这个)
+                        if !urlString.hasSuffix("/favicon.ico"),
+                           let rootUrl = URL(string: "/favicon.ico", relativeTo: self.webView.url) {
+                            self.downloadFavicon(url: rootUrl, completion: completion)
+                        } else {
+                            completion(nil)
+                        }
+                    }
+                }
+            }.resume()
+        }
+    }
+    
+    /// 下载图标数据的辅助方法
+    private func downloadFavicon(url: URL, completion: @escaping (Data?) -> Void) {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 3.0
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let data = data, let _ = UIImage(data: data) {
+                    completion(data)
+                } else {
+                    completion(nil)
+                }
+            }
+        }.resume()
+    }
 }
 
 // MARK: - UIGestureRecognizerDelegate
 
 extension WebBrowserViewController: UIGestureRecognizerDelegate {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         // 只在导航栏隐藏时响应手势
         return hideNavBar
+    }
+}
+
+// MARK: - Status Bar Control
+
+extension WebBrowserViewController {
+    /// 重写状态栏隐藏属性
+    public override var prefersStatusBarHidden: Bool {
+        return isStatusBarHidden
+    }
+
+    /// 状态栏动画样式
+    public override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation {
+        return .slide
+    }
+
+    /// 支持的屏幕方向
+    public override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        // 如果是强制横屏，只返回横屏
+        // 这里可以根据当前 state 动态返回
+        return .allButUpsideDown
+    }
+
+    /// 是否自动旋转
+    public override var shouldAutorotate: Bool {
+        return true
     }
 }
 
 // MARK: - WKNavigationDelegate - Auto-Capture by Rules
 
 extension WebBrowserViewController: WKNavigationDelegate {
+
+    /// 处理导航策略，防止系统弹窗和外部跳转
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        guard let url = navigationAction.request.url else {
+            decisionHandler(.allow)
+            return
+        }
+
+        // 1. 如果是主框架的跳转，且是 http/https，则允许在当前 WebView 加载
+        // 2. 如果是 target="_blank"，强制在当前 WebView 加载，防止弹出系统浏览器
+        if navigationAction.targetFrame == nil {
+            webView.load(navigationAction.request)
+            decisionHandler(.cancel)
+            return
+        }
+
+        // 3. 处理特殊协议 (如 tel:, mailto:, itms-services: 等)
+        let scheme = url.scheme?.lowercased() ?? ""
+        if !["http", "https", "file", "about", "manifest-cache"].contains(scheme) {
+            // 如果需要支持这些协议，可以在这里调用 UIApplication.shared.open
+            // 但为了避免弹窗干扰测试，我们先打印日志并允许
+            print("🔗 [Browser] 拦截到特殊协议跳转: \(url.absoluteString)")
+        }
+
+        decisionHandler(.allow)
+    }
 
     /// 页面加载完成 - 检查是否需要自动缓存页面
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
@@ -1033,8 +1481,17 @@ extension WebBrowserViewController: WKNavigationDelegate {
         print("📄 ========================================")
         print("📄 页面加载完成")
         print("- URL: \(url.absoluteString)")
+        print("- Title: \(webView.title ?? "nil")")
         print("📄 ========================================")
         WebBridgeLogger.shared.info("📄 Page loaded: \(url.absoluteString)")
+
+        // 更新历史记录
+        fetchFavicon { [weak self] faviconData in
+            WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: self?.webView.title, favicon: faviconData)
+            
+            // 发送通知，告知历史记录已更新
+            NotificationCenter.default.post(name: NSNotification.Name("WebPageHistoryUpdated"), object: nil)
+        }
 
         // 检查 URL 是否匹配页面缓存规则
         let (shouldCache, matchedRule) = PageCacheRuleManager.shared.shouldCache(url: url)
@@ -1098,5 +1555,111 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 WebBridgeLogger.shared.error("❌ Failed to cache page: \(error.localizedDescription)")
             }
         }
+    }
+
+    // MARK: - Cache Support
+
+    /// 使用 Manifest 缓存加载 URL
+    /// - Parameters:
+    ///   - url: 要加载的 URL
+    ///   - forceRefresh: 是否强制刷新（绕过缓存）
+    /// - Note: 此方法会自动检测 manifest.json，根据 persistent 字段选择懒加载或持久化模式
+    public func loadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
+        print("🌐 [WebBrowserVC] Loading URL with cache: \(url.absoluteString)")
+
+        currentURL = url
+
+        // 更新 UI 显示正在通过缓存检查
+        updateCacheStatus(source: "CHECKING")
+
+        // 使用 LazyManifestLoader.smartLoad() 智能加载
+        LazyManifestLoader.smartLoad(
+            url: url,
+            in: webView,
+            from: self,
+            forceRefresh: forceRefresh
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+
+                switch result {
+                case .success:
+                    print("✅ [WebBrowserVC] URL loaded with cache: \(url.absoluteString)")
+                    // 检查是否真正命中了缓存。如果已经是 MANIFEST/INTERCEPT (由通知设置)，则不需要重置为 LIVE
+                    if self.currentCacheSource == "CHECKING" || self.currentCacheSource == "LIVE" {
+                        let isActuallyCached = self.checkIfActuallyCached(for: url)
+                        if !isActuallyCached {
+                            self.updateCacheStatus(source: "LIVE")
+                        }
+                    }
+                case .failure(let error):
+                    print("❌ [WebBrowserVC] Failed to load URL: \(error.localizedDescription)")
+                    self.updateCacheStatus(source: "LIVE")
+                    // 回退到普通加载
+                    let request = URLRequest(url: url)
+                    self.webView.load(request)
+                }
+            }
+        }
+    }
+
+    /// 更新缓存状态显示
+    private func updateCacheStatus(source: String) {
+        // 立即更新状态变量，用于逻辑判断
+        self.currentCacheSource = source
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            self.cacheStatusLabel.text = source
+            
+            switch source {
+            case "LIVE":
+                self.cacheStatusLabel.backgroundColor = WKColor.grey.base.withAlphaComponent(0.6)
+            case "INTERCEPT":
+                self.cacheStatusLabel.backgroundColor = .systemGreen
+            case "MANIFEST", "HTML":
+                self.cacheStatusLabel.backgroundColor = .systemBlue
+            case "CHECKING":
+                self.cacheStatusLabel.backgroundColor = .systemOrange
+            default:
+                self.cacheStatusLabel.backgroundColor = .systemOrange
+            }
+            
+            print("📱 [Browser] Cache Status Updated: \(source)")
+        }
+    }
+
+    /// 检查是否真正使用了缓存
+    private func checkIfActuallyCached(for url: URL) -> Bool {
+        NSLog("🔍 [Browser] Checking cache for URL: %@", url.absoluteString)
+        
+        // 1. 检查 PersistentManifestLoader (持久化模式)
+        if PersistentManifestLoader.shared.isCached(url: url) {
+            NSLog("✅ [Browser] Cache Hit: Persistent (MANIFEST)")
+            updateCacheStatus(source: "MANIFEST")
+            return true
+        }
+
+        // 2. 尝试解析 AppID
+        let appID = AppIDResolver.resolveAppID(from: url)
+        NSLog("🔍 [Browser] Resolved AppID: %@", appID)
+        
+        // 3. 检查 ManifestCacheManager (懒加载模式/HTML 缓存)
+        if let manifest = ManifestCacheManager.shared.getCachedManifest(for: appID) {
+            NSLog("✅ [Browser] Cache Hit: Lazy Manifest (INTERCEPT), persistent=%d", manifest.persistent ?? false)
+            updateCacheStatus(source: "INTERCEPT")
+            return true
+        }
+        
+        // 4. 检查 InterceptiveCacheManager (离线拦截缓存)
+        if InterceptiveCacheManager.shared.hasCachedResource(for: url) {
+            NSLog("✅ [Browser] Cache Hit: Interceptive Resource (INTERCEPT)")
+            updateCacheStatus(source: "INTERCEPT")
+            return true
+        }
+        
+        NSLog("❌ [Browser] Cache Miss")
+        return false
     }
 }

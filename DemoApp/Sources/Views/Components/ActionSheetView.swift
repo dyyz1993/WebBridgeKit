@@ -107,6 +107,9 @@ class ActionSheetView: UIView {
         }
 
         cancelButton.setTitle("取消", for: .normal)
+        // Set accessibility identifier for testing
+        cancelButton.accessibilityIdentifier = "actionsheet.取消"
+        cancelButton.accessibilityLabel = "取消"
         cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
     }
 
@@ -147,6 +150,10 @@ class ActionSheetView: UIView {
             default:
                 button.setTitleColor(UIColor.systemBlue, for: .normal)
             }
+
+            // Set accessibility identifier for testing
+            button.accessibilityIdentifier = "actionsheet.\(action.title)"
+            button.accessibilityLabel = action.title
 
             button.addTarget(self, action: #selector(actionTapped(_:)), for: .touchUpInside)
             button.snp.makeConstraints { make in

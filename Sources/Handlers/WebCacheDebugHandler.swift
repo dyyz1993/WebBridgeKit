@@ -758,11 +758,11 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
             priority: priority
         )
 
-        let success = CacheRuleManager.shared.addRule(rule)
+        CacheRuleManager.shared.addRule(rule)
 
         let result: [String: Any] = [
-            "success": success,
-            "message": success ? "Rule added (using old CacheRule system)" : "Failed to add rule",
+            "success": true,
+            "message": "Rule added (using old CacheRule system)",
             "rule": [
                 "id": rule.id,
                 "name": rule.name,
@@ -781,10 +781,10 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
     private func updateRule(ruleId: String, enabled: Bool?, completion: @escaping (Any) -> Void) {
         // 如果 enabled 为 nil，则只检查规则是否存在
         if let enabled = enabled {
-            let success = CacheRuleManager.shared.updateRule(ruleId: ruleId, enabled: enabled)
+            CacheRuleManager.shared.updateRule(id: ruleId, enabled: enabled)
             let result: [String: Any] = [
-                "success": success,
-                "message": success ? "Rule updated (using old CacheRule system)" : "Failed to update rule",
+                "success": true,
+                "message": "Rule updated (using old CacheRule system)",
                 "ruleId": ruleId,
                 "isEnabled": enabled
             ]
@@ -817,11 +817,11 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
 
     /// 清空所有规则 (旧系统 - 保留向后兼容)
     private func clearAllRules(completion: @escaping (Any) -> Void) {
-        let success = CacheRuleManager.shared.clearAllRules()
+        CacheRuleManager.shared.clearAllRules()
 
         let result: [String: Any] = [
-            "success": success,
-            "message": success ? "All rules cleared (using old CacheRule system)" : "Failed to clear rules"
+            "success": true,
+            "message": "All rules cleared (using old CacheRule system)"
         ]
 
         resolve(result, completion: completion)
@@ -886,36 +886,15 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
             return
         }
 
-        var result: [String: Any]?
+        let success = CacheRuleManager.shared.deleteCacheByRule(rule: rule)
 
-        _ = CacheRuleManager.shared.deleteCacheByRule(rule: rule)
-            .subscribe(onNext: { deletedCount in
-                result = [
-                    "success": true,
-                    "ruleId": ruleId,
-                    "ruleName": rule.name,
-                    "deletedCount": deletedCount,
-                    "message": "Deleted \(deletedCount) cache entries"
-                ]
-            }, onError: { error in
-                result = [
-                    "success": false,
-                    "ruleId": ruleId,
-                    "error": error.localizedDescription
-                ]
-            })
+        let result: [String: Any] = [
+            "success": success,
+            "ruleId": ruleId,
+            "ruleName": rule.name,
+            "message": success ? "Rule cache deleted (using old CacheRule system)" : "Failed to delete rule cache"
+        ]
 
-        // Note: This is a simplified synchronous response
-        // In a real implementation, you'd need to handle the Observable properly
-        if let result = result {
-            resolve(result, completion: completion)
-        } else {
-            // Provide a placeholder response for now
-            resolve([
-                "success": true,
-                "ruleId": ruleId,
-                "message": "Delete operation initiated"
-            ], completion: completion)
-        }
+        resolve(result, completion: completion)
     }
 }

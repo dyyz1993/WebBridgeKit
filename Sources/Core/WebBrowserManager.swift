@@ -320,17 +320,26 @@ public class WebBrowserManager {
     // MARK: - Helper Methods
 
     private func createWebViewController(for url: URL, params: WebBrowserParams) -> UIViewController {
+        print("🔧 [WebBrowserManager] createWebViewController called for URL: \(url.absoluteString)")
+        print("🔧 [WebBrowserManager] params.hideTabBar: \(params.hideTabBar)")
+        print("🔧 [WebBrowserManager] params.displayMode: \(params.displayMode)")
+
         // 🔥 关键：必须在创建时就设置 hidesBottomBarWhenPushed（在 push 之前）
         // 使用 WebBrowserViewController 以支持页面自动缓存功能
         let webVC: WebBrowserViewController
         if isLocalURL(url) {
             // 对于本地URL，需要特殊处理
             let pageName = getPageName(from: url)
+            print("🔧 [WebBrowserManager] Creating WebBrowserViewController for local URL: \(pageName)")
             webVC = WebBrowserViewController(url: url)  // 使用便捷初始化
             webVC.title = params.customTitle ?? pageName
         } else {
+            print("🔧 [WebBrowserManager] Creating WebBrowserViewController for remote URL")
             webVC = WebBrowserViewController(url: url)  // 使用便捷初始化
-            webVC.title = params.customTitle ?? url.host
+            
+            // 🔥 优化：如果是 localhost，不作为标题显示
+            let displayTitle = (url.host == "localhost") ? nil : url.host
+            webVC.title = params.customTitle ?? displayTitle
 
             // 🔥 添加到历史记录追踪（只追踪外部URL）
             WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webVC.title)
@@ -339,6 +348,11 @@ public class WebBrowserManager {
 
         // 🔥 必须在 push 之前设置 hidesBottomBarWhenPushed
         webVC.hidesBottomBarWhenPushed = params.hideTabBar
+
+        // 添加 accessibility identifier
+        webVC.view.accessibilityIdentifier = "browserManager.container"
+
+        print("✅ [WebBrowserManager] WebBrowserViewController created successfully")
 
         return webVC
     }
@@ -455,6 +469,52 @@ public class WebBrowserManager {
             topController = presented
         }
         return topController
+    }
+
+    // MARK: - Cache Support
+
+    /// 打开支持 Manifest 缓存的浏览器
+    /// - Parameters:
+    ///   - url: 要加载的 URL
+    ///   - params: 浏览器配置参数（可选）
+    ///   - forceRefresh: 是否强制刷新（绕过缓存）
+    ///   - sourceViewController: 来源 ViewController
+    /// - Note: 此方法会自动检测 manifest.json，根据 persistent 字段选择懒加载或持久化模式
+    public func openBrowserWithCache(
+        url: URL,
+        params: WebBrowserParams? = nil,
+        forceRefresh: Bool = false,
+        from sourceViewController: UIViewController? = nil,
+        animated: Bool = true
+    ) {
+        print("🌐 [WebBrowserManager] Opening browser with cache support: \(url.absoluteString), animated: \(animated)")
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
+            let effectiveParams = params ?? WebBrowserParams.from(url: url)
+
+            // 获取 NavigationController
+            guard let navController = self.getNavigationController(from: sourceViewController) else {
+                print("❌ [WebBrowserManager] No navigation controller found")
+                return
+            }
+
+            // 创建 WebViewController
+            let webVC = self.createWebViewController(for: url, params: effectiveParams)
+            self.addToNavigationStack(webVC, url: url, params: effectiveParams)
+
+            // 先推入导航栈
+            navController.pushViewController(webVC, animated: animated)
+            self.currentBrowser = webVC
+
+            // 使用 WebBrowserViewController 的 loadURLWithCache 方法
+            if let browserVC = webVC as? WebBrowserViewController {
+                browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
+            } else {
+                print("❌ [WebBrowserManager] Failed to cast to WebBrowserViewController")
+            }
+        }
     }
 }
 

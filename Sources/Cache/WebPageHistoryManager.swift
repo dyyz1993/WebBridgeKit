@@ -38,7 +38,8 @@ public class WebPageHistoryManager {
     /// - Parameters:
     ///   - url: 页面URL
     ///   - title: 页面标题（可选）
-    public func addOrUpdateHistory(url: URL, title: String? = nil) {
+    ///   - favicon: 页面图标（可选）
+    public func addOrUpdateHistory(url: URL, title: String? = nil, favicon: Data? = nil) {
         guard let urlString = url.absoluteString as String? else { return }
 
         let realm = getRealm()
@@ -52,8 +53,11 @@ public class WebPageHistoryManager {
             try? realm?.write {
                 existing.lastVisitDate = Date()
                 existing.visitCount += 1
-                if let title = title, existing.title == nil {
+                if let title = title {
                     existing.title = title
+                }
+                if let favicon = favicon {
+                    existing.favicon = favicon
                 }
             }
             WebBridgeLogger.shared.log(.debug, "♻️ History updated: \(urlString)")
@@ -62,6 +66,7 @@ public class WebPageHistoryManager {
             let history = WebPageHistory()
             history.url = urlString
             history.title = title
+            history.favicon = favicon
             history.visitCount = 1
             history.lastVisitDate = Date()
 
@@ -91,22 +96,55 @@ public class WebPageHistoryManager {
         WebBridgeLogger.shared.log(.info, "🗑️ History deleted: \(id)")
     }
 
-    /// 清空所有历史
-    func clearAllHistory() {
+    /// 清空所有历史（保留收藏和置顶项）
+    public func clearAllHistory() {
         let realm = getRealm()
 
-        // 先清理所有缓存
-        WebPageOfflineCacheManager.shared.clearAllCache()
+        // 查找非收藏且非置顶的项目
+        let predicate = NSPredicate(format: "isFavorite == false AND isPinned == false")
+        let itemsToDelete = realm?.objects(WebPageHistory.self).filter(predicate)
 
-        // 删除所有历史记录
         try? realm?.write {
-            let histories = realm?.objects(WebPageHistory.self)
-            if let histories = histories {
-                realm?.delete(histories)
+            if let items = itemsToDelete {
+                for item in items {
+                    // 如果有缓存，先删除缓存
+                    if item.isCached {
+                        WebPageOfflineCacheManager.shared.deleteCache(history: item)
+                    }
+                }
+                realm?.delete(items)
             }
         }
+        
+        WebBridgeLogger.shared.log(.info, "🗑️ Non-favorite/pinned history cleared")
+    }
 
-        WebBridgeLogger.shared.log(.info, "🧹 All history cleared")
+    /// 清理低频访问项（仅针对非收藏和非置顶项）
+    /// 当历史记录超过 limit 时，删除访问次数最少的项
+    public func cleanupLowFrequencyItems(limit: Int = 100) {
+        guard let realm = getRealm() else { return }
+        
+        // 仅筛选非收藏且非置顶的项目进行清理
+        let predicate = NSPredicate(format: "isFavorite == false AND isPinned == false")
+        let removableItems = realm.objects(WebPageHistory.self).filter(predicate)
+        
+        if removableItems.count <= limit { return }
+        
+        let toDeleteCount = removableItems.count - limit
+        // 按照最后访问时间升序排列（最旧的在前），取前 toDeleteCount 个进行删除
+        let itemsToDelete = removableItems.sorted(byKeyPath: "lastVisitDate", ascending: true).prefix(toDeleteCount)
+        
+        try? realm.write {
+            for item in itemsToDelete {
+                // 如果有缓存，先删除缓存
+                if item.isCached {
+                    WebPageOfflineCacheManager.shared.deleteCache(history: item)
+                }
+                realm.delete(item)
+            }
+        }
+        
+        WebBridgeLogger.shared.log(.info, "🧹 Cleaned up \(toDeleteCount) low-frequency history items (protected favorites/pinned)")
     }
 
     // MARK: - 查询
@@ -114,17 +152,21 @@ public class WebPageHistoryManager {
     /// 获取所有历史记录（按最后访问时间降序）
     public func getAllHistories() -> Results<WebPageHistory> {
         guard let realm = getRealm() else {
-            // Return empty Results if realm is unavailable
-            return try! Realm().objects(WebPageHistory.self).filter("FALSEPREDICATE")
+            // 使用临时内存 Realm 返回空 Results
+            let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
+            let tempRealm = try! Realm(configuration: config)
+            return tempRealm.objects(WebPageHistory.self).filter("FALSEPREDICATE")
         }
         return realm.objects(WebPageHistory.self)
             .sorted(byKeyPath: "lastVisitDate", ascending: false)
     }
 
     /// 获取已缓存的历史记录
-    func getCachedHistories() -> Results<WebPageHistory> {
+    public func getCachedHistories() -> Results<WebPageHistory> {
         guard let realm = getRealm() else {
-            return try! Realm().objects(WebPageHistory.self).filter("FALSEPREDICATE")
+            let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
+            let tempRealm = try! Realm(configuration: config)
+            return tempRealm.objects(WebPageHistory.self).filter("FALSEPREDICATE")
         }
         return realm.objects(WebPageHistory.self)
             .filter("isCached == true")
@@ -140,15 +182,17 @@ public class WebPageHistoryManager {
     }
 
     /// 根据ID查找历史记录
-    func findHistory(id: String) -> WebPageHistory? {
+    public func findHistory(id: String) -> WebPageHistory? {
         let realm = getRealm()
         return realm?.object(ofType: WebPageHistory.self, forPrimaryKey: id)
     }
 
     /// 搜索历史记录（标题或URL包含关键词）
-    func searchHistories(keyword: String) -> Results<WebPageHistory> {
+    public func searchHistories(keyword: String) -> Results<WebPageHistory> {
         guard let realm = getRealm() else {
-            return try! Realm().objects(WebPageHistory.self).filter("FALSEPREDICATE")
+            let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
+            let tempRealm = try! Realm(configuration: config)
+            return tempRealm.objects(WebPageHistory.self).filter("FALSEPREDICATE")
         }
         return realm.objects(WebPageHistory.self)
             .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
@@ -158,13 +202,13 @@ public class WebPageHistoryManager {
     // MARK: - 统计
 
     /// 获取历史记录总数
-    func getTotalCount() -> Int {
+    public func getTotalCount() -> Int {
         let realm = getRealm()
         return realm?.objects(WebPageHistory.self).count ?? 0
     }
 
     /// 获取今日访问数
-    func getTodayVisitCount() -> Int {
+    public func getTodayVisitCount() -> Int {
         let realm = getRealm()
         let today = Calendar.current.startOfDay(for: Date())
         return realm?.objects(WebPageHistory.self)
@@ -173,7 +217,7 @@ public class WebPageHistoryManager {
     }
 
     /// 获取最常访问的页面（前N个）
-    func getMostVisited(limit: Int = 10) -> [WebPageHistory] {
+    public func getMostVisited(limit: Int = 10) -> [WebPageHistory] {
         guard let realm = getRealm() else { return [] }
         return Array(realm.objects(WebPageHistory.self)
             .sorted(byKeyPath: "visitCount", ascending: false)

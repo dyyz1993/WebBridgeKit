@@ -158,8 +158,19 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
         output.isEmpty
             .drive(onNext: { [weak self] isEmpty in
-                self?.emptyStateView.isHidden = !isEmpty
-                self?.tableView.isHidden = isEmpty
+                guard let self = self else { return }
+
+                if isEmpty {
+                    // 显示空状态，隐藏tableView
+                    self.view.bringSubviewToFront(self.emptyStateView)
+                    self.emptyStateView.isHidden = false
+                    self.tableView.isHidden = true
+                } else {
+                    // 隐藏空状态，显示tableView
+                    self.emptyStateView.isHidden = true
+                    self.tableView.isHidden = false
+                    self.view.bringSubviewToFront(self.tableView)
+                }
             })
             .disposed(by: rx)
 

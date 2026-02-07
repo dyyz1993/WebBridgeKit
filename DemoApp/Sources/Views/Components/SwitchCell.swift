@@ -8,11 +8,14 @@
 
 import UIKit
 import SnapKit
+import RxSwift
 
 /// 开关列表项单元格
 class SwitchCell: UITableViewCell {
 
     static let identifier = "SwitchCell"
+
+    var prepareForReuseBag = DisposeBag()
 
     // MARK: - UI Components
 
@@ -31,7 +34,7 @@ class SwitchCell: UITableViewCell {
         return label
     }()
 
-    private let switchControl: UISwitch = {
+    let switchControl: UISwitch = {
         let switchControl = UISwitch()
         switchControl.onTintColor = UIColor.systemBlue
         return switchControl
@@ -50,6 +53,11 @@ class SwitchCell: UITableViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        prepareForReuseBag = DisposeBag()
     }
 
     // MARK: - Setup

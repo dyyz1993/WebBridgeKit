@@ -40,7 +40,9 @@ public class WebLocationHandler: BaseWebNativeHandler {
         case .notDetermined:
             // 首次请求权限 - 设置代理并请求，等待 didChangeAuthorization 回调
             locationManager.delegate = self
-            locationManager.requestWhenInUseAuthorization()
+            showLocationPermissionAlert {
+                self.locationManager.requestWhenInUseAuthorization()
+            }
             // 注意：不在这里返回结果，等待 didChangeAuthorization 回调
 
         case .authorizedWhenInUse, .authorizedAlways:
@@ -50,6 +52,34 @@ public class WebLocationHandler: BaseWebNativeHandler {
         default:
             // 已明确拒绝或受限，返回权限引导
             rejectPermissionDenied(type: .location, status: .denied, completion: completion)
+        }
+    }
+
+    /**
+     * 显示位置权限请求提示
+     * - Parameter onAllow: 允许时的回调
+     */
+    private func showLocationPermissionAlert(onAllow: @escaping () -> Void) {
+        runOnMainThread { [weak self] in
+            guard let self = self, let topVC = self.topViewController else { return }
+
+            let alert = UIAlertController(
+                title: "位置权限",
+                message: "需要您的位置信息以提供更好的服务",
+                preferredStyle: .alert
+            )
+            alert.view.accessibilityIdentifier = "location.permissionRequest"
+
+            alert.addAction(UIAlertAction(title: "允许", style: .default) { _ in
+                onAllow()
+            })
+            alert.addAction(UIAlertAction(title: "拒绝", style: .cancel) { _ in
+                if let completion = self.completionCallback {
+                    self.rejectPermissionDenied(type: .location, status: .denied, completion: completion)
+                }
+            })
+
+            topVC.present(alert, animated: true)
         }
     }
 

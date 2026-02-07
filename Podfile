@@ -1,6 +1,11 @@
+install! 'cocoapods', :warn_for_unused_master_specs_repo => false
+
 platform :ios, '14.0'
 use_frameworks!
 inhibit_all_warnings!
+
+workspace 'WebBridgeKit.xcworkspace'
+project 'WebBridgeKit.xcodeproj'
 
 def shared_pods
   pod 'SnapKit'
@@ -22,11 +27,6 @@ end
 
 target 'DemoApp' do
   shared_pods
-end
-
-target 'DemoAppUITests' do
-  inherit! :search_paths
-  pod 'OHHTTPStubs/Swift'
 end
 
 post_install do |installer|

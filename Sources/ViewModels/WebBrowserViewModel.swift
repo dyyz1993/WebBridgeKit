@@ -220,6 +220,10 @@ extension WKWebViewConfiguration {
         config.allowsInlineMediaPlayback = true
         config.allowsPictureInPictureMediaPlayback = true
 
+        // 5. 注册自定义 Scheme Handler
+        ManifestURLSchemeHandler.register(to: config, scheme: "custom")
+        ManifestURLSchemeHandler.register(to: config, scheme: "wb-resource")
+
         return (config, bridge)
     }
 }

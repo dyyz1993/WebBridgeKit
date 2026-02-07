@@ -102,6 +102,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             let picker = UIImagePickerController()
             picker.sourceType = .camera
             picker.cameraCaptureMode = .photo
+            picker.view.accessibilityIdentifier = "camera.preview"
 
             // 创建 delegate 并注册到静态字典
             let delegateId = "WebCameraHandler_\(Self.delegateCounter)"
@@ -138,6 +139,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             picker.sourceType = .camera
             picker.cameraCaptureMode = .video
             picker.videoQuality = .typeMedium
+            picker.view.accessibilityIdentifier = "camera.preview"
 
             // 创建 delegate 并注册到静态字典
             let delegateId = "WebCameraHandler_\(Self.delegateCounter)"
@@ -459,6 +461,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             let container = OverlayContainerView(layer: previewLayer)
             container.isHidden = isHidden
             container.isUserInteractionEnabled = false
+            container.accessibilityIdentifier = "camera.videoOverlay"
             
             let scrollX = webView.scrollView.contentOffset.x
             let scrollY = webView.scrollView.contentOffset.y

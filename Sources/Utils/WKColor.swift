@@ -41,3 +41,51 @@ public class WKColor: NSObject {
         public static let secondary = UIColor.secondarySystemBackground
     }
 }
+
+// MARK: - Letter Icon Extension
+
+public extension UIImageView {
+    /// 设置首字母图标
+    /// - Parameters:
+    ///   - text: 文本内容
+    ///   - size: 图标大小
+    func setLetterIcon(for text: String?, size: CGSize = CGSize(width: 40, height: 40)) {
+        let letter = (text ?? "?").prefix(1).uppercased()
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        let image = renderer.image { context in
+            // 背景色 (根据文字哈希生成颜色，保证同一个域名颜色一致)
+            let colors: [UIColor] = [
+                .systemBlue, .systemGreen, .systemOrange, .systemIndigo, 
+                .systemPurple, .systemTeal, .systemPink
+            ]
+            let colorIndex = abs((text ?? "?").hashValue) % colors.count
+            let bgColor = colors[colorIndex].withAlphaComponent(0.2)
+            let textColor = colors[colorIndex]
+            
+            let rect = CGRect(origin: .zero, size: size)
+            bgColor.setFill()
+            UIBezierPath(roundedRect: rect, cornerRadius: size.width / 4).fill()
+            
+            // 绘制文字
+            let font = UIFont.systemFont(ofSize: size.width * 0.6, weight: .bold)
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: font,
+                .foregroundColor: textColor
+            ]
+            
+            let stringSize = letter.size(withAttributes: attributes)
+            let stringRect = CGRect(
+                x: (size.width - stringSize.width) / 2,
+                y: (size.height - stringSize.height) / 2,
+                width: stringSize.width,
+                height: stringSize.height
+            )
+            
+            letter.draw(in: stringRect, withAttributes: attributes)
+        }
+        
+        self.image = image
+        self.backgroundColor = .clear
+    }
+}

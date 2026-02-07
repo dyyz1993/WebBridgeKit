@@ -36,21 +36,32 @@ public class URLFavoriteManager {
     /// - Parameters:
     ///   - url: 页面URL
     ///   - title: 页面标题（可选）
+    ///   - favicon: 页面图标（可选）
     /// - Returns: 创建的收藏对象
     @discardableResult
-    public func addFavorite(url: URL, title: String? = nil) -> URLFavorite? {
+    public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) -> URLFavorite? {
         let realm = getRealm()
         let urlString = url.absoluteString
 
         // 检查是否已存在
         if let existing = findFavorite(url: url) {
             WebBridgeLogger.shared.log(.debug, "⚠️ Favorite already exists: \(urlString)")
+            // 更新标题和图标
+            try? realm?.write {
+                if let title = title {
+                    existing.title = title
+                }
+                if let favicon = favicon {
+                    existing.favicon = favicon
+                }
+            }
             return existing
         }
 
         let favorite = URLFavorite()
         favorite.url = urlString
         favorite.title = title ?? url.host
+        favorite.favicon = favicon
         favorite.createdAt = Date()
         favorite.sortOrder = getAllFavorites().count
 
@@ -96,7 +107,9 @@ public class URLFavoriteManager {
     /// 获取所有收藏（按置顶和排序）
     public func getAllFavorites() -> Results<URLFavorite> {
         guard let realm = getRealm() else {
-            return try! Realm().objects(URLFavorite.self).filter("FALSEPREDICATE")
+            let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
+            let tempRealm = try! Realm(configuration: config)
+            return tempRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
         }
         return realm.objects(URLFavorite.self)
             .sorted(by: [
@@ -122,7 +135,9 @@ public class URLFavoriteManager {
     /// 搜索收藏（标题或URL包含关键词）
     func searchFavorites(keyword: String) -> Results<URLFavorite> {
         guard let realm = getRealm() else {
-            return try! Realm().objects(URLFavorite.self).filter("FALSEPREDICATE")
+            let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
+            let tempRealm = try! Realm(configuration: config)
+            return tempRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
         }
         return realm.objects(URLFavorite.self)
             .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)

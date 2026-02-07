@@ -20,9 +20,11 @@ targets:
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     dependencies:
-      - framework: WebBridgeKit
-      - framework: UIKit
-      - framework: WebKit
+      - sdk: UIKit.framework
+      - sdk: WebKit.framework
+      - target: WebBridgeKit
+        embed: true
+        link: true
 
 schemes:
   DemoApp:

@@ -13,7 +13,7 @@ import CryptoKit
 // 依赖: SwiftSoup (~> 2.6.0) - 需要在 Podfile 中添加
 
 /// 资源类型
-enum ResourceType {
+public enum HTMLResourceType {
     case css
     case js
     case image
@@ -24,11 +24,18 @@ enum ResourceType {
 }
 
 /// 资源URL信息
-struct ResourceURL {
-    let originalURL: URL
-    let type: ResourceType
-    let element: String // link, script, img, etc.
-    let attribute: String // href, src, etc.
+public struct ResourceURL {
+    public let originalURL: URL
+    public let type: HTMLResourceType
+    public let element: String // link, script, img, etc.
+    public let attribute: String // href, src, etc.
+
+    public init(originalURL: URL, type: HTMLResourceType, element: String, attribute: String) {
+        self.originalURL = originalURL
+        self.type = type
+        self.element = element
+        self.attribute = attribute
+    }
 }
 
 /// HTML资源解析器
@@ -80,7 +87,7 @@ class HTMLResourceParser {
             let hrefString = String(html[hrefRange])
             let rel = extractRel(from: html, match: match)
 
-            let type: ResourceType
+            let type: HTMLResourceType
             if rel?.contains("stylesheet") == true {
                 type = .css
             } else if rel?.contains("icon") == true {

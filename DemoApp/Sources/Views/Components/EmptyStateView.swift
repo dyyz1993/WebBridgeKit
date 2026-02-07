@@ -17,6 +17,7 @@ class EmptyStateView: UIView {
 
     private let containerView: UIView = {
         let view = UIView()
+        view.backgroundColor = .clear  // 确保容器背景透明
         return view
     }()
 
@@ -71,6 +72,11 @@ class EmptyStateView: UIView {
     // MARK: - Setup
 
     private func setupUI() {
+        backgroundColor = .clear  // 确保背景透明，避免白色蒙层
+
+        // Accessibility identifier for testing
+        accessibilityIdentifier = "EmptyStateView"
+
         addSubview(containerView)
         containerView.addSubview(iconImageView)
         containerView.addSubview(titleLabel)
@@ -114,7 +120,8 @@ class EmptyStateView: UIView {
 
     func configure(icon: String? = nil, title: String, description: String, actionTitle: String? = nil) {
         if let icon = icon {
-            iconImageView.image = UIImage(systemName: icon)
+            let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
+            iconImageView.image = UIImage(systemName: icon, withConfiguration: config)
             iconImageView.isHidden = false
         } else {
             iconImageView.isHidden = true
@@ -122,6 +129,9 @@ class EmptyStateView: UIView {
 
         titleLabel.text = title
         descriptionLabel.text = description
+
+        // Debug: 打印配置信息
+        print("🔍 [EmptyStateView] configured - title: \(title), icon: \(icon ?? "none")")
 
         if let actionTitle = actionTitle {
             actionButton.setTitle(actionTitle, for: .normal)

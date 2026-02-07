@@ -21,6 +21,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         let table = UITableView(frame: .zero, style: .grouped)
         table.backgroundColor = UIColor.systemGroupedBackground
         table.register(MenuCell.self, forCellReuseIdentifier: MenuCell.identifier)
+        table.register(SwitchCell.self, forCellReuseIdentifier: SwitchCell.identifier)
         table.separatorStyle = .singleLine
         table.separatorInset = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 0)
         table.tableFooterView = UIView()
@@ -28,6 +29,9 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }()
 
     private let headerView = SettingsHeaderView()
+
+    private let itemSelectRelay = PublishRelay<IndexPath>()
+    private let lastAppMemoryToggleRelay = PublishRelay<Bool>()
 
     // MARK: - Lifecycle
 
@@ -66,50 +70,80 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     // MARK: - Bind ViewModel
 
     override func bindViewModel() {
-        let itemSelect = tableView.rx.itemSelected
-            .asDriver()
+        tableView.rx.itemSelected
             .do(onNext: { [weak self] indexPath in
                 self?.tableView.deselectRow(at: indexPath, animated: true)
             })
+            .bind(to: itemSelectRelay)
+            .disposed(by: rx)
 
         let input = SettingsViewModel.Input(
-            itemSelect: itemSelect
+            itemSelect: itemSelectRelay.asDriver(onErrorJustReturn: IndexPath(row: 0, section: 0)),
+            lastAppMemoryToggle: lastAppMemoryToggleRelay.asDriver(onErrorJustReturn: false)
         )
 
         let output = viewModel.transform(input: input)
 
         // 绑定数据
         Observable.just((0..<viewModel.numberOfItems()).map { $0 })
-            .bind(to: tableView.rx.items(cellIdentifier: MenuCell.identifier, cellType: MenuCell.self)) { [weak self] _, index, cell in
-                guard let self = self else { return }
+            .bind(to: tableView.rx.items) { (tv: UITableView, index: Int, _) -> UITableViewCell in
                 let indexPath = IndexPath(row: index, section: 0)
                 let menuItem = self.viewModel.menuItem(at: indexPath)
-                cell.configure(
-                    icon: menuItem.icon,
-                    title: menuItem.title,
-                    value: nil,
-                    showArrow: true
-                )
+                
+                if menuItem.action == .lastAppMemory {
+                    let cell = tv.dequeueReusableCell(withIdentifier: SwitchCell.identifier, for: indexPath) as! SwitchCell
+                    cell.configure(
+                        title: menuItem.title,
+                        description: "自动打开上次访问的应用",
+                        isOn: UserDefaults.standard.bool(forKey: "EnableLastAppMemory")
+                    )
+                    // 监听开关变化并反馈给 ViewModel
+                    cell.switchControl.rx.isOn
+                        .skip(1) // 跳过初始值的绑定
+                        .distinctUntilChanged()
+                        .bind(to: self.lastAppMemoryToggleRelay)
+                        .disposed(by: cell.prepareForReuseBag)
+                    return cell
+                } else {
+                    let cell = tv.dequeueReusableCell(withIdentifier: MenuCell.identifier, for: indexPath) as! MenuCell
+                    
+                    var value: String? = nil
+                    if menuItem.action == .storageManage {
+                        output.storageSize
+                            .drive(onNext: { size in
+                                cell.configure(icon: menuItem.icon, title: menuItem.title, value: size, showArrow: true)
+                            })
+                            .disposed(by: cell.prepareForReuseBag)
+                    }
+                    
+                    cell.configure(
+                        icon: menuItem.icon,
+                        title: menuItem.title,
+                        value: value,
+                        showArrow: true
+                    )
 
-                // Set accessibility identifier for each menu item cell
-                switch menuItem.action {
-                case .tokenManage:
-                    cell.accessibilityIdentifier = "settings.cell.tokenManage"
-                    cell.accessibilityLabel = "口令管理"
-                case .serverConfig:
-                    cell.accessibilityIdentifier = "settings.cell.serverConfig"
-                    cell.accessibilityLabel = "服务器配置"
-                case .apiKeyManage:
-                    cell.accessibilityIdentifier = "settings.cell.apiKeyManage"
-                    cell.accessibilityLabel = "密钥管理"
-                case .about:
-                    cell.accessibilityIdentifier = "settings.cell.about"
-                    cell.accessibilityLabel = "关于"
+                    // Accessibility identifiers
+                    switch menuItem.action {
+                    case .tokenManage:
+                        cell.accessibilityIdentifier = "settings.cell.tokenManage"
+                    case .serverConfig:
+                        cell.accessibilityIdentifier = "settings.cell.serverConfig"
+                    case .apiKeyManage:
+                        cell.accessibilityIdentifier = "settings.cell.apiKeyManage"
+                    case .storageManage:
+                        cell.accessibilityIdentifier = "settings.cell.storageManage"
+                    case .about:
+                        cell.accessibilityIdentifier = "settings.cell.about"
+                    default:
+                        break
+                    }
+                    return cell
                 }
             }
             .disposed(by: rx)
 
-        // 导航到口令管理
+        // 处理导航
         output.navigateToTokenManage
             .drive(onNext: { [weak self] in
                 self?.navigateToTokenManage()

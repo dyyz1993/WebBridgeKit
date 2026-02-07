@@ -128,6 +128,7 @@ public class WebViewPool {
             // 创建预热的 WebView
             let config = WebBridgePool.shared.acquireConfiguration()
             let webView = WKWebView(frame: .zero, configuration: config)
+            webView.accessibilityIdentifier = "webViewPool.instance.0"
 
             // 注入 BarkBridge 脚本到预热的 WebView
             self.injectBridgeScript(to: webView)
@@ -317,7 +318,24 @@ public class WebViewPool {
         let size = pool.count
         let warmed = isWarmedUp
         lock.unlock()
+
+        // 更新 pool 中 WebView 实例的 accessibilityIdentifier
+        DispatchQueue.main.async { [weak self] in
+            self?.updateAccessibilityIdentifiers()
+        }
+
         return (size, hitRate, warmed)
+    }
+
+    /// 更新 WebView 实例的 accessibility identifiers
+    private func updateAccessibilityIdentifiers() {
+        lock.lock()
+        let poolCopy = pool
+        lock.unlock()
+
+        for (index, instance) in poolCopy.enumerated() {
+            instance.webView.accessibilityIdentifier = "webViewPool.instance.\(index)"
+        }
     }
 
     deinit {

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 // Framework imports
 
@@ -98,7 +99,7 @@ class ResourceDownloader {
         // 检查文件是否已存在
         if FileManager.default.fileExists(atPath: localPath.path) {
             let attributes = try FileManager.default.attributesOfItem(atPath: localPath.path)
-            let size = attributes[.size] as? Int64 ?? 0
+            let size = attributes[FileAttributeKey.size] as? Int64 ?? 0
             return (subdir + "/" + filename, size)
         }
 
@@ -145,7 +146,7 @@ class ResourceDownloader {
 
     // MARK: - Helper
 
-    private func getSubdirectory(for type: ResourceType) -> String {
+    private func getSubdirectory(for type: HTMLResourceType) -> String {
         switch type {
         case .css:
             return "css"
@@ -176,19 +177,10 @@ class ResourceDownloader {
     }
 
     private func compressImageIfNeeded(_ data: Data) -> Data {
-        // 简单实现：如果图片大于1MB，进行压缩
-        guard data.count > 1024 * 1024,
-              let image = UIImage(data: data) else {
-            return data
-        }
-
-        // 使用0.7质量压缩
-        guard let compressed = image.jpegData(compressionQuality: 0.7) else {
-            return data
-        }
-
-        WebBridgeLogger.shared.log(.debug, "🗜️ Compressed image: \(data.count) -> \(compressed.count) bytes")
-        return compressed
+        // ⚠️ UIKit 组件（如 UIImage）必须在主线程使用
+        // 这里直接返回原始数据，避免在后台线程使用 UIImage
+        // 如果需要压缩功能，应该使用 ImageIO 框架（支持后台线程）
+        return data
     }
 
     enum DownloadError: Error {

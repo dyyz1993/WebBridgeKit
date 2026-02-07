@@ -199,7 +199,7 @@ class WebPageHistoryViewModel: ViewModel {
         guard let url = URL(string: history.url) else { return }
 
         // 更新访问次数
-        WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: history.title)
+        WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: history.title, favicon: history.favicon)
 
         // 触发打开URL
         openURLRelay.accept(url)

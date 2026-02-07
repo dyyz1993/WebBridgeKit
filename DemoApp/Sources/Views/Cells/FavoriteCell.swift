@@ -114,6 +114,8 @@ class FavoriteCell: UITableViewCell {
     // MARK: - Setup
 
     private func setupUI() {
+        // 确保cell背景透明，避免白色遮挡
+        contentView.backgroundColor = .clear
         backgroundColor = .clear
         selectionStyle = .none
 
@@ -208,9 +210,7 @@ class FavoriteCell: UITableViewCell {
             faviconImageView.backgroundColor = .clear
         } else {
             // 使用首字母图标
-            faviconImageView.image = nil
-            _ = (favorite.title ?? "?").prefix(1).uppercased()
-            faviconImageView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            faviconImageView.setLetterIcon(for: favorite.title ?? favorite.url, size: CGSize(width: 40, height: 40))
         }
 
         // 置顶状态
@@ -244,5 +244,12 @@ class FavoriteCell: UITableViewCell {
         faviconImageView.image = nil
         onPinToggle = nil
         onCacheModeToggle = nil
+        // 重置所有 UI 状态
+        titleLabel.text = nil
+        urlLabel.text = nil
+        pinButton.isHidden = true
+        favoriteIconView.isHidden = true
+        cacheModeSwitch.isOn = false
+        faviconImageView.backgroundColor = UIColor.tertiarySystemBackground
     }
 }

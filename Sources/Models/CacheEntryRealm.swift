@@ -82,7 +82,7 @@ public class CacheEntryRealm: Object {
     }
 
     /// 资源类型分类
-    public var resourceType: ResourceType {
+    public var resourceType: CacheResourceType {
         switch fileExtension.lowercased() {
         case "js", "mjs":
             return .script
@@ -133,7 +133,7 @@ public class CacheEntryRealm: Object {
 
     // MARK: - Resource Type Enum
 
-    public enum ResourceType: String {
+    public enum CacheResourceType: String {
         case html
         case script
         case stylesheet

@@ -66,12 +66,14 @@ public class ModalWebViewController: UIViewController {
     // MARK: - Setup
 
     private func setupUI() {
+        view.accessibilityIdentifier = "modalBrowser.view"
         view.backgroundColor = .clear
 
         // 遮罩层
         if config.showMask {
             maskView = UIView()
             maskView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+            maskView.accessibilityIdentifier = "modalBrowser.maskView"
             maskView.alpha = 0
             view.addSubview(maskView)
             maskView.snp.makeConstraints { make in
@@ -87,6 +89,7 @@ public class ModalWebViewController: UIViewController {
 
         // 容器视图
         containerView = UIView()
+        containerView.accessibilityIdentifier = "modalBrowser.containerView"
         containerView.backgroundColor = .systemBackground
         containerView.layer.cornerRadius = config.cornerRadius
         containerView.layer.shadowColor = UIColor.black.cgColor
@@ -122,6 +125,7 @@ public class ModalWebViewController: UIViewController {
         webVC.didMove(toParent: self)
 
         webView = webVC.webView
+        webView.accessibilityIdentifier = "modalBrowser.webView"
         bridge = webVC.bridge
 
         // 关闭按钮
@@ -139,6 +143,7 @@ public class ModalWebViewController: UIViewController {
 
     private func setupCloseButton() {
         let closeButton = UIButton(type: .system)
+        closeButton.accessibilityIdentifier = "modalBrowser.closeButton"
         closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
         closeButton.tintColor = .gray
         closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)

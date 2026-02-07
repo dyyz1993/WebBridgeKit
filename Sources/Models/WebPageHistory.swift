@@ -22,6 +22,8 @@ public class WebPageHistory: Object {
     public let resourcePaths = List<String>()
     @objc dynamic public var cachedSize: Int64 = 0
     @objc dynamic public var isCached: Bool = false
+    @objc dynamic public var isPinned: Bool = false      // 是否置顶
+    @objc dynamic public var isFavorite: Bool = false    // 是否收藏
     @objc dynamic public var visitCount: Int = 0
     @objc dynamic public var lastVisitDate = Date()
     @objc dynamic public var cacheDate: Date? = nil
@@ -41,7 +43,7 @@ public class WebPageHistory: Object {
     }
 
     /// 格式化缓存大小为可读字符串
-    var formattedSize: String {
+    public var formattedSize: String {
         return ByteCountFormatter.string(fromByteCount: cachedSize, countStyle: .file)
     }
 

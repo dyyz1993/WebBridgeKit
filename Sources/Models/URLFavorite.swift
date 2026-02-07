@@ -30,14 +30,14 @@ public class URLFavorite: Object {
     }
 
     /// 格式化创建时间
-    var formattedCreatedAt: String {
+    public var formattedCreatedAt: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         return formatter.string(from: createdAt)
     }
 
     /// 获取 URL 的域名
-    var domain: String? {
+    public var domain: String? {
         guard let urlObj = URL(string: url) else { return nil }
         return urlObj.host
     }

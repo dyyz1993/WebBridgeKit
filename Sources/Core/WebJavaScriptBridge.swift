@@ -8,7 +8,6 @@
 
 import Foundation
 import WebKit
-import UIKit
 
 // Framework imports
 
@@ -206,6 +205,10 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
 
         // 缓存调试
         handlerFactories["cacheDebug"] = { WebCacheDebugHandler() }
+
+        // 页面缓存管理
+        // TODO: Fix compilation error - WebPageCacheHandler not found
+        // handlerFactories["page"] = { WebPageCacheHandler() }
 
         print("🌉 [JS Bridge] 已注册 \(handlerFactories.count) 个 Handler 工厂（懒加载模式）")
         print("   工厂列表: \(Array(handlerFactories.keys).sorted())")

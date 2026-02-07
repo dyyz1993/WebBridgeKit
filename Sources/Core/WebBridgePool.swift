@@ -78,9 +78,22 @@ public class WebBridgePool {
         config.allowsInlineMediaPlayback = true
         config.dataDetectorTypes = []
 
-        // 注册自定义 URL Scheme Handler 用于离线缓存
-        let schemeHandler = CacheURLSchemeHandler()
-        config.setURLSchemeHandler(schemeHandler, forURLScheme: "bark-cache")
+        // ============================================================
+        // OLD APPROACH (DISABLED): Custom bark-cache:// URL Scheme
+        // This approach required HTML modification and is no longer used
+        // ============================================================
+        // let schemeHandler = CacheURLSchemeHandler()
+        // config.setURLSchemeHandler(schemeHandler, forURLScheme: "bark-cache")
+
+        // ============================================================
+        // MANIFEST CACHE: custom:// URL Scheme with loadHTMLString + baseURL
+        // Uses WKURLSchemeHandler to intercept custom:// requests
+        // NO HTML modification or JS injection required
+        // ============================================================
+        // HTML uses relative paths (src="logo.png")
+        // baseURL = "custom://" makes relative paths auto-complete to custom://logo.png
+        // WKURLSchemeHandler looks up real URL from manifest.json
+        ManifestURLSchemeHandler.register(to: config, scheme: "custom")
 
         // 预注入 Bridge 脚本
         let bridgeScript = getBridgeScript()
@@ -94,7 +107,7 @@ public class WebBridgePool {
         self.preheatedUserScript = script
         self.warmConfiguration = config
 
-        WebBridgeLogger.shared.log(.info, "✅ [WebBridgePool] Configuration warmed up with bark-cache:// scheme")
+        WebBridgeLogger.shared.log(.info, "✅ [WebBridgePool] Configuration warmed up with System URLCache (no HTML modification needed)")
     }
 
     // MARK: - 获取和回收

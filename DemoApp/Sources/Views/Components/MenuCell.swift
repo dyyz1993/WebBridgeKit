@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import RxSwift
 
 /// 菜单列表项单元格
 class MenuCell: UITableViewCell {
@@ -46,11 +47,20 @@ class MenuCell: UITableViewCell {
         return label
     }()
 
+    // MARK: - Properties
+
+    public var prepareForReuseBag = DisposeBag()
+
     // MARK: - Initialization
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        prepareForReuseBag = DisposeBag()
     }
 
     required init?(coder: NSCoder) {
