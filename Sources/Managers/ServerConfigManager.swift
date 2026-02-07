@@ -150,15 +150,38 @@ public class ServerConfigManager {
     ///   - config: 要测试的配置
     ///   - completion: 完成回调，返回是否成功
     public func testConnection(config: ServerConfig, completion: @escaping (Bool) -> Void) {
-        // TODO: 实现实际的连接测试
-        // 这里使用简单的延迟模拟
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            // 简单验证：检查配置是否有效
-            let isValid = config.baseURL != nil && config.apiEndpoint != nil
-            completion(isValid)
+        guard let url = config.fullAPIURL else {
+            completion(false)
+            return
         }
 
-        WebBridgeLogger.shared.log(.info, "🔍 Testing connection: \(config.serverType)")
+        // 真实的网络测试：发送一个轻量级的 GET 请求（如 /ping 或 /health）
+        // 这里假设服务端提供了一个健康检查接口，如果没有，则尝试连接 BaseURL
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 5.0 // 5秒超时
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    WebBridgeLogger.shared.log(.error, "❌ Connection test failed: \(error.localizedDescription)")
+                    completion(false)
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    // 只要返回 200~399 范围内的状态码，认为服务是存活的
+                    let isSuccess = (200...399).contains(httpResponse.statusCode)
+                    WebBridgeLogger.shared.log(.info, "🔍 Connection test result for \(url.absoluteString): \(isSuccess) (Status: \(httpResponse.statusCode))")
+                    completion(isSuccess)
+                } else {
+                    completion(false)
+                }
+            }
+        }
+        task.resume()
+
+        WebBridgeLogger.shared.log(.info, "🔍 Testing real connection: \(url.absoluteString)")
     }
 
     /// 测试当前激活的服务器连接

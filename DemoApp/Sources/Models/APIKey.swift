@@ -21,18 +21,22 @@ struct APIKey: Codable, Equatable {
     var description: String?
     /// 是否启用
     var isEnabled: Bool
+    /// 绑定的群组或来源 ID (可选)
+    var boundGroupId: String?
     
     init(id: String = UUID().uuidString,
          name: String,
          value: String = "sk-" + UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased(),
          createdAt: Date = Date(),
          description: String? = nil,
-         isEnabled: Bool = true) {
+         isEnabled: Bool = true,
+         boundGroupId: String? = nil) {
         self.id = id
         self.name = name
         self.value = value
         self.createdAt = createdAt
         self.description = description
         self.isEnabled = isEnabled
+        self.boundGroupId = boundGroupId
     }
 }

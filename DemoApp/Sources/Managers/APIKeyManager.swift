@@ -29,8 +29,8 @@ class APIKeyManager {
     }
     
     /// 创建新 Key
-    func createKey(name: String, description: String? = nil) {
-        let newKey = APIKey(name: name, description: description)
+    func createKey(name: String, description: String? = nil, boundGroupId: String? = nil) {
+        let newKey = APIKey(name: name, description: description, boundGroupId: boundGroupId)
         var current = keysRelay.value
         current.append(newKey)
         keysRelay.accept(current)
