@@ -542,7 +542,7 @@ public class PersistentManifestLoader: NSObject {
             }
 
             // 收集完成的任务并更新进度
-            for try await (completedIndex, resourceName) in group {
+            for try await (_, resourceName) in group {
                 progressLock.lock()
                 completedCount += 1
                 let current = completedCount

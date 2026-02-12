@@ -81,7 +81,6 @@ public class WebPermissionHandler: BaseWebNativeHandler {
 
                 alert.addAction(UIAlertAction(title: "允许", style: .default) { _ in
                     // 请求系统权限
-                    let requestCompletion = completion
                     self.locationManager = CLLocationManager()
                     self.locationManager?.delegate = self
                     self.tempCompletion = completion

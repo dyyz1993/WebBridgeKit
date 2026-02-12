@@ -69,7 +69,7 @@ class ResourceDownloader {
             }
 
             // 收集结果
-            for try await (url, path, size) in group {
+            for try await (url, path, _) in group {
                 results[url] = path
                 downloadedResources.insert(url.absoluteString)
                 completedCount += 1

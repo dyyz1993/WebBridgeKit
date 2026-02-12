@@ -505,7 +505,7 @@ public class ManifestCacheManager {
         defer { statsLock.unlock() }
 
         let total = cacheHits + cacheMisses
-        let hitRate = total > 0 ? Double(cacheHits) / Double(total) : 0.0
+        _ = total > 0 ? Double(cacheHits) / Double(total) : 0.0
 
         return CacheStats(
             totalRequests: Int(total),

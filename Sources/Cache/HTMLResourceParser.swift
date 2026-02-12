@@ -209,8 +209,7 @@ class HTMLResourceParser {
         var offset = 0
 
         for match in matches.reversed() {
-            guard let htmlRange = Range(match.range, in: html),
-                  let urlRange = Range(match.range(at: 3), in: html),
+            guard let urlRange = Range(match.range(at: 3), in: html),
                   let suffixRange = Range(match.range(at: 4), in: html) else {
                 continue
             }

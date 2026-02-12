@@ -1,0 +1,12 @@
+{
+  "persistent": false,
+  "version": "1.0.0",
+  "appid": "com.webbridgekit.test.lazy",
+  "name": "Lazy Test App",
+  "description": "Test app for lazy loading mode",
+  "resources": {
+    "logo.svg": "logo.svg",
+    "style.css": "style.css",
+    "script.js": "script.js"
+  }
+}

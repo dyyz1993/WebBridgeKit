@@ -45,7 +45,7 @@ public class WebSystemInfoHandler: BaseWebNativeHandler {
             "batteryState": batteryStateString(device.batteryState),
             "preferredLanguage": Locale.preferredLanguages.first ?? "",
             "locale": Locale.current.identifier,
-            "timezone": TimeZone.current.identifier ?? ""
+            "timezone": TimeZone.current.identifier
         ]
     }
 

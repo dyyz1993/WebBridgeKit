@@ -100,7 +100,7 @@ public class WebGestureInterceptor: NSObject {
         guard let webView = webView else { return }
 
         let translation = gesture.translation(in: webView)
-        let velocity = gesture.velocity(in: webView)
+        let _ = gesture.velocity(in: webView)
         let location = gesture.location(in: webView)
 
         // 只在顶部且向下拖动时响应

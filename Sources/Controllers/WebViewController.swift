@@ -308,7 +308,7 @@ public class WebViewController: UIViewController {
         }
 
         WebPageThumbnailGenerator.shared.generateThumbnail(for: webView, url: url) { [weak self] thumbnailData in
-            guard let self = self, let thumbnailData = thumbnailData else {
+            guard let thumbnailData = thumbnailData else {
                 return
             }
 
@@ -855,7 +855,7 @@ public class WebViewController: UIViewController {
         print("⚡ [ManifestCache] Starting lazy mode load")
 
         // 将 WebManifest 转换为 LazyManifestLoader.WebManifest
-        let lazyManifest = LazyManifestLoader.WebManifest(
+        _ = LazyManifestLoader.WebManifest(
             persistent: manifest.persistent,
             resources: manifest.resources,
             version: manifest.version,
@@ -974,7 +974,7 @@ public class WebViewController: UIViewController {
         // Ensure view is loaded
         _ = view
 
-        guard let htmlPath = Bundle.main.path(forResource: htmlName, ofType: "html") else {
+        guard Bundle.main.path(forResource: htmlName, ofType: "html") != nil else {
             print("❌ [BarkWebVC] HTML file not found: \(htmlName).html")
             return
         }

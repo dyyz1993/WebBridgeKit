@@ -130,7 +130,7 @@ public class TestLogger {
     ///   - duration: 耗时（秒）
     ///   - cacheSize: 缓存大小（字节）
     public func logResult(success: Bool, duration: TimeInterval, cacheSize: Int64) {
-        let timestamp = dateFormatter.string(from: Date())
+        _ = dateFormatter.string(from: Date())
         let status = success ? "成功" : "失败"
         let durationString = String(format: "%.2f秒", duration)
         let cacheSizeString = ByteCountFormatter.string(fromByteCount: cacheSize, countStyle: .file)
