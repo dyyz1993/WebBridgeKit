@@ -17,9 +17,19 @@ import CommonCrypto
 actor APIKeyDatabaseActor {
     private let realmConfiguration: Realm.Configuration
     private let permanentKeyID = "permanent-key"
+    private let deviceIDPrefix: String
 
-    init(realmConfiguration: Realm.Configuration) {
+    init(realmConfiguration: Realm.Configuration) async {
         self.realmConfiguration = realmConfiguration
+        // Cache device ID prefix on initialization to avoid main actor access later
+        self.deviceIDPrefix = await Self.getDeviceIDPrefix()
+    }
+
+    /// Get device ID prefix (must be called from Main Actor context)
+    @MainActor
+    private static func getDeviceIDPrefix() -> String {
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown"
+        return String(deviceID)
     }
 
     /// Get Realm instance
@@ -33,9 +43,8 @@ actor APIKeyDatabaseActor {
         let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         let randomPart = String((0..<32).map { _ in characters.randomElement()! })
 
-        // Add device identifier prefix
-        let deviceID = UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown"
-        return "wbk_\(deviceID)_\(randomPart)"
+        // Use cached device identifier prefix
+        return "wbk_\(deviceIDPrefix)_\(randomPart)"
     }
 
     // MARK: - Permanent Key Operations
@@ -209,7 +218,7 @@ public class APIKeyManager {
     public static let shared = APIKeyManager()
 
     private let realmConfiguration: Realm.Configuration
-    private let databaseActor: APIKeyDatabaseActor
+    private var databaseActor: APIKeyDatabaseActor?
 
     private init() {
         // Use independent Realm file
@@ -217,12 +226,33 @@ public class APIKeyManager {
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("apiKey.realm"),
             schemaVersion: 1
         )
-        self.databaseActor = APIKeyDatabaseActor(realmConfiguration: realmConfiguration)
+        self.databaseActor = nil
 
-        // Initialize permanent key asynchronously
+        // Initialize database actor asynchronously
         Task {
-            try? await databaseActor.ensurePermanentKeyExists()
+            await initializeDatabaseActor()
         }
+    }
+
+    /// Initialize the database actor asynchronously
+    private func initializeDatabaseActor() async {
+        let actor = await APIKeyDatabaseActor(realmConfiguration: realmConfiguration)
+        self.databaseActor = actor
+
+        // Initialize permanent key
+        do {
+            try await actor.ensurePermanentKeyExists()
+        } catch {
+            WebBridgeLogger.shared.log(.error, "Failed to initialize permanent key: \(error.localizedDescription)")
+        }
+    }
+
+    /// Get the database actor, ensuring it's initialized
+    private func getDatabaseActor() async throws -> APIKeyDatabaseActor {
+        guard let actor = await databaseActor else {
+            throw WebBridgeError.databaseOperationFailed(underlying: NSError(domain: "APIKeyManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Database actor not initialized"]))
+        }
+        return actor
     }
 
     // MARK: - Permanent Key Operations
@@ -231,7 +261,8 @@ public class APIKeyManager {
     /// - Returns: Permanent key string
     public func getPermanentKey() async throws -> String {
         do {
-            return try await databaseActor.getPermanentKey()
+            let actor = try await getDatabaseActor()
+            return try await actor.getPermanentKey()
         } catch let error as WebBridgeError {
             throw error
         } catch {
@@ -244,7 +275,8 @@ public class APIKeyManager {
     @discardableResult
     public func refreshPermanentKey() async throws -> String {
         do {
-            return try await databaseActor.refreshPermanentKey()
+            let actor = try await getDatabaseActor()
+            return try await actor.refreshPermanentKey()
         } catch let error as WebBridgeError {
             throw error
         } catch {
@@ -260,7 +292,8 @@ public class APIKeyManager {
     @discardableResult
     public func generateTemporaryKey(duration: TimeInterval) async throws -> APIKey {
         do {
-            return try await databaseActor.generateTemporaryKey(duration: duration)
+            let actor = try await getDatabaseActor()
+            return try await actor.generateTemporaryKey(duration: duration)
         } catch let error as WebBridgeError {
             throw error
         } catch {
@@ -273,7 +306,8 @@ public class APIKeyManager {
     /// - Returns: Whether valid
     public func validateKey(key: String) async throws -> Bool {
         do {
-            return try await databaseActor.validateKey(key: key)
+            let actor = try await getDatabaseActor()
+            return try await actor.validateKey(key: key)
         } catch let error as WebBridgeError {
             throw error
         } catch {
@@ -286,7 +320,8 @@ public class APIKeyManager {
     /// Delete key
     public func deleteKey(id: String) async throws {
         do {
-            try await databaseActor.deleteKey(id: id)
+            let actor = try await getDatabaseActor()
+            try await actor.deleteKey(id: id)
         } catch let error as WebBridgeError {
             throw error
         } catch {
@@ -297,7 +332,8 @@ public class APIKeyManager {
     /// Get all keys
     public func getAllKeys() async throws -> [APIKey] {
         do {
-            return try await databaseActor.getAllKeys()
+            let actor = try await getDatabaseActor()
+            return try await actor.getAllKeys()
         } catch let error as WebBridgeError {
             throw error
         } catch {
@@ -308,7 +344,8 @@ public class APIKeyManager {
     /// Get temporary keys
     public func getTemporaryKeys() async throws -> [APIKey] {
         do {
-            return try await databaseActor.getTemporaryKeys()
+            let actor = try await getDatabaseActor()
+            return try await actor.getTemporaryKeys()
         } catch let error as WebBridgeError {
             throw error
         } catch {
@@ -321,7 +358,8 @@ public class APIKeyManager {
     /// Clean up expired temporary keys
     public func cleanupExpiredKeys() async throws {
         do {
-            try await databaseActor.cleanupExpiredKeys()
+            let actor = try await getDatabaseActor()
+            try await actor.cleanupExpiredKeys()
         } catch let error as WebBridgeError {
             throw error
         } catch {
