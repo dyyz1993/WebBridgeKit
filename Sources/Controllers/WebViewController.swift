@@ -11,6 +11,7 @@ import WebKit
 // Framework imports
 
 /// 统一的 Web 容器，支持横竖屏控制、全屏控制与 JSBridge
+@MainActor
 public class WebViewController: UIViewController {
 
     // MARK: - Properties
@@ -120,19 +121,19 @@ public class WebViewController: UIViewController {
     /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
     private func setupUserAgent() {
         // 获取原始 UA 并追加自定义信息
-        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, error) in
+        _ = webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, error) in
             guard let self = self, let baseUA = result as? String else { return }
-            
+
             let info = Bundle.main.infoDictionary
             let appVersion = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
             let buildNumber = info?["CFBundleVersion"] as? String ?? "1"
-            
+
             let screenSize = UIScreen.main.bounds.size
             let screenScale = UIScreen.main.scale
-            
+
             // 格式: BaseUA WebBridgeKit/Version (Build; Screen/WxH; Ratio/R)
             let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
-            
+
             self.webView.customUserAgent = customUA
             print("📱 [BarkWebVC] Custom UA configured: \(customUA)")
         }
@@ -236,7 +237,7 @@ public class WebViewController: UIViewController {
         // 🔒 Input validation: Validate URL scheme to prevent loading dangerous URLs
         let allowedSchemes: Set<String> = ["http", "https", "file", "custom"]
         do {
-            try InputValidator.validateURLScheme(url, allowedSchemes: allowedSchemes)
+            _ = try InputValidator.validateURLScheme(url, allowedSchemes: allowedSchemes)
         } catch {
             print("❌ [BarkWebVC] Invalid URL scheme: \(url.absoluteString)")
             print("   - Error: \(error.localizedDescription)")
@@ -308,29 +309,31 @@ public class WebViewController: UIViewController {
         }
 
         WebPageThumbnailGenerator.shared.generateThumbnail(for: webView, url: url) { [weak self] thumbnailData in
-            guard let thumbnailData = thumbnailData else {
-                return
-            }
+            Task { @MainActor in
+                guard let thumbnailData else {
+                    return
+                }
 
-            // 通过URL查找历史记录并更新缩略图
-            if let history = WebPageHistoryManager.shared.findHistory(url: url) {
-                // 使用 WebPageOfflineCacheManager 的 Realm 实例来更新
-                // 因为它可能已经打开了 Realm
-                do {
-                    let realm = try Realm(configuration: Realm.Configuration(
-                        fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageHistory.realm"),
-                        schemaVersion: 1
-                    ))
-                    try realm.write {
-                        if let cachedHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
-                            cachedHistory.thumbnail = thumbnailData
-                            print("✅ [BarkWebVC] Thumbnail saved for: \(url)")
+                // 通过URL查找历史记录并更新缩略图
+                if let history = WebPageHistoryManager.shared.findHistory(url: url) {
+                    // 使用 WebPageOfflineCacheManager 的 Realm 实例来更新
+                    // 因为它可能已经打开了 Realm
+                    do {
+                        let realm = try Realm(configuration: Realm.Configuration(
+                            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageHistory.realm"),
+                            schemaVersion: 1
+                        ))
+                        try realm.write {
+                            if let cachedHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
+                                cachedHistory.thumbnail = thumbnailData
+                                print(" [BarkWebVC] Thumbnail saved for: \(url)")
+                            }
                         }
+                    } catch {
+                        // 🔒 Proper error handling with logging
+                        print(" [BarkWebVC] Failed to save thumbnail for: \(url)")
+                        print("   - Error: \(error.localizedDescription)")
                     }
-                } catch {
-                    // 🔒 Proper error handling with logging
-                    print("❌ [BarkWebVC] Failed to save thumbnail for: \(url)")
-                    print("   - Error: \(error.localizedDescription)")
                 }
             }
         }
@@ -626,36 +629,44 @@ public class WebViewController: UIViewController {
     private func setupNotifications() {
         // 监听全屏切换
         NotificationCenter.default.addObserver(forName: NSNotification.Name("BarkStatusBarVisibilityChanged"), object: nil, queue: .main) { [weak self] notification in
-            if let hidden = notification.userInfo?["hidden"] as? Bool {
-                self?.isStatusBarHidden = hidden
+            Task { @MainActor [weak self] in
+                if let hidden = notification.userInfo?["hidden"] as? Bool {
+                    self?.isStatusBarHidden = hidden
+                }
             }
         }
 
         // 监听方向切换
         NotificationCenter.default.addObserver(forName: NSNotification.Name("BarkOrientationChanged"), object: nil, queue: .main) { [weak self] notification in
-            guard let self = self else { return }
-            if let orientation = notification.userInfo?["orientation"] as? String {
-                switch orientation {
-                case "landscape":
-                    self.supportedOrientations = .landscape
-                    self.rotateTo(.landscapeLeft)
-                case "portrait":
-                    self.supportedOrientations = .portrait
-                    self.rotateTo(.portrait)
-                default:
-                    self.supportedOrientations = .all
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let orientation = notification.userInfo?["orientation"] as? String {
+                    switch orientation {
+                    case "landscape":
+                        self.supportedOrientations = .landscape
+                        self.rotateTo(.landscapeLeft)
+                    case "portrait":
+                        self.supportedOrientations = .portrait
+                        self.rotateTo(.portrait)
+                    default:
+                        self.supportedOrientations = .all
+                    }
                 }
             }
         }
 
         // 监听下拉刷新完成通知
         NotificationCenter.default.addObserver(forName: NSNotification.Name("BarkPullRefreshCompleted"), object: nil, queue: .main) { [weak self] _ in
-            self?.gestureInterceptor?.stopLoading()
+            Task { @MainActor [weak self] in
+                self?.gestureInterceptor?.stopLoading()
+            }
         }
 
         // 监听下拉刷新取消通知
         NotificationCenter.default.addObserver(forName: NSNotification.Name("BarkPullRefreshCancelled"), object: nil, queue: .main) { [weak self] _ in
-            self?.gestureInterceptor?.stopLoading()
+            Task { @MainActor [weak self] in
+                self?.gestureInterceptor?.stopLoading()
+            }
         }
     }
 
@@ -691,7 +702,7 @@ public class WebViewController: UIViewController {
 
                 // 使用新的 Geometry 更新 API
                 let geometryPreferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: targetMask)
-                windowScene.requestGeometryUpdate(geometryPreferences) { error in
+                _ = windowScene.requestGeometryUpdate(geometryPreferences) { error in
                     print("⚠️ [BarkWebVC] Geometry update error: \(error.localizedDescription)")
                 }
                 print("✅ [BarkWebVC] Geometry update requested (iOS 16+)")
@@ -726,35 +737,46 @@ public class WebViewController: UIViewController {
         loadingObserver?.invalidate()
         loadingObserver = nil
 
-        // 🔒 Remove all script message handlers to prevent memory leaks
-        // WKUserContentController.add(_:name:) creates strong references
-        for handlerName in registeredHandlerNames {
-            webView?.configuration.userContentController.removeScriptMessageHandler(forName: handlerName)
-        }
-        registeredHandlerNames.removeAll()
+        // Store references to clean up outside of actor context
+        let handlerNames = registeredHandlerNames
+        let webViewInstance = webView
+        let interceptor = gestureInterceptor
+        let pooled = isPooledInstance
+        let bridgeInstance = bridge
+        let webViewForPool = pooled ? webView : nil
+        let bridgeForPool = pooled ? bridge : nil
 
-        // 🔒 Clear delegates to break strong reference cycles
-        webView?.navigationDelegate = nil
-        webView?.uiDelegate = nil
+        Task { @MainActor in
+            // 🔒 Remove all script message handlers to prevent memory leaks
+            // WKUserContentController.add(_:name:) creates strong references
+            for handlerName in handlerNames {
+                webViewInstance?.configuration.userContentController.removeScriptMessageHandler(forName: handlerName)
+            }
+
+            // 🔒 Clear delegates to break strong reference cycles
+            webViewInstance?.navigationDelegate = nil
+            webViewInstance?.uiDelegate = nil
+
+            // 如果是从池中获取的，回收实例到池中（性能优化）
+            if pooled, let webView = webViewForPool, let bridge = bridgeForPool {
+                let instance = WebViewPool.WebViewInstance(
+                    webView: webView,
+                    bridge: bridge
+                )
+                WebViewPool.shared.recycle(instance)
+                print(" [BarkWebVC] Recycled instance to pool")
+            } else if let bridge = bridgeInstance {
+                // 不是从池中获取的，尝试回收 Bridge
+                WebBridgePool.shared.recycleBridge(bridge)
+                print(" [BarkWebVC] Recycled bridge only")
+            }
+        }
 
         NotificationCenter.default.removeObserver(self)
-        gestureInterceptor?.cleanup()
+        interceptor?.cleanup()
+        registeredHandlerNames.removeAll()
 
-        // 如果是从池中获取的，回收实例到池中（性能优化）
-        if isPooledInstance {
-            let instance = WebViewPool.WebViewInstance(
-                webView: webView!,
-                bridge: bridge!
-            )
-            WebViewPool.shared.recycle(instance)
-            print("♻️ [BarkWebVC] Recycled instance to pool")
-        } else {
-            // 不是从池中获取的，尝试回收 Bridge
-            WebBridgePool.shared.recycleBridge(bridge!)
-            print("♻️ [BarkWebVC] Recycled bridge only")
-        }
-
-        print("🧹 [BarkWebVC] Cleaned up with proper memory management")
+        print(" [BarkWebVC] Cleaned up with proper memory management")
     }
 
     // MARK: - Constants
@@ -771,19 +793,23 @@ public class WebViewController: UIViewController {
         print("📥 [ManifestCache] Downloading manifest from: \(manifestURL.absoluteString)")
 
         let task = URLSession.shared.dataTask(with: manifestURL) { [weak self] data, response, error in
-            guard let self = self else { return }
+            guard let self else { return }
 
             if let error = error {
                 print("❌ [ManifestCache] Failed to download manifest: \(error.localizedDescription)")
                 // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL, error: error)
+                Task { @MainActor [weak self] in
+                    self?.fallbackToNormalLoad(pageURL, error: error)
+                }
                 return
             }
 
-            guard let data = data else {
+            guard let data else {
                 print("❌ [ManifestCache] Manifest data is empty")
                 let emptyError = NSError(domain: "WebBridgeKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Manifest data is empty"])
-                self.fallbackToNormalLoad(pageURL, error: emptyError)
+                Task { @MainActor [weak self] in
+                    self?.fallbackToNormalLoad(pageURL, error: emptyError)
+                }
                 return
             }
 
@@ -797,7 +823,8 @@ public class WebViewController: UIViewController {
                 print("   - Version: \(manifest.version ?? "N/A")")
 
                 // 根据 persistent 字段选择加载策略
-                DispatchQueue.main.async {
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
                     if manifest.persistent {
                         print("🔥 [ManifestCache] Using PERSISTENT mode (download all resources first)")
                         self.usePersistentMode(pageURL: pageURL, manifest: manifest)
@@ -810,7 +837,9 @@ public class WebViewController: UIViewController {
             } catch {
                 print("❌ [ManifestCache] Failed to decode manifest: \(error.localizedDescription)")
                 // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL, error: error)
+                Task { @MainActor [weak self] in
+                    self?.fallbackToNormalLoad(pageURL, error: error)
+                }
             }
         }
 
@@ -821,10 +850,10 @@ public class WebViewController: UIViewController {
     private func usePersistentMode(pageURL: URL, manifest: PersistentManifestLoader.WebManifest) {
         // 找到合适的 view controller 来显示进度弹窗
         let presentingViewController: UIViewController
-        if let navController = self.navigationController,
+        if let navController = navigationController,
            let topVC = navController.topViewController {
             presentingViewController = topVC
-        } else if let parentVC = self.parent {
+        } else if let parentVC = parent {
             presentingViewController = parentVC
         } else {
             presentingViewController = self
@@ -837,15 +866,17 @@ public class WebViewController: UIViewController {
             in: webView,
             from: presentingViewController
         ) { [weak self] result in
-            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                guard let self else { return }
 
-            switch result {
-            case .success:
-                print("✅ [ManifestCache] Persistent mode load completed successfully")
-            case .failure(let error):
-                print("❌ [ManifestCache] Persistent mode failed: \(error.localizedDescription)")
-                // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL, error: error)
+                switch result {
+                case .success:
+                    print("✅ [ManifestCache] Persistent mode load completed successfully")
+                case .failure(let error):
+                    print("❌ [ManifestCache] Persistent mode failed: \(error.localizedDescription)")
+                    // 回退到普通加载
+                    self.fallbackToNormalLoad(pageURL, error: error)
+                }
             }
         }
     }
@@ -868,15 +899,17 @@ public class WebViewController: UIViewController {
             url: pageURL,
             in: webView
         ) { [weak self] result in
-            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                guard let self else { return }
 
-            switch result {
-            case .success:
-                print("✅ [ManifestCache] Lazy mode load completed successfully")
-            case .failure(let error):
-                print("❌ [ManifestCache] Lazy mode failed: \(error.localizedDescription)")
-                // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL, error: error)
+                switch result {
+                case .success:
+                    print("✅ [ManifestCache] Lazy mode load completed successfully")
+                case .failure(let error):
+                    print("❌ [ManifestCache] Lazy mode failed: \(error.localizedDescription)")
+                    // 回退到普通加载
+                    self.fallbackToNormalLoad(pageURL, error: error)
+                }
             }
         }
     }
@@ -885,21 +918,17 @@ public class WebViewController: UIViewController {
     private func fallbackToNormalLoad(_ url: URL, error: Error? = nil) {
         print("⏭️ [ManifestCache] Falling back to normal load")
 
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            // 如果提供了错误信息，且是自定义协议 URL，则显示错误页面
-            if let error = error, (url.scheme == self.customScheme || url.scheme == "wb-resource") {
-                self.showErrorPage(url: url, error: error)
-                return
-            }
-            
-            self.webView.load(URLRequest(url: url))
-            print("🌐 [BarkWebVC] Loading: \(url) (fallback mode)")
-
-            // 页面加载完成后自动生成缩略图
-            self.generateThumbnailAfterLoad(url: url)
+        // 如果提供了错误信息，且是自定义协议 URL，则显示错误页面
+        if let error = error, (url.scheme == customScheme || url.scheme == "wb-resource") {
+            showErrorPage(url: url, error: error)
+            return
         }
+
+        webView.load(URLRequest(url: url))
+        print("🌐 [BarkWebVC] Loading: \(url) (fallback mode)")
+
+        // 页面加载完成后自动生成缩略图
+        generateThumbnailAfterLoad(url: url)
     }
 
     /// 显示资源加载错误页面
@@ -1141,42 +1170,40 @@ public class WebViewController: UIViewController {
         print(debugInfo)
 
         // 显示 Alert
-        DispatchQueue.main.async { [weak self] in
-            let alert = UIAlertController(
-                title: "🔍 Cache Debug Info",
-                message: debugInfo,
-                preferredStyle: .actionSheet
-            )
+        let alert = UIAlertController(
+            title: "Cache Debug Info",
+            message: debugInfo,
+            preferredStyle: .actionSheet
+        )
 
-            alert.addAction(UIAlertAction(
-                title: "Copy to Clipboard",
-                style: .default
-            ) { _ in
-                UIPasteboard.general.string = debugInfo
-                self?.showToast(message: "Debug info copied to clipboard")
-            })
+        alert.addAction(UIAlertAction(
+            title: "Copy to Clipboard",
+            style: .default
+        ) { [weak self] _ in
+            UIPasteboard.general.string = debugInfo
+            self?.showToast(message: "Debug info copied to clipboard")
+        })
 
-            alert.addAction(UIAlertAction(
-                title: "Clear All Cache",
-                style: .destructive
-            ) { _ in
-                self?.clearAllCache()
-            })
+        alert.addAction(UIAlertAction(
+            title: "Clear All Cache",
+            style: .destructive
+        ) { [weak self] _ in
+            self?.clearAllCache()
+        })
 
-            alert.addAction(UIAlertAction(
-                title: "Close",
-                style: .cancel
-            ))
+        alert.addAction(UIAlertAction(
+            title: "Close",
+            style: .cancel
+        ))
 
-            // 对于 iPad 支持
-            if let popoverController = alert.popoverPresentationController {
-                if let barButton = self?.navigationItem.rightBarButtonItem {
-                    popoverController.barButtonItem = barButton
-                }
+        // 对于 iPad 支持
+        if let popoverController = alert.popoverPresentationController {
+            if let barButton = navigationItem.rightBarButtonItem {
+                popoverController.barButtonItem = barButton
             }
-
-            self?.present(alert, animated: true)
         }
+
+        present(alert, animated: true)
     }
 
     /// 清除所有缓存
@@ -1191,10 +1218,10 @@ public class WebViewController: UIViewController {
         let dataStore = WKWebsiteDataStore.default()
         let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
         let from = Date.distantPast
-        dataStore.removeData(ofTypes: dataTypes, modifiedSince: from) {
-            DispatchQueue.main.async { [weak self] in
+        _ = dataStore.removeData(ofTypes: dataTypes, modifiedSince: from) { [weak self] in
+            Task { @MainActor [weak self] in
                 self?.showToast(message: "All cache cleared successfully")
-                print("✅ [BarkWebVC] All cache cleared")
+                print(" All cache cleared")
             }
         }
     }
@@ -1208,7 +1235,8 @@ public class WebViewController: UIViewController {
         )
         present(alert, animated: true)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
             alert.dismiss(animated: true)
         }
     }
