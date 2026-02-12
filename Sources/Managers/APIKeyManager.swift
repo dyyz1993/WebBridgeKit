@@ -10,80 +10,63 @@ import Foundation
 import RealmSwift
 import CommonCrypto
 
-/// API 密钥管理器
-/// 负责密钥的生成、刷新、验证、删除
-public class APIKeyManager {
+// MARK: - Actor for Thread-Safe Database Operations
 
-    public static let shared = APIKeyManager()
-
+/// Thread-safe actor for database operations
+/// Ensures all Realm operations are serialized and safe from concurrent access
+actor APIKeyDatabaseActor {
     private let realmConfiguration: Realm.Configuration
     private let permanentKeyID = "permanent-key"
 
-    private init() {
-        // 使用独立的 Realm 文件
-        self.realmConfiguration = Realm.Configuration(
-            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("apiKey.realm"),
-            schemaVersion: 1
-        )
-
-        // 初始化永久密钥
-        ensurePermanentKeyExists()
+    init(realmConfiguration: Realm.Configuration) {
+        self.realmConfiguration = realmConfiguration
     }
 
-    /// 获取 Realm 实例
-    private func getRealm() -> Realm? {
-        return try? Realm(configuration: realmConfiguration)
+    /// Get Realm instance
+    private func getRealm() throws -> Realm {
+        return try Realm(configuration: realmConfiguration)
     }
 
-    /// 确保永久密钥存在
-    private func ensurePermanentKeyExists() {
-        guard let permanentKey = getPermanentKeyObject() else {
-            // 不存在则创建
-            _ = createPermanentKey()
+    /// Generate API key string
+    private func generateAPIKey() -> String {
+        // Format: wbk_ + 32 random characters
+        let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        let randomPart = String((0..<32).map { _ in characters.randomElement()! })
+
+        // Add device identifier prefix
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown"
+        return "wbk_\(deviceID)_\(randomPart)"
+    }
+
+    // MARK: - Permanent Key Operations
+
+    /// Get permanent key object
+    private func getPermanentKeyObject() throws -> APIKey? {
+        let realm = try getRealm()
+        let predicate = NSPredicate(format: "id == %@", permanentKeyID)
+        return realm.objects(APIKey.self).filter(predicate).first
+    }
+
+    /// Ensure permanent key exists
+    func ensurePermanentKeyExists() async throws {
+        guard try getPermanentKeyObject() == nil else {
             return
         }
+        // Create if not exists
+        _ = try createPermanentKey()
     }
 
-    // MARK: - 永久密钥
-
-    /// 获取永久密钥
-    /// - Returns: 永久密钥字符串
-    public func getPermanentKey() -> String {
-        guard let key = getPermanentKeyObject() else {
-            return createPermanentKey()
+    /// Get permanent key value
+    func getPermanentKey() async throws -> String {
+        guard let key = try getPermanentKeyObject() else {
+            return try createPermanentKey()
         }
         return key.keyValue
     }
 
-    /// 刷新永久密钥
-    /// - Returns: 新的永久密钥字符串
-    @discardableResult
-    public func refreshPermanentKey() -> String {
-        let realm = getRealm()
-
-        // 删除旧的永久密钥
-        if let oldKey = getPermanentKeyObject() {
-            try? realm?.write {
-                realm?.delete(oldKey)
-            }
-        }
-
-        // 创建新的永久密钥
-        let newKey = createPermanentKey()
-        WebBridgeLogger.shared.log(.info, "🔄 Permanent key refreshed")
-        return newKey
-    }
-
-    /// 获取永久密钥对象
-    private func getPermanentKeyObject() -> APIKey? {
-        let realm = getRealm()
-        let predicate = NSPredicate(format: "id == %@", permanentKeyID)
-        return realm?.objects(APIKey.self).filter(predicate).first
-    }
-
-    /// 创建永久密钥
-    private func createPermanentKey() -> String {
-        let realm = getRealm()
+    /// Create permanent key
+    private func createPermanentKey() throws -> String {
+        let realm = try getRealm()
 
         let key = APIKey()
         key.id = permanentKeyID
@@ -93,22 +76,36 @@ public class APIKeyManager {
         key.createdAt = Date()
         key.expiresAt = nil
 
-        try? realm?.write {
-            realm?.add(key)
+        try realm.write {
+            realm.add(key)
         }
 
         WebBridgeLogger.shared.log(.info, "🔑 Permanent key created")
         return key.keyValue
     }
 
-    // MARK: - 临时密钥
+    /// Refresh permanent key
+    func refreshPermanentKey() async throws -> String {
+        let realm = try getRealm()
 
-    /// 生成临时密钥
-    /// - Parameter duration: 有效时长（秒）
-    /// - Returns: 创建的临时密钥对象
-    @discardableResult
-    public func generateTemporaryKey(duration: TimeInterval) -> APIKey? {
-        let realm = getRealm()
+        // Delete old permanent key
+        if let oldKey = try getPermanentKeyObject() {
+            try realm.write {
+                realm.delete(oldKey)
+            }
+        }
+
+        // Create new permanent key
+        let newKey = try createPermanentKey()
+        WebBridgeLogger.shared.log(.info, "🔄 Permanent key refreshed")
+        return newKey
+    }
+
+    // MARK: - Temporary Key Operations
+
+    /// Generate temporary key
+    func generateTemporaryKey(duration: TimeInterval) async throws -> APIKey {
+        let realm = try getRealm()
 
         let key = APIKey()
         key.id = UUID().uuidString
@@ -118,23 +115,24 @@ public class APIKeyManager {
         key.createdAt = Date()
         key.expiresAt = Date().addingTimeInterval(duration)
 
-        try? realm?.write {
-            realm?.add(key)
+        try realm.write {
+            realm.add(key)
         }
 
         WebBridgeLogger.shared.log(.info, "🔑 Temporary key generated, valid for \(Int(duration))s")
-        return key
+        // Return independent copy to avoid cross-thread access issues
+        return APIKey(value: key)
     }
 
-    /// 验证密钥是否有效
-    /// - Parameter key: 密钥字符串
-    /// - Returns: 是否有效
-    public func validateKey(key: String) -> Bool {
-        let realm = getRealm()
+    /// Validate key
+    func validateKey(key: String) async throws -> Bool {
+        let realm = try getRealm()
         let predicate = NSPredicate(format: "keyValue == %@ AND isActive == true", key)
-        guard let keyObj = realm?.objects(APIKey.self).filter(predicate).first else { return false }
+        guard let keyObj = realm.objects(APIKey.self).filter(predicate).first else {
+            return false
+        }
 
-        // 检查是否过期
+        // Check if expired
         if keyObj.isExpired {
             return false
         }
@@ -142,74 +140,347 @@ public class APIKeyManager {
         return true
     }
 
-    // MARK: - CRUD
+    // MARK: - CRUD Operations
 
-    /// 删除密钥
-    public func deleteKey(id: String) {
-        let realm = getRealm()
-        guard let key = realm?.object(ofType: APIKey.self, forPrimaryKey: id) else { return }
-
-        // 不允许删除永久密钥
-        if key.id == permanentKeyID {
-            WebBridgeLogger.shared.log(.warning, "⚠️ Cannot delete permanent key")
-            return
+    /// Delete key
+    func deleteKey(id: String) async throws {
+        let realm = try getRealm()
+        guard let key = realm.object(ofType: APIKey.self, forPrimaryKey: id) else {
+            throw WebBridgeError.invalidInput("Key not found with ID: \(id)")
         }
 
-        try? realm?.write {
-            realm?.delete(key)
+        // Don't allow deleting permanent key
+        if key.id == permanentKeyID {
+            WebBridgeLogger.shared.log(.warning, "⚠️ Cannot delete permanent key")
+            throw WebBridgeError.invalidInput("Cannot delete permanent key")
+        }
+
+        try realm.write {
+            realm.delete(key)
         }
 
         WebBridgeLogger.shared.log(.info, "🗑️ Key deleted: \(id)")
     }
 
-    /// 获取所有密钥
-    public func getAllKeys() -> Results<APIKey> {
-        guard let realm = getRealm() else {
-            return try! Realm().objects(APIKey.self).filter("FALSEPREDICATE")
-        }
-        return realm.objects(APIKey.self)
+    /// Get all keys
+    func getAllKeys() async throws -> [APIKey] {
+        let realm = try getRealm()
+        let results = realm.objects(APIKey.self)
             .sorted(byKeyPath: "createdAt", ascending: false)
+        // Create independent copies to avoid cross-thread access issues
+        return results.map { APIKey(value: $0) }
     }
 
-    /// 获取临时密钥
-    public func getTemporaryKeys() -> Results<APIKey> {
-        guard let realm = getRealm() else {
-            return try! Realm().objects(APIKey.self).filter("FALSEPREDICATE")
-        }
+    /// Get temporary keys
+    func getTemporaryKeys() async throws -> [APIKey] {
+        let realm = try getRealm()
         let predicate = NSPredicate(format: "keyType == 'temporary'")
-        return realm.objects(APIKey.self)
+        let results = realm.objects(APIKey.self)
             .filter(predicate)
             .sorted(byKeyPath: "createdAt", ascending: false)
+        // Create independent copies to avoid cross-thread access issues
+        return results.map { APIKey(value: $0) }
     }
 
-    // MARK: - 维护
+    // MARK: - Maintenance Operations
 
-    /// 清理已过期的临时密钥
-    public func cleanupExpiredKeys() {
-        let realm = getRealm()
+    /// Clean up expired temporary keys
+    func cleanupExpiredKeys() async throws {
+        let realm = try getRealm()
         let now = Date()
         let predicate = NSPredicate(format: "keyType == 'temporary' AND expiresAt <= %@", now as NSDate)
-        let expired = realm?.objects(APIKey.self).filter(predicate)
+        let expired = realm.objects(APIKey.self).filter(predicate)
 
-        try? realm?.write {
-            if let expired = expired {
-                realm?.delete(expired)
-            }
+        let count = expired.count
+        try realm.write {
+            realm.delete(expired)
         }
 
-        WebBridgeLogger.shared.log(.info, "🧹 Cleaned up \(expired?.count ?? 0) expired keys")
+        WebBridgeLogger.shared.log(.info, "🧹 Cleaned up \(count) expired keys")
+    }
+}
+
+// MARK: - Main Manager Class
+
+/// API Key Manager
+/// Responsible for key generation, refresh, validation, and deletion
+public class APIKeyManager {
+
+    public static let shared = APIKeyManager()
+
+    private let realmConfiguration: Realm.Configuration
+    private let databaseActor: APIKeyDatabaseActor
+
+    private init() {
+        // Use independent Realm file
+        self.realmConfiguration = Realm.Configuration(
+            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("apiKey.realm"),
+            schemaVersion: 1
+        )
+        self.databaseActor = APIKeyDatabaseActor(realmConfiguration: realmConfiguration)
+
+        // Initialize permanent key asynchronously
+        Task {
+            try? await databaseActor.ensurePermanentKeyExists()
+        }
     }
 
-    // MARK: - 私有方法
+    // MARK: - Permanent Key Operations
 
-    /// 生成 API 密钥
-    private func generateAPIKey() -> String {
-        // 格式: wbk_ + 32位随机字符
-        let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        let randomPart = String((0..<32).map { _ in characters.randomElement()! })
+    /// Get permanent key
+    /// - Returns: Permanent key string
+    public func getPermanentKey() async throws -> String {
+        do {
+            return try await databaseActor.getPermanentKey()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
 
-        // 添加设备标识前缀
-        let deviceID = UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown"
-        return "wbk_\(deviceID)_\(randomPart)"
+    /// Refresh permanent key
+    /// - Returns: New permanent key string
+    @discardableResult
+    public func refreshPermanentKey() async throws -> String {
+        do {
+            return try await databaseActor.refreshPermanentKey()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    // MARK: - Temporary Key Operations
+
+    /// Generate temporary key
+    /// - Parameter duration: Valid duration in seconds
+    /// - Returns: Created temporary key object
+    @discardableResult
+    public func generateTemporaryKey(duration: TimeInterval) async throws -> APIKey {
+        do {
+            return try await databaseActor.generateTemporaryKey(duration: duration)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Validate key
+    /// - Parameter key: Key string
+    /// - Returns: Whether valid
+    public func validateKey(key: String) async throws -> Bool {
+        do {
+            return try await databaseActor.validateKey(key: key)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    // MARK: - CRUD Operations
+
+    /// Delete key
+    public func deleteKey(id: String) async throws {
+        do {
+            try await databaseActor.deleteKey(id: id)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Get all keys
+    public func getAllKeys() async throws -> [APIKey] {
+        do {
+            return try await databaseActor.getAllKeys()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Get temporary keys
+    public func getTemporaryKeys() async throws -> [APIKey] {
+        do {
+            return try await databaseActor.getTemporaryKeys()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    // MARK: - Maintenance Operations
+
+    /// Clean up expired temporary keys
+    public func cleanupExpiredKeys() async throws {
+        do {
+            try await databaseActor.cleanupExpiredKeys()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+}
+
+// MARK: - Synchronous Compatibility Layer
+// These methods provide backward compatibility with existing code
+// that calls the manager synchronously. They wrap the async methods.
+
+extension APIKeyManager {
+
+    /// Synchronous version of getPermanentKey for backward compatibility
+    /// Returns empty string on error
+    public func getPermanentKey() -> String {
+        var result: String = ""
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await getPermanentKey()
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to get permanent key: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of refreshPermanentKey for backward compatibility
+    /// Returns empty string on error
+    @discardableResult
+    public func refreshPermanentKey() -> String {
+        var result: String = ""
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await refreshPermanentKey()
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to refresh permanent key: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of generateTemporaryKey for backward compatibility
+    /// Returns nil on error
+    @discardableResult
+    public func generateTemporaryKey(duration: TimeInterval) -> APIKey? {
+        var result: APIKey? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await generateTemporaryKey(duration: duration)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to generate temporary key: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of validateKey for backward compatibility
+    /// Returns false on error
+    public func validateKey(key: String) -> Bool {
+        var result: Bool = false
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await validateKey(key: key)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to validate key: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of deleteKey for backward compatibility
+    public func deleteKey(id: String) {
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                try await deleteKey(id: id)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to delete key: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+    }
+
+    /// Synchronous version of getAllKeys for backward compatibility
+    /// Returns empty array on error
+    public func getAllKeys() -> [APIKey] {
+        var result: [APIKey] = []
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await getAllKeys()
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to get all keys: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of getTemporaryKeys for backward compatibility
+    /// Returns empty array on error
+    public func getTemporaryKeys() -> [APIKey] {
+        var result: [APIKey] = []
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await getTemporaryKeys()
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to get temporary keys: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of cleanupExpiredKeys for backward compatibility
+    public func cleanupExpiredKeys() {
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                try await cleanupExpiredKeys()
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to cleanup expired keys: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
     }
 }

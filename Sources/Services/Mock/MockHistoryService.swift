@@ -128,41 +128,35 @@ public class MockHistoryService: HistoryServiceProtocol {
 
     // MARK: - 查询
 
-    public func getAllHistories() -> Results<WebPageHistory> {
+    public func getAllHistories() -> [WebPageHistory] {
         if useInMemoryRealm, let realm = getRealm() {
             let results = realm.objects(WebPageHistory.self)
                 .sorted(byKeyPath: "lastVisitDate", ascending: false)
             print("🔍 [MockHistoryService] getAllHistories: useInMemoryRealm=true, count: \(results.count)")
-            return results
+            return Array(results).map { WebPageHistory(value: $0) }
         }
 
-        // 创建临时内存 Realm 来获取空 Results
-        let config = Realm.Configuration(inMemoryIdentifier: UUID().uuidString)
-        let tempRealm = try! Realm(configuration: config)
-        print("🔍 [MockHistoryService] getAllHistories: useInMemoryRealm=false, returning empty Results")
-        return tempRealm.objects(WebPageHistory.self).filter("FALSEPREDICATE")
-    }
-
-    /// 获取所有历史记录的数组形式（用于 Mock 模式）
-    public func getAllHistoriesArray() -> [WebPageHistory] {
-        if useInMemoryRealm, let realm = getRealm() {
-            return Array(realm.objects(WebPageHistory.self)
-                .sorted(byKeyPath: "lastVisitDate", ascending: false))
-        }
-
+        print("🔍 [MockHistoryService] getAllHistories: useInMemoryRealm=false, returning array from dictionary")
         return Array(mockHistories.values)
             .sorted { $0.lastVisitDate > $1.lastVisitDate }
     }
 
-    public func getCachedHistories() -> Results<WebPageHistory> {
+    /// 获取所有历史记录的数组形式（用于 Mock 模式）
+    public func getAllHistoriesArray() -> [WebPageHistory] {
+        return getAllHistories()
+    }
+
+    public func getCachedHistories() -> [WebPageHistory] {
         if useInMemoryRealm, let realm = getRealm() {
-            return realm.objects(WebPageHistory.self)
+            return Array(realm.objects(WebPageHistory.self)
                 .filter("isCached == true")
-                .sorted(byKeyPath: "cacheDate", ascending: false)
+                .sorted(byKeyPath: "cacheDate", ascending: false))
+                .map { WebPageHistory(value: $0) }
         }
-        let config = Realm.Configuration(inMemoryIdentifier: UUID().uuidString)
-        let tempRealm = try! Realm(configuration: config)
-        return tempRealm.objects(WebPageHistory.self).filter("FALSEPREDICATE")
+
+        return Array(mockHistories.values)
+            .filter { $0.isCached }
+            .sorted { ($0.cacheDate ?? Date.distantPast) > ($1.cacheDate ?? Date.distantPast) }
     }
 
     public func findHistory(url: URL) -> WebPageHistory? {
@@ -184,15 +178,20 @@ public class MockHistoryService: HistoryServiceProtocol {
         return mockHistories.values.first { $0.id == id }
     }
 
-    public func searchHistories(keyword: String) -> Results<WebPageHistory> {
+    public func searchHistories(keyword: String) -> [WebPageHistory] {
         if useInMemoryRealm, let realm = getRealm() {
-            return realm.objects(WebPageHistory.self)
+            return Array(realm.objects(WebPageHistory.self)
                 .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
-                .sorted(byKeyPath: "lastVisitDate", ascending: false)
+                .sorted(byKeyPath: "lastVisitDate", ascending: false))
+                .map { WebPageHistory(value: $0) }
         }
-        let config = Realm.Configuration(inMemoryIdentifier: UUID().uuidString)
-        let tempRealm = try! Realm(configuration: config)
-        return tempRealm.objects(WebPageHistory.self).filter("FALSEPREDICATE")
+
+        return mockHistories.values
+            .filter { history in
+                history.url.localizedCaseInsensitiveContains(keyword) ||
+                (history.title?.localizedCaseInsensitiveContains(keyword) ?? false)
+            }
+            .sorted { $0.lastVisitDate > $1.lastVisitDate }
     }
 
     // MARK: - 统计
@@ -236,8 +235,12 @@ public class MockHistoryService: HistoryServiceProtocol {
     /// 添加 Mock 数据（用于测试）
     public func addMockData(urls: [String], titles: [String]? = nil) {
         for (index, url) in urls.enumerated() {
+            guard let urlObject = URL(string: url) else {
+                print("⚠️ [MockHistoryService] Invalid URL: \(url)")
+                continue
+            }
             let title = titles?.indices.contains(index) == true ? titles?[index] : "Mock: \(url)"
-            addOrUpdateHistory(url: URL(string: url)!, title: title, favicon: nil)
+            addOrUpdateHistory(url: urlObject, title: title, favicon: nil)
         }
     }
 

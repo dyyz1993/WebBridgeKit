@@ -9,21 +9,48 @@
 import Foundation
 
 /// Manifest 存储管理
-public class ManifestStore {
+public class ManifestStore: ManifestCacheManaging {
 
     public static let shared = ManifestStore()
 
-    private var htmlCache: [String: String] = [:]
-    private var manifestCache: [String: Manifest] = [:]
+    /// 缓存条目（带时间戳）
+    private struct CacheEntry {
+        let html: String
+        let timestamp: Date
+
+        var isExpired: Bool {
+            // 默认 7 天过期
+            let expirationDays = 7
+            let expirationInterval = TimeInterval(expirationDays * 24 * 60 * 60)
+            return Date().timeIntervalSince(timestamp) > expirationInterval
+        }
+    }
+
+    /// Manifest 缓存条目（带时间戳）
+    private struct ManifestCacheEntry {
+        let manifest: Manifest
+        let timestamp: Date
+
+        var isExpired: Bool {
+            // 默认 7 天过期
+            let expirationDays = 7
+            let expirationInterval = TimeInterval(expirationDays * 24 * 60 * 60)
+            return Date().timeIntervalSince(timestamp) > expirationInterval
+        }
+    }
+
+    private var htmlCache: [String: CacheEntry] = [:]
+    private var manifestCache: [String: ManifestCacheEntry] = [:]
     private var currentManifests: [String: Manifest] = [:]
 
-    private let lock = NSLock()
+    /// ✅ FIX: Serial queue for thread-safe access to shared state
+    /// Replaced NSLock with serial queue to prevent deadlock risks
+    private let serialQueue = DispatchQueue(label: "com.webbridgekit.manifest-store", qos: .userInitiated)
     private let htmlFilePath: URL
     private let manifestFilePath: URL
 
-    // Async save mechanism to avoid lock-I/O deadlock
+    // Async save mechanism
     private var savePending = false
-    private let saveQueue = DispatchQueue(label: "com.webbridgekit.manifest-save", qos: .utility)
 
     public init() {
         let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
@@ -35,114 +62,134 @@ public class ManifestStore {
         self.htmlFilePath = cacheDir.appendingPathComponent("html_cache.plist")
         self.manifestFilePath = cacheDir.appendingPathComponent("manifest_cache.plist")
 
-        // 加载已保存的数据
-        loadFromDisk()
+        // 异步加载已保存的数据，减少主线程压力
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            self?.loadFromDisk()
+            Log.info("Disk data loaded in background", category: .manifest)
+        }
+
+        Log.info("Initialized (background loading started)", category: .manifest)
     }
 
     // MARK: - HTML Storage
-    
+
     public func getHTML(for key: String) -> String? {
-        lock.lock()
-        defer { lock.unlock() }
-        return htmlCache[key]
+        return serialQueue.sync {
+            return htmlCache[key]?.html
+        }
     }
 
     public func saveHTML(_ html: String, for key: String) {
-        lock.lock()
-        defer { lock.unlock() }
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
 
-        htmlCache[key] = html
-        scheduleAsyncSave()
-        
-        // 发送更新通知
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: NSNotification.Name("ManifestCacheDidUpdate"), object: nil)
+            self.htmlCache[key] = CacheEntry(html: html, timestamp: Date())
+            self.scheduleAsyncSave()
+
+            // 发送更新通知
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .manifestCacheDidUpdate, object: nil)
+            }
         }
     }
 
     public func removeHTML(for key: String) {
-        lock.lock()
-        defer { lock.unlock() }
-
-        htmlCache.removeValue(forKey: key)
-        scheduleAsyncSave()
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.htmlCache.removeValue(forKey: key)
+            self.scheduleAsyncSave()
+        }
     }
 
     // MARK: - Manifest Storage
 
     public func getManifest(for key: String) -> Manifest? {
-        lock.lock()
-        defer { lock.unlock() }
-        return manifestCache[key]
+        return serialQueue.sync {
+            return manifestCache[key]?.manifest
+        }
     }
 
     public func saveManifest(_ manifest: Manifest, for key: String) {
-        lock.lock()
-        defer { lock.unlock() }
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
 
-        var updatedManifest = manifest
-        updatedManifest.version = updatedManifest.version ?? UUID().uuidString
-        updatedManifest.lastUpdated = Date()
-        manifestCache[key] = updatedManifest
-        scheduleAsyncSave()
-        
-        // 发送更新通知
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: NSNotification.Name("ManifestCacheDidUpdate"), object: nil)
+            var updatedManifest = manifest
+            updatedManifest.version = updatedManifest.version ?? UUID().uuidString
+            updatedManifest.lastUpdated = Date()
+            self.manifestCache[key] = ManifestCacheEntry(manifest: updatedManifest, timestamp: Date())
+            self.scheduleAsyncSave()
+
+            // 发送更新通知
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .manifestCacheDidUpdate, object: nil)
+            }
         }
     }
 
     public func removeManifest(for key: String) {
-        lock.lock()
-        defer { lock.unlock() }
-
-        manifestCache.removeValue(forKey: key)
-        scheduleAsyncSave()
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.manifestCache.removeValue(forKey: key)
+            self.scheduleAsyncSave()
+        }
     }
 
     /// 清空所有缓存
     public func clearAll() {
-        lock.lock()
-        htmlCache.removeAll()
-        manifestCache.removeAll()
-        currentManifests.removeAll()
-        lock.unlock()
-
-        saveQueue.async { [weak self] in
+        serialQueue.async { [weak self] in
             guard let self = self else { return }
-            try? FileManager.default.removeItem(at: self.htmlFilePath)
-            try? FileManager.default.removeItem(at: self.manifestFilePath)
-            print("🗑️ [ManifestStore] Cleared all data from disk")
-        }
+            self.htmlCache.removeAll()
+            self.manifestCache.removeAll()
+            self.currentManifests.removeAll()
 
-        // 发送更新通知
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: NSNotification.Name("ManifestCacheDidUpdate"), object: nil)
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                guard let self = self else { return }
+                try? FileManager.default.removeItem(at: self.htmlFilePath)
+                try? FileManager.default.removeItem(at: self.manifestFilePath)
+                Log.info("Cleared all data from disk", category: .manifest)
+            }
+
+            // 发送更新通知
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .manifestCacheDidUpdate, object: nil)
+            }
         }
     }
 
     // MARK: - Current Manifest
 
     public func getCurrentManifest(for key: String) -> Manifest? {
-        lock.lock()
-        defer { lock.unlock() }
-        return currentManifests[key]
+        return serialQueue.sync {
+            return currentManifests[key]
+        }
     }
 
     public func setCurrentManifest(_ manifest: Manifest, for key: String) {
-        lock.lock()
-        defer { lock.unlock() }
-        currentManifests[key] = manifest
-        scheduleAsyncSave()
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.currentManifests[key] = manifest
+            self.scheduleAsyncSave()
+        }
     }
 
     /// 获取所有已缓存的页面 key
     /// - Returns: 所有页面标识符（HTML 或 Manifest）
     public func getAllPageKeys() -> [String] {
-        lock.lock()
-        defer { lock.unlock() }
-        // ✅ FIX: 返回 manifest 的 keys（HTML 可能为空）
-        return Array(manifestCache.keys)
+        return serialQueue.sync {
+            return Array(manifestCache.keys)
+        }
+    }
+
+    /// 根据 appId 获取 Manifest 和对应的 key
+    public func getManifestByAppId(_ appId: String) -> (key: String, manifest: Manifest)? {
+        return serialQueue.sync {
+            for (key, entry) in manifestCache {
+                if entry.manifest.appid == appId {
+                    return (key, entry.manifest)
+                }
+            }
+            return nil
+        }
     }
 
     // MARK: - Persistence
@@ -151,13 +198,20 @@ public class ManifestStore {
         // 加载 HTML 缓存
         if let htmlData = try? Data(contentsOf: htmlFilePath),
            let htmlDict = try? PropertyListSerialization.propertyList(from: htmlData, options: [], format: nil) as? [String: String] {
-            htmlCache = htmlDict
+            // 转换为新的 CacheEntry 结构，使用当前时间作为时间戳
+            let newHtmlCache = htmlDict.mapValues { html in
+                CacheEntry(html: html, timestamp: Date())
+            }
+            serialQueue.async { [weak self] in
+                guard let self = self else { return }
+                self.htmlCache = newHtmlCache
+            }
         }
 
         // 加载 Manifest 缓存
         if let manifestData = try? Data(contentsOf: manifestFilePath),
            let manifestDict = try? PropertyListSerialization.propertyList(from: manifestData, options: [], format: nil) as? [String: [String: Any]] {
-            var loaded: [String: Manifest] = [:]
+            var loaded: [String: ManifestCacheEntry] = [:]
 
             for (key, value) in manifestDict {
                 if let resources = value["resources"] as? [String: String] {
@@ -192,38 +246,90 @@ public class ManifestStore {
                         manifest.accessCount = accessCount
                     }
 
-                    loaded[key] = manifest
+                    // 使用 lastUpdated 作为缓存时间戳，如果没有则使用当前时间
+                    let cacheTimestamp = manifest.lastUpdated ?? Date()
+                    loaded[key] = ManifestCacheEntry(manifest: manifest, timestamp: cacheTimestamp)
                 }
             }
 
-            manifestCache = loaded
+            serialQueue.async { [weak self] in
+                guard let self = self else { return }
+                self.manifestCache = loaded
+            }
         }
 
-        print("✅ [ManifestStore] Loaded from disk: \(htmlCache.count) HTMLs, \(manifestCache.count) manifests")
+        let htmlCount = serialQueue.sync { htmlCache.count }
+        let manifestCount = serialQueue.sync { manifestCache.count }
+        Log.info("Loaded from disk: \(htmlCount) HTMLs, \(manifestCount) manifests", category: .manifest)
     }
 
-    /// Schedule async save to avoid holding lock during I/O operations
+    /// ✅ FIX: Simplified async save with serialQueue - no complex locking needed
     private func scheduleAsyncSave() {
-        saveQueue.async { [weak self] in
+        DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self = self else { return }
 
-            // Check if save is already pending
-            self.lock.lock()
-            if self.savePending {
-                self.lock.unlock()
-                return
+            // Get copies of data from serialQueue
+            let htmlCopy: [String: String]
+            let manifestDictCopy: [String: [String: Any]]
+
+            htmlCopy = self.serialQueue.sync {
+                return self.htmlCache.mapValues { $0.html }
             }
-            self.savePending = true
 
-            // Copy data under lock (fast operation)
-            var htmlCopy: [String: String]?
-            var manifestDictCopy: [String: [String: Any]]?
+            manifestDictCopy = self.serialQueue.sync {
+                var dict: [String: [String: Any]] = [:]
+                for (key, entry) in self.manifestCache {
+                    let manifest = entry.manifest
+                    var manifestDict: [String: Any] = [
+                        "resources": manifest.resources,
+                        "appid": manifest.appid ?? "",
+                        "name": manifest.name ?? "",
+                        "icon": manifest.icon ?? "",
+                        "isPinned": manifest.isPinned ?? false,
+                        "isFavorite": manifest.isFavorite ?? false,
+                        "accessCount": manifest.accessCount ?? 0
+                    ]
+                    if let version = manifest.version {
+                        manifestDict["version"] = version
+                    }
+                    if let lastUpdated = manifest.lastUpdated {
+                        manifestDict["lastUpdated"] = lastUpdated.timeIntervalSince1970
+                    }
+                    if let lastAccessed = manifest.lastAccessed {
+                        manifestDict["lastAccessed"] = lastAccessed.timeIntervalSince1970
+                    }
+                    dict[key] = manifestDict
+                }
+                return dict
+            }
 
-            htmlCopy = self.htmlCache
+            // Perform I/O without holding any lock
+            if let htmlData = try? PropertyListSerialization.data(fromPropertyList: htmlCopy, format: .xml, options: 0) {
+                try? htmlData.write(to: self.htmlFilePath)
+            }
 
-            manifestDictCopy = [:]
-            for (key, manifest) in self.manifestCache {
-                var dict: [String: Any] = [
+            if let manifestData = try? PropertyListSerialization.data(fromPropertyList: manifestDictCopy, format: .xml, options: 0) {
+                try? manifestData.write(to: self.manifestFilePath)
+            }
+        }
+    }
+
+    private func saveToDisk() {
+        // 保存 HTML 缓存
+        let htmlCopy = serialQueue.sync {
+            return htmlCache.mapValues { $0.html }
+        }
+
+        if let htmlData = try? PropertyListSerialization.data(fromPropertyList: htmlCopy, format: .xml, options: 0) {
+            try? htmlData.write(to: htmlFilePath)
+        }
+
+        // 保存 Manifest 缓存
+        let manifestCopy = serialQueue.sync {
+            var dict: [String: [String: Any]] = [:]
+            for (key, entry) in manifestCache {
+                let manifest = entry.manifest
+                var manifestDict: [String: Any] = [
                     "resources": manifest.resources,
                     "appid": manifest.appid ?? "",
                     "name": manifest.name ?? "",
@@ -232,71 +338,25 @@ public class ManifestStore {
                     "isFavorite": manifest.isFavorite ?? false,
                     "accessCount": manifest.accessCount ?? 0
                 ]
+
                 if let version = manifest.version {
-                    dict["version"] = version
+                    manifestDict["version"] = version
                 }
+
                 if let lastUpdated = manifest.lastUpdated {
-                    dict["lastUpdated"] = lastUpdated.timeIntervalSince1970
+                    manifestDict["lastUpdated"] = lastUpdated.timeIntervalSince1970
                 }
+
                 if let lastAccessed = manifest.lastAccessed {
-                    dict["lastAccessed"] = lastAccessed.timeIntervalSince1970
+                    manifestDict["lastAccessed"] = lastAccessed.timeIntervalSince1970
                 }
-                manifestDictCopy?[key] = dict
+
+                dict[key] = manifestDict
             }
-            self.lock.unlock()
-
-            // Perform I/O without holding lock (slow operation)
-            if let htmlData = try? PropertyListSerialization.data(fromPropertyList: htmlCopy ?? [:], format: .xml, options: 0) {
-                try? htmlData.write(to: self.htmlFilePath)
-            }
-
-            if let manifestData = try? PropertyListSerialization.data(fromPropertyList: manifestDictCopy ?? [:], format: .xml, options: 0) {
-                try? manifestData.write(to: self.manifestFilePath)
-            }
-
-            // Reset pending flag
-            self.lock.lock()
-            self.savePending = false
-            self.lock.unlock()
-        }
-    }
-
-    private func saveToDisk() {
-        // 保存 HTML 缓存
-        if let htmlData = try? PropertyListSerialization.data(fromPropertyList: htmlCache, format: .xml, options: 0) {
-            try? htmlData.write(to: htmlFilePath)
+            return dict
         }
 
-        // 保存 Manifest 缓存
-        var manifestDict: [String: [String: Any]] = [:]
-
-        for (key, manifest) in manifestCache {
-            var dict: [String: Any] = [
-                "resources": manifest.resources,
-                "appid": manifest.appid ?? "",
-                "name": manifest.name ?? "",
-                "icon": manifest.icon ?? "",
-                "isPinned": manifest.isPinned ?? false,
-                "isFavorite": manifest.isFavorite ?? false,
-                "accessCount": manifest.accessCount ?? 0
-            ]
-
-            if let version = manifest.version {
-                dict["version"] = version
-            }
-
-            if let lastUpdated = manifest.lastUpdated {
-                dict["lastUpdated"] = lastUpdated.timeIntervalSince1970
-            }
-
-            if let lastAccessed = manifest.lastAccessed {
-                dict["lastAccessed"] = lastAccessed.timeIntervalSince1970
-            }
-
-            manifestDict[key] = dict
-        }
-
-        if let manifestData = try? PropertyListSerialization.data(fromPropertyList: manifestDict, format: .xml, options: 0) {
+        if let manifestData = try? PropertyListSerialization.data(fromPropertyList: manifestCopy, format: .xml, options: 0) {
             try? manifestData.write(to: manifestFilePath)
         }
     }
@@ -306,7 +366,7 @@ public class ManifestStore {
 
 /// 资源缓存（内存 + 磁盘）
 public class ResourceCache {
-    
+
     public static let shared = ResourceCache()
 
     private var memoryCache: [String: ResourceData] = [:]
@@ -314,9 +374,9 @@ public class ResourceCache {
     private var currentMemorySize: Int64 = 0
 
     private let diskCacheDirectory: URL
-    private let lock = NSLock()
 
-    private let queue = DispatchQueue(label: "com.webbridgekit.resource-cache", qos: .userInitiated)
+    /// ✅ FIX: Using serialQueue for thread-safe operations
+    private let serialQueue = DispatchQueue(label: "com.webbridgekit.resource-cache", qos: .userInitiated)
 
     public init() {
         let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
@@ -331,13 +391,14 @@ public class ResourceCache {
     // MARK: - Cache Operations
 
     public func get(_ relativePath: String, for pageKey: String) -> ResourceData? {
-        lock.lock()
-        defer { lock.unlock() }
-
         let key = cacheKey(relativePath, pageKey: pageKey)
 
         // 先查内存
-        if let resource = memoryCache[key] {
+        let cachedResource = serialQueue.sync {
+            return memoryCache[key]
+        }
+
+        if let resource = cachedResource {
             return resource
         }
 
@@ -361,7 +422,7 @@ public class ResourceCache {
     }
 
     func set(_ resource: ResourceData, for pageKey: String) {
-        queue.async { [weak self] in
+        serialQueue.async { [weak self] in
             guard let self = self else { return }
 
             let key = self.cacheKey(resource.relativePath, pageKey: pageKey)
@@ -372,7 +433,7 @@ public class ResourceCache {
                 let parentDirectory = diskPath.deletingLastPathComponent()
                 try FileManager.default.createDirectory(at: parentDirectory, withIntermediateDirectories: true, attributes: nil)
 
-                // 1. Write to disk first (no lock needed)
+                // Write to disk first
                 try resource.data.write(to: diskPath)
 
                 // Save metadata
@@ -385,10 +446,7 @@ public class ResourceCache {
                     try metaData.write(to: diskPath.appendingPathExtension("meta"))
                 }
 
-                // 2. Update memory cache (single lock acquisition)
-                self.lock.lock()
-                defer { self.lock.unlock() }
-
+                // Update memory cache
                 let resourceSize = Int64(resource.data.count)
 
                 // Evict old resources if needed
@@ -406,7 +464,7 @@ public class ResourceCache {
 
                 // 发送更新通知
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: NSNotification.Name("ManifestCacheDidUpdate"), object: nil)
+                    NotificationCenter.default.post(name: .manifestCacheDidUpdate, object: nil)
                 }
             } catch {
                 print("❌ [ResourceCache] Failed to cache: \(error.localizedDescription)")
@@ -415,45 +473,46 @@ public class ResourceCache {
     }
 
     func removeResources(for pageKey: String) {
-        lock.lock()
-        defer { lock.unlock() }
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
 
-        // 移除内存缓存
-        var keysToRemove: [String] = []
-        for key in memoryCache.keys {
-            if key.contains("/\(pageKey)/") {
-                keysToRemove.append(key)
+            // 移除内存缓存
+            var keysToRemove: [String] = []
+            for key in self.memoryCache.keys {
+                if key.contains("/\(pageKey)/") {
+                    keysToRemove.append(key)
+                }
             }
-        }
 
-        for key in keysToRemove {
-            if let resource = memoryCache.removeValue(forKey: key) {
-                currentMemorySize -= Int64(resource.data.count)
+            for key in keysToRemove {
+                if let resource = self.memoryCache.removeValue(forKey: key) {
+                    self.currentMemorySize -= Int64(resource.data.count)
+                }
             }
-        }
 
-        // 移除磁盘缓存
-        if let enumerator = FileManager.default.enumerator(at: diskCacheDirectory, includingPropertiesForKeys: nil) {
-            for case let fileURL as URL in enumerator {
-                let filename = fileURL.lastPathComponent
-                if filename.contains("/\(pageKey)/") {
-                    try? FileManager.default.removeItem(at: fileURL)
+            // 移除磁盘缓存
+            if let enumerator = FileManager.default.enumerator(at: self.diskCacheDirectory, includingPropertiesForKeys: nil) {
+                for case let fileURL as URL in enumerator {
+                    let filename = fileURL.lastPathComponent
+                    if filename.contains("/\(pageKey)/") {
+                        try? FileManager.default.removeItem(at: fileURL)
+                    }
                 }
             }
         }
     }
 
     func removeAll() {
-        lock.lock()
-        defer { lock.unlock() }
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.memoryCache.removeAll()
+            self.currentMemorySize = 0
 
-        memoryCache.removeAll()
-        currentMemorySize = 0
-
-        // 清空磁盘目录
-        if let enumerator = FileManager.default.enumerator(at: diskCacheDirectory, includingPropertiesForKeys: nil) {
-            for case let fileURL as URL in enumerator {
-                try? FileManager.default.removeItem(at: fileURL)
+            // 清空磁盘目录
+            if let enumerator = FileManager.default.enumerator(at: self.diskCacheDirectory, includingPropertiesForKeys: nil) {
+                for case let fileURL as URL in enumerator {
+                    try? FileManager.default.removeItem(at: fileURL)
+                }
             }
         }
     }
@@ -461,42 +520,43 @@ public class ResourceCache {
     /// 移除指定 pageKey 的所有缓存
     /// - Parameter pageKey: 页面标识符
     func removeAll(for pageKey: String) {
-        lock.lock()
-        defer { lock.unlock() }
+        serialQueue.async { [weak self] in
+            guard let self = self else { return }
 
-        let pageKeyPrefix = "\(pageKey)/"
+            let pageKeyPrefix = "\(pageKey)/"
 
-        // 从内存缓存中删除
-        var keysToRemove: [String] = []
-        for key in memoryCache.keys {
-            if key.hasPrefix(pageKeyPrefix) {
-                keysToRemove.append(key)
-            }
-        }
-        for key in keysToRemove {
-            if let resource = memoryCache.removeValue(forKey: key) {
-                currentMemorySize -= Int64(resource.data.count)
-            }
-        }
-
-        // 从磁盘缓存中删除
-        if let enumerator = FileManager.default.enumerator(at: diskCacheDirectory, includingPropertiesForKeys: nil) {
-            for case let fileURL as URL in enumerator {
-                let fileName = fileURL.lastPathComponent
-                if fileName.hasPrefix(pageKeyPrefix) {
-                    try? FileManager.default.removeItem(at: fileURL)
+            // 从内存缓存中删除
+            var keysToRemove: [String] = []
+            for key in self.memoryCache.keys {
+                if key.hasPrefix(pageKeyPrefix) {
+                    keysToRemove.append(key)
                 }
-                // 也删除元数据文件
-                let metaFileName = fileName + ".meta"
-                if let metaFileURL = URL(string: fileURL.deletingLastPathComponent().appendingPathComponent(metaFileName).absoluteString) {
-                    if metaFileURL.lastPathComponent.hasPrefix(pageKeyPrefix) {
-                        try? FileManager.default.removeItem(at: metaFileURL)
+            }
+            for key in keysToRemove {
+                if let resource = self.memoryCache.removeValue(forKey: key) {
+                    self.currentMemorySize -= Int64(resource.data.count)
+                }
+            }
+
+            // 从磁盘缓存中删除
+            if let enumerator = FileManager.default.enumerator(at: self.diskCacheDirectory, includingPropertiesForKeys: nil) {
+                for case let fileURL as URL in enumerator {
+                    let fileName = fileURL.lastPathComponent
+                    if fileName.hasPrefix(pageKeyPrefix) {
+                        try? FileManager.default.removeItem(at: fileURL)
+                    }
+                    // 也删除元数据文件
+                    let metaFileName = fileName + ".meta"
+                    if let metaFileURL = URL(string: fileURL.deletingLastPathComponent().appendingPathComponent(metaFileName).absoluteString) {
+                        if metaFileURL.lastPathComponent.hasPrefix(pageKeyPrefix) {
+                            try? FileManager.default.removeItem(at: metaFileURL)
+                        }
                     }
                 }
             }
-        }
 
-        print("🗑️ [ResourceCache] Removed all resources for pageKey: \(pageKey)")
+            print("🗑️ [ResourceCache] Removed all resources for pageKey: \(pageKey)")
+        }
     }
 
     public func totalSize() -> Int64 {

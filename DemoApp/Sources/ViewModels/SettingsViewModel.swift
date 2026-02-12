@@ -26,6 +26,7 @@ class SettingsViewModel: ViewModel {
         let navigateToTokenManage: Driver<Void>
         let navigateToServerConfig: Driver<Void>
         let navigateToAPIKeyManage: Driver<Void>
+        let navigateToManagement: Driver<Void>
         let navigateToAbout: Driver<Void>
         let storageSize: Driver<String>
         let lastAppMemoryEnabled: Driver<Bool>
@@ -37,7 +38,7 @@ class SettingsViewModel: ViewModel {
         SettingsMenuItem(icon: "text.command", title: "口令管理", action: .tokenManage),
         SettingsMenuItem(icon: "server.rack", title: "服务器配置", action: .serverConfig),
         SettingsMenuItem(icon: "key", title: "密钥管理", action: .apiKeyManage),
-        SettingsMenuItem(icon: "memorychip", title: "存储空间", action: .storageManage),
+        SettingsMenuItem(icon: "archivebox", title: "资源管理", action: .management),
         SettingsMenuItem(icon: "arrow.counterclockwise", title: "记忆上次应用", action: .lastAppMemory),
         SettingsMenuItem(icon: "info.circle", title: "关于", action: .about)
     ]
@@ -48,6 +49,7 @@ class SettingsViewModel: ViewModel {
     private let navigateToTokenManageRelay = PublishRelay<Void>()
     private let navigateToServerConfigRelay = PublishRelay<Void>()
     private let navigateToAPIKeyManageRelay = PublishRelay<Void>()
+    private let navigateToManagementRelay = PublishRelay<Void>()
     private let navigateToAboutRelay = PublishRelay<Void>()
 
     // MARK: - Public Methods
@@ -75,10 +77,12 @@ class SettingsViewModel: ViewModel {
         // 定时更新存储空间显示
         Observable<Int>.interval(.seconds(5), scheduler: MainScheduler.instance)
             .startWith(0)
+            .observe(on: ConcurrentDispatchQueueScheduler(qos: .background)) // 在后台线程计算
             .map { _ in
                 let totalSize = ManifestCacheManager.shared.calculateTotalCacheSize()
                 return ByteCountFormatter.string(fromByteCount: Int64(totalSize), countStyle: .file)
             }
+            .observe(on: MainScheduler.instance) // 回到主线程更新 UI
             .bind(to: storageSizeRelay)
             .disposed(by: rx)
 
@@ -95,9 +99,8 @@ class SettingsViewModel: ViewModel {
                     self.navigateToServerConfigRelay.accept(())
                 case .apiKeyManage:
                     self.navigateToAPIKeyManageRelay.accept(())
-                case .storageManage:
-                    // 可以在这里跳转到详情，或者直接触发清理
-                    break
+                case .management:
+                    self.navigateToManagementRelay.accept(())
                 case .lastAppMemory:
                     // 开关在 Cell 内部处理，这里不处理跳转
                     break
@@ -112,6 +115,7 @@ class SettingsViewModel: ViewModel {
             navigateToTokenManage: navigateToTokenManageRelay.asDriver(onErrorJustReturn: ()),
             navigateToServerConfig: navigateToServerConfigRelay.asDriver(onErrorJustReturn: ()),
             navigateToAPIKeyManage: navigateToAPIKeyManageRelay.asDriver(onErrorJustReturn: ()),
+            navigateToManagement: navigateToManagementRelay.asDriver(onErrorJustReturn: ()),
             navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
             storageSize: storageSizeRelay.asDriver(),
             lastAppMemoryEnabled: lastAppMemoryEnabledRelay.asDriver()
@@ -125,7 +129,7 @@ enum SettingsMenuAction {
     case tokenManage
     case serverConfig
     case apiKeyManage
-    case storageManage
+    case management
     case lastAppMemory
     case about
 }

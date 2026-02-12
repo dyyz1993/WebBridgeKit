@@ -8,6 +8,8 @@
 
 import UIKit
 import WebBridgeKit
+import RxSwift
+import RxCocoa
 
 /// 主标签栏控制器
 /// 管理 3 个主要功能模块：首页、收藏、设置
@@ -55,7 +57,7 @@ class TabBarController: UITabBarController {
         // 切换到首页并打开浏览器
         self.selectedIndex = 0
         if let mainNav = viewControllers?.first as? UINavigationController {
-            WebBrowserManager.shared.openBrowserWithCache(
+            WebBrowserManager.shared.openBrowser(
                 url: url,
                 params: WebBrowserParams(
                     displayMode: .normal,
@@ -92,8 +94,8 @@ class TabBarController: UITabBarController {
             
             // 获取首页的导航控制器
             if let mainNav = viewControllers?.first as? UINavigationController {
-                // 使用 animated: false 实现“直接进入”效果
-                WebBrowserManager.shared.openBrowserWithCache(
+                // 使用 animated: false 实现"直接进入"效果
+                WebBrowserManager.shared.openBrowser(
                     url: url,
                     params: WebBrowserParams(displayMode: .normal),
                     from: mainNav,
@@ -112,7 +114,7 @@ class TabBarController: UITabBarController {
     private func setupTabs() {
         // 创建主要 Tab
         let mainVC = createMainViewController()
-        let messageVC = createMessageInboxViewController()
+        let testCasesVC = createTestCasesViewController()
         let manageVC = createManagementViewController()
         let settingsVC = createSettingsViewController()
 
@@ -123,12 +125,11 @@ class TabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "house.fill")
         )
 
-        messageVC.tabBarItem = UITabBarItem(
-            title: "消息",
-            image: UIImage(systemName: "tray"),
-            selectedImage: UIImage(systemName: "tray.fill")
+        testCasesVC.tabBarItem = UITabBarItem(
+            title: "用例",
+            image: UIImage(systemName: "checklist"),
+            selectedImage: UIImage(systemName: "checklist")
         )
-
 
         manageVC.tabBarItem = UITabBarItem(
             title: "管理",
@@ -145,7 +146,7 @@ class TabBarController: UITabBarController {
         // 包装导航控制器
         viewControllers = [
             UINavigationController(rootViewController: mainVC),
-            UINavigationController(rootViewController: messageVC),
+            UINavigationController(rootViewController: testCasesVC),
             UINavigationController(rootViewController: manageVC),
             UINavigationController(rootViewController: settingsVC)
         ]
@@ -186,8 +187,8 @@ class TabBarController: UITabBarController {
         return MainViewController(viewModel: viewModel)
     }
 
-    private func createMessageInboxViewController() -> MessageInboxViewController {
-        return MessageInboxViewController()
+    private func createTestCasesViewController() -> ManifestTestCasesViewController {
+        return ManifestTestCasesViewController()
     }
 
     private func createManagementViewController() -> ManagementViewController {

@@ -101,7 +101,10 @@ public class WebPageOfflineCacheManager {
                 try rewrittenHTML.write(to: htmlPath, atomically: true, encoding: .utf8)
 
                 // 7. 生成缩略图（可选）
-                // TODO: 使用WKWebView生成页面缩略图
+                // 注意: 生成页面缩略图需要使用 WKWebView 的 snapshot 功能
+                // 这需要在主线程创建 WebView，加载 HTML，然后截取快照
+                // 由于涉及异步操作和内存开销，这里暂时不实现
+                // 未来可以通过 WebPageThumbnailGenerator 来实现
 
                 // 8. 更新Realm记录
                 let realm = try await asyncRealm()
@@ -135,16 +138,28 @@ public class WebPageOfflineCacheManager {
     }
 
     /// 删除缓存
-    public func deleteCache(history: WebPageHistory) {
-        guard let cacheDir = history.cacheDirectory else { return }
+    /// - Parameters:
+    ///   - history: 历史记录对象
+    ///   - realm: 可选的 Realm 实例，如果已在事务中，请传入该实例
+    /// 删除特定历史记录对应的缓存
+    /// - Parameters:
+    ///   - history: 历史记录对象
+    ///   - realm: 可选的 Realm 实例（用于事务嵌套）
+    public func deleteCache(history: WebPageHistory, realm: Realm? = nil) {
+        let historyId = history.id
+        let cacheDir = history.cacheDirectory
+        
+        // 1. 删除物理文件 (IO 操作，不依赖 Realm 线程)
+        if let dir = cacheDir {
+            try? FileManager.default.removeItem(at: dir)
+        }
 
-        // 删除文件
-        try? FileManager.default.removeItem(at: cacheDir)
-
-        // 更新Realm记录
-        let realm = getRealm()
-        try? realm?.write {
-            if let cachedHistory = realm?.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
+        // 2. 更新数据库状态 (必须在 Realm 实例所属线程执行)
+        let currentRealm = realm ?? getRealm()
+        guard let r = currentRealm else { return }
+        
+        let updateLogic = {
+            if let cachedHistory = r.object(ofType: WebPageHistory.self, forPrimaryKey: historyId) {
                 cachedHistory.htmlPath = nil
                 cachedHistory.resourcePaths.removeAll()
                 cachedHistory.cachedSize = 0
@@ -153,7 +168,15 @@ public class WebPageOfflineCacheManager {
             }
         }
 
-        WebBridgeLogger.shared.log(.info, "🗑️ Cache deleted: \(history.url)")
+        if r.isInWriteTransaction {
+            updateLogic()
+        } else {
+            try? r.write {
+                updateLogic()
+            }
+        }
+
+        WebBridgeLogger.shared.log(.info, "🗑️ Cache deleted for ID: \(historyId)")
     }
 
     /// 刷新缓存（重新下载）
@@ -174,8 +197,12 @@ public class WebPageOfflineCacheManager {
         let realm = getRealm()
         let cachedHistories = realm?.objects(WebPageHistory.self).filter("isCached == true")
 
-        cachedHistories?.forEach { history in
-            deleteCache(history: history)
+        if let r = realm, let histories = cachedHistories {
+            try? r.write {
+                histories.forEach { history in
+                    deleteCache(history: history, realm: r)
+                }
+            }
         }
 
         WebBridgeLogger.shared.log(.info, "🧹 All caches cleared")
@@ -206,9 +233,15 @@ public class WebPageOfflineCacheManager {
 
         if let histories = histories, histories.count > maxCount {
             let toDelete = Array(histories.prefix(histories.count - maxCount))
-            for history in toDelete {
-                deleteCache(history: history)
+            
+            if let r = realm {
+                try? r.write {
+                    for history in toDelete {
+                        deleteCache(history: history, realm: r)
+                    }
+                }
             }
+            
             WebBridgeLogger.shared.log(.info, "🧹 LRU cleanup: removed \(toDelete.count) old caches")
         }
     }

@@ -333,8 +333,15 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
     private func openHistory(_ history: WebPageHistory) {
         guard let url = URL(string: history.url) else { return }
 
-        // 更新访问记录
-        WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: history.title)
+        // 更新访问记录 - 使用异步 API
+        Task { @MainActor in
+            do {
+                try await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: history.title)
+            } catch {
+                SVProgressHUD.showError(withStatus: NSLocalizedString("Failed to update history", comment: ""))
+                WebBridgeLogger.shared.log(.error, "Failed to update history: \(error.localizedDescription)")
+            }
+        }
 
         // 打开浏览器
         if let navigationController = navigationController {
@@ -402,7 +409,9 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
 
         // 删除
         alert.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: ""), style: .destructive) { [weak self] _ in
-            self?.deleteHistory(history)
+            Task { @MainActor in
+                await self?.deleteHistory(history)
+            }
         })
 
         alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
@@ -431,12 +440,15 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         }
     }
 
-    private func deleteHistory(_ history: WebPageHistory) {
-        WebPageHistoryManager.shared.deleteHistory(id: history.id)
-        SVProgressHUD.showInfo(withStatus:NSLocalizedString("Deleted", comment: ""))
-        // 在主线程刷新列表
-        DispatchQueue.main.async { [weak self] in
-            self?.viewModel.loadHistories()
+    private func deleteHistory(_ history: WebPageHistory) async {
+        do {
+            try await WebPageHistoryManager.shared.deleteHistory(id: history.id)
+            SVProgressHUD.showInfo(withStatus: NSLocalizedString("Deleted", comment: ""))
+            // 刷新列表（已经在 MainActor 上了）
+            viewModel.loadHistories()
+        } catch {
+            SVProgressHUD.showError(withStatus: NSLocalizedString("Failed to delete", comment: ""))
+            WebBridgeLogger.shared.log(.error, "Failed to delete history: \(error.localizedDescription)")
         }
     }
 
@@ -512,8 +524,10 @@ extension WebPageHistoryViewController: UITableViewDelegate {
         }
 
         let deleteAction = UIContextualAction(style: .destructive, title: NSLocalizedString("Delete", comment: "Delete")) { [weak self] _, _, completion in
-            self?.deleteHistory(history)
-            completion(true)
+            Task { @MainActor in
+                await self?.deleteHistory(history)
+                completion(true)
+            }
         }
         deleteAction.backgroundColor = UIColor.red
 
@@ -588,14 +602,26 @@ extension WebPageHistoryViewController {
     private func handleQRScanResult(_ result: String) {
         // 解析URL
         if let url = URL(string: result) {
-            // 添加到历史记录
-            WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: nil)
+            // 添加到历史记录 - 使用异步 API
+            Task { @MainActor in
+                do {
+                    try await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: nil)
+                } catch {
+                    WebBridgeLogger.shared.log(.error, "Failed to add history from QR: \(error.localizedDescription)")
+                }
+            }
 
             // 打开浏览器
             self.openURL(url)
         } else if let url = URL(string: "https://" + result) {
-            // 尝试添加https前缀
-            WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: nil)
+            // 尝试添加https前缀 - 使用异步 API
+            Task { @MainActor in
+                do {
+                    try await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: nil)
+                } catch {
+                    WebBridgeLogger.shared.log(.error, "Failed to add history from QR: \(error.localizedDescription)")
+                }
+            }
             self.openURL(url)
         } else {
             SVProgressHUD.showError(withStatus:NSLocalizedString("Invalid URL", comment: "Invalid URL"))

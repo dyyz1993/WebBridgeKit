@@ -1,0 +1,26 @@
+# This is a placeholder font file for testing purposes
+# In a real application, this would be a binary WOFF2 font file
+# For testing resource loading, this file serves as a placeholder
+
+Font-Name: TestFont
+Version: 1.0.0
+Format: WOFF2 (Web Open Font Format 2.0)
+Size: ~50KB (actual compressed font data)
+
+Note: To create a real WOFF2 font file, you would need to:
+1. Start with a TrueType (.ttf) or OpenType (.otf) font
+2. Use a tool like `woff2_compress` to convert it to WOFF2 format
+3. Include the binary font data here
+
+Example command:
+  woff2_compress input.ttf -o output.woff2
+
+For this test, the browser will attempt to load this file and
+the performance monitoring will track the attempt, even if it
+fails to parse as a valid font.
+
+Font metadata for testing:
+- Family: TestFont
+- Weight: 400 (Normal)
+- Style: Normal
+- Unicode Range: U+0000-U+FFFF

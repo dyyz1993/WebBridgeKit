@@ -233,16 +233,28 @@ build/
 # Claude Code
 .claude/
 
-# Documentation (keep README.md)
-*.md
+# Documentation (keep important docs)
 !README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE.md
+!docs/**/*.md
 
 # Temporary documentation
+*_SUMMARY.md
+*_REPORT.md
+*_GUIDE.md
+*_CHECKLIST.md
+*_QUICKSTART.md
+*_REFERENCE.md
+*_QUICK_START.md
 CACHE_RESOURCE_*.md
 TASK_*_IMPLEMENTATION_SUMMARY.md
 CREATION_SUMMARY.md
 PROJECT_REPORT.md
 PROJECT_SETUP.md
+PROJECT_ARCHITECTURE_ANALYSIS.md
+PROJECT_OPTIMIZATION_RECOMMENDATIONS.md
 
 # Build logs
 *.log

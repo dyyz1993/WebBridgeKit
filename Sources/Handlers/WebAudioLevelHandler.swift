@@ -107,13 +107,17 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
 
                 // 创建音频引擎
                 self.audioEngine = AVAudioEngine()
-                let inputNode = self.audioEngine!.inputNode
+                guard let inputNode = self.audioEngine?.inputNode else {
+                    self.isMonitoring = false
+                    self.reject(error: "Failed to get audio input node", completion: completion)
+                    return
+                }
                 let format = inputNode.outputFormat(forBus: 0)
 
                 print("🎤 [AudioLevel] Audio format: \(format)")
 
                 // 安装音频 tap - 实时处理音频数据
-                inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+                inputNode.installTap(onBus: 0, bufferSize: WebBridgeKitConfiguration.Audio.bufferSize, format: format) { [weak self] buffer, _ in
                     self?.processAudioBuffer(buffer)
                 }
 

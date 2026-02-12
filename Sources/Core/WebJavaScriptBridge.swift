@@ -39,12 +39,12 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         guard let body = message.body as? [String: Any],
               let action = body["action"] as? String else {
             WebBridgeLogger.shared.error("Invalid message format")
-            sendErrorToJS("Invalid message format")
+            sendErrorToJS("Invalid message format", callbackId: nil)
             return
         }
 
-        // 保存 callbackId
-        currentCallbackId = body["callbackId"] as? String
+        // 获取 callbackId，避免并发时被覆盖
+        let callbackId = body["callbackId"] as? String
 
         // 自动记录请求日志（使用 Token 机制）
         let token = WebBridgeLogToken(
@@ -60,13 +60,13 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
 
         // 输出到控制台
         #if DEBUG
-        print("🌉 [JS Bridge] Received action: \(action), callbackId: \(currentCallbackId ?? "nil")")
+        print("🌉 [JS Bridge] Received action: \(action), callbackId: \(callbackId ?? "nil")")
         #endif
 
         // 使用 getHandler 实现懒加载
         guard let handler = getHandler(for: action) else {
             WebBridgeLogger.shared.error("Unsupported action: \(action)")
-            sendErrorToJS("Unsupported action: \(action)")
+            sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
 
             // 记录错误响应
             WebBridgeLogger.shared.logResponse(
@@ -83,13 +83,6 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             return
         }
 
-        // 设置 Handler 的 Token（用于自动日志）
-        if let baseHandler = handler as? BaseWebNativeHandler {
-            // 使用关联对象或者直接设置内部属性
-            // 这里通过反射或者添加公共方法来设置 token
-            // 由于 currentToken 是私有的，我们在 handler 内部处理
-        }
-
         // 异步处理，避免阻塞主线程
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
@@ -103,7 +96,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 self?.activeTokens.removeValue(forKey: action)
                 self?.tokensLock.unlock()
 
-                self?.sendResultToJS(result)
+                self?.sendResultToJS(result, callbackId: callbackId)
             }
         }
     }
@@ -210,8 +203,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         handlerFactories["cacheDebug"] = { WebCacheDebugHandler() }
 
         // 页面缓存管理
-        // TODO: Fix compilation error - WebPageCacheHandler not found
-        // handlerFactories["page"] = { WebPageCacheHandler() }
+        handlerFactories["page"] = { WebPageCacheHandler() }
 
         print("🌉 [JS Bridge] 已注册 \(handlerFactories.count) 个 Handler 工厂（懒加载模式）")
         print("   工厂列表: \(Array(handlerFactories.keys).sorted())")
@@ -242,9 +234,14 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         nativeHandlers[action] = handler
 
         // 设置 WebView 引用
-        if let baseHandler = handler as? BaseWebNativeHandler,
-           let webView = self.webView {
-            baseHandler.webView = webView
+        if let baseHandler = handler as? BaseWebNativeHandler {
+            if let webView = self.webView {
+                baseHandler.webView = webView
+            } else {
+                #if DEBUG
+                print("⚠️ [JS Bridge] Warning: webView is nil when creating handler \(action). It will be set later in setWebView().")
+                #endif
+            }
         }
 
         print("♻️ [JS Bridge] 懒加载创建 Handler: \(action)")
@@ -253,7 +250,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
 
     // MARK: - Send Result to JS
     
-    public func sendResultToJS(_ result: Any) {
+    public func sendResultToJS(_ result: Any, callbackId: String?) {
         var resultDict: [String: Any] = [:]
 
         // 处理不同的结果类型
@@ -268,24 +265,34 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             resultDict = ["data": result]
         }
 
-        // 添加 callbackId（关键！）
-        if let callbackId = currentCallbackId {
+        // 设置 callbackId（关键！）
+        if let callbackId = callbackId {
             resultDict["callbackId"] = callbackId
+        } else {
+            // 如果没有 callbackId，可能是主动推送或旧版兼容
+            // 在调试模式下记录
+            #if DEBUG
+            print("🌉 [JS Bridge] No callbackId for result: \(resultDict.keys)")
+            #endif
         }
 
         let script: String
         if let jsonString = try? JSONSerialization.data(withJSONObject: resultDict, options: []),
-           let jsonString = String(data: jsonString, encoding: .utf8) {
-            script = "window.BarkBridge.receiveResult(\(jsonString));"
+           let jsonStr = String(data: jsonString, encoding: .utf8) {
+            // 记录发送到 JS 的数据
+            WebBridgeLogger.shared.log(.info, "[JS Bridge] Sending to JS: \(jsonStr.prefix(200))")
+            script = "window.BarkBridge.receiveResult(\(jsonStr));"
         } else {
             // 如果 JSON 序列化失败，使用简单的字符串
             script = "window.BarkBridge.receiveResult({'success': false, 'error': 'JSON serialization failed'});"
         }
 
-        WebBridgeLogger.shared.log(.info, "[JS Bridge] Sending to JS: \(script.prefix(200))")
-
         DispatchQueue.main.async { [weak self] in
-            self?.webView?.evaluateJavaScript(script, completionHandler: { jsResult, error in
+            guard let webView = self?.webView else {
+                WebBridgeLogger.shared.error("[JS Bridge] Failed to send result: webView is nil")
+                return
+            }
+            webView.evaluateJavaScript(script, completionHandler: { jsResult, error in
                 if let error = error {
                     WebBridgeLogger.shared.error("JavaScript execution failed: \(error.localizedDescription)")
                 }
@@ -293,9 +300,9 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         }
     }
 
-    public func sendErrorToJS(_ error: String) {
+    public func sendErrorToJS(_ error: String, callbackId: String?) {
         let result: [String: Any] = ["success": false, "error": error]
-        sendResultToJS(result)
+        sendResultToJS(result, callbackId: callbackId)
     }
 
     // MARK: - Send Event to JS

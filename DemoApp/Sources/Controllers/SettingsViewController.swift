@@ -107,8 +107,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
                 } else {
                     let cell = tv.dequeueReusableCell(withIdentifier: MenuCell.identifier, for: indexPath) as! MenuCell
                     
-                    var value: String? = nil
-                    if menuItem.action == .storageManage {
+                    let value: String? = nil
+                    if menuItem.action == .management {
                         output.storageSize
                             .drive(onNext: { size in
                                 cell.configure(icon: menuItem.icon, title: menuItem.title, value: size, showArrow: true)
@@ -131,8 +131,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
                         cell.accessibilityIdentifier = "settings.cell.serverConfig"
                     case .apiKeyManage:
                         cell.accessibilityIdentifier = "settings.cell.apiKeyManage"
-                    case .storageManage:
-                        cell.accessibilityIdentifier = "settings.cell.storageManage"
+                    case .management:
+                        cell.accessibilityIdentifier = "settings.cell.management"
                     case .about:
                         cell.accessibilityIdentifier = "settings.cell.about"
                     default:
@@ -146,22 +146,25 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         // 导航处理
         output.navigateToAPIKeyManage
             .drive(onNext: { [weak self] in
-                let vc = APIKeyManagementViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.navigateToAPIKeyManage()
+            })
+            .disposed(by: rx)
+
+        output.navigateToManagement
+            .drive(onNext: { [weak self] in
+                self?.navigateToManagement()
             })
             .disposed(by: rx)
 
         output.navigateToTokenManage
             .drive(onNext: { [weak self] in
-                // TODO: 实现 Token 管理页
-                print("Navigating to Token Manage")
+                self?.navigateToTokenManage()
             })
             .disposed(by: rx)
 
         output.navigateToServerConfig
             .drive(onNext: { [weak self] in
-                // TODO: 实现服务器配置页
-                print("Navigating to Server Config")
+                self?.navigateToServerConfig()
             })
             .disposed(by: rx)
     }
@@ -188,6 +191,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     private func navigateToAPIKeyManage() {
         let apiKeyManageVC = APIKeyManageViewController(viewModel: APIKeyManageViewModel())
         navigationController?.pushViewController(apiKeyManageVC, animated: true)
+    }
+
+    private func navigateToManagement() {
+        let managementVC = ManagementViewController()
+        navigationController?.pushViewController(managementVC, animated: true)
     }
 
     private func navigateToAbout() {

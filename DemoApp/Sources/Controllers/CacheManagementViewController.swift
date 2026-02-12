@@ -225,14 +225,14 @@ class CacheManagementViewController: UIViewController {
 
         // 删除成功提示
         output.deleteSuccess
-            .drive(onNext: { [weak self] in
+            .drive(onNext: {
                 SVProgressHUD.showSuccess(withStatus: "缓存已删除")
             })
             .disposed(by: disposeBag)
 
         // 全部删除成功提示
         output.deleteAllSuccess
-            .drive(onNext: { [weak self] in
+            .drive(onNext: {
                 SVProgressHUD.showSuccess(withStatus: "所有缓存已清除")
             })
             .disposed(by: disposeBag)
@@ -243,7 +243,7 @@ class CacheManagementViewController: UIViewController {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleCacheUpdate),
-            name: NSNotification.Name("ManifestCacheDidUpdate"),
+            name: .manifestCacheDidUpdate,
             object: nil
         )
     }

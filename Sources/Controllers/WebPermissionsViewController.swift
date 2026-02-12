@@ -120,6 +120,23 @@ class WebPermissionsViewController: UIViewController {
     private func checkPermissions(completion: @escaping ([[String: Any]]) -> Void) {
         WebPermissionManager.shared.checkAllPermissions(completion: completion)
     }
+
+    // MARK: - Cleanup
+
+    deinit {
+        // 🔒 Stop loading and remove delegates to prevent memory leaks
+        webView?.stopLoading()
+        webView?.navigationDelegate = nil
+
+        // 🔒 Remove script message handler to break strong reference cycle
+        // WKUserContentController.add(_:name:) creates a strong reference to the handler
+        webView?.configuration.userContentController.removeScriptMessageHandler(forName: "barkBridge")
+
+        // 🔒 Remove from superview
+        webView?.removeFromSuperview()
+
+        print("🧹 [WebPermissionsVC] Cleaned up with proper memory management")
+    }
 }
 
 extension WebPermissionsViewController: WKScriptMessageHandler {
@@ -143,7 +160,7 @@ extension WebPermissionsViewController: WKScriptMessageHandler {
                 ]
 
                 // 添加 callbackId
-                if let callbackId = body["callbackId"] as? Int {
+                if let callbackId = body["callbackId"] {
                     response["callbackId"] = callbackId
                 }
 
@@ -157,7 +174,7 @@ extension WebPermissionsViewController: WKScriptMessageHandler {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
             }
             var response: [String: Any] = ["success": true]
-            if let callbackId = body["callbackId"] as? Int {
+            if let callbackId = body["callbackId"] {
                 response["callbackId"] = callbackId
             }
             let script = "window.BarkBridge.receiveResult(\(toJson(response)));"
@@ -168,7 +185,7 @@ extension WebPermissionsViewController: WKScriptMessageHandler {
                 "success": false,
                 "error": "Unknown action: \(action)"
             ]
-            if let callbackId = body["callbackId"] as? Int {
+            if let callbackId = body["callbackId"] {
                 response["callbackId"] = callbackId
             }
             let script = "window.BarkBridge.receiveResult(\(toJson(response)));"

@@ -30,7 +30,14 @@ public class WebOpenPageHandler: BaseWebNativeHandler {
 
         // 添加页面或URL参数
         if let pageName = params["page"] as? String {
-            queryItems.append(URLQueryItem(name: "page", value: pageName))
+            // 验证页面名称，防止路径遍历攻击
+            do {
+                try InputValidator.validateHTMLName(pageName)
+                queryItems.append(URLQueryItem(name: "page", value: pageName))
+            } catch {
+                reject(error: "Invalid page name: \(error.localizedDescription)", completion: completion)
+                return
+            }
         } else if let urlString = params["url"] as? String {
             // 远程 URL
             if let url = URL(string: urlString) {

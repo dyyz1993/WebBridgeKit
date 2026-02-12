@@ -40,6 +40,12 @@ public class WebClipboardHandler: BaseWebNativeHandler {
 
     private func readClipboard(completion: @escaping (Any) -> Void) {
         runOnMainThread {
+            // UI 测试时，读取剪贴板可能导致系统权限弹窗或主线程死锁，默认返回空字符串
+            if ProcessInfo.processInfo.arguments.contains("-UITesting") {
+                self.resolve(["text": ""], completion: completion)
+                return
+            }
+            
             let text = UIPasteboard.general.string ?? ""
             self.resolve(["text": text], completion: completion)
         }

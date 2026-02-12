@@ -74,68 +74,97 @@ public class ManifestCacheManager {
         }
     }
 
-    /// 加载缓存的页面
+    /// 加载缓存的页面（带错误处理）
     /// - Parameters:
     ///   - pageKey: 页面标识符
     ///   - webView: 目标 WebView
-    public func loadPage(pageKey: String, into webView: WKWebView) {
+    ///   - completion: 完成回调，返回 Result
+    public func loadPage(pageKey: String, into webView: WKWebView, completion: ((Result<Void, Error>) -> Void)? = nil) {
         queue.async { [weak self] in
             guard let self = self else { return }
 
-            // 从缓存获取 HTML
-            guard let html = self.manifestStore.getHTML(for: pageKey) else {
-                NSLog("❌ [ManifestCache] Page not found: \(pageKey)")
-                return
+            do {
+                // 从缓存获取 HTML
+                guard let html = self.manifestStore.getHTML(for: pageKey) else {
+                    let error = WebBridgeError.cacheLoadFailed(reason: "Page not found: \(pageKey)")
+                    NSLog("❌ [ManifestCache] \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        completion?(.failure(error))
+                    }
+                    return
+                }
+
+                // 获取或创建 manifest
+                let manifest = self.manifestStore.getManifest(for: pageKey) ?? Manifest()
+
+                // 设置当前页面的 manifest
+                self.manifestStore.setCurrentManifest(manifest, for: pageKey)
+
+                // ⚠️ WebView 操作必须在主线程执行
+                DispatchQueue.main.async {
+                    webView.loadHTMLString(html, baseURL: URL(string: "\(self.scheme)://"))
+
+                    // 发送通知，用于 UI 显示
+                    NotificationCenter.default.post(
+                        name: .manifestCacheHit,
+                        object: nil,
+                        userInfo: ["pageKey": pageKey, "source": "HTML"]
+                    )
+
+                    completion?(.success(()))
+                }
+
+                NSLog("✅ [ManifestCache] Loaded page: \(pageKey)")
+                NSLog("   - Manifest entries: \(manifest.resources.count)")
+            } catch {
+                let bridgeError = WebBridgeError.cacheLoadFailed(reason: error.localizedDescription)
+                NSLog("❌ [ManifestCache] Failed to load page: \(bridgeError.localizedDescription)")
+                DispatchQueue.main.async {
+                    completion?(.failure(bridgeError))
+                }
             }
-
-            // 获取或创建 manifest
-            let manifest = self.manifestStore.getManifest(for: pageKey) ?? Manifest()
-
-            // 设置当前页面的 manifest
-            self.manifestStore.setCurrentManifest(manifest, for: pageKey)
-
-            // ⚠️ WebView 操作必须在主线程执行
-            DispatchQueue.main.async {
-                webView.loadHTMLString(html, baseURL: URL(string: "\(self.scheme)://"))
-
-                // 发送通知，用于 UI 显示
-                NotificationCenter.default.post(
-                    name: ManifestCacheManager.cacheHitNotification,
-                    object: nil,
-                    userInfo: ["pageKey": pageKey, "source": "HTML"]
-                )
-            }
-
-            NSLog("✅ [ManifestCache] Loaded page: \(pageKey)")
-            NSLog("   - Manifest entries: \(manifest.resources.count)")
         }
     }
 
-    /// 保存页面及其 manifest
+    /// 保存页面及其 manifest（带错误处理和重试）
     /// - Parameters:
     ///   - pageKey: 页面标识符
     ///   - html: HTML 内容
     ///   - manifest: 资源映射清单
-    public func savePage(pageKey: String, html: String, manifest: Manifest) {
+    ///   - completion: 完成回调，返回 Result
+    public func savePage(pageKey: String, html: String, manifest: Manifest, completion: ((Result<Void, Error>) -> Void)? = nil) {
         queue.async { [weak self] in
             guard let self = self else { return }
 
-            // 保存 HTML
-            self.manifestStore.saveHTML(html, for: pageKey)
+            // 使用重试机制保存数据
+            Task {
+                do {
+                    try await RetryHelper.execute(maxRetries: 3, delay: 0.5) {
+                        // 保存 HTML
+                        self.manifestStore.saveHTML(html, for: pageKey)
 
-            // 保存 manifest
-            self.manifestStore.saveManifest(manifest, for: pageKey)
+                        // 保存 manifest
+                        self.manifestStore.saveManifest(manifest, for: pageKey)
 
-            NSLog("✅ [ManifestCache] Saved page: \(pageKey)")
-            NSLog("   - HTML length: \(html.count) chars")
-            NSLog("   - Manifest entries: \(manifest.resources.count)")
+                        NSLog("✅ [ManifestCache] Saved page: \(pageKey)")
+                        NSLog("   - HTML length: \(html.count) chars")
+                        NSLog("   - Manifest entries: \(manifest.resources.count)")
+                    }
 
-            // 发送缓存更新通知（在主线程）
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("ManifestCacheDidUpdate"),
-                    object: nil
-                )
+                    // 发送缓存更新通知（在主线程）
+                    await MainActor.run {
+                        NotificationCenter.default.post(
+                            name: .manifestCacheDidUpdate,
+                            object: nil
+                        )
+                        completion?(.success(()))
+                    }
+                } catch {
+                    NSLog("❌ [ManifestCache] Failed to save page after retries: \(error.localizedDescription)")
+                    await MainActor.run {
+                        completion?(.failure(WebBridgeError.cacheSaveFailed(underlying: error)))
+                    }
+                }
             }
         }
     }
@@ -200,8 +229,13 @@ public class ManifestCacheManager {
                 let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
                 let persistentDir = cachesDir.appendingPathComponent("WebBridgeKit/PersistentCache").appendingPathComponent(pageKey)
                 if FileManager.default.fileExists(atPath: persistentDir.path) {
-                    try? FileManager.default.removeItem(at: persistentDir)
-                    NSLog("🗑️ [ManifestCache] Removed persistent cache directory for: \(pageKey)")
+                    do {
+                        try FileManager.default.removeItem(at: persistentDir)
+                        NSLog("🗑️ [ManifestCache] Removed persistent cache directory for: \(pageKey)")
+                    } catch {
+                        Log.error("Failed to remove persistent cache directory for \(pageKey): \(error.localizedDescription)", category: .cache)
+                        NSLog("❌ [ManifestCache] Failed to remove persistent cache directory for: \(pageKey) - \(error.localizedDescription)")
+                    }
                 }
             }
 
@@ -214,7 +248,7 @@ public class ManifestCacheManager {
                 }
                 // 发送缓存更新通知
                 NotificationCenter.default.post(
-                    name: NSNotification.Name("ManifestCacheDidUpdate"),
+                    name: .manifestCacheDidUpdate,
                     object: nil
                 )
             }
@@ -229,7 +263,7 @@ public class ManifestCacheManager {
         }
     }
 
-    /// 处理资源请求（由 URLSchemeHandler 调用）
+    /// 处理资源请求（由 URLSchemeHandler 调用，带错误处理和重试）
     /// - Parameters:
     ///   - relativePath: 相对路径（如 "logo.png"）
     ///   - pageKey: 当前页面标识符
@@ -276,38 +310,93 @@ public class ManifestCacheManager {
                 return
             }
 
-            // 3. 下载资源
+            // 3. 下载资源（带重试机制）
             NSLog("📥 [\(fileName)] 正在下载...")
 
-            let task = URLSession.shared.dataTask(with: url) { data, response, error in
-                if let error = error {
+            Task {
+                do {
+                    let resource = try await RetryHelper.executeAsync(maxRetries: 3, delay: 1.0) {
+                        try await self.downloadResource(from: url, relativePath: relativePath)
+                    }
+
+                    // 4. 缓存资源
+                    self.resourceCache.set(resource, for: pageKey)
+
+                    NSLog("✅ [\(fileName)] 下载成功 (大小: \(resource.data.count) bytes)")
+                    NSLog("💾 [\(fileName)] 已缓存")
+                    completion(.success(resource))
+                } catch {
                     NSLog("❌ [\(fileName)] 下载失败: \(error.localizedDescription)")
-                    completion(.failure(error))
-                    return
+                    completion(.failure(WebBridgeError.networkRequestFailed(reason: error.localizedDescription)))
+                }
+            }
+        }
+    }
+
+    /// 下载单个资源（异步）
+    private func downloadResource(from url: URL, relativePath: String) async throws -> ResourceData {
+        return try await PerformanceMonitor.shared.measure(
+            "ManifestCache.downloadResource",
+            metadata: ["relativePath": relativePath, "url": url.absoluteString]
+        ) {
+            // 使用 RequestDeduplicator 防止重复下载
+            let result: Any = try await RequestDeduplicator.shared.executeResourceDownload(
+                urlString: url.absoluteString,
+                relativePath: relativePath
+            ) {
+                // 检查网络状态（快速失败，避免10秒超时等待）
+                try NetworkMonitor.shared.ensureNetworkAvailable()
+
+                // 检查是否为蜂窝网络并发出警告
+                if NetworkMonitor.shared.warnIfCellular() {
+                    let fileName = (relativePath as NSString).lastPathComponent
+                    WebBridgeLogger.shared.log(.warning, "⚠️ [ManifestCache] Downloading '\(fileName)' over cellular network - data charges may apply")
                 }
 
-                guard let data = data else {
-                    NSLog("❌ [\(fileName)] 下载数据为空")
-                    completion(.failure(ManifestCacheError.emptyData))
-                    return
-                }
-
-                // 4. 缓存资源
-                let mimeType = self.getMimeType(forPath: relativePath)
-                let resource = ResourceData(
-                    relativePath: relativePath,
-                    data: data,
-                    mimeType: mimeType
-                )
-
-                self.resourceCache.set(resource, for: pageKey)
-
-                NSLog("✅ [\(fileName)] 下载成功 (大小: \(data.count) bytes)")
-                NSLog("💾 [\(fileName)] 已缓存")
-                completion(.success(resource))
+                return try await self.performDownload(from: url, relativePath: relativePath)
             }
 
-            task.resume()
+            guard let resource = result as? ResourceData else {
+                throw WebBridgeError.cacheLoadFailed(
+                    reason: "Type mismatch in resource download result for: \(relativePath)"
+                )
+            }
+
+            return resource
+        }
+    }
+
+    /// 执行实际的下载操作（不包含去重逻辑）
+    private func performDownload(from url: URL, relativePath: String) async throws -> ResourceData {
+        return try await PerformanceMonitor.shared.measure(
+            "ManifestCache.performDownload",
+            metadata: ["relativePath": relativePath, "url": url.absoluteString]
+        ) {
+            try await withCheckedThrowingContinuation { continuation in
+                let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
+
+                    guard let data = data, data.count > 0 else {
+                        Log.error("Downloaded empty data for resource: \(relativePath)", category: .network)
+                        continuation.resume(throwing: ManifestCacheError.emptyData)
+                        return
+                    }
+
+                    let mimeType = self.getMimeType(forPath: relativePath)
+                    let resource = ResourceData(
+                        relativePath: relativePath,
+                        data: data,
+                        mimeType: mimeType
+                    )
+
+                    continuation.resume(returning: resource)
+                }
+
+                task.resume()
+            }
         }
     }
 
@@ -376,9 +465,21 @@ public class ManifestCacheManager {
             let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             let persistentRootDir = cachesDir.appendingPathComponent("WebBridgeKit/PersistentCache")
             if FileManager.default.fileExists(atPath: persistentRootDir.path) {
-                try? FileManager.default.removeItem(at: persistentRootDir)
-                try? FileManager.default.createDirectory(at: persistentRootDir, withIntermediateDirectories: true)
-                NSLog("🗑️ [ManifestCache] Cleared all persistent cache directories")
+                do {
+                    try FileManager.default.removeItem(at: persistentRootDir)
+                    NSLog("🗑️ [ManifestCache] Cleared all persistent cache directories")
+                } catch {
+                    Log.error("Failed to clear persistent cache directory: \(error.localizedDescription)", category: .cache)
+                    NSLog("❌ [ManifestCache] Failed to clear persistent cache directory: \(error.localizedDescription)")
+                }
+
+                // Recreate the directory for future use
+                do {
+                    try FileManager.default.createDirectory(at: persistentRootDir, withIntermediateDirectories: true)
+                } catch {
+                    Log.error("Failed to recreate persistent cache directory: \(error.localizedDescription)", category: .cache)
+                    NSLog("❌ [ManifestCache] Failed to recreate persistent cache directory: \(error.localizedDescription)")
+                }
             }
 
             NSLog("🗑️ [ManifestCache] Cleared all cache")
@@ -390,7 +491,7 @@ public class ManifestCacheManager {
                 }
                 // 发送缓存更新通知
                 NotificationCenter.default.post(
-                    name: NSNotification.Name("ManifestCacheDidUpdate"),
+                    name: .manifestCacheDidUpdate,
                     object: nil
                 )
             }

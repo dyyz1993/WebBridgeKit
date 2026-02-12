@@ -19,9 +19,18 @@ public class WebViewController: UIViewController {
     public var bridge: WebJavaScriptBridge!
     public var gestureInterceptor: WebGestureInterceptor?
 
+    /// 当前加载的 URL
+    public var url: URL?
+
 
     /// 标记是否从池中获取的实例（用于性能优化）
     private var isPooledInstance = false
+
+    /// KVO observer for webView.isLoading property (for thumbnail generation)
+    private var loadingObserver: NSKeyValueObservation?
+
+    /// Track all registered script message handler names for proper cleanup
+    private var registeredHandlerNames: [String] = []
 
     /// 是否隐藏状态栏
     public var isStatusBarHidden: Bool = false {
@@ -65,9 +74,19 @@ public class WebViewController: UIViewController {
                 make.edges.equalToSuperview()
             }
 
-            // 为当前 ViewController 添加 message handler
+            // 为当前 ViewController 添加 message handler (使用 weak wrapper 防止循环引用)
             // 注意：脚已在预热时注入，但 message handler 需要每个 VC 单独添加
-            webView.configuration.userContentController.add(self, name: "barkBridge")
+            let weakHandler1 = WeakScriptMessageHandler(target: self)
+            webView.configuration.userContentController.add(weakHandler1, name: "barkBridge")
+            registeredHandlerNames.append("barkBridge")
+
+            let weakHandler2 = WeakScriptMessageHandler(target: self)
+            webView.configuration.userContentController.add(weakHandler2, name: "BarkBridge")
+            registeredHandlerNames.append("BarkBridge")
+
+            let weakHandler3 = WeakScriptMessageHandler(target: self)
+            webView.configuration.userContentController.add(weakHandler3, name: "WebBridgeKit")
+            registeredHandlerNames.append("WebBridgeKit")
 
             // 更新 bridge 的 webView 引用
             bridge.setWebView(webView)
@@ -91,13 +110,32 @@ public class WebViewController: UIViewController {
         // 默认禁用所有浏览器特性
         applyBrowserFeatures()
 
+        // 设置自定义 User-Agent
+        setupUserAgent()
+
         // 添加缓存调试按钮
         setupCacheDebugButton()
+    }
 
-        #if DEBUG
-        // Add cache debug floating button
-        addCacheDebugButton(at: CGPoint(x: view.bounds.width - 70, y: 100))
-        #endif
+    /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
+    private func setupUserAgent() {
+        // 获取原始 UA 并追加自定义信息
+        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, error) in
+            guard let self = self, let baseUA = result as? String else { return }
+            
+            let info = Bundle.main.infoDictionary
+            let appVersion = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+            let buildNumber = info?["CFBundleVersion"] as? String ?? "1"
+            
+            let screenSize = UIScreen.main.bounds.size
+            let screenScale = UIScreen.main.scale
+            
+            // 格式: BaseUA WebBridgeKit/Version (Build; Screen/WxH; Ratio/R)
+            let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
+            
+            self.webView.customUserAgent = customUA
+            print("📱 [BarkWebVC] Custom UA configured: \(customUA)")
+        }
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -163,6 +201,15 @@ public class WebViewController: UIViewController {
         // 确保 view 已加载，从而 webView 已初始化
         _ = view
 
+        // 🔒 Input validation: Validate HTML name to prevent path traversal attacks
+        do {
+            _ = try InputValidator.validateHTMLName(htmlName)
+        } catch {
+            print("❌ [BarkWebVC] Invalid HTML name: \(htmlName)")
+            print("   - Error: \(error.localizedDescription)")
+            return
+        }
+
         if let htmlPath = Bundle.main.path(forResource: htmlName, ofType: "html") {
             let htmlURL = URL(fileURLWithPath: htmlPath)
             webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
@@ -186,6 +233,18 @@ public class WebViewController: UIViewController {
         // 确保 view 已加载
         _ = view
 
+        // 🔒 Input validation: Validate URL scheme to prevent loading dangerous URLs
+        let allowedSchemes: Set<String> = ["http", "https", "file", "custom"]
+        do {
+            try InputValidator.validateURLScheme(url, allowedSchemes: allowedSchemes)
+        } catch {
+            print("❌ [BarkWebVC] Invalid URL scheme: \(url.absoluteString)")
+            print("   - Error: \(error.localizedDescription)")
+            return
+        }
+
+        self.url = url
+
         print("🧪 [ManifestCache] Attempting to match URL: \(url.absoluteString)")
 
         // 🔥 检查 URL 是否匹配缓存规则
@@ -203,7 +262,11 @@ public class WebViewController: UIViewController {
             // 🔥 新方案：使用系统 URLCache，无需 HTML 修改或 JS 注入
             // WKWebView 会自动使用 URLCache.shared 处理缓存
             // 基于 HTTP 缓存头，自动回退到网络
-            webView.load(URLRequest(url: url))
+            if url.isFileURL {
+                webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+            } else {
+                webView.load(URLRequest(url: url))
+            }
             print("🌐 [BarkWebVC] Loading: \(url) (System URLCache will handle cache automatically)")
 
             // 🔥 页面加载完成后自动生成缩略图
@@ -213,6 +276,10 @@ public class WebViewController: UIViewController {
 
     /// 页面加载完成后生成缩略图
     private func generateThumbnailAfterLoad(url: URL) {
+        // 🔒 Clean up any existing observer before creating a new one
+        loadingObserver?.invalidate()
+        loadingObserver = nil
+
         // 使用KVO监听loading属性
         let observation = webView.observe(\.isLoading, options: [.new]) { [weak self] webView, change in
             guard let self = self, let isLoading = change.newValue else { return }
@@ -222,12 +289,15 @@ public class WebViewController: UIViewController {
                 // 延迟2秒等待页面渲染完成
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                     self?.captureThumbnail(for: url)
+                    // 🔒 Clean up observer after use
+                    self?.loadingObserver?.invalidate()
+                    self?.loadingObserver = nil
                 }
             }
         }
 
         // 保存观察者以便后续清理
-        objc_setAssociatedObject(self, &AssociatedKeys.loadingObserver, observation, .OBJC_ASSOCIATION_RETAIN)
+        loadingObserver = observation
     }
 
     /// 捕获缩略图并保存
@@ -246,25 +316,24 @@ public class WebViewController: UIViewController {
             if let history = WebPageHistoryManager.shared.findHistory(url: url) {
                 // 使用 WebPageOfflineCacheManager 的 Realm 实例来更新
                 // 因为它可能已经打开了 Realm
-                if let realm = try? Realm(configuration: Realm.Configuration(
-                    fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageHistory.realm"),
-                    schemaVersion: 1
-                )) {
-                    try? realm.write {
+                do {
+                    let realm = try Realm(configuration: Realm.Configuration(
+                        fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageHistory.realm"),
+                        schemaVersion: 1
+                    ))
+                    try realm.write {
                         if let cachedHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
                             cachedHistory.thumbnail = thumbnailData
                             print("✅ [BarkWebVC] Thumbnail saved for: \(url)")
                         }
                     }
+                } catch {
+                    // 🔒 Proper error handling with logging
+                    print("❌ [BarkWebVC] Failed to save thumbnail for: \(url)")
+                    print("   - Error: \(error.localizedDescription)")
                 }
             }
         }
-    }
-
-    // MARK: - Associated Keys for KVO cleanup
-
-    private struct AssociatedKeys {
-        static var loadingObserver: UInt8 = 0
     }
 
     /// 安全地加载 URL（强制使用在线版本）
@@ -272,6 +341,7 @@ public class WebViewController: UIViewController {
     public func loadURLOnline(_ url: URL) {
         // 确保 view 已加载
         _ = view
+        self.url = url
         webView.load(URLRequest(url: url))
         print("🌐 [BarkWebVC] Loading from network (forced): \(url)")
     }
@@ -490,7 +560,11 @@ public class WebViewController: UIViewController {
 
         let script = WKUserScript(source: bridgeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         webView.configuration.userContentController.addUserScript(script)
-        webView.configuration.userContentController.add(self, name: "barkBridge")
+
+        // 使用 weak wrapper 防止循环引用
+        let weakHandler = WeakScriptMessageHandler(target: self)
+        webView.configuration.userContentController.add(weakHandler, name: "barkBridge")
+        registeredHandlerNames.append("barkBridge")
 
         // 设置手势拦截器
         setupGestureInterceptor()
@@ -648,9 +722,23 @@ public class WebViewController: UIViewController {
     }
 
     deinit {
+        // 🔒 Clean up KVO observer
+        loadingObserver?.invalidate()
+        loadingObserver = nil
+
+        // 🔒 Remove all script message handlers to prevent memory leaks
+        // WKUserContentController.add(_:name:) creates strong references
+        for handlerName in registeredHandlerNames {
+            webView?.configuration.userContentController.removeScriptMessageHandler(forName: handlerName)
+        }
+        registeredHandlerNames.removeAll()
+
+        // 🔒 Clear delegates to break strong reference cycles
+        webView?.navigationDelegate = nil
+        webView?.uiDelegate = nil
+
         NotificationCenter.default.removeObserver(self)
         gestureInterceptor?.cleanup()
-        webView?.configuration.userContentController.removeScriptMessageHandler(forName: "barkBridge")
 
         // 如果是从池中获取的，回收实例到池中（性能优化）
         if isPooledInstance {
@@ -666,7 +754,7 @@ public class WebViewController: UIViewController {
             print("♻️ [BarkWebVC] Recycled bridge only")
         }
 
-        print("🧹 [BarkWebVC] Cleaned up")
+        print("🧹 [BarkWebVC] Cleaned up with proper memory management")
     }
 
     // MARK: - Constants
@@ -688,13 +776,14 @@ public class WebViewController: UIViewController {
             if let error = error {
                 print("❌ [ManifestCache] Failed to download manifest: \(error.localizedDescription)")
                 // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL)
+                self.fallbackToNormalLoad(pageURL, error: error)
                 return
             }
 
             guard let data = data else {
                 print("❌ [ManifestCache] Manifest data is empty")
-                self.fallbackToNormalLoad(pageURL)
+                let emptyError = NSError(domain: "WebBridgeKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Manifest data is empty"])
+                self.fallbackToNormalLoad(pageURL, error: emptyError)
                 return
             }
 
@@ -721,7 +810,7 @@ public class WebViewController: UIViewController {
             } catch {
                 print("❌ [ManifestCache] Failed to decode manifest: \(error.localizedDescription)")
                 // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL)
+                self.fallbackToNormalLoad(pageURL, error: error)
             }
         }
 
@@ -756,7 +845,7 @@ public class WebViewController: UIViewController {
             case .failure(let error):
                 print("❌ [ManifestCache] Persistent mode failed: \(error.localizedDescription)")
                 // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL)
+                self.fallbackToNormalLoad(pageURL, error: error)
             }
         }
     }
@@ -787,23 +876,92 @@ public class WebViewController: UIViewController {
             case .failure(let error):
                 print("❌ [ManifestCache] Lazy mode failed: \(error.localizedDescription)")
                 // 回退到普通加载
-                self.fallbackToNormalLoad(pageURL)
+                self.fallbackToNormalLoad(pageURL, error: error)
             }
         }
     }
 
     /// 回退到普通加载模式
-    private func fallbackToNormalLoad(_ url: URL) {
+    private func fallbackToNormalLoad(_ url: URL, error: Error? = nil) {
         print("⏭️ [ManifestCache] Falling back to normal load")
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            
+            // 如果提供了错误信息，且是自定义协议 URL，则显示错误页面
+            if let error = error, (url.scheme == self.customScheme || url.scheme == "wb-resource") {
+                self.showErrorPage(url: url, error: error)
+                return
+            }
+            
             self.webView.load(URLRequest(url: url))
             print("🌐 [BarkWebVC] Loading: \(url) (fallback mode)")
 
             // 页面加载完成后自动生成缩略图
             self.generateThumbnailAfterLoad(url: url)
         }
+    }
+
+    /// 显示资源加载错误页面
+    private func showErrorPage(url: URL, error: Error) {
+        let title = "WebBridge 资源加载失败"
+        let urlString = url.absoluteString
+        let errorMessage = error.localizedDescription
+        
+        let errorHTML = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>\(title)</title>
+            <style>
+                body { font-family: -apple-system, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #2d3748; line-height: 1.5; }
+                .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 6px solid #e53e3e; }
+                h1 { color: #c53030; font-size: 22px; margin-top: 0; display: flex; align-items: center; }
+                .icon { font-size: 28px; margin-right: 12px; }
+                .info-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all; }
+                .label { font-weight: bold; color: #742a2a; display: block; margin-bottom: 5px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+                code { background: #edf2f7; padding: 3px 6px; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; color: #1a202c; }
+                .footer { margin-top: 30px; font-size: 14px; color: #4a5568; border-top: 1px solid #edf2f7; padding-top: 20px; }
+                ul { padding-left: 20px; margin-top: 10px; }
+                li { margin-bottom: 8px; }
+                .btn { display: inline-block; background: #4a5568; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; margin-top: 15px; font-size: 14px; cursor: pointer; border: none; }
+                .btn:hover { background: #2d3748; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1><span class="icon">🚫</span>资源加载失败</h1>
+                <p>在处理 manifest 缓存加载时遇到了错误，无法加载目标页面。</p>
+                
+                <div class="info-box">
+                    <span class="label">请求地址 (Request URL):</span>
+                    <code>\(urlString)</code>
+                </div>
+                
+                <div class="info-box">
+                    <span class="label">错误原因 (Error):</span>
+                    <code>\(errorMessage)</code>
+                </div>
+                
+                <div class="footer">
+                    <span class="label">排查建议:</span>
+                    <ul>
+                        <li>检查网络连接是否正常，确保能够下载 <code>manifest.json</code>。</li>
+                        <li>确认服务器上的 <code>manifest.json</code> 格式是否正确。</li>
+                        <li>检查本地缓存策略配置是否与服务器一致。</li>
+                        <li>尝试在设置中清理缓存后重试。</li>
+                    </ul>
+                    <button onclick="window.location.reload()" class="btn">重试加载 (Reload)</button>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        self.webView.loadHTMLString(errorHTML, baseURL: url)
+        print("⚠️ [BarkWebVC] Loaded error page for: \(url.absoluteString)")
     }
 
     // MARK: - Manifest Cache Helper Methods
@@ -839,7 +997,10 @@ public class WebViewController: UIViewController {
             }
 
             // Load HTML with custom scheme
-            let htmlURL = URL(string: "\(customScheme)://\(htmlName).html")!
+            guard let htmlURL = URL(string: "\(customScheme)://\(htmlName).html") else {
+                print("❌ [BarkWebVC] Failed to create URL for scheme: \(customScheme), page: \(htmlName)")
+                return
+            }
             webView.load(URLRequest(url: htmlURL))
             print("✅ [BarkWebVC] Loaded HTML with manifest: \(htmlName).html")
 
@@ -1073,33 +1234,32 @@ extension WebViewController: WKScriptMessageHandler {
 
         print("🎮 [BarkWebVC] Received action: \(action)")
 
-        // 设置当前 callbackId
+        // 获取当前 callbackId
         let callbackId = body["callbackId"] as? String
-        bridge.currentCallbackId = callbackId
 
         // 特殊处理浏览器特性设置
         if action == "browser" {
-            handleBrowserAction(body: body)
+            handleBrowserAction(body: body, callbackId: callbackId)
             return
         }
 
         // 使用 getHandler 方法支持懒加载
         guard let handler = bridge.getHandler(for: action) else {
             print("❌ [BarkWebVC] No handler for: \(action)")
-            bridge.sendErrorToJS("Unsupported action: \(action)")
+            bridge.sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
             return
         }
 
         handler.handle(body: body) { [weak self] result in
-            self?.bridge.sendResultToJS(result)
+            self?.bridge.sendResultToJS(result, callbackId: callbackId)
         }
     }
 
     /// 🔥 处理浏览器特性相关的 Bridge 调用
-    private func handleBrowserAction(body: [String: Any]) {
+    private func handleBrowserAction(body: [String: Any], callbackId: String?) {
         guard let params = body["params"] as? [String: Any],
               let action = params["action"] as? String else {
-            bridge.sendErrorToJS("Missing action parameter")
+            bridge.sendErrorToJS("Missing action parameter", callbackId: callbackId)
             return
         }
 
@@ -1112,9 +1272,9 @@ extension WebViewController: WKScriptMessageHandler {
                     "success": true,
                     "feature": feature,
                     "enabled": enabled
-                ])
+                ], callbackId: callbackId)
             } else {
-                bridge.sendErrorToJS("Missing feature or enabled parameter")
+                bridge.sendErrorToJS("Missing feature or enabled parameter", callbackId: callbackId)
             }
 
         case "getFeatures":
@@ -1125,10 +1285,10 @@ extension WebViewController: WKScriptMessageHandler {
                     "scrollIndicator": scrollIndicatorEnabled,
                     "backForwardGestures": backForwardGesturesEnabled
                 ]
-            ])
+            ], callbackId: callbackId)
 
         default:
-            bridge.sendErrorToJS("Unknown browser action: \(action)")
+            bridge.sendErrorToJS("Unknown browser action: \(action)", callbackId: callbackId)
         }
     }
 }

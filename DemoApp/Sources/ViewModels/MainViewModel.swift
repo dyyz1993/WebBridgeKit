@@ -145,126 +145,183 @@ class MainViewModel: ViewModel {
     /// 执行基于打开频率的自动清理
     /// 当历史记录超过 50 条时，自动清理访问次数少于 2 次的项目
     private func performFrequencyCleanup() {
-        WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
+        Task {
+            try? await WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
+        }
     }
 
     private func loadHistories() {
-        print("🔍 [MainVM] loadHistories called")
-        // 自动清理逻辑已在 WebPageHistoryManager 中优化：会自动忽略收藏和置顶项
-        performFrequencyCleanup()
+        Log.debug("loadHistories called", category: .ui)
 
-        // 1. 获取置顶项目 (从收藏中获取 isPinned = true)
-        let pinnedItems = favoriteService.getAllFavorites()
-            .filter("isPinned == true")
-            .sorted(byKeyPath: "sortOrder", ascending: true)
-            .map { favorite -> WebPageHistory in
-                let history = WebPageHistory()
-                history.id = favorite.id
-                history.url = favorite.url
-                history.title = favorite.title ?? favorite.domain ?? "未知"
-                history.favicon = favorite.favicon
-                history.isPinned = true
-                history.isFavorite = true
-                
-                // 计算缓存大小
-                if let url = URL(string: favorite.url) {
-                    let cacheID = url.host ?? url.lastPathComponent
-                    history.cachedSize = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
-                }
-                
-                return history
-            }
-        print("🔍 [MainVM] pinnedItems count: \(pinnedItems.count)")
+        // 使用 Task 执行异步操作
+        Task { [weak self] in
+            guard let self = self else { return }
 
-        // 2. 获取收藏项目 (排除已置顶的)
-        let favoriteItems = favoriteService.getAllFavorites()
-            .filter("isPinned == false")
-            .sorted(byKeyPath: "createdAt", ascending: false)
-            .map { favorite -> WebPageHistory in
-                let history = WebPageHistory()
-                history.id = favorite.id
-                history.url = favorite.url
-                history.title = favorite.title ?? favorite.domain ?? "未知"
-                history.favicon = favorite.favicon
-                history.isPinned = false
-                history.isFavorite = true
-                
-                // 计算缓存大小
-                if let url = URL(string: favorite.url) {
-                    let cacheID = url.host ?? url.lastPathComponent
-                    history.cachedSize = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
-                }
-                
-                return history
+            // 1. 执行自动清理（异步）
+            try? await WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
+
+            // 2. 异步获取所有历史记录
+            let historyResults: [WebPageHistory]
+            do {
+                historyResults = try await WebPageHistoryManager.shared.getAllHistories()
+            } catch {
+                Log.error("Failed to get all histories: \(error.localizedDescription)", category: .ui)
+                historyResults = []
             }
 
-        // 3. 获取最近访问的历史记录 (排除已在收藏中的)
-        let favoriteURLs = Set(favoriteService.getAllFavorites().map { $0.url })
-        
-        // 修改：按照最后访问时间 (lastVisitDate) 降序排列，显示最近的 20 条记录 (原来是 6 条)
-        let histories = historyService.getAllHistories()
-            .filter { !favoriteURLs.contains($0.url) }
-            .sorted { $0.lastVisitDate > $1.lastVisitDate }
-            .prefix(20)
-            .map { history -> WebPageHistory in
-                // 直接返回一个新的对象或修改后的对象，设置 isFavorite 为 false
-                let displayHistory = WebPageHistory()
-                displayHistory.id = history.id
-                displayHistory.url = history.url
-                displayHistory.title = history.title
-                displayHistory.favicon = history.favicon
-                displayHistory.visitCount = history.visitCount
-                displayHistory.lastVisitDate = history.lastVisitDate
-                displayHistory.isFavorite = false
-                displayHistory.isPinned = false
-                
-                // 确保缓存大小是最新的
-                if let url = URL(string: history.url) {
-                    let cacheID = url.host ?? url.lastPathComponent
-                    displayHistory.cachedSize = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
-                    displayHistory.isCached = displayHistory.cachedSize > 0
+            // 3. 一次性获取所有收藏数据，避免在循环中重复查询 Realm
+            // 注意：favoriteService 目前还是同步的，保持在主线程执行
+            await MainActor.run {
+                let allFavorites = Array(self.favoriteService.getAllFavorites())
+                let favoriteURLs = Set(allFavorites.map { $0.url })
+
+                // 2. 获取置顶项目 (从已获取的收藏中筛选 isPinned = true)
+                let pinnedItems = allFavorites.filter { $0.isPinned }
+                    .sorted { $0.sortOrder < $1.sortOrder }
+                    .map { favorite -> WebPageHistory in
+                        let history = WebPageHistory()
+                        history.id = favorite.id
+                        history.url = favorite.url
+                        history.title = favorite.title ?? favorite.domain ?? "未知"
+                        history.favicon = favorite.favicon
+                        history.isPinned = true
+                        history.isFavorite = true
+
+                        // 异步计算缓存大小，避免阻塞主线程
+                        let itemURL = favorite.url
+                        if let url = URL(string: itemURL) {
+                            let cacheID = url.host ?? url.lastPathComponent
+                            history.cachedSize = 0
+
+                            Task.detached {
+                                let size = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
+                                if size > 0 {
+                                    await MainActor.run { [weak self] in
+                                        self?.updateHistoryItemSize(url: itemURL, size: size)
+                                    }
+                                }
+                            }
+                        }
+                        return history
+                    }
+
+                // 3. 获取收藏项目 (排除已置顶的)
+                let favoriteItems = allFavorites.filter { !$0.isPinned }
+                    .sorted { $0.createdAt > $1.createdAt }
+                    .map { favorite -> WebPageHistory in
+                        let history = WebPageHistory()
+                        history.id = favorite.id
+                        history.url = favorite.url
+                        history.title = favorite.title ?? favorite.domain ?? "未知"
+                        history.favicon = favorite.favicon
+                        history.isPinned = false
+                        history.isFavorite = true
+                        history.cachedSize = 0
+                        return history
+                    }
+
+                // 4. 获取最近访问的历史记录 (排除已在收藏中的)
+                // historyResults 已经通过异步获取
+                let histories = historyResults.prefix(100) // 取最近 100 条进行过滤
+                    .filter { !favoriteURLs.contains($0.url) }
+                    .prefix(20) // 最终显示 20 条
+                    .map { history -> WebPageHistory in
+                        let displayHistory = WebPageHistory()
+                        displayHistory.id = history.id
+                        displayHistory.url = history.url
+                        displayHistory.title = history.title
+                        displayHistory.favicon = history.favicon
+                        displayHistory.visitCount = history.visitCount
+                        displayHistory.lastVisitDate = history.lastVisitDate
+                        displayHistory.isFavorite = false
+                        displayHistory.isPinned = false
+
+                        if let url = URL(string: history.url) {
+                            let cacheID = url.host ?? url.lastPathComponent
+                            displayHistory.cachedSize = 0
+                            displayHistory.isCached = false
+
+                            Task.detached {
+                                let size = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
+                                if size > 0 {
+                                    await MainActor.run { [weak self] in
+                                        self?.updateHistoryItemSize(url: history.url, size: size)
+                                    }
+                                }
+                            }
+                        }
+                        return displayHistory
+                    }
+
+                // 🧪 添加测试入口
+                let testEntry = WebPageHistory()
+                testEntry.id = "test_cases_entry"
+                testEntry.url = "wb-app://test-cases"
+                testEntry.title = "🧪 自动化测试用例"
+                testEntry.isPinned = true
+
+                // 构造 Section 数据
+                var sections: [WebPageHistorySection] = []
+
+                if !pinnedItems.isEmpty || true { // 始终显示常用应用区，包含测试入口
+                    var topItems = pinnedItems
+                    topItems.insert(testEntry, at: 0)
+                    sections.append(WebPageHistorySection(header: "常用应用", items: topItems))
                 }
-                return displayHistory
+
+                if !favoriteItems.isEmpty {
+                    sections.append(WebPageHistorySection(header: "我的收藏", items: favoriteItems))
+                }
+
+                if !histories.isEmpty {
+                    sections.append(WebPageHistorySection(header: "最近访问", items: Array(histories)))
+                }
+
+                // 计算总存储大小 (异步)
+                Task.detached { [weak self] in
+                    let totalBytes = PersistentManifestLoader.shared.getCacheSize()
+                    let formattedTotalSize = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
+                    await MainActor.run {
+                        self?.totalStorageSizeRelay.accept(formattedTotalSize)
+                    }
+                }
+
+                // 更新 UI
+                self.historiesRelay.accept(sections)
+                self.isEmptyRelay.accept(sections.allSatisfy { $0.items.isEmpty })
+                self.loadingRelay.accept(false)
+                Log.info("loadHistories completed, sections: \(sections.count)", category: .ui)
             }
-
-        // 🧪 添加测试入口到列表顶部
-        let testEntry = WebPageHistory()
-        testEntry.id = "manifest-cache-test"
-        testEntry.url = "http://localhost:8080/test_resources/manifest_cache_demo/index.html"
-        testEntry.title = "🧪 Manifest 缓存测试"
-        testEntry.favicon = nil as Data?
-        testEntry.visitCount = 0
-        testEntry.lastVisitDate = Date()
-        
-        // 更新测试入口的缓存大小
-        if let url = URL(string: testEntry.url) {
-            let cacheID = url.host ?? url.lastPathComponent
-            testEntry.cachedSize = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
-            testEntry.isCached = testEntry.cachedSize > 0
         }
+    }
 
-        var sections: [WebPageHistorySection] = []
+    /// 异步更新历史记录项的缓存大小
+    /// - Parameters:
+    ///   - url: 项目 URL
+    ///   - size: 缓存大小
+    private func updateHistoryItemSize(url: String, size: Int64) {
+        var currentSections = historiesRelay.value
+        var updated = false
         
-        if !pinnedItems.isEmpty {
-            sections.append(WebPageHistorySection(header: "置顶应用", items: Array(pinnedItems)))
+        for (sIndex, section) in currentSections.enumerated() {
+            var items = section.items
+            for (iIndex, item) in items.enumerated() {
+                if item.url == url {
+                    item.cachedSize = size
+                    item.isCached = size > 0
+                    items[iIndex] = item
+                    updated = true
+                }
+            }
+            if updated {
+                currentSections[sIndex] = WebPageHistorySection(header: section.header, items: items)
+                break
+            }
         }
         
-        if !favoriteItems.isEmpty {
-            sections.append(WebPageHistorySection(header: "我的收藏", items: Array(favoriteItems)))
+        if updated {
+            historiesRelay.accept(currentSections)
         }
-        
-        let recentItems = [testEntry] + Array(histories)
-        sections.append(WebPageHistorySection(header: "最近访问", items: recentItems))
-
-        // 计算总存储大小
-        let totalBytes = PersistentManifestLoader.shared.getCacheSize()
-        let formattedTotalSize = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
-        totalStorageSizeRelay.accept(formattedTotalSize)
-
-        historiesRelay.accept(sections)
-        print("🔍 [MainVM] historiesRelay.accept called with \(sections.count) sections")
-        isEmptyRelay.accept(sections.allSatisfy { $0.items.isEmpty })
-        loadingRelay.accept(false)
     }
 
     func addToFavorites(url: URL) {

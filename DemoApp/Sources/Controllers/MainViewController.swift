@@ -48,48 +48,47 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("🔧 [MainVC] viewDidLoad called")
+        Log.debug("viewDidLoad called", category: .ui)
         title = "首页"
         setupUI()
         setupGestures()
         setupNotifications()
         // Note: bindViewModel will be called by BaseViewController in viewWillAppear
-        
+
         // 启动时执行一次自动清理
         WebCacheManager.shared.performAutoCleanup()
     }
 
     private func setupNotifications() {
-        NotificationCenter.default.rx.notification(NSNotification.Name("QRScannerDidScanURL"))
+        NotificationCenter.default.rx.notification(.qrScannerDidScanURL)
             .subscribe(onNext: { [weak self] notification in
                 let url = notification.object as? URL
                 let rawString = notification.userInfo?["rawString"] as? String
                 self?.handleScannedResult(url: url, rawString: rawString)
             })
             .disposed(by: rx)
-            
+
         // 自动化测试支持：直接通过通知触发原生跳转，避免 URL Scheme 弹窗
-        NotificationCenter.default.rx.notification(NSNotification.Name("AutomationTestOpenURL"))
+        NotificationCenter.default.rx.notification(.automationTestOpenURL)
             .compactMap { $0.userInfo?["url"] as? String }
             .compactMap { URL(string: $0) }
             .subscribe(onNext: { [weak self] url in
-                print("🤖 [MainVC] Automation trigger: opening \(url.absoluteString) natively")
+                Log.info("Automation trigger: opening \(url.absoluteString) natively", category: .ui)
                 self?.openURL(url)
             })
             .disposed(by: rx)
 
         // 监听历史记录更新通知
-        NotificationCenter.default.rx.notification(NSNotification.Name("WebPageHistoryUpdated"))
+        NotificationCenter.default.rx.notification(.historyDidUpdate)
             .subscribe(onNext: { [weak self] _ in
-                print("🔄 [MainVC] History updated notification received")
+                Log.info("History updated notification received", category: .ui)
                 self?.viewModel.refreshData()
             })
             .disposed(by: rx)
     }
 
     private func handleScannedResult(url: URL?, rawString: String?) {
-        print("🔍 [MainVC] Handling scanned result - URL: \(url?.absoluteString ?? "nil"), Raw: \(rawString ?? "nil")")
-        
+        Log.debug("Handling scanned result - URL: \(url?.absoluteString ?? "nil"), Raw: \(rawString ?? "nil")", category: .ui)
         // 1. 优先处理解析后的 URL
         if let url = url {
             // 特殊协议处理：wb-app://
@@ -122,8 +121,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func handleCustomProtocol(_ url: URL) {
-        print("🔗 [MainVC] Handling custom protocol: \(url.absoluteString)")
-        
+        Log.debug("Handling custom protocol: \(url.absoluteString)", category: .ui)
         // 示例：wb-app://load?url=https://...
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
         
@@ -158,7 +156,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             } catch {
                 await MainActor.run {
                     self.loadingView.stopLoading()
-                    print("❌ [MainVC] Failed to load manifest: \(error)")
+                    Log.error("Failed to load manifest: \(error)", category: .ui)
                     // 如果解析失败，可能是普通 JSON，直接作为 URL 打开
                     self.openURL(url)
                 }
@@ -168,13 +166,18 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("🔄 [MainVC] viewWillAppear - refreshing data")
+        Log.debug("viewWillAppear - refreshing data", category: .ui)
         viewModel.refreshData()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        print("👀 [MainVC] viewDidAppear")
+        Log.debug("viewDidAppear", category: .ui)
+        // 检查剪贴板中的口令
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            PassphraseManager.shared.checkClipboard(from: self)
+        }
     }
 
     // MARK: - Setup UI
@@ -208,6 +211,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         
         // 设置数据源
         collectionView.dataSource = self
+        collectionView.delegate = self // 初始设置代理
 
         // 添加背景装饰：顶部渐变或图形
         let topBackground = UIView()
@@ -225,6 +229,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         collectionView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+        collectionView.accessibilityIdentifier = "MainCollectionView"
 
         emptyStateView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -273,12 +278,11 @@ class MainViewController: BaseViewController<MainViewModel> {
     // MARK: - Bind ViewModel
 
     override func bindViewModel() {
-        print("🔧 [MainVC] bindViewModel called")
-        print("🔧 [MainVC] navigationController: \(String(describing: navigationController))")
+        Log.debug("bindViewModel called", category: .ui)
+        Log.debug("navigationController: \(String(describing: navigationController))", category: .ui)
 
-        // 设置代理以支持 FlowLayout，同时保持 Rx 事件有效
-        collectionView.rx.setDelegate(self)
-            .disposed(by: rx)
+        // Note: delegate 已在 setupUI 中设置，不需要使用 rx.setDelegate
+        // 因为我们同时需要 UICollectionViewDataSource 和 UICollectionViewDelegateFlowLayout
 
         // 使用 Driver 合并刷新信号，确保每次回到首页都更新
         let refreshTrigger = Driver.merge(
@@ -288,7 +292,7 @@ class MainViewController: BaseViewController<MainViewModel> {
 
         let itemSelect = collectionView.rx.itemSelected
             .do(onNext: { indexPath in
-                print("🔧 [MainVC] Cell tapped at indexPath: \(indexPath)")
+                Log.debug("Cell tapped at indexPath: \(indexPath)", category: .ui)
             })
             .asDriver(onErrorDriveWith: .empty())
 
@@ -297,7 +301,7 @@ class MainViewController: BaseViewController<MainViewModel> {
 
         // 使用自定义 PublishRelay 处理长按
         let itemLongPressRelay = PublishRelay<IndexPath>()
-        
+
         // 添加长按手势
         let longPressGesture = UILongPressGestureRecognizer()
         collectionView.addGestureRecognizer(longPressGesture)
@@ -307,7 +311,7 @@ class MainViewController: BaseViewController<MainViewModel> {
                 guard let self = self else { return }
                 let point = gesture.location(in: self.collectionView)
                 if let indexPath = self.collectionView.indexPathForItem(at: point) {
-                    print("🔧 [MainVC] Cell long pressed at indexPath: \(indexPath)")
+                    Log.debug("Cell long pressed at indexPath: \(indexPath)", category: .ui)
                     itemLongPressRelay.accept(indexPath)
                 }
             })
@@ -384,21 +388,17 @@ class MainViewController: BaseViewController<MainViewModel> {
     // MARK: - Private Methods
 
     private func updateCollectionView(sections: [WebPageHistorySection]) {
-        print("🔄 [MainVC] updateCollectionView called with \(sections.count) sections")
-        
+        Log.debug("updateCollectionView called with \(sections.count) sections", category: .ui)
+
         // 关键：直接刷新，不再使用带延迟的 Observable 订阅，避免内存泄漏和重复刷新
         DispatchQueue.main.async { [weak self] in
             self?.collectionView.reloadData()
-            print("🔄 [MainVC] collectionView.reloadData() executed")
+            Log.debug("collectionView.reloadData() executed", category: .ui)
         }
-            
-        // 注意：不要在这里手动设置 delegate = self，否则会破坏 RxSwift 的 itemSelected 绑定
-        // Delegate 已在 bindViewModel 中通过 rx.setDelegate(self) 设置
-        collectionView.dataSource = self
     }
 
     @objc private func refreshData() {
-        print("🔄 [MainVC] refreshData (Pull-to-refresh) triggered")
+        Log.debug("refreshData (Pull-to-refresh) triggered", category: .ui)
         // 不需要在这里手动调用 viewModel.refreshData()，
         // 因为 bindViewModel 中已经绑定了 refreshControl.rx.controlEvent(.valueChanged)
     }
@@ -419,23 +419,33 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func openURL(_ url: URL) {
-        print("🔗 [MainVC] openURL called: \(url.absoluteString)")
+        Log.debug("openURL called: \(url.absoluteString)", category: .ui)
+
+        // 处理自定义协议：wb-app://test-cases
+        if url.scheme == "wb-app" && url.host == "test-cases" {
+            Log.debug("Opening test cases page", category: .ui)
+            // 切换到测试用例 Tab (索引 1)
+            if let tabBarController = self.tabBarController {
+                tabBarController.selectedIndex = 1
+            }
+            return
+        }
 
         // 保存上次打开的 URL（如果启用了记忆功能）
         if UserDefaults.standard.bool(forKey: "EnableLastAppMemory") {
             UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
             UserDefaults.standard.synchronize()
-            print("💾 [MainVC] Saved LastOpenedURL: \(url.absoluteString)")
+            Log.debug("Saved LastOpenedURL: \(url.absoluteString)", category: .ui)
         }
 
-        // 使用 WebBrowserManager 打开支持缓存的浏览器
-        print("🔗 [MainVC] Calling WebBrowserManager.shared.openBrowserWithCache...")
-        WebBrowserManager.shared.openBrowserWithCache(
+        // 使用 WebBrowserManager 打开浏览器
+        Log.debug("Calling WebBrowserManager.shared.openBrowser...", category: .ui)
+        WebBrowserManager.shared.openBrowser(
             url: url,
             params: WebBrowserParams(displayMode: .normal),
             from: navigationController
         )
-        print("✅ [MainVC] WebBrowserManager.shared.openBrowserWithCache returned")
+        Log.debug("WebBrowserManager.shared.openBrowser returned", category: .ui)
     }
 
     private func showActionSheet(url: URL) {
@@ -518,14 +528,14 @@ extension MainViewController: UICollectionViewDataSource {
         // 设置置顶和收藏的点击事件
         cell.onPinToggle = { [weak self] in
             guard let self = self, let url = URL(string: history.url) else { return }
-            print("📌 [MainVC] Toggled pin for: \(url.absoluteString)")
+            Log.debug("Toggled pin for: \(url.absoluteString)", category: .ui)
             self.viewModel.togglePin(url: url)
             self.viewModel.refreshData()
         }
-        
+
         cell.onFavoriteToggle = { [weak self] in
             guard let self = self, let url = URL(string: history.url) else { return }
-            print("⭐ [MainVC] Toggled favorite for: \(url.absoluteString)")
+            Log.debug("Toggled favorite for: \(url.absoluteString)", category: .ui)
             self.viewModel.toggleFavorite(url: url)
             self.viewModel.refreshData()
         }

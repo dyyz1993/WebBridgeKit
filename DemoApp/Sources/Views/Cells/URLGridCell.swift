@@ -19,28 +19,52 @@ class URLGridCell: UICollectionViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemGroupedBackground
+        view.backgroundColor = .secondarySystemGroupedBackground
+        view.layer.cornerRadius = 24
+        // 添加精致阴影
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 8)
+        view.layer.shadowRadius = 16
+        view.layer.shadowOpacity = 0.08
+        return view
+    }()
+
+    private let contentClipView: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 24
+        view.layer.masksToBounds = true
+        return view
+    }()
+
+    private let glassEffectView: UIVisualEffectView = {
+        let blur = UIBlurEffect(style: .systemThinMaterial)
+        let view = UIVisualEffectView(effect: blur)
+        view.layer.cornerRadius = 24
+        view.layer.masksToBounds = true
+        view.isHidden = true // 仅在特定状态显示
+        
+        // 添加磨砂边框效果
+        view.layer.borderWidth = 0.5
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+        return view
+    }()
+
+    private let faviconContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.systemBackground
         view.layer.cornerRadius = 20
-        // 添加阴影效果
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
         view.layer.shadowRadius = 8
-        view.layer.shadowOpacity = 0.1
-        view.layer.masksToBounds = false
-        view.isHidden = false
+        view.layer.shadowOpacity = 0.05
         return view
     }()
 
     private let faviconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.tintColor = UIColor.systemBlue
-        imageView.backgroundColor = UIColor.tertiarySystemGroupedBackground
-        imageView.layer.cornerRadius = 14
+        imageView.layer.cornerRadius = 16
         imageView.layer.masksToBounds = true
-        // 添加精致边框
-        imageView.layer.borderWidth = 0.5
-        imageView.layer.borderColor = UIColor.separator.cgColor
         return imageView
     }()
 
@@ -50,6 +74,7 @@ class URLGridCell: UICollectionViewCell {
         label.textColor = UIColor.label
         label.textAlignment = .center
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail // 尾部截断
         return label
     }()
 
@@ -59,6 +84,7 @@ class URLGridCell: UICollectionViewCell {
         label.textColor = UIColor.tertiaryLabel
         label.textAlignment = .center
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingMiddle // 中间截断（更适合 URL）
         return label
     }()
 
@@ -122,9 +148,45 @@ class URLGridCell: UICollectionViewCell {
         return label
     }()
 
-    // MARK: - Properties
+    private let lastVisitedLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 9, weight: .regular)
+        label.textColor = UIColor.quaternaryLabel
+        label.textAlignment = .center
+        return label
+    }()
 
+    private let appIdLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 9, weight: .bold)
+        label.textColor = UIColor.systemIndigo
+        label.textAlignment = .center
+        label.lineBreakMode = .byTruncatingTail
+        return label
+    }()
+
+    private let appIdBadgeView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.systemIndigo.withAlphaComponent(0.1)
+        view.layer.cornerRadius = 4
+        view.isHidden = true
+        return view
+    }()
+
+    private let actionStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 6
+        stack.distribution = .fillEqually
+        return stack
+    }()
+
+    // MARK: - Properties
+    
     private var currentHistory: WebPageHistory?
+
+    var onPinToggle: (() -> Void)?
+    var onFavoriteToggle: (() -> Void)?
 
     var history: WebPageHistory? {
         didSet {
@@ -139,6 +201,16 @@ class URLGridCell: UICollectionViewCell {
         }
     }
 
+    // MARK: - Actions
+
+    @objc private func pinTapped() {
+        onPinToggle?()
+    }
+
+    @objc private func favoriteTapped() {
+        onFavoriteToggle?()
+    }
+
     // MARK: - Initialization
 
     override init(frame: CGRect) {
@@ -148,6 +220,7 @@ class URLGridCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
         backgroundColor = .clear
         containerView.isHidden = true
+        containerView.alpha = 0  // 同时设置 alpha 确保绝对不显示
 
         setupUI()
     }
@@ -166,6 +239,7 @@ class URLGridCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
         backgroundColor = .clear
         containerView.isHidden = true
+        containerView.alpha = 0  // 重置 alpha
         containerView.backgroundColor = UIColor.secondarySystemBackground  // 重置为默认颜色
 
         // 重置所有 UI 状态
@@ -179,9 +253,6 @@ class URLGridCell: UICollectionViewCell {
 
     // MARK: - Interaction
     
-    var onPinToggle: (() -> Void)?
-    var onFavoriteToggle: (() -> Void)?
-
     override var isHighlighted: Bool {
         didSet {
             animateSelection(isHighlighted)
@@ -199,20 +270,30 @@ class URLGridCell: UICollectionViewCell {
     // MARK: - Setup
     
     private func setupUI() {
-        // 确保contentView背景透明，避免白色遮挡
         contentView.backgroundColor = .clear
         backgroundColor = .clear
 
         contentView.addSubview(containerView)
-        containerView.addSubview(faviconImageView)
-        containerView.addSubview(pinIconView)
-        containerView.addSubview(cachedBadgeView)
-        containerView.addSubview(titleLabel)
-        containerView.addSubview(urlLabel)
-        containerView.addSubview(favoriteIconView)
-        containerView.addSubview(sizeLabel)
-        containerView.addSubview(modeBadgeView)
+        containerView.addSubview(contentClipView)
+        
+        contentClipView.addSubview(glassEffectView)
+        contentClipView.addSubview(faviconContainer)
+        faviconContainer.addSubview(faviconImageView)
+        
+        contentClipView.addSubview(actionStackView)
+        actionStackView.addArrangedSubview(pinIconView)
+        actionStackView.addArrangedSubview(favoriteIconView)
+        
+        contentClipView.addSubview(cachedBadgeView)
+        contentClipView.addSubview(titleLabel)
+        contentClipView.addSubview(urlLabel)
+        contentClipView.addSubview(sizeLabel)
+        contentClipView.addSubview(lastVisitedLabel)
+        contentClipView.addSubview(modeBadgeView)
         modeBadgeView.addSubview(modeLabel)
+        
+        contentClipView.addSubview(appIdBadgeView)
+        appIdBadgeView.addSubview(appIdLabel)
 
         cachedBadgeView.addSubview(cachedLabel)
 
@@ -220,23 +301,42 @@ class URLGridCell: UICollectionViewCell {
             make.edges.equalToSuperview().inset(6)
         }
 
-        faviconImageView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16)
+        contentClipView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        glassEffectView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        faviconContainer.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(20)
             make.centerX.equalToSuperview()
+            make.width.height.equalTo(56)
+        }
+
+        faviconImageView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
             make.width.height.equalTo(52)
         }
 
+        actionStackView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(12)
+            make.right.equalToSuperview().offset(-12)
+        }
+
         pinIconView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(10)
-            make.right.equalToSuperview().offset(-10)
-            make.width.height.equalTo(18)
+            make.width.height.equalTo(22)
+        }
+
+        favoriteIconView.snp.makeConstraints { make in
+            make.width.height.equalTo(22)
         }
 
         cachedBadgeView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(10)
-            make.left.equalToSuperview().offset(10)
+            make.top.equalToSuperview().offset(12)
+            make.left.equalToSuperview().offset(12)
             make.height.equalTo(18)
-            make.width.greaterThanOrEqualTo(50)
         }
 
         cachedLabel.snp.makeConstraints { make in
@@ -244,25 +344,42 @@ class URLGridCell: UICollectionViewCell {
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(faviconImageView.snp.bottom).offset(12)
-            make.left.equalToSuperview().offset(10)
-            make.right.equalToSuperview().offset(-10)
+            make.top.equalTo(faviconContainer.snp.bottom).offset(12)
+            make.left.equalToSuperview().offset(12)
+            make.right.equalToSuperview().offset(-12)
         }
 
         urlLabel.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
-            make.left.equalToSuperview().offset(10)
-            make.right.equalToSuperview().offset(-10)
+            make.left.equalToSuperview().offset(12)
+            make.right.equalToSuperview().offset(-12)
+        }
+
+        lastVisitedLabel.snp.makeConstraints { make in
+            make.top.equalTo(urlLabel.snp.bottom).offset(6)
+            make.left.right.equalTo(urlLabel)
         }
 
         sizeLabel.snp.makeConstraints { make in
             make.bottom.equalToSuperview().offset(-12)
-            make.left.equalToSuperview().offset(10)
+            make.left.equalToSuperview().offset(12)
+        }
+
+        appIdBadgeView.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-12)
+            make.centerX.equalToSuperview()
+            make.height.equalTo(14)
+            make.left.greaterThanOrEqualTo(sizeLabel.snp.right).offset(4)
+            make.right.lessThanOrEqualTo(modeBadgeView.snp.left).offset(-4)
+        }
+
+        appIdLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4))
         }
 
         modeBadgeView.snp.makeConstraints { make in
             make.bottom.equalToSuperview().offset(-12)
-            make.right.equalToSuperview().offset(-10)
+            make.right.equalToSuperview().offset(-12)
             make.height.equalTo(14)
         }
 
@@ -270,120 +387,90 @@ class URLGridCell: UICollectionViewCell {
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4))
         }
 
-        favoriteIconView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(10)
-            make.right.equalToSuperview().offset(-10)
-            make.width.height.equalTo(18)
-        }
-
         pinIconView.addTarget(self, action: #selector(pinTapped), for: .touchUpInside)
         favoriteIconView.addTarget(self, action: #selector(favoriteTapped), for: .touchUpInside)
 
-        favoriteIconView.isHidden = true
+        favoriteIconView.isHidden = false
         modeBadgeView.isHidden = true
-    }
-
-    @objc private func pinTapped() {
-        onPinToggle?()
-    }
-
-    @objc private func favoriteTapped() {
-        onFavoriteToggle?()
     }
 
     // MARK: - Update UI
 
     private func updateUI() {
         guard let history = currentHistory else {
-            // 没有数据时隐藏容器视图
+            // 如果没有数据，绝对不能显示 containerView
             containerView.isHidden = true
-            accessibilityIdentifier = nil
-            titleLabel.text = ""
-            urlLabel.text = ""
-            pinIconView.isHidden = true
-            cachedBadgeView.isHidden = true
-            favoriteIconView.isHidden = true
-            modeBadgeView.isHidden = true
-            faviconImageView.image = nil
+            containerView.alpha = 0
             return
         }
 
-        // 有数据时显示容器视图
-        containerView.isHidden = false
-        containerView.backgroundColor = UIColor.secondarySystemBackground
+        // 只有在数据加载完成后，才在主线程显示内容
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.currentHistory?.url == history.url else { return }
 
-        // Set accessibility identifier for testing
-        accessibilityIdentifier = "history.cell.\(history.id)"
-
-        // 设置标题
-        titleLabel.text = history.title ?? "未知页面"
-
-        // 设置缓存大小
-        if history.cachedSize > 0 {
-            sizeLabel.text = history.formattedSize
-            sizeLabel.isHidden = false
-        } else {
-            sizeLabel.text = nil
-            sizeLabel.isHidden = true
-        }
-
-        // 设置加载模式
-        updateModeBadge(for: history)
-
-        // 设置 URL
-        if let url = URL(string: history.url) {
-            let host = url.host ?? ""
-            if host == "localhost" {
-                urlLabel.text = ""
-            } else {
-                urlLabel.text = host
+            // 先显示容器，并执行渐显动画
+            self.containerView.isHidden = false
+            UIView.animate(withDuration: 0.2) {
+                self.containerView.alpha = 1
             }
-        } else {
-            urlLabel.text = history.url
-        }
 
-        // 设置图标
-        if let favicon = history.favicon, let image = UIImage(data: favicon) {
-            faviconImageView.image = image
-            faviconImageView.backgroundColor = .clear
-        } else {
-            // 使用首字母图标
-            faviconImageView.setLetterIcon(for: history.title ?? history.url, size: CGSize(width: 52, height: 52))
-        }
+            // 动态背景
+            if history.isPinned {
+                self.containerView.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.05)
+                self.glassEffectView.isHidden = false
+            } else {
+                self.containerView.backgroundColor = .secondarySystemGroupedBackground
+                self.glassEffectView.isHidden = true
+            }
 
-        // 缓存状态
-        if history.isCached {
-            cachedBadgeView.isHidden = false
-            cachedLabel.text = "OFFLINE"
-        } else {
-            cachedBadgeView.isHidden = true
-        }
+            self.titleLabel.text = history.title ?? "未知页面"
 
-        // 置顶状态
-        let pinImage = history.isPinned ? "pin.fill" : "pin"
-        pinIconView.setImage(UIImage(systemName: pinImage, withConfiguration: UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)), for: .normal)
-        pinIconView.tintColor = history.isPinned ? UIColor.systemOrange : UIColor.systemGray4
-        pinIconView.backgroundColor = history.isPinned ? UIColor.systemOrange.withAlphaComponent(0.15) : UIColor.systemGray6.withAlphaComponent(0.5)
-        pinIconView.isHidden = false // 始终显示以便点击
-        
-        // 收藏状态
-        let favoriteImage = history.isFavorite ? "star.fill" : "star"
-        favoriteIconView.setImage(UIImage(systemName: favoriteImage, withConfiguration: UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)), for: .normal)
-        favoriteIconView.tintColor = history.isFavorite ? UIColor.systemYellow : UIColor.systemGray4
-        favoriteIconView.backgroundColor = history.isFavorite ? UIColor.systemYellow.withAlphaComponent(0.15) : UIColor.systemGray6.withAlphaComponent(0.5)
-        favoriteIconView.isHidden = false // 始终显示以便点击
-        
-        // 始终显示置顶和收藏，并并排排列
-        favoriteIconView.snp.remakeConstraints { make in
-            make.top.equalToSuperview().offset(10)
-            make.right.equalToSuperview().offset(-10)
-            make.width.height.equalTo(20)
-        }
-        
-        pinIconView.snp.remakeConstraints { make in
-            make.top.equalToSuperview().offset(10)
-            make.right.equalTo(favoriteIconView.snp.left).offset(-6)
-            make.width.height.equalTo(20)
+            // 格式化上次访问时间
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .short
+            self.lastVisitedLabel.text = "最后访问: \(formatter.string(from: history.lastVisitDate))"
+
+            if history.cachedSize > 0 {
+                self.sizeLabel.text = history.formattedSize
+                self.sizeLabel.isHidden = false
+            } else {
+                self.sizeLabel.isHidden = true
+            }
+
+            self.updateModeBadge(for: history)
+
+            if let url = URL(string: history.url) {
+                self.urlLabel.text = url.host ?? history.url
+
+                // 解析 AppID 并显示
+                let appId = AppIDResolver.resolveAppID(from: url)
+                self.appIdLabel.text = "ID: \(appId)"
+                self.appIdBadgeView.isHidden = false
+            } else {
+                self.urlLabel.text = history.url
+                self.appIdBadgeView.isHidden = true
+            }
+
+            if let favicon = history.favicon, let image = UIImage(data: favicon) {
+                self.faviconImageView.image = image
+                self.faviconImageView.backgroundColor = .clear
+            } else {
+                self.faviconImageView.setLetterIcon(for: history.title ?? history.url, size: CGSize(width: 52, height: 52))
+            }
+
+            self.cachedBadgeView.isHidden = !history.isCached
+
+            // 更新按钮状态
+            let pinImage = history.isPinned ? "pin.fill" : "pin"
+            self.pinIconView.setImage(UIImage(systemName: pinImage), for: .normal)
+            self.pinIconView.tintColor = history.isPinned ? .systemOrange : .systemGray4
+            self.pinIconView.backgroundColor = history.isPinned ? UIColor.systemOrange.withAlphaComponent(0.1) : .clear
+
+            let favoriteImage = history.isFavorite ? "star.fill" : "star"
+            self.favoriteIconView.setImage(UIImage(systemName: favoriteImage), for: .normal)
+            self.favoriteIconView.tintColor = history.isFavorite ? .systemYellow : .systemGray4
+            self.favoriteIconView.backgroundColor = history.isFavorite ? UIColor.systemYellow.withAlphaComponent(0.1) : .clear
         }
     }
 

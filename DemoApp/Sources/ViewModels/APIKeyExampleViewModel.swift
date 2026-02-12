@@ -43,6 +43,14 @@ class APIKeyExampleViewModel: ViewModel {
 
     private let exampleData: [CodeExample] = [
         CodeExample(
+            title: "Bark 推送请求",
+            language: "URL",
+            code: """
+            https://api.day.app/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit&icon=https://day.app/assets/images/avatar.jpg&sound=birdsong
+            """,
+            description: "使用 Bark API 发送推送通知，支持自定义分组、图标和铃声"
+        ),
+        CodeExample(
             title: "Swift 请求",
             language: "Swift",
             code: """

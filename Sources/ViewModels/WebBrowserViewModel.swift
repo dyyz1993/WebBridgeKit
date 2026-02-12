@@ -213,6 +213,9 @@ extension WKWebViewConfiguration {
         let preferences = WKPreferences()
         preferences.javaScriptEnabled = true
         preferences.javaScriptCanOpenWindowsAutomatically = true
+        // 允许跨域访问本地文件 (用于测试本地 HTML)
+        config.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
+        preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
         config.preferences = preferences
 
         // 4. 媒体播放策略

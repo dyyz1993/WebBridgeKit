@@ -79,6 +79,129 @@ public struct Manifest: Codable {
     public var resolvedVersion: String {
         return version ?? "0.0.1"
     }
+
+    /// Validate the manifest for security and correctness
+    /// - Returns: ManifestValidationResult containing validation status and any errors/warnings
+    public func validate() -> ManifestValidationResult {
+        var errors: [ManifestError] = []
+        var warnings: [String] = []
+
+        // Validate version compatibility
+        if let version = version {
+            if !ManifestVersion.isSupported(version) {
+                errors.append(.unsupportedVersion(version))
+            }
+        } else {
+            warnings.append("No version specified, using default version")
+        }
+
+        // Validate resources
+        if resources.isEmpty {
+            errors.append(.missingRequiredField("resources"))
+        } else {
+            for (path, urlString) in resources {
+                // Validate resource path for path traversal attacks
+                if let pathError = validateResourcePath(path) {
+                    errors.append(pathError)
+                }
+
+                // Validate resource URL
+                if let url = URL(string: urlString) {
+                    if !isValidResourceURL(url) {
+                        errors.append(.invalidResourcePath("Invalid resource URL: \(urlString)"))
+                    }
+                } else {
+                    errors.append(.invalidResourcePath("Malformed URL for resource: \(path)"))
+                }
+            }
+        }
+
+        // Validate appid format if provided
+        if let appid = appid {
+            if !isValidAppID(appid) {
+                errors.append(.invalidFormat("Invalid appid format: \(appid)"))
+            }
+        }
+
+        // Validate name if provided
+        if let name = name {
+            if name.isEmpty {
+                warnings.append("Name field is empty")
+            }
+        }
+
+        return errors.isEmpty ?
+            (warnings.isEmpty ? .valid() : .validWithWarnings(warnings)) :
+            .invalid(errors, warnings: warnings)
+    }
+
+    /// Check if the manifest is expired based on lastUpdated date
+    /// - Parameter expirationDays: Number of days before considering expired (default: 30)
+    /// - Returns: True if the manifest is expired
+    public func isExpired(expirationDays: Int = 30) -> Bool {
+        guard let lastUpdated = lastUpdated else {
+            return true // No lastUpdated date means expired
+        }
+
+        let expirationInterval = TimeInterval(expirationDays * 24 * 60 * 60)
+        let elapsed = Date().timeIntervalSince(lastUpdated)
+
+        return elapsed > expirationInterval
+    }
+
+    // MARK: - Private Validation Helpers
+
+    /// Validate a resource path for security issues
+    private func validateResourcePath(_ path: String) -> ManifestError? {
+        // Check for path traversal attempts
+        if path.contains("..") {
+            return .pathTraversalDetected(in: path)
+        }
+
+        // Check for absolute paths (security risk)
+        if path.hasPrefix("/") {
+            return .invalidResourcePath("Absolute paths not allowed: \(path)")
+        }
+
+        // Check for null bytes
+        if path.contains("\0") {
+            return .invalidResourcePath("Null bytes not allowed in path: \(path)")
+        }
+
+        // Check for empty path
+        if path.isEmpty {
+            return .invalidResourcePath("Empty resource path")
+        }
+
+        // Check for excessively long paths
+        if path.count > 255 {
+            return .invalidResourcePath("Path too long (> 255 characters): \(path)")
+        }
+
+        return nil
+    }
+
+    /// Validate if a URL is suitable for resource caching
+    private func isValidResourceURL(_ url: URL) -> Bool {
+        // Must have a valid scheme
+        guard let scheme = url.scheme?.lowercased() else {
+            return false
+        }
+
+        // Only allow http, https, and data schemes
+        let allowedSchemes = ["http", "https", "data"]
+        return allowedSchemes.contains(scheme)
+    }
+
+    /// Validate appid format
+    private func isValidAppID(_ appid: String) -> Bool {
+        // AppID should only contain alphanumeric characters, dots, underscores, and hyphens
+        let allowedCharacterSet = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+
+        return !appid.isEmpty &&
+               appid.unicodeScalars.allSatisfy { allowedCharacterSet.contains($0) } &&
+               appid.count <= 64
+    }
 }
 
 // MARK: - ResourceData

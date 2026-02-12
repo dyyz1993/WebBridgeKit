@@ -32,6 +32,7 @@ class ManifestTestCasesViewController: UIViewController {
         table.register(TestCaseCell.self, forCellReuseIdentifier: TestCaseCell.identifier)
         table.rowHeight = UITableView.automaticDimension
         table.estimatedRowHeight = 100
+        table.accessibilityIdentifier = "ManifestTestCasesTableView" // 添加 ID 方便测试定位
         return table
     }()
 
@@ -320,7 +321,7 @@ class TestWebViewController: UIViewController {
         
         view.bringSubviewToFront(debugLabel)
         
-        NotificationCenter.default.addObserver(forName: NSNotification.Name("UpdateDebugLabel"), object: nil, queue: .main) { [weak self] notification in
+        NotificationCenter.default.addObserver(forName: .updateDebugLabel, object: nil, queue: .main) { [weak self] notification in
             if let text = notification.userInfo?["text"] as? String {
                 NSLog("📱 [TestVC] Received Notification: UpdateDebugLabel with text: %@", text)
                 

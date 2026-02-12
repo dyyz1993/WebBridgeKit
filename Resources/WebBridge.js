@@ -206,4 +206,90 @@
 
     // 打印初始化日志
     console.log('[BarkBridge] Initialized successfully');
+
+    // ===== WebBridgeKit API =====
+    // 提供更现代化的 Promise-based API
+    window.WebBridgeKit = {
+        /**
+         * 权限管理
+         * @param {object} params - { type: 'camera' | 'microphone' | 'location' }
+         * @returns {Promise<{granted: boolean, status: number}>}
+         */
+        permission: function(params) {
+            return BarkBridge.callNative('requestPermission', params);
+        },
+
+        /**
+         * 相机功能
+         * @param {object} params - { type: 'photo' | 'video' }
+         * @returns {Promise<{type: string, data: string, width: number, height: number, size: number, cancelled?: boolean}>}
+         */
+        camera: function(params) {
+            return BarkBridge.callNative('camera', params);
+        },
+
+        /**
+         * 定位功能
+         * @param {object} params - {}
+         * @returns {Promise<{latitude: number, longitude: number, accuracy: number}>}
+         */
+        location: function(params) {
+            return BarkBridge.callNative('getLocation', params);
+        },
+
+        /**
+         * 分享功能
+         * @param {object} params - { text: string, url?: string }
+         * @returns {Promise<{success: boolean}>}
+         */
+        share: function(params) {
+            return BarkBridge.callNative('share', params);
+        },
+
+        /**
+         * 扫码功能
+         * @param {object} params - {}
+         * @returns {Promise<{code: string, type: string}>}
+         */
+        scan: function(params) {
+            return BarkBridge.callNative('scan', params);
+        },
+
+        /**
+         * 触觉反馈
+         * @param {object} params - { style: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' }
+         * @returns {Promise<{success: boolean}>}
+         */
+        haptic: function(params) {
+            return BarkBridge.callNative('haptic', params);
+        },
+
+        /**
+         * 网络请求
+         * @param {object} params - { url: string, method?: string, headers?: object, body?: string }
+         * @returns {Promise<{data: string, statusCode: number, headers: object}>}
+         */
+        request: function(params) {
+            return BarkBridge.callNative('request', params);
+        },
+
+        /**
+         * 导航控制
+         * @param {object} params - { action: 'push' | 'pop' | 'popToRoot', url?: string }
+         * @returns {Promise<{success: boolean}>}
+         */
+        navigation: function(params) {
+            return BarkBridge.callNative('navigation', params);
+        },
+
+        /**
+         * 检查 WebBridgeKit 是否可用
+         * @returns {boolean}
+         */
+        isAvailable: function() {
+            return BarkBridge.isAvailable();
+        }
+    };
+
+    console.log('[WebBridgeKit] Initialized successfully');
 })();

@@ -32,6 +32,15 @@ class TextFieldCell: UITableViewCell {
         return field
     }()
 
+    private let errorLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.textColor = UIColor.systemRed
+        label.numberOfLines = 0
+        label.isHidden = true
+        return label
+    }()
+
     private let separatorLine: UIView = {
         let line = UIView()
         line.backgroundColor = UIColor.separator
@@ -61,6 +70,7 @@ class TextFieldCell: UITableViewCell {
 
         contentView.addSubview(titleLabel)
         contentView.addSubview(textField)
+        contentView.addSubview(errorLabel)
         contentView.addSubview(separatorLine)
 
         titleLabel.snp.makeConstraints { make in
@@ -76,8 +86,14 @@ class TextFieldCell: UITableViewCell {
             make.height.equalTo(32)
         }
 
+        errorLabel.snp.makeConstraints { make in
+            make.top.equalTo(textField.snp.bottom).offset(4)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+        }
+
         separatorLine.snp.makeConstraints { make in
-            make.top.equalTo(textField.snp.bottom).offset(8)
+            make.top.equalTo(errorLabel.snp.bottom).offset(8)
             make.left.equalToSuperview().offset(16)
             make.right.equalToSuperview().offset(-16)
             make.height.equalTo(0.5)
@@ -89,7 +105,7 @@ class TextFieldCell: UITableViewCell {
 
     // MARK: - Configure
 
-    func configure(title: String, placeholder: String, text: String?, enabled: Bool = true) {
+    func configure(title: String, placeholder: String, text: String?, enabled: Bool = true, error: String? = nil) {
         titleLabel.text = title
         textField.placeholder = placeholder
         textField.text = text
@@ -98,6 +114,17 @@ class TextFieldCell: UITableViewCell {
         // Update appearance based on enabled state
         titleLabel.textColor = enabled ? UIColor.label : UIColor.secondaryLabel
         textField.textColor = enabled ? UIColor.label : UIColor.secondaryLabel
+        
+        // Update error state
+        if let error = error, !error.isEmpty {
+            errorLabel.text = error
+            errorLabel.isHidden = false
+            separatorLine.backgroundColor = UIColor.systemRed
+        } else {
+            errorLabel.text = nil
+            errorLabel.isHidden = true
+            separatorLine.backgroundColor = UIColor.separator
+        }
     }
 
     // MARK: - Actions

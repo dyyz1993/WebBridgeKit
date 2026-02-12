@@ -9,45 +9,42 @@
 import Foundation
 import RealmSwift
 
-/// URL 收藏管理器
-/// 负责收藏的增删改查、置顶、排序、缓存模式管理
-public class URLFavoriteManager {
-
-    public static let shared = URLFavoriteManager()
-
+/// Thread-safe actor for database operations
+/// Ensures all Realm operations are serialized and safe from concurrent access
+actor FavoriteDatabaseActor {
     private let realmConfiguration: Realm.Configuration
 
-    private init() {
-        // 使用独立的 Realm 文件
-        self.realmConfiguration = Realm.Configuration(
-            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("urlFavorite.realm"),
-            schemaVersion: 1
-        )
+    init(realmConfiguration: Realm.Configuration) {
+        self.realmConfiguration = realmConfiguration
     }
 
-    /// 获取 Realm 实例
-    private func getRealm() -> Realm? {
-        return try? Realm(configuration: realmConfiguration)
+    /// Get Realm instance
+    private func getRealm() throws -> Realm {
+        return try Realm(configuration: realmConfiguration)
     }
 
-    // MARK: - 添加/更新
+    // MARK: - Add/Update Operations
 
-    /// 添加收藏
+    /// Add favorite
     /// - Parameters:
-    ///   - url: 页面URL
-    ///   - title: 页面标题（可选）
-    ///   - favicon: 页面图标（可选）
-    /// - Returns: 创建的收藏对象
+    ///   - url: Page URL
+    ///   - title: Page title (optional)
+    ///   - favicon: Page icon (optional)
+    /// - Returns: Created favorite object
     @discardableResult
-    public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) -> URLFavorite? {
-        let realm = getRealm()
-        let urlString = url.absoluteString
+    func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) async throws -> URLFavorite {
+        guard let urlString = url.absoluteString as String? else {
+            throw WebBridgeError.invalidInput("Invalid URL string")
+        }
 
-        // 检查是否已存在
-        if let existing = findFavorite(url: url) {
+        let realm = try getRealm()
+
+        // Check if already exists
+        let predicate = NSPredicate(format: "url == %@", urlString)
+        if let existing = realm.objects(URLFavorite.self).filter(predicate).first {
             WebBridgeLogger.shared.log(.debug, "⚠️ Favorite already exists: \(urlString)")
-            // 更新标题和图标
-            try? realm?.write {
+            // Update title and favicon
+            try realm.write {
                 if let title = title {
                     existing.title = title
                 }
@@ -55,7 +52,8 @@ public class URLFavoriteManager {
                     existing.favicon = favicon
                 }
             }
-            return existing
+            // Return independent copy
+            return URLFavorite(value: existing)
         }
 
         let favorite = URLFavorite()
@@ -63,50 +61,389 @@ public class URLFavoriteManager {
         favorite.title = title ?? url.host
         favorite.favicon = favicon
         favorite.createdAt = Date()
-        favorite.sortOrder = getAllFavorites().count
 
-        try? realm?.write {
-            realm?.add(favorite)
+        // Get current count for sort order
+        let currentCount = realm.objects(URLFavorite.self).count
+        favorite.sortOrder = currentCount
+
+        try realm.write {
+            realm.add(favorite)
         }
 
         WebBridgeLogger.shared.log(.info, "➕ Favorite added: \(urlString)")
-        return favorite
+        // Return independent copy
+        return URLFavorite(value: favorite)
     }
 
-    /// 更新收藏
-    func updateFavorite(_ favorite: URLFavorite) {
-        let realm = getRealm()
-        try? realm?.write {
-            realm?.add(favorite, update: .modified)
+    /// Update favorite
+    func updateFavorite(_ favorite: URLFavorite) async throws {
+        let realm = try getRealm()
+        try realm.write {
+            realm.add(favorite, update: .modified)
         }
         WebBridgeLogger.shared.log(.debug, "♻️ Favorite updated: \(favorite.id)")
     }
 
-    // MARK: - 删除
+    // MARK: - Delete Operations
 
-    /// 删除收藏
-    public func deleteFavorite(id: String) {
-        let realm = getRealm()
-        guard let favorite = realm?.object(ofType: URLFavorite.self, forPrimaryKey: id) else { return }
+    /// Delete favorite by ID
+    func deleteFavorite(id: String) async throws {
+        let realm = try getRealm()
+        guard let favorite = realm.object(ofType: URLFavorite.self, forPrimaryKey: id) else {
+            throw WebBridgeError.invalidInput("Favorite not found with ID: \(id)")
+        }
 
-        try? realm?.write {
-            realm?.delete(favorite)
+        try realm.write {
+            realm.delete(favorite)
         }
 
         WebBridgeLogger.shared.log(.info, "🗑️ Favorite deleted: \(id)")
     }
 
-    /// 删除收藏（根据URL）
-    public func deleteFavorite(url: URL) {
-        guard let favorite = findFavorite(url: url) else { return }
-        deleteFavorite(id: favorite.id)
+    /// Delete favorite by URL
+    func deleteFavorite(url: URL) async throws {
+        guard let favorite = try await findFavorite(url: url) else {
+            throw WebBridgeError.invalidInput("Favorite not found with URL: \(url.absoluteString)")
+        }
+        try await deleteFavorite(id: favorite.id)
     }
 
-    // MARK: - 查询
+    // MARK: - Query Operations
 
-    /// 获取所有收藏（按置顶和排序）
+    /// Get all favorites (sorted by pinned status and sort order)
+    func getAllFavorites() async throws -> [URLFavorite] {
+        let realm = try getRealm()
+        let results = realm.objects(URLFavorite.self)
+            .sorted(by: [
+                SortDescriptor(keyPath: "isPinned", ascending: false),
+                SortDescriptor(keyPath: "sortOrder", ascending: true)
+            ])
+        // Create independent copies to avoid cross-thread access issues
+        return results.map { URLFavorite(value: $0) }
+    }
+
+    /// Find favorite by URL
+    func findFavorite(url: URL) async throws -> URLFavorite? {
+        guard let urlString = url.absoluteString as String? else {
+            return nil
+        }
+        let realm = try getRealm()
+        let predicate = NSPredicate(format: "url == %@", urlString)
+        if let favorite = realm.objects(URLFavorite.self).filter(predicate).first {
+            // Return unfrozen (independent) object copy to avoid cross-thread access crashes
+            return URLFavorite(value: favorite)
+        }
+        return nil
+    }
+
+    /// Find favorite by ID
+    func findFavorite(id: String) async throws -> URLFavorite? {
+        let realm = try getRealm()
+        if let favorite = realm.object(ofType: URLFavorite.self, forPrimaryKey: id) {
+            // Return unfrozen (independent) object copy to avoid cross-thread access crashes
+            return URLFavorite(value: favorite)
+        }
+        return nil
+    }
+
+    /// Search favorites (title or URL contains keyword)
+    func searchFavorites(keyword: String) async throws -> [URLFavorite] {
+        let realm = try getRealm()
+        let results = realm.objects(URLFavorite.self)
+            .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
+            .sorted(by: [
+                SortDescriptor(keyPath: "isPinned", ascending: false),
+                SortDescriptor(keyPath: "sortOrder", ascending: true)
+            ])
+        // Create independent copies to avoid cross-thread access issues
+        return results.map { URLFavorite(value: $0) }
+    }
+
+    /// Get total favorite count
+    func getTotalCount() async throws -> Int {
+        let realm = try getRealm()
+        return realm.objects(URLFavorite.self).count
+    }
+
+    // MARK: - Special Operations
+
+    /// Toggle pin status
+    /// - Parameter id: Favorite ID
+    /// - Returns: New pin status
+    @discardableResult
+    func togglePin(id: String) async throws -> Bool {
+        let realm = try getRealm()
+        guard let favorite = realm.object(ofType: URLFavorite.self, forPrimaryKey: id) else {
+            throw WebBridgeError.invalidInput("Favorite not found with ID: \(id)")
+        }
+
+        try realm.write {
+            favorite.isPinned.toggle()
+        }
+
+        WebBridgeLogger.shared.log(.info, favorite.isPinned ? "📌 Favorite pinned: \(id)" : "📍 Favorite unpinned: \(id)")
+        return favorite.isPinned
+    }
+
+    /// Update cache mode
+    func updateCacheMode(id: String, enabled: Bool) async throws {
+        let realm = try getRealm()
+        guard let favorite = realm.object(ofType: URLFavorite.self, forPrimaryKey: id) else {
+            throw WebBridgeError.invalidInput("Favorite not found with ID: \(id)")
+        }
+
+        try realm.write {
+            favorite.enableCacheMode = enabled
+        }
+
+        WebBridgeLogger.shared.log(.info, "\(enabled ? "✅" : "❌") Cache mode \(enabled ? "enabled" : "disabled"): \(id)")
+    }
+
+    /// Update sort order
+    func updateSortOrder(favorites: [URLFavorite]) async throws {
+        let realm = try getRealm()
+        try realm.write {
+            for (index, favorite) in favorites.enumerated() {
+                favorite.sortOrder = index
+            }
+        }
+        WebBridgeLogger.shared.log(.debug, "♻️ Sort order updated")
+    }
+}
+
+/// URL Favorite Manager
+/// Responsible for add, delete, update, query, pin, and cache mode management of favorites
+public class URLFavoriteManager {
+
+    public static let shared = URLFavoriteManager()
+
+    private let realmConfiguration: Realm.Configuration
+    private let databaseActor: FavoriteDatabaseActor
+
+    private init() {
+        // Use independent Realm file
+        self.realmConfiguration = Realm.Configuration(
+            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("urlFavorite.realm"),
+            schemaVersion: 1
+        )
+        self.databaseActor = FavoriteDatabaseActor(realmConfiguration: realmConfiguration)
+    }
+
+    // MARK: - Add/Update Operations
+
+    /// Add favorite
+    /// - Parameters:
+    ///   - url: Page URL
+    ///   - title: Page title (optional)
+    ///   - favicon: Page icon (optional)
+    /// - Returns: Created favorite object
+    @discardableResult
+    public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) async throws -> URLFavorite {
+        do {
+            return try await databaseActor.addFavorite(url: url, title: title, favicon: favicon)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Update favorite
+    public func updateFavorite(_ favorite: URLFavorite) async throws {
+        do {
+            try await databaseActor.updateFavorite(favorite)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    // MARK: - Delete Operations
+
+    /// Delete favorite by ID
+    public func deleteFavorite(id: String) async throws {
+        do {
+            try await databaseActor.deleteFavorite(id: id)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Delete favorite by URL
+    public func deleteFavorite(url: URL) async throws {
+        do {
+            try await databaseActor.deleteFavorite(url: url)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    // MARK: - Query Operations
+
+    /// Get all favorites (sorted by pinned status and sort order)
+    /// Returns independent copy array to avoid cross-thread access issues
+    public func getAllFavorites() async throws -> [URLFavorite] {
+        do {
+            return try await databaseActor.getAllFavorites()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Find favorite by URL
+    public func findFavorite(url: URL) async throws -> URLFavorite? {
+        do {
+            return try await databaseActor.findFavorite(url: url)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Find favorite by ID
+    public func findFavorite(id: String) async throws -> URLFavorite? {
+        do {
+            return try await databaseActor.findFavorite(id: id)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Search favorites (title or URL contains keyword)
+    /// Returns independent copy array to avoid cross-thread access issues
+    public func searchFavorites(keyword: String) async throws -> [URLFavorite] {
+        do {
+            return try await databaseActor.searchFavorites(keyword: keyword)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Get total favorite count
+    public func getTotalCount() async throws -> Int {
+        do {
+            return try await databaseActor.getTotalCount()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    // MARK: - Special Operations
+
+    /// Toggle pin status
+    /// - Parameter id: Favorite ID
+    /// - Returns: New pin status
+    @discardableResult
+    public func togglePin(id: String) async throws -> Bool {
+        do {
+            return try await databaseActor.togglePin(id: id)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Update cache mode
+    public func updateCacheMode(id: String, enabled: Bool) async throws {
+        do {
+            try await databaseActor.updateCacheMode(id: id, enabled: enabled)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Update sort order
+    public func updateSortOrder(favorites: [URLFavorite]) async throws {
+        do {
+            try await databaseActor.updateSortOrder(favorites: favorites)
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        }
+    }
+}
+
+// MARK: - Synchronous Compatibility Layer
+// These methods provide backward compatibility with existing code
+// that calls the manager synchronously. They wrap the async methods.
+
+extension URLFavoriteManager {
+
+    /// Synchronous version of addFavorite for backward compatibility
+    @discardableResult
+    public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) -> URLFavorite? {
+        var result: URLFavorite? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await addFavorite(url: url, title: title, favicon: favicon)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to add favorite: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of updateFavorite for backward compatibility
+    public func updateFavorite(_ favorite: URLFavorite) {
+        Task {
+            do {
+                try await updateFavorite(favorite)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to update favorite: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Synchronous version of deleteFavorite(id:) for backward compatibility
+    public func deleteFavorite(id: String) {
+        Task {
+            do {
+                try await deleteFavorite(id: id)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to delete favorite by ID: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Synchronous version of deleteFavorite(url:) for backward compatibility
+    public func deleteFavorite(url: URL) {
+        Task {
+            do {
+                try await deleteFavorite(url: url)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to delete favorite by URL: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Synchronous version of getAllFavorites for backward compatibility
+    /// Returns Results<URLFavorite> for protocol compatibility
     public func getAllFavorites() -> Results<URLFavorite> {
-        guard let realm = getRealm() else {
+        let realm = try? Realm(configuration: realmConfiguration)
+        guard let realm = realm else {
             let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
             let tempRealm = try! Realm(configuration: config)
             return tempRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
@@ -118,23 +455,68 @@ public class URLFavoriteManager {
             ])
     }
 
-    /// 根据URL查找收藏
+    /// Synchronous version of getAllFavorites returning array
+    /// Returns empty array on error
+    public func getAllFavoritesAsArray() -> [URLFavorite] {
+        var result: [URLFavorite] = []
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await getAllFavorites()
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to get all favorites: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of findFavorite(url:) for backward compatibility
+    /// Returns nil on error
     public func findFavorite(url: URL) -> URLFavorite? {
-        guard let urlString = url.absoluteString as String? else { return nil }
-        let realm = getRealm()
-        let predicate = NSPredicate(format: "url == %@", urlString)
-        return realm?.objects(URLFavorite.self).filter(predicate).first
+        var result: URLFavorite? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await findFavorite(url: url)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to find favorite by URL: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
     }
 
-    /// 根据ID查找收藏
-    func findFavorite(id: String) -> URLFavorite? {
-        let realm = getRealm()
-        return realm?.object(ofType: URLFavorite.self, forPrimaryKey: id)
+    /// Synchronous version of findFavorite(id:) for backward compatibility
+    /// Returns nil on error
+    public func findFavorite(id: String) -> URLFavorite? {
+        var result: URLFavorite? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await findFavorite(id: id)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to find favorite by ID: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
     }
 
-    /// 搜索收藏（标题或URL包含关键词）
-    func searchFavorites(keyword: String) -> Results<URLFavorite> {
-        guard let realm = getRealm() else {
+    /// Synchronous version of searchFavorites for backward compatibility
+    /// Returns Results<URLFavorite> for protocol compatibility
+    public func searchFavorites(keyword: String) -> Results<URLFavorite> {
+        let realm = try? Realm(configuration: realmConfiguration)
+        guard let realm = realm else {
             let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
             let tempRealm = try! Realm(configuration: config)
             return tempRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
@@ -147,50 +529,83 @@ public class URLFavoriteManager {
             ])
     }
 
-    /// 获取收藏总数
-    func getTotalCount() -> Int {
-        let realm = getRealm()
-        return realm?.objects(URLFavorite.self).count ?? 0
+    /// Synchronous version of searchFavorites returning array
+    /// Returns empty array on error
+    public func searchFavoritesAsArray(keyword: String) -> [URLFavorite] {
+        var result: [URLFavorite] = []
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            do {
+                result = try await searchFavorites(keyword: keyword)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to search favorites: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
     }
 
-    // MARK: - 特殊操作
+    /// Synchronous version of getTotalCount for backward compatibility
+    /// Returns 0 on error
+    public func getTotalCount() -> Int {
+        var result: Int = 0
+        let semaphore = DispatchSemaphore(value: 0)
 
-    /// 切换置顶状态
-    /// - Parameter id: 收藏ID
-    /// - Returns: 切换后的置顶状态
+        Task {
+            do {
+                result = try await getTotalCount()
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to get total count: \(error.localizedDescription)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return result
+    }
+
+    /// Synchronous version of togglePin for backward compatibility
+    /// Returns false on error
     @discardableResult
     public func togglePin(id: String) -> Bool {
-        let realm = getRealm()
-        guard let favorite = realm?.object(ofType: URLFavorite.self, forPrimaryKey: id) else { return false }
+        var result: Bool = false
+        let semaphore = DispatchSemaphore(value: 0)
 
-        try? realm?.write {
-            favorite.isPinned.toggle()
+        Task {
+            do {
+                result = try await togglePin(id: id)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to toggle pin: \(error.localizedDescription)")
+            }
+            semaphore.signal()
         }
 
-        WebBridgeLogger.shared.log(.info, favorite.isPinned ? "📌 Favorite pinned: \(id)" : "📍 Favorite unpinned: \(id)")
-        return favorite.isPinned
+        semaphore.wait()
+        return result
     }
 
-    /// 更新缓存模式
+    /// Synchronous version of updateCacheMode for backward compatibility
     public func updateCacheMode(id: String, enabled: Bool) {
-        let realm = getRealm()
-        guard let favorite = realm?.object(ofType: URLFavorite.self, forPrimaryKey: id) else { return }
-
-        try? realm?.write {
-            favorite.enableCacheMode = enabled
-        }
-
-        WebBridgeLogger.shared.log(.info, "\(enabled ? "✅" : "❌") Cache mode \(enabled ? "enabled" : "disabled"): \(id)")
-    }
-
-    /// 更新排序顺序
-    public func updateSortOrder(favorites: [URLFavorite]) {
-        let realm = getRealm()
-        try? realm?.write {
-            for (index, favorite) in favorites.enumerated() {
-                favorite.sortOrder = index
+        Task {
+            do {
+                try await updateCacheMode(id: id, enabled: enabled)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to update cache mode: \(error.localizedDescription)")
             }
         }
-        WebBridgeLogger.shared.log(.debug, "♻️ Sort order updated")
+    }
+
+    /// Synchronous version of updateSortOrder for backward compatibility
+    public func updateSortOrder(favorites: [URLFavorite]) {
+        Task {
+            do {
+                try await updateSortOrder(favorites: favorites)
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to update sort order: \(error.localizedDescription)")
+            }
+        }
     }
 }

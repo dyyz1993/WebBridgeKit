@@ -104,10 +104,12 @@ class WebPageThumbnailGenerator {
         let memoryMB = getMemoryUsage()
 
         if memoryMB > maxMemoryMB {
-            WebBridgeLogger.shared.log(.warning, "⚠️ Memory usage high: \(memoryMB)MB, cleaning old thumbnails")
+            WebBridgeLogger.shared.log(.warning, category: .cache, message: "⚠️ Memory usage high: \(memoryMB)MB, cleaning old thumbnails")
 
             // 清理旧的缩略图（保留最近100个）
-            WebPageHistoryManager.shared.cleanOldThumbnails(keepLatest: 100)
+            Task {
+                try? await WebPageHistoryManager.shared.cleanOldThumbnails(keepLatest: 100)
+            }
         }
     }
 

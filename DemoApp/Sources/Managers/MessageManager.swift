@@ -97,9 +97,3 @@ class MessageManager {
         }
     }
 }
-
-// MARK: - Notification Names
-
-extension Notification.Name {
-    static let didReceivePushMessage = Notification.Name("didReceivePushMessage")
-}

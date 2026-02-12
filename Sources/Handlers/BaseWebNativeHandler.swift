@@ -290,7 +290,8 @@ public struct WebBridgeResponse {
         canOpenSettings: Bool,
         topVC: UIViewController
     ) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             let alert = UIAlertController(
                 title: "需要权限",
                 message: "请在设置中允许\(permissionType.displayName)权限，以使用此功能。",

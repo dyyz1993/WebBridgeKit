@@ -1,199 +1,267 @@
 # WebBridgeKit
 
-一个功能强大的 iOS WebView Bridge 框架，支持 32 个原生功能 Handler。
+iOS WebView 与原生功能桥接框架
 
-## ✅ 已完成的工作
+## 📱 功能特性
 
-- ✅ 创建项目目录结构
-- ✅ 配置 Podfile（CocoaPods 依赖）
-- ✅ 迁移核心架构文件（7个）
-- ✅ 迁移 Native Handlers（32个）
-- ✅ 迁移 ViewController 和相关文件
-- ✅ 迁移缓存和存储文件
-- ✅ 迁移资源文件
-- ✅ 调整依赖关系（去 Bark 化）
-- ✅ 创建 WebBridgeLogger 替代 BarkLogger
-- ✅ 重命名文件（BarkWebViewController → WebViewController）
+- 🌐 **WebView 池管理** - 预加载和复用 WebView，提升页面打开速度
+- 📦 **ManifestCache 离线缓存** - 基于 manifest.json 的完整离线缓存方案
+- 🔗 **JavaScript Bridge** - Web 与原生双向通信
+- 📱 **原生功能调用** - 相机、定位、分享、扫码、震动等
+- 🎨 **Material Design UI** - 基于 Material Components 的现代化界面
+- 📊 **缓存管理** - 智能缓存策略和可视化管理面板
 
-## 项目结构
+## 🏗️ 架构设计
+
+### 核心模块
 
 ```
 WebBridgeKit/
-├── Podfile                          # CocoaPods 依赖配置
-├── README.md                        # 本文档
-├── scripts/                         # 辅助脚本
-│   ├── fix_dependencies.rb          # 依赖修复脚本（已执行）
-│   └── rename_files.rb              # 文件重命名脚本（已执行）
 ├── Sources/
-│   ├── Core/                        # 核心架构（7个文件）
-│   │   ├── WebJavaScriptBridge.swift    # JS-OC 通信桥接核心
-│   │   ├── WebBrowserManager.swift      # 浏览器管理器
-│   │   ├── WebBrowserParams.swift       # 浏览器参数配置
-│   │   ├── WebBridgePool.swift          # Bridge 预热池
-│   │   ├── WebViewPool.swift            # WebView 实例池
-│   │   └── WebViewPerformanceMonitor.swift  # 性能监控
-│   ├── Handlers/                    # 32 个 Native Handler
-│   │   └── BaseWebNativeHandler.swift   # Handler 基类
-│   ├── Controllers/                 # ViewController
-│   │   ├── WebViewController.swift      # 主 WebView 容器（已重命名）
-│   │   ├── ModalWebViewController.swift # 弹窗 WebView
-│   │   ├── WebBrowserViewController.swift # 浏览器控制器
-│   │   ├── WebPageHistoryViewController.swift # 历史记录
-│   │   └── WebPermissionsViewController.swift # 权限管理
-│   ├── ViewModels/                  # ViewModel
-│   │   └── WebPageHistoryViewModel.swift
-│   ├── Models/                      # 数据模型
-│   │   └── WebPageHistory.swift
-│   ├── Views/                       # UI 组件
-│   │   ├── WebPageHistoryCell.swift
-│   │   └── WebPageHistoryGalleryCell.swift
-│   ├── Cache/                       # 缓存相关
-│   │   ├── CacheURLSchemeHandler.swift  # 自定义 URL Scheme（已重命名）
-│   │   ├── WebPageThumbnailGenerator.swift
-│   │   └── ...
-│   ├── Storage/                     # Realm 数据库
-│   │   └── RealmConfiguration.swift
-│   ├── Extensions/                  # 扩展
-│   │   └── WKWebView+Rx.swift
-│   └── Utils/                       # 工具类
-│       └── WebBridgeLogger.swift    # 日志系统（新增）
-└── Resources/
-    └── WebBridge.js                 # JavaScript Bridge 文件
+│   ├── Cache/              # 缓存模块
+│   │   ├── ManifestCacheManager.swift       # Manifest 缓存管理
+│   │   ├── WebResourceCacheManager.swift    # 资源存储管理
+│   │   └── ManifestDownloader.swift         # Manifest 下载器
+│   ├── Handlers/           # URL Scheme 处理
+│   │   └── WebResourceURLSchemeHandler.swift
+│   ├── Controllers/        # 视图控制器
+│   ├── Services/          # 业务服务
+│   ├── Models/            # 数据模型
+│   └── Utils/             # 工具类
+└── DemoApp/               # 示例应用
 ```
 
-## 下一步操作
+### 缓存方案
 
-### 1. 在 Xcode 中创建 Framework 项目
+**ManifestCache** (唯一有效方案)
 
-1. 打开 Xcode
-2. File → New → Project
-3. 选择 **Framework** 模板（iOS → Framework）
-4. 项目名称：`WebBridgeKit`
-5. 位置选择：`/Users/xuyingzhou/Project/temporary/WebBridgeKit`（覆盖当前目录）
-   - 或者选择父目录，然后手动移动文件
-6. Language: Swift
-7. Interface: None（纯代码，无需 Storyboard）
-8. 点击创建
+工作流程:
+1. 下载 `manifest.json` 获取资源列表
+2. 下载所有资源到本地缓存
+3. 使用 `loadHTMLString` + `wb-resource://` scheme 加载页面
+4. `WebResourceURLSchemeHandler` 拦截请求并返回缓存资源
 
-### 2. 添加文件到 Xcode 项目
+优势:
+- ✅ 完全离线访问
+- ✅ 支持所有资源类型 (HTML/CSS/JS/图片/字体等)
+- ✅ 版本控制和更新机制
+- ✅ 缓存命中率统计
 
-项目创建后，将 `Sources/` 目录下的所有文件添加到 Xcode 项目中：
+## 🚀 快速开始
 
-1. 在 Xcode 左侧项目导航器中，右键点击 `WebBridgeKit` 组
-2. 选择 "Add Files to WebBridgeKit..."
-3. 选择整个 `Sources/` 目录和 `Resources/` 目录
-4. 确保 "Copy items if needed" **未选中**（文件已经在正确位置）
-5. 确保 "Create groups" 已选中
-6. 点击 "Add"
-
-**重要：确保目录结构与以下一致：**
-```
-WebBridgeKit/
-├── WebBridgeKit.h          # 公共头文件
-├── Info.plist             # Framework 配置
-└── Sources/               # 所有源代码
-```
-
-### 3. 配置 CocoaPods
+### 安装依赖
 
 ```bash
-cd /Users/xuyingzhou/Project/temporary/WebBridgeKit
 pod install
 ```
 
-然后打开 `WebBridgeKit.xcworkspace` 而不是 `.xcodeproj`。
+### 打开项目
 
-### 4. 配置 Framework 设置
-
-在 Xcode 项目设置中：
-
-1. **Deployment Settings**:
-   - iOS Deployment Target: 14.0
-   - Build Libraries for Distribution: Yes（如果需要作为 XCFramework）
-
-2. **Header Files**:
-   - 创建 `WebBridgeKit.h` 作为公共头文件
-   - 在 "Build Phases" → "Headers" 中将其设为 **Public**
-
-3. **Target Membership**:
-   - 确保所有 .swift 文件的 Target Membership 包含 WebBridgeKit
-
-### 5. 处理剩余问题
-
-代码中可能还有一些需要手动处理的问题：
-
-#### 移除 BarkSnackbarController
-
-在 `WebBrowserManager.swift` 中，将 `BarkSnackbarController` 相关代码简化或删除：
-
-```swift
-// 如果有类似代码：
-if let barkSnackbar = viewController as? BarkSnackbarController {
-    return findNavigationController(from: barkSnackbar.rootViewController)
-}
-
-// 简化为：
-// 直接忽略这个特殊处理
+```bash
+open WebBridgeKit.xcworkspace
 ```
 
-#### 检查编译错误
-
-编译项目，检查是否有：
-- 缺失的导入（import 语句）
-- 未定义的类型
-- 循环依赖
-
-### 6. 创建 Demo App（可选）
-
-在同一 Workspace 中创建一个 App 项目来测试 Framework：
-
-1. File → New → Project
-2. 选择 **App** 模板
-3. 项目名称：`WebBridgeDemo`
-4. 位置：`/Users/xuyingzhou/Project/temporary/WebBridgeKit/WebBridgeDemo`
-5. 点击创建
-
-然后在 Demo App 的 "General" → "Frameworks, Libraries, and Embedded Content" 中添加 WebBridgeKit。
-
-## 依赖
-
-- SnapKit - 布局
-- RxSwift + RxCocoa - 响应式编程
-- Moya/RxSwift - 网络请求
-- Kingfisher - 图片加载
-- SwiftSoup - HTML 解析
-- RealmSwift - 数据库
-
-## 功能特性
-
-- 32 个原生功能 Handler
-- WebView 池化复用
-- Bridge 预热优化
-- 性能监控
-- 离线缓存支持
-- 页面历史记录
-
-## 使用示例
+### 初始化框架
 
 ```swift
 import WebBridgeKit
 
-// 打开浏览器
-WebBrowserManager.shared.openBrowser(
-    url: URL(string: "https://example.com")!,
-    params: WebBrowserParams(displayMode: .normal),
-    from: self
-)
-
-// 预热 WebView（应用启动时调用）
-WebViewPool.shared.warmup()
-WebBridgePool.shared.warmup()
+// 在 AppDelegate 中初始化
+func application(_ application: UIApplication, 
+                didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    
+    // 初始化 WebBridgeKit (会预热 WebView 池)
+    WebBridgeKit.shared.initialize()
+    
+    return true
+}
 ```
 
-## 文件统计
+### 使用 ManifestCache
 
-- Swift 文件总数：57 个
-- 核心架构：7 个
-- Native Handlers：32 个
-- ViewController：5 个
-- 其他文件：13 个
+```swift
+import WebBridgeKit
+
+// 1. 加载带缓存的页面
+let url = URL(string: "https://example.com/app")!
+let cacheManager = ManifestCacheManager.shared
+
+cacheManager.loadPage(url: url) { result in
+    switch result {
+    case .success(let webView):
+        // 页面加载成功，可以显示 webView
+        self.view.addSubview(webView)
+        
+    case .failure(let error):
+        print("加载失败: \(error)")
+    }
+}
+
+// 2. 检查缓存状态
+if cacheManager.hasCachedManifest(for: url) {
+    print("已缓存")
+}
+
+// 3. 清理缓存
+cacheManager.clearCache(for: url)
+```
+
+### JavaScript Bridge 使用
+
+```javascript
+// Web 端调用原生功能
+window.BarkBridge.callNative('camera', {}, function(result) {
+    console.log('拍照结果:', result);
+});
+
+// 或使用 Promise 风格 (WebBridgeKit API)
+window.WebBridgeKit.camera()
+    .then(result => console.log('拍照结果:', result))
+    .catch(error => console.error('错误:', error));
+```
+
+## 📦 Manifest 格式
+
+```json
+{
+  "url": "https://example.com/app",
+  "version": "1.0.0",
+  "resources": [
+    {
+      "url": "https://example.com/app/index.html",
+      "type": "text/html"
+    },
+    {
+      "url": "https://example.com/app/style.css",
+      "type": "text/css"
+    },
+    {
+      "url": "https://example.com/app/app.js",
+      "type": "application/javascript"
+    },
+    {
+      "url": "https://example.com/app/logo.png",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+## 🧪 测试
+
+### 运行单元测试
+
+```bash
+xcodebuild test \
+  -workspace WebBridgeKit.xcworkspace \
+  -scheme DemoApp \
+  -destination 'platform=iOS Simulator,name=iPhone 15'
+```
+
+### 运行 UI 测试
+
+```bash
+xcodebuild test \
+  -workspace WebBridgeKit.xcworkspace \
+  -scheme DemoApp \
+  -destination 'platform=iOS Simulator,name=iPhone 15' \
+  -only-testing:DemoAppUITests
+```
+
+## 📚 依赖
+
+- **RxSwift** (6.9.0) - 响应式编程
+- **Realm** (10.54.6) - 本地数据库
+- **Alamofire** (5.11.0) - 网络请求
+- **Kingfisher** (7.12.0) - 图片加载
+- **Material** (3.1.8) - Material Design 组件
+- **SnapKit** (5.7.1) - 自动布局
+- **SwiftSoup** (2.11.3) - HTML 解析
+
+## 🔧 配置
+
+### 缓存配置
+
+```swift
+// 设置缓存大小限制
+WebResourceCacheManager.shared.maxCacheSize = 100 * 1024 * 1024 // 100MB
+
+// 设置缓存过期时间
+WebResourceCacheManager.shared.cacheExpiration = 7 * 24 * 60 * 60 // 7天
+
+// 启用缓存统计
+WebResourceCacheManager.shared.enableStatistics = true
+```
+
+### WebView 池配置
+
+```swift
+// 设置池大小
+WebViewPool.shared.poolSize = 3
+
+// 预热 WebView
+WebViewPool.shared.warmup {
+    print("WebView 池预热完成")
+}
+```
+
+## 📖 API 文档
+
+### ManifestCacheManager
+
+主要的缓存管理类
+
+```swift
+// 加载页面
+func loadPage(url: URL, completion: @escaping (Result<WKWebView, Error>) -> Void)
+
+// 检查缓存
+func hasCachedManifest(for url: URL) -> Bool
+
+// 清理缓存
+func clearCache(for url: URL)
+func clearAll()
+
+// 获取缓存统计
+func getCacheStats() -> CacheStatistics
+```
+
+### WebResourceCacheManager
+
+底层资源存储管理
+
+```swift
+// 创建缓存空间
+func createCacheSpace(for url: URL) -> String
+
+// 存储资源
+func storeResource(cacheID: String, relativePath: String, data: Data, mimeType: String) throws
+
+// 获取资源
+func getResource(cacheID: String, relativePath: String) -> (data: Data, mimeType: String)?
+
+// 删除缓存空间
+func removeCacheSpace(cacheID: String)
+```
+
+## 🐛 已知问题
+
+- iOS 的 `WKNavigationDelegate` 无法拦截子资源加载，因此不支持拦截式缓存
+- 大文件缓存可能影响性能，建议设置合理的缓存大小限制
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
+
+MIT License
+
+## 📞 联系方式
+
+如有问题，请提交 Issue。
+
+---
+
+**版本**: 1.0.0  
+**最后更新**: 2026-02-09

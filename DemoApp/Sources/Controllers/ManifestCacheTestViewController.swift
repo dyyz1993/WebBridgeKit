@@ -215,7 +215,7 @@ class ManifestCacheTestViewController: UIViewController {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleResourceLogNotification(_:)),
-            name: LazyManifestLoader.resourceLogNotification,
+            name: Notification.Name.resourceLogNotification,
             object: nil
         )
 
@@ -840,13 +840,6 @@ class ManifestCacheTestViewController: UIViewController {
 
     private func addLog(_ message: String) {
         // ✅ FIX: 简化 log 方法，避免复杂的 text range 计算
-        // 确保 logTextView 已创建
-        guard self.logTextView != nil else {
-            let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
-            print("[\(timestamp)] \(message)")
-            return
-        }
-
         let logAction = { [weak self] in
             guard let self = self else { return }
 

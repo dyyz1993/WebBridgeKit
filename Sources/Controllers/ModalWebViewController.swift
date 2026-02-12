@@ -263,6 +263,28 @@ public class ModalWebViewController: UIViewController {
             self.dismiss(animated: false)
         }
     }
+
+    // MARK: - Cleanup
+
+    deinit {
+        // 🔒 Clean up child view controller
+        webViewVC?.willMove(toParent: nil)
+        webViewVC?.view.removeFromSuperview()
+        webViewVC?.removeFromParent()
+
+        // 🔒 Stop loading and clean up WebView
+        webView?.stopLoading()
+        webView?.navigationDelegate = nil
+        webView?.uiDelegate = nil
+
+        // 🔒 Remove from superview
+        webView?.removeFromSuperview()
+
+        // 🔒 Clean up bridge
+        bridge = nil
+
+        print("🧹 [ModalWebVC] Cleaned up with proper memory management")
+    }
 }
 
 // MARK: - UIGestureRecognizerDelegate

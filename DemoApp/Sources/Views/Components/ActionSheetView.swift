@@ -202,7 +202,8 @@ class ActionSheetView: UIView {
     @objc private func actionTapped(_ sender: UIButton) {
         dismiss()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            guard let self = self else { return }
             self.actions[sender.tag].action()
         }
     }

@@ -33,6 +33,7 @@ class EmptyStateView: UIView {
         label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         label.textColor = UIColor.label
         label.textAlignment = .center
+        label.accessibilityIdentifier = "EmptyStateView.titleLabel"
         return label
     }()
 

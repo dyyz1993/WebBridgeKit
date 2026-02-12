@@ -251,8 +251,12 @@ public class MockFavoriteService: FavoriteServiceProtocol {
     /// 添加 Mock 数据（用于测试）
     public func addMockData(urls: [String], titles: [String]? = nil) {
         for (index, url) in urls.enumerated() {
+            guard let urlObject = URL(string: url) else {
+                print("⚠️ [MockFavoriteService] Invalid URL: \(url)")
+                continue
+            }
             let title = titles?.indices.contains(index) == true ? titles?[index] : nil
-            addFavorite(url: URL(string: url)!, title: title, favicon: nil)
+            addFavorite(url: urlObject, title: title, favicon: nil)
         }
     }
 

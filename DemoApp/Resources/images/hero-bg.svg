@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fcd34d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="1200" height="600" fill="url(#skyGrad)"/>
+
+  <!-- Sun -->
+  <circle cx="950" cy="120" r="80" fill="url(#sunGrad)" opacity="0.9">
+    <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Clouds -->
+  <g fill="white" opacity="0.8">
+    <ellipse cx="150" cy="100" rx="80" ry="40"/>
+    <ellipse cx="200" cy="90" rx="60" ry="35"/>
+    <ellipse cx="100" cy="95" rx="50" ry="30"/>
+
+    <ellipse cx="500" cy="150" rx="100" ry="50"/>
+    <ellipse cx="560" cy="140" rx="70" ry="40"/>
+    <ellipse cx="440" cy="145" rx="60" ry="35"/>
+
+    <ellipse cx="850" cy="80" rx="90" ry="45"/>
+    <ellipse cx="900" cy="70" rx="65" ry="38"/>
+    <ellipse cx="800" cy="75" rx="55" ry="32"/>
+  </g>
+
+  <!-- Mountains -->
+  <polygon points="0,600 200,250 400,600" fill="#374151"/>
+  <polygon points="200,600 450,200 700,600" fill="#4b5563"/>
+  <polygon points="500,600 700,280 900,600" fill="#374151"/>
+  <polygon points="700,600 950,220 1200,600" fill="#4b5563"/>
+
+  <!-- Snow caps -->
+  <polygon points="200,250 180,290 220,290" fill="white"/>
+  <polygon points="450,200 420,250 480,250" fill="white"/>
+  <polygon points="950,220 910,270 990,270" fill="white"/>
+
+  <!-- Trees -->
+  <g fill="#10b981">
+    <polygon points="100,600 120,520 140,600"/>
+    <polygon points="300,600 330,500 360,600"/>
+    <polygon points="550,600 580,510 610,600"/>
+    <polygon points="800,600 830,530 860,600"/>
+    <polygon points="1050,600 1080,520 1110,600"/>
+  </g>
+
+  <!-- Ground/field -->
+  <rect y="550" width="1200" height="50" fill="#22c55e"/>
+
+  <!-- Path -->
+  <path d="M 600 600 Q 550 500 500 450 Q 450 400 400 420" stroke="#d97706" stroke-width="15" fill="none" stroke-linecap="round"/>
+
+  <!-- Decorative circles (bokeh effect) -->
+  <circle cx="100" cy="300" r="20" fill="white" opacity="0.1"/>
+  <circle cx="1100" cy="400" r="30" fill="white" opacity="0.08"/>
+  <circle cx="300" cy="200" r="15" fill="white" opacity="0.12"/>
+  <circle cx="900" cy="250" r="25" fill="white" opacity="0.06"/>
+</svg>

@@ -38,6 +38,7 @@ class TestCaseCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         label.textColor = UIColor.label
         label.numberOfLines = 1
+        label.accessibilityIdentifier = "testCaseCell.titleLabel"
         return label
     }()
 
@@ -73,6 +74,7 @@ class TestCaseCell: UITableViewCell {
         button.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
         button.layer.cornerRadius = 8
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
+        button.accessibilityIdentifier = "testCaseCell.runButton"
         return button
     }()
 

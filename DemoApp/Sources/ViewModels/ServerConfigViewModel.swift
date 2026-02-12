@@ -30,7 +30,9 @@ class ServerConfigViewModel: ViewModel {
         let serverType: Driver<String>               // 服务器类型
         let baseURL: Driver<String?>                 // Base URL
         let apiEndpoint: Driver<String?>             // API Endpoint
-        let testResult: Driver<Bool?>                // 测试结果
+        let testResult: Driver<(Bool, String?)?>     // 测试结果 (成功, 错误信息)
+        let baseURLValidation: Driver<String?>       // Base URL 验证反馈
+        let apiEndpointValidation: Driver<String?>    // API Endpoint 验证反馈
         let saveSuccess: Driver<Bool>                // 保存成功
         let resetSuccess: Driver<Bool>               // 重置成功
         let isCustomServer: Driver<Bool>             // 是否为自定义服务器
@@ -45,7 +47,7 @@ class ServerConfigViewModel: ViewModel {
     private let serverTypeRelay = BehaviorRelay<String>(value: "default")
     private let baseURLRelay = BehaviorRelay<String?>(value: nil)
     private let apiEndpointRelay = BehaviorRelay<String?>(value: nil)
-    private let testResultRelay = BehaviorRelay<Bool?>(value: nil)
+    private let testResultRelay = BehaviorRelay<(Bool, String?)?>(value: nil)
     private let saveSuccessRelay = PublishRelay<Bool>()
     private let resetSuccessRelay = PublishRelay<Bool>()
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
@@ -104,6 +106,12 @@ class ServerConfigViewModel: ViewModel {
             baseURL: baseURLRelay.asDriver(),
             apiEndpoint: apiEndpointRelay.asDriver(),
             testResult: testResultRelay.asDriver(),
+            baseURLValidation: baseURLRelay.asDriver().map { [weak self] url in
+                self?.validateBaseURL(url)
+            },
+            apiEndpointValidation: apiEndpointRelay.asDriver().map { [weak self] endpoint in
+                self?.validateAPIEndpoint(endpoint)
+            },
             saveSuccess: saveSuccessRelay.asDriver(onErrorJustReturn: false),
             resetSuccess: resetSuccessRelay.asDriver(onErrorJustReturn: false),
             isCustomServer: serverTypeRelay.asDriver().map { $0 == "custom" },
@@ -112,6 +120,36 @@ class ServerConfigViewModel: ViewModel {
     }
 
     // MARK: - Private Methods
+
+    /// 验证 Base URL
+    /// - Parameter url: URL 字符串
+    /// - Returns: 错误信息，如果有效则返回 nil
+    private func validateBaseURL(_ url: String?) -> String? {
+        guard let url = url, !url.isEmpty else {
+            return "请输入服务器地址"
+        }
+        
+        guard let urlObj = URL(string: url), (urlObj.scheme == "http" || urlObj.scheme == "https") else {
+            return "请输入有效的 http/https 协议地址"
+        }
+        
+        return nil
+    }
+
+    /// 验证 API Endpoint
+    /// - Parameter endpoint: Endpoint 字符串
+    /// - Returns: 错误信息，如果有效则返回 nil
+    private func validateAPIEndpoint(_ endpoint: String?) -> String? {
+        guard let endpoint = endpoint, !endpoint.isEmpty else {
+            return "请输入 API 端点"
+        }
+        
+        if !endpoint.hasPrefix("/") {
+            return "端点应以 / 开头"
+        }
+        
+        return nil
+    }
 
     /// 加载当前配置
     private func loadCurrentConfig() {
@@ -143,7 +181,18 @@ class ServerConfigViewModel: ViewModel {
     }
 
     /// 测试连接
-    private func testConnection() {
+    func testConnection() {
+        // 先进行本地验证
+        if let baseURLError = validateBaseURL(baseURLRelay.value) {
+            testResultRelay.accept((false, "Base URL 验证失败: \(baseURLError)"))
+            return
+        }
+        
+        if let apiEndpointError = validateAPIEndpoint(apiEndpointRelay.value) {
+            testResultRelay.accept((false, "API Endpoint 验证失败: \(apiEndpointError)"))
+            return
+        }
+
         isLoadingRelay.accept(true)
         testResultRelay.accept(nil) // 重置测试结果
 
@@ -155,12 +204,16 @@ class ServerConfigViewModel: ViewModel {
 
         serverConfigManager.testConnection(config: tempConfig) { [weak self] success in
             self?.isLoadingRelay.accept(false)
-            self?.testResultRelay.accept(success)
+            if success {
+                self?.testResultRelay.accept((true, nil))
+            } else {
+                self?.testResultRelay.accept((false, "无法连接到服务器，请确认地址和端点是否正确。"))
+            }
         }
     }
 
     /// 保存配置
-    private func saveConfig() {
+    func saveConfig() {
         let serverType = serverTypeRelay.value
         let baseURL = baseURLRelay.value
         let apiEndpoint = apiEndpointRelay.value
@@ -190,7 +243,7 @@ class ServerConfigViewModel: ViewModel {
     }
 
     /// 重置配置
-    private func resetConfig() {
+    func resetConfig() {
         serverConfigManager.resetToDefault()
 
         // 重新加载配置

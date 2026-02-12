@@ -408,24 +408,47 @@ public class ManifestDownloader {
 
     /// 解析并验证 manifest
     private func parseAndValidate(data: Data) throws -> WebManifest {
+        // Validate data is not empty
+        guard !data.isEmpty else {
+            throw ManifestDownloaderError.invalidJSON(
+                NSError(domain: "ManifestDownloader", code: -1, userInfo: [
+                    NSLocalizedDescriptionKey: "Empty manifest data"
+                ])
+            )
+        }
+
         do {
+            // Attempt to decode the manifest
             let manifest = try decoder.decode(WebManifest.self, from: data)
+
+            // Validate the manifest using proper error handling
             try validate(manifest)
+
             return manifest
         } catch let error as DecodingError {
+            // Convert decoding errors to ManifestDownloaderError
             throw parseDecodingError(error)
+        } catch let error as ManifestDownloaderError {
+            // Re-throw ManifestDownloaderError as-is
+            throw error
         } catch {
+            // Wrap any other errors
             throw ManifestDownloaderError.invalidJSON(error)
         }
     }
 
-    /// 验证 manifest
+    /// 验证 manifest with detailed error reporting
     private func validate(_ manifest: WebManifest) throws {
         var errors: [String] = []
 
         // 验证版本号
         if manifest.version.isEmpty {
             errors.append("version cannot be empty")
+        }
+
+        // 验证版本兼容性
+        if !ManifestVersion.isSupported(manifest.version) {
+            errors.append("Unsupported manifest version: \(manifest.version)")
         }
 
         // 验证描述
@@ -438,15 +461,39 @@ public class ManifestDownloader {
             errors.append("resources cannot be empty")
         }
 
-        // 验证资源 URL
+        // 验证每个资源
         for (path, resource) in manifest.resources {
+            // Validate resource path for security
+            if path.contains("..") {
+                errors.append("Path traversal detected in resource: \(path)")
+            }
+
+            if path.hasPrefix("/") {
+                errors.append("Absolute paths not allowed in resource: \(path)")
+            }
+
+            // Validate resource URL
             if resource.url.absoluteString.isEmpty {
                 errors.append("Invalid URL for resource: \(path)")
+            }
+
+            // Verify URL scheme is allowed
+            if let scheme = resource.url.scheme?.lowercased() {
+                let allowedSchemes = ["http", "https", "data"]
+                if !allowedSchemes.contains(scheme) {
+                    errors.append("Disallowed URL scheme '\(scheme)' for resource: \(path)")
+                }
             }
 
             // 验证必需资源
             if resource.required && resource.type == .other {
                 errors.append("Required resource \(path) has unknown type")
+            }
+
+            // Validate resource type
+            if resource.type == .other {
+                // Log as warning, not error
+                continue
             }
         }
 

@@ -224,7 +224,10 @@ public class WebCacheDebugPanelViewController: UIViewController {
 
     @objc private func testCache() {
         // 使用 example.com 测试缓存
-        let testURL = URL(string: "https://example.com")!
+        guard let testURL = URL(string: "https://example.com") else {
+            print("❌ [DebugPanel] Failed to create test URL")
+            return
+        }
         let testRule = PageCacheRule(
             name: "测试规则",
             includePatterns: ["https://example.com/**"],
@@ -410,8 +413,18 @@ public class WebCacheDebugPanelViewController: UIViewController {
     // MARK: - Page Actions
 
     private func openCachedPage(_ pageInfo: CachedPageInfo) {
-        // TODO: 打开已缓存的页面
-        WebBridgeLogger.shared.info("Opening cached page: \(pageInfo.url)")
+        // 从缓存历史记录中获取 HTML 路径
+        let historyService = RealmHistoryService.shared
+        if let history = historyService.findHistory(id: pageInfo.id),
+           let htmlPath = history.htmlPath {
+            // 使用 ModalWebViewController 打开缓存的页面
+            let fileURL = URL(fileURLWithPath: htmlPath)
+            let modalVC = ModalWebViewController(url: fileURL)
+            present(modalVC, animated: true)
+            WebBridgeLogger.shared.info("Opening cached page: \(pageInfo.url)")
+        } else {
+            WebBridgeLogger.shared.error("Failed to find cached page: \(pageInfo.url)")
+        }
     }
 
     private func refreshCachedPage(_ pageInfo: CachedPageInfo) {

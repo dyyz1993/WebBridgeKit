@@ -46,23 +46,25 @@ class TokenManager {
     private func resolveToken(_ token: String) {
         // 模拟服务器请求逻辑
         // 在真实场景中，这里会调用 API 服务端（如配置的开源服务端地址）
-        
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
+
+        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
             // 模拟解析结果
             // 假设解析出了一个 AppID 和对应的 URL
             let mockAppID = "com.example.app"
             let mockURL = "https://m.baidu.com" // 模拟一个落地页
-            
+
             print("✅ [TokenManager] Token resolved: \(mockAppID) -> \(mockURL)")
-            
-            DispatchQueue.main.async {
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
                 self.handleResolvedResult(appId: mockAppID, urlString: mockURL)
             }
         }
     }
     
     private func handleResolvedResult(appId: String, urlString: String) {
-        guard let url = URL(string: urlString) else { return }
+        guard URL(string: urlString) != nil else { return }
         
         // 构造一条虚拟消息，触发自动跳转逻辑
         let message = WebhookMessage(

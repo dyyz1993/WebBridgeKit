@@ -133,11 +133,13 @@ public class WebSpeechHandler: BaseWebNativeHandler {
             } else if currentStatus == .notDetermined {
                 // 未确定，请求权限
                 print("🎤 [Speech] Requesting speech recognition authorization...")
-                SFSpeechRecognizer.requestAuthorization { status in
+                SFSpeechRecognizer.requestAuthorization { [weak self] status in
+                    guard let self = self else { return }
                     print("🎤 [Speech] Authorization callback status: \(self.permissionStatusString(status))")
 
                     // 延迟检查状态，确保 iOS 已更新缓存
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                        guard let self = self else { return }
                         let refreshedStatus = SFSpeechRecognizer.authorizationStatus()
                         print("🎤 [Speech] Refreshed status after delay: \(self.permissionStatusString(refreshedStatus))")
 

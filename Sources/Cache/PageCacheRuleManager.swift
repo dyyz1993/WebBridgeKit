@@ -184,8 +184,7 @@ public class PageCacheRuleManager {
     public func getCachedPages(for ruleId: String) -> Observable<[CachedPageInfo]> {
         return Observable.create { observer in
             // 从 WebPageOfflineCacheManager 获取缓存页面
-            // TODO: 需要实现 CachedPageInfo 的获取逻辑
-            let pages: [CachedPageInfo] = []
+            let pages = WebPageOfflineCacheManager.shared.getCachedPages(for: ruleId)
             observer.onNext(pages)
             observer.onCompleted()
             return Disposables.create()
@@ -196,9 +195,10 @@ public class PageCacheRuleManager {
     public func getRulesWithPages() -> Observable<[RuleWithPages]> {
         return Observable.create { observer in
             let rules = self.getAllRules()
-            // TODO: 需要实现从 WebPageOfflineCacheManager 获取缓存页面的逻辑
+            // 从 WebPageOfflineCacheManager 获取每个规则下的缓存页面
             let rulesWithPages = rules.map { rule in
-                RuleWithPages(rule: rule, cachedPages: [], isExpanded: false)
+                let pages = WebPageOfflineCacheManager.shared.getCachedPages(for: rule.id)
+                return RuleWithPages(rule: rule, cachedPages: pages, isExpanded: false)
             }
             observer.onNext(rulesWithPages)
             observer.onCompleted()

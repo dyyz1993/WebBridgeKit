@@ -90,6 +90,17 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         return button
     }()
 
+    private let testPermanentKeyButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        let image = UIImage(systemName: "paperplane", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.setTitle(" 测试", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        button.tintColor = UIColor.systemGreen
+        return button
+    }()
+
     private let permanentKeySeparator: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.separator
@@ -137,6 +148,57 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         return table
     }()
 
+    // Bark 配置卡片
+    private let barkConfigCard: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.secondarySystemBackground
+        view.layer.cornerRadius = 16
+        view.layer.masksToBounds = true
+        return view
+    }()
+
+    private let barkConfigTitle: UILabel = {
+        let label = UILabel()
+        label.text = "Bark 推送配置 (开发调试)"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.textColor = UIColor.label
+        return label
+    }()
+
+    private let barkKeyTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "在此输入您的 Bark Key (从手机 Bark App 获取)"
+        tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        tf.borderStyle = .none
+        tf.backgroundColor = UIColor.tertiarySystemBackground
+        tf.layer.cornerRadius = 8
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
+        tf.leftViewMode = .always
+        return tf
+    }()
+
+    private let barkServerTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "服务器地址 (默认: https://api.day.app)"
+        tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        tf.borderStyle = .none
+        tf.backgroundColor = UIColor.tertiarySystemBackground
+        tf.layer.cornerRadius = 8
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
+        tf.leftViewMode = .always
+        return tf
+    }()
+
+    private let saveBarkConfigButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("保存配置", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        button.backgroundColor = UIColor.systemBlue
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        return button
+    }()
+
     // 空状态视图
     private let emptyStateView = EmptyStateView()
 
@@ -179,6 +241,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         permanentKeyCard.addSubview(permanentKeyValue)
         permanentKeyCard.addSubview(copyPermanentKeyButton)
         permanentKeyCard.addSubview(refreshKeyButton)
+        permanentKeyCard.addSubview(testPermanentKeyButton)
         permanentKeyCard.addSubview(permanentKeySeparator)
         permanentKeyCard.addSubview(examplesButton)
 
@@ -218,6 +281,12 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
             make.height.equalTo(32)
         }
 
+        testPermanentKeyButton.snp.makeConstraints { make in
+            make.left.equalTo(refreshKeyButton.snp.right).offset(12)
+            make.centerY.equalTo(copyPermanentKeyButton)
+            make.height.equalTo(32)
+        }
+
         permanentKeySeparator.snp.makeConstraints { make in
             make.top.equalTo(copyPermanentKeyButton.snp.bottom).offset(12)
             make.left.equalToSuperview().offset(16)
@@ -252,19 +321,59 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         contentView.addSubview(tableView)
         contentView.addSubview(emptyStateView)
 
+        // 添加 Bark 配置
+        contentView.addSubview(barkConfigCard)
+        barkConfigCard.addSubview(barkConfigTitle)
+        barkConfigCard.addSubview(barkKeyTextField)
+        barkConfigCard.addSubview(barkServerTextField)
+        barkConfigCard.addSubview(saveBarkConfigButton)
+
         tableView.snp.makeConstraints { make in
             make.top.equalTo(temporaryKeysDescription.snp.bottom).offset(12)
             make.left.equalToSuperview()
             make.right.equalToSuperview()
+            make.height.equalTo(200) // 初始高度
+        }
+
+        barkConfigCard.snp.makeConstraints { make in
+            make.top.equalTo(tableView.snp.bottom).offset(24)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+            make.bottom.equalToSuperview().offset(-32)
+        }
+
+        barkConfigTitle.snp.makeConstraints { make in
+            make.top.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+        }
+
+        barkKeyTextField.snp.makeConstraints { make in
+            make.top.equalTo(barkConfigTitle.snp.bottom).offset(12)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+            make.height.equalTo(44)
+        }
+
+        barkServerTextField.snp.makeConstraints { make in
+            make.top.equalTo(barkKeyTextField.snp.bottom).offset(12)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+            make.height.equalTo(44)
+        }
+
+        saveBarkConfigButton.snp.makeConstraints { make in
+            make.top.equalTo(barkServerTextField.snp.bottom).offset(16)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+            make.height.equalTo(44)
             make.bottom.equalToSuperview().offset(-16)
-            make.height.equalTo(200) // 初始高度，会根据内容动态调整
         }
 
         emptyStateView.snp.makeConstraints { make in
             make.top.equalTo(temporaryKeysDescription.snp.bottom).offset(12)
             make.left.equalToSuperview()
             make.right.equalToSuperview()
-            make.height.equalTo(300)
+            make.height.equalTo(200)
         }
 
         // 空状态视图配置
@@ -278,7 +387,13 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         // 按钮事件
         copyPermanentKeyButton.addTarget(self, action: #selector(copyPermanentKeyTapped), for: .touchUpInside)
         refreshKeyButton.addTarget(self, action: #selector(refreshKeyTapped), for: .touchUpInside)
+        testPermanentKeyButton.addTarget(self, action: #selector(testPermanentKeyTapped), for: .touchUpInside)
         examplesButton.addTarget(self, action: #selector(showExamplesTapped), for: .touchUpInside)
+        saveBarkConfigButton.addTarget(self, action: #selector(saveBarkConfigTapped), for: .touchUpInside)
+        
+        // 初始化加载配置
+        barkKeyTextField.text = viewModel.getBarkKey()
+        barkServerTextField.text = viewModel.getBarkServer()
     }
 
     private func setupRightBarButton() {
@@ -360,6 +475,13 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         // 设置 TableView 数据源和代理
         tableView.dataSource = self
         tableView.delegate = self
+
+        // 绑定测试推送结果
+        output.testPushResult
+            .drive(onNext: { [weak self] result in
+                self?.showTestPushResult(success: result.success, message: result.message)
+            })
+            .disposed(by: rx)
     }
 
     // MARK: - Actions
@@ -384,8 +506,25 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         present(alert, animated: true)
     }
 
+    @objc private func testPermanentKeyTapped() {
+        viewModel.sendPermanentKeyTestPush()
+    }
+
     @objc private func addTemporaryKeyTapped() {
-        showDurationPicker()
+        showKeyCreationDialog()
+    }
+
+    @objc private func saveBarkConfigTapped() {
+        let key = barkKeyTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let server = barkServerTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        viewModel.saveBarkConfig(key: key, server: server)
+        
+        let alert = UIAlertController(title: "保存成功", message: "Bark 配置已更新", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
+        
+        view.endEditing(true)
     }
 
     @objc private func showExamplesTapped() {
@@ -419,36 +558,50 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         }
     }
 
-    private func showDurationPicker() {
+    private func showKeyCreationDialog() {
         let alert = UIAlertController(
-            title: "选择有效期",
-            message: "请选择临时密钥的有效时长",
-            preferredStyle: .actionSheet
+            title: "创建临时密钥",
+            message: "请输入密钥名称和绑定的群组 ID（可选）",
+            preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "1 小时", style: .default) { [weak self] _ in
-            self?.viewModel.addTemporaryKey(duration: 3600)
-        })
+        alert.addTextField { textField in
+            textField.placeholder = "密钥名称（如：GitHub 推送）"
+        }
 
-        alert.addAction(UIAlertAction(title: "1 天", style: .default) { [weak self] _ in
-            self?.viewModel.addTemporaryKey(duration: 86400)
-        })
+        alert.addTextField { textField in
+            textField.placeholder = "群组 ID (可选)"
+        }
 
-        alert.addAction(UIAlertAction(title: "7 天", style: .default) { [weak self] _ in
-            self?.viewModel.addTemporaryKey(duration: 604800)
-        })
+        let durations: [(String, TimeInterval)] = [
+            ("1 小时", 3600),
+            ("1 天", 86400),
+            ("7 天", 604800),
+            ("30 天", 2592000)
+        ]
 
-        alert.addAction(UIAlertAction(title: "30 天", style: .default) { [weak self] _ in
-            self?.viewModel.addTemporaryKey(duration: 2592000)
+        // 这里为了简化 UI，使用二级弹窗选择时长
+        alert.addAction(UIAlertAction(title: "下一步", style: .default) { [weak self] _ in
+            let name = alert.textFields?[0].text
+            let groupId = alert.textFields?[1].text
+
+            let durationAlert = UIAlertController(title: "选择有效期", message: nil, preferredStyle: .actionSheet)
+            for (title, duration) in durations {
+                durationAlert.addAction(UIAlertAction(title: title, style: .default) { _ in
+                    self?.viewModel.addTemporaryKey(duration: duration, name: name, groupId: groupId)
+                })
+            }
+            durationAlert.addAction(UIAlertAction(title: "取消", style: .cancel))
+
+            // iPad 支持
+            if let popoverController = durationAlert.popoverPresentationController {
+                popoverController.barButtonItem = self?.navigationItem.rightBarButtonItem
+            }
+
+            self?.present(durationAlert, animated: true)
         })
 
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-
-        // iPad 支持
-        if let popoverController = alert.popoverPresentationController {
-            popoverController.barButtonItem = navigationItem.rightBarButtonItem
-        }
-
         present(alert, animated: true)
     }
 
@@ -476,6 +629,16 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let alert = UIAlertController(
             title: "创建成功",
             message: "临时密钥已创建",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
+    }
+
+    private func showTestPushResult(success: Bool, message: String) {
+        let alert = UIAlertController(
+            title: success ? "测试成功" : "测试失败",
+            message: message,
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "确定", style: .default))
@@ -523,19 +686,59 @@ extension APIKeyManageViewController: UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let key = currentTemporaryKeys[indexPath.row]
+        
+        // 删除操作
         let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] _, _, completion in
-            guard let self = self else {
-                completion(false)
-                return
-            }
-
-            let key = self.currentTemporaryKeys[indexPath.row]
-            self.deleteKeySubject.onNext(key.id)
+            self?.deleteKeySubject.onNext(key.id)
             completion(true)
         }
+        deleteAction.image = UIImage(systemName: "trash")
+        
+        // 测试操作
+        let testAction = UIContextualAction(style: .normal, title: "测试") { [weak self] _, _, completion in
+            self?.viewModel.sendTemporaryKeyTestPush(key: key)
+            completion(true)
+        }
+        testAction.backgroundColor = UIColor.systemGreen
+        testAction.image = UIImage(systemName: "paperplane.fill")
 
-        deleteAction.backgroundColor = UIColor.systemRed
+        // 编辑操作
+        let editAction = UIContextualAction(style: .normal, title: "编辑") { [weak self] _, _, completion in
+            self?.showEditGroupIdDialog(for: key)
+            completion(true)
+        }
+        editAction.backgroundColor = UIColor.systemBlue
+        editAction.image = UIImage(systemName: "square.and.pencil")
+        
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction, testAction, editAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
+    }
+}
 
-        return UISwipeActionsConfiguration(actions: [deleteAction])
+// MARK: - Actions
+
+extension APIKeyManageViewController {
+    
+    private func showEditGroupIdDialog(for key: APIKey) {
+        let alert = UIAlertController(
+            title: "编辑群组绑定",
+            message: "修改密钥 \"\(key.name)\" 绑定的群组 ID",
+            preferredStyle: .alert
+        )
+        
+        alert.addTextField { textField in
+            textField.placeholder = "群组 ID"
+            textField.text = key.boundGroupId
+        }
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: "保存", style: .default) { [weak self] _ in
+            let newGroupId = alert.textFields?.first?.text
+            self?.viewModel.updateKeyGroupId(id: key.id, groupId: newGroupId)
+        })
+        
+        present(alert, animated: true)
     }
 }

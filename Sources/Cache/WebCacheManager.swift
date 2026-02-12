@@ -28,17 +28,42 @@ public class WebCacheManager {
 
     /// 获取所有网站的缓存统计
     public func fetchCacheStatistics() -> Observable<[WebCacheStatistics]> {
-        return Observable.create { observer in
-            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-
-            self.dataStore.fetchDataRecords(ofTypes: dataTypes) { records in
-                let stats = self.groupRecordsByDomain(records)
-
-                // 保存到 Realm
-                self.saveCacheStatistics(stats)
-
-                observer.onNext(stats)
+        return Observable.create { [weak self] observer in
+            guard let self = self else {
                 observer.onCompleted()
+                return Disposables.create()
+            }
+            // WKWebsiteDataStore 操作必须在主线程执行
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else {
+                    observer.onCompleted()
+                    return
+                }
+                let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+
+                self.dataStore.fetchDataRecords(ofTypes: dataTypes) { [weak self] records in
+                    guard let self = self else {
+                        observer.onCompleted()
+                        return
+                    }
+                    let stats = self.groupRecordsByDomain(records)
+
+                    // 保存到 Realm (可以在后台线程执行)
+                    DispatchQueue.global(qos: .utility).async { [weak self] in
+                        guard let self = self else {
+                            DispatchQueue.main.async {
+                                observer.onCompleted()
+                            }
+                            return
+                        }
+                        self.saveCacheStatistics(stats)
+
+                        DispatchQueue.main.async {
+                            observer.onNext(stats)
+                            observer.onCompleted()
+                        }
+                    }
+                }
             }
 
             return Disposables.create()
@@ -73,59 +98,81 @@ public class WebCacheManager {
     /// 自动清理逻辑已在 WebPageHistoryManager 中优化：会自动忽略收藏和置顶项
     /// 清理过期或低频使用的缓存资源
     public func performAutoCleanup() {
-        print("🧹 [WebCacheManager] Starting auto cleanup...")
-        
-        // 1. 清理低频历史记录 (由 WebPageHistoryManager 处理)
-        WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
-        
-        // 2. 清理过期的拦截资源缓存
-        InterceptiveCacheManager.shared.cleanupExpiredCache()
-        
-        // 3. 清理未使用的资源缓存 (超过 7 天未访问)
-        WebResourceCacheManager.shared.cleanupUnusedResources(olderThan: 7 * 24 * 3600)
-        
-        print("🧹 [WebCacheManager] Auto cleanup completed")
+        Log.info("Starting auto cleanup...", category: .cache)
+
+        // 异步执行清理任务，避免阻塞主线程（特别是应用启动时）
+        DispatchQueue.global(qos: .utility).async {
+            // 1. 清理低频历史记录 (由 WebPageHistoryManager 处理)
+            WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
+
+            // 2. 清理过期的拦截资源缓存 (已删除 InterceptiveCacheManager)
+            // InterceptiveCacheManager.shared.cleanupExpiredCache()
+
+            // 3. 清理未使用的资源缓存 (超过 7 天未访问)
+            WebResourceCacheManager.shared.cleanupUnusedResources(olderThan: 7 * 24 * 3600)
+
+            Log.info("Auto cleanup completed in background", category: .cache)
+        }
     }
     
     /// 清理所有缓存
     public func clearAll() {
-        // 1. 清理 WKWebView 网站数据
-        let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-        let dateFrom = Date(timeIntervalSince1970: 0)
-        dataStore.removeData(ofTypes: dataTypes, modifiedSince: dateFrom) {
-            print("🗑️ [WebCacheManager] Cleared all WKWebView website data")
-        }
-
-        // 2. 清理自定义缓存管理器
-        ManifestCacheManager.shared.clearAll()
-        WebResourceCacheManager.shared.clearAll()
-        InterceptiveCacheManager.shared.clearAllCache()
-        PersistentManifestLoader.shared.clearAllCache()
-        
-        // 3. 清理 Realm 统计数据
-        if let realm = try? Realm() {
-            try? realm.write {
-                realm.delete(realm.objects(WebCacheStatistics.self))
+        // 1. 清理 WKWebView 网站数据 (必须在主线程执行)
+        DispatchQueue.main.async {
+            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+            let dateFrom = Date(timeIntervalSince1970: 0)
+            self.dataStore.removeData(ofTypes: dataTypes, modifiedSince: dateFrom) {
+                Log.info("Cleared all WKWebView website data", category: .cache)
             }
         }
-        
-        print("🗑️ [WebCacheManager] All caches cleared globally")
+
+        // 2. 清理自定义缓存管理器 (这些通常是内部异步的)
+        ManifestCacheManager.shared.clearAll()
+        WebResourceCacheManager.shared.clearAll()
+        // InterceptiveCacheManager.shared.clearAllCache()  // 已删除
+        PersistentManifestLoader.shared.clearAllCache()
+
+        // 3. 清理 Realm 统计数据 (必须在后台线程执行，避免 Realm 跨线程访问)
+        DispatchQueue.global(qos: .utility).async {
+            if let realm = try? Realm() {
+                try? realm.write {
+                    realm.delete(realm.objects(WebCacheStatistics.self))
+                }
+                Log.info("Cleared Realm statistics", category: .cache)
+            }
+        }
+
+        Log.info("All caches clearing triggered (WebView data on main, Realm on background)", category: .cache)
     }
 
     /// 清理特定域名的缓存
     public func clearCache(for domain: String) -> Observable<Void> {
         return Observable.create { observer in
-            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+            // WKWebsiteDataStore 操作必须在主线程执行
+            DispatchQueue.main.async {
+                let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
 
-            self.dataStore.fetchDataRecords(ofTypes: dataTypes) { records in
-                let targetRecords = records.filter { $0.displayName == domain }
+                self.dataStore.fetchDataRecords(ofTypes: dataTypes) { records in
+                    let targetRecords = records.filter { $0.displayName == domain }
 
-                self.dataStore.removeData(ofTypes: dataTypes, for: targetRecords) {
-                    // 从 Realm 中删除统计
-                    self.deleteCacheStatistics(for: domain)
+                    self.dataStore.removeData(ofTypes: dataTypes, for: targetRecords) {
+                        // 从 Realm 中删除统计 (必须在后台线程执行，避免 Realm 跨线程访问)
+                        DispatchQueue.global(qos: .utility).async {
+                            // 在后台线程创建新的 Realm 实例
+                            if let realm = try? Realm() {
+                                try? realm.write {
+                                    if let stat = realm.object(ofType: WebCacheStatistics.self, forPrimaryKey: domain) {
+                                        realm.delete(stat)
+                                    }
+                                }
+                            }
 
-                    observer.onNext(())
-                    observer.onCompleted()
+                            DispatchQueue.main.async {
+                                observer.onNext(())
+                                observer.onCompleted()
+                            }
+                        }
+                    }
                 }
             }
 
@@ -136,15 +183,27 @@ public class WebCacheManager {
     /// 清理所有缓存
     public func clearAllCache() -> Observable<Void> {
         return Observable.create { observer in
-            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-            let from = Date.distantPast
+            // WKWebsiteDataStore 操作必须在主线程执行
+            DispatchQueue.main.async {
+                let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+                let from = Date.distantPast
 
-            WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: from) {
-                // 清空 Realm 中的统计
-                self.clearAllCacheStatistics()
+                WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: from) {
+                    // 清空 Realm 中的统计 (必须在后台线程执行，避免 Realm 跨线程访问)
+                    DispatchQueue.global(qos: .utility).async {
+                        // 在后台线程创建新的 Realm 实例
+                        if let realm = try? Realm() {
+                            try? realm.write {
+                                realm.delete(realm.objects(WebCacheStatistics.self))
+                            }
+                        }
 
-                observer.onNext(())
-                observer.onCompleted()
+                        DispatchQueue.main.async {
+                            observer.onNext(())
+                            observer.onCompleted()
+                        }
+                    }
+                }
             }
 
             return Disposables.create()
@@ -193,17 +252,42 @@ public class WebCacheManager {
     }
 
     /// 获取缓存的域名列表
-    public func getCachedDomains() -> Results<WebCacheStatistics>? {
-        guard let realm = try? Realm() else { return nil }
-        return realm.objects(WebCacheStatistics.self)
-            .sorted(byKeyPath: "totalSize", ascending: false)
+    public func getCachedDomains() -> [WebCacheStatistics] {
+        var results: [WebCacheStatistics] = []
+        let semaphore = DispatchSemaphore(value: 0)
+        DispatchQueue.global(qos: .userInitiated).async {
+            if let realm = try? Realm() {
+                let stats = realm.objects(WebCacheStatistics.self).sorted(byKeyPath: "totalSize", ascending: false)
+                // 必须在当前线程冻结对象或转换为数组，才能跨线程传递
+                results = Array(stats.map { stat -> WebCacheStatistics in
+                    let newStat = WebCacheStatistics()
+                    newStat.domain = stat.domain
+                    newStat.totalSize = stat.totalSize
+                    newStat.fileCount = stat.fileCount
+                    newStat.lastUpdate = stat.lastUpdate
+                    return newStat
+                })
+            }
+            semaphore.signal()
+        }
+        _ = semaphore.wait(timeout: .now() + 2.0)
+        return results
     }
 
     /// 获取总缓存大小
     public func getTotalCacheSize() -> Int64 {
-        guard let realm = try? Realm() else { return 0 }
-        return realm.objects(WebCacheStatistics.self)
-            .sum(of: \WebCacheStatistics.totalSize)
+        var size: Int64 = 0
+        // 使用同步方式获取，但必须确保线程安全
+        // 建议在 UI 上显示时使用异步版本，这里保留同步版本供内部调用
+        let semaphore = DispatchSemaphore(value: 0)
+        DispatchQueue.global(qos: .userInitiated).async {
+            if let realm = try? Realm() {
+                size = realm.objects(WebCacheStatistics.self).sum(of: \WebCacheStatistics.totalSize)
+            }
+            semaphore.signal()
+        }
+        _ = semaphore.wait(timeout: .now() + 1.0)
+        return size
     }
 
     // MARK: - 压缩缓存管理 (WebCompressedCacheStore)

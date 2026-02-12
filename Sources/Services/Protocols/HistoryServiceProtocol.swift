@@ -34,12 +34,14 @@ public protocol HistoryServiceProtocol: AnyObject {
     // MARK: - 查询
 
     /// 获取所有历史记录（按最后访问时间降序）
-    /// - Returns: 历史记录结果集
-    func getAllHistories() -> Results<WebPageHistory>
+    /// 返回独立副本数组，避免跨线程访问问题
+    /// - Returns: 历史记录数组
+    func getAllHistories() -> [WebPageHistory]
 
     /// 获取已缓存的历史记录
-    /// - Returns: 已缓存的历史记录结果集
-    func getCachedHistories() -> Results<WebPageHistory>
+    /// 返回独立副本数组，避免跨线程访问问题
+    /// - Returns: 已缓存的历史记录数组
+    func getCachedHistories() -> [WebPageHistory]
 
     /// 根据URL查找历史记录
     /// - Parameter url: 页面URL
@@ -52,9 +54,10 @@ public protocol HistoryServiceProtocol: AnyObject {
     func findHistory(id: String) -> WebPageHistory?
 
     /// 搜索历史记录（标题或URL包含关键词）
+    /// 返回独立副本数组，避免跨线程访问问题
     /// - Parameter keyword: 搜索关键词
-    /// - Returns: 匹配的历史记录结果集
-    func searchHistories(keyword: String) -> Results<WebPageHistory>
+    /// - Returns: 匹配的历史记录数组
+    func searchHistories(keyword: String) -> [WebPageHistory]
 
     // MARK: - 统计
 

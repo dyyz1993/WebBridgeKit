@@ -25,14 +25,116 @@ public class WebBridgeLogger {
 
     // MARK: - Log Levels
 
-    public enum LogLevel {
-        case info
-        case error
-        case debug
-        case warning
+    public enum LogLevel: Int {
+        case debug = 0
+        case info = 1
+        case warning = 2
+        case error = 3
+
+        var emoji: String {
+            switch self {
+            case .debug: return "🔍"
+            case .info: return "ℹ️"
+            case .warning: return "⚠️"
+            case .error: return "❌"
+            }
+        }
+
+        var prefix: String {
+            switch self {
+            case .debug: return "DEBUG"
+            case .info: return "INFO"
+            case .warning: return "WARN"
+            case .error: return "ERROR"
+            }
+        }
     }
 
+    // MARK: - Log Categories
+
+    public enum LogCategory: String {
+        case general = "General"
+        case cache = "Cache"
+        case network = "Network"
+        case browser = "Browser"
+        case manifest = "Manifest"
+        case realm = "Realm"
+        case ui = "UI"
+        case performance = "Performance"
+    }
+
+    // MARK: - Configuration
+
+    // Minimum log level, defaults to info
+    public var minLogLevel: LogLevel = .info
+
+    // Whether to include file name and line number, disabled by default (production environment)
+    public var includeFileLocation: Bool = false
+
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        return formatter
+    }()
+
+    private let logQueue = DispatchQueue(label: "com.webbridgekit.logger")
+
     // MARK: - Public Methods
+
+    public func log(
+        _ level: LogLevel,
+        category: LogCategory = .general,
+        message: String,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) {
+        guard isEnabled && level.rawValue >= minLogLevel.rawValue else { return }
+
+        logQueue.async { [weak self] in
+            guard let self = self else { return }
+
+            var logMessage = "\(level.emoji) [\(category.rawValue)] \(message)"
+
+            if self.includeFileLocation {
+                let fileName = (file as NSString).lastPathComponent
+                logMessage += " [\(fileName):\(line) \(function)]"
+            }
+
+            print(logMessage)
+
+            // Also use os.log to record to system logs
+            let osLogType: OSLogType
+            switch level {
+            case .debug: osLogType = .debug
+            case .info: osLogType = .info
+            case .warning: osLogType = .default
+            case .error: osLogType = .error
+            }
+
+            let osLog = OSLog(subsystem: "com.webbridgekit", category: category.rawValue)
+            os_log("%{public}@", log: osLog, type: osLogType, message)
+        }
+    }
+
+    // Convenience methods
+    public func debug(_ message: String, category: LogCategory = .general, file: String = #file, function: String = #function, line: Int = #line) {
+        log(.debug, category: category, message: message, file: file, function: function, line: line)
+    }
+
+    public func info(_ message: String, category: LogCategory = .general, file: String = #file, function: String = #function, line: Int = #line) {
+        log(.info, category: category, message: message, file: file, function: function, line: line)
+    }
+
+    public func warning(_ message: String, category: LogCategory = .general, file: String = #file, function: String = #function, line: Int = #line) {
+        log(.warning, category: category, message: message, file: file, function: function, line: line)
+    }
+
+    public func error(_ message: String, category: LogCategory = .general, file: String = #file, function: String = #function, line: Int = #line) {
+        log(.error, category: category, message: message, file: file, function: function, line: line)
+    }
+
+    // MARK: - Backward Compatible Methods
 
     public func log(_ level: LogLevel = .info, _ message: String) {
         guard isEnabled else { return }
@@ -47,22 +149,6 @@ public class WebBridgeLogger {
         case .warning:
             logger.warning("\(message)")
         }
-    }
-
-    public func info(_ message: String) {
-        log(.info, message)
-    }
-
-    public func error(_ message: String) {
-        log(.error, message)
-    }
-
-    public func debug(_ message: String) {
-        log(.debug, message)
-    }
-
-    public func warning(_ message: String) {
-        log(.warning, message)
     }
 
     // MARK: - Specialized Log Methods
@@ -107,3 +193,8 @@ public struct WebBridgeLogToken {
     public let module: String
     public let timestamp = Date()
 }
+
+// MARK: - Global Convenience Access
+
+/// Global convenience access to the logger
+public let Log = WebBridgeLogger.shared

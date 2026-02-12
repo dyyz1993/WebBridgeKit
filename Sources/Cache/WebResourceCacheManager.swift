@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import RealmSwift
 
 /// Web资源缓存管理器
 /// 实现按 URL 隔立的缓存空间管理
@@ -135,6 +136,7 @@ public class WebResourceCacheManager {
 
     // MARK: - Properties
 
+    private let realmConfiguration: Realm.Configuration
     private let cacheBaseDirectory: URL
     private let cacheIndexFile: URL
     private let fileManager = FileManager.default
@@ -144,25 +146,74 @@ public class WebResourceCacheManager {
 
     private let mapLock = NSLock()
     private let accessLock = NSLock()
-    private let queue = DispatchQueue(label: "com.webbridgekit.resource-cache-manager", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "com.webbridgekit.resource-cache-manager", qos: .utility)
 
     // 缓存统计
     private var totalCacheSize: Int64 = 0
     private let sizeLock = NSLock()
 
+    /// 获取 Realm 实例
+    private func getRealm() -> Realm? {
+        return try? Realm(configuration: realmConfiguration)
+    }
+
+    /// 缓存统计信息 (不再持有受管对象，改为每次从 Realm 获取)
+    private var cacheStats: WebCacheStatistics? {
+        // 在主线程访问 Realm 可能导致卡顿，增加警告
+        if Thread.isMainThread {
+            #if DEBUG
+            print("⚠️ [WebResourceCacheManager] Warning: Accessing cacheStats on main thread may cause hitches")
+            #endif
+        }
+        let realm = getRealm()
+        return realm?.object(ofType: WebCacheStatistics.self, forPrimaryKey: "global")
+    }
+
     // MARK: - Initialization
 
     private init() {
+        // 使用独立的 Realm 文件
+        self.realmConfiguration = Realm.Configuration(
+            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("resourceCache.realm"),
+            schemaVersion: 1
+        )
+
         let paths = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)
         self.cacheBaseDirectory = paths[0].appendingPathComponent("WebResourceCache", isDirectory: true)
         self.cacheIndexFile = cacheBaseDirectory.appendingPathComponent("cache-index.plist")
 
         setupCacheDirectory()
-        loadCacheIndex()
-        updateTotalCacheSize()
+        setupStats()
+        
+        // 异步加载索引和统计信息，减少主线程压力（特别是 UI 测试时）
+        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+            queue.async { [weak self] in
+                guard let self = self else { return }
+                self.loadCacheIndex()
+                self.updateTotalCacheSize()
+                
+                print("✅ [WebResourceCacheManager] Initialization tasks completed in background")
+            }
+        } else {
+            // UI 测试模式下仅加载索引，不计算大小
+            queue.async { [weak self] in
+                self?.loadCacheIndex()
+            }
+            print("🧪 [WebResourceCacheManager] UI Testing mode: Skipped heavy size calculation")
+        }
 
-        print("✅ [WebResourceCacheManager] Initialized")
-        print("   - Base directory: \(cacheBaseDirectory.path)")
+        print("✅ [WebResourceCacheManager] Initialized (background loading started)")
+    }
+
+    private func setupStats() {
+        let realm = getRealm()
+        if realm?.object(ofType: WebCacheStatistics.self, forPrimaryKey: "global") == nil {
+            try? realm?.write {
+                let stats = WebCacheStatistics()
+                stats.domain = "global"
+                realm?.add(stats)
+            }
+        }
     }
 
     // MARK: - Public API - Cache Space Management
@@ -461,6 +512,14 @@ public class WebResourceCacheManager {
         var totalSize: Int64 = 0
         var fileCount = 0
 
+        // ⚠️ 重要：避免在主线程进行大量文件枚举
+        // 如果是主线程调用，且文件很多，可能会导致 UI 卡顿
+        if Thread.isMainThread {
+            #if DEBUG
+            print("⚠️ [WebResourceCacheManager] getCacheStats called on Main Thread. This may cause UI lag.")
+            #endif
+        }
+
         if let enumerator = fileManager.enumerator(at: cacheDirectory, includingPropertiesForKeys: [.fileSizeKey]) {
             for case let fileURL as URL in enumerator {
                 if let resourceValues = try? fileURL.resourceValues(forKeys: [.fileSizeKey]),
@@ -594,25 +653,29 @@ public class WebResourceCacheManager {
 
     /// 清理所有缓存
     public func clearAll() {
-        mapLock.lock()
-        let cacheIDs = Array(urlToCacheIDMap.values)
-        urlToCacheIDMap.removeAll()
-        cacheAccessTimes.removeAll()
-        mapLock.unlock()
+        queue.async { [weak self] in
+            guard let self = self else { return }
 
-        for cacheID in cacheIDs {
-            let cacheDirectory = cacheBaseDirectory.appendingPathComponent("cache-\(cacheID)")
-            try? fileManager.removeItem(at: cacheDirectory)
+            self.mapLock.lock()
+            let cacheIDs = Array(self.urlToCacheIDMap.values)
+            self.urlToCacheIDMap.removeAll()
+            self.cacheAccessTimes.removeAll()
+            self.mapLock.unlock()
+
+            for cacheID in cacheIDs {
+                let cacheDirectory = self.cacheBaseDirectory.appendingPathComponent("cache-\(cacheID)")
+                try? self.fileManager.removeItem(at: cacheDirectory)
+            }
+
+            self.sizeLock.lock()
+            self.totalCacheSize = 0
+            self.sizeLock.unlock()
+
+            self.saveCacheIndex()
+            self.updateTotalCacheSize()
+
+            print("🗑️ [WebResourceCacheManager] Cleared all cache spaces (async)")
         }
-
-        sizeLock.lock()
-        totalCacheSize = 0
-        sizeLock.unlock()
-
-        saveCacheIndex()
-        updateTotalCacheSize()
-
-        print("🗑️ [WebResourceCacheManager] Cleared all cache spaces")
     }
 
     /// 清理未使用的资源
@@ -655,7 +718,9 @@ public class WebResourceCacheManager {
         do {
             let data = try Data(contentsOf: cacheIndexFile)
             if let dict = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: String] {
+                mapLock.lock()
                 urlToCacheIDMap = dict
+                mapLock.unlock()
                 print("✅ [WebResourceCacheManager] Loaded cache index: \(dict.count) entries")
             }
         } catch {
@@ -668,7 +733,11 @@ public class WebResourceCacheManager {
             guard let self = self else { return }
 
             do {
-                let data = try PropertyListSerialization.data(fromPropertyList: self.urlToCacheIDMap, format: .xml, options: 0)
+                self.mapLock.lock()
+                let mapCopy = self.urlToCacheIDMap
+                self.mapLock.unlock()
+                
+                let data = try PropertyListSerialization.data(fromPropertyList: mapCopy, format: .xml, options: 0)
                 try data.write(to: self.cacheIndexFile)
             } catch {
                 print("❌ [WebResourceCacheManager] Failed to save cache index: \(error.localizedDescription)")

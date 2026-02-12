@@ -322,7 +322,7 @@ public class PersistentManifestLoader: NSObject {
                 // 🔥 发送通知用于 UI 更新
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
-                        name: NSNotification.Name("com.webbridgekit.manifest-cache.hit"),
+                        name: .manifestCacheHit,
                         object: nil,
                         userInfo: ["source": "MANIFEST"]
                     )
@@ -766,9 +766,12 @@ public class PersistentManifestLoader: NSObject {
 
     /// 清除所有缓存
     public func clearAllCache() {
-        try? FileManager.default.removeItem(at: cacheDirectory)
-        createCacheDirectoryIfNeeded()
-        print("🗑️ [PersistentManifestLoader] Cleared all cache")
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self = self else { return }
+            try? FileManager.default.removeItem(at: self.cacheDirectory)
+            self.createCacheDirectoryIfNeeded()
+            print("🗑️ [PersistentManifestLoader] Cleared all cache (async)")
+        }
     }
 
     /// 获取缓存大小

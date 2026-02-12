@@ -85,6 +85,21 @@ class APIKeyCell: UITableViewCell {
         return button
     }()
 
+    private let groupBadge: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.1)
+        view.layer.cornerRadius = 4
+        view.isHidden = true
+        return view
+    }()
+
+    private let groupLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+        label.textColor = UIColor.systemPurple
+        return label
+    }()
+
     // MARK: - Properties
 
     private var currentKey: APIKey?
@@ -112,10 +127,12 @@ class APIKeyCell: UITableViewCell {
         containerView.addSubview(typeLabel)
         containerView.addSubview(keyLabel)
         containerView.addSubview(dateLabel)
+        containerView.addSubview(groupBadge)
         containerView.addSubview(statusBadge)
         containerView.addSubview(copyButton)
 
         statusBadge.addSubview(statusLabel)
+        groupBadge.addSubview(groupLabel)
 
         containerView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(8)
@@ -142,10 +159,21 @@ class APIKeyCell: UITableViewCell {
             make.right.equalTo(copyButton.snp.left).offset(-8)
         }
 
+        groupBadge.snp.makeConstraints { make in
+            make.centerY.equalTo(dateLabel)
+            make.left.equalTo(iconImageView.snp.right).offset(12)
+            make.height.equalTo(16)
+        }
+
+        groupLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4))
+        }
+
         dateLabel.snp.makeConstraints { make in
             make.top.equalTo(keyLabel.snp.bottom).offset(4)
-            make.left.equalTo(iconImageView.snp.right).offset(12)
+            make.left.equalTo(groupBadge.isHidden ? iconImageView.snp.right : groupBadge.snp.right).offset(groupBadge.isHidden ? 12 : 6)
             make.right.equalTo(copyButton.snp.left).offset(-8)
+            make.bottom.equalToSuperview().offset(-12)
         }
 
         copyButton.snp.makeConstraints { make in
@@ -192,6 +220,26 @@ class APIKeyCell: UITableViewCell {
             typeLabel.text = "临时密钥"
             iconImageView.tintColor = UIColor.systemBlue
             iconImageView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        }
+
+        // 绑定群组
+        if let groupId = key.boundGroupId, !groupId.isEmpty {
+            groupBadge.isHidden = false
+            groupLabel.text = "群组: \(groupId)"
+        } else {
+            groupBadge.isHidden = true
+        }
+
+        // 更新日期标签约束
+        dateLabel.snp.remakeConstraints { make in
+            make.top.equalTo(keyLabel.snp.bottom).offset(4)
+            if !groupBadge.isHidden {
+                make.left.equalTo(groupBadge.snp.right).offset(6)
+            } else {
+                make.left.equalTo(iconImageView.snp.right).offset(12)
+            }
+            make.right.equalTo(copyButton.snp.left).offset(-8)
+            make.bottom.equalToSuperview().offset(-12)
         }
 
         // 密钥值

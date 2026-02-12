@@ -77,7 +77,14 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
             case .failure(let error):
                 NSLog("   ❌ Failed: %@, error: %@", relativePath, error.localizedDescription)
-                urlSchemeTask.didFailWithError(error)
+                
+                // 🔥 优化：如果是 HTML 页面或主请求失败，显示错误提示页，而不是白屏
+                let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
+                if isPageRequest {
+                    self.deliverErrorPage(to: urlSchemeTask, url: url, error: error)
+                } else {
+                    urlSchemeTask.didFailWithError(error)
+                }
                 self.removeTask(forID: taskID)
             }
         }
@@ -99,8 +106,16 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         let resourcePath = cacheDir.appendingPathComponent(relativePath)
 
         guard FileManager.default.fileExists(atPath: resourcePath.path) else {
+            let error = ManifestCacheError.resourceNotFound(relativePath)
             NSLog("❌ [SchemeHandler] Resource not found in cache: %@", relativePath)
-            urlSchemeTask.didFailWithError(ManifestCacheError.resourceNotFound(relativePath))
+            
+            // 🔥 优化：如果是 HTML 页面失败，显示错误提示页
+            let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
+            if isPageRequest {
+                self.deliverErrorPage(to: urlSchemeTask, url: url, error: error)
+            } else {
+                urlSchemeTask.didFailWithError(error)
+            }
             return
         }
 
@@ -226,7 +241,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         
         // 发送通知用于 UI 更新
         NotificationCenter.default.post(
-            name: NSNotification.Name("wb-resource-delivered"),
+            name: .resourceDelivered,
             object: nil,
             userInfo: ["path": resource.relativePath]
         )
@@ -244,6 +259,90 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         taskLock.lock()
         defer { taskLock.unlock() }
         activeTasks.removeValue(forKey: taskID)
+    }
+
+    // MARK: - Error Feedback
+
+    private func deliverErrorPage(to urlSchemeTask: WKURLSchemeTask, url: URL, error: Error) {
+        let errorHTML = generateErrorHTML(url: url, error: error)
+        guard let data = errorHTML.data(using: .utf8) else {
+            urlSchemeTask.didFailWithError(error)
+            return
+        }
+
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: 404, // 使用 404 表示资源缺失
+            httpVersion: "HTTP/1.1",
+            headerFields: [
+                "Content-Type": "text/html",
+                "Cache-Control": "no-cache",
+                "Access-Control-Allow-Origin": "*"
+            ]
+        )!
+
+        urlSchemeTask.didReceive(response)
+        urlSchemeTask.didReceive(data)
+        urlSchemeTask.didFinish()
+        
+        NSLog("⚠️ [SchemeHandler] Delivered error page for: %@", url.absoluteString)
+    }
+
+    private func generateErrorHTML(url: URL, error: Error) -> String {
+        let urlString = url.absoluteString
+        let errorMessage = error.localizedDescription
+        
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WebBridge 资源加载失败</title>
+            <style>
+                body { font-family: -apple-system, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #2d3748; line-height: 1.5; }
+                .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 6px solid #e53e3e; }
+                h1 { color: #c53030; font-size: 22px; margin-top: 0; display: flex; align-items: center; }
+                .icon { font-size: 28px; margin-right: 12px; }
+                .info-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all; }
+                .label { font-weight: bold; color: #742a2a; display: block; margin-bottom: 5px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+                code { background: #edf2f7; padding: 3px 6px; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; color: #1a202c; }
+                .footer { margin-top: 30px; font-size: 14px; color: #4a5568; border-top: 1px solid #edf2f7; padding-top: 20px; }
+                ul { padding-left: 20px; margin-top: 10px; }
+                li { margin-bottom: 8px; }
+                .btn { display: inline-block; background: #4a5568; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; margin-top: 15px; font-size: 14px; }
+                .btn:hover { background: #2d3748; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1><span class="icon">🚫</span>WebBridge 资源加载失败</h1>
+                <p>在处理自定义协议请求时遇到了错误，无法加载目标资源。</p>
+                
+                <div class="info-box">
+                    <span class="label">请求地址 (Request URL):</span>
+                    <code>\(urlString)</code>
+                </div>
+                
+                <div class="info-box">
+                    <span class="label">错误原因 (Error):</span>
+                    <code>\(errorMessage)</code>
+                </div>
+                
+                <div class="footer">
+                    <span class="label">排查建议:</span>
+                    <ul>
+                        <li>检查 <code>manifest.json</code> 映射表是否包含该相对路径。</li>
+                        <li>如果是 <code>wb-resource://</code>，请确认持久化缓存目录中是否存在该文件。</li>
+                        <li>确认本地网络连接是否正常（如果是懒加载模式且本地无缓存）。</li>
+                        <li>尝试在管理页面清理缓存并重新加载。</li>
+                    </ul>
+                    <a href="javascript:location.reload()" class="btn">重试加载 (Reload)</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
     }
 
     // MARK: - URL Parsing

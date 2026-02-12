@@ -101,9 +101,6 @@ public class LazyManifestLoader: NSObject {
     private let manifestCacheManager: ManifestCacheManager
     public let scheme = "custom"
     private let manifestFileName = "manifest.json"
-    
-    /// 通知名称：资源加载日志
-    public static let resourceLogNotification = NSNotification.Name("WebBridgeDebugLog")
 
     // MARK: - Singleton
 
@@ -183,8 +180,12 @@ public class LazyManifestLoader: NSObject {
             } catch {
                 shared.postLog("⚠️ [智能加载] 未找到 manifest.json，回退到普通 WebView 加载")
                 DispatchQueue.main.async {
-                    let request = URLRequest(url: url)
-                    webView.load(request)
+                    if url.isFileURL {
+                        webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+                    } else {
+                        let request = URLRequest(url: url)
+                        webView.load(request)
+                    }
                     completion(.success(()))
                 }
             }
@@ -264,7 +265,7 @@ public class LazyManifestLoader: NSObject {
                 // 🔥 发送通知用于 UI 更新
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
-                        name: NSNotification.Name("com.webbridgekit.manifest-cache.hit"),
+                        name: .manifestCacheHit,
                         object: nil,
                         userInfo: ["source": "INTERCEPT"]
                     )
@@ -329,7 +330,7 @@ public class LazyManifestLoader: NSObject {
         NSLog("🌐 [LazyLoader] %@", message)
         DispatchQueue.main.async {
             NotificationCenter.default.post(
-                name: LazyManifestLoader.resourceLogNotification,
+                name: .resourceLogNotification,
                 object: nil,
                 userInfo: ["message": message]
             )
@@ -393,7 +394,8 @@ public class LazyManifestLoader: NSObject {
                 self.manifestCacheManager.savePage(pageKey: cacheID, html: html, manifest: self.convertToManifest(manifest))
 
                 // 2. 立即加载 HTML
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     self.manifestCacheManager.loadHTML(html, into: webView)
                     if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: self.scheme) as? ManifestURLSchemeHandler {
                         schemeHandler.setPageKey(cacheID, for: webView)
@@ -450,7 +452,7 @@ public class LazyManifestLoader: NSObject {
                 // ✅ 资源下载完成后通知 UI 刷新，以便更新缓存大小显示
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
-                        name: NSNotification.Name("ManifestCacheDidUpdate"),
+                        name: .manifestCacheDidUpdate,
                         object: nil
                     )
                 }

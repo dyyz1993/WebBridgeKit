@@ -305,7 +305,10 @@ private class WebTabViewController: WebBrowserViewController {
             loadURL = url
         } else {
             // 默认 URL - 使用页面名称
-            loadURL = URL(string: "http://localhost:8080/\(pageName).html")!
+            guard let defaultURL = URL(string: "http://localhost:8080/\(pageName).html") else {
+                fatalError("Failed to create default URL for page: \(pageName)")
+            }
+            loadURL = defaultURL
         }
 
         super.init(viewModel: WebBrowserViewModel(url: loadURL))

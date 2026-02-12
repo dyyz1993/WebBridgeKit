@@ -12,15 +12,16 @@ import os.log
 
 // Framework imports
 
-/// 浏览器管理器 - 单例模式
+/// 浏览器管理器 - 支持依赖注入
 /// 负责管理浏览器页面的打开、关闭和历史记录
-public class WebBrowserManager {
+public class WebBrowserManager: WebBrowserManaging {
 
     // MARK: - Singleton
 
     public static let shared = WebBrowserManager()
 
-    private init() {}
+    // 允许创建测试实例
+    public init() {}
 
     // MARK: - Navigation History
 
@@ -47,35 +48,51 @@ public class WebBrowserManager {
 
     // MARK: - Open Browser
 
-    /// 打开浏览器（统一入口）
+    /// 打开浏览器（统一入口，带错误处理）
     /// - Parameters:
     ///   - url: 要加载的 URL
     ///   - params: 浏览器配置参数
+    ///   - forceRefresh: 是否强制刷新（绕过缓存）
+    ///   - animated: 是否使用动画
     ///   - sourceViewController: 来源 ViewController（可选）
+    ///   - completion: 完成回调，返回 Result
     public func openBrowser(
         url: URL,
         params: WebBrowserParams? = nil,
-        from sourceViewController: UIViewController? = nil
+        forceRefresh: Bool = false,
+        from sourceViewController: UIViewController? = nil,
+        animated: Bool = true,
+        completion: ((Result<Void, any Error>) -> Void)? = nil
     ) {
         os_log("=== WebBrowserManager.openBrowser ===", log: OSLog.default, type: .info)
         os_log("URL: %@", log: OSLog.default, type: .info, url.absoluteString)
+        os_log("forceRefresh: %{public}@, animated: %{public}@", log: OSLog.default, type: .info, String(forceRefresh), String(animated))
 
         // Ensure all UI operations happen on main thread
         DispatchQueue.main.async { [weak self] in
             guard let self = self else {
                 os_log("❌ WebBrowserManager 已被释放", log: OSLog.default, type: .error)
+                completion?(.failure(WebBridgeError.browserOpenFailed(reason: "WebBrowserManager deallocated")))
                 return
             }
-            let effectiveParams = params ?? WebBrowserParams.from(url: url)
-            os_log("DisplayMode: %ld", log: OSLog.default, type: .info, effectiveParams.displayMode.rawValue)
 
-            switch effectiveParams.displayMode {
-            case .modal:
-                self.openModalBrowser(url: url, params: effectiveParams, from: sourceViewController)
-            case .immersive:
-                self.openImmersiveBrowser(url: url, params: effectiveParams, from: sourceViewController)
-            case .normal:
-                self.openNormalBrowser(url: url, params: effectiveParams, from: sourceViewController)
+            do {
+                let effectiveParams = params ?? WebBrowserParams.from(url: url)
+                os_log("DisplayMode: %ld", log: OSLog.default, type: .info, effectiveParams.displayMode.rawValue)
+
+                switch effectiveParams.displayMode {
+                case .modal:
+                    self.openModalBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
+                case .immersive:
+                    self.openImmersiveBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
+                case .normal:
+                    self.openNormalBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
+                }
+
+                completion?(.success(()))
+            } catch {
+                os_log("❌ 打开浏览器失败: %@", log: OSLog.default, type: .error, error.localizedDescription)
+                completion?(.failure(WebBridgeError.browserOpenFailed(reason: error.localizedDescription)))
             }
         }
     }
@@ -100,7 +117,13 @@ public class WebBrowserManager {
 
     // MARK: - Private Open Methods
 
-    private func openNormalBrowser(url: URL, params: WebBrowserParams, from sourceViewController: UIViewController?) {
+    private func openNormalBrowser(
+        url: URL,
+        params: WebBrowserParams,
+        from sourceViewController: UIViewController?,
+        forceRefresh: Bool = false,
+        animated: Bool = true
+    ) {
         os_log("=== openNormalBrowser ===", log: OSLog.default, type: .info)
 
         guard let navController = getNavigationController(from: sourceViewController) else {
@@ -114,57 +137,99 @@ public class WebBrowserManager {
             return
         }
 
-        os_log("✅ 找到 NavigationController", log: OSLog.default, type: .info)
-        let webVC = createWebViewController(for: url, params: params)
-        addToNavigationStack(webVC, url: url, params: params)
+        do {
+            os_log("✅ 找到 NavigationController", log: OSLog.default, type: .info)
+            let webVC = createWebViewController(for: url, params: params)
+            addToNavigationStack(webVC, url: url, params: params)
 
-        navController.pushViewController(webVC, animated: true)
-        currentBrowser = webVC
+            navController.pushViewController(webVC, animated: animated)
+            currentBrowser = webVC
 
-        os_log("✅ 已推送浏览器到导航栈", log: OSLog.default, type: .info)
-        print("✅ [WebBrowserManager] Pushed normal browser to navigation stack")
+            // 🔥 统一调用 loadURLWithCache
+            if let browserVC = webVC as? WebBrowserViewController {
+                browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
+            }
+
+            os_log("✅ 已推送浏览器到导航栈", log: OSLog.default, type: .info)
+            print("✅ [WebBrowserManager] Pushed normal browser to navigation stack")
+        } catch {
+            os_log("❌ 打开普通浏览器失败: %@", log: OSLog.default, type: .error, error.localizedDescription)
+            print("❌ [WebBrowserManager] Failed to open normal browser: \(error.localizedDescription)")
+        }
     }
 
-    private func openImmersiveBrowser(url: URL, params: WebBrowserParams, from sourceViewController: UIViewController?) {
+    private func openImmersiveBrowser(
+        url: URL,
+        params: WebBrowserParams,
+        from sourceViewController: UIViewController?,
+        forceRefresh: Bool = false,
+        animated: Bool = true
+    ) {
+        os_log("=== openImmersiveBrowser ===", log: OSLog.default, type: .info)
+
         guard let navController = getNavigationController(from: sourceViewController) else {
+            os_log("❌ 找不到 NavigationController", log: OSLog.default, type: .error)
             print("❌ [WebBrowserManager] No navigation controller found")
             return
         }
 
+        os_log("✅ 找到 NavigationController", log: OSLog.default, type: .info)
         let webVC = createWebViewController(for: url, params: params)
         addToNavigationStack(webVC, url: url, params: params)
 
-        navController.pushViewController(webVC, animated: true)
+        navController.pushViewController(webVC, animated: animated)
         currentBrowser = webVC
 
+        // 🔥 统一调用 loadURLWithCache
+        if let browserVC = webVC as? WebBrowserViewController {
+            browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
+        }
+
+        os_log("✅ 已推送沉浸式浏览器到导航栈", log: OSLog.default, type: .info)
         print("✅ [WebBrowserManager] Pushed immersive browser to navigation stack")
     }
 
-    private func openModalBrowser(url: URL, params: WebBrowserParams, from sourceViewController: UIViewController?) {
+    private func openModalBrowser(
+        url: URL,
+        params: WebBrowserParams,
+        from sourceViewController: UIViewController?,
+        forceRefresh: Bool = false,
+        animated: Bool = true
+    ) {
         guard let presentingVC = sourceViewController ?? getTopViewController() else {
             print("❌ [WebBrowserManager] No view controller to present modal")
             return
         }
 
-        // 获取模态配置
-        let config = params.toModalConfig()
+        // Note: Modal mode uses ModalWebViewController which wraps WebViewController.
+        // Unlike WebBrowserViewController (used in normal/immersive modes), WebViewController
+        // does not support Manifest caching via loadURLWithCache().
+        // Modal mode is designed for simple popups/overlays, not full-featured browsing.
+        // The forceRefresh parameter is accepted for API consistency but not used in Modal mode.
 
-        // 创建 ModalWebViewController
-        let modalVC: ModalWebViewController
-        if isLocalURL(url) {
-            let pageName = getPageName(from: url)
-            modalVC = ModalWebViewController(htmlName: pageName, config: config)
-        } else {
-            modalVC = ModalWebViewController(url: url, config: config)
+        do {
+            // 获取模态配置
+            let config = params.toModalConfig()
+
+            // 创建 ModalWebViewController
+            let modalVC: ModalWebViewController
+            if isLocalURL(url) {
+                let pageName = getPageName(from: url)
+                modalVC = ModalWebViewController(htmlName: pageName, config: config)
+            } else {
+                modalVC = ModalWebViewController(url: url, config: config)
+            }
+
+            modalVC.modalPresentationStyle = .overFullScreen
+            modalVC.modalTransitionStyle = .crossDissolve
+
+            currentModal = modalVC
+            presentingVC.present(modalVC, animated: animated)
+
+            print("✅ [WebBrowserManager] Presented modal browser (animated: \(animated))")
+        } catch {
+            print("❌ [WebBrowserManager] Failed to present modal browser: \(error.localizedDescription)")
         }
-
-        modalVC.modalPresentationStyle = .overFullScreen
-        modalVC.modalTransitionStyle = .crossDissolve
-
-        currentModal = modalVC
-        presentingVC.present(modalVC, animated: true)
-
-        print("✅ [WebBrowserManager] Presented modal browser")
     }
 
     // MARK: - Close Browser
@@ -471,51 +536,6 @@ public class WebBrowserManager {
         return topController
     }
 
-    // MARK: - Cache Support
-
-    /// 打开支持 Manifest 缓存的浏览器
-    /// - Parameters:
-    ///   - url: 要加载的 URL
-    ///   - params: 浏览器配置参数（可选）
-    ///   - forceRefresh: 是否强制刷新（绕过缓存）
-    ///   - sourceViewController: 来源 ViewController
-    /// - Note: 此方法会自动检测 manifest.json，根据 persistent 字段选择懒加载或持久化模式
-    public func openBrowserWithCache(
-        url: URL,
-        params: WebBrowserParams? = nil,
-        forceRefresh: Bool = false,
-        from sourceViewController: UIViewController? = nil,
-        animated: Bool = true
-    ) {
-        print("🌐 [WebBrowserManager] Opening browser with cache support: \(url.absoluteString), animated: \(animated)")
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-
-            let effectiveParams = params ?? WebBrowserParams.from(url: url)
-
-            // 获取 NavigationController
-            guard let navController = self.getNavigationController(from: sourceViewController) else {
-                print("❌ [WebBrowserManager] No navigation controller found")
-                return
-            }
-
-            // 创建 WebViewController
-            let webVC = self.createWebViewController(for: url, params: effectiveParams)
-            self.addToNavigationStack(webVC, url: url, params: effectiveParams)
-
-            // 先推入导航栈
-            navController.pushViewController(webVC, animated: animated)
-            self.currentBrowser = webVC
-
-            // 使用 WebBrowserViewController 的 loadURLWithCache 方法
-            if let browserVC = webVC as? WebBrowserViewController {
-                browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
-            } else {
-                print("❌ [WebBrowserManager] Failed to cast to WebBrowserViewController")
-            }
-        }
-    }
 }
 
 // MARK: - WebViewController Extensions

@@ -59,6 +59,9 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
     private var currentBaseURL: String?
     private var currentAPIEndpoint: String?
     private var isCustomServer: Bool = false
+    
+    private var baseURLValidationError: String?
+    private var apiEndpointValidationError: String?
 
     // Relays for cell callbacks
     private var serverTypeChange: PublishRelay<String>?
@@ -98,19 +101,14 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
         let baseURLChange = PublishRelay<String?>()
         let apiEndpointChange = PublishRelay<String?>()
 
-        // 暂存输入驱动
-        let serverTypeChangeDriver = serverTypeChange.asDriver(onErrorJustReturn: "default")
-        let baseURLChangeDriver = baseURLChange.asDriver(onErrorJustReturn: nil)
-        let apiEndpointChangeDriver = apiEndpointChange.asDriver(onErrorJustReturn: nil)
-
         // 创建输入
         let input = ServerConfigViewModel.Input(
-            serverTypeChange: serverTypeChangeDriver,
-            baseURLChange: baseURLChangeDriver,
-            apiEndpointChange: apiEndpointChangeDriver,
-            testConnection: tableView.rx.modelSelected(ButtonCell.ButtonType.self).asDriver().filter { $0 == .test }.map { _ in },
-            saveConfig: tableView.rx.modelSelected(ButtonCell.ButtonType.self).asDriver().filter { $0 == .save }.map { _ in },
-            resetConfig: tableView.rx.modelSelected(ButtonCell.ButtonType.self).asDriver().filter { $0 == .reset }.map { _ in }
+            serverTypeChange: serverTypeChange.asDriver(onErrorJustReturn: "default"),
+            baseURLChange: baseURLChange.asDriver(onErrorJustReturn: nil),
+            apiEndpointChange: apiEndpointChange.asDriver(onErrorJustReturn: nil),
+            testConnection: Driver.never(), // 会在 handleButtonAction 中触发
+            saveConfig: Driver.never(),     // 会在 handleButtonAction 中触发
+            resetConfig: Driver.never()     // 会在 handleButtonAction 中触发
         )
 
         let output = viewModel.transform(input: input)
@@ -130,9 +128,31 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
 
         // 监听测试结果
         output.testResult
-            .drive(onNext: { [weak self] (result: Bool?) in
-                guard let result = result else { return }
-                self?.showTestResult(result)
+            .drive(onNext: { [weak self] result in
+                guard let (success, error) = result else { return }
+                self?.showTestResult(success: success, error: error)
+            })
+            .disposed(by: rx)
+
+        // 监听 BaseURL 验证结果
+        output.baseURLValidation
+            .drive(onNext: { [weak self] error in
+                self?.baseURLValidationError = error
+                // 只在自定义服务器模式下刷新
+                if self?.isCustomServer == true {
+                    self?.tableView.reloadRows(at: [IndexPath(row: 0, section: Section.serverAddress.rawValue)], with: .none)
+                }
+            })
+            .disposed(by: rx)
+            
+        // 监听 APIEndpoint 验证结果
+        output.apiEndpointValidation
+            .drive(onNext: { [weak self] error in
+                self?.apiEndpointValidationError = error
+                // 只在自定义服务器模式下刷新
+                if self?.isCustomServer == true {
+                    self?.tableView.reloadRows(at: [IndexPath(row: 0, section: Section.apiEndpoint.rawValue)], with: .none)
+                }
             })
             .disposed(by: rx)
 
@@ -150,6 +170,7 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
             .drive(onNext: { [weak self] (success: Bool) in
                 if success {
                     self?.showResetSuccess()
+                    self?.tableView.reloadData()
                 }
             })
             .disposed(by: rx)
@@ -158,6 +179,7 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
         output.serverType
             .drive(onNext: { [weak self] type in
                 self?.currentServerType = type
+                self?.tableView.reloadData()
             })
             .disposed(by: rx)
 
@@ -165,8 +187,27 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
         output.isCustomServer
             .drive(onNext: { [weak self] isCustom in
                 self?.isCustomServer = isCustom
+                self?.tableView.reloadData()
             })
             .disposed(by: rx)
+            
+        // 监听 BaseURL 和 APIEndpoint 变化
+        output.baseURL
+            .drive(onNext: { [weak self] url in
+                self?.currentBaseURL = url
+            })
+            .disposed(by: rx)
+            
+        output.apiEndpoint
+            .drive(onNext: { [weak self] endpoint in
+                self?.currentAPIEndpoint = endpoint
+            })
+            .disposed(by: rx)
+            
+        // 保存 relays
+        self.serverTypeChange = serverTypeChange
+        self.baseURLChange = baseURLChange
+        self.apiEndpointChange = apiEndpointChange
     }
 
     // MARK: - Bind Table View
@@ -175,41 +216,16 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
                                serverTypeChange: PublishRelay<String>,
                                baseURLChange: PublishRelay<String?>,
                                apiEndpointChange: PublishRelay<String?>) {
-
-        // 绑定表格数据
-        Observable.zip(
-            output.serverType.asObservable(),
-            output.baseURL.asObservable(),
-            output.apiEndpoint.asObservable(),
-            output.isCustomServer.asObservable()
-        )
-        .map { serverType, baseURL, apiEndpoint, isCustom in
-            return (serverType, baseURL, apiEndpoint, isCustom)
-        }
-        .subscribe(onNext: { [weak self] (serverType, baseURL, apiEndpoint, isCustom) in
-            self?.currentServerType = serverType
-            self?.currentBaseURL = baseURL
-            self?.currentAPIEndpoint = apiEndpoint
-            self?.isCustomServer = isCustom
-            self?.tableView.reloadData()
-        })
-        .disposed(by: rx)
-
         // 使用传统的 delegate/datasource 方式
         tableView.dataSource = self
         tableView.delegate = self
-
-        // Store relays for use in cellForRowAt
-        self.serverTypeChange = serverTypeChange
-        self.baseURLChange = baseURLChange
-        self.apiEndpointChange = apiEndpointChange
     }
 
     // MARK: - Alert Methods
 
-    private func showTestResult(_ success: Bool) {
+    private func showTestResult(success: Bool, error: String?) {
         let title = success ? "连接成功" : "连接失败"
-        let message = success ? "服务器连接测试通过，配置有效。" : "无法连接到服务器，请检查配置是否正确。"
+        let message = success ? "服务器连接测试通过，配置有效。" : (error ?? "无法连接到服务器，请检查配置是否正确。")
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "确定", style: .default))
         present(alert, animated: true)
@@ -230,7 +246,10 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
     private func showResetConfirmation() {
         let alert = UIAlertController(title: "确认重置", message: "确定要重置为默认服务器配置吗？当前自定义配置将丢失。", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "重置", style: .destructive))
+        alert.addAction(UIAlertAction(title: "重置", style: .destructive) { [weak self] _ in
+            // 发送重置动作
+            self?.viewModel.resetConfig()
+        })
         present(alert, animated: true)
     }
 }
@@ -276,7 +295,8 @@ extension ServerConfigViewController: UITableViewDataSource {
                 title: "Base URL",
                 placeholder: "https://api.example.com",
                 text: currentBaseURL,
-                enabled: isCustomServer
+                enabled: isCustomServer,
+                error: isCustomServer ? baseURLValidationError : nil
             )
             cell.onTextChange = { [weak self] text in
                 self?.baseURLChange?.accept(text)
@@ -289,7 +309,8 @@ extension ServerConfigViewController: UITableViewDataSource {
                 title: "API Endpoint",
                 placeholder: "/v1",
                 text: currentAPIEndpoint,
-                enabled: isCustomServer
+                enabled: isCustomServer,
+                error: isCustomServer ? apiEndpointValidationError : nil
             )
             cell.onTextChange = { [weak self] text in
                 self?.apiEndpointChange?.accept(text)
@@ -300,6 +321,7 @@ extension ServerConfigViewController: UITableViewDataSource {
             let cell = tableView.dequeueReusableCell(withIdentifier: ButtonCell.identifier, for: indexPath) as! ButtonCell
             let buttonType: ButtonCell.ButtonType
             let title: String
+            var enabled = true
 
             switch indexPath.row {
             case 0:
@@ -308,15 +330,17 @@ extension ServerConfigViewController: UITableViewDataSource {
             case 1:
                 buttonType = .save
                 title = "保存配置"
+                enabled = isCustomServer || currentServerType == "default"
             case 2:
                 buttonType = .reset
                 title = "重置为默认"
+                enabled = isCustomServer
             default:
                 buttonType = .test
                 title = ""
             }
 
-            cell.configure(title: title, buttonType: buttonType, enabled: true)
+            cell.configure(title: title, buttonType: buttonType, enabled: enabled)
             cell.onButtonTap = { [weak self] in
                 self?.handleButtonAction(buttonType)
             }
@@ -361,15 +385,12 @@ extension ServerConfigViewController: UITableViewDelegate {
 extension ServerConfigViewController {
 
     private func handleButtonAction(_ type: ButtonCell.ButtonType) {
+        view.endEditing(true)
         switch type {
         case .test:
-            // 测试连接功能已通过 RxSwift 绑定实现
-            showTestResult(true) // 临时测试
-
+            viewModel.testConnection()
         case .save:
-            // 保存配置功能已通过 RxSwift 绑定实现
-            showSaveSuccess() // 临时测试
-
+            viewModel.saveConfig()
         case .reset:
             showResetConfirmation()
         }

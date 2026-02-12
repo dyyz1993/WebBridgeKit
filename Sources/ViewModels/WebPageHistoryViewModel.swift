@@ -23,6 +23,7 @@ enum ViewMode {
 typealias WebPageHistorySection = AnimatableSectionModel<String, WebPageHistory>
 
 /// 历史记录ViewModel
+@MainActor
 class WebPageHistoryViewModel: ViewModel {
     let disposeBag = DisposeBag()
 
@@ -96,8 +97,9 @@ class WebPageHistoryViewModel: ViewModel {
         // 删除历史记录
         input.itemDelete
             .drive(onNext: { [weak self] history in
-                WebPageHistoryManager.shared.deleteHistory(id: history.id)
-                self?.loadHistories()
+                Task { @MainActor [weak self] in
+                    await self?.deleteHistory(history)
+                }
             })
             .disposed(by: disposeBag)
 
@@ -145,64 +147,94 @@ class WebPageHistoryViewModel: ViewModel {
     }
 
     func loadHistories() {
-        // 确保在主线程执行
-        if Thread.isMainThread {
-            performLoadHistories()
-        } else {
-            DispatchQueue.main.async { [weak self] in
-                self?.performLoadHistories()
-            }
+        Task { @MainActor [weak self] in
+            await self?.performLoadHistories()
         }
     }
 
-    private func performLoadHistories() {
-        let histories = WebPageHistoryManager.shared.getAllHistories()
+    private func performLoadHistories() async {
+        do {
+            let histories = try await WebPageHistoryManager.shared.getAllHistories()
 
-        // 按日期分组
-        let grouped = Dictionary(grouping: histories) { history in
-            formatSectionDate(history.lastVisitDate)
+            // 按日期分组
+            let grouped = Dictionary(grouping: histories) { history in
+                formatSectionDate(history.lastVisitDate)
+            }
+
+            let sortedKeys = grouped.keys.sorted(by: >)
+
+            let sections: [WebPageHistorySection] = sortedKeys.map { key in
+                let items = grouped[key]?.sorted(by: { $0.lastVisitDate > $1.lastVisitDate }) ?? []
+                return WebPageHistorySection(model: key, items: items)
+            }
+
+            historyRelay.accept(sections)
+        } catch {
+            WebBridgeLogger.shared.log(.error, "Failed to load histories: \(error.localizedDescription)")
+            cacheErrorRelay.accept(NSLocalizedString("Failed to load history", comment: ""))
         }
-
-        let sortedKeys = grouped.keys.sorted(by: >)
-
-        let sections: [WebPageHistorySection] = sortedKeys.map { key in
-            let items = grouped[key]?.sorted(by: { $0.lastVisitDate > $1.lastVisitDate }) ?? []
-            return WebPageHistorySection(model: key, items: items)
-        }
-
-        historyRelay.accept(sections)
     }
 
     private func filterHistories(keyword: String) {
+        Task { @MainActor [weak self] in
+            await self?.performFilterHistories(keyword: keyword)
+        }
+    }
+
+    private func performFilterHistories(keyword: String) async {
         if keyword.isEmpty {
-            loadHistories()
+            await performLoadHistories()
             return
         }
 
-        let filtered = WebPageHistoryManager.shared.searchHistories(keyword: keyword)
+        do {
+            let filtered = try await WebPageHistoryManager.shared.searchHistories(keyword: keyword)
 
-        let grouped = Dictionary(grouping: filtered) { history in
-            formatSectionDate(history.lastVisitDate)
+            let grouped = Dictionary(grouping: filtered) { history in
+                formatSectionDate(history.lastVisitDate)
+            }
+
+            let sortedKeys = grouped.keys.sorted(by: >)
+
+            let sections: [WebPageHistorySection] = sortedKeys.map { key in
+                let items = grouped[key] ?? []
+                return WebPageHistorySection(model: key, items: items)
+            }
+
+            historyRelay.accept(sections)
+        } catch {
+            WebBridgeLogger.shared.log(.error, "Failed to filter histories: \(error.localizedDescription)")
         }
-
-        let sortedKeys = grouped.keys.sorted(by: >)
-
-        let sections: [WebPageHistorySection] = sortedKeys.map { key in
-            let items = grouped[key] ?? []
-            return WebPageHistorySection(model: key, items: items)
-        }
-
-        historyRelay.accept(sections)
     }
 
     private func openHistory(_ history: WebPageHistory) {
         guard let url = URL(string: history.url) else { return }
 
         // 更新访问次数
-        WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: history.title, favicon: history.favicon)
+        Task {
+            do {
+                try await WebPageHistoryManager.shared.addOrUpdateHistory(
+                    url: url,
+                    title: history.title,
+                    favicon: history.favicon
+                )
+            } catch {
+                WebBridgeLogger.shared.log(.error, "Failed to update history: \(error.localizedDescription)")
+            }
+        }
 
         // 触发打开URL
         openURLRelay.accept(url)
+    }
+
+    private func deleteHistory(_ history: WebPageHistory) async {
+        do {
+            try await WebPageHistoryManager.shared.deleteHistory(id: history.id)
+            await performLoadHistories()
+        } catch {
+            WebBridgeLogger.shared.log(.error, "Failed to delete history: \(error.localizedDescription)")
+            cacheErrorRelay.accept(NSLocalizedString("Failed to delete history", comment: ""))
+        }
     }
 
     private func cachePage(_ history: WebPageHistory) {

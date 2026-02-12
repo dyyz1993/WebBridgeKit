@@ -43,11 +43,11 @@ public class RealmHistoryService: HistoryServiceProtocol {
 
     // MARK: - 查询
 
-    public func getAllHistories() -> Results<WebPageHistory> {
+    public func getAllHistories() -> [WebPageHistory] {
         return manager.getAllHistories()
     }
 
-    public func getCachedHistories() -> Results<WebPageHistory> {
+    public func getCachedHistories() -> [WebPageHistory] {
         return manager.getCachedHistories()
     }
 
@@ -59,7 +59,7 @@ public class RealmHistoryService: HistoryServiceProtocol {
         return manager.findHistory(id: id)
     }
 
-    public func searchHistories(keyword: String) -> Results<WebPageHistory> {
+    public func searchHistories(keyword: String) -> [WebPageHistory] {
         return manager.searchHistories(keyword: keyword)
     }
 

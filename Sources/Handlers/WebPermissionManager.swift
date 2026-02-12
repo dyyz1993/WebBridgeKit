@@ -73,6 +73,8 @@ public class WebPermissionManager {
 
         return [
             "type": "location",
+            "displayName": "地理位置",
+            "icon": "📍",
             "status": statusString,
             "granted": granted
         ]
@@ -101,6 +103,8 @@ public class WebPermissionManager {
 
             completion([
                 "type": "notification",
+                "displayName": "通知权限",
+                "icon": "🔔",
                 "status": statusString,
                 "granted": granted
             ])
@@ -133,6 +137,8 @@ public class WebPermissionManager {
 
         return [
             "type": "camera",
+            "displayName": "相机权限",
+            "icon": "📷",
             "status": statusString,
             "granted": granted
         ]
@@ -164,6 +170,8 @@ public class WebPermissionManager {
 
         return [
             "type": "microphone",
+            "displayName": "麦克风权限",
+            "icon": "🎤",
             "status": statusString,
             "granted": granted
         ]
@@ -195,6 +203,8 @@ public class WebPermissionManager {
 
         return [
             "type": "speech",
+            "displayName": "语音识别",
+            "icon": "🗣️",
             "status": statusString,
             "granted": granted
         ]

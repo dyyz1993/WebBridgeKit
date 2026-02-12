@@ -17,7 +17,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "testSignal", let body = message.body as? String {
             NSLog("📱 [JS -> Native] Received test signal (len=%d): %@", body.count, body)
-            NotificationCenter.default.post(name: NSNotification.Name("UpdateDebugLabel"), object: nil, userInfo: ["text": body])
+            NotificationCenter.default.post(name: .updateDebugLabel, object: nil, userInfo: ["text": body])
         }
     }
 
@@ -116,6 +116,206 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
             description: "验证深层嵌套目录（res/sub1/sub2/）下的资源同步。",
             manifestFileName: "manifest.json",
             manifestURL: URL(string: "\(baseURL)complex_resources/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_test",
+            name: "9. JSBridge 综合功能测试",
+            description: "加载本地 test.html，测试定位、扫码、分享等所有 Bridge 接口。",
+            manifestFileName: "test.html",
+            manifestURL: Bundle.main.url(forResource: "test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_comprehensive",
+            name: "10. Bridge 核心接口测试",
+            description: "加载 js_bridge_test.html，验证 Bark 风格的 Bridge 调用。",
+            manifestFileName: "js_bridge_test.html",
+            manifestURL: Bundle.main.url(forResource: "js_bridge_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_haptic",
+            name: "11. 触觉反馈测试",
+            description: "加载 trigger_haptic.html，测试震动和触感反馈。",
+            manifestFileName: "trigger_haptic.html",
+            manifestURL: Bundle.main.url(forResource: "trigger_haptic", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_network",
+            name: "12. 网络请求测试",
+            description: "加载 execute_network_test.html，测试通过 Bridge 发送网络请求。",
+            manifestFileName: "execute_network_test.html",
+            manifestURL: Bundle.main.url(forResource: "execute_network_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_navigation",
+            name: "13. 导航控制测试",
+            description: "加载 navigation_test.html，测试页面跳转和返回控制。",
+            manifestFileName: "navigation_test.html",
+            manifestURL: Bundle.main.url(forResource: "navigation_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_permissions",
+            name: "14. 权限申请测试",
+            description: "加载 permissions_ui.html，测试位置、相机等权限申请。",
+            manifestFileName: "permissions_ui.html",
+            manifestURL: Bundle.main.url(forResource: "permissions_ui", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_main",
+            name: "15. 综合测试大厅",
+            description: "加载 main_test.html，包含所有功能的导航入口。",
+            manifestFileName: "main_test.html",
+            manifestURL: Bundle.main.url(forResource: "main_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_performance",
+            name: "16. 性能基准测试",
+            description: "加载 test_performance.html，测试 Bridge 调用性能和资源加载速度。",
+            manifestFileName: "test_performance.html",
+            manifestURL: Bundle.main.url(forResource: "test_performance", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_image_cache",
+            name: "17. 图片缓存测试",
+            description: "加载 image_cache_test.html，验证图片资源缓存逻辑。",
+            manifestFileName: "image_cache_test.html",
+            manifestURL: Bundle.main.url(forResource: "image_cache_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_tab_cache",
+            name: "18. Tab 缓存测试",
+            description: "加载 tab_cache_test.html，验证多 Tab 场景下的资源缓存。",
+            manifestFileName: "tab_cache_test.html",
+            manifestURL: Bundle.main.url(forResource: "tab_cache_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_image_loading",
+            name: "19. 图片加载测试",
+            description: "加载 test_image_loading.html，测试多种格式图片的加载。",
+            manifestFileName: "test_image_loading.html",
+            manifestURL: Bundle.main.url(forResource: "test_image_loading", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_manifest_cache_test",
+            name: "20. Manifest 缓存验证",
+            description: "加载 manifest_cache_test.html，验证 Manifest 资源的缓存状态。",
+            manifestFileName: "manifest_cache_test.html",
+            manifestURL: Bundle.main.url(forResource: "manifest_cache_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_manifest_test",
+            name: "21. Manifest 功能验证",
+            description: "加载 manifest_test.html，验证 Manifest 解析和资源映射。",
+            manifestFileName: "manifest_test.html",
+            manifestURL: Bundle.main.url(forResource: "manifest_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_manifest_cache_demo",
+            name: "22. 缓存策略演示",
+            description: "加载 manifest_cache_demo.html，演示不同的资源缓存策略。",
+            manifestFileName: "manifest_cache_demo.html",
+            manifestURL: Bundle.main.url(forResource: "manifest_cache_demo", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_manifest_demo",
+            name: "23. 综合演示页面",
+            description: "加载 manifest_demo.html，展示框架的综合能力。",
+            manifestFileName: "manifest_demo.html",
+            manifestURL: Bundle.main.url(forResource: "manifest_demo", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_error_page",
+            name: "24. 错误处理测试",
+            description: "加载 error_page.html，验证框架对异常情况的处理。",
+            manifestFileName: "error_page.html",
+            manifestURL: Bundle.main.url(forResource: "error_page", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_welcome",
+            name: "25. 欢迎引导页",
+            description: "加载 welcome.html，测试精美的欢迎引导界面。",
+            manifestFileName: "welcome.html",
+            manifestURL: Bundle.main.url(forResource: "welcome", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_permission_test",
+            name: "26. 详细权限测试",
+            description: "加载 permission-test.html，逐项测试 iOS 权限回调。",
+            manifestFileName: "permission-test.html",
+            manifestURL: Bundle.main.url(forResource: "permission-test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_static_test",
+            name: "27. 静态资源测试",
+            description: "加载 static_test.html，验证 CSS/JS 等静态资源的加载。",
+            manifestFileName: "static_test.html",
+            manifestURL: Bundle.main.url(forResource: "static_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_slow_1s",
+            name: "28. 慢加载测试 (1s)",
+            description: "加载 slow_resource_1s.html，验证页面加载超时处理。",
+            manifestFileName: "slow_resource_1s.html",
+            manifestURL: Bundle.main.url(forResource: "slow_resource_1s", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_slow_3s",
+            name: "29. 慢加载测试 (3s)",
+            description: "加载 slow_resource_3s.html，验证页面加载超时处理。",
+            manifestFileName: "slow_resource_3s.html",
+            manifestURL: Bundle.main.url(forResource: "slow_resource_3s", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_slow_5s",
+            name: "30. 慢加载测试 (5s)",
+            description: "加载 slow_resource_5s.html，验证页面加载超时处理。",
+            manifestFileName: "slow_resource_5s.html",
+            manifestURL: Bundle.main.url(forResource: "slow_resource_5s", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_hub",
+            name: "31. 测试索引页 (Hub)",
+            description: "加载 test_hub.html，快速访问所有测试用例的入口。",
+            manifestFileName: "test_hub.html",
+            manifestURL: Bundle.main.url(forResource: "test_hub", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_ua_test",
+            name: "32. User-Agent 检测",
+            description: "加载 ua_test.html，验证自定义 UA（版本、屏幕尺寸、倍率）是否生效。",
+            manifestFileName: "ua_test.html",
+            manifestURL: Bundle.main.url(forResource: "ua_test", withExtension: "html") ?? URL(string: "about:blank")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "jsbridge_custom_error_test",
+            name: "33. 资源加载错误演示",
+            description: "加载一个不存在的 custom:// 协议地址，演示自定义错误页面的显示。",
+            manifestFileName: "error_demo",
+            manifestURL: URL(string: "custom://nonexistent-page/index.html")!
         ))
 
         return cases
@@ -260,31 +460,52 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
                 return
             }
 
-            // 构建页面 URL（从 manifest URL 中提取基础 URL）
-            let baseURL = testCase.manifestURL.deletingLastPathComponent()
+            // 构建页面 URL
+            let pageURL: URL
+            if testCase.manifestURL.isFileURL {
+                // 如果是本地 HTML 文件，直接加载该文件
+                pageURL = testCase.manifestURL
+            } else {
+                // 如果是远程 Manifest，从 manifest URL 中提取基础 URL (index.html 所在的目录)
+                pageURL = testCase.manifestURL.deletingLastPathComponent()
+            }
             
-            logger.logInfo("页面 URL: \(baseURL.absoluteString)")
+            logger.logInfo("页面 URL: \(pageURL.absoluteString)")
             
-            // 使用 WebBrowserManager 打开，支持缓存
-            WebBrowserManager.shared.openBrowserWithCache(
-                url: baseURL,
-                forceRefresh: false,
-                from: viewController
-            )
+            // 使用 WebBrowserManager 打开
+            if testCase.manifestURL.isFileURL {
+                // 对于本地文件，使用普通的 openBrowser，因为它不需要 manifest 缓存逻辑
+                WebBrowserManager.shared.openBrowser(
+                    url: pageURL,
+                    params: WebBrowserParams.from(url: pageURL),
+                    from: viewController
+                )
+            } else {
+                // 对于远程 Manifest，使用 openBrowser
+                WebBrowserManager.shared.openBrowser(
+                    url: pageURL,
+                    forceRefresh: false,
+                    from: viewController
+                )
+            }
             
             logger.logSuccess("WebBrowserManager 已启动加载")
             
             // 对于 UI 测试，我们需要模拟完成以便更新状态列表
             // 在实际使用中，用户会看到页面加载过程
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                guard let self = self else { return }
+                
                 // 获取当前缓存大小作为参考
                 let resourceCache = ResourceCache.shared
                 let cacheSize = resourceCache.totalSize()
                 
-                logger.log("步骤 2: 验证缓存状态")
-                logger.logInfo("当前资源缓存总大小: \(self.formatBytes(cacheSize))")
-                
-                completion(TestExecutionResult(success: true, cacheSize: cacheSize, error: nil))
+                DispatchQueue.main.async {
+                    logger.log("步骤 2: 验证缓存状态")
+                    logger.logInfo("当前资源缓存总大小: \(self.formatBytes(cacheSize))")
+                    
+                    completion(TestExecutionResult(success: true, cacheSize: cacheSize, error: nil))
+                }
             }
         }
     }

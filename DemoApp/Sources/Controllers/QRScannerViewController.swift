@@ -167,7 +167,7 @@ extension QRScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
             dismiss(animated: true) {
                 // 发送原始字符串和解析后的 URL，方便后续扩展
                 NotificationCenter.default.post(
-                    name: NSNotification.Name("QRScannerDidScanURL"),
+                    name: .qrScannerDidScanURL,
                     object: url,
                     userInfo: ["rawString": processedResult]
                 )
@@ -176,7 +176,7 @@ extension QRScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
             // 如果不是有效 URL，也尝试发送原始字符串，让 MainVC 处理特殊协议
             dismiss(animated: true) {
                 NotificationCenter.default.post(
-                    name: NSNotification.Name("QRScannerDidScanURL"),
+                    name: .qrScannerDidScanURL,
                     object: nil,
                     userInfo: ["rawString": processedResult]
                 )

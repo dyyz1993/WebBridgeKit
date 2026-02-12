@@ -88,7 +88,7 @@ class CacheManagementViewModel: ViewModel {
         loadCacheData()
 
         // 监听缓存更新通知
-        NotificationCenter.default.rx.notification(NSNotification.Name("ManifestCacheDidUpdate"))
+        NotificationCenter.default.rx.notification(.manifestCacheDidUpdate)
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] _ in
                 self?.loadCacheData()
@@ -133,7 +133,7 @@ class CacheManagementViewModel: ViewModel {
                 totalSize += cacheSize
 
                 // 聚合同一 AppID 的缓存
-                if var existing = appInfoMap[sanitizedAppID] {
+                if let existing = appInfoMap[sanitizedAppID] {
                     // 合并 pageKeys 和缓存大小
                     var updatedKeys = existing.pageKeys
                     updatedKeys.append(pageKey)

@@ -105,9 +105,6 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     // MARK: - Properties
 
-    /// 是否已检查URL参数
-    private var hasCheckedURLParams = false
-
     /// 是否隐藏导航栏
     private var hideNavBar = false
 
@@ -123,6 +120,9 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     /// 当前缓存来源标识
     private var currentCacheSource: String = "LIVE"
+
+    /// Track all registered script message handler names for proper cleanup
+    private var registeredHandlerNames: [String] = []
 
     // MARK: - Initialization
 
@@ -181,14 +181,14 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             }
         }
 
-        // 设置通知监听 - 缓存命中通知
-        NotificationCenter.default.addObserver(
-            forName: InterceptiveCacheManager.cacheHitNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            self?.updateCacheStatus(source: "INTERCEPT")
-        }
+        // 设置通知监听 - 缓存命中通知 (InterceptiveCacheManager 已删除)
+        // NotificationCenter.default.addObserver(
+        //     forName: InterceptiveCacheManager.cacheHitNotification,
+        //     object: nil,
+        //     queue: .main
+        // ) { [weak self] notification in
+        //     self?.updateCacheStatus(source: "INTERCEPT")
+        // }
 
         NotificationCenter.default.addObserver(
             forName: ManifestCacheManager.cacheHitNotification,
@@ -201,7 +201,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
         // 加载初始内容
         if let initialURL = viewModel.initialURL {
-            loadURL(initialURL, checkParams: false)  // 🔥 Will check params in viewWillAppear
+            loadURLWithCache(initialURL, forceRefresh: false)  // 🔥 Will check params in viewWillAppear
         } else {
             loadWelcomePage()
         }
@@ -346,14 +346,6 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             tabBarController.view.layoutIfNeeded()
             print("✅ [Browser] TabBar auto-hidden on webview entry")
         }
-
-        // 🔥 Fix: Check URL parameters in viewWillAppear (not viewDidLoad)
-        // At this point, the view controller is in the navigation stack, so tabBarController is valid
-        // Only check once to avoid duplicate processing
-        if !hasCheckedURLParams, let currentURL = currentURL {
-            hasCheckedURLParams = true
-            checkURLParameters(currentURL)
-        }
     }
 
     public override func viewWillDisappear(_ animated: Bool) {
@@ -407,8 +399,12 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             checkURLParameters(url)
         }
 
-        let request = URLRequest(url: url)
-        webView.load(request)
+        if url.isFileURL {
+            webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        } else {
+            let request = URLRequest(url: url)
+            webView.load(request)
+        }
 
         print("🌐 [Browser] 加载 URL: \(url.absoluteString)")
     }
@@ -422,11 +418,18 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let queryItems = components.queryItems else {
-            print("⚠️ [WebBrowserVC] No query items found")
+            print("⚠️ [WebBrowserVC] No query items found - resetting UI state")
+            // 🔥 如果没有查询参数，重置UI状态
+            resetUIState()
             return
         }
 
         print("✅ [WebBrowserVC] Found \(queryItems.count) query items")
+
+        // 🔥 先重置UI状态，然后根据参数设置
+        var shouldHideNavBar = false
+        var shouldHideStatusBar = false
+        var targetOrientation: UIInterfaceOrientation? = nil
 
         for item in queryItems {
             print("🔍 [WebBrowserVC] Processing query item: \(item.name) = \(item.value ?? "nil")")
@@ -435,12 +438,12 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             case "hidenavbar":
                 if let value = item.value, value == "1" || value.lowercased() == "true" {
                     print("✅ [WebBrowserVC] Hiding navigation bar (hidenavbar)")
-                    setNavigationBarHidden(true)
+                    shouldHideNavBar = true
                 }
             case "hidestatusbar":
                 if let value = item.value, value == "1" || value.lowercased() == "true" {
                     print("✅ [WebBrowserVC] Hiding status bar (hidestatusbar)")
-                    setStatusBarHidden(true)
+                    shouldHideStatusBar = true
                 }
             case "hidetabbar":
                 // 🔥 TabBar is now auto-hidden, no need to handle this parameter
@@ -449,25 +452,50 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                 // 🔥 支持沉浸式模式
                 if let value = item.value, value.lowercased() == "immersive" {
                     print("✅ [WebBrowserVC] Activating immersive mode (mode=immersive)")
-                    setNavigationBarHidden(true)
-                    setStatusBarHidden(true)
+                    shouldHideNavBar = true
+                    shouldHideStatusBar = true
                     // Note: TabBar is already auto-hidden, no need to call setTabBarHidden
                 }
             case "orientation":
                 // 🔥 支持强制横屏
                 if let value = item.value, value.lowercased() == "landscape" {
                     print("✅ [WebBrowserVC] Forcing landscape orientation")
-                    updateOrientation(.landscapeRight)
+                    targetOrientation = .landscapeRight
                 } else if let value = item.value, value.lowercased() == "portrait" {
                     print("✅ [WebBrowserVC] Forcing portrait orientation")
-                    updateOrientation(.portrait)
+                    targetOrientation = .portrait
                 }
             default:
                 break
             }
         }
 
+        // 应用UI状态
+        if shouldHideNavBar {
+            setNavigationBarHidden(true)
+        }
+        if shouldHideStatusBar {
+            setStatusBarHidden(true)
+        }
+        if let orientation = targetOrientation {
+            updateOrientation(orientation)
+        }
+
         print("✅ [WebBrowserVC] checkURLParameters completed")
+    }
+
+    /// 重置UI状态（当URL没有参数时调用）
+    private func resetUIState() {
+        print("🔄 [Browser] Resetting UI state to default...")
+        
+        // 显示导航栏和状态栏
+        setNavigationBarHidden(false)
+        setStatusBarHidden(false)
+        
+        // 恢复竖屏方向
+        updateOrientation(.portrait)
+        
+        print("✅ [Browser] UI state reset to default")
     }
 
     /// 更新屏幕方向
@@ -652,6 +680,30 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                 self?.currentURL = url
             })
             .disposed(by: rx)
+        
+        // 设置自定义 User-Agent
+        setupUserAgent()
+    }
+
+    /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
+    private func setupUserAgent() {
+        // 获取原始 UA 并追加自定义信息
+        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, error) in
+            guard let self = self, let baseUA = result as? String else { return }
+            
+            let info = Bundle.main.infoDictionary
+            let appVersion = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+            let buildNumber = info?["CFBundleVersion"] as? String ?? "1"
+            
+            let screenSize = UIScreen.main.bounds.size
+            let screenScale = UIScreen.main.scale
+            
+            // 格式: BaseUA WebBridgeKit/Version (Build; Screen/WxH; Ratio/R)
+            let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
+            
+            self.webView.customUserAgent = customUA
+            print("📱 [WebBrowserVC] Custom UA configured: \(customUA)")
+        }
     }
 
     // MARK: - Welcome Page
@@ -1407,6 +1459,29 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             }
         }.resume()
     }
+
+    // MARK: - Deinit
+
+    deinit {
+        // 🔒 Stop any ongoing loading
+        webView.stopLoading()
+
+        // 🔒 Remove all script message handlers to prevent memory leaks
+        // WKUserContentController.add(_:name:) creates strong references
+        for handlerName in registeredHandlerNames {
+            webView.configuration.userContentController.removeScriptMessageHandler(forName: handlerName)
+        }
+        registeredHandlerNames.removeAll()
+
+        // 🔒 Clear delegates to break strong reference cycles
+        webView.navigationDelegate = nil
+        webView.uiDelegate = nil
+
+        // 🔒 Remove from superview
+        webView.removeFromSuperview()
+
+        print("🧹 [WebBrowserVC] Cleaned up with proper memory management")
+    }
 }
 
 // MARK: - UIGestureRecognizerDelegate
@@ -1485,12 +1560,31 @@ extension WebBrowserViewController: WKNavigationDelegate {
         print("📄 ========================================")
         WebBridgeLogger.shared.info("📄 Page loaded: \(url.absoluteString)")
 
-        // 更新历史记录
+        // 🔥 每次页面加载完成后都检查URL参数（支持页面内导航）
+        checkURLParameters(url)
+
+        // 更新历史记录 - 使用 async API
         fetchFavicon { [weak self] faviconData in
-            WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: self?.webView.title, favicon: faviconData)
-            
-            // 发送通知，告知历史记录已更新
-            NotificationCenter.default.post(name: NSNotification.Name("WebPageHistoryUpdated"), object: nil)
+            guard let self = self else { return }
+
+            // 在 MainActor 上执行异步数据库操作
+            Task { @MainActor in
+                do {
+                    try await WebPageHistoryManager.shared.addOrUpdateHistory(
+                        url: url,
+                        title: self.webView.title,
+                        favicon: faviconData
+                    )
+
+                    // 发送通知，告知历史记录已更新
+                    NotificationCenter.default.post(name: .historyDidUpdate, object: nil)
+
+                    print("✅ History updated successfully for: \(url.absoluteString)")
+                } catch {
+                    WebBridgeLogger.shared.log(.error, "Failed to update history: \(error.localizedDescription)")
+                    print("❌ Failed to update history for \(url.absoluteString): \(error.localizedDescription)")
+                }
+            }
         }
 
         // 检查 URL 是否匹配页面缓存规则
@@ -1614,12 +1708,95 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 case .failure(let error):
                     print("❌ [WebBrowserVC] Failed to load URL: \(error.localizedDescription)")
                     self.updateCacheStatus(source: "LIVE")
-                    // 回退到普通加载
-                    let request = URLRequest(url: url)
-                    self.webView.load(request)
+                    
+                    // 🔥 优化：如果是自定义协议请求失败，显示错误提示页，而不是白屏
+                    let isCustomScheme = url.scheme == "custom" || url.scheme == "wb-resource"
+                    if isCustomScheme {
+                        self.loadErrorPage(url: url, error: error)
+                    } else {
+                        // 回退到普通加载
+                        if url.isFileURL {
+                            self.webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+                        } else {
+                            let request = URLRequest(url: url)
+                            self.webView.load(request)
+                        }
+                    }
                 }
             }
         }
+    }
+
+    /// 加载错误提示页面
+    /// - Parameters:
+    ///   - url: 失败的 URL
+    ///   - error: 错误信息
+    public func loadErrorPage(url: URL, error: Error) {
+        let errorHTML = generateErrorHTML(url: url, error: error)
+        webView.loadHTMLString(errorHTML, baseURL: url)
+        print("⚠️ [WebBrowserVC] Loaded error page for: \(url.absoluteString)")
+    }
+
+    /// 生成错误提示 HTML
+    /// - Parameters:
+    ///   - url: 失败的 URL
+    ///   - error: 错误信息
+    /// - Returns: HTML 字符串
+    private func generateErrorHTML(url: URL, error: Error) -> String {
+        let urlString = url.absoluteString
+        let errorMessage = error.localizedDescription
+        
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WebBridge 资源加载失败</title>
+            <style>
+                body { font-family: -apple-system, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #2d3748; line-height: 1.5; }
+                .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 6px solid #e53e3e; }
+                h1 { color: #c53030; font-size: 22px; margin-top: 0; display: flex; align-items: center; }
+                .icon { font-size: 28px; margin-right: 12px; }
+                .info-box { background: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all; }
+                .label { font-weight: bold; color: #742a2a; display: block; margin-bottom: 5px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+                code { background: #edf2f7; padding: 3px 6px; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; color: #1a202c; }
+                .footer { margin-top: 30px; font-size: 14px; color: #4a5568; border-top: 1px solid #edf2f7; padding-top: 20px; }
+                ul { padding-left: 20px; margin-top: 10px; }
+                li { margin-bottom: 8px; }
+                .btn { display: inline-block; background: #4a5568; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; margin-top: 15px; font-size: 14px; }
+                .btn:hover { background: #2d3748; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1><span class="icon">🚫</span>WebBridge 资源加载失败</h1>
+                <p>在处理缓存加载请求时遇到了错误，无法加载目标页面。</p>
+                
+                <div class="info-box">
+                    <span class="label">请求地址 (Request URL):</span>
+                    <code>\(urlString)</code>
+                </div>
+                
+                <div class="info-box">
+                    <span class="label">错误原因 (Error):</span>
+                    <code>\(errorMessage)</code>
+                </div>
+                
+                <div class="footer">
+                    <span class="label">排查建议:</span>
+                    <ul>
+                        <li>检查网络连接是否正常。</li>
+                        <li>确认 <code>manifest.json</code> 映射表是否包含该相对路径。</li>
+                        <li>如果是 <code>wb-resource://</code>，请确认持久化缓存目录中是否存在该文件。</li>
+                        <li>尝试在管理页面清理缓存并重新加载。</li>
+                    </ul>
+                    <a href="javascript:location.reload()" class="btn">重试加载 (Reload)</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
     }
 
     /// 更新缓存状态显示
@@ -1671,12 +1848,12 @@ extension WebBrowserViewController: WKNavigationDelegate {
             return true
         }
         
-        // 4. 检查 InterceptiveCacheManager (离线拦截缓存)
-        if InterceptiveCacheManager.shared.hasCachedResource(for: url) {
-            NSLog("✅ [Browser] Cache Hit: Interceptive Resource (INTERCEPT)")
-            updateCacheStatus(source: "INTERCEPT")
-            return true
-        }
+        // 4. 检查 InterceptiveCacheManager (已删除)
+        // if InterceptiveCacheManager.shared.hasCachedResource(for: url) {
+        //     NSLog("✅ [Browser] Cache Hit: Interceptive Resource (INTERCEPT)")
+        //     updateCacheStatus(source: "INTERCEPT")
+        //     return true
+        // }
         
         NSLog("❌ [Browser] Cache Miss")
         return false
