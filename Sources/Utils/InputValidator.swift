@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 /// A utility enum providing static methods for validating various input types.
 /// Used throughout WebBridgeKit to ensure data integrity and prevent security issues.
@@ -335,42 +336,31 @@ public enum HashAlgorithm {
 // MARK: - Data Hashing Extensions
 
 private extension Data {
+    /// Compute SHA-256 hash using CryptoKit
     func sha256() -> String {
-        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-        self.withUnsafeBytes { bytes in
-            _ = CC_SHA256(bytes.baseAddress, CC_LONG(self.count), &hash)
-        }
-        return hash.map { String(format: "%02x", $0) }.joined()
+        let digest = SHA256.hash(data: self)
+        return Data(digest).map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Compute SHA-384 hash using CryptoKit
     func sha384() -> String {
-        var hash = [UInt8](repeating: 0, count: Int(CC_SHA384_DIGEST_LENGTH))
-        self.withUnsafeBytes { bytes in
-            _ = CC_SHA384(bytes.baseAddress, CC_LONG(self.count), &hash)
-        }
-        return hash.map { String(format: "%02x", $0) }.joined()
+        let digest = SHA384.hash(data: self)
+        return Data(digest).map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Compute SHA-512 hash using CryptoKit
     func sha512() -> String {
-        var hash = [UInt8](repeating: 0, count: Int(CC_SHA512_DIGEST_LENGTH))
-        self.withUnsafeBytes { bytes in
-            _ = CC_SHA512(bytes.baseAddress, CC_LONG(self.count), &hash)
-        }
-        return hash.map { String(format: "%02x", $0) }.joined()
+        let digest = SHA512.hash(data: self)
+        return Data(digest).map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Compute MD5 hash using CryptoKit
+    /// WARNING: MD5 is cryptographically broken and should only be used for legacy compatibility
     func md5() -> String {
-        var hash = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
-        self.withUnsafeBytes { bytes in
-            _ = CC_MD5(bytes.baseAddress, CC_LONG(self.count), &hash)
-        }
-        return hash.map { String(format: "%02x", $0) }.joined()
+        let digest = Insecure.MD5.hash(data: self)
+        return Data(digest).map { String(format: "%02x", $0) }.joined()
     }
 }
-
-// MARK: - CommonCrypto Shims
-
-import CommonCrypto
 
 
 // MARK: - ValidationError

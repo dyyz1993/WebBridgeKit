@@ -10,6 +10,7 @@ import RxSwift
 import RxCocoa
 
 /// 口令 (Token) 管理与解析器
+@MainActor
 class TokenManager {
     
     static let shared = TokenManager()
@@ -47,8 +48,10 @@ class TokenManager {
         // 模拟服务器请求逻辑
         // 在真实场景中，这里会调用 API 服务端（如配置的开源服务端地址）
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
+        Task { @MainActor in
+            // 模拟网络延迟
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+
             // 模拟解析结果
             // 假设解析出了一个 AppID 和对应的 URL
             let mockAppID = "com.example.app"
@@ -56,10 +59,7 @@ class TokenManager {
 
             print("✅ [TokenManager] Token resolved: \(mockAppID) -> \(mockURL)")
 
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.handleResolvedResult(appId: mockAppID, urlString: mockURL)
-            }
+            self.handleResolvedResult(appId: mockAppID, urlString: mockURL)
         }
     }
     
