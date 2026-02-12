@@ -88,11 +88,24 @@ public class WebContactsHandler: BaseWebNativeHandler {
      */
     private func permissionStatusString(_ status: CNAuthorizationStatus) -> String {
         switch status {
-        case .authorized: return "authorized"
-        case .denied: return "denied"
-        case .restricted: return "restricted"
-        case .notDetermined: return "notDetermined"
-        @unknown default: return "unknown"
+        case .authorized:
+            "authorized"
+        case .denied:
+            "denied"
+        case .restricted:
+            "restricted"
+        case .notDetermined:
+            "notDetermined"
+        case .limited:
+            // Limited access available in iOS 14+
+            if #available(iOS 14.0, *) {
+                "limited"
+            } else {
+                "unknown"
+            }
+        @unknown default:
+            // Handle any future authorization status values
+            "unknown"
         }
     }
 

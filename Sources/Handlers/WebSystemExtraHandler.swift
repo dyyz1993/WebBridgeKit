@@ -87,10 +87,22 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
             let type: String
             if #available(iOS 11.0, *) {
                 switch context.biometryType {
-                case .faceID: type = "faceID"
-                case .touchID: type = "touchID"
-                case .none: type = "none"
-                @unknown default: type = "unknown"
+                case .faceID:
+                    type = "faceID"
+                case .touchID:
+                    type = "touchID"
+                case .none:
+                    type = "none"
+                case .opticID:
+                    // Iris recognition available in iOS 18+
+                    if #available(iOS 18.0, *) {
+                        type = "opticID"
+                    } else {
+                        type = "unknown"
+                    }
+                @unknown default:
+                    // Handle any other future biometry types
+                    type = "unknown"
                 }
             } else {
                 type = "touchID" // iOS 11 以下只有 TouchID
