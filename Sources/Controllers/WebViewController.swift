@@ -7,8 +7,7 @@
 
 import UIKit
 import WebKit
-
-// Framework imports
+import RealmSwift
 
 /// 统一的 Web 容器，支持横竖屏控制、全屏控制与 JSBridge
 @MainActor
