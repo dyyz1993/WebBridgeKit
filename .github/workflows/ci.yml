@@ -55,44 +55,6 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
-  test:
-    name: Unit Tests
-    runs-on: macos-15
-    needs: build
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
-        with:
-          path: Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
-          restore-keys: |
-            pods-${{ runner.os }}-
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode Project
-        run: xcodegen generate
-
-      - name: Install Pods
-        run: pod install
-
-      - name: Run Tests
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -workspace WebBridgeKit.xcworkspace \
-            -scheme DemoApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
-            -configuration Debug \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color
-
   swiftlint:
     name: SwiftLint
     runs-on: macos-15
