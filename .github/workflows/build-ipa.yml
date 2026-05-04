@@ -1,0 +1,86 @@
+name: Build IPA
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+          - Release
+          - Debug
+
+jobs:
+  build-ipa:
+    name: Build IPA
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Install Pods
+        run: pod install
+
+      - name: Build Archive (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme DemoApp \
+            -configuration ${{ github.event.inputs.configuration || 'Release' }} \
+            -archivePath build/DemoApp.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            | xcpretty --color
+
+      - name: Export IPA (unsigned)
+        run: |
+          mkdir -p build/Payload
+          cp -r build/DemoApp.xcarchive/Products/Applications/DemoApp.app build/Payload/
+          cd build
+          zip -r DemoApp.ipa Payload/
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DemoApp-${{ github.event.inputs.configuration || 'Release' }}
+          path: build/DemoApp.ipa
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/DemoApp.ipa
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
