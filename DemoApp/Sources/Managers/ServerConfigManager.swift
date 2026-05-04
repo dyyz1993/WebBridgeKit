@@ -8,6 +8,7 @@
 
 import Foundation
 import RealmSwift
+import WebBridgeKit
 
 /// 服务器配置管理器
 /// 负责服务器配置的保存、读取、重置

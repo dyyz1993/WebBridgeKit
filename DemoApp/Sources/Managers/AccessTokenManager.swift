@@ -8,6 +8,7 @@
 
 import Foundation
 import RealmSwift
+import WebBridgeKit
 
 /// 访问口令管理器
 /// 负责口令的生成、验证、删除、延长有效期
