@@ -1,0 +1,31 @@
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - identifier_name
+  - type_body_length
+  - function_body_length
+  - cyclomatic_complexity
+  - file_length
+  - type_name
+  - large_tuple
+  - nesting
+  - vertical_whitespace
+  - force_cast
+  - force_try
+  - todo
+
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - explicit_init
+
+included:
+  - Sources
+  - DemoApp/Sources
+
+excluded:
+  - Pods
+  - DemoAppUITests
+  - Tests
+
+reporter: "github-actions-logging"
