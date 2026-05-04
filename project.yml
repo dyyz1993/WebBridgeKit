@@ -75,6 +75,22 @@ targets:
     dependencies:
       - target: WebBridgeKit
 
+  DemoAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - DemoAppUITests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.demo.ui.tests
+      TEST_TARGET_NAME: DemoApp
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+    dependencies:
+      - target: DemoApp
+
 schemes:
   WebBridgeKit:
     build:
@@ -91,6 +107,13 @@ schemes:
         DemoApp: all
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - DemoAppUITests
+      coverageTargets:
+        - DemoApp
+        - WebBridgeKit
     archive:
       config: Release
 

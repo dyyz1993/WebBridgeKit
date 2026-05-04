@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haptic Test</title>
+    <script>
+        setTimeout(function() {
+            // Try to call the bridge
+            if (window.WebBridgeKit && window.WebBridgeKit.callNative) {
+                window.WebBridgeKit.callNative('haptic', {style: 'medium'});
+            } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.WebBridgeKit) {
+                window.webkit.messageHandlers.WebBridgeKit.postMessage({
+                    api: 'haptic',
+                    params: {style: 'medium'}
+                });
+            }
+            console.log('Haptic trigger attempted');
+        }, 1000);
+    </script>
+</head>
+<body>
+    <h1 style="color: #fa709a; font-family: sans-serif;">Haptic Test</h1>
+    <p style="font-family: sans-serif;">Triggering haptic feedback...</p>
+    <p style="font-family: sans-serif; color: #666;">(Check if device vibrated)</p>
+</body>
+</html>

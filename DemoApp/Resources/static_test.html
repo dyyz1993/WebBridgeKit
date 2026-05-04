@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Static Resource Performance Test Page">
+    <title>Static Resource Performance Test</title>
+
+    <!-- CSS Resources -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/animations.css">
+
+    <!-- Custom Font -->
+    <style>
+        @font-face {
+            font-family: 'TestFont';
+            src: url('fonts/main-font.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+
+    <style>
+        body.test-page {
+            font-family: 'TestFont', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .performance-dashboard {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-header h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .dashboard-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .dashboard-content {
+            padding: 15px;
+        }
+
+        .metric-section {
+            margin-bottom: 15px;
+        }
+
+        .metric-section h3 {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 10px 0;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            margin: 5px 0;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .resource-list {
+            margin-top: 15px;
+        }
+
+        .resource-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .resource-item:last-child {
+            border-bottom: none;
+        }
+
+        .resource-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+
+        .resource-icon.css { background: #dbeafe; color: #2563eb; }
+        .resource-icon.js { background: #fef3c7; color: #f59e0b; }
+        .resource-icon.image { background: #d1fae5; color: #10b981; }
+        .resource-icon.font { background: #ede9fe; color: #7c3aed; }
+
+        .resource-info {
+            flex: 1;
+        }
+
+        .resource-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+
+        .resource-details {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .resource-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .status-cached {
+            background: #d1fae5;
+            color: #10b981;
+        }
+
+        .status-loaded {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .main-content {
+            padding: 60px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .test-section h1 {
+            margin-bottom: 20px;
+            color: #111827;
+        }
+
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .image-item {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .image-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .image-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .log-console {
+            background: #111827;
+            color: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-entry.info { color: #60a5fa; }
+        .log-entry.success { color: #34d399; }
+        .log-entry.error { color: #f87171; }
+        .log-entry.warn { color: #fbbf24; }
+
+        .animations-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .animation-box {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="test-page">
+    <!-- Performance Dashboard -->
+    <div class="performance-dashboard" id="performanceDashboard">
+        <div class="dashboard-header">
+            <h2>Performance Monitor</h2>
+            <button class="dashboard-close" onclick="toggleDashboard()">−</button>
+        </div>
+        <div class="dashboard-content">
+            <div class="metric-section">
+                <h3>Page Load Time</h3>
+                <div class="metric-value" id="loadTime">0ms</div>
+                <div class="metric-label">Total page load time</div>
+            </div>
+
+            <div class="metric-section">
+                <h3>Resources Loaded</h3>
+                <div class="metric-value" id="resourceCount">0</div>
+                <div class="metric-label">Total resources</div>
+            </div>
+
+            <div class="metric-section">
+                <h3>Transfer Size</h3>
+                <div class="metric-value" id="totalSize">0KB</div>
+                <div class="metric-label">Total data transferred</div>
+            </div>
+
+            <div class="resource-list" id="resourceList">
+                <!-- Resources will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="test-section">
+            <h1>Static Resource Performance Test</h1>
+            <p>This page tests the loading performance of various static resources including CSS, JavaScript, images, and fonts.</p>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="refreshMetrics()">Refresh Metrics</button>
+                <button class="btn btn-outline" onclick="clearLogs()">Clear Logs</button>
+                <button class="btn btn-secondary" onclick="testAPI()">Test Performance API</button>
+                <button class="btn btn-outline" onclick="sendToNative()">Send to Native</button>
+            </div>
+
+            <div class="log-console" id="logConsole">
+                <div class="log-entry info">[INFO] Page initialized</div>
+                <div class="log-entry info">[INFO] Waiting for resources to load...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Image Gallery</h2>
+            <div class="image-gallery">
+                <div class="image-item">
+                    <img src="images/logo.svg" alt="Logo" loading="lazy">
+                    <div class="image-label">Logo (SVG)</div>
+                </div>
+                <div class="image-item">
+                    <img src="images/hero-bg.svg" alt="Hero Background" loading="lazy">
+                    <div class="image-label">Hero Background (SVG)</div>
+                </div>
+                <div class="image-item">
+                    <img src="images/icon-set.svg" alt="Icon Set" loading="lazy">
+                    <div class="image-label">Icon Set (SVG)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Animation Tests</h2>
+            <div class="animations-demo">
+                <div class="animation-box animate-fadeIn">Fade In</div>
+                <div class="animation-box animate-slideInUp">Slide Up</div>
+                <div class="animation-box animate-bounce">Bounce</div>
+                <div class="animation-box animate-pulse">Pulse</div>
+                <div class="animation-box animate-spin" style="animation-duration: 2s;">Spin</div>
+                <div class="animation-box animate-shake">Shake</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Resource Timing Details</h2>
+            <div class="table-container">
+                <table id="resourceTable">
+                    <thead>
+                        <tr>
+                            <th>Resource</th>
+                            <th>Type</th>
+                            <th>Duration</th>
+                            <th>Size</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Navigation Timing</h2>
+            <div class="table-container">
+                <table id="navTimingTable">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value (ms)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Resources -->
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+
+    <script>
+        // Performance Monitoring Script
+        let dashboardVisible = true;
+        let metricsData = {};
+
+        // Logging utility
+        function log(message, type = 'info') {
+            const console = document.getElementById('logConsole');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
+            console.appendChild(entry);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function clearLogs() {
+            const console = document.getElementById('logConsole');
+            console.innerHTML = '';
+            log('Logs cleared', 'info');
+        }
+
+        function toggleDashboard() {
+            const dashboard = document.getElementById('performanceDashboard');
+            dashboardVisible = !dashboardVisible;
+            dashboard.style.display = dashboardVisible ? 'block' : 'none';
+        }
+
+        // Get resource type
+        function getResourceType(resource) {
+            const typeMap = {
+                'link': 'css',
+                'script': 'javascript',
+                'img': 'image',
+                'css': 'css',
+                'font': 'font',
+                'fetch': 'fetch',
+                'xmlhttprequest': 'xhr'
+            };
+            return typeMap[resource.initiatorType] || resource.initiatorType;
+        }
+
+        // Get resource icon
+        function getResourceIcon(type) {
+            const icons = {
+                'css': '🎨',
+                'javascript': '⚡',
+                'image': '🖼️',
+                'font': '🔤'
+            };
+            return icons[type] || '📄';
+        }
+
+        // Format file size
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Refresh performance metrics
+        function refreshMetrics() {
+            log('Refreshing metrics...', 'info');
+
+            // Get all resources
+            const resources = performance.getEntriesByType('resource');
+
+            // Calculate totals
+            let totalSize = 0;
+            let totalCount = resources.length;
+            let resourceHTML = '';
+
+            const tableBody = document.querySelector('#resourceTable tbody');
+            tableBody.innerHTML = '';
+
+            resources.forEach(resource => {
+                const name = resource.name.split('/').pop();
+                const type = getResourceType(resource);
+                const duration = resource.duration.toFixed(2);
+                const size = resource.transferSize;
+                const cached = size === 0;
+
+                totalSize += size > 0 ? size : 0;
+
+                // Add to dashboard
+                resourceHTML += `
+                    <div class="resource-item">
+                        <div class="resource-icon ${type}">${getResourceIcon(type)}</div>
+                        <div class="resource-info">
+                            <div class="resource-name">${name}</div>
+                            <div class="resource-details">${type} • ${duration}ms</div>
+                        </div>
+                        <div class="resource-status ${cached ? 'status-cached' : 'status-loaded'}">
+                            ${cached ? 'Cached' : 'Loaded'}
+                        </div>
+                    </div>
+                `;
+
+                // Add to table
+                const row = `
+                    <tr>
+                        <td>${name}</td>
+                        <td>${type}</td>
+                        <td>${duration}ms</td>
+                        <td>${formatSize(size)}</td>
+                        <td><span class="resource-status ${cached ? 'status-cached' : 'status-loaded'}">${cached ? 'Cached' : 'Loaded'}</span></td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+
+            // Update dashboard
+            document.getElementById('resourceCount').textContent = totalCount;
+            document.getElementById('totalSize').textContent = formatSize(totalSize);
+            document.getElementById('resourceList').innerHTML = resourceHTML;
+
+            // Update page load time
+            const navigation = performance.getEntriesByType('navigation')[0];
+            if (navigation) {
+                const loadTime = (navigation.loadEventEnd - navigation.fetchStart).toFixed(2);
+                document.getElementById('loadTime').textContent = loadTime + 'ms';
+
+                // Update navigation timing table
+                const navTableBody = document.querySelector('#navTimingTable tbody');
+                navTableBody.innerHTML = `
+                    <tr><td>DNS Lookup</td><td>${(navigation.domainLookupEnd - navigation.domainLookupStart).toFixed(2)}</td></tr>
+                    <tr><td>TCP Connection</td><td>${(navigation.connectEnd - navigation.connectStart).toFixed(2)}</td></tr>
+                    <tr><td>Request Time</td><td>${(navigation.responseEnd - navigation.requestStart).toFixed(2)}</td></tr>
+                    <tr><td>DOM Processing</td><td>${(navigation.domComplete - navigation.domInteractive).toFixed(2)}</td></tr>
+                    <tr><td>DOM Content Loaded</td><td>${(navigation.domContentLoadedEventEnd - navigation.fetchStart).toFixed(2)}</td></tr>
+                    <tr><td>Total Load Time</td><td>${loadTime}</td></tr>
+                `;
+            }
+
+            // Store metrics
+            metricsData = {
+                resources: resources.map(r => ({
+                    name: r.name.split('/').pop(),
+                    type: getResourceType(r),
+                    duration: r.duration,
+                    size: r.transferSize,
+                    cached: r.transferSize === 0
+                })),
+                navigation: navigation ? {
+                    loadTime: navigation.loadEventEnd - navigation.fetchStart,
+                    domContentLoaded: navigation.domContentLoadedEventEnd - navigation.fetchStart,
+                    domComplete: navigation.domComplete - navigation.fetchStart
+                } : null,
+                timestamp: Date.now()
+            };
+
+            log(`Loaded ${totalCount} resources (${formatSize(totalSize)})`, 'success');
+        }
+
+        // Test Performance API
+        function testAPI() {
+            log('Testing Performance API...', 'info');
+
+            // Test basic performance
+            log(`Performance.now(): ${performance.now().toFixed(2)}ms`, 'info');
+            log(`Performance.timing: ${JSON.stringify(performance.timing).substring(0, 100)}...`, 'info');
+
+            // Test memory if available
+            if (performance.memory) {
+                log(`Memory: usedJSHeapSize=${formatSize(performance.memory.usedJSHeapSize)}`, 'info');
+            }
+
+            // Test paint timing
+            const paintEntries = performance.getEntriesByType('paint');
+            paintEntries.forEach(entry => {
+                log(`Paint: ${entry.name} at ${entry.startTime.toFixed(2)}ms`, 'info');
+            });
+
+            // Test marks and measures
+            performance.mark('test-mark');
+            performance.measure('test-measure', 'test-mark');
+            const measures = performance.getEntriesByType('measure');
+            measures.forEach(measure => {
+                log(`Measure: ${measure.name} = ${measure.duration.toFixed(2)}ms`, 'info');
+            });
+
+            log('Performance API test complete', 'success');
+        }
+
+        // Send data to native app
+        function sendToNative() {
+            log('Sending data to native app...', 'info');
+
+            const message = {
+                type: 'performance-test',
+                timestamp: Date.now(),
+                metrics: metricsData
+            };
+
+            // Try iOS
+            if (window.webkit?.messageHandlers?.performanceTest) {
+                try {
+                    window.webkit.messageHandlers.performanceTest.postMessage(message);
+                    log('Data sent to iOS app', 'success');
+                } catch (error) {
+                    log(`Failed to send to iOS: ${error.message}`, 'error');
+                }
+            }
+
+            // Try Android
+            if (window.performanceTestAndroid) {
+                try {
+                    window.performanceTestAndroid.postMessage(JSON.stringify(message));
+                    log('Data sent to Android app', 'success');
+                } catch (error) {
+                    log(`Failed to send to Android: ${error.message}`, 'error');
+                }
+            }
+
+            // Check if native bridge is available
+            if (!window.webkit?.messageHandlers?.performanceTest && !window.performanceTestAndroid) {
+                log('No native bridge detected - running in browser', 'warn');
+            }
+
+            // Also log to console for debugging
+            console.log('Performance Test Data:', message);
+        }
+
+        // Performance Observer for monitoring
+        if ('PerformanceObserver' in window) {
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    if (entry.entryType === 'resource') {
+                        const type = getResourceType(entry);
+                        const name = entry.name.split('/').pop();
+                        const duration = entry.duration.toFixed(2);
+                        const size = formatSize(entry.transferSize);
+                        const cached = entry.transferSize === 0;
+
+                        log(`Resource loaded: ${name} (${type}, ${duration}ms, ${size}, ${cached ? 'cached' : 'network'})`, 'info');
+
+                        // Send to native immediately
+                        if (window.webkit?.messageHandlers?.resourceLoaded) {
+                            window.webkit.messageHandlers.resourceLoaded.postMessage({
+                                name: name,
+                                type: type,
+                                duration: duration,
+                                size: entry.transferSize,
+                                cached: cached
+                            });
+                        }
+                    } else if (entry.entryType === 'paint') {
+                        log(`Paint: ${entry.name} at ${entry.startTime.toFixed(2)}ms`, 'info');
+                    }
+                }
+            });
+
+            observer.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
+            log('PerformanceObserver initialized', 'success');
+        }
+
+        // Wait for page load
+        window.addEventListener('load', () => {
+            log('Page fully loaded', 'success');
+
+            // Wait a bit for all resources to finish
+            setTimeout(() => {
+                refreshMetrics();
+                log('Initial metrics collected', 'success');
+            }, 500);
+        });
+
+        // Log when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                log('DOM Content Loaded', 'success');
+            });
+        } else {
+            log('DOM already loaded', 'info');
+        }
+
+        // Initial log
+        log('Performance monitoring initialized', 'success');
+        log('Waiting for resources to load...', 'info');
+    </script>
+</body>
+</html>

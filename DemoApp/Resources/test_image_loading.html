@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>图片加载测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-image { margin: 20px 0; border: 2px solid #ccc; }
+        .info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>图片缓存加载测试</h1>
+    <p>这个页面专门测试图片是否从缓存加载</p>
+
+    <div class="info">
+        <h3>测试图片信息：</h3>
+        <div id="imageInfo">加载中...</div>
+    </div>
+
+    <!-- 测试图片：应该从缓存加载 -->
+    <img id="testImage" class="test-image" src="resources/logo.png" alt="测试图片" width="200" height="200">
+
+    <script>
+        window.onload = function() {
+            const img = document.getElementById('testImage');
+            const info = document.getElementById('imageInfo');
+
+            let html = '<p><strong>图片 src:</strong> ' + img.src + '</p>';
+            html += '<p><strong>图片 currentSrc:</strong> ' + img.currentSrc + '</p>';
+            html += '<p><strong>图片 complete:</strong> ' + img.complete + '</p>';
+            html += '<p><strong>图片 naturalWidth:</strong> ' + img.naturalWidth + '</p>';
+            html += '<p><strong>图片 naturalHeight:</strong> ' + img.naturalHeight + '</p>';
+
+            // 判断加载来源
+            if (img.currentSrc && img.currentSrc.indexOf('wb-resource://') === 0) {
+                html += '<p class="success">✅ 图片从缓存 (wb-resource://) 加载成功！</p>';
+            } else if (img.currentSrc && img.currentSrc.indexOf('custom://') === 0) {
+                html += '<p class="success">✅ 图片从自定义协议加载</p>';
+            } else if (img.currentSrc && img.currentSrc.indexOf('http') === 0) {
+                html += '<p class="error">❌ 图片从网络加载 (不是缓存)</p>';
+            } else {
+                html += '<p class="error">⚠️ 图片加载来源未知: ' + img.currentSrc + '</p>';
+            }
+
+            // 判断是否真的加载了图片文件
+            if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                html += '<p class="success">✅ 图片文件成功加载 (' + img.naturalWidth + 'x' + img.naturalHeight + ')</p>';
+            } else {
+                html += '<p class="error">❌ 图片文件加载失败</p>';
+            }
+
+            info.innerHTML = html;
+        };
+    </script>
+</body>
+</html>

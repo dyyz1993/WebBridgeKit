@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Info Test</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h2>Network Info Test</h2>
+    <button onclick="callNative('getNetworkInfo')">Get Network Info</button>
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+    
+    <script>
+        function callNative(action) {
+            document.getElementById('result').innerHTML = 'Calling ' + action + '...';
+            
+            // Try to call WebBridgeKit
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.webBridgeKit) {
+                window.webkit.messageHandlers.webBridgeKit.postMessage({
+                    action: action
+                });
+            } else {
+                document.getElementById('result').innerHTML += '<br>WebBridgeKit not available - showing mock data';
+                showMockNetworkInfo();
+            }
+        }
+        
+        function showMockNetworkInfo() {
+            setTimeout(function() {
+                document.getElementById('result').innerHTML = '<strong>Network Type:</strong> wifi<br><strong>Mock Result</strong>';
+            }, 500);
+        }
+        
+        // Auto-click on load
+        window.onload = function() {
+            setTimeout(function() {
+                document.querySelector('button').click();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

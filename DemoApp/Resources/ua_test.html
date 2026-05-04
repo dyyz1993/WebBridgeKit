@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>User-Agent 测试</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 20px; background: #f5f5f5; color: #333; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { font-size: 20px; margin-top: 0; color: #007AFF; }
+        .ua-box { background: #f0f0f0; padding: 15px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 14px; margin: 15px 0; border: 1px solid #ddd; }
+        .info-item { margin-bottom: 10px; font-size: 15px; }
+        .label { font-weight: bold; color: #666; }
+        .btn { display: block; width: 100%; padding: 12px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; margin-top: 20px; cursor: pointer; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>📱 User-Agent 检测</h1>
+        <p>当前浏览器的 User-Agent 信息如下：</p>
+        
+        <div class="ua-box" id="ua-display">正在获取...</div>
+        
+        <div class="info-item">
+            <span class="label">是否包含 WebBridgeKit:</span>
+            <span id="check-kit">检测中...</span>
+        </div>
+        
+        <div class="info-item">
+            <span class="label">是否包含版本号:</span>
+            <span id="check-version">检测中...</span>
+        </div>
+
+        <div class="info-item">
+            <span class="label">是否包含屏幕尺寸:</span>
+            <span id="check-screen">检测中...</span>
+        </div>
+
+        <button class="btn" onclick="window.location.reload()">刷新页面</button>
+    </div>
+
+    <script>
+        function updateUA() {
+            const ua = navigator.userAgent;
+            document.getElementById('ua-display').textContent = ua;
+            
+            const hasKit = ua.includes('WebBridgeKit');
+            document.getElementById('check-kit').textContent = hasKit ? '✅ 是' : '❌ 否';
+            document.getElementById('check-kit').style.color = hasKit ? 'green' : 'red';
+            
+            const hasVersion = /WebBridgeKit\/\d+\.\d+\.\d+/.test(ua);
+            document.getElementById('check-version').textContent = hasVersion ? '✅ 是' : '❌ 否';
+            document.getElementById('check-version').style.color = hasVersion ? 'green' : 'red';
+
+            const hasScreen = /Screen\/\d+x\d+/.test(ua);
+            document.getElementById('check-screen').textContent = hasScreen ? '✅ 是' : '❌ 否';
+            document.getElementById('check-screen').style.color = hasScreen ? 'green' : 'red';
+        }
+
+        // 延迟一小会儿获取，确保 customUserAgent 已经生效
+        setTimeout(updateUA, 100);
+    </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; padding: 16px; background: #f5f5f5; margin: 0; }
+        h1 { color: #333; margin: 0 0 16px 0; }
+        .summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .summary-title { font-size: 14px; opacity: 0.9; margin-bottom: 8px; }
+        .summary-stats { display: flex; justify-content: space-around; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; }
+        .stat-label { font-size: 11px; opacity: 0.8; }
+        .permission-list { background: white; border-radius: 12px; overflow: hidden; }
+        .permission-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #f0f0f0; }
+        .permission-item:last-child { border-bottom: none; }
+        .permission-icon { font-size: 28px; margin-right: 12px; }
+        .permission-info { flex: 1; }
+        .permission-name { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 4px; }
+        .permission-status { font-size: 13px; color: #666; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-authorized { background: #d4edda; color: #155724; }
+        .status-denied { background: #f8d7da; color: #721c24; }
+        .status-notDetermined { background: #fff3cd; color: #856404; }
+        .status-limited { background: #d1ecf1; color: #0c5460; }
+        .btn-settings { display: block; width: 100%; padding: 14px; background: #667eea; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; margin-top: 16px; cursor: pointer; }
+        .btn-settings:active { opacity: 0.8; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🔐 权限管理</h1>
+
+    <div id="loading" class="loading">正在检测权限状态...</div>
+
+    <div id="content" style="display: none;">
+        <div class="summary-card">
+            <div class="summary-title">权限概览</div>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="total">0</div>
+                    <div class="stat-label">总计</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="granted">0</div>
+                    <div class="stat-label">已授权</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="denied">0</div>
+                    <div class="stat-label">已拒绝</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="permission-list" id="permissionList"></div>
+
+        <button class="btn-settings" onclick="openSettings()">打开系统设置</button>
+    </div>
+
+    <script>
+        function callNative(action, params) {
+            try {
+                window.webkit.messageHandlers.BarkBridge.postMessage({ action: action, params: params || {} });
+            } catch (e) {
+                console.error('Native call failed:', e);
+            }
+        }
+
+        function openSettings() {
+            callNative('openSettings');
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'authorized':
+                    return '<span class="status-badge status-authorized">✅ 已授权</span>';
+                case 'denied':
+                    return '<span class="status-badge status-denied">❌ 已拒绝</span>';
+                case 'notDetermined':
+                    return '<span class="status-badge status-notDetermined">⚠️ 未请求</span>';
+                case 'limited':
+                    return '<span class="status-badge status-limited">⚡️ 部分授权</span>';
+                default:
+                    return '<span class="status-badge status-notDetermined">❓ 未知</span>';
+            }
+        }
+
+        function renderPermissions(data) {
+            var permissions = data.permissions;
+            var summary = data.summary;
+
+            // 更新概览
+            document.getElementById('total').textContent = summary.total;
+            document.getElementById('granted').textContent = summary.granted;
+            document.getElementById('denied').textContent = summary.denied;
+
+            // 渲染权限列表
+            var listHTML = '';
+            for (var i = 0; i < permissions.length; i++) {
+                var perm = permissions[i];
+                listHTML += '<div class="permission-item">';
+                listHTML += '<div class="permission-icon">' + perm.icon + '</div>';
+                listHTML += '<div class="permission-info">';
+                listHTML += '<div class="permission-name">' + perm.displayName + '</div>';
+                listHTML += '<div class="permission-status">' + getStatusBadge(perm.status) + '</div>';
+                listHTML += '</div>';
+                listHTML += '</div>';
+            }
+
+            document.getElementById('permissionList').innerHTML = listHTML;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+
+        // 页面加载时获取权限状态
+        setTimeout(function() {
+            callNative('getPermissionStatus');
+        }, 100);
+
+        // 接收权限数据
+        window.BarkBridge = window.BarkBridge || {};
+        window.BarkBridge.receiveResult = function(result) {
+            if (result.success && result.data && result.data.permissions) {
+                renderPermissions(result.data);
+            }
+        };
+    </script>
+</body>
+</html>

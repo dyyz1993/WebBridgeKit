@@ -315,7 +315,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
             name: "33. 资源加载错误演示",
             description: "加载一个不存在的 custom:// 协议地址，演示自定义错误页面的显示。",
             manifestFileName: "error_demo",
-            manifestURL: URL(string: "custom://nonexistent-page/index.html")!
+            manifestURL: URL(string: "custom://nonexistent-page/index.html")!  // 🔥 直接使用完整URL，不用 deletingLastPathComponent
         ))
 
         return cases
@@ -481,10 +481,10 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
                     from: viewController
                 )
             } else {
-                // 对于远程 Manifest，使用 openBrowser
+                // 对于远程 Manifest，使用 openBrowser（并传递 params）
                 WebBrowserManager.shared.openBrowser(
                     url: pageURL,
-                    forceRefresh: false,
+                    params: WebBrowserParams.from(url: pageURL),
                     from: viewController
                 )
             }

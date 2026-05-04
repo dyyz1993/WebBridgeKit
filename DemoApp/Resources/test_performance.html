@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebBridgeKit Performance Test</title>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: rgba(255,255,255,0.95); padding: 30px; border-radius: 15px; margin-bottom: 30px; }
+        .header h1 { color: #1e3c72; margin-bottom: 10px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat { background: rgba(255,255,255,0.95); padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #2a5298; }
+        .resources { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .resource { background: rgba(255,255,255,0.95); padding: 20px; border-radius: 10px; }
+        .resource.large { border-left: 5px solid #e74c3c; }
+        .resource.slow { border-left: 5px solid #f39c12; }
+        .resource h3 { margin-bottom: 10px; color: #1e3c72; }
+        .resource a { display: inline-block; padding: 8px 16px; background: #2a5298; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 WebBridgeKit Performance Test</h1>
+            <p>Test resources for measuring WebView performance</p>
+        </div>
+        <div class="stats">
+            <div class="stat"><div class="stat-value">6</div><div>Total Resources</div></div>
+            <div class="stat"><div class="stat-value">16MB</div><div>Total Size</div></div>
+            <div class="stat"><div class="stat-value">3</div><div>Large Files</div></div>
+        </div>
+        <h2 style="color:white;margin-bottom:20px">Test Resources</h2>
+        <div class="resources">        <div class="resource large">
+            <h3>📦 Large Resource</h3>
+            <p>Size: 1MB</p>
+            <a href="./large/large_resource_1mb.dat" download>Download</a>
+        </div>        <div class="resource large">
+            <h3>📦 Large Resource</h3>
+            <p>Size: 5MB</p>
+            <a href="./large/large_resource_5mb.dat" download>Download</a>
+        </div>        <div class="resource large">
+            <h3>📦 Large Resource</h3>
+            <p>Size: 10MB</p>
+            <a href="./large/large_resource_10mb.dat" download>Download</a>
+        </div>        <div class="resource slow">
+            <h3>🐢 Slow Resource</h3>
+            <p>Delay: 1.0s</p>
+            <a href="./slow/slow_resource_1s.html" target="_blank">Open</a>
+        </div>        <div class="resource slow">
+            <h3>🐢 Slow Resource</h3>
+            <p>Delay: 3.0s</p>
+            <a href="./slow/slow_resource_3s.html" target="_blank">Open</a>
+        </div>        <div class="resource slow">
+            <h3>🐢 Slow Resource</h3>
+            <p>Delay: 5.0s</p>
+            <a href="./slow/slow_resource_5s.html" target="_blank">Open</a>
+        </div>        </div>
+    </div>
+    <script>
+        window.addEventListener('load', function() {
+            const loadTime = performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart;
+            console.log('Page load time:', loadTime + 'ms');
+        });
+    </script>
+</body>
+</html>

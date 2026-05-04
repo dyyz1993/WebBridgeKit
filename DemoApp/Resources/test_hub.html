@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebBridgeKit Manifest 测试中心</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f7;
+        }
+        h1 { color: #1d1d1f; border-bottom: 1px solid #d2d2d7; padding-bottom: 10px; }
+        .case-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .case-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .case-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #0071e3; }
+        .case-desc { font-size: 14px; color: #6e6e73; margin-bottom: 12px; }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        .tag-lazy { background: #e1f5fe; color: #01579b; }
+        .tag-persistent { background: #fff3e0; color: #e65100; }
+        .tag-appid { background: #e8f5e9; color: #1b5e20; }
+        a { text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>WebBridgeKit 测试用例</h1>
+    <p>点击下方卡片进入对应的 Manifest 缓存测试页面。</p>
+
+    <a href="cases/persistent_with_id/index.html">
+        <div class="case-card">
+            <div class="case-title">1. 持久化测试 (有 AppID)</div>
+            <div class="case-desc">使用 <code>com.test.persistent</code>，全量资源预下载后再展示，支持离线。</div>
+            <div>
+                <span class="tag tag-persistent">持久化</span>
+                <span class="tag tag-appid">AppID</span>
+            </div>
+        </div>
+    </a>
+
+    <a href="cases/persistent_no_id/index.html">
+        <div class="case-card">
+            <div class="case-title">2. 持久化测试 (无 AppID)</div>
+            <div class="case-desc">未配置 AppID，全量资源预下载，使用域名作为标识符。</div>
+            <div>
+                <span class="tag tag-persistent">持久化</span>
+            </div>
+        </div>
+    </a>
+
+    <a href="cases/lazy_with_id/index.html">
+        <div class="case-card">
+            <div class="case-title">3. 懒加载测试 (有 AppID)</div>
+            <div class="case-desc">使用 <code>com.test.lazy</code> 作为标识符，页面加载后异步下载资源。</div>
+            <div>
+                <span class="tag tag-lazy">懒加载</span>
+                <span class="tag tag-appid">AppID</span>
+            </div>
+        </div>
+    </a>
+
+    <a href="cases/lazy_no_id/index.html">
+        <div class="case-card">
+            <div class="case-title">4. 懒加载测试 (无 AppID)</div>
+            <div class="case-desc">未配置 AppID，页面加载后异步下载资源，使用域名作为标识符。</div>
+            <div>
+                <span class="tag tag-lazy">懒加载</span>
+            </div>
+        </div>
+    </a>
+
+    <a href="cases/minimal/index.html">
+        <div class="case-card">
+            <div class="case-title">5. 最简 Manifest 测试</div>
+            <div class="case-desc">仅包含必要的 resources 字段，验证框架的鲁棒性。</div>
+            <div>
+                <span class="tag tag-lazy">懒加载</span>
+            </div>
+        </div>
+    </a>
+
+    <h2>Bridge 功能测试</h2>
+    <p>测试 WebBridgeKit 提供的原生功能调用能力。</p>
+
+    <a href="js_bridge_test.html">
+        <div class="case-card">
+            <div class="case-title">6. JS Bridge 综合测试</div>
+            <div class="case-desc">测试分享、位置、系统信息、触觉反馈等基础 Bridge 功能。</div>
+            <div>
+                <span class="tag tag-appid">Bridge</span>
+                <span class="tag tag-persistent">综合</span>
+            </div>
+        </div>
+    </a>
+
+    <a href="permissions_ui.html">
+        <div class="case-card">
+            <div class="case-title">7. 权限申请测试</div>
+            <div class="case-desc">测试摄像头、相册、位置、通知等系统权限的动态申请。</div>
+            <div>
+                <span class="tag tag-appid">Bridge</span>
+                <span class="tag tag-lazy">权限</span>
+            </div>
+        </div>
+    </a>
+
+    <a href="execute_network_test.html">
+        <div class="case-card">
+            <div class="case-title">8. 网络请求测试</div>
+            <div class="case-desc">测试通过 Bridge 发起原生网络请求，支持跨域访问。</div>
+            <div>
+                <span class="tag tag-appid">Bridge</span>
+                <span class="tag tag-persistent">网络</span>
+            </div>
+        </div>
+    </a>
+
+    <a href="trigger_haptic.html">
+        <div class="case-card">
+            <div class="case-title">9. 触觉反馈测试</div>
+            <div class="case-desc">测试各种强度的 Taptic Engine 触觉反馈。</div>
+            <div>
+                <span class="tag tag-appid">Bridge</span>
+                <span class="tag tag-lazy">交互</span>
+            </div>
+        </div>
+    </a>
+
+    <div style="margin-top: 40px; font-size: 12px; color: #86868b; text-align: center;">
+        WebBridgeKit Testing Portal &copy; 2025
+    </div>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片缓存测试</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ 图片缓存测试</h1>
+            <p class="subtitle">验证 WebBridgeKit 图片缓存和 URL Scheme 重写功能</p>
+        </header>
+
+        <section class="test-section">
+            <h2>测试图片</h2>
+            <div class="image-grid">
+                <div class="image-card">
+                    <div class="image-wrapper">
+                        <img id="logo" src="images/logo.png" alt="Logo" onload="checkImage('logo')" onerror="markError('logo')">
+                    </div>
+                    <div class="image-info" id="logo-info">
+                        <div class="image-name">Logo (PNG)</div>
+                        <div class="status">加载中...</div>
+                    </div>
+                </div>
+
+                <div class="image-card">
+                    <div class="image-wrapper">
+                        <img id="photo1" src="images/photo1.jpg" alt="Photo 1" onload="checkImage('photo1')" onerror="markError('photo1')">
+                    </div>
+                    <div class="image-info" id="photo1-info">
+                        <div class="image-name">Photo 1 (JPG)</div>
+                        <div class="status">加载中...</div>
+                    </div>
+                </div>
+
+                <div class="image-card">
+                    <div class="image-wrapper">
+                        <img id="icon" src="images/icon.png" alt="Icon" onload="checkImage('icon')" onerror="markError('icon')">
+                    </div>
+                    <div class="image-info" id="icon-info">
+                        <div class="image-name">Icon (PNG)</div>
+                        <div class="status">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="results-section">
+            <h2>验证结果</h2>
+            <div id="results"></div>
+        </section>
+
+        <section class="details-section">
+            <h2>详细信息</h2>
+            <div id="details"></div>
+        </section>
+
+        <footer>
+            <button class="btn" onclick="runAllTests()">🔄 重新测试</button>
+            <button class="btn btn-secondary" onclick="exportResults()">📥 导出结果</button>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // 测试结果存储
+        const testResults = {
+            logo: null,
+            photo1: null,
+            icon: null
+        };
+
+        // 检查单张图片
+        function checkImage(id) {
+            const img = document.getElementById(id);
+            const info = document.getElementById(`${id}-info`);
+
+            const result = {
+                id: id,
+                success: true,
+                currentSrc: img.currentSrc,
+                isResourceScheme: img.currentSrc && img.currentSrc.startsWith('wb-resource://'),
+                naturalWidth: img.naturalWidth,
+                naturalHeight: img.naturalHeight,
+                hasValidDimensions: img.naturalWidth > 0 && img.naturalHeight > 0,
+                complete: img.complete,
+                display: window.getComputedStyle(img).display
+            };
+
+            testResults[id] = result;
+
+            // 更新 UI
+            const statusDiv = info.querySelector('.status');
+            if (result.isResourceScheme && result.hasValidDimensions) {
+                statusDiv.innerHTML = `<span class="badge success">✓ 缓存加载</span>`;
+                statusDiv.innerHTML += `<div class="details">${result.naturalWidth}×${result.naturalHeight}px</div>`;
+            } else if (result.hasValidDimensions) {
+                statusDiv.innerHTML = `<span class="badge warning">⚠️ 未使用缓存</span>`;
+                statusDiv.innerHTML += `<div class="details">${result.naturalWidth}×${result.naturalHeight}px</div>`;
+            } else {
+                statusDiv.innerHTML = `<span class="badge error">✗ 加载失败</span>`;
+            }
+
+            updateResults();
+        }
+
+        // 标记错误
+        function markError(id) {
+            const info = document.getElementById(`${id}-info`);
+            const statusDiv = info.querySelector('.status');
+            statusDiv.innerHTML = `<span class="badge error">✗ 加载失败</span>`;
+
+            testResults[id] = {
+                id: id,
+                success: false,
+                error: true
+            };
+
+            updateResults();
+        }
+
+        // 更新结果面板
+        function updateResults() {
+            const resultsDiv = document.getElementById('results');
+            const allChecked = Object.values(testResults).every(r => r !== null);
+
+            if (!allChecked) {
+                resultsDiv.innerHTML = '<div class="loading">等待所有图片加载完成...</div>';
+                return;
+            }
+
+            const passed = Object.values(testResults).filter(r => r && r.isResourceScheme && r.hasValidDimensions).length;
+            const total = Object.keys(testResults).length;
+
+            let html = `
+                <div class="summary">
+                    <h3>测试摘要</h3>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-value">${passed}/${total}</div>
+                            <div class="stat-label">通过</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value ${passed === total ? 'success' : 'warning'}">
+                                ${passed === total ? '✓' : '⚠️'}
+                            </div>
+                            <div class="stat-label">状态</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+            updateDetails();
+        }
+
+        // 更新详细信息
+        function updateDetails() {
+            const detailsDiv = document.getElementById('details');
+
+            let html = '<div class="details-grid">';
+
+            for (const [id, result] of Object.entries(testResults)) {
+                if (!result) continue;
+
+                html += `
+                    <div class="detail-card">
+                        <h4>${result.id.toUpperCase()}</h4>
+                        <dl>
+                            <dt>当前 URL:</dt>
+                            <dd><code>${result.currentSrc || 'N/A'}</code></dd>
+                            <dt>URL Scheme:</dt>
+                            <dd>${result.isResourceScheme ?
+                                '<span class="badge success">wb-resource://</span>' :
+                                '<span class="badge warning">其他</span>'}</dd>
+                            <dt>尺寸:</dt>
+                            <dd>${result.naturalWidth}×${result.naturalHeight}px</dd>
+                            <dt>有效尺寸:</dt>
+                            <dd>${result.hasValidDimensions ?
+                                '<span class="badge success">是</span>' :
+                                '<span class="badge error">否</span>'}</dd>
+                            <dt>加载完成:</dt>
+                            <dd>${result.complete ?
+                                '<span class="badge success">是</span>' :
+                                '<span class="badge warning">否</span>'}</dd>
+                        </dl>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            detailsDiv.innerHTML = html;
+        }
+
+        // 运行所有测试
+        function runAllTests() {
+            // 清空结果
+            for (const key of Object.keys(testResults)) {
+                testResults[key] = null;
+            }
+
+            // 重新加载图片
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                const src = img.src;
+                img.src = '';
+                setTimeout(() => {
+                    img.src = src;
+                }, 10);
+            });
+
+            updateResults();
+        }
+
+        // 导出结果
+        function exportResults() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                results: testResults,
+                summary: {
+                    total: Object.keys(testResults).length,
+                    passed: Object.values(testResults).filter(r => r && r.isResourceScheme && r.hasValidDimensions).length
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `image-cache-test-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('图片缓存测试页面已加载');
+            updateResults();
+        });
+    </script>
+</body>
+</html>

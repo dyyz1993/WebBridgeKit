@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permission Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .permission-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .permission-section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .permission-section h2 .icon {
+            font-size: 24px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        button.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .result-box {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #333;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .result-box.success {
+            border-left-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .result-box.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.granted {
+            background: #4caf50;
+        }
+
+        .status-indicator.denied {
+            background: #f44336;
+        }
+
+        .status-indicator.pending {
+            background: #ff9800;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Permission Test Suite</h1>
+
+        <!-- Camera Permission Section -->
+        <div class="permission-section">
+            <h2><span class="icon">📷</span> Camera Permission</h2>
+            <div class="button-group">
+                <button onclick="requestCameraPermission()">Request Camera Permission</button>
+                <button class="secondary" onclick="openCamera()">Open Camera (Photo)</button>
+                <button class="success" onclick="checkCameraStatus()">Check Camera Status</button>
+            </div>
+            <div id="cameraResult" class="result-box"></div>
+            <p class="info-text">Tests camera access and photo capture functionality</p>
+        </div>
+
+        <!-- Microphone Permission Section -->
+        <div class="permission-section">
+            <h2><span class="icon">🎤</span> Microphone Permission</h2>
+            <div class="button-group">
+                <button onclick="requestMicrophonePermission()">Request Microphone Permission</button>
+                <button class="success" onclick="checkMicrophoneStatus()">Check Microphone Status</button>
+            </div>
+            <div id="microphoneResult" class="result-box"></div>
+            <p class="info-text">Tests microphone access permission status</p>
+        </div>
+
+        <!-- Location Permission Section -->
+        <div class="permission-section">
+            <h2><span class="icon">📍</span> Location Permission</h2>
+            <div class="button-group">
+                <button onclick="requestLocation()">Get Current Location</button>
+                <button class="success" onclick="checkLocationStatus()">Check Location Status</button>
+            </div>
+            <div id="locationResult" class="result-box"></div>
+            <p class="info-text">Tests geolocation access and coordinates retrieval</p>
+        </div>
+
+        <!-- All Permissions Status -->
+        <div class="permission-section">
+            <h2><span class="icon">📊</span> All Permissions Status</h2>
+            <div class="button-group">
+                <button class="success" onclick="checkAllPermissions()">Check All Permissions</button>
+            </div>
+            <div id="allPermissionsResult" class="result-box"></div>
+        </div>
+    </div>
+
+    <script>
+        // Utility function to display results
+        function showResult(elementId, message, isSuccess = true) {
+            const resultBox = document.getElementById(elementId);
+            resultBox.textContent = message;
+            resultBox.className = 'result-box show ' + (isSuccess ? 'success' : 'error');
+        }
+
+        // Camera Permission Tests
+        function requestCameraPermission() {
+            if (window.WebBridgeKit && window.WebBridgeKit.permission) {
+                window.WebBridgeKit.permission({ type: 'camera' })
+                    .then(result => {
+                        const status = result.granted ? '✅ Granted' : '❌ Denied';
+                        showResult('cameraResult', `Camera Permission: ${status}\nStatus: ${result.status}`, result.granted);
+                    })
+                    .catch(error => {
+                        showResult('cameraResult', `Error: ${error.message || error}`, false);
+                    });
+            } else {
+                showResult('cameraResult', 'WebBridgeKit not available', false);
+            }
+        }
+
+        function openCamera() {
+            if (window.WebBridgeKit && window.WebBridgeKit.camera) {
+                window.WebBridgeKit.camera({ type: 'photo' })
+                    .then(result => {
+                        if (result.cancelled) {
+                            showResult('cameraResult', 'Camera operation cancelled by user', true);
+                        } else {
+                            showResult('cameraResult', `Photo captured!\nType: ${result.type}\nSize: ${result.width}x${result.height}\nData size: ${result.size} bytes`, true);
+                        }
+                    })
+                    .catch(error => {
+                        showResult('cameraResult', `Error: ${error.message || error}`, false);
+                    });
+            } else {
+                showResult('cameraResult', 'WebBridgeKit not available', false);
+            }
+        }
+
+        function checkCameraStatus() {
+            if (window.WebBridgeKit && window.WebBridgeKit.permission) {
+                window.WebBridgeKit.permission({ type: 'camera' })
+                    .then(result => {
+                        const statusText = getStatusText(result.status);
+                        showResult('cameraResult', `Camera Permission Status:\nGranted: ${result.granted}\nStatus: ${statusText}`, true);
+                    })
+                    .catch(error => {
+                        showResult('cameraResult', `Error: ${error.message || error}`, false);
+                    });
+            } else {
+                showResult('cameraResult', 'WebBridgeKit not available', false);
+            }
+        }
+
+        // Microphone Permission Tests
+        function requestMicrophonePermission() {
+            if (window.WebBridgeKit && window.WebBridgeKit.permission) {
+                window.WebBridgeKit.permission({ type: 'microphone' })
+                    .then(result => {
+                        const status = result.granted ? '✅ Granted' : '❌ Denied';
+                        showResult('microphoneResult', `Microphone Permission: ${status}\nStatus: ${result.status}`, result.granted);
+                    })
+                    .catch(error => {
+                        showResult('microphoneResult', `Error: ${error.message || error}`, false);
+                    });
+            } else {
+                showResult('microphoneResult', 'WebBridgeKit not available', false);
+            }
+        }
+
+        function checkMicrophoneStatus() {
+            if (window.WebBridgeKit && window.WebBridgeKit.permission) {
+                window.WebBridgeKit.permission({ type: 'microphone' })
+                    .then(result => {
+                        const statusText = getStatusText(result.status);
+                        showResult('microphoneResult', `Microphone Permission Status:\nGranted: ${result.granted}\nStatus: ${statusText}`, true);
+                    })
+                    .catch(error => {
+                        showResult('microphoneResult', `Error: ${error.message || error}`, false);
+                    });
+            } else {
+                showResult('microphoneResult', 'WebBridgeKit not available', false);
+            }
+        }
+
+        // Location Permission Tests
+        function requestLocation() {
+            if (window.WebBridgeKit && window.WebBridgeKit.location) {
+                window.WebBridgeKit.location({})
+                    .then(result => {
+                        showResult('locationResult', `Location retrieved!\nLatitude: ${result.latitude}\nLongitude: ${result.longitude}\nAccuracy: ${result.accuracy}m`, true);
+                    })
+                    .catch(error => {
+                        showResult('locationResult', `Error: ${error.message || error}`, false);
+                    });
+            } else {
+                showResult('locationResult', 'WebBridgeKit not available', false);
+            }
+        }
+
+        function checkLocationStatus() {
+            if (window.WebBridgeKit && window.WebBridgeKit.permission) {
+                window.WebBridgeKit.permission({ type: 'location' })
+                    .then(result => {
+                        const statusText = getLocationStatusText(result.status);
+                        showResult('locationResult', `Location Permission Status:\nGranted: ${result.granted}\nStatus: ${statusText}`, true);
+                    })
+                    .catch(error => {
+                        showResult('locationResult', `Error: ${error.message || error}`, false);
+                    });
+            } else {
+                showResult('locationResult', 'WebBridgeKit not available', false);
+            }
+        }
+
+        // Check All Permissions
+        function checkAllPermissions() {
+            const promises = [];
+
+            if (window.WebBridgeKit && window.WebBridgeKit.permission) {
+                promises.push(window.WebBridgeKit.permission({ type: 'camera' }).then(r => ({ type: 'Camera', ...r })));
+                promises.push(window.WebBridgeKit.permission({ type: 'microphone' }).then(r => ({ type: 'Microphone', ...r })));
+                promises.push(window.WebBridgeKit.permission({ type: 'location' }).then(r => ({ type: 'Location', ...r })));
+            }
+
+            Promise.all(promises)
+                .then(results => {
+                    let output = '=== All Permissions Status ===\n\n';
+                    results.forEach(result => {
+                        const status = result.granted ? '✅ Granted' : '❌ Denied';
+                        output += `${result.type}: ${status}\n`;
+                    });
+                    showResult('allPermissionsResult', output, true);
+                })
+                .catch(error => {
+                    showResult('allPermissionsResult', `Error: ${error.message || error}`, false);
+                });
+        }
+
+        // Helper function to convert status code to text
+        function getStatusText(status) {
+            const statusMap = {
+                0: 'Not Determined',
+                1: 'Restricted',
+                2: 'Denied',
+                3: 'Authorized'
+            };
+            return statusMap[status] || `Unknown (${status})`;
+        }
+
+        // Helper function for location status
+        function getLocationStatusText(status) {
+            const statusMap = {
+                0: 'Not Determined',
+                1: 'Restricted',
+                2: 'Denied',
+                3: 'Authorized Always',
+                4: 'Authorized When In Use'
+            };
+            return statusMap[status] || `Unknown (${status})`;
+        }
+
+        // Auto-check permissions on page load
+        window.addEventListener('load', () => {
+            console.log('Permission Test Page loaded');
+            console.log('WebBridgeKit available:', !!window.WebBridgeKit);
+        });
+    </script>
+</body>
+</html>

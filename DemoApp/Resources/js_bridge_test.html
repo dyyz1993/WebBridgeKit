@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; padding: 16px; background: #f5f5f5; margin: 0; }
+        h1 { color: #333; margin: 0 0 16px 0; }
+        .status-bar { background: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+        .status-bar.ok { background: #d4edda; color: #155724; }
+        .status-bar.error { background: #f8d7da; color: #721c24; }
+        .test-section { background: white; padding: 16px; border-radius: 8px; margin-bottom: 12px; }
+        .test-section h3 { margin: 0 0 12px 0; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { padding: 10px; border: none; border-radius: 6px; color: white; font-size: 14px; cursor: pointer; width: 100%; }
+        button:active { opacity: 0.7; }
+        .btn-share { background: #667eea; }
+        .btn-location { background: #f093fb; }
+        .btn-system { background: #4facfe; }
+        .btn-network { background: #00f2fe; }
+        .btn-haptic { background: #fa709a; }
+        .btn-vibrate { background: #fee140; color: #333; }
+        .log-section { background: #1e1e1e; color: #f0f0f0; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; max-height: 250px; overflow-y: auto; }
+        .log-entry { padding: 4px 0; border-bottom: 1px solid #333; }
+        .log-success { color: #4ade80; }
+        .log-error { color: #f87171; }
+        .log-info { color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <h1>🌉 Bark JS Bridge</h1>
+    <div id="statusBar" class="status-bar">检测中...</div>
+
+    <div class="test-section">
+        <h3>📤 基础功能</h3>
+        <button class="btn-share" onclick="callNative('share', {text: '来自 Bark 的分享', url: 'https://github.com/Finb/Bark'})">分享</button>
+        <button class="btn-location" onclick="callNative('getLocation')">获取位置</button>
+    </div>
+
+    <div class="test-section">
+        <h3>📱 系统信息</h3>
+        <div class="btn-grid">
+            <button class="btn-system" onclick="callNative('getSystemInfo')">系统信息</button>
+            <button class="btn-network" onclick="callNative('getNetworkInfo')">网络状态</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🎨 交互反馈</h3>
+        <div class="btn-grid">
+            <button class="btn-haptic" onclick="callNative('haptic')">触觉反馈</button>
+            <button class="btn-vibrate" onclick="callNative('vibrate')">震动</button>
+        </div>
+    </div>
+
+    <div class="log-section">
+        <div id="logContainer"></div>
+    </div>
+
+    <script>
+        function addLog(type, message, data) {
+            var logContainer = document.getElementById('logContainer');
+            var time = new Date().toLocaleTimeString();
+            var logClass = type === 'success' ? 'log-success' : type === 'error' ? 'log-error' : 'log-info';
+            var div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = '[' + time + '] [' + type.toUpperCase() + '] ' + message + (data ? ' ' + JSON.stringify(data) : '');
+            logContainer.insertBefore(div, logContainer.firstChild);
+            if (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        function checkBridge() {
+            var hasBridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.BarkBridge;
+            var statusBar = document.getElementById('statusBar');
+            if (hasBridge) {
+                statusBar.className = 'status-bar ok';
+                statusBar.textContent = '✅ JS Bridge 可用';
+                addLog('success', 'JS Bridge 检测成功');
+            } else {
+                statusBar.className = 'status-bar error';
+                statusBar.textContent = '❌ JS Bridge 不可用';
+                addLog('error', 'JS Bridge 不可用');
+            }
+            return hasBridge;
+        }
+
+        function callNative(action, params) {
+            if (!checkBridge()) return;
+            addLog('info', '调用: ' + action, params);
+            try {
+                window.webkit.messageHandlers.BarkBridge.postMessage({ action: action, params: params || {} });
+                addLog('info', '请求已发送');
+            } catch (e) {
+                addLog('error', '调用失败: ' + e.message);
+            }
+        }
+
+        window.BarkBridge = window.BarkBridge || {};
+        window.BarkBridge.receiveResult = function(result) {
+            if (result.success) {
+                addLog('success', '成功', result.data);
+            } else {
+                addLog('error', '失败: ' + (result.error || 'Unknown'));
+            }
+        };
+
+        setTimeout(checkBridge, 100);
+    </script>
+</body>
+</html>

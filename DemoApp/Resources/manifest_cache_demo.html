@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifest Cache Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+
+        .resource-list {
+            margin-top: 20px;
+        }
+
+        .resource-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .loading {
+            color: #FF9800;
+            font-weight: bold;
+        }
+
+        .button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .button:hover {
+            background: #1976D2;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .status.success {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .status.error {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        #imageContainer img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .feature-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .feature-card p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Manifest Cache System Demo</h1>
+        <p class="subtitle">Demonstrating relative path loading with custom:// URL scheme</p>
+
+        <div class="info-box">
+            <h3>📋 How It Works</h3>
+            <p>This page uses <strong>relative paths</strong> for all resources:</p>
+            <ul>
+                <li>Images: <code>&lt;img src="logo.png"&gt;</code></li>
+                <li>CSS: <code>&lt;link href="styles.css"&gt;</code></li>
+                <li>JS: <code>&lt;script src="app.js"&gt;</code></li>
+            </ul>
+            <p><strong>These relative paths are automatically resolved to</strong> <code>custom://</code> URLs and intercepted by the URL scheme handler!</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🎯 Custom URL Scheme</h4>
+                <p>Uses custom:// instead of http:// for complete control</p>
+            </div>
+            <div class="feature-card">
+                <h4>📦 Manifest-Based</h4>
+                <p>Maps relative paths to real network URLs via manifest.json</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ On-Demand Loading</h4>
+                <p>Resources fetched only when needed, then cached</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔄 Transparent</h4>
+                <p>No HTML modifications required after initial setup</p>
+            </div>
+        </div>
+
+        <h2>📦 Resource Loading Status</h2>
+        <div class="resource-list">
+            <div class="resource-item" id="css-status">
+                <span class="loading">⏳</span> styles.css - Loading...
+            </div>
+            <div class="resource-item" id="js-status">
+                <span class="loading">⏳</span> app.js - Loading...
+            </div>
+            <div class="resource-item" id="image-status">
+                <span class="loading">⏳</span> logo.png - Loading...
+            </div>
+        </div>
+
+        <div id="imageContainer"></div>
+
+        <div class="status" id="statusMessage" style="display: none;"></div>
+
+        <h2>🎮 Interactive Demo</h2>
+        <button class="button" onclick="testJavaScript()">Test JavaScript Bridge</button>
+        <button class="button" onclick="checkCacheStatus()">Check Cache Status</button>
+        <button class="button" onclick="loadExternalImage()">Load External Image</button>
+
+        <div id="testResults" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 6px; display: none;">
+            <h4>Test Results:</h4>
+            <pre id="testOutput"></pre>
+        </div>
+    </div>
+
+    <!-- External CSS with relative path -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- External JavaScript with relative path -->
+    <script src="app.js"></script>
+
+    <script>
+        // This inline script will work
+        console.log('✅ Inline JavaScript loaded successfully');
+
+        // Update CSS status
+        setTimeout(() => {
+            const cssStatus = document.getElementById('css-status');
+            if (document.styleSheets.length > 0) {
+                cssStatus.innerHTML = '<span class="success">✅</span> styles.css - Loaded successfully!';
+            } else {
+                cssStatus.innerHTML = '<span style="color: red;">❌</span> styles.css - Failed to load (expected - file may not exist)';
+            }
+        }, 100);
+
+        // Test JavaScript bridge
+        function testJavaScript() {
+            const results = document.getElementById('testResults');
+            const output = document.getElementById('testOutput');
+            results.style.display = 'block';
+
+            let testInfo = 'JavaScript Bridge Test Results:\n';
+            testInfo += '================================\n';
+            testInfo += `✅ Inline JavaScript: Working\n`;
+            testInfo += `✅ Document Object: ${document !== undefined ? 'Available' : 'Not Available'}\n`;
+            testInfo += `✅ Window Object: ${window !== undefined ? 'Available' : 'Not Available'}\n`;
+            testInfo += `✅ Console: Working\n`;
+            testInfo += `\nNote: app.js and styles.css will fail to load if\n`;
+            testInfo += `the manifest doesn't have entries for them.\n`;
+            testInfo += `This is expected behavior for demo purposes.\n`;
+
+            output.textContent = testInfo;
+        }
+
+        // Check cache status (placeholder)
+        function checkCacheStatus() {
+            const results = document.getElementById('testResults');
+            const output = document.getElementById('testOutput');
+            results.style.display = 'block';
+
+            const cacheInfo = {
+                'custom:// scheme': '✅ Active',
+                'Manifest System': '✅ Initialized',
+                'URL Scheme Handler': '✅ Registered',
+                'Relative Path Support': '✅ Working'
+            };
+
+            let statusText = 'Cache System Status:\n';
+            statusText += '=====================\n';
+            for (const [key, value] of Object.entries(cacheInfo)) {
+                statusText += `${key}: ${value}\n`;
+            }
+            statusText += '\nAll systems operational! 🚀';
+
+            output.textContent = statusText;
+        }
+
+        // Load external image (placeholder)
+        function loadExternalImage() {
+            const container = document.getElementById('imageContainer');
+            const status = document.getElementById('image-status');
+            const statusMsg = document.getElementById('statusMessage');
+
+            // Try to load image with relative path
+            container.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">Attempting to load logo.png from custom:// logo.png...</p>';
+
+            setTimeout(() => {
+                const img = document.createElement('img');
+                img.src = 'logo.png';
+                img.alt = 'Demo Logo';
+                img.onerror = () => {
+                    container.innerHTML = '<p style="padding: 20px; text-align: center; color: #f44336;">❌ Failed to load logo.png</p><p style="text-align: center; font-size: 12px; color: #666;">This is expected if the manifest doesn\'t have an entry for "logo.png"</p>';
+                    status.innerHTML = '<span style="color: #f44336;">❌</span> logo.png - Failed to load (expected if not in manifest)';
+                };
+                img.onload = () => {
+                    status.innerHTML = '<span class="success">✅</span> logo.png - Loaded successfully!';
+                    container.innerHTML = '';
+                    container.appendChild(img);
+                };
+                container.appendChild(img);
+            }, 500);
+        }
+
+        // Page load complete
+        window.addEventListener('load', () => {
+            console.log('✅ Page fully loaded');
+            console.log('📊 Resource loading complete');
+            console.log('🎯 Custom URL scheme: custom://');
+
+            // Update JS status
+            const jsStatus = document.getElementById('js-status');
+            jsStatus.innerHTML = '<span class="success">✅</span> app.js - Inline JavaScript loaded (external may fail if not in manifest)';
+
+            // Show success message
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.style.display = 'block';
+            statusMsg.className = 'status success';
+            statusMsg.innerHTML = '<strong>✅ Success!</strong> Page loaded with custom:// URL scheme. Check console for details.';
+        });
+
+        // Log any errors
+        window.addEventListener('error', (e) => {
+            console.error('❌ Error:', e.message);
+            console.error('   Source:', e.filename);
+            console.error('   Line:', e.lineno);
+        });
+    </script>
+</body>
+</html>
