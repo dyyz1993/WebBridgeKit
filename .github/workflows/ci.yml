@@ -12,14 +12,11 @@ concurrency:
 
 jobs:
   build:
-    name: Build & Test
+    name: Build
     runs-on: macos-15
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Show Xcode version
-        run: xcodebuild -version
 
       - name: Cache CocoaPods
         uses: actions/cache@v4
@@ -38,10 +35,6 @@ jobs:
       - name: Install Pods
         run: pod install
 
-      - name: List Available Destinations
-        run: |
-          xcrun simctl list devices available | grep -i iphone | head -20
-
       - name: Build
         run: |
           set -o pipefail
@@ -55,14 +48,122 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-15
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Install Pods
+        run: pod install
+
+      - name: Boot Simulator
+        run: |
+          # Find and boot iPhone 16 simulator
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for runtime, devices in data['devices'].items():
+              for d in devices:
+                  if d['name'] == 'iPhone 16' and d['isAvailable']:
+                      print(d['udid'])
+                      sys.exit(0)
+          sys.exit(1)
+          ")
+          echo "Booting iPhone 16: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Run UI Tests
+        run: |
+          set -o pipefail
+          mkdir -p build/test-results
+          
+          xcodebuild test \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme DemoApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug \
+            -resultBundlePath build/test-results/TestResults \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -maximum-parallel-testing-workers 2 \
+            | xcpretty --color --report junit --output build/test-results/junit.xml || true
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p build/screenshots
+          
+          # Extract screenshots from result bundle
+          if [ -d "build/test-results/TestResults" ]; then
+            find build/test-results/TestResults -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
+            find build/test-results/TestResults -name "Screenshot*" -exec cp {} build/screenshots/ \; 2>/dev/null || true
+          fi
+          
+          # Also grab simulator screenshots
+          DEVICE_ID=$(xcrun simctl list devices booted -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for runtime, devices in data['devices'].items():
+              for d in devices:
+                  if d['state'] == 'Booted':
+                      print(d['udid'])
+                      sys.exit(0)
+          " 2>/dev/null || echo "")
+          
+          if [ -n "$DEVICE_ID" ]; then
+            xcrun simctl io "$DEVICE_ID" screenshot build/screenshots/final_state.png || true
+          fi
+          
+          echo "Screenshots collected: $(ls build/screenshots/ | wc -l) files"
+
+      - name: Upload Test Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-screenshots
+          path: build/screenshots/
+          retention-days: 14
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: build/test-results/
+          retention-days: 14
+
+      - name: Publish Test Report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: build/test-results/junit.xml
+          check_name: "UI Test Results"
+
   swiftlint:
     name: SwiftLint
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install SwiftLint
-        run: brew install swiftlint
-
       - name: Run SwiftLint
-        run: swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ DemoApp/Sources/ || true
+        run: |
+          brew install swiftlint
+          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ DemoApp/Sources/ || true
