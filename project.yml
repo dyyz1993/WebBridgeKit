@@ -46,18 +46,18 @@ targets:
           - Resources/WebBridge.js
         runOnlyForDeploymentPostprocessing: false
 
-  DemoApp:
+  SuperApp:
     type: application
     platform: iOS
     deploymentTarget: "14.0"
     sources:
-      - DemoApp/Sources
-      - DemoApp/Resources
+      - SuperApp/Sources
+      - SuperApp/Resources
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.demo
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1,2"
-      PRODUCT_NAME: DemoApp
+      PRODUCT_NAME: SuperApp
       CURRENT_PROJECT_VERSION: "1"
       MARKETING_VERSION: "1.0"
       FRAMEWORK_SEARCH_PATHS:
@@ -75,21 +75,42 @@ targets:
     dependencies:
       - target: WebBridgeKit
 
-  DemoAppUITests:
+  SuperAppUITests:
     type: bundle.ui-testing
     platform: iOS
     deploymentTarget: "14.0"
     sources:
       - DemoAppUITests
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.demo.ui.tests
-      TEST_TARGET_NAME: DemoApp
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.ui.tests
+      TEST_TARGET_NAME: SuperApp
       SWIFT_VERSION: "5.0"
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
     dependencies:
-      - target: DemoApp
+      - target: SuperApp
+
+  AppTemplate:
+    type: application
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - AppTemplate/Sources
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.apptemplate
+      SWIFT_VERSION: "5.0"
+      TARGETED_DEVICE_FAMILY: "1,2"
+      PRODUCT_NAME: AppTemplate
+      CURRENT_PROJECT_VERSION: "1"
+      MARKETING_VERSION: "1.0"
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: "-"
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
+      INFOPLIST_KEY_NSAppTransportSecurity: YES
+    dependencies:
+      - target: WebBridgeKit
 
 schemes:
   WebBridgeKit:
@@ -101,19 +122,39 @@ schemes:
     archive:
       config: Release
 
-  DemoApp:
+  SuperApp:
     build:
       targets:
-        DemoApp: all
+        SuperApp: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - DemoAppUITests
+        - SuperAppUITests
       coverageTargets:
-        - DemoApp
+        - SuperApp
         - WebBridgeKit
     archive:
       config: Release
 
+  SuperAppUITests:
+    build:
+      targets:
+        SuperAppUITests: all
+    test:
+      config: Debug
+      targets:
+        - SuperAppUITests
+      coverageTargets:
+        - SuperApp
+        - WebBridgeKit
+
+  AppTemplate:
+    build:
+      targets:
+        AppTemplate: all
+    run:
+      config: Debug
+    archive:
+      config: Release

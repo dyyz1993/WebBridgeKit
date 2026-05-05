@@ -82,7 +82,10 @@ public struct WebBrowserParams {
     public let orientation: UIInterfaceOrientationMask
     public let allowJavaScriptClose: Bool
     public let customTitle: String?
-    
+
+    /// 🔥 调试模式：启用时会显示错误页面而不是白屏
+    public var debugMode: Bool = false
+
     /// 附加负载数据（用于透传给网页）
     public let payload: [String: String]?
 
@@ -101,6 +104,7 @@ public struct WebBrowserParams {
         orientation: UIInterfaceOrientationMask = .all,
         allowJavaScriptClose: Bool = true,
         customTitle: String? = nil,
+        debugMode: Bool = false,
         payload: [String: String]? = nil
     ) {
         self.displayMode = displayMode
@@ -115,6 +119,7 @@ public struct WebBrowserParams {
         self.orientation = orientation
         self.allowJavaScriptClose = allowJavaScriptClose
         self.customTitle = customTitle
+        self.debugMode = debugMode
         self.payload = payload
     }
 
@@ -135,6 +140,7 @@ public struct WebBrowserParams {
         var orientation: UIInterfaceOrientationMask = .all
         var allowJavaScriptClose: Bool = true
         var customTitle: String? = nil
+        var debugMode: Bool = false
 
         // 辅助函数获取当前宽高
         func getCurrentWidth() -> String {
@@ -165,7 +171,8 @@ public struct WebBrowserParams {
                 disableSwipeBack: disableSwipeBack,
                 orientation: orientation,
                 allowJavaScriptClose: allowJavaScriptClose,
-                customTitle: customTitle
+                customTitle: customTitle,
+                debugMode: debugMode
             )
         }
 
@@ -209,6 +216,8 @@ public struct WebBrowserParams {
                 allowJavaScriptClose = (item.value == "true" || item.value == "1")
             case "title":
                 customTitle = item.value
+            case "debugmode":
+                debugMode = (item.value == "true" || item.value == "1")
             default:
                 break
             }

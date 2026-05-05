@@ -28,7 +28,7 @@ WebBridgeKit/
 │   ├── Services/          # 业务服务
 │   ├── Models/            # 数据模型
 │   └── Utils/             # 工具类
-└── DemoApp/               # 示例应用
+└── SuperApp/               # 示例应用
 ```
 
 ### 缓存方案
@@ -154,7 +154,7 @@ window.WebBridgeKit.camera()
 ```bash
 xcodebuild test \
   -workspace WebBridgeKit.xcworkspace \
-  -scheme DemoApp \
+  -scheme SuperApp \
   -destination 'platform=iOS Simulator,name=iPhone 15'
 ```
 
@@ -163,9 +163,9 @@ xcodebuild test \
 ```bash
 xcodebuild test \
   -workspace WebBridgeKit.xcworkspace \
-  -scheme DemoApp \
+  -scheme SuperApp \
   -destination 'platform=iOS Simulator,name=iPhone 15' \
-  -only-testing:DemoAppUITests
+  -only-testing:SuperAppUITests
 ```
 
 ## 📚 依赖

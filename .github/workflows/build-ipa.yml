@@ -48,9 +48,9 @@ jobs:
           set -o pipefail
           xcodebuild archive \
             -workspace WebBridgeKit.xcworkspace \
-            -scheme DemoApp \
+            -scheme SuperApp \
             -configuration ${{ github.event.inputs.configuration || 'Release' }} \
-            -archivePath build/DemoApp.xcarchive \
+            -archivePath build/SuperApp.xcarchive \
             -destination 'generic/platform=iOS' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
@@ -62,22 +62,22 @@ jobs:
       - name: Export IPA (unsigned)
         run: |
           mkdir -p build/Payload
-          cp -r build/DemoApp.xcarchive/Products/Applications/DemoApp.app build/Payload/
+          cp -r build/SuperApp.xcarchive/Products/Applications/SuperApp.app build/Payload/
           cd build
-          zip -r DemoApp.ipa Payload/
+          zip -r SuperApp.ipa Payload/
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DemoApp-${{ github.event.inputs.configuration || 'Release' }}
-          path: build/DemoApp.ipa
+          name: SuperApp-${{ github.event.inputs.configuration || 'Release' }}
+          path: build/SuperApp.ipa
           retention-days: 30
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/DemoApp.ipa
+          files: build/SuperApp.ipa
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

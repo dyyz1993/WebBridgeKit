@@ -121,6 +121,9 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 当前缓存来源标识
     private var currentCacheSource: String = "LIVE"
 
+    /// 🔥 调试模式：启用时会显示错误页面而不是白屏
+    public var debugMode: Bool = false
+
     /// Track all registered script message handler names for proper cleanup
     private var registeredHandlerNames: [String] = []
 
@@ -199,18 +202,14 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             self?.updateCacheStatus(source: source)
         }
 
-        // 加载初始内容
-        if let initialURL = viewModel.initialURL {
-            loadURLWithCache(initialURL, forceRefresh: false)  // 🔥 Will check params in viewWillAppear
-        } else {
-            loadWelcomePage()
-        }
+        // 加载初始内容（移到 viewWillAppear 以确保 debugMode 已设置）
     }
 
     /// 配置系统的导航栏
     private func configureNavigationBar() {
         // 🔥 禁用大标题，确保浏览器界面整洁
         navigationItem.largeTitleDisplayMode = .never
+
         
         // 设置标题视图容器
         // 🔥 给容器一个初始 frame 或 size，否则在某些 iOS 版本下不显示
@@ -541,9 +540,13 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             if !hidden {
                 let canGoBack = self.webView.canGoBack
                 if canGoBack {
-                    self.navigationItem.leftBarButtonItems = [self.backBarButton!, self.closeBarButton!]
+                    if let backBtn = self.backBarButton, let closeBtn = self.closeBarButton {
+                        self.navigationItem.leftBarButtonItems = [backBtn, closeBtn]
+                    }
                 } else {
-                    self.navigationItem.leftBarButtonItems = [self.closeBarButton!]
+                    if let closeBtn = self.closeBarButton {
+                        self.navigationItem.leftBarButtonItems = [closeBtn]
+                    }
                 }
             }
 
@@ -651,9 +654,13 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             // 🔥 根据是否可以后退来动态调整左侧按钮
             if self.hideNavBar == false {
                 if canGoBack {
-                    self.navigationItem.leftBarButtonItems = [self.backBarButton!, self.closeBarButton!]
+                    if let backBtn = self.backBarButton, let closeBtn = self.closeBarButton {
+                        self.navigationItem.leftBarButtonItems = [backBtn, closeBtn]
+                    }
                 } else {
-                    self.navigationItem.leftBarButtonItems = [self.closeBarButton!]
+                    if let closeBtn = self.closeBarButton {
+                        self.navigationItem.leftBarButtonItems = [closeBtn]
+                    }
                 }
             }
         })
@@ -1477,8 +1484,16 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
 
+        // 🔒 Explicitly clear RxSwift subscriptions to prevent memory leaks
+        // DisposeBag automatically disposes on deinit, but explicitly clearing
+        // ensures no lingering strong references during cleanup
+        _ = rx
+
         // 🔒 Remove from superview
         webView.removeFromSuperview()
+
+        // 🔒 Reset binding flag to prevent edge cases
+        isViewModelBinded = false
 
         print("🧹 [WebBrowserVC] Cleaned up with proper memory management")
     }
@@ -1682,10 +1697,14 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
         currentURL = targetURL
 
+        // 🔥 注入调试脚本（如果调试模式启用）
+        injectDebugScript(for: targetURL)
+
         // 更新 UI 显示正在通过缓存检查
         updateCacheStatus(source: "CHECKING")
 
         // 使用 LazyManifestLoader.smartLoad() 智能加载
+        print("🔍 [WebBridgeVC] loadURLWithCache 调用，debugMode=\(debugMode)")
         LazyManifestLoader.smartLoad(
             url: url,
             in: webView,
@@ -1725,6 +1744,88 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 }
             }
         }
+    }
+
+    // MARK: - Debug Mode
+
+    /// 🔥 注入调试脚本（当 debugMode 启用时）
+    /// - Parameter url: 当前加载的 URL
+    private func injectDebugScript(for url: URL) {
+        print("🔍 [WebBridgeVC] injectDebugScript 被调用！debugMode=\(debugMode)")
+        guard debugMode else { return }
+
+        // 🔥 简化的内联调试脚本（避免 Bundle 资源问题）
+        let debugScript = """
+        (function() {
+            'use strict';
+
+            const CONFIG = {
+                checkInterval: 500,
+                maxStackTrace: 10,
+                verboseLogging: true
+            };
+
+            const state = {
+                hasError: false,
+                errorTimestamp: null,
+                stackTrace: [],
+                loadStartTime: Date.now()
+            };
+
+            // 错误检测
+            function checkErrorState() {
+                const title = document.title || '';
+                const isBlank = title === '' || title === 'about:blank';
+
+                if (isBlank && !state.hasError) {
+                    state.hasError = true;
+                    state.errorTimestamp = new Date().toISOString();
+                    state.stackTrace.push({
+                        message: '页面加载失败 - 白屏检测',
+                        time: new Date().toISOString(),
+                        type: 'error'
+                    });
+                    showErrorPanel();
+                }
+            }
+
+            // 显示错误面板
+            function showErrorPanel() {
+                if (document.getElementById('wb-debug-panel')) return;
+
+                const panel = document.createElement('div');
+                panel.id = 'wb-debug-panel';
+                panel.style.cssText = 'position:fixed;top:10px;right:10px;width:300px;max-height:80vh;background:rgba(220,53,69,0.95);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-family:-apple-system,system-ui,sans-serif;font-size:12px;color:#fff;z-index:99999;overflow:hidden;';
+                panel.innerHTML = `
+                    <div style="padding:15px;border-bottom:1px solid rgba(255,255,255,255,0.1);">
+                        <strong>🔍 WebBridge 调试模式</strong>
+                        <button onclick="navigator.clipboard.writeText('URL: \\(url.absoluteString)\\n错误: 页面加载失败')" style="float:right;background:#4CAF50;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">复制信息</button>
+                    </div>
+                    <div style="padding:15px;">
+                        <div style="color:#ffc107;margin-bottom:10px;">⚠️ 检测到白屏</div>
+                        <div style="font-size:11px;color:#ddd;">页面标题为空或 about:blank</div>
+                    </div>
+                `;
+                document.body.appendChild(panel);
+                console.log('%c[WebBridge Debug] 错误面板已显示', 'color: #f44336');
+            }
+
+            // 监控页面状态
+            setInterval(checkErrorState, CONFIG.checkInterval);
+            console.log('%c[WebBridge Debug] 调试模式已启用', 'color: #4CAF50');
+            console.log('[WebBridge Debug] 监控 URL: \(url.absoluteString)');
+        })();
+        """
+
+        // 使用 WKUserScript 注入脚本（在所有框架加载后执行）
+        let userScript = WKUserScript(
+            source: debugScript,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+
+        webView.configuration.userContentController.addUserScript(userScript)
+        print("🔍 [WebBridgeVC] Debug script injected for: \(url.absoluteString)")
     }
 
     /// 加载错误提示页面

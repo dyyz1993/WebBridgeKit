@@ -34,17 +34,38 @@ public class WebBrowserManager: WebBrowserManaging {
         public let displayMode: WebBrowserParams.DisplayMode
     }
 
+    /// 状态保护队列（串行队列确保线程安全）
+    private let stateQueue = DispatchQueue(label: "com.webbridgekit.stateQueue")
+
     /// 导航栈
     private var navigationStack: [NavigationItem] = []
 
     /// 当前索引
-    public private(set) var currentIndex: Int = 0
+    private var _currentIndex: Int = 0
+
+    /// 当前索引的线程安全访问
+    public private(set) var currentIndex: Int {
+        get { stateQueue.sync { self._currentIndex } }
+        set { stateQueue.async(flags: .barrier) { self._currentIndex = newValue } }
+    }
 
     /// 当前活动的浏览器实例（不包括弹窗）
-    public private(set) var currentBrowser: UIViewController?
+    private var _currentBrowser: UIViewController?
+
+    /// 当前浏览器的线程安全访问
+    public private(set) var currentBrowser: UIViewController? {
+        get { stateQueue.sync { self._currentBrowser } }
+        set { stateQueue.async(flags: .barrier) { self._currentBrowser = newValue } }
+    }
 
     /// 当前活动的弹窗实例
-    public private(set) var currentModal: ModalWebViewController?
+    private var _currentModal: ModalWebViewController?
+
+    /// 当前弹窗的线程安全访问
+    public private(set) var currentModal: ModalWebViewController? {
+        get { stateQueue.sync { self._currentModal } }
+        set { stateQueue.async(flags: .barrier) { self._currentModal = newValue } }
+    }
 
     // MARK: - Open Browser
 
@@ -111,7 +132,7 @@ public class WebBrowserManager: WebBrowserManaging {
         components?.queryItems = [URLQueryItem(name: "page", value: pageName)]
 
         if let url = components?.url {
-            openBrowser(url: url, from: getTopViewController())
+            openBrowser(url: url, params: WebBrowserParams.from(url: url), from: getTopViewController())
         }
     }
 
@@ -207,29 +228,25 @@ public class WebBrowserManager: WebBrowserManaging {
         // Modal mode is designed for simple popups/overlays, not full-featured browsing.
         // The forceRefresh parameter is accepted for API consistency but not used in Modal mode.
 
-        do {
-            // 获取模态配置
-            let config = params.toModalConfig()
+        // 获取模态配置
+        let config = params.toModalConfig()
 
-            // 创建 ModalWebViewController
-            let modalVC: ModalWebViewController
-            if isLocalURL(url) {
-                let pageName = getPageName(from: url)
-                modalVC = ModalWebViewController(htmlName: pageName, config: config)
-            } else {
-                modalVC = ModalWebViewController(url: url, config: config)
-            }
-
-            modalVC.modalPresentationStyle = .overFullScreen
-            modalVC.modalTransitionStyle = .crossDissolve
-
-            currentModal = modalVC
-            presentingVC.present(modalVC, animated: animated)
-
-            print("✅ [WebBrowserManager] Presented modal browser (animated: \(animated))")
-        } catch {
-            print("❌ [WebBrowserManager] Failed to present modal browser: \(error.localizedDescription)")
+        // 创建 ModalWebViewController
+        let modalVC: ModalWebViewController
+        if isLocalURL(url) {
+            let pageName = getPageName(from: url)
+            modalVC = ModalWebViewController(htmlName: pageName, config: config)
+        } else {
+            modalVC = ModalWebViewController(url: url, config: config)
         }
+
+        modalVC.modalPresentationStyle = .overFullScreen
+        modalVC.modalTransitionStyle = .crossDissolve
+
+        currentModal = modalVC
+        presentingVC.present(modalVC, animated: animated)
+
+        print("✅ [WebBrowserManager] Presented modal browser (animated: \(animated))")
     }
 
     // MARK: - Close Browser
@@ -259,14 +276,23 @@ public class WebBrowserManager: WebBrowserManaging {
             // 从导航栈弹出
             navController.popViewController(animated: animated)
 
-            // 更新历史栈
-            if self.currentIndex > 0 {
-                self.currentIndex -= 1
-            }
+            // 更新历史栈 - 与实际导航栈同步
+            self.stateQueue.async(flags: .barrier) { [weak self] in
+                guard let self = self else { return }
+                // 根据 navController 的实际状态同步 navigationStack
+                let actualCount = navController.viewControllers.count
+                if self._currentIndex >= actualCount {
+                    // currentIndex 超出实际范围，重新同步
+                    self._currentIndex = max(0, actualCount - 1)
+                }
 
-            // 从导航栈中移除
-            if !self.navigationStack.isEmpty && self.currentIndex < self.navigationStack.count {
-                self.navigationStack.remove(at: self.currentIndex)
+                // 从导航栈中移除 - 使用边界检查
+                if !self.navigationStack.isEmpty && self._currentIndex < self.navigationStack.count {
+                    self.navigationStack.remove(at: self._currentIndex)
+                } else if self._currentIndex >= self.navigationStack.count {
+                    // navigationStack 不同步，重新构建
+                    self._currentIndex = max(0, self.navigationStack.count - 1)
+                }
             }
 
             self.currentBrowser = navController.topViewController
@@ -285,7 +311,7 @@ public class WebBrowserManager: WebBrowserManaging {
 
     /// 获取导航历史
     public func getNavigationHistory() -> [NavigationItem] {
-        return navigationStack
+        return stateQueue.sync { navigationStack }
     }
 
     /// 后退
@@ -323,10 +349,15 @@ public class WebBrowserManager: WebBrowserManaging {
                     break
                 }
             }
-            currentBrowser = navController.topViewController
 
-            // 更新内部索引（简化处理，直接设为当前数量-1）
-            currentIndex = max(0, navController.viewControllers.count - 1)
+            // 更新内部索引 - 与实际导航栈同步
+            stateQueue.async(flags: .barrier) { [weak self] in
+                guard let self = self else { return }
+                let actualCount = navController.viewControllers.count
+                self._currentBrowser = navController.topViewController
+                // 确保 currentIndex 在有效范围内
+                self._currentIndex = max(0, min(actualCount - 1, self.navigationStack.count))
+            }
 
             print("✅ [WebBrowserManager] Went back \(steps) steps")
             return true
@@ -354,9 +385,15 @@ public class WebBrowserManager: WebBrowserManaging {
     }
 
     private func executeGoForward(steps: Int) -> Bool {
-        let targetIndex = currentIndex + steps
+        let (targetIndex, stackCount, item) = stateQueue.sync { () -> (Int, Int, NavigationItem?) in
+            let targetIndex = _currentIndex + steps
+            guard targetIndex < navigationStack.count else {
+                return (targetIndex, 0, nil)
+            }
+            return (targetIndex, navigationStack.count, navigationStack[targetIndex])
+        }
 
-        guard targetIndex < navigationStack.count else {
+        guard let item = item else {
             print("⚠️ [WebBrowserManager] Cannot go forward - at end of stack")
             return false
         }
@@ -366,10 +403,13 @@ public class WebBrowserManager: WebBrowserManaging {
             return false
         }
 
-        let item = navigationStack[targetIndex]
         navController.pushViewController(item.viewController, animated: true)
-        currentIndex = targetIndex
-        currentBrowser = item.viewController
+
+        // 更新状态
+        stateQueue.async(flags: .barrier) { [weak self] in
+            self?._currentIndex = targetIndex
+            self?._currentBrowser = item.viewController
+        }
 
         print("✅ [WebBrowserManager] Went forward \(steps) steps")
         return true
@@ -379,7 +419,7 @@ public class WebBrowserManager: WebBrowserManaging {
 
     /// 获取当前浏览器实例
     public func getCurrentBrowser() -> UIViewController? {
-        return currentModal ?? currentBrowser
+        return stateQueue.sync { _currentModal ?? _currentBrowser }
     }
 
     // MARK: - Helper Methods
@@ -432,12 +472,15 @@ public class WebBrowserManager: WebBrowserManaging {
         )
 
         // 如果当前不在栈顶，移除后面的项
-        if currentIndex < navigationStack.count - 1 {
-            navigationStack = Array(navigationStack.prefix(currentIndex + 1))
-        }
+        stateQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            if self._currentIndex < self.navigationStack.count - 1 {
+                self.navigationStack = Array(self.navigationStack.prefix(self._currentIndex + 1))
+            }
 
-        navigationStack.append(item)
-        currentIndex = navigationStack.count - 1
+            self.navigationStack.append(item)
+            self._currentIndex = self.navigationStack.count - 1
+        }
     }
 
     private func isLocalURL(_ url: URL) -> Bool {

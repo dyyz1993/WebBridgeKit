@@ -21,11 +21,11 @@ opt_in_rules:
 
 included:
   - Sources
-  - DemoApp/Sources
+  - SuperApp/Sources
 
 excluded:
   - Pods
-  - DemoAppUITests
+  - SuperAppUITests
   - Tests
 
 reporter: "github-actions-logging"

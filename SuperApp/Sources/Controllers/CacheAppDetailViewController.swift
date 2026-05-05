@@ -1,0 +1,378 @@
+//
+//  CacheAppDetailViewController.swift
+//  SuperApp
+//
+//  Created by Claude on 2025-02-04.
+//  Copyright © 2025年 WebBridgeKit. All rights reserved.
+//
+
+import UIKit
+import SnapKit
+import RxSwift
+import RxCocoa
+import SVProgressHUD
+import WebBridgeKit
+
+/// 缓存应用详情页面
+/// 显示特定 AppID 下的所有缓存页面
+class CacheAppDetailViewController: UIViewController {
+
+    // MARK: - Properties
+
+    private let appInfo: CacheAppInfo
+    private let disposeBag = DisposeBag()
+
+    var onDeletePage: ((String) -> Void)?
+
+    // MARK: - UI Components
+
+    private lazy var tableView: UITableView = {
+        let table = UITableView(frame: .zero, style: .insetGrouped)
+        table.backgroundColor = .systemGroupedBackground
+        table.register(CachePageCell.self, forCellReuseIdentifier: CachePageCell.identifier)
+        table.rowHeight = UITableView.automaticDimension
+        table.estimatedRowHeight = 60
+        return table
+    }()
+
+    private lazy var headerView: UIView = {
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 200))
+        view.backgroundColor = .clear
+
+        let container = UIView()
+        container.backgroundColor = .secondarySystemBackground
+        container.layer.cornerRadius = 16
+        container.layer.masksToBounds = false
+        container.layer.shadowColor = UIColor.black.cgColor
+        container.layer.shadowOpacity = 0.1
+        container.layer.shadowOffset = CGSize(width: 0, height: 2)
+        container.layer.shadowRadius = 8
+
+        let iconImageView = UIImageView()
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.layer.cornerRadius = 12
+        iconImageView.layer.masksToBounds = true
+        iconImageView.clipsToBounds = true
+        iconImageView.tag = 100
+
+        let appIDLabel = UILabel()
+        appIDLabel.font = UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)
+        appIDLabel.textColor = .label
+        appIDLabel.numberOfLines = 0
+        appIDLabel.textAlignment = .center
+        appIDLabel.tag = 101
+
+        let nameLabel = UILabel()
+        nameLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        nameLabel.textColor = .secondaryLabel
+        nameLabel.numberOfLines = 1
+        nameLabel.textAlignment = .center
+        nameLabel.tag = 102
+
+        let infoLabel = UILabel()
+        infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        infoLabel.textColor = .tertiaryLabel
+        infoLabel.numberOfLines = 0
+        infoLabel.textAlignment = .center
+        infoLabel.tag = 103
+
+        let stackView = UIStackView(arrangedSubviews: [iconImageView, appIDLabel, nameLabel, infoLabel])
+        stackView.axis = .vertical
+        stackView.spacing = 12
+        stackView.alignment = .center
+
+        container.addSubview(stackView)
+        view.addSubview(container)
+
+        container.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(16)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+            make.bottom.equalToSuperview().offset(-16)
+        }
+
+        stackView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.left.greaterThanOrEqualToSuperview().offset(20)
+            make.right.lessThanOrEqualToSuperview().offset(-20)
+        }
+
+        iconImageView.snp.makeConstraints { make in
+            make.width.height.equalTo(80)
+        }
+
+        return view
+    }()
+
+    // MARK: - Initialization
+
+    init(appInfo: CacheAppInfo) {
+        self.appInfo = appInfo
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Lifecycle
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        configureHeaderView()
+        bindTableView()
+    }
+
+    // MARK: - Setup
+
+    private func setupUI() {
+        title = "缓存详情"
+        view.backgroundColor = .systemGroupedBackground
+
+        // 添加返回按钮
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .done,
+            target: self,
+            action: #selector(doneTapped)
+        )
+
+        // 添加清除全部按钮
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "清除全部",
+            style: .plain,
+            target: self,
+            action: #selector(clearAllTapped)
+        )
+
+        view.addSubview(tableView)
+        tableView.tableHeaderView = headerView
+
+        tableView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    private func configureHeaderView() {
+        guard let iconImageView = headerView.viewWithTag(100) as? UIImageView,
+              let appIDLabel = headerView.viewWithTag(101) as? UILabel,
+              let nameLabel = headerView.viewWithTag(102) as? UILabel,
+              let infoLabel = headerView.viewWithTag(103) as? UILabel else {
+            return
+        }
+
+        appIDLabel.text = appInfo.appID
+        nameLabel.text = appInfo.name ?? "未命名应用"
+
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useBytes, .useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        let sizeString = formatter.string(fromByteCount: appInfo.cacheSize)
+
+        infoLabel.text = "v\(appInfo.version) • \(appInfo.pageKeys.count) 个页面 • \(sizeString)"
+
+        if let icon = appInfo.icon, let image = UIImage(data: icon) {
+            iconImageView.image = image
+        } else if let generatedIcon = AppIconGenerator.generateIcon(from: appInfo.name, size: CGSize(width: 80, height: 80)) {
+            iconImageView.image = generatedIcon
+        } else {
+            iconImageView.backgroundColor = .systemBlue.withAlphaComponent(0.1)
+        }
+    }
+
+    private func bindTableView() {
+        let pageKeys = appInfo.pageKeys
+
+        Observable.just(pageKeys)
+            .bind(to: tableView.rx.items(cellIdentifier: CachePageCell.identifier, cellType: CachePageCell.self)) { [weak self] index, pageKey, cell in
+                cell.pageKey = pageKey
+                cell.index = index + 1
+                cell.onCopy = { pageKey in
+                    UIPasteboard.general.string = pageKey
+                    SVProgressHUD.showSuccess(withStatus: "页面 Key 已复制")
+                    SVProgressHUD.dismiss(withDelay: 1.5)
+                }
+                cell.onDelete = { [weak self] pageKey in
+                    self?.onDeletePage?(pageKey)
+                }
+            }
+            .disposed(by: disposeBag)
+    }
+
+    // MARK: - Actions
+
+    @objc private func doneTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+
+    @objc private func clearAllTapped() {
+        let alert = UIAlertController(
+            title: "确认清除",
+            message: "确定要删除此应用的所有缓存吗？这将删除 \(appInfo.pageKeys.count) 个页面的缓存。",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: "删除", style: .destructive) { [weak self] _ in
+            // 逐个删除所有页面
+            for pageKey in self?.appInfo.pageKeys ?? [] {
+                ManifestCacheManager.shared.removeCache(for: pageKey)
+            }
+
+            SVProgressHUD.showSuccess(withStatus: "所有缓存已删除")
+            SVProgressHUD.dismiss(withDelay: 1.5)
+
+            // 返回上一页
+            self?.navigationController?.popViewController(animated: true)
+        })
+
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - Cache Page Cell
+
+/// 缓存页面列表单元格
+class CachePageCell: UITableViewCell {
+
+    static let identifier = "CachePageCell"
+
+    // MARK: - UI Components
+
+    private let indexLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)
+        label.textColor = .systemBlue
+        label.textAlignment = .center
+        label.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        return label
+    }()
+
+    private let pageKeyLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium)
+        label.textColor = .label
+        label.numberOfLines = 2
+        return label
+    }()
+
+    private lazy var copyButton: UIButton = {
+        let button = UIButton(type: .system)
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.image = UIImage(systemName: "doc.on.doc")
+            config.baseForegroundColor = .systemBlue
+            button.configuration = config
+        } else {
+            button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
+            button.tintColor = .systemBlue
+        }
+        button.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        return button
+    }()
+
+    private lazy var deleteButton: UIButton = {
+        let button = UIButton(type: .system)
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.image = UIImage(systemName: "trash")
+            config.baseForegroundColor = .systemRed
+            button.configuration = config
+        } else {
+            button.setImage(UIImage(systemName: "trash"), for: .normal)
+            button.tintColor = .systemRed
+        }
+        button.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        return button
+    }()
+
+    private let buttonStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8
+        return stack
+    }()
+
+    // MARK: - Properties
+
+    private var currentPageKey: String?
+
+    var pageKey: String? {
+        didSet {
+            currentPageKey = pageKey
+            updateUI()
+        }
+    }
+
+    var index: Int = 0 {
+        didSet {
+            indexLabel.text = "\(index)."
+        }
+    }
+
+    var onCopy: ((String) -> Void)?
+    var onDelete: ((String) -> Void)?
+
+    // MARK: - Initialization
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupUI()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Setup
+
+    private func setupUI() {
+        contentView.backgroundColor = .clear
+        backgroundColor = .clear
+        selectionStyle = .none
+
+        buttonStackView.addArrangedSubview(copyButton)
+        buttonStackView.addArrangedSubview(deleteButton)
+
+        let stackView = UIStackView(arrangedSubviews: [indexLabel, pageKeyLabel, buttonStackView])
+        stackView.axis = .horizontal
+        stackView.spacing = 12
+        stackView.alignment = .center
+
+        contentView.addSubview(stackView)
+
+        stackView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
+        }
+
+        copyButton.addTarget(self, action: #selector(copyButtonTapped), for: .touchUpInside)
+        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    }
+
+    private func updateUI() {
+        pageKeyLabel.text = currentPageKey ?? "未知页面"
+    }
+
+    // MARK: - Actions
+
+    @objc private func copyButtonTapped() {
+        guard let pageKey = currentPageKey else { return }
+        onCopy?(pageKey)
+    }
+
+    @objc private func deleteButtonTapped() {
+        guard let pageKey = currentPageKey else { return }
+        onDelete?(pageKey)
+    }
+
+    // MARK: - Reuse
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        currentPageKey = nil
+        pageKeyLabel.text = nil
+        indexLabel.text = nil
+        onCopy = nil
+        onDelete = nil
+    }
+}
