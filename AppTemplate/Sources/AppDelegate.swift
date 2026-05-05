@@ -14,9 +14,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Setup window
         window = UIWindow(frame: UIScreen.main.bounds)
-        
-        let rootVC = RootViewController()
-        window?.rootViewController = UINavigationController(rootViewController: rootVC)
+
+        let tabBarController = TabBarController()
+        window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
         
         // Setup Debug Panel trigger
@@ -38,20 +38,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     private func addDebugButtonIfNeeded() {
-        guard let navController = window?.rootViewController as? UINavigationController,
-              let rootVC = navController.viewControllers.first else {
-            return
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            let debugButton = UIBarButtonItem(
-                image: UIImage(systemName: "wrench.and.screwdriver"),
-                style: .plain,
-                target: self,
-                action: #selector(self.showDebugPanel)
-            )
-            rootVC.navigationItem.rightBarButtonItem = debugButton
-        }
+        // Debug Panel is now available as a tab, no need for separate button
     }
     
     @objc private func showDebugPanel() {
