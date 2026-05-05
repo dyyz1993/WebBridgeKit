@@ -11,14 +11,13 @@ import RxCocoa
 import RxSwift
 import UIKit
 import RealmSwift
-import WebBridgeKit
 
 /// 缓存资源视图模型
-class CacheResourceViewModel: ViewModel {
+public class CacheResourceViewModel: ViewModel {
 
     // MARK: - Input & Output
 
-    struct Input {
+    public struct Input {
         let loadResources: Driver<URL>
         let selectAll: Driver<Void>
         let deselectAll: Driver<Void>
@@ -27,7 +26,7 @@ class CacheResourceViewModel: ViewModel {
         let itemDelete: Driver<String>
     }
 
-    struct Output {
+    public struct Output {
         let resources: Driver<[CacheResourceSection]>
         let isEmpty: Driver<Bool>
         let selectedCount: Driver<Int>
@@ -60,7 +59,7 @@ class CacheResourceViewModel: ViewModel {
 
     // MARK: - Transform
 
-    func transform(input: Input) -> Output {
+    public func transform(input: Input) -> Output {
         // 加载资源
         input.loadResources
             .do(onNext: { [weak self] url in
@@ -123,7 +122,7 @@ class CacheResourceViewModel: ViewModel {
     // MARK: - Public Methods
 
     /// 切换资源选择状态
-    func toggleSelection(key: String) {
+    public func toggleSelection(key: String) {
         if selectedResources.contains(key) {
             selectedResources.remove(key)
         } else {
@@ -133,7 +132,7 @@ class CacheResourceViewModel: ViewModel {
     }
 
     /// 检查资源是否被选中
-    func isSelected(key: String) -> Bool {
+    public func isSelected(key: String) -> Bool {
         return selectedResources.contains(key)
     }
 
@@ -186,7 +185,7 @@ class CacheResourceViewModel: ViewModel {
         var sections: [CacheResourceSection] = []
 
         // 按类型排序
-        let typeOrder: [CacheResourceType] = [.html, .script, .stylesheet, .image, .font, .other]
+        let typeOrder: [CacheFileResourceType] = [.html, .script, .stylesheet, .image, .font, .other]
         for type in typeOrder {
             if let items = grouped[type], !items.isEmpty {
                 sections.append(CacheResourceSection(
@@ -212,12 +211,12 @@ class CacheResourceViewModel: ViewModel {
         selectedCountRelay.accept(selectedResources.count)
     }
 
-    func deselectAllResources() {
+    public func deselectAllResources() {
         selectedResources.removeAll()
         selectedCountRelay.accept(0)
     }
 
-    func deleteSelectedResources() {
+    public func deleteSelectedResources() {
         for key in selectedResources {
             deleteResource(key: key)
         }
@@ -226,7 +225,7 @@ class CacheResourceViewModel: ViewModel {
         deletionCompletedRelay.accept(())
     }
 
-    func clearAllResources() {
+    public func clearAllResources() {
         guard !resourcesRelay.value.isEmpty else { return }
         for section in resourcesRelay.value {
             for item in section.items {
@@ -241,7 +240,7 @@ class CacheResourceViewModel: ViewModel {
         deletionCompletedRelay.accept(())
     }
 
-    func deleteResource(key: String) {
+    public func deleteResource(key: String) {
         // 删除文件
         try? FileManager.default.removeItem(atPath: key)
 
@@ -275,7 +274,7 @@ class CacheResourceViewModel: ViewModel {
         return fileSize
     }
 
-    private func guessFileType(from fileName: String) -> CacheResourceType {
+    private func guessFileType(from fileName: String) -> CacheFileResourceType {
         let pathExtension = (fileName as NSString).pathExtension.lowercased()
 
         switch pathExtension {
@@ -298,7 +297,7 @@ class CacheResourceViewModel: ViewModel {
 // MARK: - Models
 
 /// 缓存资源类型
-enum CacheResourceType {
+public enum CacheFileResourceType {
     case html
     case script
     case stylesheet
@@ -341,15 +340,15 @@ enum CacheResourceType {
 }
 
 /// 缓存资源项
-struct CacheResourceItem {
-    let key: String
-    let url: String
-    let type: CacheResourceType
-    let size: Int64
-    let compressedSize: Int64?
-    let date: Date
+public struct CacheResourceItem {
+    public let key: String
+    public let url: String
+    public let type: CacheFileResourceType
+    public let size: Int64
+    public let compressedSize: Int64?
+    public let date: Date
 
-    var formattedSize: String {
+    public var formattedSize: String {
         if let compressed = compressedSize {
             let saved = size - compressed
             let savedPercent = Int((Double(saved) / Double(size)) * 100)
@@ -358,21 +357,21 @@ struct CacheResourceItem {
         return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
 
-    var fileName: String {
+    public var fileName: String {
         return (url as NSString).lastPathComponent
     }
 }
 
 /// 缓存资源分组
-struct CacheResourceSection {
-    let type: CacheResourceType
-    let items: [CacheResourceItem]
+public struct CacheResourceSection {
+    public let type: CacheFileResourceType
+    public let items: [CacheResourceItem]
 
-    var totalSize: Int64 {
+    public var totalSize: Int64 {
         return items.reduce(0) { $0 + $1.size }
     }
 
-    var formattedTotalSize: String {
+    public var formattedTotalSize: String {
         return ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
     }
 }

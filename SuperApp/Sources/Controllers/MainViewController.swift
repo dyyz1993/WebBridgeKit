@@ -60,14 +60,6 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func setupNotifications() {
-        NotificationCenter.default.rx.notification(.qrScannerDidScanURL)
-            .subscribe(onNext: { [weak self] notification in
-                let url = notification.object as? URL
-                let rawString = notification.userInfo?["rawString"] as? String
-                self?.handleScannedResult(url: url, rawString: rawString)
-            })
-            .disposed(by: rx)
-
         // 自动化测试支持：直接通过通知触发原生跳转，避免 URL Scheme 弹窗
         NotificationCenter.default.rx.notification(.automationTestOpenURL)
             .compactMap { $0.userInfo?["url"] as? String }
@@ -262,7 +254,20 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     @objc private func openScanner() {
-        let scannerVC = QRScannerViewController()
+        let config = QRScannerViewController.Configuration(
+            showScanRegionOverlay: true,
+            showCloseButton: true,
+            tipText: "将二维码放入框内即可自动扫描",
+            enableBase64Decoding: true,
+            autoDismiss: true
+        )
+        let scannerVC = QRScannerViewController(configuration: config)
+        scannerVC.scannerDidSuccess
+            .subscribe(onNext: { [weak self] result in
+                let url = URL(string: result)
+                self?.handleScannedResult(url: url, rawString: result)
+            })
+            .disposed(by: rx)
         navigationController?.pushViewController(scannerVC, animated: true)
     }
 

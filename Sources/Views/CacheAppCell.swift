@@ -8,13 +8,12 @@
 
 import UIKit
 import SnapKit
-import WebBridgeKit
 
 /// 缓存应用列表单元格
 /// 改进版：更明显的 AppID 显示，复制按钮，卡片式布局
-class CacheAppCell: UITableViewCell {
+public class CacheAppCell: UITableViewCell {
 
-    static let identifier = "CacheAppCell"
+    public static let identifier = "CacheAppCell"
 
     // MARK: - UI Components
 
@@ -178,16 +177,16 @@ class CacheAppCell: UITableViewCell {
 
     private var currentAppInfo: CacheAppInfo?
 
-    var appInfo: CacheAppInfo? {
+    public var appInfo: CacheAppInfo? {
         didSet {
             currentAppInfo = appInfo
             updateUI()
         }
     }
 
-    var onDelete: ((String) -> Void)?
-    var onCopy: ((String) -> Void)?
-    var onTap: ((CacheAppInfo) -> Void)?
+    public var onDelete: ((String) -> Void)?
+    public var onCopy: ((String) -> Void)?
+    public var onTap: ((CacheAppInfo) -> Void)?
 
     // MARK: - Initialization
 
@@ -401,7 +400,7 @@ class CacheAppCell: UITableViewCell {
 
     // MARK: - Reuse
 
-    override func prepareForReuse() {
+    public override func prepareForReuse() {
         super.prepareForReuse()
         currentAppInfo = nil
         iconImageView.image = nil
@@ -421,11 +420,20 @@ class CacheAppCell: UITableViewCell {
 // MARK: - Cache App Info Model
 
 /// 缓存应用信息
-struct CacheAppInfo {
-    let appID: String
-    let name: String?
-    let version: String
-    let cacheSize: Int64
-    let icon: Data?
-    let pageKeys: [String]
+public struct CacheAppInfo {
+    public let appID: String
+    public let name: String?
+    public let version: String
+    public let cacheSize: Int64
+    public let icon: Data?
+    public let pageKeys: [String]
+
+    public init(appID: String, name: String?, version: String, cacheSize: Int64, icon: Data?, pageKeys: [String]) {
+        self.appID = appID
+        self.name = name
+        self.version = version
+        self.cacheSize = cacheSize
+        self.icon = icon
+        self.pageKeys = pageKeys
+    }
 }

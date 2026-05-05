@@ -9,20 +9,19 @@
 import Foundation
 import RxSwift
 import RxCocoa
-import WebBridgeKit
 
 /// 缓存管理 ViewModel
-class CacheManagementViewModel: ViewModel {
+public class CacheManagementViewModel: ViewModel {
 
     // MARK: - Input & Output
 
-    struct Input {
+    public struct Input {
         let refresh: Driver<Void>
         let deleteApp: Driver<String>
         let deleteAll: Driver<Void>
     }
 
-    struct Output {
+    public struct Output {
         let cacheApps: Driver<[CacheAppInfo]>
         let isEmpty: Driver<Bool>
         let totalCacheSize: Driver<String>
@@ -47,7 +46,7 @@ class CacheManagementViewModel: ViewModel {
 
     // MARK: - Initialization
 
-    init(
+    public init(
         manifestStore: ManifestStore = ManifestStore.shared,
         resourceCache: ResourceCache = ResourceCache.shared
     ) {
@@ -58,7 +57,7 @@ class CacheManagementViewModel: ViewModel {
 
     // MARK: - Transform
 
-    func transform(input: Input) -> Output {
+    public func transform(input: Input) -> Output {
         // 刷新数据
         input.refresh
             .do(onNext: { [weak self] in

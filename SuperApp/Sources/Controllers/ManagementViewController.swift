@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 管理中心视图控制器（合并收藏与缓存管理）
 class ManagementViewController: UIViewController {

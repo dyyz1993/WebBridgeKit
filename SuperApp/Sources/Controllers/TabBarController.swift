@@ -31,16 +31,17 @@ class TabBarController: UITabBarController {
     }
 
     private func bindMessages() {
-        // 监听未读消息数，动态更新 TabBar Badge
-        MessageManager.shared.unreadCount
-            .subscribe(onNext: { [weak self] count in
-                guard let self = self, let items = self.tabBar.items, items.count > 1 else { return }
-                let messageItem = items[1]
-                messageItem.badgeValue = count > 0 ? "\(count)" : nil
-            })
-            .disposed(by: disposeBag)
+        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            guard let self = self, let items = self.tabBar.items, items.count > 1 else { return }
+            let messageItem = items[1]
+            Task {
+                let count = await MessageEngine.shared.getUnreadCount()
+                await MainActor.run {
+                    messageItem.badgeValue = count > 0 ? "\(count)" : nil
+                }
+            }
+        }
 
-        // 监听推送通知，处理全局跳转逻辑
         NotificationCenter.default.rx.notification(.didReceivePushMessage)
             .subscribe(onNext: { [weak self] notification in
                 self?.handlePushJump(notification)
@@ -50,18 +51,20 @@ class TabBarController: UITabBarController {
 
     private func handlePushJump(_ notification: Notification) {
         guard let url = notification.userInfo?["url"] as? URL else { return }
-        let message = notification.userInfo?["message"] as? WebhookMessage
+
+        let title = notification.userInfo?["title"] as? String
+        let appId = notification.userInfo?["appId"] as? String
+        let params = notification.userInfo?["params"] as? [String: String]
 
         print("🚀 [TabBar] Handling push jump to: \(url.absoluteString)")
 
-        // 切换到首页并打开浏览器
         self.selectedIndex = 0
         if let mainNav = viewControllers?.first as? UINavigationController {
             WebBrowserManager.shared.openBrowser(
                 url: url,
                 params: WebBrowserParams(
                     displayMode: .normal,
-                    payload: message?.params
+                    payload: params
                 ),
                 from: mainNav
             )

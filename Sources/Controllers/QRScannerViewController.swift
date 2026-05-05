@@ -5,18 +5,48 @@
 //  Created on 2026-01-16.
 //
 
-import Foundation
 import AVFoundation
 import RxCocoa
 import RxSwift
+import SnapKit
 import UIKit
 
-/// 二维码扫描视图控制器
+extension QRScannerViewController {
+    public struct Configuration {
+        public var showScanRegionOverlay: Bool
+        public var scanRegionSize: CGFloat
+        public var scanRegionBorderColor: UIColor
+        public var showCloseButton: Bool
+        public var tipText: String?
+        public var enableBase64Decoding: Bool
+        public var autoDismiss: Bool
+
+        public init(
+            showScanRegionOverlay: Bool = false,
+            scanRegionSize: CGFloat = 250,
+            scanRegionBorderColor: UIColor = .systemBlue,
+            showCloseButton: Bool = false,
+            tipText: String? = nil,
+            enableBase64Decoding: Bool = false,
+            autoDismiss: Bool = true
+        ) {
+            self.showScanRegionOverlay = showScanRegionOverlay
+            self.scanRegionSize = scanRegionSize
+            self.scanRegionBorderColor = scanRegionBorderColor
+            self.showCloseButton = showCloseButton
+            self.tipText = tipText
+            self.enableBase64Decoding = enableBase64Decoding
+            self.autoDismiss = autoDismiss
+        }
+    }
+}
+
 public class QRScannerViewController: UIViewController {
 
     // MARK: - Properties
 
     public let scannerDidSuccess = PublishRelay<String>()
+    public let configuration: Configuration
 
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer?
@@ -29,6 +59,43 @@ public class QRScannerViewController: UIViewController {
         view.backgroundColor = .black
         return view
     }()
+
+    private lazy var scanRegionView: UIView = {
+        let view = UIView()
+        view.layer.borderColor = configuration.scanRegionBorderColor.cgColor
+        view.layer.borderWidth = 2
+        view.backgroundColor = .clear
+        return view
+    }()
+
+    private lazy var closeButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
+        button.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
+        button.tintColor = .white
+        return button
+    }()
+
+    private lazy var tipLabel: UILabel = {
+        let label = UILabel()
+        label.text = configuration.tipText
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textAlignment = .center
+        return label
+    }()
+
+    // MARK: - Init
+
+    public init(configuration: Configuration = Configuration()) {
+        self.configuration = configuration
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        self.configuration = Configuration()
+        super.init(coder: coder)
+    }
 
     // MARK: - Lifecycle
 
@@ -48,6 +115,11 @@ public class QRScannerViewController: UIViewController {
         stopScanning()
     }
 
+    override public func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer?.frame = view.layer.bounds
+    }
+
     // MARK: - Setup
 
     private func setupUI() {
@@ -55,6 +127,36 @@ public class QRScannerViewController: UIViewController {
         view.addSubview(previewView)
         previewView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+
+        if configuration.showScanRegionOverlay {
+            view.addSubview(scanRegionView)
+            scanRegionView.snp.makeConstraints { make in
+                make.center.equalToSuperview()
+                make.width.height.equalTo(configuration.scanRegionSize)
+            }
+        }
+
+        if configuration.showCloseButton {
+            view.addSubview(closeButton)
+            closeButton.snp.makeConstraints { make in
+                make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+                make.left.equalToSuperview().offset(16)
+                make.width.height.equalTo(44)
+            }
+            closeButton.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
+        }
+
+        if let tipText = configuration.tipText, !tipText.isEmpty {
+            view.addSubview(tipLabel)
+            tipLabel.snp.makeConstraints { make in
+                if configuration.showScanRegionOverlay {
+                    make.top.equalTo(scanRegionView.snp.bottom).offset(24)
+                } else {
+                    make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
+                }
+                make.centerX.equalToSuperview()
+            }
         }
     }
 
@@ -95,7 +197,7 @@ public class QRScannerViewController: UIViewController {
 
     private func startScanning() {
         if !captureSession.isRunning {
-            DispatchQueue.global(qos: .background).async {
+            DispatchQueue.global(qos: .userInitiated).async {
                 self.captureSession.startRunning()
             }
         }
@@ -106,6 +208,30 @@ public class QRScannerViewController: UIViewController {
             captureSession.stopRunning()
         }
     }
+
+    // MARK: - Actions
+
+    @objc private func closeAction() {
+        if navigationController != nil {
+            navigationController?.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
+    // MARK: - Result Processing
+
+    private func processScannedResult(_ rawValue: String) -> String {
+        var result = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if configuration.enableBase64Decoding,
+           let decodedData = Data(base64Encoded: result),
+           let decodedString = String(data: decodedData, encoding: .utf8) {
+            result = decodedString
+        }
+
+        return result
+    }
 }
 
 // MARK: - AVCaptureMetadataOutputObjectsDelegate
@@ -114,14 +240,20 @@ extension QRScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
     public func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
         stopScanning()
 
-        if let metadataObject = metadataObjects.first {
-            let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject
+        guard let metadataObject = metadataObjects.first,
+              let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject,
+              let rawValue = readableObject.stringValue else { return }
 
-            if let stringValue = readableObject?.stringValue {
-                AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
-                scannerDidSuccess.accept(stringValue)
+        AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
 
-                DispatchQueue.main.async { [weak self] in
+        let processedResult = processScannedResult(rawValue)
+        scannerDidSuccess.accept(processedResult)
+
+        if configuration.autoDismiss {
+            DispatchQueue.main.async { [weak self] in
+                if let nav = self?.navigationController, nav.viewControllers.count > 1 {
+                    nav.popViewController(animated: true)
+                } else {
                     self?.dismiss(animated: true)
                 }
             }

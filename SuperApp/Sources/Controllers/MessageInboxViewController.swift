@@ -11,12 +11,12 @@ import RxSwift
 import RxCocoa
 import WebBridgeKit
 
-/// 消息收件箱视图控制器
 class MessageInboxViewController: UIViewController {
 
     private let disposeBag = DisposeBag()
-    private let messageManager = MessageManager.shared
+    private let messagesRelay = BehaviorRelay<[StoredMessage]>(value: [])
     private let filterRelay = BehaviorRelay<FilterType>(value: .all)
+    private var refreshTimer: Timer?
 
     enum FilterType: Int {
         case all = 0
@@ -52,6 +52,35 @@ class MessageInboxViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         bindData()
+        startRefreshing()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        refreshMessages()
+        startRefreshing()
+    }
+
+    private func startRefreshing() {
+        refreshTimer?.invalidate()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            self?.refreshMessages()
+        }
+    }
+
+    private func refreshMessages() {
+        Task {
+            let messages = await MessageEngine.shared.getMessages()
+            await MainActor.run { [weak self] in
+                self?.messagesRelay.accept(messages)
+            }
+        }
     }
 
     private func setupUI() {
@@ -82,15 +111,15 @@ class MessageInboxViewController: UIViewController {
     }
 
     private func bindData() {
-        let filteredMessages = Observable.combineLatest(messageManager.messages, filterRelay)
-            .map { messages, filter -> [WebhookMessage] in
+        let filteredMessages = Observable.combineLatest(messagesRelay, filterRelay)
+            .map { messages, filter -> [StoredMessage] in
                 switch filter {
                 case .all:
                     return messages
                 case .unread:
                     return messages.filter { !$0.isRead }
                 case .apps:
-                    return messages.filter { $0.appId != nil }
+                    return messages.filter { $0.payload.targetAppId != nil }
                 }
             }
             .share(replay: 1)
@@ -106,36 +135,35 @@ class MessageInboxViewController: UIViewController {
             .bind(to: emptyLabel.rx.isHidden)
             .disposed(by: disposeBag)
 
-        tableView.rx.modelSelected(WebhookMessage.self)
+        tableView.rx.modelSelected(StoredMessage.self)
             .subscribe(onNext: { [weak self] message in
                 self?.handleMessageClick(message)
             })
             .disposed(by: disposeBag)
     }
 
-    private func handleMessageClick(_ message: WebhookMessage) {
-        messageManager.markAsRead(id: message.id)
+    private func handleMessageClick(_ message: StoredMessage) {
+        Task {
+            await MessageEngine.shared.markAsRead(id: message.id)
+            refreshMessages()
+        }
 
-        if let urlString = message.url, let url = URL(string: urlString) {
-            // 如果是 URL，直接打开
-            let params = WebBrowserParams(payload: message.params)
+        if let urlString = message.payload.targetURL, let url = URL(string: urlString) {
+            let params = WebBrowserParams(payload: message.payload.userInfo)
             WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
-        } else if let appId = message.appId {
-            // 如果是 AppID，打开对应应用
+        } else if let appId = message.payload.targetAppId {
             if let result = ManifestStore.shared.getManifestByAppId(appId),
                let url = URL(string: result.key) {
                 print("🚀 [Inbox] Opening AppID: \(appId) with URL: \(url)")
-                let params = WebBrowserParams(payload: message.params)
+                let params = WebBrowserParams(payload: message.payload.userInfo)
                 WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
             } else {
                 print("⚠️ [Inbox] AppID not found in cache: \(appId)")
 
-                // 尝试从 AppID 本身解析 URL（有些推送可能直接把 URL 放在 appId 字段）
                 if let url = URL(string: appId), url.scheme == "http" || url.scheme == "https" {
-                    let params = WebBrowserParams(payload: message.params)
+                    let params = WebBrowserParams(payload: message.payload.userInfo)
                     WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
                 } else {
-                    // 弹出提示
                     let alert = UIAlertController(title: "无法打开应用", message: "未找到 AppID 为 \(appId) 的本地缓存。请确保该应用已安装或已同步。", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "确定", style: .default))
                     present(alert, animated: true)
@@ -148,7 +176,10 @@ class MessageInboxViewController: UIViewController {
         let alert = UIAlertController(title: "确认清空", message: "是否删除所有消息？", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
         alert.addAction(UIAlertAction(title: "清空", style: .destructive) { [weak self] _ in
-            self?.messageManager.clearAll()
+            Task {
+                await MessageEngine.shared.clearAllMessages()
+                self?.refreshMessages()
+            }
         })
         present(alert, animated: true)
     }
@@ -280,22 +311,21 @@ class MessageCell: UITableViewCell {
         }
     }
 
-    func configure(with message: WebhookMessage) {
-        titleLabel.text = message.title
-        bodyLabel.text = message.content
-        sourceLabel.text = message.source.uppercased()
+    func configure(with message: StoredMessage) {
+        titleLabel.text = message.payload.title
+        bodyLabel.text = message.payload.body
+        sourceLabel.text = message.payload.channel.uppercased()
         unreadDot.isHidden = message.isRead
 
         let formatter = DateFormatter()
         formatter.dateFormat = "MM-dd HH:mm"
-        timeLabel.text = formatter.string(from: message.timestamp)
+        timeLabel.text = formatter.string(from: message.receivedAt)
 
-        // 根据类型设置图标
-        if message.appId != nil {
+        if message.payload.targetAppId != nil {
             iconImageView.image = UIImage(systemName: "app.badge.fill")
             iconContainer.backgroundColor = UIColor.systemIndigo.withAlphaComponent(0.1)
             iconImageView.tintColor = .systemIndigo
-        } else if message.url != nil {
+        } else if message.payload.targetURL != nil {
             iconImageView.image = UIImage(systemName: "link")
             iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
             iconImageView.tintColor = .systemBlue
@@ -305,7 +335,6 @@ class MessageCell: UITableViewCell {
             iconImageView.tintColor = .systemOrange
         }
 
-        // 如果不可点击，隐藏箭头
-        actionImageView.isHidden = (message.url == nil && message.appId == nil)
+        actionImageView.isHidden = (message.payload.targetURL == nil && message.payload.targetAppId == nil)
     }
 }

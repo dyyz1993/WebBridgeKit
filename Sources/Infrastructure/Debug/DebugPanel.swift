@@ -142,6 +142,16 @@ public class DebugPanelViewController: UIViewController {
         return btn
     }()
 
+    private lazy var cacheButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("缓存管理", for: .normal)
+        btn.backgroundColor = .systemTeal
+        btn.setTitleColor(.white, for: .normal)
+        btn.layer.cornerRadius = 8
+        btn.addTarget(self, action: #selector(showCacheManagement), for: .touchUpInside)
+        return btn
+    }()
+
     // MARK: - Lifecycle
 
     public init() {
@@ -171,7 +181,8 @@ public class DebugPanelViewController: UIViewController {
             logsButton,
             diagnosticsButton,
             settingsButton,
-            infoButton
+            infoButton,
+            cacheButton
         ])
         stackView.axis = .vertical
         stackView.spacing = 16
@@ -192,10 +203,10 @@ public class DebugPanelViewController: UIViewController {
         stackView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(100)
             make.left.right.equalToSuperview().inset(32)
-            make.height.equalTo(320)
+            make.height.equalTo(384)
         }
 
-        [mainButton, logsButton, diagnosticsButton, settingsButton, infoButton].forEach { button in
+        [mainButton, logsButton, diagnosticsButton, settingsButton, infoButton, cacheButton].forEach { button in
             button.snp.makeConstraints { make in
                 make.height.equalTo(56)
             }
@@ -222,6 +233,11 @@ public class DebugPanelViewController: UIViewController {
 
     @objc private func showInfo() {
         showNotImplemented("环境信息")
+    }
+
+    @objc private func showCacheManagement() {
+        let cacheVC = CacheManagementViewController()
+        navigationController?.pushViewController(cacheVC, animated: true)
     }
 
     private func showNotImplemented(_ featureName: String) {

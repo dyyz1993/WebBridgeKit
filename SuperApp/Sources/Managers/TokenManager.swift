@@ -8,8 +8,8 @@
 import Foundation
 import RxSwift
 import RxCocoa
+import WebBridgeKit
 
-/// 口令 (Token) 管理与解析器
 @MainActor
 class TokenManager {
 
@@ -66,19 +66,17 @@ class TokenManager {
     private func handleResolvedResult(appId: String, urlString: String) {
         guard URL(string: urlString) != nil else { return }
 
-        // 构造一条虚拟消息，触发自动跳转逻辑
-        let message = WebhookMessage(
-            title: "口令解析成功",
-            content: "已自动为您匹配应用: \(appId)",
-            source: "口令解析",
-            url: urlString,
-            appId: appId
-        )
+        Task {
+            let payload = MessagePayload(
+                title: "口令解析成功",
+                body: "已自动为您匹配应用: \(appId)",
+                channel: "token",
+                targetURL: urlString,
+                targetAppId: appId
+            )
+            try? await MessageEngine.shared.receive(payload)
+        }
 
-        // 加入消息列表，MessageManager 会自动触发跳转逻辑
-        MessageManager.shared.addMessage(message)
-
-        // 清空剪贴板，避免重复识别
         UIPasteboard.general.string = ""
     }
 }

@@ -11,18 +11,17 @@ import SnapKit
 import RxSwift
 import RxCocoa
 import SVProgressHUD
-import WebBridgeKit
 
 /// 缓存应用详情页面
 /// 显示特定 AppID 下的所有缓存页面
-class CacheAppDetailViewController: UIViewController {
+public class CacheAppDetailViewController: UIViewController {
 
     // MARK: - Properties
 
     private let appInfo: CacheAppInfo
     private let disposeBag = DisposeBag()
 
-    var onDeletePage: ((String) -> Void)?
+    public var onDeletePage: ((String) -> Void)?
 
     // MARK: - UI Components
 
@@ -106,18 +105,18 @@ class CacheAppDetailViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(appInfo: CacheAppInfo) {
+    public init(appInfo: CacheAppInfo) {
         self.appInfo = appInfo
         super.init(nibName: nil, bundle: nil)
     }
 
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     // MARK: - Lifecycle
 
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         configureHeaderView()
@@ -233,9 +232,9 @@ class CacheAppDetailViewController: UIViewController {
 // MARK: - Cache Page Cell
 
 /// 缓存页面列表单元格
-class CachePageCell: UITableViewCell {
+public class CachePageCell: UITableViewCell {
 
-    static let identifier = "CachePageCell"
+    public static let identifier = "CachePageCell"
 
     // MARK: - UI Components
 
@@ -297,21 +296,21 @@ class CachePageCell: UITableViewCell {
 
     private var currentPageKey: String?
 
-    var pageKey: String? {
+    public var pageKey: String? {
         didSet {
             currentPageKey = pageKey
             updateUI()
         }
     }
 
-    var index: Int = 0 {
+    public var index: Int = 0 {
         didSet {
             indexLabel.text = "\(index)."
         }
     }
 
-    var onCopy: ((String) -> Void)?
-    var onDelete: ((String) -> Void)?
+    public var onCopy: ((String) -> Void)?
+    public var onDelete: ((String) -> Void)?
 
     // MARK: - Initialization
 
@@ -367,7 +366,7 @@ class CachePageCell: UITableViewCell {
 
     // MARK: - Reuse
 
-    override func prepareForReuse() {
+    public override func prepareForReuse() {
         super.prepareForReuse()
         currentPageKey = nil
         pageKeyLabel.text = nil

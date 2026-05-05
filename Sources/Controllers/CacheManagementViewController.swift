@@ -11,11 +11,10 @@ import SnapKit
 import RxSwift
 import RxCocoa
 import SVProgressHUD
-import WebBridgeKit
 
 /// 缓存管理页面
 /// 显示所有已缓存的应用列表，支持删除和刷新
-class CacheManagementViewController: UIViewController {
+public class CacheManagementViewController: UIViewController {
 
     // MARK: - Properties
 
@@ -89,18 +88,18 @@ class CacheManagementViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(viewModel: CacheManagementViewModel = CacheManagementViewModel()) {
+    public init(viewModel: CacheManagementViewModel = CacheManagementViewModel()) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
 
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     // MARK: - Lifecycle
 
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         bindViewModel()
@@ -112,7 +111,7 @@ class CacheManagementViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
 
-    override func viewWillAppear(_ animated: Bool) {
+    public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         // 每次进入页面时刷新数据
         manualRefreshSubject.accept(())
@@ -364,7 +363,7 @@ class CacheManagementViewController: UIViewController {
 extension CacheManagementViewController: UITableViewDelegate {
 
     // Swipe-to-Delete 支持
-    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+    public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let appInfo = cacheApps[indexPath.row]
 
         // 删除操作
@@ -390,7 +389,7 @@ extension CacheManagementViewController: UITableViewDelegate {
     }
 
     // 长按手势支持（通过 context menu）
-    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+    public func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let appInfo = cacheApps[indexPath.row]
 
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in

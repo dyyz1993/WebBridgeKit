@@ -10,10 +10,9 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
-import WebBridgeKit
 
 /// 缓存资源管理视图控制器
-class CacheResourceViewController: BaseViewController<CacheResourceViewModel> {
+public class CacheResourceViewController: BaseViewController<CacheResourceViewModel> {
 
     // MARK: - UI Components
 
@@ -104,25 +103,25 @@ class CacheResourceViewController: BaseViewController<CacheResourceViewModel> {
 
     // MARK: - Initialization
 
-    init(url: URL) {
+    public init(url: URL) {
         self.url = url
         super.init(viewModel: CacheResourceViewModel())
     }
 
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     // MARK: - Lifecycle
 
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         title = "缓存资源"
     }
 
     // MARK: - Setup UI
 
-    override func makeUI() {
+    public override func makeUI() {
         view.backgroundColor = UIColor.systemGroupedBackground
 
         view.addSubview(tableView)
@@ -215,7 +214,7 @@ class CacheResourceViewController: BaseViewController<CacheResourceViewModel> {
 
     // MARK: - Bind ViewModel
 
-    override func bindViewModel() {
+    public override func bindViewModel() {
         let loadResources = Driver.just(url)
         let selectAll = selectAllButton.rx.tap.asDriver()
         let deselectAll = deselectAllButton.rx.tap.asDriver()
@@ -351,15 +350,15 @@ class CacheResourceViewController: BaseViewController<CacheResourceViewModel> {
 
 extension CacheResourceViewController: UITableViewDataSource {
 
-    func numberOfSections(in tableView: UITableView) -> Int {
+    public func numberOfSections(in tableView: UITableView) -> Int {
         return currentSections.count
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return currentSections[section].items.count
     }
 
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(
             withIdentifier: CacheResourceCell.identifier,
             for: indexPath
@@ -381,7 +380,7 @@ extension CacheResourceViewController: UITableViewDataSource {
         return cell
     }
 
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         let section = currentSections[section]
         return "\(section.type.displayName) - \(section.items.count) 个文件 (\(section.formattedTotalSize))"
     }
@@ -391,7 +390,7 @@ extension CacheResourceViewController: UITableViewDataSource {
 
 extension CacheResourceViewController: UITableViewDelegate {
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
         let section = currentSections[indexPath.section]
@@ -414,7 +413,7 @@ extension CacheResourceViewController: UITableViewDelegate {
         present(alert, animated: true)
     }
 
-    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+    public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let section = currentSections[indexPath.section]
         let item = section.items[indexPath.row]
 
@@ -445,7 +444,7 @@ extension CacheResourceViewController: UITableViewDelegate {
         return UISwipeActionsConfiguration(actions: [deleteAction])
     }
 
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
 }

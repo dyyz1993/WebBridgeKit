@@ -12,6 +12,7 @@ import RxSwift
 import RxCocoa
 import QuickLook
 import SVProgressHUD
+import WebBridgeKit
 
 /// Manifest 测试用例页面
 /// 展示所有测试用例，支持运行测试和查看日志

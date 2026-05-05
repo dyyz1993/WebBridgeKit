@@ -181,22 +181,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let userInfo = response.notification.request.content.userInfo
         print("🔔 [AppDelegate] Did receive notification response with userInfo: \(userInfo)")
 
-        // 解析推送内容并构造 WebhookMessage
-        // 这里简化处理，直接交给 MessageManager 处理逻辑
-        if let urlString = userInfo["url"] as? String {
-            let message = WebhookMessage(
-                id: UUID().uuidString,
-                title: response.notification.request.content.title,
-                content: response.notification.request.content.body,
-                source: "推送通知",
-                url: urlString,
-                timestamp: Date(),
-                params: (userInfo["params"] as? [String: Any])?.compactMapValues { "\($0)" }
-            )
-            MessageManager.shared.addMessage(message)
-        }
-
-        // Also forward to new MessageEngine
+        // 解析推送内容并转发到 MessageEngine
         Task {
             let payload = MessagePayload(
                 title: userInfo["title"] as? String ?? response.notification.request.content.title,

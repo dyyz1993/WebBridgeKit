@@ -9,7 +9,7 @@
 import RxSwift
 import RxCocoa
 
-extension Reactive where Base: LoadingView {
+public extension Reactive where Base: LoadingView {
 
     /// Bindable sink for isAnimating state
     var isAnimating: Binder<Bool> {

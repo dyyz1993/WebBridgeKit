@@ -11,7 +11,7 @@ import SnapKit
 
 /// 空状态视图
 /// 用于显示列表为空时的提示信息
-class EmptyStateView: UIView {
+public class EmptyStateView: UIView {
 
     // MARK: - UI Components
 
@@ -57,16 +57,16 @@ class EmptyStateView: UIView {
 
     // MARK: - Properties
 
-    var onActionTap: (() -> Void)?
+    public var onActionTap: (() -> Void)?
 
     // MARK: - Initialization
 
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
     }
 
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
@@ -119,7 +119,7 @@ class EmptyStateView: UIView {
 
     // MARK: - Configure
 
-    func configure(icon: String? = nil, title: String, description: String, actionTitle: String? = nil) {
+    public func configure(icon: String? = nil, title: String, description: String, actionTitle: String? = nil) {
         if let icon = icon {
             let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
             iconImageView.image = UIImage(systemName: icon, withConfiguration: config)

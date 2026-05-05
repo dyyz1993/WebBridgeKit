@@ -10,9 +10,9 @@ import UIKit
 import SnapKit
 
 /// 缓存资源单元格
-class CacheResourceCell: UITableViewCell {
+public class CacheResourceCell: UITableViewCell {
 
-    static let identifier = "CacheResourceCell"
+    public static let identifier = "CacheResourceCell"
 
     // MARK: - UI Components
 
@@ -90,16 +90,16 @@ class CacheResourceCell: UITableViewCell {
     // MARK: - Properties
 
     private var currentItem: CacheResourceItem?
-    var onSelectionToggle: ((String) -> Void)?
+    public var onSelectionToggle: ((String) -> Void)?
 
-    var item: CacheResourceItem? {
+    public var item: CacheResourceItem? {
         didSet {
             currentItem = item
             updateUI()
         }
     }
 
-    var isItemSelected: Bool = false {
+    public var isItemSelected: Bool = false {
         didSet {
             selectionButton.isSelected = isItemSelected
         }
@@ -233,7 +233,7 @@ class CacheResourceCell: UITableViewCell {
 
     // MARK: - Reuse
 
-    override func prepareForReuse() {
+    public override func prepareForReuse() {
         super.prepareForReuse()
         currentItem = nil
         isItemSelected = false

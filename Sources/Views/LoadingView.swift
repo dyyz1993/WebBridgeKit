@@ -11,7 +11,7 @@ import SnapKit
 
 /// 加载视图
 /// 显示加载动画和进度
-class LoadingView: UIView {
+public class LoadingView: UIView {
 
     // MARK: - UI Components
 
@@ -60,12 +60,12 @@ class LoadingView: UIView {
 
     // MARK: - Initialization
 
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
     }
 
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
@@ -120,7 +120,7 @@ class LoadingView: UIView {
     // MARK: - Public Methods
 
     /// 开始加载（旋转指示器模式）
-    func startLoading(message: String? = nil) {
+    public func startLoading(message: String? = nil) {
         isProgressMode = false
 
         activityIndicator.startAnimating()
@@ -145,7 +145,7 @@ class LoadingView: UIView {
     }
 
     /// 开始加载（进度条模式）
-    func startProgressLoading(message: String? = nil) {
+    public func startProgressLoading(message: String? = nil) {
         isProgressMode = true
 
         activityIndicator.stopAnimating()
@@ -171,7 +171,7 @@ class LoadingView: UIView {
     }
 
     /// 更新进度
-    func updateProgress(_ progress: Double, message: String? = nil, detail: String? = nil) {
+    public func updateProgress(_ progress: Double, message: String? = nil, detail: String? = nil) {
         guard isProgressMode else { return }
 
         progressView.progress = Float(progress)
@@ -183,7 +183,7 @@ class LoadingView: UIView {
     }
 
     /// 停止加载
-    func stopLoading() {
+    public func stopLoading() {
         activityIndicator.stopAnimating()
 
         UIView.animate(withDuration: 0.2, animations: {
@@ -194,12 +194,12 @@ class LoadingView: UIView {
     }
 
     /// 更新消息
-    func updateMessage(_ message: String) {
+    public func updateMessage(_ message: String) {
         messageLabel.text = message
     }
 
     /// 更新详情
-    func updateDetail(_ detail: String) {
+    public func updateDetail(_ detail: String) {
         detailLabel.text = detail
         detailLabel.isHidden = false
     }

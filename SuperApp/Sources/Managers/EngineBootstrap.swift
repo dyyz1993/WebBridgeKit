@@ -64,6 +64,10 @@ public final class EngineBootstrap {
     private func bootstrapMessage() async {
         let engine = MessageEngine.shared
 
+        let persistentStore = UserDefaultsMessageStore(key: "SuperCache_Messages")
+        await engine.setStore(persistentStore)
+        print("  ✅ Message Engine: UserDefaults persistent store configured")
+
         let barkServerURL = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
         let barkKey = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
 
@@ -84,22 +88,27 @@ public final class EngineBootstrap {
         await pipeline.register(LevelProcessor())
         await pipeline.register(BadgeProcessor())
         await pipeline.register(AutoCopyProcessor())
-        await pipeline.register(ArchiveProcessor(store: InMemoryMessageStore()))
+        await pipeline.register(ArchiveProcessor(store: persistentStore))
         await pipeline.register(MuteProcessor())
         await engine.setPipeline(pipeline)
         print("  ✅ Message Engine: Processor pipeline configured (6 processors)")
 
         await engine.setOnMessageReceived { storedMessage in
             Task { @MainActor in
-                let message = WebhookMessage(
-                    title: storedMessage.payload.title,
-                    content: storedMessage.payload.body,
-                    source: storedMessage.payload.channel,
-                    url: storedMessage.payload.targetURL,
-                    appId: storedMessage.payload.targetAppId,
-                    params: storedMessage.payload.userInfo
-                )
-                MessageManager.shared.addMessage(message)
+                if let urlString = storedMessage.payload.targetURL, let url = URL(string: urlString) {
+                    NotificationCenter.default.post(
+                        name: .didReceivePushMessage,
+                        object: nil,
+                        userInfo: [
+                            "url": url,
+                            "title": storedMessage.payload.title,
+                            "body": storedMessage.payload.body,
+                            "source": storedMessage.payload.channel,
+                            "appId": storedMessage.payload.targetAppId as Any,
+                            "params": storedMessage.payload.userInfo as Any
+                        ]
+                    )
+                }
             }
         }
 
