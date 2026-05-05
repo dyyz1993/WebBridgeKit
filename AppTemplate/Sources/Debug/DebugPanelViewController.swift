@@ -12,7 +12,11 @@ import SnapKit
 
 /// 🧠 统一的调试面板入口
 /// 所有基于 App 的 Handler + 诊断系统都可以从这个面板访问
+#if DEBUG
 public class DebugPanelViewController: UIViewController {
+#else
+internal class DebugPanelViewController: UIViewController {
+#endif
 
     private var categories: [(HandlerCategory, [HandlerMeta])] = []
     private var handlerMap: [String: HandlerMeta] = [:]

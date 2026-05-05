@@ -6,25 +6,45 @@
 import UIKit
 
 /// Debug Panel 触发器 - 摇一摇 / 长按 / URL Scheme
+#if DEBUG
 public class DebugTrigger {
+    #else
+internal class DebugTrigger {
+    #endif
     
     public static let shared = DebugTrigger()
     
+    #if DEBUG
     /// 是否启用摇一摇触发
     public var shakeEnabled = true
+    #else
+    internal var shakeEnabled = false
+    #endif
     
     /// Debug Panel 是否已经显示
     private var isShowing = false
     
     private init() {}
-    
+
     /// 在 AppDelegate 中调用，注册摇一摇
+    #if DEBUG
     public func setup(window: UIWindow?) {
         applicationSupportsShake = true
     }
-    
+    #else
+    internal func setup(window: UIWindow?) {
+        // No-op in release mode
+    }
+    #endif
+
     /// 显示 Debug Panel
+    #if DEBUG
     public func showDebugPanel(from viewController: UIViewController?) {
+    #else
+    internal func showDebugPanel(from viewController: UIViewController?) {
+        // No-op in release mode
+        return
+    #endif
         guard !isShowing else { return }
         guard let vc = viewController ?? topViewController() else { return }
         

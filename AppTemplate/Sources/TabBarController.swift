@@ -13,6 +13,11 @@ import WebBridgeKit
 /// 管理 5 个功能模块：Web、Handlers、Logs、Diagnostics、Settings
 class TabBarController: UITabBarController {
 
+    #if DEBUG
+    // Debug-related tabs
+    private var debugTabs: [UITabBarItem] = []
+    #endif
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -29,6 +34,8 @@ class TabBarController: UITabBarController {
     private func setupTabs() {
         // 创建主要 Tab
         let webVC = createWebViewController()
+
+        #if DEBUG
         let handlersVC = createHandlersViewController()
         let logsVC = createLogsViewController()
         let diagnosticsVC = createDiagnosticsViewController()
@@ -65,7 +72,10 @@ class TabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "gearshape.fill")
         )
 
-        // 包装导航控制器
+        // 保存 debug tabs
+        debugTabs = [handlersVC.tabBarItem, logsVC.tabBarItem, diagnosticsVC.tabBarItem, settingsVC.tabBarItem]
+
+        // 包装导航控制器 (5 tabs in DEBUG mode)
         viewControllers = [
             UINavigationController(rootViewController: webVC),
             UINavigationController(rootViewController: handlersVC),
@@ -73,6 +83,18 @@ class TabBarController: UITabBarController {
             UINavigationController(rootViewController: diagnosticsVC),
             UINavigationController(rootViewController: settingsVC)
         ]
+        #else
+        // Release mode: only Web tab
+        webVC.tabBarItem = UITabBarItem(
+            title: "Web",
+            image: UIImage(systemName: "globe"),
+            selectedImage: UIImage(systemName: "globe.fill")
+        )
+
+        viewControllers = [
+            UINavigationController(rootViewController: webVC)
+        ]
+        #endif
     }
 
     private func setupAppearance() {
