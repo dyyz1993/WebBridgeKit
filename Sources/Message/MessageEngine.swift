@@ -10,6 +10,7 @@ public actor MessageEngine {
     private var router: MessageRouter
     private var handlers: [String: MessageHandler] = [:]
     private var statistics: MessageStatistics
+    private var pipeline: MessageProcessorPipeline?
 
     /// Message received callback
     public var onMessageReceived: (@Sendable (StoredMessage) -> Void)?
@@ -48,6 +49,13 @@ public actor MessageEngine {
     /// Get all registered channels
     public func getRegisteredChannels() -> [String] {
         Array(channels.keys)
+    }
+
+    // MARK: - Pipeline Management
+
+    /// Set the processor pipeline
+    public func setPipeline(_ pipeline: MessageProcessorPipeline) {
+        self.pipeline = pipeline
     }
 
     // MARK: - Store Management
@@ -112,20 +120,43 @@ public actor MessageEngine {
 
         statistics.recordReceived(channelId: payload.channel)
 
-        // Notify handlers
-        if let category = payload.category,
-           let handler = handlers[category] {
-            handler.handle(storedMessage)
-        }
+        // Process through pipeline if available
+        if let pipeline = pipeline {
+            var content = MutableMessageContent(
+                title: payload.title,
+                subtitle: payload.subtitle,
+                body: payload.body,
+                sound: payload.sound,
+                badge: payload.badge,
+                group: payload.group,
+                threadId: payload.threadId,
+                targetURL: payload.targetURL,
+                targetAppId: payload.targetAppId,
+                targetMode: payload.targetMode,
+                userInfo: (payload.userInfo as? [String: Any]) ?? [:]
+            )
+            content = try await pipeline.process(content: content)
 
-        // Route if applicable
-        if payload.hasRoute {
-            let target = router.route(payload: payload)
-            onRoute?(payload, target)
-        }
+            if let category = payload.category, let handler = handlers[category] {
+                handler.handle(storedMessage)
+            }
 
-        // Notify callback
-        onMessageReceived?(storedMessage)
+            if content.targetURL != nil || content.targetAppId != nil {
+                let target = router.route(payload: payload)
+                onRoute?(payload, target)
+            }
+
+            onMessageReceived?(storedMessage)
+        } else {
+            if let category = payload.category, let handler = handlers[category] {
+                handler.handle(storedMessage)
+            }
+            if payload.hasRoute {
+                let target = router.route(payload: payload)
+                onRoute?(payload, target)
+            }
+            onMessageReceived?(storedMessage)
+        }
     }
 
     // MARK: - Query Operations

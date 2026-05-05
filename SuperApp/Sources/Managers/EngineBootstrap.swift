@@ -79,6 +79,16 @@ public final class EngineBootstrap {
         await engine.registerChannel(webhookChannel)
         print("  ✅ Message Engine: Webhook channel registered")
 
+        let pipeline = MessageProcessorPipeline()
+        await pipeline.register(MarkdownProcessor())
+        await pipeline.register(LevelProcessor())
+        await pipeline.register(BadgeProcessor())
+        await pipeline.register(AutoCopyProcessor())
+        await pipeline.register(ArchiveProcessor(store: InMemoryMessageStore()))
+        await pipeline.register(MuteProcessor())
+        await engine.setPipeline(pipeline)
+        print("  ✅ Message Engine: Processor pipeline configured (6 processors)")
+
         await engine.setOnMessageReceived { storedMessage in
             Task { @MainActor in
                 let message = WebhookMessage(
