@@ -14,7 +14,6 @@ jobs:
   build:
     name: Build
     runs-on: macos-15
-
     steps:
       - uses: actions/checkout@v4
 
@@ -48,11 +47,10 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
-  ui-tests:
-    name: UI Tests
+  smoke-tests:
+    name: 🚀 Smoke Tests
     runs-on: macos-15
     needs: build
-
     steps:
       - uses: actions/checkout@v4
 
@@ -73,23 +71,14 @@ jobs:
       - name: Install Pods
         run: pod install
 
-      - name: Boot Simulator
+      - name: Start Test Server
         run: |
-          # Find and boot iPhone 16 simulator
-          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          for runtime, devices in data['devices'].items():
-              for d in devices:
-                  if d['name'] == 'iPhone 16' and d['isAvailable']:
-                      print(d['udid'])
-                      sys.exit(0)
-          sys.exit(1)
-          ")
-          echo "Booting iPhone 16: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" || true
+          cd test-server/lazy-test
+          python3 -m http.server 8080 &
+          sleep 2
+          curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
 
-      - name: Run UI Tests
+      - name: Run Smoke Tests
         run: |
           set -o pipefail
           mkdir -p build/test-results
@@ -99,70 +88,194 @@ jobs:
             -scheme DemoApp \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -configuration Debug \
-            -resultBundlePath build/test-results/TestResults \
+            -resultBundlePath build/test-results/SmokeResults \
+            -only-testing:DemoAppUITests/MainFlowTests \
+            -only-testing:DemoAppUITests/SettingsNavigationTests \
+            -only-testing:DemoAppUITests/PermissionTests \
+            -only-testing:DemoAppUITests/DemoAppUITests \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            -maximum-parallel-testing-workers 2 \
-            | xcpretty --color --report junit --output build/test-results/junit.xml || true
+            | xcpretty --color --report junit --output build/test-results/smoke-junit.xml || true
 
       - name: Collect Screenshots
         if: always()
         run: |
           mkdir -p build/screenshots
-          
-          # Extract screenshots from result bundle
-          if [ -d "build/test-results/TestResults" ]; then
-            find build/test-results/TestResults -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
-            find build/test-results/TestResults -name "Screenshot*" -exec cp {} build/screenshots/ \; 2>/dev/null || true
-          fi
-          
-          # Also grab simulator screenshots
-          DEVICE_ID=$(xcrun simctl list devices booted -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          for runtime, devices in data['devices'].items():
-              for d in devices:
-                  if d['state'] == 'Booted':
-                      print(d['udid'])
-                      sys.exit(0)
-          " 2>/dev/null || echo "")
-          
-          if [ -n "$DEVICE_ID" ]; then
-            xcrun simctl io "$DEVICE_ID" screenshot build/screenshots/final_state.png || true
-          fi
-          
-          echo "Screenshots collected: $(ls build/screenshots/ | wc -l) files"
+          find build/test-results -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
+          DEVICE_ID=$(xcrun simctl list devices booted -j | python3 -c "import json,sys;[print(d['udid']) or sys.exit(0) for r,ds in json.load(sys.stdin)['devices'].items() for d in ds if d['state']=='Booted']" 2>/dev/null || echo "")
+          [ -n "$DEVICE_ID" ] && xcrun simctl io "$DEVICE_ID" screenshot build/screenshots/smoke_final.png || true
+          echo "Screenshots: $(ls build/screenshots/ | wc -l) files"
 
-      - name: Upload Test Screenshots
+      - name: Upload Smoke Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ui-test-screenshots
+          name: smoke-test-screenshots
           path: build/screenshots/
-          retention-days: 14
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-test-results
-          path: build/test-results/
-          retention-days: 14
+          retention-days: 7
 
       - name: Publish Test Report
         if: always()
         uses: mikepenz/action-junit-report@v4
         with:
-          report_paths: build/test-results/junit.xml
-          check_name: "UI Test Results"
+          report_paths: build/test-results/smoke-junit.xml
+          check_name: "Smoke Test Results"
+
+  core-tests:
+    name: ⚡ Core UI Tests
+    runs-on: macos-15
+    needs: smoke-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Install Pods
+        run: pod install
+
+      - name: Start Test Server
+        run: |
+          cd test-server/lazy-test
+          python3 -m http.server 8080 &
+          sleep 2
+          curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
+
+      - name: Run Core Tests (Parallel)
+        run: |
+          set -o pipefail
+          mkdir -p build/test-results
+          
+          xcodebuild test \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme DemoApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug \
+            -resultBundlePath build/test-results/CoreResults \
+            -parallel-testing-enabled YES \
+            -maximum-parallel-testing-workers 3 \
+            -skip-testing:DemoAppUITests/ManifestCacheUITests \
+            -skip-testing:DemoAppUITests/ManifestCacheContentVerificationTests \
+            -skip-testing:DemoAppUITests/ManifestCacheVerificationTests \
+            -skip-testing:DemoAppUITests/ManifestCacheButtonDebugUITests \
+            -skip-testing:DemoAppUITests/ManifestCacheQuickVerificationTests \
+            -skip-testing:DemoAppUITests/ManifestScenariosUITests \
+            -skip-testing:DemoAppUITests/ImageCacheVerificationTests \
+            -skip-testing:DemoAppUITests/LazyLoadingUITest \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output build/test-results/core-junit.xml || true
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p build/screenshots
+          find build/test-results -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
+          echo "Screenshots: $(ls build/screenshots/ | wc -l) files"
+
+      - name: Upload Core Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-test-screenshots
+          path: build/screenshots/
+          retention-days: 7
+
+      - name: Publish Test Report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: build/test-results/core-junit.xml
+          check_name: "Core Test Results"
+
+  manifest-tests:
+    name: 📦 Manifest Cache Tests
+    runs-on: macos-15
+    needs: smoke-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Install Pods
+        run: pod install
+
+      - name: Run Manifest Cache Tests (Sequential)
+        run: |
+          set -o pipefail
+          mkdir -p build/test-results
+          
+          xcodebuild test \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme DemoApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug \
+            -resultBundlePath build/test-results/ManifestResults \
+            -only-testing:DemoAppUITests/ManifestCacheUITests \
+            -only-testing:DemoAppUITests/ManifestCacheContentVerificationTests \
+            -only-testing:DemoAppUITests/ManifestCacheVerificationTests \
+            -only-testing:DemoAppUITests/ManifestCacheButtonDebugUITests \
+            -only-testing:DemoAppUITests/ManifestCacheQuickVerificationTests \
+            -only-testing:DemoAppUITests/ManifestScenariosUITests \
+            -only-testing:DemoAppUITests/ImageCacheVerificationTests \
+            -only-testing:DemoAppUITests/LazyLoadingUITest \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output build/test-results/manifest-junit.xml || true
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p build/screenshots
+          find build/test-results -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
+          echo "Screenshots: $(ls build/screenshots/ | wc -l) files"
+
+      - name: Upload Manifest Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: manifest-test-screenshots
+          path: build/screenshots/
+          retention-days: 7
+
+      - name: Publish Test Report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: build/test-results/manifest-junit.xml
+          check_name: "Manifest Test Results"
 
   swiftlint:
     name: SwiftLint
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-
       - name: Run SwiftLint
         run: |
           brew install swiftlint
