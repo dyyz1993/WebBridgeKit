@@ -14,8 +14,8 @@ import RxDataSources
 public class URLFavorite: Object {
     @objc dynamic public var id: String = UUID().uuidString
     @objc dynamic public var url: String = ""
-    @objc dynamic public var title: String? = nil
-    @objc dynamic public var favicon: Data? = nil
+    @objc dynamic public var title: String?
+    @objc dynamic public var favicon: Data?
     @objc dynamic public var isPinned: Bool = false      // 置顶
     @objc dynamic public var sortOrder: Int = 0         // 排序
     @objc dynamic public var createdAt: Date = Date()

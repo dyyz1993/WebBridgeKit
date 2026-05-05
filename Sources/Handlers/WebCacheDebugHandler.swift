@@ -640,8 +640,8 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
         WebPageOfflineCacheManager.shared.cachePage(
             url: url,
             rule: rule,
-            progress: { _ in }
-        ) { result in
+            progress: { _ in },
+            completion: { result in
             switch result {
             case .success(let pageInfo):
                 let response: [String: Any] = [
@@ -665,15 +665,15 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
             case .failure(let error):
                 self.reject(error: "Failed to cache page: \(error.localizedDescription)", completion: completion)
             }
-        }
+        })
     }
 
     /// 刷新已缓存的页面
     private func refreshCachedPage(pageId: String, completion: @escaping (Any) -> Void) {
         WebPageOfflineCacheManager.shared.refreshCachedPage(
             pageId: pageId,
-            progress: { _ in }
-        ) { result in
+            progress: { _ in },
+            completion: { result in
             switch result {
             case .success:
                 let response: [String: Any] = [
@@ -686,7 +686,7 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
             case .failure(let error):
                 self.reject(error: "Failed to refresh page: \(error.localizedDescription)", completion: completion)
             }
-        }
+        })
     }
 
     /// 删除已缓存的页面

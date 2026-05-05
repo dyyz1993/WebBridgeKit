@@ -379,7 +379,7 @@ class CacheAppCell: UITableViewCell {
         // 复制按钮动画反馈
         UIView.animate(withDuration: 0.1, animations: {
             self.copyButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }) { _ in
+        }, completion: { _ in
             UIView.animate(withDuration: 0.1) {
                 self.copyButton.transform = .identity
             }

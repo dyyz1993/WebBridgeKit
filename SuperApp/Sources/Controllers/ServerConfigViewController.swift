@@ -59,7 +59,7 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
     private var currentBaseURL: String?
     private var currentAPIEndpoint: String?
     private var isCustomServer: Bool = false
-    
+
     private var baseURLValidationError: String?
     private var apiEndpointValidationError: String?
 
@@ -144,7 +144,7 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
                 }
             })
             .disposed(by: rx)
-            
+
         // 监听 APIEndpoint 验证结果
         output.apiEndpointValidation
             .drive(onNext: { [weak self] error in
@@ -190,20 +190,20 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
                 self?.tableView.reloadData()
             })
             .disposed(by: rx)
-            
+
         // 监听 BaseURL 和 APIEndpoint 变化
         output.baseURL
             .drive(onNext: { [weak self] url in
                 self?.currentBaseURL = url
             })
             .disposed(by: rx)
-            
+
         output.apiEndpoint
             .drive(onNext: { [weak self] endpoint in
                 self?.currentAPIEndpoint = endpoint
             })
             .disposed(by: rx)
-            
+
         // 保存 relays
         self.serverTypeChange = serverTypeChange
         self.baseURLChange = baseURLChange

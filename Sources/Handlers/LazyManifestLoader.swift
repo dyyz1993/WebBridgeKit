@@ -261,7 +261,7 @@ public class LazyManifestLoader: NSObject {
 
                 // 从缓存加载
                 self.manifestCacheManager.loadHTML(cachedHTML, into: webView)
-                
+
                 // 🔥 发送通知用于 UI 更新
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
@@ -343,7 +343,7 @@ public class LazyManifestLoader: NSObject {
         if url.pathExtension.lowercased() == "html" || url.pathExtension.lowercased() == "htm" {
             baseURL = url.deletingLastPathComponent()
         }
-        
+
         let manifestURL = baseURL.appendingPathComponent(manifestFileName)
         NSLog("🌐 [LazyLoader] 正在尝试下载 Manifest: %@", manifestURL.absoluteString)
         do {
@@ -361,7 +361,7 @@ public class LazyManifestLoader: NSObject {
 
     private func downloadManifest(from url: URL, completion: @escaping (Result<WebManifest, Error>) -> Void) {
         let manifestURL = url.appendingPathComponent(manifestFileName)
-        urlSession.dataTask(with: manifestURL) { data, response, error in
+        urlSession.dataTask(with: manifestURL) { data, _, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -426,7 +426,7 @@ public class LazyManifestLoader: NSObject {
     }
 
     private func downloadHTML(from url: URL, completion: @escaping (Result<String, Error>) -> Void) {
-        urlSession.dataTask(with: url) { data, response, error in
+        urlSession.dataTask(with: url) { data, _, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -442,13 +442,13 @@ public class LazyManifestLoader: NSObject {
     private func downloadAllResources(manifest: WebManifest, baseURL: URL, pageKey: String) {
         for (relativePath, resourceURLString) in manifest.resources {
             guard let resourceURL = URL(string: resourceURLString, relativeTo: baseURL) else { continue }
-            urlSession.dataTask(with: resourceURL) { [weak self] data, response, error in
+            urlSession.dataTask(with: resourceURL) { [weak self] data, response, _ in
                 guard let self = self, let data = data, let response = response as? HTTPURLResponse else { return }
                 let mimeType = response.mimeType ?? "application/octet-stream"
                 let resource = ResourceData(relativePath: relativePath, data: data, mimeType: mimeType)
                 ResourceCache.shared.set(resource, for: pageKey)
                 self.postLog("✅ [资源下载] 已缓存: \(relativePath)")
-                
+
                 // ✅ 资源下载完成后通知 UI 刷新，以便更新缓存大小显示
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(

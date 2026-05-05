@@ -99,11 +99,11 @@ public class WebSpeechHandler: BaseWebNativeHandler {
 
     private func escapeJSString(_ str: String) -> String {
         return str.replacingOccurrences(of: "\\", with: "\\\\")
-                  .replacingOccurrences(of: "\"", with: "\\\"")
-                  .replacingOccurrences(of: "\n", with: "\\n")
-                  .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
     }
-    
+
     private func startSpeechRecognition(language: String, completion: @escaping (Any) -> Void) {
         runOnMainThread { [weak self] in
             // 在入口处就检查：防止重复调用

@@ -7,7 +7,7 @@ public enum CacheExpirationPolicy: Sendable {
     case minutes(Int)
     case hours(Int)
     case days(Int)
-    
+
     public var timeInterval: TimeInterval? {
         switch self {
         case .never:
@@ -38,7 +38,7 @@ public struct CacheConfiguration: Sendable {
     public let evictionPolicy: CacheEvictionPolicy
     public let maxSize: Int
     public let enableCompression: Bool
-    
+
     public init(
         expirationPolicy: CacheExpirationPolicy = .hours(24),
         evictionPolicy: CacheEvictionPolicy = .leastRecentlyUsed,
@@ -50,7 +50,7 @@ public struct CacheConfiguration: Sendable {
         self.maxSize = maxSize
         self.enableCompression = enableCompression
     }
-    
+
     public static let `default` = CacheConfiguration()
     public static let aggressive = CacheConfiguration(
         expirationPolicy: .hours(1),

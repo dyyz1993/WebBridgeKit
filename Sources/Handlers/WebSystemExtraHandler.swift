@@ -15,40 +15,40 @@ import LocalAuthentication
 /// 系统增强功能 Handler
 /// 支持：手电筒控制、生物识别、桌面角标设置
 public class WebSystemExtraHandler: BaseWebNativeHandler {
-    
+
     // MARK: - Handle
-    
+
     /**
      * 处理 JS 调用
      * @param body 调用参数
      * @param completion 处理完成后的回调
      */
-    public override func handle(body: [String : Any], completion: @escaping (Any) -> Void) {
+    public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? ""
-        
+
         WebBridgeLogger.shared.log(.info, "[WebSystemExtraHandler] Handling action: \(action)")
-        
+
         switch action {
         case "setTorch":
             let enabled = params["enabled"] as? Bool ?? true
             setTorch(enabled: enabled, completion: completion)
-            
+
         case "authenticate":
             let reason = params["reason"] as? String ?? "需要验证身份"
             authenticate(reason: reason, completion: completion)
-            
+
         case "setBadge":
             let count = params["count"] as? Int ?? 0
             setBadge(count: count, completion: completion)
-            
+
         default:
             self.reject(error: "Unsupported action: \(action)", code: 404, completion: completion)
         }
     }
-    
+
     // MARK: - Actions
-    
+
     /**
      * 控制手电筒
      * @param enabled 是否开启
@@ -60,7 +60,7 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
                 self?.reject(error: "Torch not available", completion: completion)
                 return
             }
-            
+
             do {
                 try device.lockForConfiguration()
                 device.torchMode = enabled ? .on : .off
@@ -71,7 +71,7 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
             }
         }
     }
-    
+
     /**
      * 生物识别 (FaceID / TouchID)
      * @param reason 验证原因描述
@@ -80,7 +80,7 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
     private func authenticate(reason: String, completion: @escaping (Any) -> Void) {
         let context = LAContext()
         var error: NSError?
-        
+
         // 预检查可用性
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
             // 获取生物识别类型
@@ -107,7 +107,7 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
             } else {
                 type = "touchID" // iOS 11 以下只有 TouchID
             }
-            
+
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { [weak self] success, evalError in
                 self?.runOnMainThread {
                     if success {
@@ -129,7 +129,7 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
             self.reject(error: errMsg, code: error?.code, completion: completion)
         }
     }
-    
+
     /**
      * 设置桌面角标
      * @param count 数字
@@ -139,7 +139,7 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
         runOnMainThread { [weak self] in
             // iOS 13+ 需要申请通知权限才能设置角标
             let center = UNUserNotificationCenter.current()
-            center.requestAuthorization(options: [.badge]) { granted, error in
+            center.requestAuthorization(options: [.badge]) { granted, _ in
                 self?.runOnMainThread {
                     if granted {
                         UIApplication.shared.applicationIconBadgeNumber = count

@@ -36,7 +36,7 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
         // 从 params 中获取参数，兼容直接在 body 中传参的情况
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? "start"
-        
+
         // 兼容从 JS 传递过来的数字类型（JS 数字在桥接时通常表现为 NSNumber）
         let fps = (params["fps"] as? NSNumber)?.intValue ?? 30
         let sensitivity = (params["sensitivity"] as? NSNumber)?.floatValue ?? 5.0
@@ -152,12 +152,12 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
         let frameLength = UInt32(buffer.frameLength)
-        
+
         var sum: Float = 0
         for i in 0..<Int(frameLength) {
             sum += channelData[i] * channelData[i]
         }
-        
+
         let rms = sqrt(sum / Float(frameLength))
         // 使用灵敏度进行缩放，并限制在 0-1 之间
         self.currentLevel = min(1.0, rms * levelMultiplier)
@@ -169,16 +169,16 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
      */
     private func startTimer(fps: Int) {
         levelTimer?.cancel()
-        
+
         let interval = 1.0 / Double(max(1, fps))
         let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timer.schedule(deadline: .now(), repeating: interval)
-        
+
         timer.setEventHandler { [weak self] in
             guard let self = self, self.isMonitoring else { return }
             self.sendLevelToJS()
         }
-        
+
         self.levelTimer = timer
         timer.resume()
     }
@@ -189,10 +189,10 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
     private func sendLevelToJS() {
         // 使用统一的事件发送机制
         sendEventToJS(event: "onAudioLevelChange", data: ["level": currentLevel])
-        
+
         // 同时保留旧的直接调用方式，确保最大兼容性
         let jsCode = "if(window.onAudioLevelChange) { window.onAudioLevelChange(\(currentLevel)); } else if(window.onAudioLevel) { window.onAudioLevel(\(currentLevel)); }"
-        
+
         runOnMainThread { [weak self] in
             self?.webView?.evaluateJavaScript(jsCode)
         }
@@ -205,16 +205,16 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
     private func stopMonitoring(completion: @escaping (Any) -> Void) {
         runOnMainThread { [weak self] in
             guard let self = self else { return }
-            
+
             self.levelTimer?.cancel()
             self.levelTimer = nil
-            
+
             self.audioEngine?.stop()
             self.audioEngine?.inputNode.removeTap(onBus: 0)
             self.audioEngine = nil
-            
+
             self.isMonitoring = false
-            
+
             self.resolve(["message": "Monitoring stopped"], completion: completion)
         }
     }

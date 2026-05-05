@@ -16,9 +16,9 @@ import RealmSwift
 public class WebPageHistory: Object {
     @objc dynamic public var id: String = UUID().uuidString
     @objc dynamic public var url: String = ""
-    @objc dynamic public var title: String? = nil
-    @objc dynamic public var favicon: Data? = nil
-    @objc dynamic public var htmlPath: String? = nil
+    @objc dynamic public var title: String?
+    @objc dynamic public var favicon: Data?
+    @objc dynamic public var htmlPath: String?
     public let resourcePaths = List<String>()
     @objc dynamic public var cachedSize: Int64 = 0
     @objc dynamic public var isCached: Bool = false
@@ -26,12 +26,12 @@ public class WebPageHistory: Object {
     @objc dynamic public var isFavorite: Bool = false    // 是否收藏
     @objc dynamic public var visitCount: Int = 0
     @objc dynamic public var lastVisitDate = Date()
-    @objc dynamic public var cacheDate: Date? = nil
-    @objc dynamic public var thumbnail: Data? = nil
+    @objc dynamic public var cacheDate: Date?
+    @objc dynamic public var thumbnail: Data?
 
     // PageCacheRule 关联
-    @objc dynamic public var ruleId: String? = nil        // 关联的规则 ID
-    @objc dynamic public var ruleName: String? = nil      // 关联的规则名称
+    @objc dynamic public var ruleId: String?        // 关联的规则 ID
+    @objc dynamic public var ruleName: String?      // 关联的规则名称
     @objc dynamic public var isExcluded: Bool = false     // 是否被规则排除
 
     override public class func primaryKey() -> String? {

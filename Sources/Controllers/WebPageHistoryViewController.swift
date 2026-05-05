@@ -46,7 +46,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         tableView.separatorStyle = .none
         tableView.backgroundColor = WKColor.background.primary
         tableView.register(WebPageHistoryCell.self,
-                          forCellReuseIdentifier: "\(WebPageHistoryCell.self)")
+                           forCellReuseIdentifier: "\(WebPageHistoryCell.self)")
         tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 20))
         tableView.rx.setDelegate(self).disposed(by: rx)
 
@@ -131,7 +131,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         return view
     }()
 
-    /// 进度HUD
+    // 进度HUD
 
     // MARK: - Properties
 
@@ -149,7 +149,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         configureCell: { [weak self] (_: TableViewSectionedDataSource<WebPageHistorySection>, tableView: UITableView, _: IndexPath, item: WebPageHistory) in
             guard let self = self,
                   let cell = tableView.dequeueReusableCell(
-                      withIdentifier: "\(WebPageHistoryCell.self)"
+                    withIdentifier: "\(WebPageHistoryCell.self)"
                   ) as? WebPageHistoryCell else {
                 return UITableViewCell()
             }
@@ -269,7 +269,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         output.cacheSuccess
             .drive(onNext: { [weak self] in
                 self?.hideProgressHUD()
-                SVProgressHUD.showInfo(withStatus:NSLocalizedString("Cached successfully", comment: ""))
+                SVProgressHUD.showInfo(withStatus: NSLocalizedString("Cached successfully", comment: ""))
                 // 刷新列表
                 self?.viewModel.loadHistories()
             })
@@ -279,7 +279,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         output.cacheError
             .drive(onNext: { [weak self] (error: String) in
                 self?.hideProgressHUD()
-                SVProgressHUD.showError(withStatus:error)
+                SVProgressHUD.showError(withStatus: error)
             })
             .disposed(by: rx)
 
@@ -388,7 +388,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         if history.isCached {
             alert.addAction(UIAlertAction(title: NSLocalizedString("Delete Cache", comment: ""), style: .default) { _ in
                 WebPageOfflineCacheManager.shared.deleteCache(history: history)
-                SVProgressHUD.showInfo(withStatus:NSLocalizedString("Cache deleted", comment: ""))
+                SVProgressHUD.showInfo(withStatus: NSLocalizedString("Cache deleted", comment: ""))
             })
         } else {
             alert.addAction(UIAlertAction(title: NSLocalizedString("Cache Offline", comment: ""), style: .default) { [weak self] _ in
@@ -404,7 +404,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         // 复制链接
         alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Link", comment: ""), style: .default) { _ in
             UIPasteboard.general.string = history.url
-            SVProgressHUD.showInfo(withStatus:NSLocalizedString("Link copied", comment: ""))
+            SVProgressHUD.showInfo(withStatus: NSLocalizedString("Link copied", comment: ""))
         })
 
         // 删除
@@ -429,13 +429,13 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
             self?.hideProgressHUD()
             switch result {
             case .success:
-                SVProgressHUD.showInfo(withStatus:NSLocalizedString("Cached successfully", comment: ""))
+                SVProgressHUD.showInfo(withStatus: NSLocalizedString("Cached successfully", comment: ""))
                 // 在主线程刷新列表
                 DispatchQueue.main.async {
                     self?.viewModel.loadHistories()
                 }
             case .failure(let error):
-                SVProgressHUD.showError(withStatus:error.localizedDescription)
+                SVProgressHUD.showError(withStatus: error.localizedDescription)
             }
         }
     }
@@ -535,7 +535,7 @@ extension WebPageHistoryViewController: UITableViewDelegate {
         if history.isCached {
             cacheAction = UIContextualAction(style: .normal, title: NSLocalizedString("Delete Cache", comment: "Delete Cache")) { _, _, completion in
                 WebPageOfflineCacheManager.shared.deleteCache(history: history)
-                SVProgressHUD.showInfo(withStatus:NSLocalizedString("Cache deleted", comment: ""))
+                SVProgressHUD.showInfo(withStatus: NSLocalizedString("Cache deleted", comment: ""))
                 completion(true)
             }
             cacheAction.backgroundColor = UIColor.systemOrange
@@ -581,7 +581,7 @@ extension WebPageHistoryViewController: UICollectionViewDataSource {
             withReuseIdentifier: WebPageHistoryGalleryCell.reuseIdentifier,
             for: indexPath
         ) as? WebPageHistoryGalleryCell,
-              indexPath.item < allHistories.count else {
+        indexPath.item < allHistories.count else {
             return UICollectionViewCell()
         }
 
@@ -624,7 +624,7 @@ extension WebPageHistoryViewController {
             }
             self.openURL(url)
         } else {
-            SVProgressHUD.showError(withStatus:NSLocalizedString("Invalid URL", comment: "Invalid URL"))
+            SVProgressHUD.showError(withStatus: NSLocalizedString("Invalid URL", comment: "Invalid URL"))
         }
     }
 }

@@ -198,7 +198,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         let allFavorites = sections.flatMap { $0.items }
 
         Observable.just(allFavorites)
-            .bind(to: tableView.rx.items(cellIdentifier: FavoriteCell.identifier, cellType: FavoriteCell.self)) { [weak self] row, favorite, cell in
+            .bind(to: tableView.rx.items(cellIdentifier: FavoriteCell.identifier, cellType: FavoriteCell.self)) { [weak self] _, favorite, cell in
                 cell.favorite = favorite
                 cell.onPinToggle = { id in
                     self?.handlePinToggle(id: id)
@@ -231,7 +231,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
             cacheModeToggle: .empty(),
             itemDelete: .empty()
         )
-        let _ = viewModel.transform(input: input)
+        _ = viewModel.transform(input: input)
     }
 
     private func handleCacheModeToggle(id: String, enabled: Bool) {
@@ -242,7 +242,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
             cacheModeToggle: .just((id, enabled)),
             itemDelete: .empty()
         )
-        let _ = viewModel.transform(input: input)
+        _ = viewModel.transform(input: input)
     }
 
     private func handleDelete(id: String) {
@@ -261,7 +261,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
                 cacheModeToggle: .empty(),
                 itemDelete: .just(id)
             )
-            let _ = self.viewModel.transform(input: input)
+            _ = self.viewModel.transform(input: input)
         })
 
         present(alert, animated: true)
@@ -344,7 +344,7 @@ extension FavoriteViewController: UITableViewDelegate {
 extension FavoriteViewController: UITableViewDragDelegate {
     func tableView(_ tableView: UITableView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
         // 只允许在同一个 section 内拖拽
-        guard currentSections.count > 0 else { return [] }
+        guard !currentSections.isEmpty else { return [] }
 
         let itemProvider = NSItemProvider(object: String(indexPath.section) as NSString)
         let dragItem = UIDragItem(itemProvider: itemProvider)

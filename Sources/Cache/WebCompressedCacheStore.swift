@@ -79,7 +79,7 @@ public class WebCompressedCacheStore {
         // 配置 Realm
         self.realmConfiguration = Realm.Configuration(
             schemaVersion: 1,
-            migrationBlock: { migration, oldSchemaVersion in
+            migrationBlock: { _, _ in
                 // 未来版本迁移在这里处理
             }
         )

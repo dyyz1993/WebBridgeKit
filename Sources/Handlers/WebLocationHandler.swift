@@ -43,7 +43,7 @@ public class WebLocationHandler: BaseWebNativeHandler {
             showLocationPermissionAlert {
                 self.locationManager.requestWhenInUseAuthorization()
             }
-            // 注意：不在这里返回结果，等待 didChangeAuthorization 回调
+        // 注意：不在这里返回结果，等待 didChangeAuthorization 回调
 
         case .authorizedWhenInUse, .authorizedAlways:
             // 已授权，直接获取位置

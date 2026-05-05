@@ -89,7 +89,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .bind(to: tableView.rx.items) { (tv: UITableView, index: Int, _) -> UITableViewCell in
                 let indexPath = IndexPath(row: index, section: 0)
                 let menuItem = self.viewModel.menuItem(at: indexPath)
-                
+
                 if menuItem.action == .lastAppMemory {
                     let cell = tv.dequeueReusableCell(withIdentifier: SwitchCell.identifier, for: indexPath) as! SwitchCell
                     cell.configure(
@@ -106,7 +106,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
                     return cell
                 } else {
                     let cell = tv.dequeueReusableCell(withIdentifier: MenuCell.identifier, for: indexPath) as! MenuCell
-                    
+
                     let value: String? = nil
                     if menuItem.action == .management {
                         output.storageSize
@@ -115,7 +115,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
                             })
                             .disposed(by: cell.prepareForReuseBag)
                     }
-                    
+
                     cell.configure(
                         icon: menuItem.icon,
                         title: menuItem.title,

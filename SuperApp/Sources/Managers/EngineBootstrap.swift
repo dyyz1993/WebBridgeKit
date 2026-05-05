@@ -12,61 +12,61 @@ import WebBridgeKit
 @MainActor
 public final class EngineBootstrap {
     public static let shared = EngineBootstrap()
-    
+
     private var aiServer: AIHTTPServer?
     private var isInitialized = false
-    
+
     private init() {}
-    
+
     public func initialize(in window: UIWindow?) async {
         guard !isInitialized else { return }
         isInitialized = true
-        
+
         print("🚀 [EngineBootstrap] Starting engine initialization...")
-        
+
         await bootstrapTheme(in: window)
-        
+
         print("  ✅ Cache Engine: using WebBridgeKit CacheManager")
-        
+
         await bootstrapMessage()
-        
+
         await bootstrapAI()
-        
+
         await bootstrapSkills()
-        
+
         print("  ✅ Bridge Engine: using WebBridgeKit HandlerRegistry")
-        
+
         print("🚀 [EngineBootstrap] All engines initialized!")
     }
-    
+
     // MARK: - Theme
-    
+
     private func bootstrapTheme(in window: UIWindow?) async {
         let themeManager = ThemeManager.shared
         let theme = await themeManager.getTheme()
-        
+
         if let window = window {
             await themeManager.applyToWindow(window)
         }
-        
-        await themeManager.observe { newTheme in
+
+        await themeManager.observe { _ in
             Task { @MainActor [weak self] in
                 guard let window = self?.getCurrentWindow() else { return }
                 await themeManager.applyToWindow(window)
             }
         }
-        
+
         print("  ✅ Theme Engine: initialized with '\(theme.name)' theme")
     }
-    
+
     // MARK: - Message
-    
+
     private func bootstrapMessage() async {
         let engine = MessageEngine.shared
-        
+
         let barkServerURL = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
         let barkKey = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
-        
+
         if !barkKey.isEmpty {
             let barkChannel = BarkChannel(serverURL: barkServerURL, key: barkKey)
             await engine.registerChannel(barkChannel)
@@ -74,11 +74,11 @@ public final class EngineBootstrap {
         } else {
             print("  ⚠️ Message Engine: Bark channel skipped (no key configured)")
         }
-        
+
         let webhookChannel = WebhookChannel()
         await engine.registerChannel(webhookChannel)
         print("  ✅ Message Engine: Webhook channel registered")
-        
+
         await engine.setOnMessageReceived { storedMessage in
             Task { @MainActor in
                 let message = WebhookMessage(
@@ -92,31 +92,31 @@ public final class EngineBootstrap {
                 MessageManager.shared.addMessage(message)
             }
         }
-        
+
         await engine.setOnRoute { payload, target in
             Task { @MainActor in
                 self.handleRoute(payload: payload, target: target)
             }
         }
-        
+
         let channelCount = await engine.getRegisteredChannels().count
         print("  ✅ Message Engine: initialized with \(channelCount) channels")
     }
-    
+
     // MARK: - AI
-    
+
     private func bootstrapAI() async {
         let server = AIHTTPServer(port: 8765)
         await server.registerDefaultRoutes()
-        
+
         for tool in BuiltinAITools.all {
-            await server.registerRoute(method: .POST, path: "/tools/\(tool.name)") { request in
+            await server.registerRoute(method: .POST, path: "/tools/\(tool.name)") { _ in
                 return AIResponse.ok(["result": "executed"])
             }
         }
-        
+
         self.aiServer = server
-        
+
         do {
             try await server.start()
             print("  ✅ AI Engine: HTTP server started on port 8765")
@@ -124,29 +124,29 @@ public final class EngineBootstrap {
             print("  ⚠️ AI Engine: Failed to start HTTP server: \(error)")
         }
     }
-    
+
     // MARK: - Skills
-    
+
     private func bootstrapSkills() async {
         let registry = SkillRegistry.shared
-        
+
         for skill in BuiltinSkills.all {
             await registry.register(skill)
         }
-        
+
         let skills = await registry.listAll()
         print("  ✅ Skills Engine: \(skills.count) skills registered")
     }
-    
+
     // MARK: - Helpers
-    
+
     private func getCurrentWindow() -> UIWindow? {
         return UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap { $0.windows }
             .first { $0.isKeyWindow }
     }
-    
+
     private func handleRoute(payload: MessagePayload, target: RouteTarget) {
         switch target.type {
         case .url:
@@ -173,7 +173,7 @@ public final class EngineBootstrap {
             break
         }
     }
-    
+
     public func shutdown() async {
         if let server = aiServer {
             await server.stop()

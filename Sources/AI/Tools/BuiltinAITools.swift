@@ -3,7 +3,7 @@ import UIKit
 
 /// Built-in AI tools for WebBridgeKit
 public enum BuiltinAITools {
-    
+
     /// List all registered handlers
     public static let listHandlers = AITool(
         name: "list_handlers",
@@ -12,7 +12,7 @@ public enum BuiltinAITools {
         parameters: [
             AIParameter(name: "category", description: "Filter by category (optional)")
         ],
-        execute: { params in
+        execute: { _ in
             // This would connect to HandlerRegistry
             // For now, return a placeholder
             return [
@@ -21,7 +21,7 @@ public enum BuiltinAITools {
             ]
         }
     )
-    
+
     /// Execute a handler
     public static let executeHandler = AITool(
         name: "execute_handler",
@@ -39,7 +39,7 @@ public enum BuiltinAITools {
             return ["status": "executed", "handler": name]
         }
     )
-    
+
     /// Get cache statistics
     public static let getCacheStats = AITool(
         name: "get_cache_stats",
@@ -54,7 +54,7 @@ public enum BuiltinAITools {
             ]
         }
     )
-    
+
     /// Clear cache
     public static let clearCache = AITool(
         name: "clear_cache",
@@ -68,7 +68,7 @@ public enum BuiltinAITools {
             return ["status": "cleared", "type": type]
         }
     )
-    
+
     /// Get message inbox
     public static let getMessages = AITool(
         name: "get_messages",
@@ -78,12 +78,12 @@ public enum BuiltinAITools {
             AIParameter(name: "filter", description: "Filter: all, unread"),
             AIParameter(name: "channel", description: "Filter by channel: bark, webhook")
         ],
-        execute: { params in
+        execute: { _ in
             // This would connect to MessageEngine
             return ["messages": [], "count": 0]
         }
     )
-    
+
     /// Send push notification
     public static let sendNotification = AITool(
         name: "send_notification",
@@ -103,7 +103,7 @@ public enum BuiltinAITools {
             return ["status": "sent", "title": title, "body": body]
         }
     )
-    
+
     /// Get diagnostics
     public static let getDiagnostics = AITool(
         name: "get_diagnostics",
@@ -112,7 +112,7 @@ public enum BuiltinAITools {
         parameters: [
             AIParameter(name: "type", description: "Diagnostic type: system, bridge, cache, message, all")
         ],
-        execute: { params in
+        execute: { _ in
             return [
                 "system": ["platform": "iOS", "version": UIDevice.current.systemVersion],
                 "bridge": ["handlers": 0],
@@ -121,7 +121,7 @@ public enum BuiltinAITools {
             ]
         }
     )
-    
+
     /// All built-in tools
     public static let all: [AITool] = [
         listHandlers,

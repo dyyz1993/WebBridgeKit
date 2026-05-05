@@ -139,7 +139,7 @@ public struct WebBrowserParams {
         var disableSwipeBack: Bool = false
         var orientation: UIInterfaceOrientationMask = .all
         var allowJavaScriptClose: Bool = true
-        var customTitle: String? = nil
+        var customTitle: String?
         var debugMode: Bool = false
 
         // 辅助函数获取当前宽高

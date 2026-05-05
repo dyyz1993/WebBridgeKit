@@ -45,7 +45,7 @@ public class WebClipboardHandler: BaseWebNativeHandler {
                 self.resolve(["text": ""], completion: completion)
                 return
             }
-            
+
             let text = UIPasteboard.general.string ?? ""
             self.resolve(["text": text], completion: completion)
         }

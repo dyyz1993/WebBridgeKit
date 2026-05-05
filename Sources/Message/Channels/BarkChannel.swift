@@ -5,12 +5,12 @@ import Foundation
 public actor BarkChannel: @preconcurrency MessageChannel {
     public let channelId = "bark"
     public nonisolated(unsafe) var isActive = false
-    
+
     private let serverURL: String
     private let key: String
     private let session: URLSession
     private var configuration: BarkConfiguration
-    
+
     public init(
         serverURL: String = "https://api.day.app",
         key: String,
@@ -21,29 +21,29 @@ public actor BarkChannel: @preconcurrency MessageChannel {
         self.configuration = configuration
         self.session = URLSession(configuration: .ephemeral)
     }
-    
+
     public func start() async {
         isActive = true
     }
-    
+
     public func stop() async {
         isActive = false
     }
-    
+
     public func send(_ payload: MessagePayload) async throws -> MessageSendResult {
         guard isActive else {
             return .failed(error: .channelNotActive(channelId: channelId))
         }
-        
+
         guard !key.isEmpty else {
             return .failed(error: .channelNotConfigured(channelId: channelId))
         }
-        
+
         let url = try buildBarkURL(payload)
-        
+
         do {
             let (_, response) = try await session.data(from: url)
-            
+
             if let httpResponse = response as? HTTPURLResponse {
                 switch httpResponse.statusCode {
                 case 200:
@@ -61,15 +61,15 @@ public actor BarkChannel: @preconcurrency MessageChannel {
                     ))
                 }
             }
-            
+
             return .success(messageId: payload.id)
         } catch {
             return .failed(error: .networkError(underlying: error))
         }
     }
-    
+
     // MARK: - Bark API
-    
+
     /// Send a simple text notification
     public func sendText(
         title: String,
@@ -88,43 +88,43 @@ public actor BarkChannel: @preconcurrency MessageChannel {
         )
         return try await send(payload)
     }
-    
+
     /// Test connection to Bark server
     public func testConnection() async throws -> Bool {
         guard let url = URL(string: "\(serverURL)/\(key)/test/test") else {
             return false
         }
-        
+
         let (_, response) = try await session.data(from: url)
-        
+
         if let httpResponse = response as? HTTPURLResponse {
             return httpResponse.statusCode == 200
         }
         return false
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func buildBarkURL(_ payload: MessagePayload) throws -> URL {
         var components: [String] = []
-        
+
         // Base URL + key
         components.append(serverURL)
         components.append(key)
-        
+
         // Title and body (URL encoded)
         let encodedTitle = payload.title.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? payload.title
         let encodedBody = payload.body.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? payload.body
-        
+
         components.append(encodedTitle)
         components.append(encodedBody)
-        
+
         // Build URL string
         let urlString = components.joined(separator: "/")
-        
+
         // Add query parameters
         var queryItems: [URLQueryItem] = []
-        
+
         if let sound = payload.sound {
             queryItems.append(URLQueryItem(name: "sound", value: sound))
         }
@@ -146,19 +146,19 @@ public actor BarkChannel: @preconcurrency MessageChannel {
         if configuration.copyable {
             queryItems.append(URLQueryItem(name: "copyable", value: "1"))
         }
-        
+
         var urlComponents = URLComponents(string: urlString)
         if !queryItems.isEmpty {
             urlComponents?.queryItems = queryItems
         }
-        
+
         guard let url = urlComponents?.url else {
             throw MessageError.invalidPayload(reason: "Failed to build Bark URL")
         }
-        
+
         return url
     }
-    
+
     private func barkLevel(from priority: MessagePriority) -> String? {
         switch priority {
         case .critical:
@@ -180,7 +180,7 @@ public struct BarkConfiguration: Sendable {
     public let copyable: Bool
     public let maxRetries: Int
     public let timeout: TimeInterval
-    
+
     public init(
         icon: String? = nil,
         isArchive: Bool = false,
@@ -194,6 +194,6 @@ public struct BarkConfiguration: Sendable {
         self.maxRetries = maxRetries
         self.timeout = timeout
     }
-    
+
     public static let `default` = BarkConfiguration()
 }

@@ -8,22 +8,22 @@
 import Foundation
 import WebKit
 
-/// WebBridgeKit is a comprehensive framework for bridging native iOS functionality with web content.
+// WebBridgeKit is a comprehensive framework for bridging native iOS functionality with web content.
 
 // MARK: - Debug Configuration
 
 #if DEBUG
-    /// Configure logger for debug mode
-    private func configureLoggerForDebug() {
-        WebBridgeLogger.shared.includeFileLocation = true
-        WebBridgeLogger.shared.minLogLevel = .debug
-    }
+/// Configure logger for debug mode
+private func configureLoggerForDebug() {
+    WebBridgeLogger.shared.includeFileLocation = true
+    WebBridgeLogger.shared.minLogLevel = .debug
+}
 #else
-    /// Configure logger for release mode
-    private func configureLoggerForRelease() {
-        WebBridgeLogger.shared.includeFileLocation = false
-        WebBridgeLogger.shared.minLogLevel = .warning
-    }
+/// Configure logger for release mode
+private func configureLoggerForRelease() {
+    WebBridgeLogger.shared.includeFileLocation = false
+    WebBridgeLogger.shared.minLogLevel = .warning
+}
 #endif
 
 /// Main framework class providing access to WebBridgeKit functionality

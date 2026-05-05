@@ -162,7 +162,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         }
 
         // 缓存模式切换回调
-        urlInputView.onCacheModeChange = { isEnabled in
+        urlInputView.onCacheModeChange = { _ in
             // 触发模式切换
             // 通过 RxSwift 处理
         }

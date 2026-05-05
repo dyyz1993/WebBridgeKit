@@ -101,11 +101,8 @@ actor HistoryDatabaseActor {
         let itemsToDelete = realm.objects(WebPageHistory.self).filter(predicate)
 
         try realm.write {
-            for item in itemsToDelete {
-                // Delete cache if exists
-                if item.isCached {
-                    WebPageOfflineCacheManager.shared.deleteCache(history: item, realm: realm)
-                }
+            for item in itemsToDelete where item.isCached {
+                WebPageOfflineCacheManager.shared.deleteCache(history: item, realm: realm)
             }
             realm.delete(itemsToDelete)
         }
@@ -229,8 +226,8 @@ actor HistoryDatabaseActor {
     func getMostVisited(limit: Int = 10) async throws -> [WebPageHistory] {
         let realm = try getRealm()
         return Array(realm.objects(WebPageHistory.self)
-            .sorted(byKeyPath: "visitCount", ascending: false)
-            .prefix(limit))
+                        .sorted(byKeyPath: "visitCount", ascending: false)
+                        .prefix(limit))
     }
 
     // MARK: - Utility Operations
@@ -515,7 +512,7 @@ extension WebPageHistoryManager {
     /// Synchronous version of findHistory(url:) for backward compatibility
     /// Returns nil on error
     public func findHistory(url: URL) -> WebPageHistory? {
-        var result: WebPageHistory? = nil
+        var result: WebPageHistory?
         let semaphore = DispatchSemaphore(value: 0)
 
         Task {
@@ -534,7 +531,7 @@ extension WebPageHistoryManager {
     /// Synchronous version of findHistory(id:) for backward compatibility
     /// Returns nil on error
     public func findHistory(id: String) -> WebPageHistory? {
-        var result: WebPageHistory? = nil
+        var result: WebPageHistory?
         let semaphore = DispatchSemaphore(value: 0)
 
         Task {

@@ -7,44 +7,44 @@ public actor MemoryCache<Key: Hashable & Sendable, Value: Codable & Sendable>: C
     private var accessFrequency: [Key: Int] = [:]  // For LFU eviction
     private var configuration: CacheConfiguration
     private var statistics: SystemCacheStatistics
-    
+
     public init(configuration: CacheConfiguration = .default) {
         self.configuration = configuration
         self.statistics = SystemCacheStatistics()
     }
-    
+
     public func get(for key: Key) async -> Value? {
         let start = Date()
         defer {
             let elapsed = Date().timeIntervalSince(start)
             statistics.updateAccessTime(elapsed)
         }
-        
+
         guard var entry = storage[key] else {
             statistics.recordMiss()
             return nil
         }
-        
+
         // Check expiration
         if entry.metadata.isExpired {
             await remove(for: key)
             statistics.recordMiss()
             return nil
         }
-        
+
         // Update metadata
         entry.metadata.accessCount += 1
         entry.metadata.lastAccessed = Date()
         storage[key] = entry
-        
+
         // Update access tracking
         updateAccessTracking(key)
-        
+
         statistics.recordHit()
         statistics.totalEntries = UInt64(storage.count)
         return entry.value
     }
-    
+
     public func set(_ value: Value, for key: Key, expiration: TimeInterval?) async {
         let expirationDate: Date?
         if let expiration = expiration {
@@ -54,62 +54,62 @@ public actor MemoryCache<Key: Hashable & Sendable, Value: Codable & Sendable>: C
                 Date().addingTimeInterval($0)
             }
         }
-        
+
         let metadata = CacheMetadata(
             createdAt: Date(),
             expiration: expirationDate,
             accessCount: 0
         )
-        
+
         let entry = CacheEntry(value: value, metadata: metadata)
         storage[key] = entry
-        
+
         // Update access tracking
         if !accessOrder.contains(key) {
             accessOrder.append(key)
             accessFrequency[key] = 0
         }
-        
+
         // Evict if needed
         await evictIfNeeded()
-        
+
         statistics.totalEntries = UInt64(storage.count)
     }
-    
+
     public func remove(for key: Key) async {
         storage.removeValue(forKey: key)
         accessOrder.removeAll { $0 == key }
         accessFrequency.removeValue(forKey: key)
         statistics.totalEntries = UInt64(storage.count)
     }
-    
+
     public func clearAll() async {
         storage.removeAll()
         accessOrder.removeAll()
         accessFrequency.removeAll()
         statistics.totalEntries = 0
     }
-    
+
     public func contains(_ key: Key) async -> Bool {
         guard let entry = storage[key] else {
             return false
         }
         return !entry.metadata.isExpired
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func updateAccessTracking(_ key: Key) {
         // Update LRU order
         if let index = accessOrder.firstIndex(of: key) {
             accessOrder.remove(at: index)
         }
         accessOrder.append(key)
-        
+
         // Update LFU frequency
         accessFrequency[key, default: 0] += 1
     }
-    
+
     private func evictIfNeeded() async {
         while storage.count > configuration.maxSize {
             let keyToEvict = evictKey()
@@ -117,7 +117,7 @@ public actor MemoryCache<Key: Hashable & Sendable, Value: Codable & Sendable>: C
             statistics.recordEviction()
         }
     }
-    
+
     private func evictKey() -> Key {
         switch configuration.evictionPolicy {
         case .leastRecentlyUsed:
@@ -138,13 +138,13 @@ public actor MemoryCache<Key: Hashable & Sendable, Value: Codable & Sendable>: C
             return accessOrder.first!
         }
     }
-    
+
     // MARK: - Statistics
-    
+
     public func getStatistics() -> SystemCacheStatistics {
         statistics
     }
-    
+
     public func resetStatistics() {
         statistics = SystemCacheStatistics()
     }

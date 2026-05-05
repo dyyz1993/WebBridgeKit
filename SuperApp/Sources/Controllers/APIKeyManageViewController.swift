@@ -390,7 +390,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         testPermanentKeyButton.addTarget(self, action: #selector(testPermanentKeyTapped), for: .touchUpInside)
         examplesButton.addTarget(self, action: #selector(showExamplesTapped), for: .touchUpInside)
         saveBarkConfigButton.addTarget(self, action: #selector(saveBarkConfigTapped), for: .touchUpInside)
-        
+
         // 初始化加载配置
         barkKeyTextField.text = viewModel.getBarkKey()
         barkServerTextField.text = viewModel.getBarkServer()
@@ -459,7 +459,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         // 添加临时密钥成功
         output.addedTemporaryKey
             .drive(onNext: { [weak self] key in
-                if let _ = key {
+                if key != nil {
                     self?.showAddSuccess()
                 }
             })
@@ -517,13 +517,13 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     @objc private func saveBarkConfigTapped() {
         let key = barkKeyTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let server = barkServerTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         viewModel.saveBarkConfig(key: key, server: server)
-        
+
         let alert = UIAlertController(title: "保存成功", message: "Bark 配置已更新", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "确定", style: .default))
         present(alert, animated: true)
-        
+
         view.endEditing(true)
     }
 
@@ -687,14 +687,14 @@ extension APIKeyManageViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let key = currentTemporaryKeys[indexPath.row]
-        
+
         // 删除操作
         let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] _, _, completion in
             self?.deleteKeySubject.onNext(key.id)
             completion(true)
         }
         deleteAction.image = UIImage(systemName: "trash")
-        
+
         // 测试操作
         let testAction = UIContextualAction(style: .normal, title: "测试") { [weak self] _, _, completion in
             self?.viewModel.sendTemporaryKeyTestPush(key: key)
@@ -710,7 +710,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
         }
         editAction.backgroundColor = UIColor.systemBlue
         editAction.image = UIImage(systemName: "square.and.pencil")
-        
+
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction, testAction, editAction])
         configuration.performsFirstActionWithFullSwipe = false
         return configuration
@@ -720,25 +720,25 @@ extension APIKeyManageViewController: UITableViewDelegate {
 // MARK: - Actions
 
 extension APIKeyManageViewController {
-    
+
     private func showEditGroupIdDialog(for key: APIKey) {
         let alert = UIAlertController(
             title: "编辑群组绑定",
             message: "修改密钥 \"\(key.name)\" 绑定的群组 ID",
             preferredStyle: .alert
         )
-        
+
         alert.addTextField { textField in
             textField.placeholder = "群组 ID"
             textField.text = key.boundGroupId
         }
-        
+
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
         alert.addAction(UIAlertAction(title: "保存", style: .default) { [weak self] _ in
             let newGroupId = alert.textFields?.first?.text
             self?.viewModel.updateKeyGroupId(id: key.id, groupId: newGroupId)
         })
-        
+
         present(alert, animated: true)
     }
 }

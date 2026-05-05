@@ -4,16 +4,16 @@ import Foundation
 public actor AIRouter {
     private var routes: [RouteKey: @Sendable (AIRequest) async -> AIResponse] = [:]
     private var tools: [String: AITool] = [:]
-    
+
     private struct RouteKey: Hashable {
         let method: HTTPMethod
         let path: String
     }
-    
+
     public init() {}
-    
+
     // MARK: - Route Registration
-    
+
     public func register(
         method: HTTPMethod,
         path: String,
@@ -21,13 +21,13 @@ public actor AIRouter {
     ) {
         routes[RouteKey(method: method, path: path)] = handler
     }
-    
+
     // MARK: - Tool Registration
-    
+
     public func registerTool(_ tool: AITool) {
         tools[tool.name] = tool
     }
-    
+
     public func listTools() -> [[String: String]] {
         tools.values.map { [
             "name": $0.name,
@@ -35,33 +35,31 @@ public actor AIRouter {
             "category": $0.category
         ] }
     }
-    
+
     // MARK: - Routing
-    
+
     public func route(_ request: AIRequest) async -> AIResponse {
         // Try exact match first
         let key = RouteKey(method: request.method, path: request.path)
         if let handler = routes[key] {
             return await handler(request)
         }
-        
+
         // Try parameterized route match
-        for (routeKey, handler) in routes {
-            if matchRoute(routeKey.path, requestPath: request.path) {
-                return await handler(request)
-            }
+        for (routeKey, handler) in routes where matchRoute(routeKey.path, requestPath: request.path) {
+            return await handler(request)
         }
-        
+
         return AIResponse.notFound("No route found for \(request.method.rawValue) \(request.path)")
     }
-    
+
     // MARK: - Tool Execution
-    
+
     public func executeTool(name: String, params: [String: Any]) async -> AIResponse {
         guard let tool = tools[name] else {
             return AIResponse.notFound("Tool '\(name)' not found")
         }
-        
+
         do {
             let result = try await tool.execute(params: params)
             return AIResponse.ok(["result": result])
@@ -72,29 +70,29 @@ public actor AIRouter {
             )
         }
     }
-    
+
     // MARK: - MCP Protocol
-    
+
     public func handleMCP(_ request: AIRequest) async -> AIResponse {
         guard let method = request.body["method"] as? String else {
             return AIResponse.error("Missing 'method' in MCP request")
         }
-        
+
         let params = request.body["params"] as? [String: Any] ?? [:]
-        
+
         switch method {
         case "tools/list":
             return AIResponse.ok([
                 "tools": tools.values.map { $0.toMCPToolDefinition() }
             ])
-            
+
         case "tools/call":
             guard let toolName = params["name"] as? String else {
                 return AIResponse.error("Missing tool name in 'tools/call'")
             }
             let toolParams = params["arguments"] as? [String: Any] ?? [:]
             return await executeTool(name: toolName, params: toolParams)
-            
+
         case "initialize":
             return AIResponse.ok([
                 "protocolVersion": "2024-11-05",
@@ -104,25 +102,25 @@ public actor AIRouter {
                     "version": "1.0.0"
                 ]
             ])
-            
+
         default:
             return AIResponse.error("Unknown MCP method: \(method)", code: 400)
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func matchRoute(_ routePattern: String, requestPath: String) -> Bool {
         let routeComponents = routePattern.split(separator: "/")
         let pathComponents = requestPath.split(separator: "/")
-        
+
         guard routeComponents.count == pathComponents.count else { return false }
-        
+
         for (route, path) in zip(routeComponents, pathComponents) {
             if route.hasPrefix(":") { continue }  // Parameter placeholder
             if route != path { return false }
         }
-        
+
         return true
     }
 }
@@ -135,7 +133,7 @@ public struct AITool: Sendable {
     public let category: String
     public let parameters: [AIParameter]
     private let executeHandler: @Sendable ([String: Any]) async throws -> Any
-    
+
     public init(
         name: String,
         description: String,
@@ -149,11 +147,11 @@ public struct AITool: Sendable {
         self.parameters = parameters
         self.executeHandler = execute
     }
-    
+
     public func execute(params: [String: Any]) async throws -> Any {
         try await executeHandler(params)
     }
-    
+
     public func toMCPToolDefinition() -> [String: Any] {
         var inputSchema: [String: Any] = [
             "type": "object",
@@ -164,12 +162,12 @@ public struct AITool: Sendable {
                 ]
             }
         ]
-        
+
         let required = parameters.filter { $0.required }.map { $0.name }
         if !required.isEmpty {
             inputSchema["required"] = required
         }
-        
+
         return [
             "name": name,
             "description": description,
@@ -184,7 +182,7 @@ public struct AIParameter: Sendable {
     public let description: String
     public let required: Bool
     public let defaultValue: String?
-    
+
     public init(
         name: String,
         type: String = "string",

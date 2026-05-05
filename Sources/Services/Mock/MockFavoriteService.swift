@@ -145,10 +145,10 @@ public class MockFavoriteService: FavoriteServiceProtocol {
     public func getAllFavoritesArray() -> [URLFavorite] {
         if useInMemoryRealm, let realm = getRealm() {
             return Array(realm.objects(URLFavorite.self)
-                .sorted(by: [
-                    SortDescriptor(keyPath: "isPinned", ascending: false),
-                    SortDescriptor(keyPath: "sortOrder", ascending: true)
-                ]))
+                            .sorted(by: [
+                                SortDescriptor(keyPath: "isPinned", ascending: false),
+                                SortDescriptor(keyPath: "sortOrder", ascending: true)
+                            ]))
         }
 
         return Array(mockFavorites.values)

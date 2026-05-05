@@ -14,21 +14,21 @@ import CoreBluetooth
 /// 蓝牙交互 Handler
 /// 支持：扫描周边设备、连接设备、监听连接状态
 public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate {
-    
+
     // MARK: - Properties
-    
+
     private var centralManager: CBCentralManager?
     private var discoveredPeripherals: [String: CBPeripheral] = [:]
     private var scanCompletion: ((Any) -> Void)?
-    
+
     // MARK: - Handle
-    
+
     /**
      * 处理 JS 调用
      * @param body 调用参数
      * @param completion 处理完成后的回调
      */
-    public override func handle(body: [String : Any], completion: @escaping (Any) -> Void) {
+    public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? ""
 
@@ -79,15 +79,15 @@ public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate
             "state": stateString
         ], completion: completion)
     }
-    
+
     // MARK: - Actions
-    
+
     private func startScan(completion: @escaping (Any) -> Void) {
         guard let central = centralManager else {
             self.reject(error: "Bluetooth manager not initialized", completion: completion)
             return
         }
-        
+
         if central.state == .poweredOn {
             discoveredPeripherals.removeAll()
             central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
@@ -102,39 +102,39 @@ public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate
             self.reject(error: "Bluetooth is not powered on (State: \(central.state.rawValue))", completion: completion)
         }
     }
-    
+
     private func stopScan(completion: @escaping (Any) -> Void) {
         centralManager?.stopScan()
         WebBridgeLogger.shared.log(.info, "[WebBluetoothHandler] Scanning stopped")
         self.resolve(["status": "stopped"], completion: completion)
     }
-    
+
     // MARK: - CBCentralManagerDelegate
-    
+
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         WebBridgeLogger.shared.log(.info, "[WebBluetoothHandler] State updated: \(central.state.rawValue)")
         sendEventToJS(event: "onBluetoothStateChange", data: ["state": central.state.rawValue])
     }
-    
-    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         let deviceId = peripheral.identifier.uuidString
-        
+
         // 即使已发现，也更新一下 RSSI 和名称（可能有变化）
         discoveredPeripherals[deviceId] = peripheral
-        
+
         let deviceData: [String: Any] = [
             "id": deviceId,
             "name": peripheral.name ?? "Unknown Device",
             "rssi": RSSI,
             "localName": advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? ""
         ]
-        
+
         WebBridgeLogger.shared.log(.info, "[WebBluetoothHandler] Discovered device: \(peripheral.name ?? "Unknown") (\(deviceId))")
         sendEventToJS(event: "onBluetoothDeviceFound", data: deviceData)
     }
-    
+
     // MARK: - Private
-    
+
     private func notifyJS(event: String, data: [String: Any]) {
         sendEventToJS(event: event, data: data)
     }

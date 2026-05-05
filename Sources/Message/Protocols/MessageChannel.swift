@@ -4,16 +4,16 @@ import Foundation
 public protocol MessageChannel: AnyObject, Sendable {
     /// Channel identifier
     var channelId: String { get }
-    
+
     /// Whether the channel is active
     var isActive: Bool { get }
-    
+
     /// Start listening for messages
     func start() async
-    
+
     /// Stop listening for messages
     func stop() async
-    
+
     /// Send a message through this channel
     func send(_ payload: MessagePayload) async throws -> MessageSendResult
 }
@@ -36,7 +36,7 @@ public struct MessagePayload: Codable, Sendable, Equatable {
     public let targetMode: String?
     public let userInfo: [String: String]?
     public let createdAt: Date
-    
+
     public init(
         id: String = UUID().uuidString,
         title: String,
@@ -72,7 +72,7 @@ public struct MessagePayload: Codable, Sendable, Equatable {
         self.userInfo = userInfo
         self.createdAt = createdAt
     }
-    
+
     /// Whether this message has a routing target
     public var hasRoute: Bool {
         targetURL != nil || targetAppId != nil
@@ -85,7 +85,7 @@ public enum MessagePriority: String, Codable, Sendable, CaseIterable {
     case normal
     case high
     case critical
-    
+
     public var intValue: Int {
         switch self {
         case .low: return 0
@@ -113,7 +113,7 @@ public enum MessageError: Error, Sendable, LocalizedError {
     case unauthorized
     case rateLimited(retryAfter: TimeInterval?)
     case serverError(statusCode: Int, message: String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .channelNotActive(let id):

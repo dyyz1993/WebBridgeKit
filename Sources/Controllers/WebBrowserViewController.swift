@@ -210,7 +210,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         // 🔥 禁用大标题，确保浏览器界面整洁
         navigationItem.largeTitleDisplayMode = .never
 
-        
+
         // 设置标题视图容器
         // 🔥 给容器一个初始 frame 或 size，否则在某些 iOS 版本下不显示
         titleContainerView.frame = CGRect(x: 0, y: 0, width: 200, height: 44)
@@ -245,7 +245,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
         // 更多按钮使用标准的三点图标
         let menuBtn = UIBarButtonItem(
-            image: UIImage(systemName: "ellipsis"), 
+            image: UIImage(systemName: "ellipsis"),
             style: .plain,
             target: self,
             action: #selector(menuButtonTapped)
@@ -358,7 +358,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 还原系统 NavigationBar
     private func restoreUIState() {
         print("🔄 [Browser] Restoring UI state...")
-        
+
         // 恢复屏幕方向
         UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
         UIViewController.attemptRotationToDeviceOrientation()
@@ -428,7 +428,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         // 🔥 先重置UI状态，然后根据参数设置
         var shouldHideNavBar = false
         var shouldHideStatusBar = false
-        var targetOrientation: UIInterfaceOrientation? = nil
+        var targetOrientation: UIInterfaceOrientation?
 
         for item in queryItems {
             print("🔍 [WebBrowserVC] Processing query item: \(item.name) = \(item.value ?? "nil")")
@@ -486,14 +486,14 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 重置UI状态（当URL没有参数时调用）
     private func resetUIState() {
         print("🔄 [Browser] Resetting UI state to default...")
-        
+
         // 显示导航栏和状态栏
         setNavigationBarHidden(false)
         setStatusBarHidden(false)
-        
+
         // 恢复竖屏方向
         updateOrientation(.portrait)
-        
+
         print("✅ [Browser] UI state reset to default")
     }
 
@@ -638,33 +638,33 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             })
             .disposed(by: rx)
 
-    /// 绑定后退状态 - 控制后退按钮显示
-    output.canGoBack
-        .drive(onNext: { [weak self] canGoBack in
-            guard let self = self else { return }
-            
-            if canGoBack {
-                self.backBarButton?.isEnabled = true
-                self.backBarButton?.tintColor = .label
-            } else {
-                self.backBarButton?.isEnabled = false
-                self.backBarButton?.tintColor = .clear
-            }
-            
-            // 🔥 根据是否可以后退来动态调整左侧按钮
-            if self.hideNavBar == false {
+        /// 绑定后退状态 - 控制后退按钮显示
+        output.canGoBack
+            .drive(onNext: { [weak self] canGoBack in
+                guard let self = self else { return }
+
                 if canGoBack {
-                    if let backBtn = self.backBarButton, let closeBtn = self.closeBarButton {
-                        self.navigationItem.leftBarButtonItems = [backBtn, closeBtn]
-                    }
+                    self.backBarButton?.isEnabled = true
+                    self.backBarButton?.tintColor = .label
                 } else {
-                    if let closeBtn = self.closeBarButton {
-                        self.navigationItem.leftBarButtonItems = [closeBtn]
+                    self.backBarButton?.isEnabled = false
+                    self.backBarButton?.tintColor = .clear
+                }
+
+                // 🔥 根据是否可以后退来动态调整左侧按钮
+                if self.hideNavBar == false {
+                    if canGoBack {
+                        if let backBtn = self.backBarButton, let closeBtn = self.closeBarButton {
+                            self.navigationItem.leftBarButtonItems = [backBtn, closeBtn]
+                        }
+                    } else {
+                        if let closeBtn = self.closeBarButton {
+                            self.navigationItem.leftBarButtonItems = [closeBtn]
+                        }
                     }
                 }
-            }
-        })
-        .disposed(by: rx)
+            })
+            .disposed(by: rx)
 
         // 绑定加载进度
         output.estimatedProgress
@@ -687,7 +687,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                 self?.currentURL = url
             })
             .disposed(by: rx)
-        
+
         // 设置自定义 User-Agent
         setupUserAgent()
     }
@@ -695,19 +695,19 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
     private func setupUserAgent() {
         // 获取原始 UA 并追加自定义信息
-        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, error) in
+        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, _) in
             guard let self = self, let baseUA = result as? String else { return }
-            
+
             let info = Bundle.main.infoDictionary
             let appVersion = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
             let buildNumber = info?["CFBundleVersion"] as? String ?? "1"
-            
+
             let screenSize = UIScreen.main.bounds.size
             let screenScale = UIScreen.main.scale
-            
+
             // 格式: BaseUA WebBridgeKit/Version (Build; Screen/WxH; Ratio/R)
             let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
-            
+
             self.webView.customUserAgent = customUA
             print("📱 [WebBrowserVC] Custom UA configured: \(customUA)")
         }
@@ -1245,7 +1245,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             let favoriteService = ServiceLocator.favorite
             let isFavorited = favoriteService.findFavorite(url: url) != nil
             let favoriteTitle = isFavorited ? "⭐ 取消收藏" : "☆ 收藏页面"
-            
+
             alertController.addAction(UIAlertAction(title: NSLocalizedString(favoriteTitle, comment: ""), style: .default) { [weak self] _ in
                 guard let self = self else { return }
                 if isFavorited {
@@ -1383,7 +1383,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-    
+
     /// 获取页面图标
     /// - Parameter completion: 完成回调，返回图标数据
     private func fetchFavicon(completion: @escaping (Data?) -> Void) {
@@ -1400,14 +1400,14 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                 }
                 return null;
             }
-            
+
             // 优先级：apple-touch-icon > icon > shortcut icon
-            var icon = getIcon('apple-touch-icon') || 
-                       getIcon('icon') || 
+            var icon = getIcon('apple-touch-icon') ||
+                       getIcon('icon') ||
                        getIcon('shortcut icon');
-            
+
             if (icon) return icon;
-            
+
             // 搜索包含 icon 的 rel
             var links = document.getElementsByTagName('link');
             for (var i = 0; i < links.length; i++) {
@@ -1416,29 +1416,28 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                     return links[i].href;
                 }
             }
-            
+
             return window.location.origin + '/favicon.ico';
         })()
         """
-        
-        webView.evaluateJavaScript(script) { [weak self] result, error in
+
+        webView.evaluateJavaScript(script) { [weak self] result, _ in
             guard let self = self,
                   let urlString = result as? String,
                   let url = URL(string: urlString) else {
                 completion(nil)
                 return
             }
-            
+
             // 2. 下载图标数据
             var request = URLRequest(url: url)
             request.timeoutInterval = 5.0 // 设置超时
-            
-            URLSession.shared.dataTask(with: request) { data, response, error in
+
+            URLSession.shared.dataTask(with: request) { data, _, _ in
                 DispatchQueue.main.async {
-                    if let data = data, let _ = UIImage(data: data) {
+                    if let data = data, UIImage(data: data) != nil {
                         completion(data)
                     } else {
-                        // 如果失败，尝试根目录的 favicon.ico (如果刚才不是尝试的这个)
                         if !urlString.hasSuffix("/favicon.ico"),
                            let rootUrl = URL(string: "/favicon.ico", relativeTo: self.webView.url) {
                             self.downloadFavicon(url: rootUrl, completion: completion)
@@ -1450,15 +1449,15 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             }.resume()
         }
     }
-    
+
     /// 下载图标数据的辅助方法
     private func downloadFavicon(url: URL, completion: @escaping (Data?) -> Void) {
         var request = URLRequest(url: url)
         request.timeoutInterval = 3.0
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
+
+        URLSession.shared.dataTask(with: request) { data, _, _ in
             DispatchQueue.main.async {
-                if let data = data, let _ = UIImage(data: data) {
+                if let data = data, UIImage(data: data) != nil {
                     completion(data)
                 } else {
                     completion(nil)
@@ -1682,10 +1681,8 @@ extension WebBrowserViewController: WKNavigationDelegate {
            let payload = browserVC.browserConfig?.payload {
             if var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
                 var queryItems = components.queryItems ?? []
-                for (key, value) in payload {
-                    if !queryItems.contains(where: { $0.name == key }) {
-                        queryItems.append(URLQueryItem(name: key, value: value))
-                    }
+                for (key, value) in payload where !queryItems.contains(where: { $0.name == key }) {
+                    queryItems.append(URLQueryItem(name: key, value: value))
                 }
                 components.queryItems = queryItems
                 if let newURL = components.url {
@@ -1727,7 +1724,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 case .failure(let error):
                     print("❌ [WebBrowserVC] Failed to load URL: \(error.localizedDescription)")
                     self.updateCacheStatus(source: "LIVE")
-                    
+
                     // 🔥 优化：如果是自定义协议请求失败，显示错误提示页，而不是白屏
                     let isCustomScheme = url.scheme == "custom" || url.scheme == "wb-resource"
                     if isCustomScheme {
@@ -1846,7 +1843,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
     private func generateErrorHTML(url: URL, error: Error) -> String {
         let urlString = url.absoluteString
         let errorMessage = error.localizedDescription
-        
+
         return """
         <!DOCTYPE html>
         <html>
@@ -1873,17 +1870,17 @@ extension WebBrowserViewController: WKNavigationDelegate {
             <div class="container">
                 <h1><span class="icon">🚫</span>WebBridge 资源加载失败</h1>
                 <p>在处理缓存加载请求时遇到了错误，无法加载目标页面。</p>
-                
+
                 <div class="info-box">
                     <span class="label">请求地址 (Request URL):</span>
                     <code>\(urlString)</code>
                 </div>
-                
+
                 <div class="info-box">
                     <span class="label">错误原因 (Error):</span>
                     <code>\(errorMessage)</code>
                 </div>
-                
+
                 <div class="footer">
                     <span class="label">排查建议:</span>
                     <ul>
@@ -1904,12 +1901,12 @@ extension WebBrowserViewController: WKNavigationDelegate {
     private func updateCacheStatus(source: String) {
         // 立即更新状态变量，用于逻辑判断
         self.currentCacheSource = source
-        
+
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            
+
             self.cacheStatusLabel.text = source
-            
+
             switch source {
             case "LIVE":
                 self.cacheStatusLabel.backgroundColor = WKColor.grey.base.withAlphaComponent(0.6)
@@ -1922,7 +1919,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
             default:
                 self.cacheStatusLabel.backgroundColor = .systemOrange
             }
-            
+
             print("📱 [Browser] Cache Status Updated: \(source)")
         }
     }
@@ -1930,7 +1927,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
     /// 检查是否真正使用了缓存
     private func checkIfActuallyCached(for url: URL) -> Bool {
         NSLog("🔍 [Browser] Checking cache for URL: %@", url.absoluteString)
-        
+
         // 1. 检查 PersistentManifestLoader (持久化模式)
         if PersistentManifestLoader.shared.isCached(url: url) {
             NSLog("✅ [Browser] Cache Hit: Persistent (MANIFEST)")
@@ -1941,21 +1938,21 @@ extension WebBrowserViewController: WKNavigationDelegate {
         // 2. 尝试解析 AppID
         let appID = AppIDResolver.resolveAppID(from: url)
         NSLog("🔍 [Browser] Resolved AppID: %@", appID)
-        
+
         // 3. 检查 ManifestCacheManager (懒加载模式/HTML 缓存)
         if let manifest = ManifestCacheManager.shared.getCachedManifest(for: appID) {
             NSLog("✅ [Browser] Cache Hit: Lazy Manifest (INTERCEPT), persistent=%d", manifest.persistent ?? false)
             updateCacheStatus(source: "INTERCEPT")
             return true
         }
-        
+
         // 4. 检查 InterceptiveCacheManager (已删除)
         // if InterceptiveCacheManager.shared.hasCachedResource(for: url) {
         //     NSLog("✅ [Browser] Cache Hit: Interceptive Resource (INTERCEPT)")
         //     updateCacheStatus(source: "INTERCEPT")
         //     return true
         // }
-        
+
         NSLog("❌ [Browser] Cache Miss")
         return false
     }

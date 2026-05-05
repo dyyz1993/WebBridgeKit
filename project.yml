@@ -327,6 +327,23 @@ targets:
     dependencies:
       - target: Skills
 
+  HandlerTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - Tests/HandlerTests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.HandlerTests
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
 schemes:
   WebBridgeKit:
     build:
@@ -476,3 +493,14 @@ schemes:
         - SkillsTests
       coverageTargets:
         - Skills
+
+  HandlerTests:
+    build:
+      targets:
+        HandlerTests: all
+    test:
+      config: Debug
+      targets:
+        - HandlerTests
+      coverageTargets:
+        - WebBridgeKit

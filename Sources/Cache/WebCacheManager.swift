@@ -114,7 +114,7 @@ public class WebCacheManager {
             Log.info("Auto cleanup completed in background", category: .cache)
         }
     }
-    
+
     /// 清理所有缓存
     public func clearAll() {
         // 1. 清理 WKWebView 网站数据 (必须在主线程执行)
@@ -221,7 +221,7 @@ public class WebCacheManager {
     public func preloadURL(_ url: URL) -> Observable<Void> {
         return Observable.create { observer in
             let request = URLRequest(url: url)
-            let task = URLSession.shared.dataTask(with: request) { _, response, _ in
+            let task = URLSession.shared.dataTask(with: request) { _, _, _ in
                 observer.onNext(())
                 observer.onCompleted()
             }
@@ -449,7 +449,7 @@ public class WebCacheManager {
         // 这里的估算逻辑比较简单，实际应用中可能需要更复杂的方法
         var size: Int64 = 0
         let dataTypes = record.dataTypes
-        
+
         if dataTypes.contains(WKWebsiteDataTypeDiskCache) { size += 1024 * 1024 } // 1MB
         if dataTypes.contains(WKWebsiteDataTypeMemoryCache) { size += 512 * 1024 } // 512KB
         if dataTypes.contains(WKWebsiteDataTypeOfflineWebApplicationCache) { size += 2 * 1024 * 1024 } // 2MB
@@ -458,7 +458,7 @@ public class WebCacheManager {
         if dataTypes.contains(WKWebsiteDataTypeSessionStorage) { size += 128 * 1024 } // 128KB
         if dataTypes.contains(WKWebsiteDataTypeIndexedDBDatabases) { size += 512 * 1024 } // 512KB
         if dataTypes.contains(WKWebsiteDataTypeWebSQLDatabases) { size += 512 * 1024 } // 512KB
-        
+
         return size
     }
 }

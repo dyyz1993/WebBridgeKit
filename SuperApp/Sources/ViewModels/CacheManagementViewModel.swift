@@ -165,11 +165,11 @@ class CacheManagementViewModel: ViewModel {
                 let sortedApps = appInfoMap.values.sorted { $0.cacheSize > $1.cacheSize }
                 self.cacheAppsRelay.accept(sortedApps)
                 self.isEmptyRelay.accept(sortedApps.isEmpty)
-                
+
                 // ✅ 重新计算总大小，确保准确
                 let totalBytes = sortedApps.reduce(0) { $0 + $1.cacheSize }
                 self.totalCacheSizeRelay.accept(self.formatBytes(totalBytes))
-                
+
                 self.appCountRelay.accept("\(sortedApps.count) 个应用")
                 self.loadingRelay.accept(false)
             }
@@ -196,39 +196,39 @@ class CacheManagementViewModel: ViewModel {
 
     private func calculateCacheSize(for pageKey: String) -> Int64 {
         var totalSize: Int64 = 0
-        
+
         // 1. HTML 内存/元数据大小 (从 ManifestStore 获取)
         if let html = manifestStore.getHTML(for: pageKey) {
             totalSize += Int64(html.utf8.count)
         }
-        
+
         // 2. 懒加载资源大小 (ManifestCache/Resources/{pageKey}/)
         let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         let resourceDir = cachesDir.appendingPathComponent("ManifestCache/Resources").appendingPathComponent(pageKey)
         totalSize += getDirectorySize(at: resourceDir)
-        
+
         // 3. 持久化缓存大小 (WebBridgeKit/PersistentCache/{pageKey}/)
         let persistentDir = cachesDir.appendingPathComponent("WebBridgeKit/PersistentCache").appendingPathComponent(pageKey)
         totalSize += getDirectorySize(at: persistentDir)
-        
+
         return totalSize
     }
-    
+
     private func getDirectorySize(at url: URL) -> Int64 {
         var size: Int64 = 0
         let fileManager = FileManager.default
-        
+
         guard let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey], options: [], errorHandler: nil) else {
             return 0
         }
-        
+
         for case let fileURL as URL in enumerator {
             if let resourceValues = try? fileURL.resourceValues(forKeys: [.fileSizeKey]),
                let fileSize = resourceValues.fileSize {
                 size += Int64(fileSize)
             }
         }
-        
+
         return size
     }
 
@@ -257,14 +257,14 @@ class CacheManagementViewModel: ViewModel {
                 if let resource = resourceCache.get(urlString, for: pageKey) {
                     return resource.data
                 }
-                
+
                 let path = url.path
                 if let resource = resourceCache.get(path, for: pageKey) {
                     return resource.data
                 }
             }
         }
-        
+
         // 2. 如果没有 URL 或加载失败，生成基于名称的默认图标
         return AppIconGenerator.generateIconData(from: name)
     }

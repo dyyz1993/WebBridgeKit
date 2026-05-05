@@ -15,7 +15,7 @@ public enum BridgeError: Error, LocalizedError {
     case notSupported(action: String, reason: String)
     case executionFailed(action: String, underlyingError: Error)
     case notRegistered(action: String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .permissionDenied(let action, let perm):
@@ -36,7 +36,7 @@ public enum BridgeError: Error, LocalizedError {
             return "[\(action)] Handler not registered"
         }
     }
-    
+
     /// 标准错误码
     public var errorCode: String {
         switch self {
@@ -50,7 +50,7 @@ public enum BridgeError: Error, LocalizedError {
         case .notRegistered:     return "NOT_REGISTERED"
         }
     }
-    
+
     /// 建议的解决方案
     public var suggestion: String {
         switch self {
@@ -72,7 +72,7 @@ public enum BridgeError: Error, LocalizedError {
             return "Handler '\(action)' is not registered. Available handlers may not include this action."
         }
     }
-    
+
     /// 可复制的调试信息
     public var debugInfo: String {
         """
@@ -82,7 +82,7 @@ public enum BridgeError: Error, LocalizedError {
         Suggestion: \(suggestion)
         """
     }
-    
+
     /// 关联的 action 名称
     public var actionName: String {
         switch self {
@@ -96,7 +96,7 @@ public enum BridgeError: Error, LocalizedError {
         case .notRegistered(let a): return a
         }
     }
-    
+
     /// 转为 JS 返回的 error 对象
     public var jsErrorDict: [String: Any] {
         [

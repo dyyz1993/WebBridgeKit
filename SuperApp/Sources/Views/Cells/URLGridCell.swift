@@ -42,7 +42,7 @@ class URLGridCell: UICollectionViewCell {
         view.layer.cornerRadius = 24
         view.layer.masksToBounds = true
         view.isHidden = true // 仅在特定状态显示
-        
+
         // 添加磨砂边框效果
         view.layer.borderWidth = 0.5
         view.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
@@ -182,7 +182,7 @@ class URLGridCell: UICollectionViewCell {
     }()
 
     // MARK: - Properties
-    
+
     private var currentHistory: WebPageHistory?
 
     var onPinToggle: (() -> Void)?
@@ -252,13 +252,13 @@ class URLGridCell: UICollectionViewCell {
     }
 
     // MARK: - Interaction
-    
+
     override var isHighlighted: Bool {
         didSet {
             animateSelection(isHighlighted)
         }
     }
-    
+
     private func animateSelection(_ highlighted: Bool) {
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
             self.containerView.transform = highlighted ? CGAffineTransform(scaleX: 0.94, y: 0.94) : .identity
@@ -266,24 +266,24 @@ class URLGridCell: UICollectionViewCell {
             self.containerView.layer.shadowOpacity = highlighted ? 0.05 : 0.1
         }, completion: nil)
     }
-    
+
     // MARK: - Setup
-    
+
     private func setupUI() {
         contentView.backgroundColor = .clear
         backgroundColor = .clear
 
         contentView.addSubview(containerView)
         containerView.addSubview(contentClipView)
-        
+
         contentClipView.addSubview(glassEffectView)
         contentClipView.addSubview(faviconContainer)
         faviconContainer.addSubview(faviconImageView)
-        
+
         contentClipView.addSubview(actionStackView)
         actionStackView.addArrangedSubview(pinIconView)
         actionStackView.addArrangedSubview(favoriteIconView)
-        
+
         contentClipView.addSubview(cachedBadgeView)
         contentClipView.addSubview(titleLabel)
         contentClipView.addSubview(urlLabel)
@@ -291,7 +291,7 @@ class URLGridCell: UICollectionViewCell {
         contentClipView.addSubview(lastVisitedLabel)
         contentClipView.addSubview(modeBadgeView)
         modeBadgeView.addSubview(modeLabel)
-        
+
         contentClipView.addSubview(appIdBadgeView)
         appIdBadgeView.addSubview(appIdLabel)
 

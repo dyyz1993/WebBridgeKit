@@ -96,7 +96,7 @@ class MainViewController: BaseViewController<MainViewModel> {
                 handleCustomProtocol(url)
                 return
             }
-            
+
             // 判断是否是 Manifest URL
             if url.pathExtension == "json" || url.absoluteString.contains("manifest") {
                 loadAndCacheManifest(url)
@@ -105,7 +105,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             }
             return
         }
-        
+
         // 2. 如果 URL 解析失败，但有原始字符串，尝试二次解析或报错
         if let raw = rawString {
             if raw.starts(with: "wb-app://") {
@@ -124,7 +124,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         Log.debug("Handling custom protocol: \(url.absoluteString)", category: .ui)
         // 示例：wb-app://load?url=https://...
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
-        
+
         if url.host == "load" {
             if let targetUrlString = components.queryItems?.first(where: { $0.name == "url" })?.value,
                let targetUrl = URL(string: targetUrlString) {
@@ -141,12 +141,12 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private func loadAndCacheManifest(_ url: URL) {
         loadingView.startLoading(message: "正在解析 Manifest...")
-        
+
         Task {
             do {
                 // 使用 WebBridgeKit 的 Manifest 加载器获取 Manifest 信息
                 let manifest = try await PersistentManifestLoader.shared.fetchManifest(from: url)
-                
+
                 await MainActor.run {
                     self.loadingView.stopLoading()
                     self.showAlert(title: "解析成功", message: "发现应用: \(manifest.name ?? "未知")\n已加入缓存队列")
@@ -195,7 +195,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         layout.minimumInteritemSpacing = 16
         layout.minimumLineSpacing = 20
         layout.sectionInset = UIEdgeInsets(top: 10, left: 20, bottom: 30, right: 20)
-        
+
         // 计算 Cell 大小 (2列布局)
         let screenWidth = UIScreen.main.bounds.width
         let itemWidth = (screenWidth - 40 - 16) / 2
@@ -208,7 +208,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         collectionView.register(URLGridCell.self, forCellWithReuseIdentifier: URLGridCell.identifier)
         collectionView.register(SectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SectionHeaderView.identifier)
         collectionView.showsVerticalScrollIndicator = false
-        
+
         // 设置数据源
         collectionView.dataSource = self
         collectionView.delegate = self // 初始设置代理
@@ -244,11 +244,11 @@ class MainViewController: BaseViewController<MainViewModel> {
         let scanImage = UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)
         let scanItem = UIBarButtonItem(image: scanImage, style: .plain, target: self, action: #selector(openScanner))
         navigationItem.leftBarButtonItem = scanItem
-        
+
         let clearImage = UIImage(systemName: "trash.circle.fill", withConfiguration: config)
         let clearItem = UIBarButtonItem(image: clearImage, style: .plain, target: self, action: #selector(clearAllHistory))
         clearItem.tintColor = .systemRed
-        
+
         let storageItem = UIBarButtonItem(customView: storageLabel)
         navigationItem.rightBarButtonItems = [clearItem, storageItem]
 
@@ -542,7 +542,7 @@ extension MainViewController: UICollectionViewDataSource {
 
         return cell
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderView.identifier, for: indexPath) as! SectionHeaderView
@@ -558,7 +558,7 @@ extension MainViewController: UICollectionViewDataSource {
 
 class SectionHeaderView: UICollectionReusableView {
     static let identifier = "SectionHeader"
-    
+
     let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
@@ -572,7 +572,7 @@ class SectionHeaderView: UICollectionReusableView {
         view.layer.cornerRadius = 2
         return view
     }()
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         addSubview(indicatorView)
@@ -590,7 +590,7 @@ class SectionHeaderView: UICollectionReusableView {
             make.centerY.equalToSuperview()
         }
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -604,7 +604,7 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
         let itemWidth = (screenWidth - 40 - 16) / 2
         return CGSize(width: itemWidth, height: 160)
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         return CGSize(width: collectionView.bounds.width, height: 60)
     }

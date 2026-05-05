@@ -139,7 +139,7 @@ class ManifestTestCasesViewController: UIViewController {
 
         // 绑定数据
         output.testCases
-            .drive(onNext: { [weak self] testCases in
+            .drive(onNext: { [weak self] _ in
                 self?.tableView.reloadData()
             })
             .disposed(by: disposeBag)
@@ -279,25 +279,25 @@ import WebKit
 class TestWebViewController: UIViewController {
     let webView: WKWebView
     let debugLabel = UILabel()
-    
+
     init(configuration: WKWebViewConfiguration) {
         self.webView = WKWebView(frame: .zero, configuration: configuration)
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        
+
         webView.accessibilityIdentifier = "TestWebView"
         webView.backgroundColor = .blue // 设置背景色以便调试
         webView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(webView)
-        
+
         debugLabel.textColor = .white
         debugLabel.backgroundColor = .black.withAlphaComponent(0.7) // 更深背景，对比度更高
         debugLabel.accessibilityIdentifier = "DebugLabel"
@@ -305,39 +305,39 @@ class TestWebViewController: UIViewController {
         debugLabel.font = .boldSystemFont(ofSize: 12) // 加粗并稍微变大
         debugLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(debugLabel)
-        
+
         NSLayoutConstraint.activate([
             webView.topAnchor.constraint(equalTo: view.topAnchor),
             webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             webView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
+
             // 将 DebugLabel 放在底部中央，更容易观察
             debugLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             debugLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
             debugLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
             debugLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
         ])
-        
+
         view.bringSubviewToFront(debugLabel)
-        
+
         NotificationCenter.default.addObserver(forName: .updateDebugLabel, object: nil, queue: .main) { [weak self] notification in
             if let text = notification.userInfo?["text"] as? String {
                 NSLog("📱 [TestVC] Received Notification: UpdateDebugLabel with text: %@", text)
-                
+
                 let currentText = self?.debugLabel.text ?? ""
                 let newText = currentText.isEmpty ? text : currentText + "\n" + text
                 self?.debugLabel.text = newText
-                
+
                 // 强制刷新布局以确保 UI 更新
                 self?.view.layoutIfNeeded()
-                
+
                 // 打印当前标签内容以便调试
                 NSLog("📱 [TestVC] DebugLabel content is now: %@", self?.debugLabel.text ?? "nil")
             }
         }
     }
-    
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }

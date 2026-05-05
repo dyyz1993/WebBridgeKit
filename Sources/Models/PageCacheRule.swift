@@ -45,14 +45,14 @@ public struct PageCacheRule: Codable, Identifiable {
         // 先检查是否在排除列表中
         for pattern in excludePatterns {
             if GlobPattern.matches(pattern, against: urlString) {
-                return false  // 被排除
+                return false
             }
         }
 
         // 再检查是否匹配包含列表
         for pattern in includePatterns {
             if GlobPattern.matches(pattern, against: urlString) {
-                return true  // 匹配
+                return true
             }
         }
 

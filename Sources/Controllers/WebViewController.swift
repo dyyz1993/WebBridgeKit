@@ -120,7 +120,7 @@ public class WebViewController: UIViewController {
     /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
     private func setupUserAgent() {
         // 获取原始 UA 并追加自定义信息
-        _ = webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, error) in
+        _ = webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, _) in
             guard let self = self, let baseUA = result as? String else { return }
 
             let info = Bundle.main.infoDictionary
@@ -281,7 +281,7 @@ public class WebViewController: UIViewController {
         loadingObserver = nil
 
         // 使用KVO监听loading属性
-        let observation = webView.observe(\.isLoading, options: [.new]) { [weak self] webView, change in
+        let observation = webView.observe(\.isLoading, options: [.new]) { [weak self] _, change in
             guard let self = self, let isLoading = change.newValue else { return }
 
             // 当loading变为false时，页面加载完成
@@ -389,7 +389,7 @@ public class WebViewController: UIViewController {
 
         // 根据显示模式调整体验
         configureBrowserFeatures(params: params)
-        
+
         // 🔥 注入 payload 参数
         if let payload = params.payload {
             if let payloadData = try? JSONSerialization.data(withJSONObject: payload),
@@ -399,16 +399,13 @@ public class WebViewController: UIViewController {
                 webView.configuration.userContentController.addUserScript(userScript)
                 print("🚀 [WebViewController] Injected payload: \(payloadString)")
             }
-            
+
             // 将 payload 转换为 URL Query 参数
             if let url = webView.url ?? self.url,
                var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
                 var queryItems = components.queryItems ?? []
-                for (key, value) in payload {
-                    // 避免重复添加
-                    if !queryItems.contains(where: { $0.name == key }) {
-                        queryItems.append(URLQueryItem(name: key, value: value))
-                    }
+                for (key, value) in payload where !queryItems.contains(where: { $0.name == key }) {
+                    queryItems.append(URLQueryItem(name: key, value: value))
                 }
                 components.queryItems = queryItems
                 if let newURL = components.url {
@@ -724,13 +721,6 @@ public class WebViewController: UIViewController {
         return true
     }
 
-    public override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-
-        // 🔥 TabBar 恢复由系统自动处理
-        // 当使用 hidesBottomBarWhenPushed 时，系统会在 pop 时自动恢复 TabBar
-    }
-
     deinit {
         // 🔒 Clean up KVO observer
         loadingObserver?.invalidate()
@@ -791,7 +781,7 @@ public class WebViewController: UIViewController {
     private func downloadAndUseManifest(from manifestURL: URL, pageURL: URL) {
         print("📥 [ManifestCache] Downloading manifest from: \(manifestURL.absoluteString)")
 
-        let task = URLSession.shared.dataTask(with: manifestURL) { [weak self] data, response, error in
+        let task = URLSession.shared.dataTask(with: manifestURL) { [weak self] data, _, error in
             guard let self else { return }
 
             if let error = error {
@@ -918,7 +908,7 @@ public class WebViewController: UIViewController {
         print("⏭️ [ManifestCache] Falling back to normal load")
 
         // 如果提供了错误信息，且是自定义协议 URL，则显示错误页面
-        if let error = error, (url.scheme == customScheme || url.scheme == "wb-resource") {
+        if let error = error, url.scheme == customScheme || url.scheme == "wb-resource" {
             showErrorPage(url: url, error: error)
             return
         }
@@ -935,7 +925,7 @@ public class WebViewController: UIViewController {
         let title = "WebBridge 资源加载失败"
         let urlString = url.absoluteString
         let errorMessage = error.localizedDescription
-        
+
         let errorHTML = """
         <!DOCTYPE html>
         <html>
@@ -962,17 +952,17 @@ public class WebViewController: UIViewController {
             <div class="container">
                 <h1><span class="icon">🚫</span>资源加载失败</h1>
                 <p>在处理 manifest 缓存加载时遇到了错误，无法加载目标页面。</p>
-                
+
                 <div class="info-box">
                     <span class="label">请求地址 (Request URL):</span>
                     <code>\(urlString)</code>
                 </div>
-                
+
                 <div class="info-box">
                     <span class="label">错误原因 (Error):</span>
                     <code>\(errorMessage)</code>
                 </div>
-                
+
                 <div class="footer">
                     <span class="label">排查建议:</span>
                     <ul>
@@ -987,7 +977,7 @@ public class WebViewController: UIViewController {
         </body>
         </html>
         """
-        
+
         self.webView.loadHTMLString(errorHTML, baseURL: url)
         print("⚠️ [BarkWebVC] Loaded error page for: \(url.absoluteString)")
     }

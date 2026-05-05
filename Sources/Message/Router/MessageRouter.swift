@@ -4,9 +4,9 @@ import Foundation
 public struct MessageRouter: Sendable {
     /// Custom route resolver
     public var customResolver: (@Sendable (MessagePayload) -> RouteTarget?)?
-    
+
     public init() {}
-    
+
     /// Route a message payload to its target
     /// - Parameter payload: The message payload to route
     /// - Returns: Route target
@@ -15,7 +15,7 @@ public struct MessageRouter: Sendable {
         if let custom = customResolver?(payload) {
             return custom
         }
-        
+
         // 2. Route by appId (mini app)
         if let appId = payload.targetAppId, !appId.isEmpty {
             return RouteTarget(
@@ -25,7 +25,7 @@ public struct MessageRouter: Sendable {
                 params: payload.userInfo
             )
         }
-        
+
         // 3. Route by URL
         if let urlString = payload.targetURL, let url = URL(string: urlString), !urlString.isEmpty {
             // Check if it's a deep link
@@ -37,7 +37,7 @@ public struct MessageRouter: Sendable {
                     params: payload.userInfo
                 )
             }
-            
+
             return RouteTarget(
                 type: .url,
                 destination: urlString,
@@ -45,7 +45,7 @@ public struct MessageRouter: Sendable {
                 params: payload.userInfo
             )
         }
-        
+
         // 4. Try to extract route from userInfo
         if let userInfo = payload.userInfo {
             if let appId = userInfo["appid"], !appId.isEmpty {
@@ -56,7 +56,7 @@ public struct MessageRouter: Sendable {
                     params: userInfo
                 )
             }
-            
+
             if let url = userInfo["url"], !url.isEmpty {
                 return RouteTarget(
                     type: .url,
@@ -66,11 +66,11 @@ public struct MessageRouter: Sendable {
                 )
             }
         }
-        
+
         // 5. No route
         return RouteTarget(type: .none, destination: "")
     }
-    
+
     /// Route a push notification userInfo dictionary
     /// - Parameter userInfo: APNs userInfo dictionary
     /// - Returns: Route target
@@ -78,7 +78,7 @@ public struct MessageRouter: Sendable {
         let appId = userInfo["appid"] as? String
         let url = userInfo["url"] as? String
         let mode = userInfo["mode"] as? String
-        
+
         if let appId = appId, !appId.isEmpty {
             return RouteTarget(
                 type: .appId,
@@ -87,7 +87,7 @@ public struct MessageRouter: Sendable {
                 params: userInfo as? [String: String]
             )
         }
-        
+
         if let url = url, !url.isEmpty {
             return RouteTarget(
                 type: .url,
@@ -96,7 +96,7 @@ public struct MessageRouter: Sendable {
                 params: userInfo as? [String: String]
             )
         }
-        
+
         return RouteTarget(type: .none, destination: "")
     }
 }

@@ -217,8 +217,9 @@ public class ModalWebViewController: UIViewController {
         guard let percent = Float(percentString.replacingOccurrences(of: "%", with: "")) else { return }
         let width = UIScreen.main.bounds.width * CGFloat(percent / 100)
 
+        guard let containerView = containerView else { return }
         UIView.animate(withDuration: 0.3) {
-            self.containerView.snp.updateConstraints { make in
+            containerView.snp.updateConstraints { make in
                 make.width.equalTo(width)
             }
             self.view.layoutIfNeeded()
@@ -229,8 +230,9 @@ public class ModalWebViewController: UIViewController {
         guard let percent = Float(percentString.replacingOccurrences(of: "%", with: "")) else { return }
         let height = UIScreen.main.bounds.height * CGFloat(percent / 100)
 
+        guard let containerView = containerView else { return }
         UIView.animate(withDuration: 0.3) {
-            self.containerView.snp.updateConstraints { make in
+            containerView.snp.updateConstraints { make in
                 make.height.equalTo(height)
             }
             self.view.layoutIfNeeded()
@@ -259,9 +261,9 @@ public class ModalWebViewController: UIViewController {
         UIView.animate(withDuration: 0.25, animations: {
             self.containerView.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
             self.maskView?.alpha = 0
-        }) { _ in
+        }, completion: { _ in
             self.dismiss(animated: false)
-        }
+        })
     }
 
     // MARK: - Cleanup

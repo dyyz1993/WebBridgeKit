@@ -17,7 +17,7 @@ class QRScannerViewController: UIViewController {
 
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer?
-    
+
     private let scanRegionView: UIView = {
         let view = UIView()
         view.layer.borderColor = UIColor.systemBlue.cgColor
@@ -25,7 +25,7 @@ class QRScannerViewController: UIViewController {
         view.backgroundColor = .clear
         return view
     }()
-    
+
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
@@ -33,7 +33,7 @@ class QRScannerViewController: UIViewController {
         button.tintColor = .white
         return button
     }()
-    
+
     private let tipLabel: UILabel = {
         let label = UILabel()
         label.text = "将二维码放入框内即可自动扫描"
@@ -111,23 +111,23 @@ class QRScannerViewController: UIViewController {
         view.addSubview(scanRegionView)
         view.addSubview(closeButton)
         view.addSubview(tipLabel)
-        
+
         scanRegionView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.width.height.equalTo(250)
         }
-        
+
         closeButton.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
             make.left.equalToSuperview().offset(16)
             make.width.height.equalTo(44)
         }
-        
+
         tipLabel.snp.makeConstraints { make in
             make.top.equalTo(scanRegionView.snp.bottom).offset(24)
             make.centerX.equalToSuperview()
         }
-        
+
         closeButton.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
     }
 
@@ -152,16 +152,16 @@ extension QRScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
 
     private func handleQRCodeResult(_ result: String) {
         print("✅ [Scanner] Scanned result: \(result)")
-        
+
         var processedResult = result.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         // 1. 尝试 Base64 解码 (处理加密或编码的 URL)
         if let decodedData = Data(base64Encoded: processedResult),
            let decodedString = String(data: decodedData, encoding: .utf8) {
             print("🔓 [Scanner] Base64 decoded: \(decodedString)")
             processedResult = decodedString
         }
-        
+
         // 2. 尝试解析为 URL
         if let url = URL(string: processedResult) {
             dismiss(animated: true) {
@@ -183,7 +183,7 @@ extension QRScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
             }
         }
     }
-    
+
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "确定", style: .default) { _ in

@@ -383,8 +383,8 @@ extension Bundle {
     /// 获取 App 显示名称
     var displayName: String {
         return object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ??
-               object(forInfoDictionaryKey: "CFBundleName") as? String ??
-               "SuperApp"
+            object(forInfoDictionaryKey: "CFBundleName") as? String ??
+            "SuperApp"
     }
 
     /// 获取版本号

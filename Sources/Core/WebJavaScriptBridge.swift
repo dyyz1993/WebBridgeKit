@@ -32,7 +32,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         super.init()
         registerHandlerFactories()  // 只注册工厂方法，不创建实例
     }
-    
+
     // MARK: - WKScriptMessageHandler
 
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -249,7 +249,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
     }
 
     // MARK: - Send Result to JS
-    
+
     public func sendResultToJS(_ result: Any, callbackId: String?) {
         var resultDict: [String: Any] = [:]
 
@@ -292,7 +292,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 WebBridgeLogger.shared.error("[JS Bridge] Failed to send result: webView is nil")
                 return
             }
-            webView.evaluateJavaScript(script, completionHandler: { jsResult, error in
+            webView.evaluateJavaScript(script, completionHandler: { _, error in
                 if let error = error {
                     WebBridgeLogger.shared.error("JavaScript execution failed: \(error.localizedDescription)")
                 }
@@ -332,7 +332,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         }
 
         DispatchQueue.main.async { [weak self] in
-            self?.webView?.evaluateJavaScript(script, completionHandler: { jsResult, error in
+            self?.webView?.evaluateJavaScript(script, completionHandler: { _, error in
                 if let error = error {
                     WebBridgeLogger.shared.error("Event delivery failed: \(error.localizedDescription)")
                 }
@@ -358,5 +358,3 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         print("🔗 [JS Bridge] WebView 已设置，已创建 \(createdHandlers.count) 个 Handler")
     }
 }
-
-

@@ -82,6 +82,16 @@ public class WebPermissionManager {
 
     /// 检查通知权限
     public func checkNotificationPermission(completion: @escaping ([String: Any]) -> Void) {
+        guard Bundle.main.bundlePath.hasSuffix(".app") else {
+            completion([
+                "type": "notification",
+                "displayName": "通知权限",
+                "icon": "🔔",
+                "status": "notDetermined",
+                "granted": false
+            ])
+            return
+        }
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             let statusString: String
             let granted: Bool

@@ -48,7 +48,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         let pageKey = getPageKey(for: webView)
 
         NSLog("   - Lazy cache: %@, pageKey: %@", relativePath, pageKey)
-        
+
         // 保存活跃任务
         let taskID = UUID().uuidString
         saveTask(urlSchemeTask, forID: taskID)
@@ -77,7 +77,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
             case .failure(let error):
                 NSLog("   ❌ Failed: %@, error: %@", relativePath, error.localizedDescription)
-                
+
                 // 🔥 优化：如果是 HTML 页面或主请求失败，显示错误提示页，而不是白屏
                 let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
                 if isPageRequest {
@@ -108,7 +108,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         guard FileManager.default.fileExists(atPath: resourcePath.path) else {
             let error = ManifestCacheError.resourceNotFound(relativePath)
             NSLog("❌ [SchemeHandler] Resource not found in cache: %@", relativePath)
-            
+
             // 🔥 优化：如果是 HTML 页面失败，显示错误提示页
             let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
             if isPageRequest {
@@ -141,7 +141,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             urlSchemeTask.didFinish()
 
             NSLog("✅ [SchemeHandler] Served from persistent cache: %@", relativePath)
-            
+
             // 发送通知用于 UI 更新
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
@@ -236,9 +236,9 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         urlSchemeTask.didReceive(response!)
         urlSchemeTask.didReceive(resource.data)
         urlSchemeTask.didFinish()
-        
+
         NSLog("   ✅ Delivered resource: %@ (%d bytes)", resource.relativePath, resource.data.count)
-        
+
         // 发送通知用于 UI 更新
         NotificationCenter.default.post(
             name: .resourceDelivered,
@@ -284,14 +284,14 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         urlSchemeTask.didReceive(response)
         urlSchemeTask.didReceive(data)
         urlSchemeTask.didFinish()
-        
+
         NSLog("⚠️ [SchemeHandler] Delivered error page for: %@", url.absoluteString)
     }
 
     private func generateErrorHTML(url: URL, error: Error) -> String {
         let urlString = url.absoluteString
         let errorMessage = error.localizedDescription
-        
+
         return """
         <!DOCTYPE html>
         <html>
@@ -318,17 +318,17 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             <div class="container">
                 <h1><span class="icon">🚫</span>WebBridge 资源加载失败</h1>
                 <p>在处理自定义协议请求时遇到了错误，无法加载目标资源。</p>
-                
+
                 <div class="info-box">
                     <span class="label">请求地址 (Request URL):</span>
                     <code>\(urlString)</code>
                 </div>
-                
+
                 <div class="info-box">
                     <span class="label">错误原因 (Error):</span>
                     <code>\(errorMessage)</code>
                 </div>
-                
+
                 <div class="footer">
                     <span class="label">排查建议:</span>
                     <ul>
@@ -349,7 +349,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private func extractRelativePath(from url: URL) -> String {
         let absoluteString = url.absoluteString
-        
+
         // 1. 处理 wb-resource://{cacheID}/{path}
         if absoluteString.hasPrefix("wb-resource://") {
             let pathWithoutScheme = absoluteString.replacingOccurrences(of: "wb-resource://", with: "")
@@ -363,17 +363,17 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             // custom://res/style.css -> res/style.css
             // URL(string: "custom://res/style.css")?.path -> "/style.css"
             // URL(string: "custom://res/style.css")?.host -> "res"
-            
+
             let path = url.path
             let host = url.host ?? ""
-            
+
             if !host.isEmpty {
                 let fullPath = host + path
                 return fullPath.hasPrefix("/") ? String(fullPath.dropFirst()) : fullPath
             }
             return path.hasPrefix("/") ? String(path.dropFirst()) : path
         }
-        
+
         // 3. 后备方案
         return url.path.hasPrefix("/") ? String(url.path.dropFirst()) : url.path
     }

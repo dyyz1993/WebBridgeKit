@@ -128,11 +128,11 @@ class ServerConfigViewModel: ViewModel {
         guard let url = url, !url.isEmpty else {
             return "请输入服务器地址"
         }
-        
-        guard let urlObj = URL(string: url), (urlObj.scheme == "http" || urlObj.scheme == "https") else {
+
+        guard let urlObj = URL(string: url), urlObj.scheme == "http" || urlObj.scheme == "https" else {
             return "请输入有效的 http/https 协议地址"
         }
-        
+
         return nil
     }
 
@@ -143,11 +143,11 @@ class ServerConfigViewModel: ViewModel {
         guard let endpoint = endpoint, !endpoint.isEmpty else {
             return "请输入 API 端点"
         }
-        
+
         if !endpoint.hasPrefix("/") {
             return "端点应以 / 开头"
         }
-        
+
         return nil
     }
 
@@ -187,7 +187,7 @@ class ServerConfigViewModel: ViewModel {
             testResultRelay.accept((false, "Base URL 验证失败: \(baseURLError)"))
             return
         }
-        
+
         if let apiEndpointError = validateAPIEndpoint(apiEndpointRelay.value) {
             testResultRelay.accept((false, "API Endpoint 验证失败: \(apiEndpointError)"))
             return

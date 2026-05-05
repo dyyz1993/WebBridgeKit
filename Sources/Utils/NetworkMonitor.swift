@@ -95,7 +95,7 @@ public class NetworkMonitor {
         lock.lock()
         defer { lock.unlock() }
 
-        statusChangeCallbacks.removeAll { callbackHolder in
+        statusChangeCallbacks.removeAll { _ in
             // Compare function references using ObjectIdentifier
             return false // Swift doesn't support direct function comparison, so we keep all
         }

@@ -12,11 +12,11 @@ public enum LogLevel: Int, Comparable, Codable {
     case info = 2
     case warning = 3
     case error = 4
-    
+
     public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
         return lhs.rawValue < rhs.rawValue
     }
-    
+
     var emoji: String {
         switch self {
         case .verbose: return "💬"
@@ -26,7 +26,7 @@ public enum LogLevel: Int, Comparable, Codable {
         case .error:   return "❌"
         }
     }
-    
+
     var tag: String {
         switch self {
         case .verbose: return "VRB"
@@ -52,7 +52,7 @@ public enum LogCategory: String, Codable, CaseIterable {
     case storage     = "storage"
     case navigation  = "navigation"
     case diagnostic  = "diagnostic"
-    
+
     var emoji: String {
         switch self {
         case .general:     return "📌"
@@ -75,40 +75,40 @@ public enum LogCategory: String, Codable, CaseIterable {
 public struct LogEntry: Codable {
     /// 唯一 ID
     public let id: UUID
-    
+
     /// 时间戳
     public let timestamp: Date
-    
+
     /// 级别
     public let level: LogLevel
-    
+
     /// 分类
     public let category: LogCategory
-    
+
     /// 消息
     public let message: String
-    
+
     /// 文件名
     public let file: String?
-    
+
     /// 函数名
     public let function: String?
-    
+
     /// 行号
     public let line: Int?
-    
+
     /// 附加上下文
     public let context: [String: String]?
-    
+
     /// 关联的 action（如 Handler 名称）
     public let action: String?
-    
+
     /// 耗时（毫秒）
     public let durationMs: Double?
-    
+
     /// 会话 ID
     public let sessionId: String?
-    
+
     public init(
         level: LogLevel,
         category: LogCategory,
@@ -134,9 +134,9 @@ public struct LogEntry: Codable {
         self.durationMs = durationMs
         self.sessionId = sessionId
     }
-    
+
     // MARK: - JSON
-    
+
     /// 转换为 JSON 字典
     public var jsonDict: [String: Any] {
         var dict: [String: Any] = [
@@ -155,7 +155,7 @@ public struct LogEntry: Codable {
         if let sessionId = sessionId { dict["session_id"] = sessionId }
         return dict
     }
-    
+
     /// 转换为 JSON 字符串
     public var jsonString: String {
         guard let data = try? JSONSerialization.data(withJSONObject: jsonDict, options: [.sortedKeys]),
@@ -164,15 +164,15 @@ public struct LogEntry: Codable {
         }
         return string
     }
-    
+
     // MARK: - Console Format
-    
+
     /// 控制台可读格式
     public var consoleString: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm:ss.SSS"
         let time = dateFormatter.string(from: timestamp)
-        
+
         var parts = ["\(time) \(level.emoji)[\(level.tag)] [\(category.rawValue)]"]
         if let action = action {
             parts.append("[\(action)]")
@@ -183,7 +183,7 @@ public struct LogEntry: Codable {
         }
         return parts.joined(separator: " ")
     }
-    
+
     /// 可复制的调试信息
     public var debugString: String {
         var lines = [

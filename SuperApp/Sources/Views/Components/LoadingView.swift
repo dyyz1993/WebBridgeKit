@@ -188,7 +188,7 @@ class LoadingView: UIView {
 
         UIView.animate(withDuration: 0.2, animations: {
             self.alpha = 0
-        }) { _ in
+        }, completion: { _ in
             self.isHidden = true
         }
     }

@@ -15,7 +15,7 @@ public class AccessToken: Object {
     @objc public dynamic var id: String = UUID().uuidString
     @objc public dynamic var url: String = ""
     @objc public dynamic var token: String = ""           // 口令码
-    @objc public dynamic var title: String? = nil
+    @objc public dynamic var title: String?
     @objc public dynamic var validDuration: Int = 0       // 有效时长(秒)
     @objc public dynamic var createdAt: Date = Date()
     @objc public dynamic var expiresAt: Date = Date()

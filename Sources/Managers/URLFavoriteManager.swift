@@ -390,7 +390,7 @@ extension URLFavoriteManager {
     /// Synchronous version of addFavorite for backward compatibility
     @discardableResult
     public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) -> URLFavorite? {
-        var result: URLFavorite? = nil
+        var result: URLFavorite?
         let semaphore = DispatchSemaphore(value: 0)
 
         Task {
@@ -477,7 +477,7 @@ extension URLFavoriteManager {
     /// Synchronous version of findFavorite(url:) for backward compatibility
     /// Returns nil on error
     public func findFavorite(url: URL) -> URLFavorite? {
-        var result: URLFavorite? = nil
+        var result: URLFavorite?
         let semaphore = DispatchSemaphore(value: 0)
 
         Task {
@@ -496,7 +496,7 @@ extension URLFavoriteManager {
     /// Synchronous version of findFavorite(id:) for backward compatibility
     /// Returns nil on error
     public func findFavorite(id: String) -> URLFavorite? {
-        var result: URLFavorite? = nil
+        var result: URLFavorite?
         let semaphore = DispatchSemaphore(value: 0)
 
         Task {

@@ -162,14 +162,14 @@ public class ServerConfigManager {
         request.httpMethod = "GET"
         request.timeoutInterval = 5.0 // 5秒超时
 
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        let task = URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     WebBridgeLogger.shared.log(.error, "❌ Connection test failed: \(error.localizedDescription)")
                     completion(false)
                     return
                 }
-                
+
                 if let httpResponse = response as? HTTPURLResponse {
                     // 只要返回 200~399 范围内的状态码，认为服务是存活的
                     let isSuccess = (200...399).contains(httpResponse.statusCode)

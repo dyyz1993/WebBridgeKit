@@ -14,21 +14,21 @@ import CoreMotion
 /// 高频传感器数据 Handler
 /// 支持：加速度计、陀螺仪、设备运动数据订阅
 public class WebSensorsHandler: BaseWebNativeHandler {
-    
+
     // MARK: - Properties
-    
+
     private let motionManager = CMMotionManager()
     private var isAccelerometerActive = false
     private var isGyroscopeActive = false
-    
+
     // MARK: - Handle
-    
+
     /**
      * 处理 JS 调用
      * @param body 调用参数
      * @param completion 处理完成后的回调
      */
-    public override func handle(body: [String : Any], completion: @escaping (Any) -> Void) {
+    public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? ""
 
@@ -69,9 +69,9 @@ public class WebSensorsHandler: BaseWebNativeHandler {
             "gyroscopeActive": isGyroscopeActive
         ], completion: completion)
     }
-    
+
     // MARK: - Actions
-    
+
     /**
      * 开始监听加速度计
      * @param interval 采样间隔（秒）
@@ -82,9 +82,9 @@ public class WebSensorsHandler: BaseWebNativeHandler {
             self.reject(error: "Accelerometer not available", completion: completion)
             return
         }
-        
+
         motionManager.accelerometerUpdateInterval = interval
-        motionManager.startAccelerometerUpdates(to: .main) { [weak self] data, error in
+        motionManager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
             guard let data = data else { return }
             self?.notifyJS(event: "onAccelerometerChange", data: [
                 "x": data.acceleration.x,
@@ -93,11 +93,11 @@ public class WebSensorsHandler: BaseWebNativeHandler {
                 "timestamp": data.timestamp
             ])
         }
-        
+
         isAccelerometerActive = true
         self.resolve(["status": "started", "interval": interval], completion: completion)
     }
-    
+
     /**
      * 停止监听加速度计
      * @param completion 返回结果
@@ -107,7 +107,7 @@ public class WebSensorsHandler: BaseWebNativeHandler {
         isAccelerometerActive = false
         self.resolve(["status": "stopped"], completion: completion)
     }
-    
+
     /**
      * 开始监听陀螺仪
      * @param interval 采样间隔（秒）
@@ -118,9 +118,9 @@ public class WebSensorsHandler: BaseWebNativeHandler {
             self.reject(error: "Gyroscope not available", completion: completion)
             return
         }
-        
+
         motionManager.gyroUpdateInterval = interval
-        motionManager.startGyroUpdates(to: .main) { [weak self] data, error in
+        motionManager.startGyroUpdates(to: .main) { [weak self] data, _ in
             guard let data = data else { return }
             self?.notifyJS(event: "onGyroscopeChange", data: [
                 "x": data.rotationRate.x,
@@ -129,11 +129,11 @@ public class WebSensorsHandler: BaseWebNativeHandler {
                 "timestamp": data.timestamp
             ])
         }
-        
+
         isGyroscopeActive = true
         self.resolve(["status": "started", "interval": interval], completion: completion)
     }
-    
+
     /**
      * 停止监听陀螺仪
      * @param completion 返回结果
@@ -143,16 +143,16 @@ public class WebSensorsHandler: BaseWebNativeHandler {
         isGyroscopeActive = false
         self.resolve(["status": "stopped"], completion: completion)
     }
-    
+
     // MARK: - Private
-    
+
     private func notifyJS(event: String, data: [String: Any]) {
         let script = "window.BarkBridge.receiveEvent('\(event)', \(data.jsonString ?? "{}"));"
         runOnMainThread { [weak self] in
             self?.webView?.evaluateJavaScript(script, completionHandler: nil)
         }
     }
-    
+
     deinit {
         motionManager.stopAccelerometerUpdates()
         motionManager.stopGyroUpdates()

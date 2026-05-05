@@ -223,7 +223,7 @@ public class PersistentManifestLoader: NSObject {
         guard let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey], options: []) else {
             return 0
         }
-        
+
         var totalSize: Int64 = 0
         for case let fileURL as URL in enumerator {
             if let resourceValues = try? fileURL.resourceValues(forKeys: [.fileSizeKey]),
@@ -266,12 +266,12 @@ public class PersistentManifestLoader: NSObject {
         // 3. 生成缓存 ID（使用 AppID）
         NSLog("🆔 [PersistentManifestLoader] 步骤 2: 生成缓存 ID (基于 AppID)")
         let cacheID = generateCacheID(for: url, manifest: manifest)
-        
+
         // 记录 URL 到 CacheID 的映射
         urlMappingLock.lock()
         urlToAppID[url] = cacheID
         urlMappingLock.unlock()
-        
+
         NSLog("   缓存 ID: %@", cacheID)
         let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
         NSLog("   缓存目录: %@", cacheDir.path)
@@ -326,7 +326,7 @@ public class PersistentManifestLoader: NSObject {
 
                 await registerManifest(manifest, for: cacheID, in: webView)
                 try await loadHTML(html, cacheID: cacheID, in: webView)
-                
+
                 // 🔥 发送通知用于 UI 更新
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
@@ -335,7 +335,7 @@ public class PersistentManifestLoader: NSObject {
                         userInfo: ["source": "MANIFEST"]
                     )
                 }
-                
+
                 NSLog("✅ [PersistentManifestLoader] 从缓存加载完成")
                 return
             }
@@ -344,7 +344,7 @@ public class PersistentManifestLoader: NSObject {
         // 6. 没有缓存，显示进度页面
         NSLog("📦 [PersistentManifestLoader] 未缓存，开始下载资源")
         let totalResources = manifest.resources.count
-        
+
         var modal: FullScreenProgressViewController?
         if let vc = viewController {
             modal = await showProgressModal(
@@ -374,7 +374,7 @@ public class PersistentManifestLoader: NSObject {
 
         // 10. 保存 manifest
         try saveManifest(manifest, to: cacheDir)
-        
+
         // ✅ 10b. 注册到 ManifestStore（用于首页展示）
         var finalManifest: Manifest
         if let existing = ManifestStore.shared.getManifest(for: cacheID) {
@@ -429,7 +429,7 @@ public class PersistentManifestLoader: NSObject {
         if url.pathExtension.lowercased() == "html" || url.pathExtension.lowercased() == "htm" {
             baseURL = url.deletingLastPathComponent()
         }
-        
+
         let manifestURL = baseURL.appendingPathComponent(manifestFileName)
         print("📡 [PersistentManifestLoader] 请求 manifest.json")
         print("   完整 URL: \(manifestURL.absoluteString)")
@@ -491,7 +491,7 @@ public class PersistentManifestLoader: NSObject {
     /// 下载 HTML
     private func downloadHTML(from url: URL) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
-            let task = urlSession.dataTask(with: url) { data, response, error in
+            let task = urlSession.dataTask(with: url) { data, _, error in
                 if let error = error {
                     continuation.resume(throwing: LoaderError.htmlDownloadFailed(error))
                     return
@@ -567,7 +567,7 @@ public class PersistentManifestLoader: NSObject {
     /// 下载单个资源
     private func downloadResource(from url: URL) async throws -> Data {
         return try await withCheckedThrowingContinuation { continuation in
-            let task = urlSession.dataTask(with: url) { data, response, error in
+            let task = urlSession.dataTask(with: url) { data, _, error in
                 if let error = error {
                     continuation.resume(throwing: error)
                     return
@@ -604,7 +604,7 @@ public class PersistentManifestLoader: NSObject {
     private func saveHTML(_ html: String, to cacheDir: URL) throws {
         let htmlPath = cacheDir.appendingPathComponent("index.html")
         try html.write(to: htmlPath, atomically: true, encoding: .utf8)
-        
+
         // ✅ 同步更新 ManifestStore
         let cacheID = cacheDir.lastPathComponent
         ManifestStore.shared.saveHTML(html, for: cacheID)
@@ -620,7 +620,7 @@ public class PersistentManifestLoader: NSObject {
 
         // ✅ 同步更新 ManifestStore，确保 UI 能够实时更新
         let cacheID = cacheDir.lastPathComponent
-        
+
         // 尝试获取现有 Manifest 以保留用户字段（如 isPinned, isFavorite, accessCount）
         var coreManifest: Manifest
         if let existing = ManifestStore.shared.getManifest(for: cacheID) {
@@ -641,7 +641,7 @@ public class PersistentManifestLoader: NSObject {
                 icon: manifest.icon
             )
         }
-        
+
         ManifestStore.shared.saveManifest(coreManifest, for: cacheID)
         NSLog("✅ [PersistentManifestLoader] 已同步更新 ManifestStore: %@", cacheID)
     }
@@ -805,7 +805,7 @@ public class PersistentManifestLoader: NSObject {
         urlMappingLock.lock()
         let mappedAppID = urlToAppID[url]
         urlMappingLock.unlock()
-        
+
         if let appID = mappedAppID {
             let cacheDir = cacheDirectory.appendingPathComponent(appID)
             let manifestPath = cacheDir.appendingPathComponent(manifestFileName)
@@ -813,21 +813,21 @@ public class PersistentManifestLoader: NSObject {
                 return true
             }
         }
-        
+
         // 2. 如果映射中没有，尝试使用默认 AppID (host-based)
         let cacheID = generateCacheID(for: url)
         let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
         let manifestPath = cacheDir.appendingPathComponent(manifestFileName)
-        
+
         guard FileManager.default.fileExists(atPath: manifestPath.path) else {
             return false
         }
-        
+
         // 进一步检查是否是持久化模式
         do {
             let data = try Data(contentsOf: manifestPath)
             let manifest = try JSONDecoder().decode(WebManifest.self, from: data)
-            
+
             // 如果成功找到并确认是持久化，记录到映射中
             if manifest.persistent {
                 let appID = AppIDResolver.resolveAppID(from: url, manifest: Manifest(resources: manifest.resources, version: manifest.version, appid: manifest.appid))

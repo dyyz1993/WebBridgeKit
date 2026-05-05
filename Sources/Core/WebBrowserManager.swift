@@ -53,7 +53,7 @@ public class WebBrowserManager: WebBrowserManaging {
     private var _currentBrowser: UIViewController?
 
     /// 当前浏览器的线程安全访问
-    public private(set) var currentBrowser: UIViewController? {
+    public var currentBrowser: UIViewController? {
         get { stateQueue.sync { self._currentBrowser } }
         set { stateQueue.async(flags: .barrier) { self._currentBrowser = newValue } }
     }
@@ -62,7 +62,7 @@ public class WebBrowserManager: WebBrowserManaging {
     private var _currentModal: ModalWebViewController?
 
     /// 当前弹窗的线程安全访问
-    public private(set) var currentModal: ModalWebViewController? {
+    public var currentModal: ModalWebViewController? {
         get { stateQueue.sync { self._currentModal } }
         set { stateQueue.async(flags: .barrier) { self._currentModal = newValue } }
     }
@@ -441,7 +441,7 @@ public class WebBrowserManager: WebBrowserManaging {
         } else {
             print("🔧 [WebBrowserManager] Creating WebBrowserViewController for remote URL")
             webVC = WebBrowserViewController(url: url)  // 使用便捷初始化
-            
+
             // 🔥 优化：如果是 localhost，不作为标题显示
             let displayTitle = (url.host == "localhost") ? nil : url.host
             webVC.title = params.customTitle ?? displayTitle
@@ -583,4 +583,3 @@ public class WebBrowserManager: WebBrowserManaging {
 
 // MARK: - WebViewController Extensions
 // Note: configure(with:) is now defined in WebViewController.swift
-

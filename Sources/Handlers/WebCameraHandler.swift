@@ -226,20 +226,20 @@ public class WebCameraHandler: BaseWebNativeHandler {
     }
 }
 
-    // 视频流 (New)
-    public class WebVideoHandler: BaseWebNativeHandler, AVCaptureVideoDataOutputSampleBufferDelegate {
-        
-        // 添加单例引用，方便调试或特殊转发
-        static var sharedInstance: WebVideoHandler?
+// 视频流 (New)
+public class WebVideoHandler: BaseWebNativeHandler, AVCaptureVideoDataOutputSampleBufferDelegate {
 
-        private var captureSession: AVCaptureSession?
-        private var previewLayer: AVCaptureVideoPreviewLayer?
-        private var containerView: UIView?
+    // 添加单例引用，方便调试或特殊转发
+    static var sharedInstance: WebVideoHandler?
 
-        public override init() {
-            super.init()
-            WebVideoHandler.sharedInstance = self
-        }
+    private var captureSession: AVCaptureSession?
+    private var previewLayer: AVCaptureVideoPreviewLayer?
+    private var containerView: UIView?
+
+    public override init() {
+        super.init()
+        WebVideoHandler.sharedInstance = self
+    }
 
     // 人脸识别相关
     private var faceDetectionRequest: VNDetectFaceLandmarksRequest?
@@ -250,7 +250,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
     private var isFrameTransferEnabled = false
     private var transferMode: String = "base64" // "base64" 或 "binary"
     private var currentCameraPosition: AVCaptureDevice.Position = .front
-    
+
     // FPS 统计
     private var frameCount = 0
     private var lastFPSReportTime = Date()
@@ -295,11 +295,11 @@ public class WebCameraHandler: BaseWebNativeHandler {
         } else {
             isFaceTrackingEnabled = !isFaceTrackingEnabled
         }
-        
+
         if isFaceTrackingEnabled && faceDetectionRequest == nil {
             setupFaceDetection()
         }
-        
+
         resolve(["enabled": isFaceTrackingEnabled], completion: completion)
     }
 
@@ -310,13 +310,13 @@ public class WebCameraHandler: BaseWebNativeHandler {
         } else {
             isHandTrackingEnabled = !isHandTrackingEnabled
         }
-        
+
         if isHandTrackingEnabled && handPoseRequest == nil {
             if #available(iOS 14.0, *) {
                 setupHandDetection()
             }
         }
-        
+
         resolve(["enabled": isHandTrackingEnabled], completion: completion)
     }
 
@@ -347,26 +347,26 @@ public class WebCameraHandler: BaseWebNativeHandler {
     /// 更新视频配置 (如开启/关闭追踪)
     private func updateConfig(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
-        
+
         if let faceTracking = params["faceTracking"] as? Bool {
             isFaceTrackingEnabled = faceTracking
             if faceTracking && faceDetectionRequest == nil {
                 setupFaceDetection()
             }
         }
-        
+
         if let handTracking = params["handTracking"] as? Bool {
             isHandTrackingEnabled = handTracking
         }
-        
+
         if let frameTransfer = params["frameTransfer"] as? Bool {
             isFrameTransferEnabled = frameTransfer
         }
-        
+
         if let mode = params["transferMode"] as? String {
             transferMode = mode
         }
-        
+
         resolve(["success": true], completion: completion)
     }
 
@@ -408,7 +408,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             let cornerRadius = params["cornerRadius"] as? CGFloat ?? 10
             let facingMode = params["facingMode"] as? String ?? "user"
             let isHidden = params["hidden"] as? Bool ?? false
-            
+
             print("🎬 [NativeVideo] Config: pos=(\(x),\(y)), size=\(width)x\(height), isHidden=\(isHidden)")
             self.currentCameraPosition = (facingMode == "environment") ? .back : .front
 
@@ -416,7 +416,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             let session = AVCaptureSession()
             session.beginConfiguration()
             session.sessionPreset = .medium
-            
+
             // 2. 设置输入
             guard let device = self.getDevice(for: self.currentCameraPosition),
                   let input = try? AVCaptureDeviceInput(device: device) else {
@@ -427,7 +427,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             if session.canAddInput(input) {
                 session.addInput(input)
             }
-            
+
             // 3. 设置数据输出
             let videoOutput = AVCaptureVideoDataOutput()
             videoOutput.alwaysDiscardsLateVideoFrames = true
@@ -435,9 +435,9 @@ public class WebCameraHandler: BaseWebNativeHandler {
             if session.canAddOutput(videoOutput) {
                 session.addOutput(videoOutput)
             }
-            
+
             session.commitConfiguration()
-            
+
             // 4. 创建 Preview Layer
             let previewLayer = AVCaptureVideoPreviewLayer(session: session)
             previewLayer.videoGravity = .resizeAspect
@@ -445,7 +445,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             previewLayer.cornerRadius = cornerRadius
             previewLayer.masksToBounds = true
             previewLayer.isHidden = isHidden
-            
+
             // 5. 设置方向
             if let connection = previewLayer.connection, connection.isVideoOrientationSupported {
                 connection.videoOrientation = .portrait
@@ -462,21 +462,21 @@ public class WebCameraHandler: BaseWebNativeHandler {
             container.isHidden = isHidden
             container.isUserInteractionEnabled = false
             container.accessibilityIdentifier = "camera.videoOverlay"
-            
+
             let scrollX = webView.scrollView.contentOffset.x
             let scrollY = webView.scrollView.contentOffset.y
             container.frame = CGRect(x: x + scrollX, y: y + scrollY, width: width, height: height)
-            
+
             webView.scrollView.addSubview(container)
             webView.scrollView.bringSubviewToFront(container)
 
             // 7. 启动
-             print("🎬 [NativeVideo] Starting AVCaptureSession...")
-             DispatchQueue.global(qos: .userInitiated).async {
-                 session.startRunning()
-                 self.runOnMainThread {
-                     print("🎬 [NativeVideo] AVCaptureSession is running")
-                     self.captureSession = session
+            print("🎬 [NativeVideo] Starting AVCaptureSession...")
+            DispatchQueue.global(qos: .userInitiated).async {
+                session.startRunning()
+                self.runOnMainThread {
+                    print("🎬 [NativeVideo] AVCaptureSession is running")
+                    self.captureSession = session
                     self.previewLayer = previewLayer
                     self.containerView = container
                     self.resolve(["facingMode": facingMode], completion: completion)
@@ -504,7 +504,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             }
 
             session.beginConfiguration()
-            
+
             // 移除当前输入
             if let currentInput = session.inputs.first {
                 session.removeInput(currentInput)
@@ -512,7 +512,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
 
             // 切换位置
             self.currentCameraPosition = (self.currentCameraPosition == .front) ? .back : .front
-            
+
             guard let newDevice = self.getDevice(for: self.currentCameraPosition),
                   let newInput = try? AVCaptureDeviceInput(device: newDevice) else {
                 session.commitConfiguration()
@@ -523,7 +523,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             if session.canAddInput(newInput) {
                 session.addInput(newInput)
             }
-            
+
             session.commitConfiguration()
             self.resolve(["facingMode": self.currentCameraPosition == .front ? "user" : "environment"], completion: completion)
         }
@@ -531,7 +531,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
 
     /// 设置人脸检测
     private func setupFaceDetection() {
-        faceDetectionRequest = VNDetectFaceLandmarksRequest { [weak self] request, error in
+        faceDetectionRequest = VNDetectFaceLandmarksRequest { [weak self] request, _ in
             guard let self = self, let results = request.results as? [VNFaceObservation] else { return }
             self.handleFaceDetectionResults(results)
         }
@@ -540,7 +540,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
     /// 处理人脸检测结果
     private func handleFaceDetectionResults(_ results: [VNFaceObservation]) {
         guard isFaceTrackingEnabled, let webView = self.webView else { return }
-        
+
         let faceData = results.map { observation -> [String: Any] in
             let box = observation.boundingBox
             let convertedBox: [String: CGFloat] = [
@@ -549,13 +549,13 @@ public class WebCameraHandler: BaseWebNativeHandler {
                 "width": box.size.width,
                 "height": box.size.height
             ]
-            
+
             var faceDict: [String: Any] = [
                 "boundingBox": convertedBox,
                 "roll": observation.roll?.doubleValue ?? 0,
                 "yaw": observation.yaw?.doubleValue ?? 0
             ]
-            
+
             // 采集/估算 Pitch (抬头/低头)
             if #available(iOS 15.0, *) {
                 faceDict["pitch"] = observation.pitch?.doubleValue ?? 0
@@ -564,7 +564,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
                     let nosePoints = landmarks.nose?.normalizedPoints
                     let leftEyePoints = landmarks.leftEye?.normalizedPoints
                     let rightEyePoints = landmarks.rightEye?.normalizedPoints
-                    
+
                     if let nose = nosePoints?.first, let leftEye = leftEyePoints?.first, let rightEye = rightEyePoints?.first {
                         let eyeCenterY = (leftEye.y + rightEye.y) / 2.0
                         let offset = nose.y - eyeCenterY
@@ -572,10 +572,10 @@ public class WebCameraHandler: BaseWebNativeHandler {
                     }
                 }
             }
-            
+
             if let landmarks = observation.landmarks {
                 var landmarkData: [String: [[String: CGFloat]]] = [:]
-                
+
                 func convertPoints(_ points: [CGPoint]?) -> [[String: CGFloat]]? {
                     return points?.map { pt in
                         let imageX = box.origin.x + (pt.x * box.size.width)
@@ -583,7 +583,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
                         return ["x": imageX, "y": 1.0 - imageY]
                     }
                 }
-                
+
                 landmarkData["faceContour"] = convertPoints(landmarks.faceContour?.normalizedPoints)
                 landmarkData["leftEye"] = convertPoints(landmarks.leftEye?.normalizedPoints)
                 landmarkData["rightEye"] = convertPoints(landmarks.rightEye?.normalizedPoints)
@@ -594,9 +594,9 @@ public class WebCameraHandler: BaseWebNativeHandler {
                 landmarkData["innerLips"] = convertPoints(landmarks.innerLips?.normalizedPoints)
                 landmarkData["leftEyebrow"] = convertPoints(landmarks.leftEyebrow?.normalizedPoints)
                 landmarkData["rightEyebrow"] = convertPoints(landmarks.rightEyebrow?.normalizedPoints)
-                
+
                 faceDict["landmarks"] = landmarkData
-                
+
                 // 表情识别逻辑
                 if let outerLips = landmarks.outerLips?.normalizedPoints {
                     let top = outerLips[2].y
@@ -657,7 +657,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
 
             return faceDict
         }
-        
+
         runOnMainThread { [weak self] in
             guard let self = self, let webView = self.webView else { return }
             let json = try? JSONSerialization.data(withJSONObject: faceData, options: [])
@@ -700,10 +700,10 @@ public class WebCameraHandler: BaseWebNativeHandler {
     @available(iOS 14.0, *)
     private func handleHandDetectionResults(_ results: [VNHumanHandPoseObservation]) {
         guard isHandTrackingEnabled, let webView = self.webView else { return }
-        
+
         let handData = results.map { observation -> [String: Any] in
             var joints: [String: [String: CGFloat]] = [:]
-            
+
             let allJoints: [VNHumanHandPoseObservation.JointName] = [
                 .wrist, .thumbCMC, .thumbMP, .thumbIP, .thumbTip,
                 .indexMCP, .indexPIP, .indexDIP, .indexTip,
@@ -711,44 +711,24 @@ public class WebCameraHandler: BaseWebNativeHandler {
                 .ringMCP, .ringPIP, .ringDIP, .ringTip,
                 .littleMCP, .littlePIP, .littleDIP, .littleTip
             ]
-            
+
             for joint in allJoints {
                 if let point = try? observation.recognizedPoint(joint), point.confidence > 0.1 {
                     let fullKey = joint.rawValue.rawValue
                     var shortKey = ""
                     let key = fullKey.lowercased()
-                    if key.contains("wrist") { shortKey = "wrist" }
-                    else if key.contains("thumb") {
-                        if key.contains("cmc") { shortKey = "thumbCMC" }
-                        else if key.contains("mp") { shortKey = "thumbMP" }
-                        else if key.contains("ip") { shortKey = "thumbIP" }
-                        else if key.contains("tip") { shortKey = "thumbTip" }
+                    if key.contains("wrist") { shortKey = "wrist" } else if key.contains("thumb") {
+                        if key.contains("cmc") { shortKey = "thumbCMC" } else if key.contains("mp") { shortKey = "thumbMP" } else if key.contains("ip") { shortKey = "thumbIP" } else if key.contains("tip") { shortKey = "thumbTip" }
+                    } else if key.contains("index") {
+                        if key.contains("mcp") { shortKey = "indexMCP" } else if key.contains("pip") { shortKey = "indexPIP" } else if key.contains("dip") { shortKey = "indexDIP" } else if key.contains("tip") { shortKey = "indexTip" }
+                    } else if key.contains("middle") {
+                        if key.contains("mcp") { shortKey = "middleMCP" } else if key.contains("pip") { shortKey = "middlePIP" } else if key.contains("dip") { shortKey = "middleDIP" } else if key.contains("tip") { shortKey = "middleTip" }
+                    } else if key.contains("ring") {
+                        if key.contains("mcp") { shortKey = "ringMCP" } else if key.contains("pip") { shortKey = "ringPIP" } else if key.contains("dip") { shortKey = "ringDIP" } else if key.contains("tip") { shortKey = "ringTip" }
+                    } else if key.contains("little") {
+                        if key.contains("mcp") { shortKey = "littleMCP" } else if key.contains("pip") { shortKey = "littlePIP" } else if key.contains("dip") { shortKey = "littleDIP" } else if key.contains("tip") { shortKey = "littleTip" }
                     }
-                    else if key.contains("index") {
-                        if key.contains("mcp") { shortKey = "indexMCP" }
-                        else if key.contains("pip") { shortKey = "indexPIP" }
-                        else if key.contains("dip") { shortKey = "indexDIP" }
-                        else if key.contains("tip") { shortKey = "indexTip" }
-                    }
-                    else if key.contains("middle") {
-                        if key.contains("mcp") { shortKey = "middleMCP" }
-                        else if key.contains("pip") { shortKey = "middlePIP" }
-                        else if key.contains("dip") { shortKey = "middleDIP" }
-                        else if key.contains("tip") { shortKey = "middleTip" }
-                    }
-                    else if key.contains("ring") {
-                        if key.contains("mcp") { shortKey = "ringMCP" }
-                        else if key.contains("pip") { shortKey = "ringPIP" }
-                        else if key.contains("dip") { shortKey = "ringDIP" }
-                        else if key.contains("tip") { shortKey = "ringTip" }
-                    }
-                    else if key.contains("little") {
-                        if key.contains("mcp") { shortKey = "littleMCP" }
-                        else if key.contains("pip") { shortKey = "littlePIP" }
-                        else if key.contains("dip") { shortKey = "littleDIP" }
-                        else if key.contains("tip") { shortKey = "littleTip" }
-                    }
-                    
+
                     if !shortKey.isEmpty {
                         joints[shortKey] = [
                             "x": point.location.x,
@@ -757,21 +737,21 @@ public class WebCameraHandler: BaseWebNativeHandler {
                     }
                 }
             }
-            
+
             var dict: [String: Any] = [
                 "confidence": observation.confidence,
                 "joints": joints
             ]
-            
+
             if #available(iOS 15.0, *) {
                 dict["chirality"] = observation.chirality == .left ? "left" : "right"
             } else {
                 dict["chirality"] = "unknown"
             }
-            
+
             return dict
         }
-        
+
         runOnMainThread { [weak self] in
             guard let self = self, let webView = self.webView else { return }
             let json = try? JSONSerialization.data(withJSONObject: handData, options: [])
@@ -783,7 +763,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
     }
 
     // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
-    
+
     /// 处理相机视频流输出
     public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         // 1. 计算原生端 FPS
@@ -804,7 +784,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
             let orientation: CGImagePropertyOrientation = (self.currentCameraPosition == .front) ? .leftMirrored : .right
             let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: orientation, options: [:])
-            
+
             var requests: [VNRequest] = []
             if isFaceTrackingEnabled, let request = faceDetectionRequest {
                 requests.append(request)
@@ -814,7 +794,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
                     requests.append(request)
                 }
             }
-            
+
             if !requests.isEmpty {
                 do {
                     try imageRequestHandler.perform(requests)
@@ -831,27 +811,27 @@ public class WebCameraHandler: BaseWebNativeHandler {
             var ciImage = CIImage(cvPixelBuffer: pixelBuffer)
             let orientation: CGImagePropertyOrientation = (self.currentCameraPosition == .front) ? .leftMirrored : .right
             ciImage = ciImage.oriented(orientation)
-            
+
             let context = CIContext()
             if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
                 let uiImage = UIImage(cgImage: cgImage)
                 if let data = uiImage.jpegData(compressionQuality: 0.4) {
                     let width = cgImage.width
                     let height = cgImage.height
-                    
+
                     runOnMainThread { [weak self] in
                         guard let self = self, let webView = self.webView else { return }
-                        
+
                         let base64 = data.base64EncodedString()
                         let frameInfo: [String: Any] = [
                             "width": width,
                             "height": height,
                             "isMirrored": self.currentCameraPosition == .front
                         ]
-                        
+
                         let infoJson = try? JSONSerialization.data(withJSONObject: frameInfo, options: [])
                         let infoString = infoJson.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
-                        
+
                         if self.transferMode == "binary" {
                             let updateScript = "window._lastFrameData = '\(base64)'; window._lastFrameInfo = \(infoString);"
                             let triggerScript = "if(window.onVideoFrameBinary) { window.onVideoFrameBinary(); }"
@@ -884,7 +864,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
             container.frame = newFrame
             previewLayer.frame = container.bounds
             previewLayer.cornerRadius = cornerRadius
-            
+
             self.resolve(["success": true], completion: completion)
         }
     }
@@ -893,11 +873,11 @@ public class WebCameraHandler: BaseWebNativeHandler {
     private func stopOverlayInternal() {
         captureSession?.stopRunning()
         captureSession = nil
-        
+
         containerView?.removeFromSuperview()
         containerView = nil
         previewLayer = nil
-        
+
         isFrameTransferEnabled = false
         isFaceTrackingEnabled = false
     }
@@ -910,7 +890,7 @@ private class OverlayContainerView: UIView {
         self.layer.addSublayer(layer)
         layer.frame = self.bounds
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

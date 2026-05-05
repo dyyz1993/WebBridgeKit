@@ -15,14 +15,15 @@ import RxSwift
 /// 浏览器管理协议
 /// 用于管理浏览器页面的打开、关闭和导航
 public protocol WebBrowserManaging {
-    /// 打开浏览器（统一入口）
-    /// - Parameters:
-    ///   - url: 要加载的 URL
-    ///   - params: 浏览器配置参数（可选）
-    ///   - forceRefresh: 是否强制刷新（绕过缓存）
-    ///   - sourceViewController: 来源 ViewController（可选）
-    ///   - animated: 是否使用动画
-    ///   - completion: 完成回调（可选）
+    // 打开浏览器（统一入口）
+    // - Parameters:
+    //   - url: 要加载的 URL
+    //   - params: 浏览器配置参数（可选）
+    //   - forceRefresh: 是否强制刷新（绕过缓存）
+    //   - sourceViewController: 来源 ViewController（可选）
+    //   - animated: 是否使用动画
+    //   - completion: 完成回调（可选）
+    // swiftlint:disable:next function_parameter_count
     func openBrowser(url: URL, params: WebBrowserParams?, forceRefresh: Bool, from sourceViewController: UIViewController?, animated: Bool, completion: ((Result<Void, Error>) -> Void)?)
 
     /// 关闭当前浏览器

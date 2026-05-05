@@ -190,10 +190,8 @@ public class RequestDeduplicator {
 
         var staleKeys: [String] = []
 
-        for (key, timestamp) in taskTimestamps {
-            if timestamp < staleThreshold {
-                staleKeys.append(key)
-            }
+        for (key, timestamp) in taskTimestamps where timestamp < staleThreshold {
+            staleKeys.append(key)
         }
 
         for key in staleKeys {

@@ -35,12 +35,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         } else {
             WebBridgeKit.shared.initialize()
         }
-        
+
         // Initialize all new engines
         Task {
             await EngineBootstrap.shared.initialize(in: self.window)
         }
-        
+
         // 注册推送通知
         registerForPushNotifications(application)
 
@@ -66,7 +66,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
             }
         }
-        
+
         // 🔥 UI Testing shortcut: Auto-switch to test tab to avoid UI interactions
         if ProcessInfo.processInfo.arguments.contains("-UITesting") && !ProcessInfo.processInfo.arguments.contains("-NoAutoTab") {
             print("🧪 [AppDelegate] UI Testing detected, auto-switching to Test tab")
@@ -91,7 +91,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         print("🔗 [AppDelegate] openURL called: \(url.absoluteString)")
-        
+
         // 如果是 webbridgekit:// 协议，则在 App 内部打开
         if url.scheme == "webbridgekit" {
             // 解析真实的 URL
@@ -101,7 +101,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                    let queryItems = components.queryItems,
                    let targetURLString = queryItems.first(where: { $0.name == "url" })?.value,
                    let targetURL = URL(string: targetURLString) {
-                    
+
                     WebBrowserManager.shared.openBrowser(url: targetURL)
                     return true
                 }
@@ -112,7 +112,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                    let indexString = queryItems.first(where: { $0.name == "index" })?.value,
                    let index = Int(indexString),
                    let tabBarController = window?.rootViewController as? UITabBarController {
-                    
+
                     tabBarController.selectedIndex = index
                     return true
                 }
@@ -127,7 +127,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
             }
         }
-        
+
         return false
     }
 
@@ -141,9 +141,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         UNUserNotificationCenter.current().delegate = self
-        
+
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, _ in
             print("🔔 [AppDelegate] Push authorization granted: \(granted)")
             if granted {
                 DispatchQueue.main.async {
@@ -157,7 +157,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         let token = tokenParts.joined()
         print("🔔 [AppDelegate] Device Token: \(token)")
-        
+
         // 将 Token 发送给服务器
         // APIKeyManager.shared.updateDeviceToken(token)
     }
@@ -180,7 +180,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
         print("🔔 [AppDelegate] Did receive notification response with userInfo: \(userInfo)")
-        
+
         // 解析推送内容并构造 WebhookMessage
         // 这里简化处理，直接交给 MessageManager 处理逻辑
         if let urlString = userInfo["url"] as? String {
@@ -195,7 +195,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             )
             MessageManager.shared.addMessage(message)
         }
-        
+
         // Also forward to new MessageEngine
         Task {
             let payload = MessagePayload(
@@ -209,7 +209,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             )
             try? await MessageEngine.shared.receive(payload)
         }
-        
+
         completionHandler()
     }
 

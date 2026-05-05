@@ -184,14 +184,14 @@ public class WebResourceCacheManager {
 
         setupCacheDirectory()
         setupStats()
-        
+
         // 异步加载索引和统计信息，减少主线程压力（特别是 UI 测试时）
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
             queue.async { [weak self] in
                 guard let self = self else { return }
                 self.loadCacheIndex()
                 self.updateTotalCacheSize()
-                
+
                 print("✅ [WebResourceCacheManager] Initialization tasks completed in background")
             }
         } else {
@@ -686,11 +686,11 @@ public class WebResourceCacheManager {
             let now = Date()
             let expiredIDs = self.cacheAccessTimes.filter { now.timeIntervalSince($1) > interval }.map { $0.key }
             self.mapLock.unlock()
-            
+
             for cacheID in expiredIDs {
                 self.removeCacheSpace(cacheID: cacheID)
             }
-            
+
             if !expiredIDs.isEmpty {
                 print("🧹 [WebResourceCacheManager] Cleaned up \(expiredIDs.count) expired cache spaces")
             }
@@ -736,7 +736,7 @@ public class WebResourceCacheManager {
                 self.mapLock.lock()
                 let mapCopy = self.urlToCacheIDMap
                 self.mapLock.unlock()
-                
+
                 let data = try PropertyListSerialization.data(fromPropertyList: mapCopy, format: .xml, options: 0)
                 try data.write(to: self.cacheIndexFile)
             } catch {

@@ -24,7 +24,7 @@ public class PageCacheRuleManager {
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageCacheRules.realm"),
             schemaVersion: 2,  // 新版本号
-            migrationBlock: { migration, oldSchemaVersion in
+            migrationBlock: { _, oldSchemaVersion in
                 if oldSchemaVersion < 2 {
                     // 从旧版本迁移
                     // 可以选择保留或删除旧的 CacheRule 数据
@@ -97,10 +97,8 @@ public class PageCacheRuleManager {
     /// 批量添加规则
     public func addRules(_ rules: [PageCacheRule]) -> Int {
         var addedCount = 0
-        for rule in rules {
-            if addRule(rule) {
-                addedCount += 1
-            }
+        for rule in rules where addRule(rule) {
+            addedCount += 1
         }
         return addedCount
     }
@@ -164,10 +162,8 @@ public class PageCacheRuleManager {
     public func shouldCache(url: URL) -> (shouldCache: Bool, matchedRule: PageCacheRule?) {
         let enabledRules = getEnabledRules()
 
-        for rule in enabledRules {
-            if rule.matches(url: url) {
-                return (true, rule)
-            }
+        for rule in enabledRules where rule.matches(url: url) {
+            return (true, rule)
         }
 
         return (false, nil)
@@ -212,10 +208,8 @@ public class PageCacheRuleManager {
     private func checkAndAddPresetRules() {
         let existingIds = Set(getRealm().objects(PageCacheRuleRealm.self).map { $0.id })
 
-        for presetRule in PageCacheRule.presetRules {
-            if !existingIds.contains(presetRule.id) {
-                _ = addRule(presetRule)
-            }
+        for presetRule in PageCacheRule.presetRules where !existingIds.contains(presetRule.id) {
+            _ = addRule(presetRule)
         }
     }
 

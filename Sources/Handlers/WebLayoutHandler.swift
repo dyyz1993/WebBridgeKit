@@ -13,15 +13,15 @@ import WebKit
 /// 界面布局与方向控制 Handler
 /// 支持：强制横竖屏切换、全屏显示控制
 public class WebLayoutHandler: BaseWebNativeHandler {
-    
+
     // MARK: - Handle
-    
+
     /**
      * 处理 JS 调用
      * @param body 调用参数
      * @param completion 处理完成后的回调
      */
-    public override func handle(body: [String : Any], completion: @escaping (Any) -> Void) {
+    public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? ""
 
@@ -71,9 +71,9 @@ public class WebLayoutHandler: BaseWebNativeHandler {
             ], completion: completion)
         }
     }
-    
+
     // MARK: - Actions
-    
+
     /**
      * 设置屏幕方向
      * @param orientation 方向：portrait, landscape, auto
@@ -87,7 +87,7 @@ public class WebLayoutHandler: BaseWebNativeHandler {
                 object: nil,
                 userInfo: ["orientation": orientation]
             )
-            
+
             // 兼容性保留：尝试直接旋转
             let preferred: UIInterfaceOrientation
             switch orientation {
@@ -97,12 +97,12 @@ public class WebLayoutHandler: BaseWebNativeHandler {
             }
             UIDevice.current.setValue(preferred.rawValue, forKey: "orientation")
             UIViewController.attemptRotationToDeviceOrientation()
-            
+
             WebBridgeLogger.shared.log(.info, "[WebLayoutHandler] Orientation change requested: \(orientation)")
             self?.resolve(["orientation": orientation], completion: completion)
         }
     }
-    
+
     /**
      * 设置全屏模式
      * @param enabled 是否全屏（隐藏状态栏）
@@ -116,17 +116,17 @@ public class WebLayoutHandler: BaseWebNativeHandler {
                 object: nil,
                 userInfo: ["hidden": enabled]
             )
-            
+
             // 尝试通过全局设置隐藏状态栏 (仅作为辅助)
             #if !targetEnvironment(macCatalyst)
             UIApplication.shared.isStatusBarHidden = enabled
             #endif
-            
+
             WebBridgeLogger.shared.log(.info, "[WebLayoutHandler] Fullscreen change requested: \(enabled)")
             self?.resolve(["fullscreen": enabled], completion: completion)
         }
     }
-    
+
     private func setScrollEnabled(enabled: Bool, completion: @escaping (Any) -> Void) {
         runOnMainThread { [weak self] in
             self?.webView?.scrollView.isScrollEnabled = enabled

@@ -148,7 +148,7 @@ public class WebPageOfflineCacheManager {
     public func deleteCache(history: WebPageHistory, realm: Realm? = nil) {
         let historyId = history.id
         let cacheDir = history.cacheDirectory
-        
+
         // 1. 删除物理文件 (IO 操作，不依赖 Realm 线程)
         if let dir = cacheDir {
             try? FileManager.default.removeItem(at: dir)
@@ -157,7 +157,7 @@ public class WebPageOfflineCacheManager {
         // 2. 更新数据库状态 (必须在 Realm 实例所属线程执行)
         let currentRealm = realm ?? getRealm()
         guard let r = currentRealm else { return }
-        
+
         let updateLogic = {
             if let cachedHistory = r.object(ofType: WebPageHistory.self, forPrimaryKey: historyId) {
                 cachedHistory.htmlPath = nil
@@ -233,7 +233,7 @@ public class WebPageOfflineCacheManager {
 
         if let histories = histories, histories.count > maxCount {
             let toDelete = Array(histories.prefix(histories.count - maxCount))
-            
+
             if let r = realm {
                 try? r.write {
                     for history in toDelete {
@@ -241,7 +241,7 @@ public class WebPageOfflineCacheManager {
                     }
                 }
             }
-            
+
             WebBridgeLogger.shared.log(.info, "🧹 LRU cleanup: removed \(toDelete.count) old caches")
         }
     }

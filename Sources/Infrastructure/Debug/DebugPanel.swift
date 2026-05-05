@@ -8,57 +8,57 @@ import UIKit
 /// 统一的调试面板入口 - 财布所有调试功能的界面
 /// 基于 Phase 2 的 Handler Registry，自动发现所有 Handler 和自动生成调试表单
 public class DebugPanel: NSObject {
-    
+
     public static let shared = DebugPanel()
-    
+
     // MARK: - Properties
     public var isShowing: Bool = false
-    
+
     // MARK: - Initialization
     private override init() {
         super.init()
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// 显示调试面板
     /// - Parameter viewController: 从哪个视图控制器显示
     public func show(from viewController: UIViewController?) {
         guard !isShowing else { return }
         guard let vc = viewController ?? topViewController() else { return }
-        
+
         isShowing = true
-        
+
         let debugPanelVC = DebugPanelViewController()
         let nav = UINavigationController(rootViewController: debugPanelVC)
         nav.modalPresentationStyle = .fullScreen
-        
+
         debugPanelVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: "✕ Close",
             style: .plain,
             target: self,
             action: #selector(dismissDebugPanel)
         )
-        
+
         vc.present(nav, animated: true) { [weak self] in
             self?.isShowing = false
         }
     }
-    
+
     @objc private func dismissDebugPanel() {
         if let rootVC = topViewController()?.presentedViewController {
             rootVC.dismiss(animated: true)
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func topViewController() -> UIViewController? {
         let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
         let root = scene?.windows.first?.rootViewController
         return getTopViewController(from: root)
     }
-    
+
     private func getTopViewController(from vc: UIViewController?) -> UIViewController? {
         guard let vc = vc else { return nil }
         if let presented = vc.presentedViewController {
@@ -76,22 +76,22 @@ public class DebugPanel: NSObject {
 
 /// 调试面板视图控制器
 public class DebugPanelViewController: UIViewController {
-    
+
     public static let shared = DebugPanelViewController()
-    
+
     // MARK: - UI Components
     private lazy var scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.backgroundColor = .systemBackground
         return sv
     }()
-    
+
     private lazy var contentView: UIView = {
         let view = UIView()
         view.backgroundColor = .systemBackground
         return view
     }()
-    
+
     private lazy var mainButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("主页", for: .normal)
@@ -101,7 +101,7 @@ public class DebugPanelViewController: UIViewController {
         btn.addTarget(self, action: #selector(showMain), for: .touchUpInside)
         return btn
     }()
-    
+
     private lazy var logsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("日志", for: .normal)
@@ -111,7 +111,7 @@ public class DebugPanelViewController: UIViewController {
         btn.addTarget(self, action: #selector(showLogs), for: .touchUpInside)
         return btn
     }()
-    
+
     private lazy var diagnosticsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("诊断", for: .normal)
@@ -121,7 +121,7 @@ public class DebugPanelViewController: UIViewController {
         btn.addTarget(self, action: #selector(showDiagnostics), for: .touchUpInside)
         return btn
     }()
-    
+
     private lazy var settingsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("设置", for: .normal)
@@ -131,7 +131,7 @@ public class DebugPanelViewController: UIViewController {
         btn.addTarget(self, action: #selector(showSettings), for: .touchUpInside)
         return btn
     }()
-    
+
     private lazy var infoButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("环境", for: .normal)
@@ -141,31 +141,31 @@ public class DebugPanelViewController: UIViewController {
         btn.addTarget(self, action: #selector(showInfo), for: .touchUpInside)
         return btn
     }()
-    
+
     // MARK: - Lifecycle
-    
+
     public init() {
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
-    
+
     override public func viewDidLoad() {
         super.viewDidLoad()
         title = "🧩 Debug Panel"
         view.backgroundColor = .systemBackground
-        
+
         setupUI()
     }
-    
+
     // MARK: - Setup
-    
+
     private func setupUI() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
-        
+
         let stackView = UIStackView(arrangedSubviews: [
             mainButton,
             logsButton,
@@ -176,38 +176,38 @@ public class DebugPanelViewController: UIViewController {
         stackView.axis = .vertical
         stackView.spacing = 16
         stackView.distribution = .fillEqually
-        
+
         contentView.addSubview(stackView)
-        
+
         // Layout
         scrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
+
         contentView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
             make.width.equalToSuperview()
         }
-        
+
         stackView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(100)
             make.left.right.equalToSuperview().inset(32)
             make.height.equalTo(320)
         }
-        
+
         [mainButton, logsButton, diagnosticsButton, settingsButton, infoButton].forEach { button in
             button.snp.makeConstraints { make in
                 make.height.equalTo(56)
             }
         }
     }
-    
+
     // MARK: - Actions
-    
+
     @objc private func showMain() {
         dismiss(animated: true)
     }
-    
+
     @objc private func showLogs() {
         showNotImplemented("日志查看器")
     }

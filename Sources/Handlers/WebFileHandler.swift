@@ -46,18 +46,18 @@ public class WebFileHandler: BaseWebNativeHandler {
 
         let documentPicker = UIDocumentPickerViewController(documentTypes: [accept == "*/*" ? "public.item" : accept], in: .import)
         documentPicker.allowsMultipleSelection = multiple
-        
+
         let delegateId = "WebFileHandler_\(Self.delegateCounter)"
         Self.delegateCounter += 1
-        
+
         let delegate = FilePickerDelegate(completion: completion, resolve: self.resolve, reject: self.reject)
         WebFileHandler.delegateRegistry[delegateId] = delegate
         documentPicker.delegate = delegate
-        
+
         delegate.onDismiss = {
             WebFileHandler.delegateRegistry.removeValue(forKey: delegateId)
         }
-        
+
         topVC.present(documentPicker, animated: true)
     }
 
@@ -86,7 +86,7 @@ public class WebFileHandler: BaseWebNativeHandler {
 
         func documentPicker(_ picker: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             onDismiss?()
-            
+
             var results: [[String: Any]] = []
             for url in urls {
                 do {
@@ -97,10 +97,10 @@ public class WebFileHandler: BaseWebNativeHandler {
                             url.stopAccessingSecurityScopedResource()
                         }
                     }
-                    
+
                     let data = try Data(contentsOf: url)
                     let base64 = data.base64EncodedString()
-                    
+
                     results.append([
                         "name": url.lastPathComponent,
                         "data": base64,
@@ -111,14 +111,14 @@ public class WebFileHandler: BaseWebNativeHandler {
                     print("❌ [WebFileHandler] Error reading file: \(error.localizedDescription)")
                 }
             }
-            
+
             if results.isEmpty {
                 self.rejectFunc("Failed to read selected files", nil, self.completion)
             } else {
                 self.resolveFunc(["files": results], self.completion)
             }
         }
-        
+
         private func getMimeType(for url: URL) -> String {
             let pathExtension = url.pathExtension
             if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension as CFString, nil)?.takeRetainedValue() {

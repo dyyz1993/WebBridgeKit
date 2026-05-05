@@ -30,7 +30,7 @@ public class WebContactsHandler: BaseWebNativeHandler {
         // 兼容 body 或 body.params
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? "pick"
-        
+
         // 兼容 JS 传来的数字类型 (NSNumber)
         let limit: Int
         if let limitNum = params["limit"] as? NSNumber {
@@ -148,7 +148,7 @@ public class WebContactsHandler: BaseWebNativeHandler {
         }
 
         self.pendingCompletion = completion
-        
+
         runOnMainThread {
             let picker = CNContactPickerViewController()
             picker.delegate = self
@@ -166,20 +166,20 @@ public class WebContactsHandler: BaseWebNativeHandler {
         let store = CNContactStore()
         let keys = [CNContactGivenNameKey, CNContactFamilyNameKey, CNContactPhoneNumbersKey] as [CNKeyDescriptor]
         let request = CNContactFetchRequest(keysToFetch: keys)
-        
+
         var contacts: [[String: Any]] = []
         var count = 0
-        
+
         do {
             try store.enumerateContacts(with: request) { (contact, stop) in
                 let name = "\(contact.givenName) \(contact.familyName)".trimmingCharacters(in: .whitespaces)
                 let phones = contact.phoneNumbers.map { $0.value.stringValue }
-                
+
                 contacts.append([
                     "name": name,
                     "phones": phones
                 ])
-                
+
                 count += 1
                 if count >= limit {
                     stop.pointee = true
@@ -212,12 +212,12 @@ extension WebContactsHandler: CNContactPickerDelegate {
         if let completion = self.pendingCompletion {
             let name = "\(contact.givenName) \(contact.familyName)".trimmingCharacters(in: .whitespaces)
             let phones = contact.phoneNumbers.map { $0.value.stringValue }
-            
+
             let result = [[
                 "name": name,
                 "phones": phones
             ]]
-            
+
             resolve(["contacts": result], completion: completion)
             self.pendingCompletion = nil
         }

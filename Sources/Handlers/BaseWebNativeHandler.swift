@@ -87,7 +87,7 @@ public struct WebBridgeResponse {
     public override init() {
         super.init()
     }
-    
+
     /**
      * 处理 JS 请求的主入口 (子类需重写)
      * - Parameters:
@@ -127,7 +127,7 @@ public struct WebBridgeResponse {
             self.reject(error: error.localizedDescription, completion: completion)
         }
     }
-    
+
     // MARK: - Helper Methods (Promise Style)
 
     /**
@@ -166,7 +166,7 @@ public struct WebBridgeResponse {
 
         completion(response.toDictionary())
     }
-    
+
     /**
      * 向 JS 发送主动事件（自动记录日志）
      * @param event 事件名
@@ -188,9 +188,9 @@ public struct WebBridgeResponse {
             self?.webView?.evaluateJavaScript(script)
         }
     }
-    
+
     // MARK: - UI & Context Helpers
-    
+
     /// 获取当前顶层的 ViewController
     public var topViewController: UIViewController? {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -210,16 +210,16 @@ public struct WebBridgeResponse {
 
     /// 权限类型枚举
     public enum PermissionType: String {
-        case camera = "camera"
-        case microphone = "microphone"
-        case location = "location"
-        case contacts = "contacts"
-        case photos = "photos"
-        case speech = "speech"
-        case notification = "notification"
-        case sensors = "sensors"
-        case bluetooth = "bluetooth"
-        case unknown = "unknown"
+        case camera
+        case microphone
+        case location
+        case contacts
+        case photos
+        case speech
+        case notification
+        case sensors
+        case bluetooth
+        case unknown
 
         public var displayName: String {
             switch self {
@@ -239,11 +239,11 @@ public struct WebBridgeResponse {
 
     /// 权限状态枚举
     public enum PermissionStatus: String {
-        case notDetermined = "notDetermined"
-        case denied = "denied"
-        case restricted = "restricted"
-        case authorized = "authorized"
-        case unknown = "unknown"
+        case notDetermined
+        case denied
+        case restricted
+        case authorized
+        case unknown
     }
 
     /// 统一的权限拒绝响应
@@ -322,7 +322,7 @@ public struct WebBridgeResponse {
             UIApplication.shared.open(settingsUrl)
         }
     }
-    
+
     /**
      * 确保在主线程执行操作
      * - Parameter block: 待执行的代码块

@@ -149,8 +149,8 @@ public class MockHistoryService: HistoryServiceProtocol {
     public func getCachedHistories() -> [WebPageHistory] {
         if useInMemoryRealm, let realm = getRealm() {
             return Array(realm.objects(WebPageHistory.self)
-                .filter("isCached == true")
-                .sorted(byKeyPath: "cacheDate", ascending: false))
+                            .filter("isCached == true")
+                            .sorted(byKeyPath: "cacheDate", ascending: false))
                 .map { WebPageHistory(value: $0) }
         }
 
@@ -181,15 +181,15 @@ public class MockHistoryService: HistoryServiceProtocol {
     public func searchHistories(keyword: String) -> [WebPageHistory] {
         if useInMemoryRealm, let realm = getRealm() {
             return Array(realm.objects(WebPageHistory.self)
-                .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
-                .sorted(byKeyPath: "lastVisitDate", ascending: false))
+                            .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
+                            .sorted(byKeyPath: "lastVisitDate", ascending: false))
                 .map { WebPageHistory(value: $0) }
         }
 
         return mockHistories.values
             .filter { history in
                 history.url.localizedCaseInsensitiveContains(keyword) ||
-                (history.title?.localizedCaseInsensitiveContains(keyword) ?? false)
+                    (history.title?.localizedCaseInsensitiveContains(keyword) ?? false)
             }
             .sorted { $0.lastVisitDate > $1.lastVisitDate }
     }
@@ -220,8 +220,8 @@ public class MockHistoryService: HistoryServiceProtocol {
     public func getMostVisited(limit: Int = 10) -> [WebPageHistory] {
         if useInMemoryRealm, let realm = getRealm() {
             return Array(realm.objects(WebPageHistory.self)
-                .sorted(byKeyPath: "visitCount", ascending: false)
-                .prefix(limit))
+                            .sorted(byKeyPath: "visitCount", ascending: false)
+                            .prefix(limit))
         }
 
         return mockHistories.values

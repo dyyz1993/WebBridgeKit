@@ -22,7 +22,7 @@ public class WebShareHandler: BaseWebNativeHandler {
     public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         // 兼容 body 或 body.params
         let params = body["params"] as? [String: Any] ?? body
-        
+
         guard let text = params["text"] as? String,
               let urlString = params["url"] as? String,
               let url = URL(string: urlString) else {

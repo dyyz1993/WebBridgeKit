@@ -114,7 +114,7 @@ class TextFieldCell: UITableViewCell {
         // Update appearance based on enabled state
         titleLabel.textColor = enabled ? UIColor.label : UIColor.secondaryLabel
         textField.textColor = enabled ? UIColor.label : UIColor.secondaryLabel
-        
+
         // Update error state
         if let error = error, !error.isEmpty {
             errorLabel.text = error

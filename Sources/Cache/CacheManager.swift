@@ -4,15 +4,15 @@ import Foundation
 public actor CacheManager {
     /// Shared singleton instance
     public static let shared = CacheManager()
-    
+
     private let memoryCache: MemoryCache<String, Data>
     private let diskCache: DiskCache
     private var configuration: CacheConfiguration
     // private var specializedCaches: [String: any CacheStorage] = [:]
-    
+
     /// Cache statistics
     public private(set) var globalStatistics: SystemCacheStatistics
-    
+
     private init() {
         do {
             self.memoryCache = MemoryCache<String, Data>(configuration: .default)
@@ -29,16 +29,16 @@ public actor CacheManager {
             fatalError("Failed to initialize CacheManager: \(error)")
         }
     }
-    
+
     // MARK: - Generic Cache Operations
-    
+
     public func get<T: Codable & Sendable>(for key: String, as type: T.Type, namespace: String? = nil) async -> T? {
         let fullKey = namespace.map { CacheKeyGenerator.generate(namespace: $0, identifier: key) } ?? key
-        
+
         if let data = await memoryCache.get(for: fullKey) {
             return try? JSONDecoder().decode(T.self, from: data)
         }
-        
+
         if let data = await diskCache.getTypedData(for: fullKey) {
             if let value = try? JSONDecoder().decode(T.self, from: data) {
                 if let encoded = try? JSONEncoder().encode(value) {
@@ -47,10 +47,10 @@ public actor CacheManager {
                 return value
             }
         }
-        
+
         return nil
     }
-    
+
     /// Store value in cache
     /// - Parameters:
     ///   - value: Value to cache
@@ -64,22 +64,22 @@ public actor CacheManager {
         namespace: String? = nil
     ) async {
         let fullKey = namespace.map { CacheKeyGenerator.generate(namespace: $0, identifier: key) } ?? key
-        
+
         let exp = expiration ?? configuration.expirationPolicy.timeInterval
-        
+
         if let encoded = try? JSONEncoder().encode(value) {
             await memoryCache.set(encoded, for: fullKey, expiration: exp)
         }
         await diskCache.set(value, for: fullKey, expiration: expiration)
     }
-    
+
     /// Remove cached value
     /// - Parameter key: Cache key
     public func remove(for key: String) async {
         await memoryCache.remove(for: key)
         await diskCache.remove(for: key)
     }
-    
+
     /// Clear all caches
     public func clearAll() async {
         await memoryCache.clearAll()
@@ -89,26 +89,26 @@ public actor CacheManager {
         //     // In production, you'd need to track and clear appropriately
         // }
     }
-    
+
     // MARK: - Specialized Cache Operations
-    
-    /// Register specialized cache for specific type
-    /// - Parameters:
-    ///   - cache: Cache implementation
-    ///   - name: Cache name
+
+    // Register specialized cache for specific type
+    // - Parameters:
+    //   - cache: Cache implementation
+    //   - name: Cache name
     // public func register<T: CacheStorage>(cache: T, forName name: String) async {
     //     specializedCaches[name] = cache
     // }
-    
-    /// Get specialized cache by name
-    /// - Parameter name: Cache name
-    /// - Returns: Cache if exists
+
+    // Get specialized cache by name
+    // - Parameter name: Cache name
+    // - Returns: Cache if exists
     // public func getCache(forName name: String) -> (any CacheStorage)? {
     //     specializedCaches[name]
     // }
-    
+
     // MARK: - API Response Caching
-    
+
     /// Cache API response
     /// - Parameters:
     ///   - response: Response data
@@ -124,7 +124,7 @@ public actor CacheManager {
         let key = CacheKeyGenerator.generate(from: url, method: method)
         await set(response, for: key, expiration: expiration, namespace: CacheNamespace.api)
     }
-    
+
     /// Get cached API response
     /// - Parameters:
     ///   - url: Request URL
@@ -139,9 +139,9 @@ public actor CacheManager {
         let key = CacheKeyGenerator.generate(from: url, method: method)
         return await get(for: key, as: type, namespace: CacheNamespace.api)
     }
-    
+
     // MARK: - Statistics
-    
+
     /// Get cache statistics
     /// - Returns: Combined cache statistics
     public func getStatistics() async -> (memory: SystemCacheStatistics, disk: SystemCacheStatistics) {
@@ -149,7 +149,7 @@ public actor CacheManager {
         async let diskStats = diskCache.getStatistics()
         return (await memStats, await diskStats)
     }
-    
+
     /// Get global statistics summary
     /// - Returns: Global statistics across all caches
     public func getGlobalStatistics() async -> SystemCacheStatistics {
@@ -159,7 +159,7 @@ public actor CacheManager {
         let totalRequests = totalHits + totalMisses
         let hitRate = totalRequests > 0 ? Double(totalHits) / Double(totalRequests) : 0.0
         let totalCacheSize = stats.memory.totalCacheSize + stats.disk.totalCacheSize
-        
+
         return SystemCacheStatistics(
             totalRequests: totalRequests,
             cacheHits: totalHits,
@@ -168,7 +168,7 @@ public actor CacheManager {
             totalCacheSize: totalCacheSize
         )
     }
-    
+
     /// Reset all statistics
     public func resetStatistics() async {
         await memoryCache.resetStatistics()
@@ -181,12 +181,12 @@ public actor CacheManager {
             totalCacheSize: 0
         )
     }
-    
+
     /// Print cache statistics to console
     public func printStatistics() async {
         let stats = await getStatistics()
         let global = await getGlobalStatistics()
-        
+
         print("=== Cache Statistics ===")
         print("Memory Cache:")
         print("  Hits: \(stats.memory.cacheHits), Misses: \(stats.memory.cacheMisses)")
@@ -220,7 +220,7 @@ extension CacheManager {
     ) async {
         await set(value, for: key, expiration: policy.timeInterval)
     }
-    
+
     /// Get or compute cached value
     /// - Parameters:
     ///   - key: Cache key
@@ -235,7 +235,7 @@ extension CacheManager {
         if let cached = await get(for: key, as: T.self) {
             return cached
         }
-        
+
         let value = try await factory()
         await set(value, for: key, expiration: expiration)
         return value

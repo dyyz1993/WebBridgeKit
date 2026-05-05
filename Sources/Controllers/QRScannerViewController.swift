@@ -68,7 +68,7 @@ public class QRScannerViewController: UIViewController {
             return
         }
 
-        if (captureSession.canAddInput(videoInput)) {
+        if captureSession.canAddInput(videoInput) {
             captureSession.addInput(videoInput)
         } else {
             return
@@ -76,7 +76,7 @@ public class QRScannerViewController: UIViewController {
 
         let metadataOutput = AVCaptureMetadataOutput()
 
-        if (captureSession.canAddOutput(metadataOutput)) {
+        if captureSession.canAddOutput(metadataOutput) {
             captureSession.addOutput(metadataOutput)
 
             metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)

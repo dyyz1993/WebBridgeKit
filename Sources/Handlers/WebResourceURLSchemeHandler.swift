@@ -264,18 +264,18 @@ extension WebResourceURLSchemeHandler {
 
  <html>
  <head>
-     <link rel="stylesheet" href="wb-resource://cache-id-123/styles/main.css">
-     <script src="wb-resource://cache-id-123/scripts/app.js"></script>
+ <link rel="stylesheet" href="wb-resource://cache-id-123/styles/main.css">
+ <script src="wb-resource://cache-id-123/scripts/app.js"></script>
  </head>
  <body>
-     <img src="wb-resource://cache-id-123/images/logo.png" />
+ <img src="wb-resource://cache-id-123/images/logo.png" />
  </body>
  </html>
 
  URL Format: wb-resource://{cache-id}/{relative-path}
 
  Example: wb-resource://abc123/images/photo.jpg
-   - cache-id: abc123
-   - relative-path: images/photo.jpg
-   - Resolves to: {cacheDirectory}/abc123/images/photo.jpg
+ - cache-id: abc123
+ - relative-path: images/photo.jpg
+ - Resolves to: {cacheDirectory}/abc123/images/photo.jpg
  */

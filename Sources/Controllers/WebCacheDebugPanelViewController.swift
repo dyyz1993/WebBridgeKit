@@ -428,7 +428,7 @@ public class WebCacheDebugPanelViewController: UIViewController {
     }
 
     private func refreshCachedPage(_ pageInfo: CachedPageInfo) {
-        WebPageOfflineCacheManager.shared.refreshCachedPage(pageId: pageInfo.id) { progress in
+        WebPageOfflineCacheManager.shared.refreshCachedPage(pageId: pageInfo.id) { _ in
             // 进度回调
         } completion: { result in
             switch result {

@@ -7,19 +7,19 @@ import Foundation
 
 /// Handler 分类
 public enum HandlerCategory: String, Codable, CaseIterable {
-    case hardware     = "hardware"
-    case media        = "media"
-    case navigation   = "navigation"
-    case system       = "system"
-    case feedback     = "feedback"
-    case sensor       = "sensor"
-    case clipboard    = "clipboard"
-    case permission   = "permission"
-    case debug        = "debug"
-    case cache        = "cache"
-    case file         = "file"
-    case speech       = "speech"
-    
+    case hardware
+    case media
+    case navigation
+    case system
+    case feedback
+    case sensor
+    case clipboard
+    case permission
+    case debug
+    case cache
+    case file
+    case speech
+
     public var displayName: String {
         switch self {
         case .hardware:   return "硬件"
@@ -36,7 +36,7 @@ public enum HandlerCategory: String, Codable, CaseIterable {
         case .speech:     return "语音"
         }
     }
-    
+
     public var emoji: String {
         switch self {
         case .hardware:   return "🔧"
@@ -73,7 +73,7 @@ public struct ParamDef: Codable {
     public let defaultValue: String?
     public let description: String
     public let options: [String]?
-    
+
     public init(name: String, type: ParamType, required: Bool = false,
                 defaultValue: String? = nil, description: String = "",
                 options: [String]? = nil) {
@@ -91,7 +91,7 @@ public struct ReturnDef: Codable {
     public let name: String
     public let type: ParamType
     public let description: String
-    
+
     public init(name: String, type: ParamType, description: String = "") {
         self.name = name
         self.type = type
@@ -103,34 +103,34 @@ public struct ReturnDef: Codable {
 public struct HandlerMeta: Codable {
     /// action 名称（JS 调用时的 key）
     public let action: String
-    
+
     /// 分类
     public let category: HandlerCategory
-    
+
     /// 显示名称
     public let displayName: String
-    
+
     /// 描述
     public let description: String
-    
+
     /// 需要的权限
     public let requiredPermissions: [String]
-    
+
     /// 参数定义
     public let parameters: [ParamDef]
-    
+
     /// 返回值定义
     public let returns: [ReturnDef]
-    
+
     /// 是否需要网络
     public let requiresNetwork: Bool
-    
+
     /// 是否需要硬件
     public let requiresHardware: Bool
-    
+
     /// 最低 iOS 版本
     public let minimumiOSVersion: String?
-    
+
     public init(
         action: String,
         category: HandlerCategory,
@@ -154,7 +154,7 @@ public struct HandlerMeta: Codable {
         self.requiresHardware = requiresHardware
         self.minimumiOSVersion = minimumiOSVersion
     }
-    
+
     /// 转为 JSON（用于 API 输出）
     public var jsonDict: [String: Any] {
         var dict: [String: Any] = [

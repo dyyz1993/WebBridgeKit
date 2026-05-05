@@ -224,7 +224,7 @@ public class ManifestCacheManager {
                 self.manifestStore.removeHTML(for: pageKey)
                 self.manifestStore.removeManifest(for: pageKey)
                 self.resourceCache.removeAll(for: pageKey)
-                
+
                 // ✅ 同时清理 PersistentManifestLoader 的物理缓存
                 let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
                 let persistentDir = cachesDir.appendingPathComponent("WebBridgeKit/PersistentCache").appendingPathComponent(pageKey)
@@ -373,13 +373,13 @@ public class ManifestCacheManager {
             metadata: ["relativePath": relativePath, "url": url.absoluteString]
         ) {
             try await withCheckedThrowingContinuation { continuation in
-                let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                let task = URLSession.shared.dataTask(with: url) { data, _, error in
                     if let error = error {
                         continuation.resume(throwing: error)
                         return
                     }
 
-                    guard let data = data, data.count > 0 else {
+                    guard let data = data, !data.isEmpty else {
                         Log.error("Downloaded empty data for resource: \(relativePath)", category: .network)
                         continuation.resume(throwing: ManifestCacheError.emptyData)
                         return

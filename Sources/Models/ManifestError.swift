@@ -179,7 +179,7 @@ public enum ManifestVersion {
     /// - Returns: True if the version is supported
     public static func isSupported(_ version: String) -> Bool {
         return compareVersions(version, minimumSupported) != .orderedAscending &&
-               compareVersions(version, maximumSupported) != .orderedDescending
+            compareVersions(version, maximumSupported) != .orderedDescending
     }
 
     /// Compare two version strings

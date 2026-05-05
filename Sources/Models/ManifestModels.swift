@@ -199,8 +199,8 @@ public struct Manifest: Codable {
         let allowedCharacterSet = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
 
         return !appid.isEmpty &&
-               appid.unicodeScalars.allSatisfy { allowedCharacterSet.contains($0) } &&
-               appid.count <= 64
+            appid.unicodeScalars.allSatisfy { allowedCharacterSet.contains($0) } &&
+            appid.count <= 64
     }
 }
 
@@ -310,7 +310,7 @@ public struct AppIDResolver {
         if let appid = manifest?.appid, !appid.isEmpty {
             return validateAndSanitizeAppID(appid)
         }
-        
+
         // 回退逻辑：使用 host + path，并进行规范化，以支持同一域名下的不同页面
         let host = url.host ?? "unknown"
         let path = url.path.replacingOccurrences(of: "/", with: "_")
@@ -382,7 +382,7 @@ public class AppIconGenerator {
 
         // 创建图形上下文
         let renderer = UIGraphicsImageRenderer(size: size)
-        let image = renderer.image { context in
+        let image = renderer.image { _ in
             // 绘制圆形背景
             let rect = CGRect(origin: .zero, size: size)
             let path = UIBezierPath(ovalIn: rect)

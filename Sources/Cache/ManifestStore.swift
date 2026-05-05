@@ -183,10 +183,8 @@ public class ManifestStore: ManifestCacheManaging {
     /// 根据 appId 获取 Manifest 和对应的 key
     public func getManifestByAppId(_ appId: String) -> (key: String, manifest: Manifest)? {
         return serialQueue.sync {
-            for (key, entry) in manifestCache {
-                if entry.manifest.appid == appId {
-                    return (key, entry.manifest)
-                }
+            for (key, entry) in manifestCache where entry.manifest.appid == appId {
+                return (key, entry.manifest)
             }
             return nil
         }
@@ -478,10 +476,8 @@ public class ResourceCache {
 
             // 移除内存缓存
             var keysToRemove: [String] = []
-            for key in self.memoryCache.keys {
-                if key.contains("/\(pageKey)/") {
-                    keysToRemove.append(key)
-                }
+            for key in self.memoryCache.keys where key.contains("/\(pageKey)/") {
+                keysToRemove.append(key)
             }
 
             for key in keysToRemove {
@@ -527,10 +523,8 @@ public class ResourceCache {
 
             // 从内存缓存中删除
             var keysToRemove: [String] = []
-            for key in self.memoryCache.keys {
-                if key.hasPrefix(pageKeyPrefix) {
-                    keysToRemove.append(key)
-                }
+            for key in self.memoryCache.keys where key.hasPrefix(pageKeyPrefix) {
+                keysToRemove.append(key)
             }
             for key in keysToRemove {
                 if let resource = self.memoryCache.removeValue(forKey: key) {

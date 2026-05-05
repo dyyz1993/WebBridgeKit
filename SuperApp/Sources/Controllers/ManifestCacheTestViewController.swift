@@ -235,13 +235,6 @@ class ManifestCacheTestViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
 
-    // MARK: - Setup
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        // ✅ WebView 已删除，不再需要处理覆盖问题
-    }
-
     private func setupUI() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -798,30 +791,30 @@ class ManifestCacheTestViewController: UIViewController {
         // ⚠️ 禁用进度监控（可能导致后台线程 UI 更新问题）
         // 懒加载会在后台自动下载，无需轮询
         /*
-        let cacheID = "lazy_\(abs(url.absoluteString.hashValue))"
+         let cacheID = "lazy_\(abs(url.absoluteString.hashValue))"
 
-        // 定时检查进度
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
-            guard let self = self else {
-                timer.invalidate()
-                return
-            }
+         // 定时检查进度
+         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+         guard let self = self else {
+         timer.invalidate()
+         return
+         }
 
-            if let state = LazyManifestLoader.shared.getLoadingState(for: url) {
-                let progress = Int(state.progress * 100)
-                self.addLog("⬇️ 下载进度: \(progress)% (\(state.downloadedResources)/\(state.totalResources))")
+         if let state = LazyManifestLoader.shared.getLoadingState(for: url) {
+         let progress = Int(state.progress * 100)
+         self.addLog("⬇️ 下载进度: \(progress)% (\(state.downloadedResources)/\(state.totalResources))")
 
-                if state.isCompleted {
-                    self.addLog("✅ 后台下载完成")
-                    self.updateStats()
-                    timer.invalidate()
-                }
-            } else {
-                // 状态不存在，可能已完成或失败
-                timer.invalidate()
-            }
-        }
-        */
+         if state.isCompleted {
+         self.addLog("✅ 后台下载完成")
+         self.updateStats()
+         timer.invalidate()
+         }
+         } else {
+         // 状态不存在，可能已完成或失败
+         timer.invalidate()
+         }
+         }
+         */
     }
 
     // MARK: - Helper Methods
@@ -855,7 +848,7 @@ class ManifestCacheTestViewController: UIViewController {
             self.logTextView.text += logLine
 
             // 使用 setContentOffset 更安全的滚动方式
-            if self.logTextView.text.count > 0 {
+            if !self.logTextView.text.isEmpty {
                 let bottomOffset = CGPoint(x: 0, y: self.logTextView.contentSize.height - self.logTextView.bounds.height)
                 if bottomOffset.y > 0 {
                     self.logTextView.setContentOffset(bottomOffset, animated: false)

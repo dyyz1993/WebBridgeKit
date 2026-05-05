@@ -51,9 +51,9 @@ class TabBarController: UITabBarController {
     private func handlePushJump(_ notification: Notification) {
         guard let url = notification.userInfo?["url"] as? URL else { return }
         let message = notification.userInfo?["message"] as? WebhookMessage
-        
+
         print("🚀 [TabBar] Handling push jump to: \(url.absoluteString)")
-        
+
         // 切换到首页并打开浏览器
         self.selectedIndex = 0
         if let mainNav = viewControllers?.first as? UINavigationController {
@@ -80,18 +80,18 @@ class TabBarController: UITabBarController {
         struct Static {
             static var hasChecked = false
         }
-        
+
         if Static.hasChecked { return }
         Static.hasChecked = true
-        
+
         let isEnabled = UserDefaults.standard.bool(forKey: "EnableLastAppMemory")
-        
+
         if isEnabled,
            let lastURLString = UserDefaults.standard.string(forKey: "LastOpenedURL"),
            let url = URL(string: lastURLString) {
-            
+
             print("🚀 [TabBar] Direct restoring last app: \(lastURLString)")
-            
+
             // 获取首页的导航控制器
             if let mainNav = viewControllers?.first as? UINavigationController {
                 // 使用 animated: false 实现"直接进入"效果

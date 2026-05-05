@@ -13,19 +13,19 @@ import WebKit
 /// 投屏与外部显示控制 Handler
 /// 支持：投屏状态检测、全屏模式控制、投屏变化监听
 public class WebMirroringHandler: BaseWebNativeHandler {
-    
+
     // MARK: - Properties
-    
+
     private var isObserving = false
-    
+
     // MARK: - Handle
-    
+
     /**
      * 处理 JS 调用
      * @param body 调用参数
      * @param completion 处理完成后的回调
      */
-    public override func handle(body: [String : Any], completion: @escaping (Any) -> Void) {
+    public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? ""
 
@@ -51,9 +51,9 @@ public class WebMirroringHandler: BaseWebNativeHandler {
             self.reject(error: "Unsupported action: \(action)", code: 404, completion: completion)
         }
     }
-    
+
     // MARK: - Actions
-    
+
     /**
      * 获取当前投屏状态
      * @param completion 返回结果
@@ -68,7 +68,7 @@ public class WebMirroringHandler: BaseWebNativeHandler {
             ], completion: completion)
         }
     }
-    
+
     /**
      * 开始监听投屏变化
      * @param completion 返回结果
@@ -84,7 +84,7 @@ public class WebMirroringHandler: BaseWebNativeHandler {
             self.resolve(["status": "observing"], completion: completion)
         }
     }
-    
+
     /**
      * 停止监听投屏变化
      * @param completion 返回结果
@@ -92,24 +92,23 @@ public class WebMirroringHandler: BaseWebNativeHandler {
     private func stopObserve(completion: @escaping (Any) -> Void) {
         runOnMainThread { [weak self] in
             guard let self = self else { return }
-            NotificationCenter.default.removeObserver(self)
             self.isObserving = false
             self.resolve(["status": "stopped"], completion: completion)
         }
     }
-    
+
     // MARK: - Notifications
-    
+
     @objc private func screenDidConnect() {
         WebBridgeLogger.shared.log(.info, "[WebMirroringHandler] Screen connected")
         notifyJS(isMirroring: true)
     }
-    
+
     @objc private func screenDidDisconnect() {
         WebBridgeLogger.shared.log(.info, "[WebMirroringHandler] Screen disconnected")
         notifyJS(isMirroring: false)
     }
-    
+
     private func notifyJS(isMirroring: Bool) {
         let data: [String: Any] = [
             "isMirroring": isMirroring,
@@ -117,7 +116,7 @@ public class WebMirroringHandler: BaseWebNativeHandler {
         ]
         sendEventToJS(event: "onMirroringChange", data: data)
     }
-    
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }

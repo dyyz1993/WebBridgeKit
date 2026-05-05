@@ -351,7 +351,7 @@ class CacheManagementViewController: UIViewController {
         SVProgressHUD.dismiss(withDelay: 1.5)
 
         // 刷新数据
-        let _ = viewModel.transform(input: CacheManagementViewModel.Input(
+        _ = viewModel.transform(input: CacheManagementViewModel.Input(
             refresh: .just(()),
             deleteApp: .empty(),
             deleteAll: .empty()
@@ -368,7 +368,7 @@ extension CacheManagementViewController: UITableViewDelegate {
         let appInfo = cacheApps[indexPath.row]
 
         // 删除操作
-        let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] (action, view, completionHandler) in
+        let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] (_, _, completionHandler) in
             self?.confirmDelete(appID: appInfo.appID)
             completionHandler(true)
         }
@@ -376,7 +376,7 @@ extension CacheManagementViewController: UITableViewDelegate {
         deleteAction.image = UIImage(systemName: "trash.fill")
 
         // 详情操作
-        let detailAction = UIContextualAction(style: .normal, title: "详情") { [weak self] (action, view, completionHandler) in
+        let detailAction = UIContextualAction(style: .normal, title: "详情") { [weak self] (_, _, completionHandler) in
             self?.showAppDetails(appInfo: appInfo)
             completionHandler(true)
         }
@@ -393,7 +393,7 @@ extension CacheManagementViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let appInfo = cacheApps[indexPath.row]
 
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
             // 复制 AppID
             let copyAction = UIAction(title: "复制 AppID", image: UIImage(systemName: "doc.on.doc")) { [weak self] _ in
                 UIPasteboard.general.string = appInfo.appID

@@ -13,7 +13,7 @@ import WebKit
 import WebBridgeKit
 
 class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
-    
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "testSignal", let body = message.body as? String {
             NSLog("📱 [JS -> Native] Received test signal (len=%d): %@", body.count, body)
@@ -469,9 +469,9 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
                 // 如果是远程 Manifest，从 manifest URL 中提取基础 URL (index.html 所在的目录)
                 pageURL = testCase.manifestURL.deletingLastPathComponent()
             }
-            
+
             logger.logInfo("页面 URL: \(pageURL.absoluteString)")
-            
+
             // 使用 WebBrowserManager 打开
             if testCase.manifestURL.isFileURL {
                 // 对于本地文件，使用普通的 openBrowser，因为它不需要 manifest 缓存逻辑
@@ -488,22 +488,22 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
                     from: viewController
                 )
             }
-            
+
             logger.logSuccess("WebBrowserManager 已启动加载")
-            
+
             // 对于 UI 测试，我们需要模拟完成以便更新状态列表
             // 在实际使用中，用户会看到页面加载过程
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 guard let self = self else { return }
-                
+
                 // 获取当前缓存大小作为参考
                 let resourceCache = ResourceCache.shared
                 let cacheSize = resourceCache.totalSize()
-                
+
                 DispatchQueue.main.async {
                     logger.log("步骤 2: 验证缓存状态")
                     logger.logInfo("当前资源缓存总大小: \(self.formatBytes(cacheSize))")
-                    
+
                     completion(TestExecutionResult(success: true, cacheSize: cacheSize, error: nil))
                 }
             }

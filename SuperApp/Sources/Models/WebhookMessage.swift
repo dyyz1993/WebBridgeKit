@@ -27,7 +27,7 @@ struct WebhookMessage: Codable, Equatable {
     var isRead: Bool
     /// 附加参数（用于透传至 WebView）
     let params: [String: String]?
-    
+
     init(id: String = UUID().uuidString,
          title: String,
          content: String,

@@ -18,7 +18,7 @@ public enum CacheKeyGenerator {
         let combined = components.joined(separator: ":")
         return md5(combined)
     }
-    
+
     /// Generate cache key from dictionary
     /// - Parameter dictionary: Dictionary to hash
     /// - Returns: MD5 hash of dictionary JSON representation
@@ -28,14 +28,14 @@ public enum CacheKeyGenerator {
             .joined(separator: "&")
         return md5(sorted)
     }
-    
+
     /// Generate cache key from URL
     /// - Parameter url: URL to cache
     /// - Returns: Cache key for URL
     public static func generate(from url: URL) -> String {
         generate(from: url.absoluteString)
     }
-    
+
     /// Generate cache key from request
     /// - Parameters:
     ///   - url: Request URL
@@ -49,7 +49,7 @@ public enum CacheKeyGenerator {
         }
         return generate(from: components)
     }
-    
+
     /// Generate hierarchical cache key
     /// - Parameters:
     ///   - namespace: Namespace for grouping related cache entries
@@ -58,7 +58,7 @@ public enum CacheKeyGenerator {
     public static func generate(namespace: String, identifier: String) -> String {
         "\(namespace)/\(identifier)"
     }
-    
+
     /// Generate versioned cache key
     /// - Parameters:
     ///   - key: Base cache key
@@ -67,19 +67,19 @@ public enum CacheKeyGenerator {
     public static func generate(key: String, version: Int) -> String {
         "\(key):v\(version)"
     }
-    
+
     // MARK: - Private Methods
-    
+
     private static func md5(_ string: String) -> String {
         let length = Int(CC_MD5_DIGEST_LENGTH)
         var digest = [UInt8](repeating: 0, count: length)
-        
+
         if let data = string.data(using: .utf8) {
             _ = data.withUnsafeBytes { (body: UnsafeRawBufferPointer) in
                 CC_MD5(body.baseAddress, CC_LONG(data.count), &digest)
             }
         }
-        
+
         return digest.map { String(format: "%02x", $0) }.joined()
     }
 }
@@ -92,7 +92,7 @@ public enum CacheNamespace {
     public static let bridge = "bridge"
     public static let user = "user"
     public static let settings = "settings"
-    
+
     public static func forKey(_ key: String) -> String {
         CacheKeyGenerator.generate(namespace: self.bridge, identifier: key)
     }

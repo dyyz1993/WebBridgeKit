@@ -2,7 +2,7 @@ import Foundation
 
 /// Built-in skills that ship with the scaffold
 public enum BuiltinSkills {
-    
+
     /// Open URL skill
     public static let openURL = Skill(
         name: "open_url",
@@ -16,7 +16,7 @@ public enum BuiltinSkills {
             return .success(data: ["url": url, "status": "opened"])
         }
     )
-    
+
     /// Share content skill
     public static let share = Skill(
         name: "share",
@@ -30,7 +30,7 @@ public enum BuiltinSkills {
             return .success(data: ["content": content, "status": "shared"])
         }
     )
-    
+
     /// Scan QR code skill
     public static let scanQR = Skill(
         name: "scan_qr",
@@ -41,7 +41,7 @@ public enum BuiltinSkills {
             return .success(data: ["status": "scanner_ready"])
         }
     )
-    
+
     /// Get device info skill
     public static let deviceInfo = Skill(
         name: "device_info",
@@ -56,7 +56,7 @@ public enum BuiltinSkills {
             ])
         }
     )
-    
+
     /// Clear cache skill
     public static let clearCache = Skill(
         name: "clear_cache",
@@ -67,7 +67,7 @@ public enum BuiltinSkills {
             return .success(data: ["status": "cleared"])
         }
     )
-    
+
     /// All built-in skills
     public static let all: [Skill] = [openURL, share, scanQR, deviceInfo, clearCache]
 }

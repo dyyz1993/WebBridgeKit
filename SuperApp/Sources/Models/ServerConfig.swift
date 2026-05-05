@@ -14,8 +14,8 @@ import RxDataSources
 public class ServerConfig: Object {
     @objc public dynamic var id: String = "default"
     @objc public dynamic var serverType: String = "default" // default/custom
-    @objc public dynamic var baseURL: String? = nil
-    @objc public dynamic var apiEndpoint: String? = nil
+    @objc public dynamic var baseURL: String?
+    @objc public dynamic var apiEndpoint: String?
     @objc public dynamic var isActive: Bool = true
     @objc public dynamic var updatedAt: Date = Date()
 

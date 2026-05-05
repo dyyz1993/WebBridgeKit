@@ -183,18 +183,19 @@ public class CacheEntryRealm: Object {
         accessCount += 1
     }
 
-    /// 创建或更新缓存条目
-    /// - Parameters:
-    ///   - key: 缓存键
-    ///   - url: URL
-    ///   - data: 原始数据
-    ///   - compressedData: 压缩后的数据（如果未压缩则为 nil）
-    ///   - mimeType: MIME 类型
-    ///   - filePath: 文件路径
-    ///   - etag: ETag（可选）
-    ///   - lastModified: 最后修改时间（可选）
-    ///   - responseHeaders: 响应头（可选）
-    /// - Returns: CacheEntryRealm 实例
+    // 创建或更新缓存条目
+    // - Parameters:
+    //   - key: 缓存键
+    //   - url: URL
+    //   - data: 原始数据
+    //   - compressedData: 压缩后的数据（如果未压缩则为 nil）
+    //   - mimeType: MIME 类型
+    //   - filePath: 文件路径
+    //   - etag: ETag（可选）
+    //   - lastModified: 最后修改时间（可选）
+    //   - responseHeaders: 响应头（可选）
+    // - Returns: CacheEntryRealm 实例
+    // swiftlint:disable:next function_parameter_count
     public static func createOrUpdate(
         key: String,
         url: String,

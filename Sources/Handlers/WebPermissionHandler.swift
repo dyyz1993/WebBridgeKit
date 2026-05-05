@@ -19,10 +19,10 @@ import UserNotifications
 public class WebPermissionHandler: BaseWebNativeHandler {
 
     enum PermissionType: String {
-        case location = "location"
-        case notification = "notification"
-        case camera = "camera"
-        case microphone = "microphone"
+        case location
+        case notification
+        case camera
+        case microphone
     }
 
     // Properties for location permission handling

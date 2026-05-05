@@ -14,42 +14,42 @@ import Photos
 /// 媒体与文件操作 Handler
 /// 支持：保存图片到相册、保存文件到系统、原生文件上传
 public class WebMediaHandler: BaseWebNativeHandler {
-    
+
     // MARK: - Handle
-    
+
     /**
      * 处理 JS 调用
      * @param body 调用参数
      * @param completion 处理完成后的回调
      */
-    public override func handle(body: [String : Any], completion: @escaping (Any) -> Void) {
+    public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
         let action = params["action"] as? String ?? ""
-        
+
         WebBridgeLogger.shared.log(.info, "[WebMediaHandler] Handling action: \(action)")
-        
+
         switch action {
         case "saveImage":
             let data = params["data"] as? String ?? ""
             saveImage(data: data, completion: completion)
-            
+
         case "saveFile":
             let data = params["data"] as? String ?? ""
             let fileName = params["fileName"] as? String ?? "file.txt"
             saveFile(data: data, fileName: fileName, completion: completion)
-            
+
         case "uploadFile":
             let filePath = params["path"] as? String ?? ""
             let serverUrl = params["url"] as? String ?? ""
             uploadFile(filePath: filePath, serverUrl: serverUrl, completion: completion)
-            
+
         default:
             self.reject(error: "Unsupported action: \(action)", code: 404, completion: completion)
         }
     }
-    
+
     // MARK: - Actions
-    
+
     /**
      * 保存图片到相册
      * @param data Base64 字符串或图片 URL
@@ -61,7 +61,7 @@ public class WebMediaHandler: BaseWebNativeHandler {
                 self?.reject(error: "Invalid image data", completion: completion)
                 return
             }
-            
+
             PHPhotoLibrary.requestAuthorization { status in
                 self?.runOnMainThread {
                     if status == .authorized {
@@ -74,7 +74,7 @@ public class WebMediaHandler: BaseWebNativeHandler {
             }
         }
     }
-    
+
     /**
      * 保存文件到系统“文件”App
      * @param data Base64 数据
@@ -87,11 +87,11 @@ public class WebMediaHandler: BaseWebNativeHandler {
                 self?.reject(error: "Invalid base64 data", completion: completion)
                 return
             }
-            
+
             let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
             do {
                 try fileData.write(to: tempURL)
-                
+
                 // 弹出系统分享/保存对话框
                 let picker: UIDocumentPickerViewController
                 if #available(iOS 14.0, *) {
@@ -99,7 +99,7 @@ public class WebMediaHandler: BaseWebNativeHandler {
                 } else {
                     picker = UIDocumentPickerViewController(url: tempURL, in: .exportToService)
                 }
-                
+
                 if let topVC = self?.getTopViewController() {
                     topVC.present(picker, animated: true, completion: nil)
                     self?.resolve(["status": "picker_opened"], completion: completion)
@@ -111,7 +111,7 @@ public class WebMediaHandler: BaseWebNativeHandler {
             }
         }
     }
-    
+
     /**
      * 原生代传：上传本地文件到服务器
      * @param filePath 本地文件路径
@@ -123,19 +123,19 @@ public class WebMediaHandler: BaseWebNativeHandler {
             completion(WebBridgeResponse.error(message: "Invalid server URL"))
             return
         }
-        
+
         // 这里只是模拟上传逻辑，实际应根据业务需求实现 URLSession 上传
         WebBridgeLogger.shared.log(.info, "[WebMediaHandler] Uploading file: \(filePath) to \(serverUrl)")
-        
+
         // 模拟异步上传过程
         DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
             let response = ["success": true, "fileUrl": "https://cdn.example.com/uploads/remote_file.m4a"]
             completion(WebBridgeResponse.success(data: response))
         }
     }
-    
+
     // MARK: - Helpers
-    
+
     private func decodeImage(from data: String) -> UIImage? {
         if data.hasPrefix("data:image") {
             let base64 = data.components(separatedBy: ",").last ?? ""
@@ -147,7 +147,7 @@ public class WebMediaHandler: BaseWebNativeHandler {
         }
         return nil
     }
-    
+
     private func getTopViewController() -> UIViewController? {
         if let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) {
             var topVC = window.rootViewController

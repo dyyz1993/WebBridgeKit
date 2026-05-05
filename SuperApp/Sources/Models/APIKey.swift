@@ -25,7 +25,7 @@ struct APIKey: Codable, Equatable {
     var isEnabled: Bool
     /// 绑定的群组或来源 ID (可选)
     var boundGroupId: String?
-    
+
     init(id: String = UUID().uuidString,
          name: String,
          value: String = "sk-" + UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased(),
@@ -82,17 +82,17 @@ struct APIKey: Codable, Equatable {
         guard let expiresAt = expiresAt else { return "永久有效" }
         let interval = expiresAt.timeIntervalSinceNow
         if interval <= 0 { return "已过期" }
-        
+
         let minutes = Int(interval / 60)
         if minutes < 60 {
             return "\(minutes) 分钟后过期"
         }
-        
+
         let hours = minutes / 60
         if hours < 24 {
             return "\(hours) 小时后过期"
         }
-        
+
         let days = hours / 24
         return "\(days) 天后过期"
     }

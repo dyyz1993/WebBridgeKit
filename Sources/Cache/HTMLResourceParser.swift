@@ -369,8 +369,8 @@ class HTMLResourceParser {
     private func resolveURL(_ urlString: String, baseURL: URL) -> URL? {
         // 跳过data: URL, javascript: URL, // 协议相对URL
         if urlString.hasPrefix("data:") ||
-           urlString.hasPrefix("javascript:") ||
-           urlString.hasPrefix("//") {
+            urlString.hasPrefix("javascript:") ||
+            urlString.hasPrefix("//") {
             return nil
         }
 

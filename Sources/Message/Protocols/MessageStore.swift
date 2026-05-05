@@ -4,34 +4,34 @@ import Foundation
 public protocol MessageStore: AnyObject, Sendable {
     /// Save a message
     func save(_ message: StoredMessage) async throws
-    
+
     /// Get message by ID
     func get(id: String) async -> StoredMessage?
-    
+
     /// Get all messages
     func getAll() async -> [StoredMessage]
-    
+
     /// Get messages by channel
     func getByChannel(_ channel: String) async -> [StoredMessage]
-    
+
     /// Get unread messages
     func getUnread() async -> [StoredMessage]
-    
+
     /// Get unread count
     func getUnreadCount() async -> Int
-    
+
     /// Mark message as read
     func markAsRead(id: String) async
-    
+
     /// Mark all messages as read
     func markAllAsRead() async
-    
+
     /// Delete message by ID
     func delete(id: String) async
-    
+
     /// Delete all messages
     func deleteAll() async
-    
+
     /// Get message count
     func count() async -> Int
 }
@@ -43,7 +43,7 @@ public struct StoredMessage: Codable, Sendable, Identifiable {
     public var isRead: Bool
     public var readAt: Date?
     public var receivedAt: Date
-    
+
     public init(
         id: String = UUID().uuidString,
         payload: MessagePayload,
@@ -57,7 +57,7 @@ public struct StoredMessage: Codable, Sendable, Identifiable {
         self.readAt = readAt
         self.receivedAt = receivedAt
     }
-    
+
     /// Mark as read
     public mutating func markRead() {
         isRead = true

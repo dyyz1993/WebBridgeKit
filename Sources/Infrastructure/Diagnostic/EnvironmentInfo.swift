@@ -8,13 +8,13 @@ import UIKit
 
 /// 设备和环境信息快照
 public struct EnvironmentInfo {
-    
+
     /// App 信息
     public let appVersion: String
     public let buildNumber: String
     public let bundleIdentifier: String
     public let appName: String
-    
+
     /// 设备信息
     public let deviceModel: String
     public let deviceName: String
@@ -22,39 +22,39 @@ public struct EnvironmentInfo {
     public let systemVersion: String
     public let screenBounds: CGRect
     public let screenScale: CGFloat
-    
+
     /// 资源信息
     public let physicalMemory: UInt64
     public let freeMemory: UInt64
     public let totalDiskSpace: UInt64
     public let freeDiskSpace: UInt64
-    
+
     /// 网络信息
     public let networkType: String
     public let isConnected: Bool
-    
+
     /// 采集时间
     public let capturedAt: Date
-    
+
     public init() {
         let bundle = Bundle.main
         let processInfo = ProcessInfo.processInfo
         let device = UIDevice.current
-        
+
         self.appVersion = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
         self.buildNumber = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"
         self.bundleIdentifier = bundle.bundleIdentifier ?? "unknown"
         self.appName = bundle.infoDictionary?["CFBundleName"] as? String ?? "unknown"
-        
+
         self.deviceModel = Self.getDeviceModel()
         self.deviceName = device.name
         self.systemName = device.systemName
         self.systemVersion = device.systemVersion
         self.screenBounds = UIScreen.main.bounds
         self.screenScale = UIScreen.main.scale
-        
+
         self.physicalMemory = processInfo.physicalMemory
-        
+
         var freeMemory: UInt64 = 0
         var pageSize: vm_size_t = 0
         let hostPort: mach_port_t = mach_host_self()
@@ -70,19 +70,19 @@ public struct EnvironmentInfo {
             freeMemory = UInt64(vmInfo.free_count) * UInt64(pageSize)
         }
         self.freeMemory = freeMemory
-        
+
         let fileURL = URL(fileURLWithPath: NSHomeDirectory())
         let values = try? fileURL.resourceValues(forKeys: [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey])
         self.totalDiskSpace = UInt64(values?.volumeTotalCapacity ?? 0)
         self.freeDiskSpace = UInt64(values?.volumeAvailableCapacityForImportantUsage ?? 0)
-        
+
         self.networkType = Self.getCurrentNetworkType()
         self.isConnected = true
         self.capturedAt = Date()
     }
-    
+
     // MARK: - Formatted Output
-    
+
     /// 可读的摘要信息
     public var summary: String {
         """
@@ -94,7 +94,7 @@ public struct EnvironmentInfo {
         🌐 Network: \(networkType) (\(isConnected ? "connected" : "disconnected"))
         """
     }
-    
+
     /// 完整的调试信息（可复制）
     public var debugString: String {
         """
@@ -114,7 +114,7 @@ public struct EnvironmentInfo {
         ========================
         """
     }
-    
+
     /// JSON 字典
     public var jsonDict: [String: Any] {
         [
@@ -133,15 +133,15 @@ public struct EnvironmentInfo {
             "captured_at": ISO8601DateFormatter().string(from: capturedAt)
         ]
     }
-    
+
     // MARK: - Helpers
-    
+
     private func formatBytes(_ bytes: UInt64) -> String {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         return formatter.string(fromByteCount: Int64(bytes))
     }
-    
+
     private static func getDeviceModel() -> String {
         var systemInfo = utsname()
         uname(&systemInfo)
@@ -151,7 +151,7 @@ public struct EnvironmentInfo {
             }
         }
     }
-    
+
     private static func getCurrentNetworkType() -> String {
         // Basic network type detection
         let reachability = SCNetworkReachabilityCreateWithName(nil, "www.apple.com")

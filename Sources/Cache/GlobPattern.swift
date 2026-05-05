@@ -165,7 +165,7 @@ extension GlobPattern {
             // 边界情况
             ("", "", true),
             ("exact", "exact", true),
-            ("exact", "notexact", false),
+            ("exact", "notexact", false)
         ]
 
         var passed = 0

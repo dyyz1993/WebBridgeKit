@@ -45,11 +45,11 @@ class MainViewModel: ViewModel {
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let isEmptyRelay = BehaviorRelay<Bool>(value: true)
     let totalStorageSizeRelay = BehaviorRelay<String>(value: "0 KB")
-    
+
     var historiesRelayValue: [WebPageHistorySection] {
         return historiesRelay.value
     }
-    
+
     var totalStorageSize: String {
         return totalStorageSizeRelay.value
     }
@@ -302,23 +302,21 @@ class MainViewModel: ViewModel {
     private func updateHistoryItemSize(url: String, size: Int64) {
         var currentSections = historiesRelay.value
         var updated = false
-        
+
         for (sIndex, section) in currentSections.enumerated() {
             var items = section.items
-            for (iIndex, item) in items.enumerated() {
-                if item.url == url {
-                    item.cachedSize = size
-                    item.isCached = size > 0
-                    items[iIndex] = item
-                    updated = true
-                }
+            for (iIndex, item) in items.enumerated() where item.url == url {
+                item.cachedSize = size
+                item.isCached = size > 0
+                items[iIndex] = item
+                updated = true
             }
             if updated {
                 currentSections[sIndex] = WebPageHistorySection(header: section.header, items: items)
                 break
             }
         }
-        
+
         if updated {
             historiesRelay.accept(currentSections)
         }
