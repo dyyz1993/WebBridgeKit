@@ -50,6 +50,9 @@ public final class WebBridgeKit {
 
     /// Initialize the WebBridgeKit framework
     public func initialize() {
+        // Register all handler metadata for auto-discovery
+        _ = HandlerMetaRegistry.registerAll
+
         Log.info("WebBridgeKit v\(Version.string) initialized", category: .general)
 
         // 预热 WebView 和 Bridge 池，提升首次打开速度
