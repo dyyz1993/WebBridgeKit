@@ -40,7 +40,8 @@ jobs:
           xcodebuild build \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -sdk iphonesimulator \
+            -arch arm64 \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
@@ -90,7 +91,7 @@ jobs:
             -workspace WebBridgeKit.xcworkspace \
             -scheme "${{ matrix.scheme }}" \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             -resultBundlePath "TestResults-${{ matrix.scheme }}.xcresult" \
             -enableCodeCoverage YES \
             CODE_SIGN_IDENTITY="" \
@@ -158,6 +159,12 @@ jobs:
           sleep 2
           curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
 
+      - name: Create Simulator
+        run: |
+          SIM_ID=$(xcrun simctl create "TestPhone" "iPhone 16 Pro" "latest" 2>/dev/null || echo "existing")
+          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
+          xcrun simctl boot "$SIM_ID" 2>/dev/null || true
+
       - name: Run Smoke Tests
         run: |
           set -o pipefail
@@ -166,7 +173,7 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=TestPhone' \
             -configuration Debug \
             -resultBundlePath build/test-results/SmokeResults \
             -only-testing:SuperAppUITests/MainFlowTests \
@@ -233,6 +240,12 @@ jobs:
           sleep 2
           curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
 
+      - name: Create Simulator
+        run: |
+          SIM_ID=$(xcrun simctl create "TestPhone" "iPhone 16 Pro" "latest" 2>/dev/null || echo "existing")
+          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
+          xcrun simctl boot "$SIM_ID" 2>/dev/null || true
+
       - name: Run Core Tests (Parallel)
         run: |
           set -o pipefail
@@ -241,7 +254,7 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=TestPhone' \
             -configuration Debug \
             -resultBundlePath build/test-results/CoreResults \
             -parallel-testing-enabled YES \
@@ -305,6 +318,12 @@ jobs:
       - name: Install Pods
         run: pod install
 
+      - name: Create Simulator
+        run: |
+          SIM_ID=$(xcrun simctl create "TestPhone" "iPhone 16 Pro" "latest" 2>/dev/null || echo "existing")
+          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
+          xcrun simctl boot "$SIM_ID" 2>/dev/null || true
+
       - name: Run Manifest Cache Tests (Sequential)
         run: |
           set -o pipefail
@@ -313,7 +332,7 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=TestPhone' \
             -configuration Debug \
             -resultBundlePath build/test-results/ManifestResults \
             -only-testing:SuperAppUITests/ManifestCacheUITests \
