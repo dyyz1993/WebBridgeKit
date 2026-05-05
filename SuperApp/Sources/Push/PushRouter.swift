@@ -54,36 +54,37 @@ class PushRouter {
         print("[PushRouter] Opening cached app: \(appid)")
         
         // 降级方案：暂时用 URL 方式打开
-        // 后续对接 ManifestCacheManager.shared 后替换
-        let params = WebBrowserParams(url: "app://\(appid)")
-        applyMode(params, mode: mode)
-        WebBrowserManager.shared.open(params: params, from: rootVC)
+        guard let url = URL(string: "app://\(appid)") else { return }
+        let browserParams = makeParams(for: url, mode: mode)
+        WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
     }
     
     // MARK: - Open Browser
     
     private func openBrowser(url: URL, mode: PushPayload.OpenMode, from rootVC: UIViewController) {
         print("[PushRouter] Opening URL: \(url) mode: \(mode)")
-        
-        let params = WebBrowserParams(url: url.absoluteString)
-        applyMode(params, mode: mode)
-        WebBrowserManager.shared.open(params: params, from: rootVC)
+        let browserParams = makeParams(for: url, mode: mode)
+        WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
     }
     
     // MARK: - Helper
     
-    private func applyMode(_ params: WebBrowserParams, mode: PushPayload.OpenMode) {
+    private func makeParams(for url: URL, mode: PushPayload.OpenMode) -> WebBrowserParams {
         switch mode {
         case .normal:
-            break  // 默认就是普通模式
+            return WebBrowserParams.from(url: url)
         case .immersive:
-            params.hideNavigationBar = true
-            params.hideStatusBar = true
-            params.hideTabBar = true
+            return WebBrowserParams(
+                displayMode: .immersive,
+                hideNavigationBar: true,
+                hideStatusBar: true,
+                hideTabBar: true
+            )
         case .modal:
-            params.displayMode = .modal  // 如果 WebBrowserParams 支持 modal
-            params.modalWidth = 0.85
-            params.modalHeight = 0.7
+            return WebBrowserParams(
+                displayMode: .modal,
+                modalSize: .percent(width: "85%", height: "70%")
+            )
         }
     }
 }
