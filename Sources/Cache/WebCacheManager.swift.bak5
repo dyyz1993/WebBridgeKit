@@ -75,7 +75,7 @@ public class WebCacheManager {
         let domainGroups = Dictionary(grouping: records) { $0.displayName }
 
         return domainGroups.map { (domain, records) in
-            let stats = WebCacheStatistics()
+            let stats = WebSystemCacheStatistics()
             stats.domain = domain
             stats.lastUpdate = Date()
 
@@ -260,7 +260,7 @@ public class WebCacheManager {
                 let stats = realm.objects(WebCacheStatistics.self).sorted(byKeyPath: "totalSize", ascending: false)
                 // 必须在当前线程冻结对象或转换为数组，才能跨线程传递
                 results = Array(stats.map { stat -> WebCacheStatistics in
-                    let newStat = WebCacheStatistics()
+                    let newStat = WebSystemCacheStatistics()
                     newStat.domain = stat.domain
                     newStat.totalSize = stat.totalSize
                     newStat.fileCount = stat.fileCount

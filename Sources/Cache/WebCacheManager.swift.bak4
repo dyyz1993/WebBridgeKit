@@ -27,7 +27,7 @@ public class WebCacheManager {
     // MARK: - 缓存统计
 
     /// 获取所有网站的缓存统计
-    public func fetchSystemCacheStatistics() -> Observable<[WebCacheStatistics]> {
+    public func fetchCacheStatistics() -> Observable<[WebCacheStatistics]> {
         return Observable.create { [weak self] observer in
             guard let self = self else {
                 observer.onCompleted()
@@ -56,7 +56,7 @@ public class WebCacheManager {
                             }
                             return
                         }
-                        self.saveSystemCacheStatistics(stats)
+                        self.saveCacheStatistics(stats)
 
                         DispatchQueue.main.async {
                             observer.onNext(stats)
@@ -235,7 +235,7 @@ public class WebCacheManager {
 
     // MARK: - Realm 操作
 
-    private func deleteSystemCacheStatistics(for domain: String) {
+    private func deleteCacheStatistics(for domain: String) {
         guard let realm = try? Realm() else { return }
         try? realm.write {
             if let stat = realm.object(ofType: WebCacheStatistics.self, forPrimaryKey: domain) {
@@ -244,7 +244,7 @@ public class WebCacheManager {
         }
     }
 
-    private func clearAllSystemCacheStatistics() {
+    private func clearAllCacheStatistics() {
         guard let realm = try? Realm() else { return }
         try? realm.write {
             realm.delete(realm.objects(WebCacheStatistics.self))
@@ -437,7 +437,7 @@ public class WebCacheManager {
 
     // MARK: - Helper Methods
 
-    private func saveSystemCacheStatistics(_ stats: [WebCacheStatistics]) {
+    private func saveCacheStatistics(_ stats: [WebCacheStatistics]) {
         guard let realm = try? Realm() else { return }
         try? realm.write {
             realm.add(stats, update: .modified)

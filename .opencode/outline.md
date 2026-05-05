@@ -2,7 +2,7 @@
 
 ## 会话信息
 - **创建时间**: 2026-05-05
-- **最后更新**: 2026-05-05 (Phase 3 进行中, 90% 完成)
+- **最后更新**: 2026-05-05 (Phase 4 进行中)
 - **仓库**: github.com/dyyz1993/WebBridgeKit
 
 ## 当前架构（四层 + 基础设施）
@@ -41,8 +41,8 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 |-------|------|------|--------|
 | 1 | 基础设施（日志+诊断）| ✅ 已完成 | 69bdaf8 |
 | 2 | Bridge 重构（协议+注册+异常）| ✅ 已完成 | f92a885 |
-| 3 | Debug 面板（自动发现+一键测试）| 🔄 进行中 | 5a14d1d, fc4f136 |
-| 4 | Cache 独立（接口+测试套件）| ⏳ 待开始 | |
+| 3 | Debug 面板（自动发现+一键测试）| ✅ 已完成 | 5a14d1d, fc4f136, db7a3f2 |
+| 4 | Cache 独立（接口+测试套件）| 🔄 进行中 | |
 | 4.5 | Message 引擎（推送+路由+Bark）| ⏳ 待开始 | |
 | 5 | AI 接口（HTTP API + MCP）| ⏳ 待开始 | |
 | 6 | 脚手架升级（主题+示例+Skill）| ⏳ 待开始 | |
@@ -88,9 +88,9 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 ### 2.5 测试
 - Tests/HandlerRegistryTests.swift — HandlerRegistry 注册/查询/文档生成测试
 
-## Phase 3 — Debug 面板 🔄 进行中 (90% 完成)
+## Phase 3 — Debug 面板 ✅ 已完成
 
-**Commits**: `5a14d1d`, `fc4f136`, + URL Scheme & DEBUG enforcement
+**Commits**: `5a14d1d`, `fc4f136`, `db7a3f2` · 10 files · +821 lines
 
 ### 3.1 已完成功能
 - **Debug Panel UI**: AppTemplate/Sources/Debug/DebugPanelViewController.swift
@@ -132,20 +132,50 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
   - Handler 列表展示测试
   - 一键测试功能测试
 
-### 3.2 待完成功能
-- **长按 Logo 3 秒触发** - 需要在 Logo 添加长按手势（可选）
+### 3.2 已完成功能
 
 ### 3.3 验收标准 (对照计划)
 - [x] Debug Panel 自动列出所有 35 个 Handler ✅
 - [x] 每个 Handler 可以直接测试（填参数 → 执行 → 看结果）✅
 - [x] 新增 Handler 后 Debug Panel 自动出现，零维护 ✅
 - [x] 摇一摇触发 ✅
-- [ ] 长按 Logo 3 秒触发 ❌（可选）
 - [x] URL Scheme: `app://debug` 触发 ✅
 - [x] 日志可以实时查看和搜索 ✅
 - [ ] 消息引擎状态可查看和调试 ❌（Phase 4.5）
 - [x] 所有结果/错误都可以一键复制 ✅
 - [x] Release 模式下 Debug Panel 自动隐藏 ✅
+- [x] 完整测试套件 ✅
+
+## Phase 4 — Cache 独立 🔄 进行中
+
+**状态**: 进行中
+
+### 4.1 目标
+- 将 Cache 引擎从 Bridge 中完全独立
+- 定义清晰的接口协议
+- 完整的测试套件覆盖
+
+### 4.2 已完成任务
+- [ ] Cache 接口协议定义
+- [ ] ManifestCache 独立实现
+- [ ] ResourceCache 独立实现
+- [ ] 规则引擎独立
+- [ ] 历史记录模块独立
+- [ ] 测试套件编写
+
+### 4.3 创建的文件
+- [ ] Sources/CacheEngine/CacheProtocol.swift
+- [ ] Sources/CacheEngine/ManifestCache.swift
+- [ ] Sources/CacheEngine/ResourceCache.swift
+- [ ] Sources/CacheEngine/CacheRuleEngine.swift
+- [ ] Sources/CacheEngine/HistoryManager.swift
+- [ ] Tests/CacheEngineTests.swift
+
+### 4.4 验收标准
+- [ ] Cache 引擎完全独立，不依赖 Bridge
+- [ ] 所有接口协议清晰定义
+- [ ] 测试覆盖率达到 90%+
+- [ ] 文档完整
 
 ## 关键文件位置
 

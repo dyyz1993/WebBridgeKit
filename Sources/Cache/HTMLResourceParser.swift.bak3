@@ -420,7 +420,7 @@ class HTMLResourceParser {
     // MARK: - Auto-Cache by Rules
 
     /// 缓存统计信息
-    public struct HTMLCacheStatistics {
+    public struct CacheStatistics {
         public let totalResources: Int
         public let cachedCount: Int
         public let failedCount: Int
@@ -435,7 +435,7 @@ class HTMLResourceParser {
     public static func parseAndCacheResources(
         for url: URL,
         useCacheStore cacheStore: WebCompressedCacheStore,
-        completion: @escaping (Result<HTMLCacheStatistics, Error>) -> Void
+        completion: @escaping (Result<CacheStatistics, Error>) -> Void
     ) {
         // 使用 URLSession 下载数据
         let session = URLSession.shared
@@ -527,7 +527,7 @@ class HTMLResourceParser {
             }
 
             group.notify(queue: .main) {
-                let stats = HTMLCacheStatistics(
+                let stats = CacheStatistics(
                     totalResources: resources.count,
                     cachedCount: cachedCount,
                     failedCount: failedCount,

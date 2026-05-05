@@ -177,15 +177,12 @@ public class SystemURLCacheManager {
 // MARK: - CacheStatistics
 
 /// 缓存统计信息
-public class SystemCacheStatistics {
-    public var totalRequests: Int
-    public var cacheHits: Int
-    public var cacheMisses: Int
-    public var hitRate: Double
-    public var totalCacheSize: Int64
-    public var totalEntries: UInt64 = 0
-    private var totalEvictions: Int = 0
-    private var totalAccessTime: TimeInterval = 0.0
+public struct SystemCacheStatistics {
+    public let totalRequests: Int
+    public let cacheHits: Int
+    public let cacheMisses: Int
+    public let hitRate: Double
+    public let totalCacheSize: Int64
 
     public var formattedHitRate: String {
         return String(format: "%.2f%%", hitRate * 100)
@@ -196,45 +193,6 @@ public class SystemCacheStatistics {
         formatter.allowedUnits = [.useBytes, .useKB, .useMB, .useGB]
         formatter.countStyle = .file
         return formatter.string(fromByteCount: totalCacheSize)
-    }
-
-    public init() {
-        self.totalRequests = 0
-        self.cacheHits = 0
-        self.cacheMisses = 0
-        self.hitRate = 0.0
-        self.totalCacheSize = 0
-    }
-
-    public init(totalRequests: Int, cacheHits: Int, cacheMisses: Int, hitRate: Double, totalCacheSize: Int64) {
-        self.totalRequests = totalRequests
-        self.cacheHits = cacheHits
-        self.cacheMisses = cacheMisses
-        self.hitRate = hitRate
-        self.totalCacheSize = totalCacheSize
-    }
-
-    public func recordHit() {
-        cacheHits += 1
-        updateHitRate()
-    }
-
-    public func recordMiss() {
-        cacheMisses += 1
-        updateHitRate()
-    }
-
-    public func updateAccessTime(_ time: TimeInterval) {
-        totalAccessTime += time
-    }
-
-    public func recordEviction() {
-        totalEvictions += 1
-    }
-
-    private func updateHitRate() {
-        let total = cacheHits + cacheMisses
-        hitRate = total > 0 ? Double(cacheHits) / Double(total) : 0.0
     }
 }
 
