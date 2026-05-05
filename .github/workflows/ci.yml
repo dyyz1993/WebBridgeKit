@@ -89,6 +89,7 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme "${{ matrix.scheme }}" \
+            -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             -resultBundlePath "TestResults-${{ matrix.scheme }}.xcresult" \
             -enableCodeCoverage YES \
@@ -98,7 +99,7 @@ jobs:
             | xcpretty --color --report junit --output "test-results-${{ matrix.scheme }}.xml"
 
       - name: Publish Coverage Report
-        if: always()
+        if: always() && success()
         run: |
           xcrun xccov view --report "TestResults-${{ matrix.scheme }}.xcresult" > "coverage-${{ matrix.scheme }}.txt" 2>/dev/null || echo "No coverage data"
           cat "coverage-${{ matrix.scheme }}.txt" || true

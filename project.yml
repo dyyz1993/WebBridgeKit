@@ -157,6 +157,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: Message
@@ -203,6 +204,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
@@ -249,6 +251,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
@@ -324,6 +327,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: Skills
@@ -341,6 +345,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
@@ -358,6 +363,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
@@ -375,6 +381,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
@@ -392,6 +399,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
@@ -409,6 +417,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
@@ -426,6 +435,7 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
       - target: WebBridgeKit
