@@ -383,7 +383,7 @@ class CacheAppCell: UITableViewCell {
             UIView.animate(withDuration: 0.1) {
                 self.copyButton.transform = .identity
             }
-        }
+        })
 
         // 临时改变按钮文字（iOS 15+）
         if #available(iOS 15.0, *) {

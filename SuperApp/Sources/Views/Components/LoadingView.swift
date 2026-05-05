@@ -190,7 +190,7 @@ class LoadingView: UIView {
             self.alpha = 0
         }, completion: { _ in
             self.isHidden = true
-        }
+        })
     }
 
     /// 更新消息

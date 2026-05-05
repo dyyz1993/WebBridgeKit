@@ -300,8 +300,10 @@ public struct ChannelStats: Codable, Sendable {
 // MARK: - InMemoryMessageStore (default implementation)
 
 /// Default in-memory message store
-actor InMemoryMessageStore: MessageStore {
+public actor InMemoryMessageStore: MessageStore {
     private var messages: [String: StoredMessage] = [:]
+
+    public init() {}
 
     public func save(_ message: StoredMessage) async throws {
         messages[message.id] = message

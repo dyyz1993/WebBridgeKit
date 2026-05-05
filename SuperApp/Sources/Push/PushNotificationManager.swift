@@ -46,7 +46,55 @@ class PushNotificationManager: NSObject {
         self.deviceToken = token
         print("[PushManager] Device token: \(token.prefix(8))...")
 
-        // TODO: 将 token 上报给 Bark 服务器
+        registerTokenToBarkServer(token: token)
+    }
+
+    // MARK: - Bark Registration
+
+    private func registerTokenToBarkServer(token: String) {
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
+            ?? barkServerURL
+            ?? "https://api.day.app"
+        let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key")
+            ?? barkKey
+
+        guard let key, !key.isEmpty else {
+            print("[PushManager] Bark key not configured, skip token registration")
+            return
+        }
+
+        guard var components = URLComponents(string: server) else {
+            print("[PushManager] Invalid Bark server URL: \(server)")
+            return
+        }
+        components.path = "/register"
+        components.queryItems = [
+            URLQueryItem(name: "devicetoken", value: token),
+            URLQueryItem(name: "key", value: key)
+        ]
+
+        guard let url = components.url else {
+            print("[PushManager] Failed to build Bark register URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 15
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            if let error {
+                print("[PushManager] Bark register failed: \(error.localizedDescription)")
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse,
+               (200...299).contains(httpResponse.statusCode) {
+                print("[PushManager] Bark register success")
+            } else {
+                let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+                print("[PushManager] Bark register failed with status: \(statusCode)")
+            }
+        }.resume()
     }
 
     /// 处理 APNs Token 注册失败

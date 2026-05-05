@@ -83,6 +83,7 @@ targets:
     deploymentTarget: "14.0"
     sources:
       - DemoAppUITests
+      - SuperAppUITests
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.ui.tests
       TEST_TARGET_NAME: SuperApp

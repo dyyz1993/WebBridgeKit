@@ -47,13 +47,17 @@ class PushRouter {
     // MARK: - Open Cached App
 
     private func openCachedApp(appid: String, params: [String: Any], mode: PushPayload.OpenMode, from rootVC: UIViewController) {
-        // TODO: 对接 ManifestCacheManager，通过 appid 查找缓存
-        // 如果有缓存 → 离线秒开
-        // 如果没有 → 降级为在线加载，并触发后台缓存
-
         print("[PushRouter] Opening cached app: \(appid)")
 
-        // 降级方案：暂时用 URL 方式打开
+        if let result = ManifestStore.shared.getManifestByAppId(appid),
+           let url = URL(string: result.key) {
+            print("[PushRouter] Cache hit for appid: \(appid), url: \(url)")
+            let browserParams = makeParams(for: url, mode: mode)
+            WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
+            return
+        }
+
+        print("[PushRouter] Cache miss for appid: \(appid), falling back to URL scheme")
         guard let url = URL(string: "app://\(appid)") else { return }
         let browserParams = makeParams(for: url, mode: mode)
         WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
