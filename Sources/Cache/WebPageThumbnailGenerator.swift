@@ -14,7 +14,7 @@ import WebKit
 
 /// 页面缩略图生成器
 /// 单例模式，负责截图、压缩和内存管理
-class WebPageThumbnailGenerator {
+public class WebPageThumbnailGenerator {
 
     static let shared = WebPageThumbnailGenerator()
 

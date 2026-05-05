@@ -12,7 +12,7 @@ import UIKit
 // Framework imports
 
 /// 资源下载结果
-struct ResourceDownloadResult {
+public struct ResourceDownloadResult {
     let originalURL: URL
     let localPath: String
     let size: Int64
@@ -20,7 +20,7 @@ struct ResourceDownloadResult {
 
 /// 资源下载器
 /// 支持并发下载、进度回调、去重处理
-class ResourceDownloader {
+public class ResourceDownloader {
 
     private var downloadedResources: Set<String> = []
     private let urlSession: URLSession

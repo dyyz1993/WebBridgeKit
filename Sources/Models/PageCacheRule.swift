@@ -43,17 +43,13 @@ public struct PageCacheRule: Codable, Identifiable {
         let urlString = url.absoluteString
 
         // 先检查是否在排除列表中
-        for pattern in excludePatterns {
-            if GlobPattern.matches(pattern, against: urlString) {
-                return false
-            }
+        for pattern in excludePatterns where GlobPattern.matches(pattern, against: urlString) {
+            return false
         }
 
         // 再检查是否匹配包含列表
-        for pattern in includePatterns {
-            if GlobPattern.matches(pattern, against: urlString) {
-                return true
-            }
+        for pattern in includePatterns where GlobPattern.matches(pattern, against: urlString) {
+            return true
         }
 
         return false

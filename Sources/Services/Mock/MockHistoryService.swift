@@ -112,7 +112,9 @@ public class MockHistoryService: HistoryServiceProtocol {
                 }
             }
         } else {
-            mockHistories.removeValue(forKey: id)
+            if let key = mockHistories.first(where: { $0.value.id == id })?.key {
+                mockHistories.removeValue(forKey: key)
+            }
         }
     }
 

@@ -16,7 +16,7 @@ import WebKit
 /// 支持两种格式：
 /// 1. bark-cache://{uuid}/path - 离线页面缓存
 /// 2. bark-cache://{key} - 压缩资源缓存
-class CacheURLSchemeHandler: NSObject, WKURLSchemeHandler {
+public class CacheURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let queue = DispatchQueue(label: "com.bark.cache.scheme", qos: .userInitiated)
 
@@ -27,13 +27,13 @@ class CacheURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
     // MARK: - WKURLSchemeHandler
 
-    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+    public func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         queue.async { [weak self] in
             self?.handleSchemeTask(urlSchemeTask)
         }
     }
 
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+    public func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
         // 任务被取消，无需特殊处理
     }
 

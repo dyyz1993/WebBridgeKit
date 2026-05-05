@@ -32,7 +32,7 @@ public struct WebBrowserParams {
 
     // MARK: - Modal Size
 
-    public enum ModalSize {
+    public enum ModalSize: Equatable {
         case fullscreen
         case half
         case percent(width: String, height: String)
@@ -240,7 +240,8 @@ public struct WebBrowserParams {
             disableSwipeBack: disableSwipeBack,
             orientation: orientation,
             allowJavaScriptClose: allowJavaScriptClose,
-            customTitle: customTitle
+            customTitle: customTitle,
+            debugMode: debugMode
         )
     }
 

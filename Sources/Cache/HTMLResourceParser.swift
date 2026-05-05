@@ -40,7 +40,7 @@ public struct ResourceURL {
 
 /// HTML资源解析器
 /// 使用SwiftSoup解析HTML，提取资源URL并重写为本地路径
-class HTMLResourceParser {
+public class HTMLResourceParser {
 
     // MARK: - 解析资源
 

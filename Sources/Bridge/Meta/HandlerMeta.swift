@@ -66,7 +66,7 @@ public enum ParamType: String, Codable {
 }
 
 /// 参数定义（用于自动生成调试表单）
-public struct ParamDef: Codable {
+public struct ParamDef: Codable, Equatable {
     public let name: String
     public let type: ParamType
     public let required: Bool
@@ -87,7 +87,7 @@ public struct ParamDef: Codable {
 }
 
 /// 返回值定义
-public struct ReturnDef: Codable {
+public struct ReturnDef: Codable, Equatable {
     public let name: String
     public let type: ParamType
     public let description: String
