@@ -195,8 +195,13 @@ public actor DiskCache: AnyCacheStorage {
             self.metadata = metadata
         }
         
+        init(typeName: String, valueData: Data, metadata: CacheMetadata) {
+            self.typeName = typeName
+            self.valueData = valueData
+            self.metadata = metadata
+        }
+        
         func getValue() throws -> (any Codable & Sendable)? {
-            // For simple types, decode directly
             switch typeName {
             case "String":
                 return try JSONDecoder().decode(String.self, from: valueData)
@@ -209,10 +214,39 @@ public actor DiskCache: AnyCacheStorage {
             case "Data":
                 return try JSONDecoder().decode(Data.self, from: valueData)
             default:
-                // For complex types, we can't decode them without knowing the actual type
-                // In this case, return nil and let the caller handle it
                 return nil
             }
         }
+    }
+    
+    public func getTypedData(for key: Key) async -> Data? {
+        let fileURL = cacheDirectory.appendingPathComponent(sanitizeKey(key))
+        
+        guard fileManager.fileExists(atPath: fileURL.path) else {
+            statistics.recordMiss()
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let entry = try decoder.decode(CacheEntryWrapper.self, from: data)
+            
+            if entry.metadata.isExpired {
+                try? fileManager.removeItem(at: fileURL)
+                statistics.recordMiss()
+                return nil
+            }
+            
+            statistics.recordHit()
+            return entry.valueData
+        } catch {
+            statistics.recordMiss()
+            return nil
+        }
+    }
+    
+    public func getTyped<T: Codable & Sendable>(for key: Key, as type: T.Type) async -> T? {
+        guard let data = await getTypedData(for: key) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
     }
 }

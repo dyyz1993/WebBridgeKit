@@ -146,7 +146,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
             reloadAnimation: .none,
             deleteAnimation: .left
         ),
-        configureCell: { [weak self] _, tableView, _, item in
+        configureCell: { [weak self] (_: TableViewSectionedDataSource<WebPageHistorySection>, tableView: UITableView, _: IndexPath, item: WebPageHistory) in
             guard let self = self,
                   let cell = tableView.dequeueReusableCell(
                       withIdentifier: "\(WebPageHistoryCell.self)"

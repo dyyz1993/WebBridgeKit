@@ -123,7 +123,15 @@ public actor MemoryCache<Key: Hashable & Sendable, Value: Codable & Sendable>: C
         case .leastRecentlyUsed:
             return accessOrder.first!
         case .leastFrequentlyUsed:
-            return accessFrequency.min(by: { $0.value < $1.value })!.key
+            var minKey = accessOrder.first!
+            var minFreq = Int.max
+            for key in accessOrder {
+                if let freq = accessFrequency[key], freq < minFreq {
+                    minFreq = freq
+                    minKey = key
+                }
+            }
+            return minKey
         case .firstInFirstOut:
             return accessOrder.first!
         case .sizeBased:

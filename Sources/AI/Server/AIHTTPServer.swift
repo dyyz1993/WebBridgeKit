@@ -6,7 +6,7 @@ public actor AIHTTPServer {
     public static let defaultPort: UInt16 = 8765
     
     private var serverSocket: Int32 = -1
-    private var isRunning = false
+    public var isRunning = false
     private let port: UInt16
     private let router: AIRouter
     private let configuration: AIServerConfiguration

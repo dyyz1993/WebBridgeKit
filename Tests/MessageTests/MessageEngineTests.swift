@@ -7,10 +7,12 @@ final class MessageEngineTests: XCTestCase {
     
     override func setUp() async throws {
         try await super.setUp()
-        engine = MessageEngine()
+        engine = MessageEngine.shared
     }
     
     override func tearDown() async throws {
+        await engine.setOnMessageReceived(nil)
+        await engine.clearAllMessages()
         await engine.stopAll()
         try await super.tearDown()
     }
@@ -155,17 +157,16 @@ final class MessageEngineTests: XCTestCase {
     // MARK: - Callback
     
     func testOnMessageReceivedCallback() async throws {
-        var receivedMessage: StoredMessage?
+        let expectation = expectation(description: "Message received callback")
         
-        await engine.set { message in
-            receivedMessage = message
+        await engine.setOnMessageReceived { message in
+            expectation.fulfill()
         }
         
         let payload = MessagePayload(title: "Test", body: "Body", channel: "test")
         try await engine.receive(payload)
         
-        // Note: Due to actor isolation, the callback may not have fired yet
-        // In a real test, we'd use expectations
+        await fulfillment(of: [expectation], timeout: 2.0)
     }
 }
 

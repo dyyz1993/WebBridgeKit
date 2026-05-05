@@ -32,22 +32,20 @@ public actor CacheManager {
     
     // MARK: - Generic Cache Operations
     
-    /// Retrieve cached value
-    /// - Parameters:
-    ///   - key: Cache key
-    ///   - type: Type of cached value
-    /// - Returns: Cached value if exists and valid
-    public func get<T: Codable & Sendable>(for key: String, as type: T.Type) async -> T? {
-        if let data = await memoryCache.get(for: key) {
+    public func get<T: Codable & Sendable>(for key: String, as type: T.Type, namespace: String? = nil) async -> T? {
+        let fullKey = namespace.map { CacheKeyGenerator.generate(namespace: $0, identifier: key) } ?? key
+        
+        if let data = await memoryCache.get(for: fullKey) {
             return try? JSONDecoder().decode(T.self, from: data)
         }
         
-        if let cached = await diskCache.get(for: key) {
-            guard let value = cached as? T else { return nil }
-            if let encoded = try? JSONEncoder().encode(value) {
-                await memoryCache.set(encoded, for: key, expiration: configuration.expirationPolicy.timeInterval)
+        if let data = await diskCache.getTypedData(for: fullKey) {
+            if let value = try? JSONDecoder().decode(T.self, from: data) {
+                if let encoded = try? JSONEncoder().encode(value) {
+                    await memoryCache.set(encoded, for: fullKey, expiration: configuration.expirationPolicy.timeInterval)
+                }
+                return value
             }
-            return value
         }
         
         return nil
@@ -139,7 +137,7 @@ public actor CacheManager {
         as type: T.Type
     ) async -> T? {
         let key = CacheKeyGenerator.generate(from: url, method: method)
-        return await get(for: key, as: type)
+        return await get(for: key, as: type, namespace: CacheNamespace.api)
     }
     
     // MARK: - Statistics

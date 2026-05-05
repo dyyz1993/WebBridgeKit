@@ -3,16 +3,12 @@ import XCTest
 
 final class CacheManagerTests: XCTestCase {
     
-    // MARK: - Singleton
-    
     func testSharedInstance() {
         let manager1 = CacheManager.shared
         let manager2 = CacheManager.shared
         
         XCTAssertTrue(manager1 === manager2, "CacheManager should be a singleton")
     }
-    
-    // MARK: - Basic Operations
     
     func testSetAndGet() async throws {
         await CacheManager.shared.set("value1", for: "key1")
@@ -41,25 +37,22 @@ final class CacheManagerTests: XCTestCase {
         
         await CacheManager.shared.clearAll()
         
-        XCTAssertNil(await CacheManager.shared.get(for: "key1", as: String.self))
-        XCTAssertNil(await CacheManager.shared.get(for: "key2", as: String.self))
+        let v1: String? = await CacheManager.shared.get(for: "key1", as: String.self)
+        let v2: String? = await CacheManager.shared.get(for: "key2", as: String.self)
+        XCTAssertNil(v1)
+        XCTAssertNil(v2)
     }
-    
-    // MARK: - Namespace
     
     func testNamespacedKeys() async throws {
         await CacheManager.shared.set("value1", for: "key1", namespace: "api")
         await CacheManager.shared.set("value2", for: "key1", namespace: "user")
         
-        let apiValue: String? = await CacheManager.shared.get(for: "key1", as: String.self)
-        let userValue: String? = await CacheManager.shared.get(for: "key1", as: String.self)
+        let apiValue: String? = await CacheManager.shared.get(for: "key1", as: String.self, namespace: "api")
+        let userValue: String? = await CacheManager.shared.get(for: "key1", as: String.self, namespace: "user")
         
-        // The last set should override if using the same full key
-        // This test depends on implementation details
-        XCTAssertNotNil(apiValue)
+        XCTAssertEqual(apiValue, "value1")
+        XCTAssertEqual(userValue, "value2")
     }
-    
-    // MARK: - API Response Caching
     
     func testAPIResponseCaching() async throws {
         struct User: Codable, Sendable {
@@ -79,13 +72,10 @@ final class CacheManagerTests: XCTestCase {
         XCTAssertEqual(cachedUser?.name, "John Doe")
     }
     
-    // MARK: - Get or Set
-    
     func testGetOrSet() async throws {
         var callCount = 0
         
-        // First call - should compute
-        let value1 = try await CacheManager.shared.getOrSet(for: "key1", expiration: 3600) {
+        let value1 = try await CacheManager.shared.getOrSet(for: "key1_gos", expiration: 3600) {
             callCount += 1
             return "computed value"
         }
@@ -93,8 +83,7 @@ final class CacheManagerTests: XCTestCase {
         XCTAssertEqual(value1, "computed value")
         XCTAssertEqual(callCount, 1)
         
-        // Second call - should use cache
-        let value2 = try await CacheManager.shared.getOrSet(for: "key1", expiration: 3600) {
+        let value2 = try await CacheManager.shared.getOrSet(for: "key1_gos", expiration: 3600) {
             callCount += 1
             return "computed value"
         }
@@ -102,8 +91,6 @@ final class CacheManagerTests: XCTestCase {
         XCTAssertEqual(value2, "computed value")
         XCTAssertEqual(callCount, 1, "Factory should not be called again")
     }
-    
-    // MARK: - Statistics
     
     func testStatistics() async throws {
         await CacheManager.shared.set("value1", for: "key1")
@@ -122,19 +109,19 @@ final class CacheManagerTests: XCTestCase {
         await CacheManager.shared.resetStatistics()
         
         let stats = await CacheManager.shared.getGlobalStatistics()
-        XCTAssertEqual(stats.hitCount, 0)
-        XCTAssertEqual(stats.missCount, 0)
+        XCTAssertEqual(stats.cacheHits, 0)
+        XCTAssertEqual(stats.cacheMisses, 0)
     }
     
-    // MARK: - Policy-based Caching
-    
     func testPolicyBasedCaching() async throws {
-        await CacheManager.shared.set("value1", for: "key1", policy: .seconds(1))
+        await CacheManager.shared.set("value1", for: "key1_policy", policy: .seconds(1))
         
-        XCTAssertNotNil(await CacheManager.shared.get(for: "key1", as: String.self))
+        let before = await CacheManager.shared.get(for: "key1_policy", as: String.self)
+        XCTAssertNotNil(before)
         
-        try await Task.sleep(nanoseconds: 1_500_000_000)  // 1.5 seconds
+        try await Task.sleep(nanoseconds: 1_500_000_000)
         
-        XCTAssertNil(await CacheManager.shared.get(for: "key1", as: String.self))
+        let after = await CacheManager.shared.get(for: "key1_policy", as: String.self)
+        XCTAssertNil(after)
     }
 }

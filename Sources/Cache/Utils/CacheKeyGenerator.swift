@@ -23,11 +23,10 @@ public enum CacheKeyGenerator {
     /// - Parameter dictionary: Dictionary to hash
     /// - Returns: MD5 hash of dictionary JSON representation
     public static func generate(from dictionary: [String: String]) -> String {
-        guard let data = try? JSONEncoder().encode(dictionary),
-              let string = String(data: data, encoding: .utf8) else {
-            return md5(UUID().uuidString)
-        }
-        return md5(string)
+        let sorted = dictionary.sorted { $0.key < $1.key }
+            .map { "\($0.key)=\($0.value)" }
+            .joined(separator: "&")
+        return md5(sorted)
     }
     
     /// Generate cache key from URL

@@ -23,6 +23,22 @@ end
 
 target 'WebBridgeKit' do
   shared_pods
+
+  target 'CacheTests' do
+    inherit! :complete
+  end
+
+  target 'MessageTests' do
+    inherit! :complete
+  end
+
+  target 'AITests' do
+    inherit! :complete
+  end
+
+  target 'SkillsTests' do
+    inherit! :complete
+  end
 end
 
 target 'SuperApp' do

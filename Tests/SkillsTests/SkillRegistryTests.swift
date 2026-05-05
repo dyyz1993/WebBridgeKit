@@ -91,6 +91,8 @@ final class SkillRegistryTests: XCTestCase {
             } else {
                 XCTFail("Wrong error type")
             }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
     }
     
@@ -106,6 +108,8 @@ final class SkillRegistryTests: XCTestCase {
             if case .disabled(let skillId) = error {
                 XCTAssertEqual(skillId, skill.id)
             }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
     }
     

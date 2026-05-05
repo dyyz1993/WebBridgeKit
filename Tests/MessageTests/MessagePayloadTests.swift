@@ -119,8 +119,9 @@ final class MessagePayloadTests: XCTestCase {
     
     func testEquality() {
         let id = UUID().uuidString
-        let payload1 = MessagePayload(id: id, title: "Test", body: "Body", channel: "test")
-        let payload2 = MessagePayload(id: id, title: "Test", body: "Body", channel: "test")
+        let now = Date()
+        let payload1 = MessagePayload(id: id, title: "Test", body: "Body", channel: "test", createdAt: now)
+        let payload2 = MessagePayload(id: id, title: "Test", body: "Body", channel: "test", createdAt: now)
         
         XCTAssertEqual(payload1, payload2)
     }

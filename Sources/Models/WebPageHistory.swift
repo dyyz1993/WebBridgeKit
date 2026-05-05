@@ -63,6 +63,8 @@ public class WebPageHistory: Object {
 // MARK: - IdentifiableType
 
 #if canImport(RxDataSources)
+import RxDataSources
+
 extension WebPageHistory: IdentifiableType {
     public var identity: String {
         return id

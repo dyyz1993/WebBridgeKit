@@ -15,9 +15,9 @@ final class CacheKeyGeneratorTests: XCTestCase {
     }
     
     func testGenerateFromDictionary() {
-        let dict1: [String: any Sendable] = ["id": 123, "name": "John"]
-        let dict2: [String: any Sendable] = ["id": 123, "name": "John"]
-        let dict3: [String: any Sendable] = ["id": 456, "name": "John"]
+        let dict1: [String: String] = ["id": "123", "name": "John"]
+        let dict2: [String: String] = ["id": "123", "name": "John"]
+        let dict3: [String: String] = ["id": "456", "name": "John"]
         
         let key1 = CacheKeyGenerator.generate(from: dict1)
         let key2 = CacheKeyGenerator.generate(from: dict2)
@@ -69,9 +69,9 @@ final class CacheKeyGeneratorTests: XCTestCase {
     // MARK: - CacheNamespace
     
     func testCacheNamespace() {
-        let key1 = CacheNamespace.bridge(forKey: "handler1")
-        let key2 = CacheNamespace.bridge(forKey: "handler2")
-        let key3 = CacheNamespace.api(forKey: "users")
+        let key1 = CacheNamespace.forKey("handler1")
+        let key2 = CacheNamespace.forKey("handler2")
+        let key3 = CacheKeyGenerator.generate(namespace: CacheNamespace.api, identifier: "users")
         
         XCTAssertEqual(key1, "bridge/handler1")
         XCTAssertEqual(key2, "bridge/handler2")

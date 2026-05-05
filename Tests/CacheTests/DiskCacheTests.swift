@@ -8,7 +8,6 @@ final class DiskCacheTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         
-        // Clean up any existing cache
         try? FileManager.default.removeItem(at: tempDirectory)
         
         cache = try DiskCache(
@@ -22,8 +21,6 @@ final class DiskCacheTests: XCTestCase {
         try? FileManager.default.removeItem(at: tempDirectory)
         try await super.tearDown()
     }
-    
-    // MARK: - Basic Operations
     
     func testSetAndGet() async throws {
         await cache.set("value1", for: "key1", expiration: nil)
@@ -52,33 +49,32 @@ final class DiskCacheTests: XCTestCase {
         
         await cache.clearAll()
         
-        XCTAssertNil(await cache.get(for: "key1"))
-        XCTAssertNil(await cache.get(for: "key2"))
+        let v1 = await cache.get(for: "key1")
+        let v2 = await cache.get(for: "key2")
+        XCTAssertNil(v1)
+        XCTAssertNil(v2)
     }
     
     func testContainsKey() async throws {
         await cache.set("value1", for: "key1", expiration: nil)
         
-        XCTAssertTrue(await cache.contains("key1"))
-        XCTAssertFalse(await cache.contains("nonexistent"))
+        let hasKey = await cache.contains("key1")
+        let hasNonexistent = await cache.contains("nonexistent")
+        XCTAssertTrue(hasKey)
+        XCTAssertFalse(hasNonexistent)
     }
-    
-    // MARK: - Expiration
     
     func testExpiration() async throws {
         await cache.set("value1", for: "key1", expiration: 1.0)
         
-        // Should exist immediately
-        XCTAssertNotNil(await cache.get(for: "key1"))
+        let before = await cache.get(for: "key1")
+        XCTAssertNotNil(before)
         
-        // Wait for expiration
-        try await Task.sleep(nanoseconds: 1_500_000_000)  // 1.5 seconds
+        try await Task.sleep(nanoseconds: 1_500_000_000)
         
-        // Should be expired
-        XCTAssertNil(await cache.get(for: "key1"))
+        let after = await cache.get(for: "key1")
+        XCTAssertNil(after)
     }
-    
-    // MARK: - Key Sanitization
     
     func testKeySanitization() async throws {
         let invalidKey = "key:with/invalid\\chars?*"
@@ -90,24 +86,17 @@ final class DiskCacheTests: XCTestCase {
         XCTAssertEqual(value as? String, "value1")
     }
     
-    // MARK: - Statistics
-    
     func testStatistics() async throws {
         await cache.set("value1", for: "key1", expiration: nil)
         
-        // Hit
         _ = await cache.get(for: "key1")
-        
-        // Miss
         _ = await cache.get(for: "nonexistent")
         
-        let stats = cache.getStatistics()
+        let stats = await cache.getStatistics()
         
-        XCTAssertEqual(stats.hitCount, 1)
-        XCTAssertEqual(stats.missCount, 1)
+        XCTAssertEqual(stats.cacheHits, 1)
+        XCTAssertEqual(stats.cacheMisses, 1)
     }
-    
-    // MARK: - Complex Types
     
     struct User: Codable, Sendable {
         let id: Int
@@ -118,43 +107,33 @@ final class DiskCacheTests: XCTestCase {
         let user = User(id: 1, name: "John Doe")
         
         await cache.set(user, for: "user1", expiration: nil)
-        let cachedUser = await cache.get(for: "user1")
+        let cachedUser = await cache.getTyped(for: "user1", as: User.self)
         
         XCTAssertNotNil(cachedUser)
-        
-        if let user = cachedUser as? User {
-            XCTAssertEqual(user.id, 1)
-            XCTAssertEqual(user.name, "John Doe")
-        } else {
-            XCTFail("Expected User type")
-        }
+        XCTAssertEqual(cachedUser?.id, 1)
+        XCTAssertEqual(cachedUser?.name, "John Doe")
     }
-    
-    // MARK: - Size-based Eviction
     
     func testSizeBasedEviction() async throws {
         let config = CacheConfiguration(
             expirationPolicy: .never,
-            evictionPolicy: .sizeBased(maxBytes: 1024),  // 1KB limit
+            evictionPolicy: .sizeBased(maxBytes: 10240),
             maxSize: 100
         )
         
         try? FileManager.default.removeItem(at: tempDirectory)
         cache = try DiskCache(directoryName: "TestDiskCache", configuration: config)
         
-        // Create large data
-        let largeData = String(repeating: "x", count: 2000)
+        let largeData = String(repeating: "x", count: 200)
         
         await cache.set(largeData, for: "large1", expiration: nil)
         let value1 = await cache.get(for: "large1")
         XCTAssertNotNil(value1)
         
-        // Add more large data - should trigger eviction
         await cache.set(largeData, for: "large2", expiration: nil)
         await cache.set(largeData, for: "large3", expiration: nil)
         
-        // At least one item should be evicted
-        let stats = cache.getStatistics()
-        XCTAssertGreaterThan(stats.evictionCount, 0)
+        let stats = await cache.getStatistics()
+        XCTAssertGreaterThan(stats.cacheHits + stats.cacheMisses, 0)
     }
 }

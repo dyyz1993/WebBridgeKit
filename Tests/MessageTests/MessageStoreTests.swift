@@ -173,13 +173,15 @@ final class MessageStoreTests: XCTestCase {
     // MARK: - Count
     
     func testCount() async throws {
-        XCTAssertEqual(await store.count(), 0)
+        let countBefore = await store.count()
+        XCTAssertEqual(countBefore, 0)
         
         let message = StoredMessage(
             payload: MessagePayload(title: "Test", body: "Body", channel: "test")
         )
         try await store.save(message)
         
-        XCTAssertEqual(await store.count(), 1)
+        let countAfter = await store.count()
+        XCTAssertEqual(countAfter, 1)
     }
 }

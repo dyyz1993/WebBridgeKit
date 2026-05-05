@@ -216,11 +216,13 @@ public class SystemCacheStatistics {
 
     public func recordHit() {
         cacheHits += 1
+        totalRequests += 1
         updateHitRate()
     }
 
     public func recordMiss() {
         cacheMisses += 1
+        totalRequests += 1
         updateHitRate()
     }
 
