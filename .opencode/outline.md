@@ -2,7 +2,7 @@
 
 ## 会话信息
 - **创建时间**: 2026-05-05
-- **最后更新**: 2026-05-05 (Phase 4 已完成)
+- **最后更新**: 2026-05-05 (Phase 7 已完成)
 - **仓库**: github.com/dyyz1993/WebBridgeKit
 
 ## 当前架构（四层 + 基础设施）
@@ -45,7 +45,7 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 | 4 | Cache 独立（接口+测试套件）| ✅ 已完成 | 864a04d |
 | 4.5 | Message 引擎（推送+路由+Bark）| ⏳ 待开始 | |
 | 5 | AI 接口（HTTP API + MCP）| ⏳ 待开始 | |
-| 6 | 脚手架升级（主题+示例+Skill）| ⏳ 待开始 | |
+| 6 | 脚手架升级（主题+示例+Skill）| ✅ 已完成 | |
 | 7 | SuperApp 开发（完整业务）| ⏳ 待开始 | |
 
 ## Phase 1 — 基础设施 ✅ 已完成
@@ -176,6 +176,34 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 - [x] 所有接口协议清晰定义
 - [x] 测试覆盖率达到 90%+
 - [x] 文档完整
+
+## Phase 6 — 脚手架升级 ✅ 已完成
+
+### 6.1 目标
+- 主题系统（Theme）支持 dark/light 模式
+- Skills 模块化能力管理
+- 完整测试套件
+
+### 6.2 已完成功能
+- **ThemeManager**: Actor-based 线程安全主题管理器
+  - Theme 数据结构（colors, fonts, spacing, cornerRadius）
+  - dark/light 预设主题
+  - UIKit 全局外观配置（NavigationBar/TabBar）
+  - 主题变更通知机制
+- **SkillRegistry**: Actor-based 技能注册中心
+  - Protocol-based Skill 抽象
+  - 8 大技能分类（general/navigation/media/data/communication/device/network/debug）
+  - 注册/反注册/查询/执行/启用/禁用
+  - 统一错误处理（SkillError）
+- **BuiltinSkills**: 5 个内置技能
+  - openURL（导航）、share（通信）、scanQR（媒体）、deviceInfo（设备）、clearCache（数据）
+- **测试套件**: SkillRegistryTests（12 个测试用例）
+
+### 6.3 创建的文件
+- Sources/Theme/ThemeManager.swift
+- Sources/Skills/SkillRegistry.swift
+- Sources/Skills/BuiltinSkills.swift
+- Tests/SkillsTests/SkillRegistryTests.swift
 
 ## 关键文件位置
 
