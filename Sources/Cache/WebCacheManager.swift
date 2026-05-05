@@ -130,7 +130,7 @@ public class WebCacheManager {
         ManifestCacheManager.shared.clearAll()
         WebResourceCacheManager.shared.clearAll()
         // InterceptiveCacheManager.shared.clearAllCache()  // 已删除
-        PersistentManifestLoader.shared.clearAllCache()
+        NotificationCenter.default.post(name: .clearAllCaches, object: nil)
 
         // 3. 清理 Realm 统计数据 (必须在后台线程执行，避免 Realm 跨线程访问)
         DispatchQueue.global(qos: .utility).async {

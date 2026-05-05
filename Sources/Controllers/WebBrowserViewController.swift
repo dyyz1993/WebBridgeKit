@@ -1280,7 +1280,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
         // 查看缓存统计
         alertController.addAction(UIAlertAction(title: NSLocalizedString("💾 Cache Statistics", comment: ""), style: .default) { [weak self] _ in
-            self?.showCacheStatistics()
+            self?.showSystemCacheStatistics()
         })
 
         // 缓存调试面板
@@ -1313,8 +1313,8 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         navigationController?.pushViewController(bookmarksVC, animated: true)
     }
 
-    private func showCacheStatistics() {
-        WebCacheManager.shared.fetchCacheStatistics()
+    private func showSystemCacheStatistics() {
+        WebCacheManager.shared.fetchSystemCacheStatistics()
             .subscribe(onNext: { stats in
                 let message = stats.map { stat in
                     "\(stat.domain): \(ByteCountFormatter.string(fromByteCount: stat.totalSize, countStyle: .file))"

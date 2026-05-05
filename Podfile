@@ -38,6 +38,13 @@ target 'AppTemplate' do
   shared_pods
 end
 
+target 'Cache' do
+  pod 'RxSwift', '~> 6.0'
+  pod 'RxCocoa', '~> 6.0'
+  pod 'RealmSwift', '~> 10.42'
+  pod 'ZIPFoundation', '~> 0.9'
+end
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|

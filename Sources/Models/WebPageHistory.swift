@@ -8,7 +8,7 @@
 
 import Foundation
 import RealmSwift
-import RxDataSources
+
 
 // Framework imports
 
@@ -62,8 +62,10 @@ public class WebPageHistory: Object {
 
 // MARK: - IdentifiableType
 
+#if canImport(RxDataSources)
 extension WebPageHistory: IdentifiableType {
     public var identity: String {
         return id
     }
 }
+#endif

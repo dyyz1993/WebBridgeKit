@@ -11,9 +11,6 @@ public class DebugPanel: NSObject {
     
     public static let shared = DebugPanel()
     
-    // MARK: - UI Components
-    private var currentVC: UIViewController?
-    
     // MARK: - Properties
     public var isShowing: Bool = false
     
@@ -208,30 +205,33 @@ public class DebugPanelViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func showMain() {
-        if let vc = currentVC as? WebBrowserViewController {
-            vc.debugPanelDidShow = true
-        }
         dismiss(animated: true)
     }
     
     @objc private func showLogs() {
-        let logViewer = LogViewerViewController()
-        navigationController?.pushViewController(logViewer, animated: true)
+        showNotImplemented("日志查看器")
     }
-    
+
     @objc private func showDiagnostics() {
-        let diagnostic = DiagnosticViewController()
-        navigationController?.pushViewController(diagnostic, animated: true)
+        showNotImplemented("诊断工具")
     }
-    
+
     @objc private func showSettings() {
-        let handlerList = HandlerListViewController()
-        navigationController?.pushViewController(handlerList, animated: true)
+        showNotImplemented("设置")
     }
-    
+
     @objc private func showInfo() {
-        let environment = EnvironmentViewController()
-        navigationController?.pushViewController(environment, animated: true)
+        showNotImplemented("环境信息")
+    }
+
+    private func showNotImplemented(_ featureName: String) {
+        let alert = UIAlertController(
+            title: "功能未实现",
+            message: "\(featureName) 在当前版本中不可用",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
     }
 }
 

@@ -142,7 +142,7 @@ public protocol WebPageHistoryManaging {
 public protocol WebCacheManaging {
     /// 获取所有网站的缓存统计
     /// - Returns: Observable 序列，返回缓存统计数组
-    func fetchCacheStatistics() -> Observable<[WebCacheStatistics]>
+    func fetchSystemCacheStatistics() -> Observable<[WebCacheStatistics]>
 
     /// 清理所有缓存
     func clearAll()

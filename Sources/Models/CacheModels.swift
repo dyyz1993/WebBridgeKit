@@ -43,7 +43,7 @@ public struct CachedResource {
 // MARK: - CacheMetadata
 
 /// 缓存元数据
-public struct CacheMetadata {
+public struct ResourceCacheMetadata {
     public let url: URL
     public let localPath: String
     public let mimeType: String

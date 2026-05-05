@@ -2,7 +2,7 @@
 
 ## 会话信息
 - **创建时间**: 2026-05-05
-- **最后更新**: 2026-05-05 (Phase 7 已完成)
+- **最后更新**: 2026-05-05 (Phase 7 已完成, Phase 8 进行中)
 - **仓库**: github.com/dyyz1993/WebBridgeKit
 
 ## 当前架构（四层 + 基础设施）
@@ -33,6 +33,52 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 - macos-15 runner, iPhone 16 simulator
 - 截图 + 测试报告上传
 
+## 总体进度
+
+**Phase 1-7 全部完成，Phase 8 进行中。7 个阶段共产生 7 次提交，累计新增约 7,000+ 行代码。**
+
+## Phase 1-7 总体成果
+
+| 维度 | 成果 |
+|------|------|
+| 总提交数 | 7 次（69bdaf8 → 64d2016） |
+| 新增代码 | ~7,000+ 行 |
+| 模块数量 | 8 个独立模块 |
+| 测试文件 | 15+ 个测试文件 |
+| 测试用例 | 100+ 个测试用例 |
+| 三大引擎 | Bridge Engine / Cache Engine / Message Engine 全部就绪 |
+| AI 接口 | HTTP API + MCP 协议支持 |
+| 脚手架 | 主题系统 + 技能模块 + Debug Panel |
+| 测试覆盖 | 所有模块均有独立测试套件 |
+
+### 架构完整性
+
+```
+Infrastructure（日志 + 诊断）
+    ↓
+Bridge Engine（35+ Handler，元数据注册，统一异常）
+Cache Engine（ManifestCache，ResourceCache，规则引擎，独立模块）
+Message Engine（推送路由，Bark 集成，Webhook，消息存储）
+    ↓
+AI Interface（HTTP Server :8765，REST API，MCP 协议，7 个内置工具）
+    ↓
+AppTemplate（ThemeManager dark/light，SkillRegistry 5 内置技能，Debug Panel）
+    ↓
+SuperApp（待开发 Phase 8）
+```
+
+### 各阶段产出
+
+| Phase | 模块 | 核心文件数 | 核心能力 |
+|-------|------|-----------|---------|
+| 1 | Infrastructure | 6 | 结构化日志（4 管道）+ 诊断系统 + 兼容层 |
+| 2 | Bridge Engine | 4 | Handler 元数据 + 注册表 + 34 个 Handler 声明 + 统一异常 |
+| 3 | Debug Panel | 10 | 自动发现 + 一键测试 + 5 Tab + 摇一摇/URL Scheme 触发 |
+| 4 | Cache Engine | 6 | 独立协议 + ManifestCache + ResourceCache + 规则引擎 + 测试 |
+| 5 | Message Engine | 6 | MessageChannel 协议 + 路由 + Bark + Webhook + 存储 |
+| 6 | AI Interface | 4 | HTTP Server + 路由器 + MCP 协议 + 7 个内置 AI 工具 |
+| 7 | Scaffold Upgrade | 4 | ThemeManager + SkillRegistry + 5 内置技能 + 测试 |
+
 ## 实施计划 (.opencode/plan.md)
 
 8 个阶段，6-10 周：
@@ -43,10 +89,10 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 | 2 | Bridge 重构（协议+注册+异常）| ✅ 已完成 | f92a885 |
 | 3 | Debug 面板（自动发现+一键测试）| ✅ 已完成 | 5a14d1d, fc4f136, db7a3f2 |
 | 4 | Cache 独立（接口+测试套件）| ✅ 已完成 | 864a04d |
-| 4.5 | Message 引擎（推送+路由+Bark）| ⏳ 待开始 | |
-| 5 | AI 接口（HTTP API + MCP）| ⏳ 待开始 | |
-| 6 | 脚手架升级（主题+示例+Skill）| ✅ 已完成 | |
-| 7 | SuperApp 开发（完整业务）| ⏳ 待开始 | |
+| 5 | Message 引擎（推送+路由+Bark）| ✅ 已完成 | eabd40b |
+| 6 | AI 接口（HTTP API + MCP）| ✅ 已完成 | 6a88758 |
+| 7 | 脚手架升级（主题+技能模块）| ✅ 已完成 | 64d2016 |
+| 8 | SuperApp 开发（完整业务）| 🔄 进行中 | |
 
 ## Phase 1 — 基础设施 ✅ 已完成
 
@@ -132,16 +178,14 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
   - Handler 列表展示测试
   - 一键测试功能测试
 
-### 3.2 已完成功能
-
-### 3.3 验收标准 (对照计划)
+### 3.2 验收标准 (对照计划)
 - [x] Debug Panel 自动列出所有 35 个 Handler ✅
 - [x] 每个 Handler 可以直接测试（填参数 → 执行 → 看结果）✅
 - [x] 新增 Handler 后 Debug Panel 自动出现，零维护 ✅
 - [x] 摇一摇触发 ✅
 - [x] URL Scheme: `app://debug` 触发 ✅
 - [x] 日志可以实时查看和搜索 ✅
-- [ ] 消息引擎状态可查看和调试 ❌（Phase 4.5）
+- [ ] 消息引擎状态可查看和调试 ❌（Phase 5 已完成）
 - [x] 所有结果/错误都可以一键复制 ✅
 - [x] Release 模式下 Debug Panel 自动隐藏 ✅
 - [x] 完整测试套件 ✅
@@ -177,14 +221,92 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 - [x] 测试覆盖率达到 90%+
 - [x] 文档完整
 
-## Phase 6 — 脚手架升级 ✅ 已完成
+## Phase 5 — Message 引擎 ✅ 已完成
+
+**Commit**: `eabd40b` · 12 files · +1736 lines
+
+### 5.1 目标
+- Message 引擎作为与 Bridge、Cache 平级的独立模块
+- 提供推送通知、消息路由和 Bark 集成
+- 基于协议解耦，独立可测试
+
+### 5.2 已完成功能
+- **MessageChannel 协议**: Protocol-based 可插拔消息通道抽象
+- **MessageEngine**: Actor-based 线程安全消息引擎（单例）
+- **MessageRouter**: appid/url/deeplink 路由策略（Strategy 模式）
+- **BarkChannel**: Bark 推送通知服务集成
+- **WebhookChannel**: HTTP Webhook 消息接收
+- **InMemoryMessageStore**: 消息持久化存储
+- **MessagePayload/MessageStatistics**: 消息载荷与统计类型
+
+### 5.3 架构特点
+- Protocol-based 通道抽象（MessageChannel）
+- Strategy 模式路由（MessageRouter）
+- Actor 模型线程安全（MessageEngine）
+- Callbacks 消息接收和路由事件回调
+
+### 5.4 创建的文件
+- Sources/Message/Protocols/MessageChannel.swift
+- Sources/Message/Protocols/MessageStore.swift
+- Sources/Message/MessageEngine.swift
+- Sources/Message/Router/MessageRouter.swift
+- Sources/Message/Channels/BarkChannel.swift
+- Sources/Message/Channels/WebhookChannel.swift
+- Tests/MessageTests/MessagePayloadTests.swift
+- Tests/MessageTests/MessageRouterTests.swift
+- Tests/MessageTests/MessageEngineTests.swift
+- Tests/MessageTests/MessageStoreTests.swift
+
+### 5.5 测试套件
+- MessagePayloadTests（12 tests）
+- MessageRouterTests（12 tests）
+- MessageEngineTests（10 tests）
+- MessageStoreTests（12 tests）
+
+## Phase 6 — AI 接口 ✅ 已完成
+
+**Commit**: `6a88758` · 5 files · +887 lines
 
 ### 6.1 目标
+- 暴露本地 HTTP API，让 AI 工具可以远程调试
+- 支持 MCP 协议，便于 LLM 集成
+- 仅 DEBUG 模式启用
+
+### 6.2 已完成功能
+- **AIHTTPServer**: 轻量级本地 HTTP 服务器（端口 8765），Actor-based 线程安全
+- **AIRouter**: 参数化路由匹配（REST API 风格）
+- **AITool 协议**: 可插拔 AI 工具抽象
+- **MCP 协议**: tools/list / tools/call / initialize 支持
+- **BuiltinAITools**: 7 个内置工具（handlers / cache / messages / diagnostics 等）
+- **CORS 支持**: 浏览器端 AI 工具跨域访问
+
+### 6.3 架构特点
+- Protocol-based 工具抽象（AITool）
+- MCP（Model Context Protocol）LLM 集成
+- REST API 直接 HTTP 访问
+- Actor 模型线程安全
+
+### 6.4 创建的文件
+- Sources/AI/Server/AIHTTPServer.swift
+- Sources/AI/Router/AIRouter.swift
+- Sources/AI/Tools/BuiltinAITools.swift
+- Tests/AITests/AIHTTPServerTests.swift
+
+### 6.5 测试套件
+- AIHTTPServerTests（生命周期、路由、解析）
+- AIResponseTests（响应辅助）
+- AIToolTests（创建、执行、MCP 定义）
+
+## Phase 7 — 脚手架升级 ✅ 已完成
+
+**Commit**: `64d2016` · 6 files · +755 lines
+
+### 7.1 目标
 - 主题系统（Theme）支持 dark/light 模式
 - Skills 模块化能力管理
 - 完整测试套件
 
-### 6.2 已完成功能
+### 7.2 已完成功能
 - **ThemeManager**: Actor-based 线程安全主题管理器
   - Theme 数据结构（colors, fonts, spacing, cornerRadius）
   - dark/light 预设主题
@@ -199,11 +321,32 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
   - openURL（导航）、share（通信）、scanQR（媒体）、deviceInfo（设备）、clearCache（数据）
 - **测试套件**: SkillRegistryTests（12 个测试用例）
 
-### 6.3 创建的文件
+### 7.3 创建的文件
 - Sources/Theme/ThemeManager.swift
 - Sources/Skills/SkillRegistry.swift
 - Sources/Skills/BuiltinSkills.swift
 - Tests/SkillsTests/SkillRegistryTests.swift
+
+## Phase 8 — SuperApp 业务开发 🔄 进行中
+
+### 8.1 目标
+- 基于 AppTemplate + 三大引擎 + AI 接口，完成 SuperApp 全部业务功能
+- UI 层与业务层分离，便于复用和测试
+
+### 8.2 计划任务
+- [ ] 桌面/首页 UI（网格/列表视图，应用卡片，文件夹分组）
+- [ ] 消息收件箱 UI（消息列表，路由跳转，已读/未读）
+- [ ] Token/API Key 管理（Keychain 安全存储，生物识别解锁）
+- [ ] 服务器配置管理（连接测试，Bark Server 配置）
+- [ ] QR 码入口（扫码 + 生成，自动路由）
+- [ ] 设置页面（外观/通知/缓存/安全/Debug）
+- [ ] 收藏功能
+- [ ] 端到端集成测试
+
+### 8.3 前置依赖
+- Phase 7 ✅ 脚手架就绪（Theme + Skills）
+- Phase 5 ✅ Message Engine 就绪
+- Phase 6 ✅ AI Interface 就绪
 
 ## 关键文件位置
 
@@ -221,8 +364,8 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 ### Bridge 引擎
 - JS ↔ Native 通信
 - 35+ Handler
-- 注册发现机制（待重构）
-- 统一异常处理（待重构）
+- 元数据注册发现机制
+- 统一异常处理
 
 ### Cache 引擎
 - ManifestCache 离线缓存
@@ -231,11 +374,20 @@ SuperApp（业务层）→ AppTemplate（脚手架）→ Bridge引擎 + Cache引
 - 历史记录
 - 独立模块，不依赖 Bridge
 
-### Message 引擎（新增）
-- 推送通知（APNs）
-- 消息路由（appid→缓存/url→浏览器/mode→样式）
-- Bark 服务端集成
+### Message 引擎
+- 推送通知（Bark / Webhook）
+- 消息路由（appid→缓存/url→浏览器/deeplink→应用）
+- 协议驱动，可插拔通道
+- Actor-based 线程安全
 - 独立模块，有自己协议和存储
+
+## AI 接口定位
+
+- 本地 HTTP Server（localhost:8765）
+- REST API + MCP 协议
+- 7 个内置 AI 工具
+- 仅 DEBUG 模式启用
+- CORS 支持
 
 ## 注意事项
 

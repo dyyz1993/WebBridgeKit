@@ -158,8 +158,16 @@ public class PersistentManifestLoader: NSObject {
 
         super.init()
 
-        // 创建缓存目录
-        createCacheDirectoryIfNeeded()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleClearAllCaches),
+            name: .clearAllCaches,
+            object: nil
+        )
+    }
+
+    @objc private func handleClearAllCaches() {
+        clearAllCache()
     }
 
     // MARK: - Public API

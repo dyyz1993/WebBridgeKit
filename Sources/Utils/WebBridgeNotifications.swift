@@ -65,6 +65,11 @@ public extension Notification.Name {
     /// Posted when manifest cache is hit
     static let manifestCacheHit = Notification.Name("com.webbridgekit.manifest-cache.hit")
 
+    // MARK: - Cache Clear Notifications
+
+    /// Posted when all caches should be cleared
+    static let clearAllCaches = Notification.Name("wb-cache-clear-all")
+
     // MARK: - Resource Delivery Notifications
 
     /// Posted when a resource is delivered
