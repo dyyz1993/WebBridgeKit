@@ -198,14 +198,14 @@ targets:
       - Tests/CacheTests
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.CacheTests
-      TEST_TARGET_NAME: Cache
+      TEST_TARGET_NAME: WebBridgeKit
       SWIFT_VERSION: "5.0"
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
-      - target: Cache
+      - target: WebBridgeKit
 
   AI:
     type: framework
@@ -244,14 +244,14 @@ targets:
       - Tests/AITests
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.AITests
-      TEST_TARGET_NAME: AI
+      TEST_TARGET_NAME: WebBridgeKit
       SWIFT_VERSION: "5.0"
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
-      - target: AI
+      - target: WebBridgeKit
 
   Theme:
     type: framework
@@ -486,7 +486,7 @@ schemes:
       targets:
         - CacheTests
       coverageTargets:
-        - Cache
+        - WebBridgeKit
     archive:
       config: Release
 
@@ -499,7 +499,7 @@ schemes:
       targets:
         - CacheTests
       coverageTargets:
-        - Cache
+        - WebBridgeKit
 
   Message:
     build:
@@ -534,7 +534,7 @@ schemes:
       targets:
         - AITests
       coverageTargets:
-        - AI
+        - WebBridgeKit
     archive:
       config: Release
 
@@ -547,7 +547,7 @@ schemes:
       targets:
         - AITests
       coverageTargets:
-        - AI
+        - WebBridgeKit
 
   Theme:
     build:

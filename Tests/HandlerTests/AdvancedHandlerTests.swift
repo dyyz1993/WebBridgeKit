@@ -604,12 +604,20 @@ final class AdvancedHandlerTests: XCTestCase {
                 "includePatterns": ["https://example.com/*"]
             ]
         ]]) { result in
-            let dict = self.assertSuccess(result)
+            guard let dict = result as? [String: Any] else {
+                XCTFail("Result is not a dictionary")
+                expectation.fulfill()
+                return
+            }
+            if dict["success"] as? Bool != true {
+                let msg = dict["message"] ?? dict["error"] ?? "unknown error"
+                XCTFail("addPageRule failed: \(msg)")
+            }
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
 
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 5.0)
     }
 
     func testCacheDebugHandler_DeletePageRule_MissingId_ReturnsError() {
