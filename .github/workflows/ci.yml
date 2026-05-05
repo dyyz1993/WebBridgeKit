@@ -60,6 +60,11 @@ jobs:
           - AITests
           - SkillsTests
           - HandlerTests
+          - BridgeTests
+          - CoreTests
+          - ModelsTests
+          - UtilsTests
+          - ServicesTests
     steps:
       - uses: actions/checkout@v4
 
@@ -86,10 +91,25 @@ jobs:
             -scheme "${{ matrix.scheme }}" \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             -resultBundlePath "TestResults-${{ matrix.scheme }}.xcresult" \
+            -enableCodeCoverage YES \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output "test-results-${{ matrix.scheme }}.xml" || true
+            | xcpretty --color --report junit --output "test-results-${{ matrix.scheme }}.xml"
+
+      - name: Publish Coverage Report
+        if: always()
+        run: |
+          xcrun xccov view --report "TestResults-${{ matrix.scheme }}.xcresult" > "coverage-${{ matrix.scheme }}.txt" 2>/dev/null || echo "No coverage data"
+          cat "coverage-${{ matrix.scheme }}.txt" || true
+
+      - name: Upload Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.scheme }}
+          path: "coverage-${{ matrix.scheme }}.txt"
+          retention-days: 7
 
       - name: Upload test results
         if: always()
@@ -155,7 +175,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output build/test-results/smoke-junit.xml || true
+            | xcpretty --color --report junit --output build/test-results/smoke-junit.xml
 
       - name: Collect Screenshots
         if: always()
@@ -236,7 +256,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output build/test-results/core-junit.xml || true
+            | xcpretty --color --report junit --output build/test-results/core-junit.xml
 
       - name: Collect Screenshots
         if: always()
@@ -306,7 +326,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output build/test-results/manifest-junit.xml || true
+            | xcpretty --color --report junit --output build/test-results/manifest-junit.xml
 
       - name: Collect Screenshots
         if: always()
