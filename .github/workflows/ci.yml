@@ -84,6 +84,28 @@ jobs:
           xcodegen generate
           pod install
 
+      - name: Prepare Simulator
+        run: |
+          xcrun simctl list runtimes available | grep iOS
+          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for rt in data.get('runtimes', []):
+              ident = rt.get('identifier', '')
+              if 'iOS' in ident and rt.get('isAvailable', False):
+                  print(ident)
+                  break
+          ")
+          echo "Using runtime: $RUNTIME_ID"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "ERROR: Failed to create simulator"
+            exit 1
+          fi
+          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+          echo "Created simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+
       - name: Run ${{ matrix.scheme }}
         run: |
           set -o pipefail
@@ -91,7 +113,7 @@ jobs:
             -workspace WebBridgeKit.xcworkspace \
             -scheme "${{ matrix.scheme }}" \
             -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
             -resultBundlePath "TestResults-${{ matrix.scheme }}.xcresult" \
             -enableCodeCoverage YES \
             CODE_SIGN_IDENTITY="" \
@@ -159,11 +181,27 @@ jobs:
           sleep 2
           curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
 
-      - name: Create Simulator
+      - name: Prepare Simulator
         run: |
-          SIM_ID=$(xcrun simctl create "TestPhone" "iPhone 16 Pro" "latest" 2>/dev/null || echo "existing")
-          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
-          xcrun simctl boot "$SIM_ID" 2>/dev/null || true
+          xcrun simctl list runtimes available | grep iOS
+          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for rt in data.get('runtimes', []):
+              ident = rt.get('identifier', '')
+              if 'iOS' in ident and rt.get('isAvailable', False):
+                  print(ident)
+                  break
+          ")
+          echo "Using runtime: $RUNTIME_ID"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "ERROR: Failed to create simulator"
+            exit 1
+          fi
+          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+          echo "Created simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
 
       - name: Run Smoke Tests
         run: |
@@ -173,7 +211,7 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination 'platform=iOS Simulator,name=TestPhone' \
+            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
             -configuration Debug \
             -resultBundlePath build/test-results/SmokeResults \
             -only-testing:SuperAppUITests/MainFlowTests \
@@ -240,11 +278,27 @@ jobs:
           sleep 2
           curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
 
-      - name: Create Simulator
+      - name: Prepare Simulator
         run: |
-          SIM_ID=$(xcrun simctl create "TestPhone" "iPhone 16 Pro" "latest" 2>/dev/null || echo "existing")
-          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
-          xcrun simctl boot "$SIM_ID" 2>/dev/null || true
+          xcrun simctl list runtimes available | grep iOS
+          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for rt in data.get('runtimes', []):
+              ident = rt.get('identifier', '')
+              if 'iOS' in ident and rt.get('isAvailable', False):
+                  print(ident)
+                  break
+          ")
+          echo "Using runtime: $RUNTIME_ID"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "ERROR: Failed to create simulator"
+            exit 1
+          fi
+          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+          echo "Created simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
 
       - name: Run Core Tests (Parallel)
         run: |
@@ -254,7 +308,7 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination 'platform=iOS Simulator,name=TestPhone' \
+            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
             -configuration Debug \
             -resultBundlePath build/test-results/CoreResults \
             -parallel-testing-enabled YES \
@@ -318,11 +372,27 @@ jobs:
       - name: Install Pods
         run: pod install
 
-      - name: Create Simulator
+      - name: Prepare Simulator
         run: |
-          SIM_ID=$(xcrun simctl create "TestPhone" "iPhone 16 Pro" "latest" 2>/dev/null || echo "existing")
-          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
-          xcrun simctl boot "$SIM_ID" 2>/dev/null || true
+          xcrun simctl list runtimes available | grep iOS
+          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for rt in data.get('runtimes', []):
+              ident = rt.get('identifier', '')
+              if 'iOS' in ident and rt.get('isAvailable', False):
+                  print(ident)
+                  break
+          ")
+          echo "Using runtime: $RUNTIME_ID"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "ERROR: Failed to create simulator"
+            exit 1
+          fi
+          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+          echo "Created simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
 
       - name: Run Manifest Cache Tests (Sequential)
         run: |
@@ -332,7 +402,7 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination 'platform=iOS Simulator,name=TestPhone' \
+            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
             -configuration Debug \
             -resultBundlePath build/test-results/ManifestResults \
             -only-testing:SuperAppUITests/ManifestCacheUITests \
