@@ -36,6 +36,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             WebBridgeKit.shared.initialize()
         }
         
+        // Initialize all new engines
+        Task {
+            await EngineBootstrap.shared.initialize(in: self.window)
+        }
+        
         // 注册推送通知
         registerForPushNotifications(application)
 
@@ -189,6 +194,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 params: (userInfo["params"] as? [String: Any])?.compactMapValues { "\($0)" }
             )
             MessageManager.shared.addMessage(message)
+        }
+        
+        // Also forward to new MessageEngine
+        Task {
+            let payload = MessagePayload(
+                title: userInfo["title"] as? String ?? response.notification.request.content.title,
+                body: userInfo["body"] as? String ?? response.notification.request.content.body,
+                channel: "apns",
+                targetURL: userInfo["url"] as? String,
+                targetAppId: userInfo["appid"] as? String,
+                targetMode: userInfo["mode"] as? String,
+                userInfo: userInfo as? [String: String]
+            )
+            try? await MessageEngine.shared.receive(payload)
         }
         
         completionHandler()

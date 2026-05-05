@@ -19,6 +19,11 @@ public actor MessageEngine {
         onMessageReceived = callback
     }
     
+    /// Set the route callback from outside the actor
+    public func setOnRoute(_ callback: (@Sendable (MessagePayload, RouteTarget) -> Void)?) {
+        onRoute = callback
+    }
+    
     /// Route callback
     public var onRoute: (@Sendable (MessagePayload, RouteTarget) -> Void)?
     
