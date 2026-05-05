@@ -47,6 +47,64 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
+  unit-tests:
+    name: Unit Tests (${{ matrix.scheme }})
+    runs-on: macos-15
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        scheme:
+          - CacheTests
+          - MessageTests
+          - AITests
+          - SkillsTests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          brew install xcodegen
+          gem install cocoapods
+          xcodegen generate
+          pod install
+
+      - name: Run ${{ matrix.scheme }}
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme "${{ matrix.scheme }}" \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -resultBundlePath "TestResults-${{ matrix.scheme }}.xcresult" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output "test-results-${{ matrix.scheme }}.xml" || true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.scheme }}
+          path: "TestResults-${{ matrix.scheme }}.xcresult"
+          retention-days: 7
+
+      - name: Publish Test Report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: "test-results-${{ matrix.scheme }}.xml"
+          check_name: "Unit Test Results (${{ matrix.scheme }})"
+
   smoke-tests:
     name: 🚀 Smoke Tests
     runs-on: macos-15
