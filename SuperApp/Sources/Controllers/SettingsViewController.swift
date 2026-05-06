@@ -122,8 +122,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func navigateToDebugPanel() {
-        let vc = ManifestTestCasesViewController()
-        navigationController?.pushViewController(vc, animated: true)
+        let debugPanel = DebugPanelViewController()
+        let nav = UINavigationController(rootViewController: debugPanel)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
 
     private func navigateToUIDebug() {

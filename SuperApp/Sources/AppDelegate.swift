@@ -44,8 +44,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // 注册推送通知
         registerForPushNotifications(application)
 
-        // 创建窗口
-        window = UIWindow(frame: UIScreen.main.bounds)
+        // 创建窗口（支持摇一摇触发调试面板）
+        window = DebugWindow(frame: UIScreen.main.bounds)
 
         // 创建根视图控制器（使用 TabBar）
         let tabBarController = TabBarController()
@@ -203,3 +203,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     private func injectTestURLsForDebugging() {
     }
 }
+
+// MARK: - DebugWindow
+
+#if DEBUG
+private class DebugWindow: UIWindow {
+    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        super.motionEnded(motion, with: event)
+        guard motion == .motionShake else { return }
+
+        let debugPanel = DebugPanelViewController()
+        let nav = UINavigationController(rootViewController: debugPanel)
+        nav.modalPresentationStyle = .fullScreen
+
+        topViewController()?.present(nav, animated: true)
+    }
+
+    private func topViewController() -> UIViewController? {
+        let root = rootViewController
+        return getTopViewController(from: root)
+    }
+
+    private func getTopViewController(from vc: UIViewController?) -> UIViewController? {
+        guard let vc = vc else { return nil }
+        if let presented = vc.presentedViewController {
+            return getTopViewController(from: presented)
+        }
+        if let nav = vc as? UINavigationController {
+            return getTopViewController(from: nav.visibleViewController)
+        }
+        if let tab = vc as? UITabBarController {
+            return getTopViewController(from: tab.selectedViewController)
+        }
+        return vc
+    }
+}
+#else
+private typealias DebugWindow = UIWindow
+#endif
