@@ -1,0 +1,42 @@
+name: 'Setup Xcode Project'
+description: 'Install deps, generate project, pod install'
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache Homebrew
+      id: cache-brew
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Caches/Homebrew
+        key: brew-${{ runner.os }}-xcodegen-swiftlint
+
+    - name: Install xcodegen & swiftlint
+      if: steps.cache-brew.outputs.cache-hit != 'true'
+      shell: bash
+      run: brew install xcodegen swiftlint
+
+    - name: Ensure tools available
+      shell: bash
+      run: |
+        command -v xcodegen || brew install xcodegen
+        command -v swiftlint || brew install swiftlint
+
+    - name: Cache CocoaPods
+      uses: actions/cache@v4
+      with:
+        path: Pods
+        key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
+        restore-keys: pods-${{ runner.os }}-
+
+    - name: Cache DerivedData
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Developer/Xcode/DerivedData
+        key: derived-${{ runner.os }}-${{ hashFiles('Podfile.lock', 'project.yml') }}
+        restore-keys: derived-${{ runner.os }}-
+
+    - name: Generate & Install
+      shell: bash
+      run: |
+        xcodegen generate --spec project.yml --project .
+        pod install
