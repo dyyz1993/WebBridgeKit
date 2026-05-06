@@ -330,7 +330,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         commandBanner.transform = CGAffineTransform(translationX: 0, y: -44)
 
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        let scanImage = UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)
+        let scanImage = LucideIcon.scan.image(pointSize: 18, weight: .semibold)
         let scanItem = UIBarButtonItem(image: scanImage, style: .plain, target: self, action: #selector(openScanner))
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem

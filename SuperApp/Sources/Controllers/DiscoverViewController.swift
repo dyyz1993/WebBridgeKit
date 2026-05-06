@@ -374,7 +374,7 @@ class DiscoverAppCell: UICollectionViewCell {
 
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = 16
         return view
     }()

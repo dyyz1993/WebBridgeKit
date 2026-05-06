@@ -60,7 +60,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let fabButton: UIButton = {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold)
-        button.setImage(UIImage(systemName: "bell.badge.fill", withConfiguration: config), for: .normal)
+        button.setImage(LucideIcon.bell.image(pointSize: 22, weight: .semibold), for: .normal)
         button.backgroundColor = UIColor.systemBlue
         button.tintColor = .white
         button.layer.cornerRadius = 28
@@ -93,7 +93,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         navigationItem.hidesSearchBarWhenScrolling = false
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "checkmark.circle"),
+            image: LucideIcon.check.image(pointSize: 20),
             style: .plain,
             target: nil,
             action: nil
@@ -394,7 +394,7 @@ class InboxMessageCell: UITableViewCell {
 
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = 12
         return view
     }()

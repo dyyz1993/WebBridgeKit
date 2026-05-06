@@ -102,25 +102,25 @@ class TabBarController: UITabBarController {
         mainVC.tabBarItem = UITabBarItem(
             title: "首页",
             image: UIImage(systemName: "house"),
-            selectedImage: UIImage(systemName: "house.fill")
+            selectedImage: LucideIcon.home.image(pointSize: 20)
         )
 
         inboxVC.tabBarItem = UITabBarItem(
             title: "收信箱",
             image: UIImage(systemName: "tray"),
-            selectedImage: UIImage(systemName: "tray.fill")
+            selectedImage: LucideIcon.inbox.image(pointSize: 20)
         )
 
         discoverVC.tabBarItem = UITabBarItem(
             title: "发现",
             image: UIImage(systemName: "compass"),
-            selectedImage: UIImage(systemName: "compass.fill")
+            selectedImage: LucideIcon.compass.image(pointSize: 20)
         )
 
         settingsVC.tabBarItem = UITabBarItem(
             title: "设置",
             image: UIImage(systemName: "gearshape"),
-            selectedImage: UIImage(systemName: "gearshape.fill")
+            selectedImage: LucideIcon.settings.image(pointSize: 20)
         )
 
         viewControllers = [
