@@ -76,6 +76,9 @@ targets:
       INFOPLIST_KEY_NSAppTransportSecurity: YES
     dependencies:
       - target: WebBridgeKit
+        embed: true
+      - target: Message
+        embed: true
 
   SuperAppUITests:
     type: bundle.ui-testing

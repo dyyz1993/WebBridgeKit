@@ -16,8 +16,12 @@ public final class ClipboardMonitor: Sendable {
     private init() {}
 
     public func readClipboard() -> String? {
-        DispatchQueue.main.sync {
-            UIPasteboard.general.string
+        if Thread.isMainThread {
+            return UIPasteboard.general.string
+        } else {
+            return DispatchQueue.main.sync {
+                UIPasteboard.general.string
+            }
         }
     }
 
