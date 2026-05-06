@@ -62,6 +62,10 @@ target 'WebBridgeKit' do
   target 'ServicesTests' do
     inherit! :complete
   end
+
+  target 'CommandParserTests' do
+    inherit! :complete
+  end
 end
 
 target 'SuperApp' do

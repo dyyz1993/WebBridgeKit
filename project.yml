@@ -440,6 +440,24 @@ targets:
     dependencies:
       - target: WebBridgeKit
 
+  CommandParserTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - Tests/CommandParserTests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.CommandParserTests
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
 schemes:
   WebBridgeKit:
     build:
@@ -653,5 +671,16 @@ schemes:
       config: Debug
       targets:
         - ServicesTests
+      coverageTargets:
+        - WebBridgeKit
+
+  CommandParserTests:
+    build:
+      targets:
+        CommandParserTests: all
+    test:
+      config: Debug
+      targets:
+        - CommandParserTests
       coverageTargets:
         - WebBridgeKit
