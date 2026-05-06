@@ -82,10 +82,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // 每次 App 进入前台时，尝试解析剪贴板口令
-        // UI 测试时禁用剪贴板检测，避免主线程干扰
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
             TokenManager.shared.parseTokenFromClipboard()
+            CommandHandler.shared.checkClipboardOnForeground()
         }
     }
 

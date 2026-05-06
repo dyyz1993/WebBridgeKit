@@ -34,6 +34,8 @@ public final class EngineBootstrap {
 
         await bootstrapSkills()
 
+        await bootstrapCommandParser()
+
         print("  ✅ Bridge Engine: using WebBridgeKit HandlerRegistry")
 
         print("🚀 [EngineBootstrap] All engines initialized!")
@@ -155,6 +157,20 @@ public final class EngineBootstrap {
 
         let skills = await registry.listAll()
         print("  ✅ Skills Engine: \(skills.count) skills registered")
+    }
+
+    // MARK: - CommandParser
+
+    private func bootstrapCommandParser() async {
+        let config = CommandParserConfiguration(
+            maxPayloadSize: 4096,
+            maxAge: 300,
+            allowedSchemes: ["http", "https"],
+            enableSignatureVerification: false,
+            enableTimestampValidation: false
+        )
+        await CommandParser.shared.setConfiguration(config)
+        print("  ✅ CommandParser Engine: initialized (clipboard monitoring active)")
     }
 
     // MARK: - Helpers

@@ -165,10 +165,10 @@ class MainViewController: BaseViewController<MainViewModel> {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         Log.debug("viewDidAppear", category: .ui)
-        // 检查剪贴板中的口令
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
             PassphraseManager.shared.checkClipboard(from: self)
+            CommandHandler.shared.checkClipboardOnForeground()
         }
     }
 
