@@ -45,6 +45,8 @@ final class RetryHelperTests: XCTestCase {
                 XCTFail("Wrong error type")
             }
             XCTAssertEqual(attempt, 2)
+        } catch {
+            XCTFail("Expected WebBridgeError but got \(error)")
         }
     }
 
@@ -90,6 +92,8 @@ final class RetryHelperTests: XCTestCase {
             if case .networkUnavailable(let reason) = error {
                 XCTAssertEqual(reason, "offline")
             }
+        } catch {
+            XCTFail("Expected WebBridgeError but got \(error)")
         }
     }
 

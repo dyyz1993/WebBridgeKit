@@ -4,6 +4,7 @@
 //
 
 import XCTest
+import CryptoKit
 @testable import WebBridgeKit
 
 final class InputValidatorTests: XCTestCase {

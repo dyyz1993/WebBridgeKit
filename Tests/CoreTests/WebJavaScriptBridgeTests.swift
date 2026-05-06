@@ -40,7 +40,7 @@ final class WebJavaScriptBridgeTests: XCTestCase {
     func testGetHandlerCreatesSameInstanceOnSecondCall() {
         let first = bridge.getHandler(for: "share")
         let second = bridge.getHandler(for: "share")
-        XCTAssertTrue(first === second, "Lazy loading should return the same instance")
+        XCTAssertTrue((first as AnyObject) === (second as AnyObject), "Lazy loading should return the same instance")
     }
 
     func testGetHandlerForMultipleActions() {

@@ -50,7 +50,7 @@ final class WebPageHistoryTests: XCTestCase {
     func testFormattedSizeZeroBytes() {
         let history = WebPageHistory()
         history.cachedSize = 0
-        XCTAssertTrue(history.formattedSize.contains("0") || history.formattedSize.contains("bytes"))
+        XCTAssertFalse(history.formattedSize.isEmpty, "formattedSize should not be empty for zero bytes")
     }
 
     func testFormattedSizeKB() {

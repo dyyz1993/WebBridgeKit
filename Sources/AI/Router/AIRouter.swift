@@ -46,7 +46,7 @@ public actor AIRouter {
         }
 
         // Try parameterized route match
-        for (routeKey, handler) in routes where matchRoute(routeKey.path, requestPath: request.path) {
+        for (routeKey, handler) in routes where routeKey.method == request.method && matchRoute(routeKey.path, requestPath: request.path) {
             return await handler(request)
         }
 
