@@ -235,6 +235,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
         let scanImage = UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)
         let scanItem = UIBarButtonItem(image: scanImage, style: .plain, target: self, action: #selector(openScanner))
+        scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
         let clearImage = UIImage(systemName: "trash.circle.fill", withConfiguration: config)

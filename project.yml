@@ -152,7 +152,7 @@ targets:
       - Tests/MessageTests
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.MessageTests
-      TEST_TARGET_NAME: Message
+      TEST_TARGET_NAME: WebBridgeKit
       SWIFT_VERSION: "5.0"
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
@@ -160,7 +160,7 @@ targets:
       SDKROOT: iphonesimulator
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
     dependencies:
-      - target: Message
+      - target: WebBridgeKit
 
   Cache:
     type: framework

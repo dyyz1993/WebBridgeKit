@@ -130,8 +130,7 @@ final class MainFlowTests: XCTestCase {
     }
 
     func testMainPageAccessibility() {
-        // Verify all accessibility identifiers are present
-        XCTAssertTrue(app.otherElements["main.collectionView"].exists, "Collection view accessibility identifier should exist")
+        XCTAssertTrue(app.collectionViews["MainCollectionView"].waitForExistence(timeout: 10), "Collection view accessibility identifier should exist")
         XCTAssertTrue(app.buttons["main.scanButton"].exists, "Scan button accessibility identifier should exist")
     }
 }

@@ -5,7 +5,7 @@ class MainPage: BasePage {
     // MARK: - UI Elements
 
     var collectionView: XCUIElement {
-        return app.otherElements["main.collectionView"]
+        return app.collectionViews["MainCollectionView"]
     }
 
     var scanButton: XCUIElement {
