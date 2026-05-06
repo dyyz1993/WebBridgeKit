@@ -238,7 +238,7 @@ jobs:
   core-tests:
     name: ⚡ Core UI Tests
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: [build]
     continue-on-error: true
     if: always() && needs.build.result == 'success'

@@ -11,7 +11,7 @@ import SnapKit
 import RxSwift
 import RxCocoa
 import QuickLook
-import SVProgressHUD
+
 import WebBridgeKit
 
 /// Manifest 测试用例页面
@@ -157,9 +157,9 @@ class ManifestTestCasesViewController: UIViewController {
         output.loading
             .drive(onNext: { isLoading in
                 if isLoading {
-                    SVProgressHUD.show()
+                    HUDService.shared.show()
                 } else {
-                    SVProgressHUD.dismiss()
+                    HUDService.shared.dismiss()
                 }
             })
             .disposed(by: disposeBag)
@@ -169,10 +169,10 @@ class ManifestTestCasesViewController: UIViewController {
             .drive(onNext: { [weak self] isRunning in
                 if isRunning {
                     self?.navigationItem.rightBarButtonItem?.isEnabled = false
-                    SVProgressHUD.showInfo(withStatus: "测试运行中...")
+                    HUDService.shared.showInfo(withStatus: "测试运行中...")
                 } else {
                     self?.navigationItem.rightBarButtonItem?.isEnabled = true
-                    SVProgressHUD.dismiss()
+                    HUDService.shared.dismiss()
                 }
             })
             .disposed(by: disposeBag)

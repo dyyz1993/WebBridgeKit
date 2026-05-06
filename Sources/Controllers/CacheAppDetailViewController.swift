@@ -10,7 +10,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
-import SVProgressHUD
+
 
 /// 缓存应用详情页面
 /// 显示特定 AppID 下的所有缓存页面
@@ -188,8 +188,8 @@ public class CacheAppDetailViewController: UIViewController {
                 cell.index = index + 1
                 cell.onCopy = { pageKey in
                     UIPasteboard.general.string = pageKey
-                    SVProgressHUD.showSuccess(withStatus: "页面 Key 已复制")
-                    SVProgressHUD.dismiss(withDelay: 1.5)
+                    HUDService.shared.showSuccess(withStatus: "页面 Key 已复制")
+                    HUDService.shared.dismiss(withDelay: 1.5)
                 }
                 cell.onDelete = { [weak self] pageKey in
                     self?.onDeletePage?(pageKey)
@@ -218,8 +218,8 @@ public class CacheAppDetailViewController: UIViewController {
                 ManifestCacheManager.shared.removeCache(for: pageKey)
             }
 
-            SVProgressHUD.showSuccess(withStatus: "所有缓存已删除")
-            SVProgressHUD.dismiss(withDelay: 1.5)
+            HUDService.shared.showSuccess(withStatus: "所有缓存已删除")
+            HUDService.shared.dismiss(withDelay: 1.5)
 
             // 返回上一页
             self?.navigationController?.popViewController(animated: true)

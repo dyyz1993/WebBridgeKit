@@ -17,8 +17,7 @@ def shared_pods
   pod 'SwiftSoup', '~> 2.6'
   pod 'RealmSwift', '~> 10.42'
   pod 'ZIPFoundation', '~> 0.9'
-  pod 'Material', '~> 3.1'
-  pod 'SVProgressHUD', '~> 2.2'
+
 end
 
 target 'WebBridgeKit' do

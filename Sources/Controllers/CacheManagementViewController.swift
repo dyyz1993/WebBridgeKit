@@ -10,7 +10,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
-import SVProgressHUD
+
 
 /// 缓存管理页面
 /// 显示所有已缓存的应用列表，支持删除和刷新
@@ -196,9 +196,9 @@ public class CacheManagementViewController: UIViewController {
         output.loading
             .drive(onNext: { [weak self] isLoading in
                 if isLoading {
-                    SVProgressHUD.show()
+                    HUDService.shared.show()
                 } else {
-                    SVProgressHUD.dismiss()
+                    HUDService.shared.dismiss()
                     self?.refreshControl.endRefreshing()
                 }
             })
@@ -225,14 +225,14 @@ public class CacheManagementViewController: UIViewController {
         // 删除成功提示
         output.deleteSuccess
             .drive(onNext: {
-                SVProgressHUD.showSuccess(withStatus: "缓存已删除")
+                HUDService.shared.showSuccess(withStatus: "缓存已删除")
             })
             .disposed(by: disposeBag)
 
         // 全部删除成功提示
         output.deleteAllSuccess
             .drive(onNext: {
-                SVProgressHUD.showSuccess(withStatus: "所有缓存已清除")
+                HUDService.shared.showSuccess(withStatus: "所有缓存已清除")
             })
             .disposed(by: disposeBag)
     }
@@ -291,8 +291,8 @@ public class CacheManagementViewController: UIViewController {
     }
 
     private func showCopyFeedback(appID: String) {
-        SVProgressHUD.showSuccess(withStatus: "AppID 已复制")
-        SVProgressHUD.dismiss(withDelay: 1.5)
+        HUDService.shared.showSuccess(withStatus: "AppID 已复制")
+        HUDService.shared.dismiss(withDelay: 1.5)
     }
 
     private func showAppDetails(appInfo: CacheAppInfo) {
@@ -322,8 +322,8 @@ public class CacheManagementViewController: UIViewController {
     private func deleteCacheDirectly(appID: String) {
         ManifestCacheManager.shared.removeCacheByAppID(appID) {
             DispatchQueue.main.async {
-                SVProgressHUD.showSuccess(withStatus: "缓存已删除")
-                SVProgressHUD.dismiss(withDelay: 1.5)
+                HUDService.shared.showSuccess(withStatus: "缓存已删除")
+                HUDService.shared.dismiss(withDelay: 1.5)
                 // 手动刷新
                 self.manualRefreshSubject.accept(())
             }
@@ -334,8 +334,8 @@ public class CacheManagementViewController: UIViewController {
     private func deleteAllCacheDirectly() {
         ManifestCacheManager.shared.clearAll {
             DispatchQueue.main.async {
-                SVProgressHUD.showSuccess(withStatus: "所有缓存已清除")
-                SVProgressHUD.dismiss(withDelay: 1.5)
+                HUDService.shared.showSuccess(withStatus: "所有缓存已清除")
+                HUDService.shared.dismiss(withDelay: 1.5)
                 // 手动刷新
                 self.manualRefreshSubject.accept(())
             }
@@ -346,8 +346,8 @@ public class CacheManagementViewController: UIViewController {
         // 删除特定页面的缓存
         ManifestCacheManager.shared.removeCache(for: pageKey)
 
-        SVProgressHUD.showSuccess(withStatus: "页面缓存已删除")
-        SVProgressHUD.dismiss(withDelay: 1.5)
+        HUDService.shared.showSuccess(withStatus: "页面缓存已删除")
+        HUDService.shared.dismiss(withDelay: 1.5)
 
         // 刷新数据
         _ = viewModel.transform(input: CacheManagementViewModel.Input(
