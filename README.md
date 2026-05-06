@@ -1,5 +1,7 @@
 # WebBridgeKit
 
+![CI](https://github.com/dyyz1993/WebBridgeKit/actions/workflows/ci.yml/badge.svg)
+
 iOS WebView 与原生能力桥接框架，面向超级 App 场景设计。
 
 ## 项目介绍
