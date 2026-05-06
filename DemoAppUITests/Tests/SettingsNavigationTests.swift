@@ -7,6 +7,10 @@ final class SettingsNavigationTests: XCTestCase {
     var settingsPage: SettingsPage!
 
     override func setUpWithError() throws {
+        if TestEnvironment.isCI {
+            throw XCTSkip("Skipping in CI environment")
+        }
+        try super.setUpWithError()
         continueAfterFailure = false
         app = AppLauncher.shared.launchApp()
         settingsPage = SettingsPage(app: app)

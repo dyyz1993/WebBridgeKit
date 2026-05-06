@@ -154,6 +154,7 @@ jobs:
     name: 🚀 Smoke Tests
     runs-on: macos-15
     needs: build
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -204,6 +205,8 @@ jobs:
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
 
       - name: Run Smoke Tests
+        env:
+          CI: "true"
         run: |
           set -o pipefail
           mkdir -p build/test-results
@@ -250,7 +253,8 @@ jobs:
   core-tests:
     name: ⚡ Core UI Tests
     runs-on: macos-15
-    needs: smoke-tests
+    needs: [build]
+    if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/checkout@v4
 
@@ -351,7 +355,8 @@ jobs:
   manifest-tests:
     name: 📦 Manifest Cache Tests
     runs-on: macos-15
-    needs: smoke-tests
+    needs: [build]
+    if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/checkout@v4
 

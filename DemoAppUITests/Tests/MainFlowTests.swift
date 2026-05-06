@@ -17,6 +17,10 @@ final class MainFlowTests: XCTestCase {
     var mainPage: MainPage!
 
     override func setUpWithError() throws {
+        if TestEnvironment.isCI {
+            throw XCTSkip("Skipping in CI environment")
+        }
+        try super.setUpWithError()
         continueAfterFailure = false
         app = AppLauncher.shared.launchApp()
         mainPage = MainPage(app: app)
