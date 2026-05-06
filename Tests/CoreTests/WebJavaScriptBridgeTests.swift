@@ -23,8 +23,8 @@ final class WebJavaScriptBridgeTests: XCTestCase {
     // MARK: - Initialization
 
     func testInitializationRegistersHandlerFactories() {
-        XCTAssertFalse(bridge.nativeHandlers.isEmpty || bridge.nativeHandlers.count > 0)
-        XCTAssertTrue(bridge.nativeHandlers.isEmpty, "Handlers should be lazy-loaded")
+        XCTAssertTrue(bridge.nativeHandlers.isEmpty, "Handlers should be lazy-loaded and empty after initialization")
+        XCTAssertNotNil(bridge.getHandler(for: "share"), "Factory should create handler for known action")
     }
 
     func testGetHandlerReturnsHandlerForRegisteredAction() {

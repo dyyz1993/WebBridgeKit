@@ -47,7 +47,7 @@ public enum InputValidator {
         }
 
         // Define prohibited characters for path traversal prevention
-        let prohibitedCharacters = CharacterSet(charactersIn: ".\\:")
+        let prohibitedCharacters = CharacterSet(charactersIn: "\\:")
 
         // Check for path traversal patterns
         if name.range(of: "..", options: .literal) != nil {
