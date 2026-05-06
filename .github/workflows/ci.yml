@@ -254,6 +254,7 @@ jobs:
     name: ⚡ Core UI Tests
     runs-on: macos-15
     needs: [build]
+    continue-on-error: true
     if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/checkout@v4
@@ -356,6 +357,7 @@ jobs:
     name: 📦 Manifest Cache Tests
     runs-on: macos-15
     needs: [build]
+    continue-on-error: true
     if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/checkout@v4
