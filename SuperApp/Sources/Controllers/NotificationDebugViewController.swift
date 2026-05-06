@@ -9,6 +9,7 @@
 import UIKit
 import SnapKit
 import RxSwift
+import WebBridgeKit
 
 class NotificationDebugViewController: UIViewController {
 
@@ -70,7 +71,7 @@ class NotificationDebugViewController: UIViewController {
         let btn = UIButton(type: .system)
         btn.setTitle("发送", for: .normal)
         btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        btn.backgroundColor = .systemBlue
+        btn.backgroundColor = ThemeColors.current.primary
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = 12
         return btn
@@ -104,7 +105,7 @@ class NotificationDebugViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "调试面板"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
         setupUI()
         setupPicker()
         setupTemplates()
@@ -177,7 +178,7 @@ class NotificationDebugViewController: UIViewController {
 
     private func addSection(title: String, views: [UIView]) {
         let card = UIView()
-        card.backgroundColor = .secondarySystemGroupedBackground
+        card.backgroundColor = ThemeColors.current.cardBackground
         card.layer.cornerRadius = 16
 
         let header = UILabel()
@@ -258,7 +259,7 @@ class NotificationDebugViewController: UIViewController {
                 btn.setTitle(t.0, for: .normal)
                 btn.layer.cornerRadius = 8
                 btn.layer.borderWidth = 1
-                btn.layer.borderColor = UIColor.systemBlue.cgColor
+                btn.layer.borderColor = ThemeColors.current.primary.cgColor
                 btn.tag = j
                 btn.addTarget(self, action: #selector(applyTemplate(_:)), for: .touchUpInside)
                 row.addArrangedSubview(btn)

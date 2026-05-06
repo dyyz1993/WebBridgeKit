@@ -31,7 +31,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let pushURLLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .medium)
-        label.textColor = .label
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 0
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -40,8 +40,8 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("复制", for: .normal)
-        button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
-        button.backgroundColor = .systemBlue
+        button.setImage(LucideIcon.copy.image(pointSize: 16), for: .normal)
+        button.backgroundColor = ThemeColors.current.primary
         button.setTitleColor(.white, for: .normal)
         button.tintColor = .white
         button.layer.cornerRadius = 10
@@ -52,7 +52,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let shareButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("分享", for: .normal)
-        button.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
+        button.setImage(LucideIcon.share.image(pointSize: 16), for: .normal)
         button.backgroundColor = .systemGray
         button.setTitleColor(.white, for: .normal)
         button.tintColor = .white
@@ -73,7 +73,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let tokenLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         label.lineBreakMode = .byCharWrapping
         return label
@@ -83,14 +83,14 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let statsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         return label
     }()
 
     private static func makeCard() -> UIView {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = 16
         return view
     }
@@ -98,7 +98,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private static func makeCardHeader(_ text: String) -> UILabel {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.text = text
         return label
     }
@@ -111,7 +111,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     private func setupUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         view.addSubview(scrollView)
         scrollView.addSubview(stackView)

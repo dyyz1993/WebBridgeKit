@@ -9,6 +9,7 @@
 import UIKit
 import SnapKit
 import RxSwift
+import WebBridgeKit
 
 /// 菜单列表项单元格
 class MenuCell: UITableViewCell {
@@ -20,20 +21,20 @@ class MenuCell: UITableViewCell {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemBlue
+        imageView.tintColor = ThemeColors.current.primary
         return imageView
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
     private let arrowImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "chevron.right")
+        imageView.image = LucideIcon.chevronRight.templateImage(pointSize: 12)
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = UIColor.tertiaryLabel
         return imageView
@@ -42,7 +43,7 @@ class MenuCell: UITableViewCell {
     private let valueLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .right
         return label
     }()

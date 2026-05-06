@@ -9,6 +9,7 @@
 import UIKit
 import SnapKit
 import RxSwift
+import WebBridgeKit
 
 /// 开关列表项单元格
 class SwitchCell: UITableViewCell {
@@ -22,21 +23,21 @@ class SwitchCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         return label
     }()
 
     let switchControl: UISwitch = {
         let switchControl = UISwitch()
-        switchControl.onTintColor = UIColor.systemBlue
+        switchControl.onTintColor = ThemeColors.current.primary
         return switchControl
     }()
 

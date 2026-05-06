@@ -90,10 +90,9 @@ class URLGridCell: UICollectionViewCell {
 
     private let pinIconView: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
-        button.setImage(UIImage(systemName: "pin.fill", withConfiguration: config), for: .normal)
-        button.tintColor = UIColor.systemOrange
-        button.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.1)
+        button.setImage(LucideIcon.pin.templateImage(pointSize: 12, weight: .semibold), for: .normal)
+        button.tintColor = ThemeColors.current.warning
+        button.backgroundColor = ThemeColors.current.warning.withAlphaComponent(0.1)
         button.layer.cornerRadius = 9
         return button
     }()
@@ -115,8 +114,7 @@ class URLGridCell: UICollectionViewCell {
     private let cachedLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 9, weight: .medium)
-        label.textColor = UIColor.systemGreen
-        label.text = "未缓存"
+        label.textColor = ThemeColors.current.success
         label.textAlignment = .center
         return label
     }()
@@ -124,7 +122,7 @@ class URLGridCell: UICollectionViewCell {
     private let favoriteIconView: UIButton = {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
-        button.setImage(UIImage(systemName: "star.fill", withConfiguration: config), for: .normal)
+        button.setImage(LucideIcon.star.templateImage(pointSize: 12, weight: .semibold), for: .normal)
         button.tintColor = UIColor.systemYellow
         button.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.1)
         button.layer.cornerRadius = 9
@@ -133,7 +131,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let modeBadgeView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        view.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
         view.layer.cornerRadius = 4
         view.clipsToBounds = true
         return view
@@ -142,14 +140,14 @@ class URLGridCell: UICollectionViewCell {
     private let modeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 8, weight: .bold)
-        label.textColor = UIColor.systemBlue
+        label.textColor = ThemeColors.current.primary
         return label
     }()
 
     private let sizeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 9, weight: .medium)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         return label
     }()

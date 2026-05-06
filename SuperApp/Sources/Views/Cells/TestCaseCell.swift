@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 测试用例列表单元格
 class TestCaseCell: UITableViewCell {
@@ -26,10 +27,9 @@ class TestCaseCell: UITableViewCell {
 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
-        imageView.image = UIImage(systemName: "doc.text.fill", withConfiguration: config)
+        imageView.image = LucideIcon.docTextFill.image(pointSize: 24)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemBlue
+        imageView.tintColor = ThemeColors.current.primary
         return imageView
     }()
 
@@ -70,8 +70,8 @@ class TestCaseCell: UITableViewCell {
         let button = UIButton(type: .system)
         button.setTitle("运行", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        button.tintColor = UIColor.systemBlue
-        button.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        button.tintColor = ThemeColors.current.primary
+        button.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
         button.layer.cornerRadius = 8
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         button.accessibilityIdentifier = "testCaseCell.runButton"

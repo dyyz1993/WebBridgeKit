@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 操作面板视图
 /// 底部弹出的操作选择面板
@@ -23,7 +24,7 @@ class ActionSheetView: UIView {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBackground
+        view.backgroundColor = ThemeColors.current.background
         view.layer.cornerRadius = 16
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         view.layer.masksToBounds = true
@@ -33,7 +34,7 @@ class ActionSheetView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         return label
     }()
@@ -42,14 +43,14 @@ class ActionSheetView: UIView {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 1
-        stack.backgroundColor = UIColor.separator
+        stack.backgroundColor = ThemeColors.current.border
         return stack
     }()
 
     private let cancelButton: UIButton = {
         let button = UIButton(type: .system)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .regular)
-        button.backgroundColor = UIColor.systemBackground
+        button.backgroundColor = ThemeColors.current.background
         return button
     }()
 
@@ -137,18 +138,18 @@ class ActionSheetView: UIView {
         for action in actions {
             let button = UIButton(type: .system)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .regular)
-            button.backgroundColor = UIColor.systemBackground
+            button.backgroundColor = ThemeColors.current.background
             button.setTitle(action.title, for: .normal)
             button.tag = actions.firstIndex(where: { $0.title == action.title }) ?? 0
 
             // 根据样式设置颜色
             switch action.style {
             case .destructive:
-                button.setTitleColor(UIColor.systemRed, for: .normal)
+                button.setTitleColor(ThemeColors.current.error, for: .normal)
             case .cancel:
-                button.setTitleColor(UIColor.systemBlue, for: .normal)
+                button.setTitleColor(ThemeColors.current.primary, for: .normal)
             default:
-                button.setTitleColor(UIColor.systemBlue, for: .normal)
+                button.setTitleColor(ThemeColors.current.primary, for: .normal)
             }
 
             // Set accessibility identifier for testing

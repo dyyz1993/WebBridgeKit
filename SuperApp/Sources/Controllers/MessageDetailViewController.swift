@@ -45,7 +45,7 @@ class MessageDetailViewController: UIViewController {
 
     private let metaCard: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = 12
         return view
     }()
@@ -76,7 +76,7 @@ class MessageDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "消息详情"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
         setupUI()
         configure()
     }
@@ -123,14 +123,14 @@ class MessageDetailViewController: UIViewController {
             addMetaRow(label: "已读时间", value: formatter.string(from: readAt))
         }
 
-        addAction(title: "复制内容", icon: "doc.on.doc") { [weak self] in
+        addAction(title: "复制内容", icon: .copy) { [weak self] in
             guard let self = self else { return }
             UIPasteboard.general.string = self.message.payload.body
             HUDService.shared.showSuccess(withStatus: "已复制到剪贴板")
         }
 
         if let urlString = message.payload.targetURL, let url = URL(string: urlString) {
-            addAction(title: "打开链接", icon: "link") { [weak self] in
+            addAction(title: "打开链接", icon: .link) { [weak self] in
                 guard let self = self else { return }
                 WebBrowserManager.shared.openBrowser(
                     url: url,
@@ -141,7 +141,7 @@ class MessageDetailViewController: UIViewController {
         }
 
         if let appId = message.payload.targetAppId {
-            addAction(title: "打开应用", icon: "app.badge") { [weak self] in
+            addAction(title: "打开应用", icon: .appBadge) { [weak self] in
                 guard let self = self else { return }
                 if let result = ManifestStore.shared.getManifestByAppId(appId),
                    let url = URL(string: result.key) {
@@ -154,7 +154,7 @@ class MessageDetailViewController: UIViewController {
             }
         }
 
-        addAction(title: "删除", icon: "trash", isDestructive: true) { [weak self] in
+        addAction(title: "删除", icon: .trash, isDestructive: true) { [weak self] in
             guard let self = self else { return }
             let alert = UIAlertController(title: "确认删除", message: "确定要删除这条消息吗？", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "取消", style: .cancel))
@@ -198,15 +198,14 @@ class MessageDetailViewController: UIViewController {
         metaStackView.addArrangedSubview(container)
     }
 
-    private func addAction(title: String, icon: String, isDestructive: Bool = false, handler: @escaping () -> Void) {
+    private func addAction(title: String, icon: LucideIcon, isDestructive: Bool = false, handler: @escaping () -> Void) {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        button.setImage(UIImage(systemName: icon, withConfiguration: config), for: .normal)
+        button.setImage(icon.templateImage(pointSize: 16), for: .normal)
         button.setTitle("  \(title)", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 15, weight: .medium)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         button.contentHorizontalAlignment = .leading
         button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-        button.backgroundColor = .secondarySystemGroupedBackground
+        button.backgroundColor = ThemeColors.current.cardBackground
         button.layer.cornerRadius = 10
 
         if isDestructive {

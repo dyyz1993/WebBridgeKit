@@ -25,7 +25,7 @@ class DebugPanelViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "调试面板"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: "完成",
@@ -97,7 +97,7 @@ private class HandlerDebugListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         tableView.delegate = self
         tableView.dataSource = self
@@ -269,22 +269,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("▶️ Execute", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        button.backgroundColor = .systemBlue
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 10
-        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        button.addTarget(self, action: #selector(execute), for: .touchUpInside)
-        stack.addArrangedSubview(button)
-
-        let resultHeader = UILabel()
-        resultHeader.text = "Result"
-        resultHeader.font = .systemFont(ofSize: 15, weight: .semibold)
-        stack.addArrangedSubview(resultHeader)
-
-        resultTextView.isEditable = false
-        resultTextView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
-        resultTextView.heightAnchor.constraint(equalToConstant: 200).isActive = true
-        resultTextView.backgroundColor = .secondarySystemBackground
+        button.backgroundColor = ThemeColors.current.primary
         resultTextView.layer.cornerRadius = 8
         resultTextView.text = "Tap Execute to test..."
         stack.addArrangedSubview(resultTextView)
@@ -401,7 +386,7 @@ private class LogDebugViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         let toolbar = makeToolbar()
         textView.isEditable = false
@@ -508,7 +493,7 @@ private class EnvironmentDebugViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: "Copy",

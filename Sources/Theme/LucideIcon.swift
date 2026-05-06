@@ -45,9 +45,22 @@ public enum LucideIcon: String, CaseIterable {
     case arrowUp = "arrow.up"
     case arrowDown = "arrow.down"
 
+    case chevronDown = "chevron.down"
+
     case bug = "exclamationmark.bubble.fill"
     case terminal = "chevron.left.forwardslash.chevron.right"
     case chartBar = "chart.bar.fill"
+
+    case docText = "doc.text"
+    case docTextFill = "doc.text.fill"
+    case appFill = "app.fill"
+    case appBadge = "app.badge.fill"
+    case pinOutline = "pin"
+    case starOutline = "star"
+    case squarePencil = "square.and.pencil"
+    case xmarkCircle = "xmark.circle"
+    case linkBadgePlus = "link.badge.plus"
+    case paperplane = "paperplane"
 
     case volume = "speaker.wave.2.fill"
     case mic = "mic.fill"

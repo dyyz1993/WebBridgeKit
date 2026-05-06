@@ -16,7 +16,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
 
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .insetGrouped)
-        table.backgroundColor = UIColor.systemGroupedBackground
+        table.backgroundColor = ThemeColors.current.background
         table.register(MenuCell.self, forCellReuseIdentifier: MenuCell.identifier)
         table.separatorStyle = .singleLine
         table.separatorInset = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 0)
@@ -35,7 +35,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func setupUI() {
-        view.backgroundColor = UIColor.systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
         view.addSubview(tableView)
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()

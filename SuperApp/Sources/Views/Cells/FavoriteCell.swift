@@ -28,9 +28,8 @@ class FavoriteCell: UITableViewCell {
     private let faviconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemBlue
-        imageView.backgroundColor = UIColor.tertiarySystemBackground
-        imageView.layer.cornerRadius = 8
+        imageView.tintColor = ThemeColors.current.primary
+        imageView.backgroundColor = .tertiarySystemBackground
         imageView.layer.masksToBounds = true
         imageView.clipsToBounds = true
         return imageView
@@ -54,17 +53,15 @@ class FavoriteCell: UITableViewCell {
 
     private let pinButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        let image = UIImage(systemName: "pin.fill", withConfiguration: config)
+        let image = LucideIcon.pin.image(pointSize: 16)
         button.setImage(image, for: .normal)
-        button.tintColor = UIColor.systemOrange
+        button.tintColor = ThemeColors.current.warning
         return button
     }()
 
     private let favoriteIconView: UIImageView = {
         let imageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        imageView.image = UIImage(systemName: "star.fill", withConfiguration: config)
+        imageView.image = LucideIcon.star.image(pointSize: 18)
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = UIColor.systemYellow
         return imageView
@@ -73,8 +70,8 @@ class FavoriteCell: UITableViewCell {
     private let cacheModeSwitch: UISwitch = {
         let switchControl = UISwitch()
         switchControl.isOn = false
-        switchControl.tintColor = UIColor.systemGreen
-        switchControl.onTintColor = UIColor.systemGreen
+        switchControl.tintColor = ThemeColors.current.success
+        switchControl.onTintColor = ThemeColors.current.success
         return switchControl
     }()
 
@@ -215,7 +212,7 @@ class FavoriteCell: UITableViewCell {
 
         // 置顶状态
         pinButton.isHidden = false
-        pinButton.tintColor = favorite.isPinned ? UIColor.systemOrange : UIColor.systemGray3
+        pinButton.tintColor = favorite.isPinned ? ThemeColors.current.warning : .systemGray3
 
         // 收藏图标
         favoriteIconView.isHidden = false
