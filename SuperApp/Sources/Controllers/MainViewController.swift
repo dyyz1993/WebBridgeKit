@@ -344,14 +344,14 @@ class MainViewController: BaseViewController<MainViewModel> {
                 guard let self = self else { return }
 
                 if isEmpty {
-                    // 显示空状态，隐藏collectionView
                     self.view.bringSubviewToFront(self.emptyStateView)
                     self.emptyStateView.isHidden = false
                     self.collectionView.isHidden = true
+                    self.collectionView.alpha = 0
                 } else {
-                    // 隐藏空状态，显示collectionView
                     self.emptyStateView.isHidden = true
                     self.collectionView.isHidden = false
+                    self.collectionView.alpha = 1
                     self.view.bringSubviewToFront(self.collectionView)
                 }
             })

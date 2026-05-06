@@ -208,13 +208,12 @@ final class SettingsNavigationTests: XCTestCase {
     }
 
     func testSettingsAccessibility() {
-        // Verify accessibility identifiers
-        XCTAssertTrue(app.tables["settings.tableView"].exists, "Table view accessibility identifier should exist")
+        let tableView = app.tables["settings.tableView"]
+        XCTAssertTrue(tableView.waitForExistence(timeout: 10), "Table view accessibility identifier should exist")
 
-        // Verify each cell's accessibility identifier
-        XCTAssertTrue(app.tables["settings.tableView"].cells["settings.cell.tokenManage"].exists, "Token manage cell accessibility identifier should exist")
-        XCTAssertTrue(app.tables["settings.tableView"].cells["settings.cell.serverConfig"].exists, "Server config cell accessibility identifier should exist")
-        XCTAssertTrue(app.tables["settings.tableView"].cells["settings.cell.apiKeyManage"].exists, "API key manage cell accessibility identifier should exist")
-        XCTAssertTrue(app.tables["settings.tableView"].cells["settings.cell.about"].exists, "About cell accessibility identifier should exist")
+        XCTAssertTrue(tableView.cells["settings.cell.tokenManage"].waitForExistence(timeout: 5), "Token manage cell accessibility identifier should exist")
+        XCTAssertTrue(tableView.cells["settings.cell.serverConfig"].waitForExistence(timeout: 5), "Server config cell accessibility identifier should exist")
+        XCTAssertTrue(tableView.cells["settings.cell.apiKeyManage"].waitForExistence(timeout: 5), "API key manage cell accessibility identifier should exist")
+        XCTAssertTrue(tableView.cells["settings.cell.about"].waitForExistence(timeout: 5), "About cell accessibility identifier should exist")
     }
 }

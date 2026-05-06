@@ -2,6 +2,16 @@
 import XCTest
 import Foundation
 
+// MARK: - CI Environment Detection
+
+enum TestEnvironment {
+    static var isCI: Bool {
+        return ProcessInfo.processInfo.environment["CI"] != nil
+            || ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] != nil
+            || ProcessInfo.processInfo.environment["FASTLANE"] != nil
+    }
+}
+
 // MARK: - Error Types
 
 public enum ManifestTestError: Error {

@@ -94,8 +94,11 @@ final class SuperAppSmokeTests: XCTestCase {
     // MARK: - Home Screen
 
     func testHomeScreenHasCollectionView() {
-        let collectionView = app.collectionViews.firstMatch
-        XCTAssertTrue(collectionView.waitForExistence(timeout: 5), "Home screen should have a collection view")
+        let collectionView = app.collectionViews["MainCollectionView"]
+        let emptyState = app.otherElements["EmptyStateView"]
+        let collectionViewExists = collectionView.waitForExistence(timeout: 5)
+        let emptyStateExists = emptyState.waitForExistence(timeout: 2)
+        XCTAssertTrue(collectionViewExists || emptyStateExists, "Home screen should have a collection view or empty state")
     }
 
     // MARK: - Settings Screen

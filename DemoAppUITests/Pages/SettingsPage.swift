@@ -78,7 +78,7 @@ class SettingsPage: BasePage {
 
     func verifyMenuItemExists(_ item: SettingsMenuItem) -> Bool {
         let cell = tableView.cells[item.cellIdentifier]
-        return cell.exists
+        return cell.waitForExistence(timeout: 5)
     }
 
     func verifyAllMenuItemsExist() -> Bool {
