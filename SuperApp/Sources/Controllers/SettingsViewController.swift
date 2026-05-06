@@ -87,6 +87,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .drive(onNext: { [weak self] in self?.openNotificationSettings() })
             .disposed(by: rx)
 
+        output.navigateToUIDebug
+            .drive(onNext: { [weak self] in self?.navigateToUIDebug() })
+            .disposed(by: rx)
+
         output.clearCache
             .drive(onNext: { [weak self] in self?.showClearCacheConfirm() })
             .disposed(by: rx)
@@ -118,6 +122,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func navigateToDebugPanel() {
+        let vc = ManifestTestCasesViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func navigateToUIDebug() {
         let vc = NotificationDebugViewController()
         navigationController?.pushViewController(vc, animated: true)
     }

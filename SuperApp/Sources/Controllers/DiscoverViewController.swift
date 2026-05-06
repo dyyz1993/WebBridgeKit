@@ -26,6 +26,12 @@ class DiscoverViewController: UIViewController {
 
     private var sections: [DiscoverSection] = []
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MM-dd HH:mm"
+        return f
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "发现"
@@ -77,6 +83,8 @@ class DiscoverViewController: UIViewController {
             description: "缓存的应用会显示在这里",
             actionTitle: nil
         )
+
+        addLongPressGesture()
     }
 
     private func createSectionLayout(section: Int) -> NSCollectionLayoutSection {
@@ -112,12 +120,12 @@ class DiscoverViewController: UIViewController {
 
     @objc private func refreshData() {
         loadData()
-        collectionView.refreshControl?.endRefreshing()
     }
 
     private func loadData() {
         buildSections()
         collectionView.reloadData()
+        collectionView.refreshControl?.endRefreshing()
         emptyStateView.isHidden = !sections.allSatisfy { $0.items.isEmpty }
     }
 
@@ -127,10 +135,14 @@ class DiscoverViewController: UIViewController {
         let histories = WebPageHistoryManager.shared.getAllHistories()
         let recentItems = histories.prefix(6).map { history -> DiscoverItem in
             let cacheStatus = DiscoverItem.CacheStatus(from: history)
+            let cacheSize = ByteCountFormatter.string(fromByteCount: history.cachedSize, countStyle: .file)
+            let lastAccessed = Self.dateFormatter.string(from: history.lastVisitDate)
             return DiscoverItem(
                 name: history.title ?? history.url,
                 url: history.url,
-                cacheStatus: cacheStatus
+                cacheStatus: cacheStatus,
+                cacheSize: cacheSize,
+                lastAccessed: lastAccessed
             )
         }
         newSections.append(DiscoverSection(title: "最近使用", items: recentItems))
@@ -142,10 +154,17 @@ class DiscoverViewController: UIViewController {
                 let name = manifest.name ?? key
                 let cacheStatus: DiscoverItem.CacheStatus = manifest.persistent == true ? .persistent : .cached
                 let entryURL = manifest.resources.values.first ?? key
+                let cacheSize = ByteCountFormatter.string(
+                    fromByteCount: PersistentManifestLoader.shared.getCacheSize(for: key),
+                    countStyle: .file
+                )
+                let lastAccessed = manifest.lastUpdated.map { Self.dateFormatter.string(from: $0) }
                 cachedItems.append(DiscoverItem(
                     name: name,
                     url: entryURL,
-                    cacheStatus: cacheStatus
+                    cacheStatus: cacheStatus,
+                    cacheSize: cacheSize,
+                    lastAccessed: lastAccessed
                 ))
             }
         }
@@ -175,6 +194,8 @@ struct DiscoverItem {
     let name: String
     let url: String
     let cacheStatus: CacheStatus
+    var cacheSize: String
+    var lastAccessed: String?
 
     enum CacheStatus {
         case persistent
@@ -252,6 +273,65 @@ extension DiscoverViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = sections[indexPath.section].items[indexPath.item]
         openURL(item.url)
+    }
+}
+
+// MARK: - Long Press
+
+extension DiscoverViewController {
+    func addLongPressGesture() {
+        let gesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        collectionView.addGestureRecognizer(gesture)
+    }
+
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        let point = gesture.location(in: collectionView)
+        guard let indexPath = collectionView.indexPathForItem(at: point) else { return }
+        let item = sections[indexPath.section].items[indexPath.item]
+        showItemActionSheet(item: item)
+    }
+
+    private func showItemActionSheet(item: DiscoverItem) {
+        let alert = UIAlertController(
+            title: item.name,
+            message: "缓存: \(item.cacheSize)\(item.lastAccessed.map { " · 访问: \($0)" } ?? "")",
+            preferredStyle: .actionSheet
+        )
+        alert.addAction(UIAlertAction(title: "打开", style: .default) { [weak self] _ in
+            self?.openURL(item.url)
+        })
+        alert.addAction(UIAlertAction(title: "删除缓存", style: .destructive) { [weak self] _ in
+            self?.deleteCache(for: item)
+        })
+        alert.addAction(UIAlertAction(title: "分享", style: .default) { [weak self] _ in
+            self?.shareURL(item.url)
+        })
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        present(alert, animated: true)
+    }
+
+    private func deleteCache(for item: DiscoverItem) {
+        if let url = URL(string: item.url) {
+            PersistentManifestLoader.shared.clearCache(for: url)
+        }
+        ManifestStore.shared.removeManifest(for: item.name)
+        loadData()
+    }
+
+    private func shareURL(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
+        present(activityVC, animated: true)
     }
 }
 
@@ -335,6 +415,15 @@ class DiscoverAppCell: UICollectionViewCell {
         return label
     }()
 
+    private let detailLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 10, weight: .regular)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.numberOfLines = 1
+        return label
+    }()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -352,6 +441,7 @@ class DiscoverAppCell: UICollectionViewCell {
         cardView.addSubview(nameLabel)
         cardView.addSubview(badgeView)
         badgeView.addSubview(badgeLabel)
+        cardView.addSubview(detailLabel)
 
         cardView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(4)
@@ -383,6 +473,13 @@ class DiscoverAppCell: UICollectionViewCell {
         badgeLabel.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 6, bottom: 0, right: 6))
         }
+
+        detailLabel.snp.makeConstraints { make in
+            make.top.equalTo(badgeView.snp.bottom).offset(4)
+            make.leading.equalToSuperview().offset(8)
+            make.trailing.equalToSuperview().offset(-8)
+            make.bottom.equalToSuperview().offset(-8)
+        }
     }
 
     func configure(with item: DiscoverItem) {
@@ -390,6 +487,15 @@ class DiscoverAppCell: UICollectionViewCell {
         badgeLabel.text = item.cacheStatus.displayText
         badgeLabel.textColor = item.cacheStatus.color
         badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(0.1)
+
+        var detailParts: [String] = []
+        if !item.cacheSize.isEmpty && item.cacheSize != "0 bytes" {
+            detailParts.append(item.cacheSize)
+        }
+        if let accessed = item.lastAccessed {
+            detailParts.append(accessed)
+        }
+        detailLabel.text = detailParts.isEmpty ? nil : detailParts.joined(separator: " · ")
 
         if let url = URL(string: item.url), let host = url.host {
             let iconImage: UIImage

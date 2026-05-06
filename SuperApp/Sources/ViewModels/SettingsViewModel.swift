@@ -25,6 +25,7 @@ class SettingsViewModel: ViewModel {
         let navigateToManagement: Driver<Void>
         let navigateToAbout: Driver<Void>
         let navigateToDebugPanel: Driver<Void>
+        let navigateToUIDebug: Driver<Void>
         let openNotificationSettings: Driver<Void>
         let clearCache: Driver<Void>
     }
@@ -89,6 +90,7 @@ class SettingsViewModel: ViewModel {
     private let navigateToManagementRelay = PublishRelay<Void>()
     private let navigateToAboutRelay = PublishRelay<Void>()
     private let navigateToDebugPanelRelay = PublishRelay<Void>()
+    private let navigateToUIDebugRelay = PublishRelay<Void>()
     private let openNotificationSettingsRelay = PublishRelay<Void>()
     private let clearCacheRelay = PublishRelay<Void>()
 
@@ -105,7 +107,7 @@ class SettingsViewModel: ViewModel {
                 case .management: self.navigateToManagementRelay.accept(())
                 case .clearCache: self.clearCacheRelay.accept(())
                 case .debugPanel: self.navigateToDebugPanelRelay.accept(())
-                case .uiDebug: self.navigateToDebugPanelRelay.accept(())
+                case .uiDebug: self.navigateToUIDebugRelay.accept(())
                 case .about: self.navigateToAboutRelay.accept(())
                 case .versionInfo: break
                 }
@@ -120,6 +122,7 @@ class SettingsViewModel: ViewModel {
             navigateToManagement: navigateToManagementRelay.asDriver(onErrorJustReturn: ()),
             navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
             navigateToDebugPanel: navigateToDebugPanelRelay.asDriver(onErrorJustReturn: ()),
+            navigateToUIDebug: navigateToUIDebugRelay.asDriver(onErrorJustReturn: ()),
             openNotificationSettings: openNotificationSettingsRelay.asDriver(onErrorJustReturn: ()),
             clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ())
         )

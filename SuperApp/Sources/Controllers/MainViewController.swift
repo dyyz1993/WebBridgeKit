@@ -51,6 +51,11 @@ class MainViewController: BaseViewController<MainViewModel> {
     private let quickActionCellId = "QuickActionCell"
 
     private var pushURL: String {
+        if let activeURL = ServerConfigManager.shared.getActiveBaseURL() {
+            let key = PushNotificationManager.shared.barkKey
+                ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
+            return key.isEmpty ? activeURL : "\(activeURL)/\(key)"
+        }
         let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         return key.isEmpty ? server : "\(server)/\(key)"
@@ -60,12 +65,30 @@ class MainViewController: BaseViewController<MainViewModel> {
         return PushNotificationManager.shared.deviceToken ?? "未注册"
     }
 
+    private var isTokenRegistered: Bool {
+        return PushNotificationManager.shared.deviceToken != nil
+    }
+
     private let quickActions: [(icon: String, title: String, color: UIColor)] = [
         ("qrcode.viewfinder", "扫码", .systemBlue),
         ("doc.on.clipboard", "粘贴", .systemOrange),
         ("text.badge.star", "口令", .systemPurple),
         ("ladybug", "调试", .systemGreen)
     ]
+
+    private lazy var commandBanner: CommandBannerView = {
+        let banner = CommandBannerView()
+        banner.isHidden = true
+        banner.onTap = { [weak self] in
+            self?.executePendingCommand()
+        }
+        banner.onDismiss = { [weak self] in
+            self?.hideCommandBanner()
+        }
+        return banner
+    }()
+
+    private var pendingCommandTitle: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -170,7 +193,88 @@ class MainViewController: BaseViewController<MainViewModel> {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
             PassphraseManager.shared.checkClipboard(from: self)
-            CommandHandler.shared.checkClipboardOnForeground()
+            self.checkClipboardForCommand()
+        }
+    }
+
+    private func checkClipboardForCommand() {
+        guard let text = ClipboardMonitor.shared.readClipboard(),
+              ClipboardMonitor.shared.looksLikeCommand(text) else {
+            hideCommandBanner()
+            return
+        }
+
+        Task {
+            do {
+                let payload = try await CommandParser.shared.parse(text)
+                let title = payload.title ?? payload.appid
+                await MainActor.run { [weak self] in
+                    self?.pendingCommandTitle = title
+                    self?.showCommandBanner(title: title)
+                }
+            } catch {
+                hideCommandBanner()
+            }
+        }
+    }
+
+    private func showCommandBanner(title: String) {
+        commandBanner.configure(title: title)
+        commandBanner.isHidden = false
+        UIView.animate(withDuration: 0.3) {
+            self.commandBanner.alpha = 1
+            self.commandBanner.transform = .identity
+        }
+    }
+
+    private func hideCommandBanner() {
+        pendingCommandTitle = nil
+        guard !commandBanner.isHidden else { return }
+        UIView.animate(withDuration: 0.25, animations: {
+            self.commandBanner.alpha = 0
+            self.commandBanner.transform = CGAffineTransform(translationX: 0, y: -self.commandBanner.bounds.height)
+        }, completion: { _ in
+            self.commandBanner.isHidden = true
+        })
+    }
+
+    private func executePendingCommand() {
+        let title = pendingCommandTitle
+        hideCommandBanner()
+
+        guard let text = ClipboardMonitor.shared.readClipboard(),
+              ClipboardMonitor.shared.looksLikeCommand(text) else { return }
+        UIPasteboard.general.string = ""
+
+        Task {
+            do {
+                let payload = try await CommandParser.shared.parse(text)
+                let route = CommandRouter.shared.route(payload)
+                await MainActor.run {
+                    switch route {
+                    case .cachedApp(let appid):
+                        if let urlStr = payload.url, let url = URL(string: urlStr) {
+                            WebBrowserManager.shared.openBrowser(url: url)
+                        } else {
+                            showAlert(title: "口令解析成功", message: "应用 \(appid) 未找到本地缓存")
+                        }
+                    case .url(let urlString):
+                        if let url = URL(string: urlString) {
+                            openURL(url)
+                        }
+                    case .deeplink(let urlString):
+                        if let url = URL(string: urlString) {
+                            UIApplication.shared.open(url)
+                        }
+                    case .none:
+                        break
+                    @unknown default:
+                        break
+                    }
+                }
+            } catch {
+                Log.warning("Command parse failed: \(error)", category: .general)
+            }
         }
     }
 
@@ -215,6 +319,15 @@ class MainViewController: BaseViewController<MainViewModel> {
         loadingView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+
+        view.addSubview(commandBanner)
+        commandBanner.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(44)
+        }
+        commandBanner.alpha = 0
+        commandBanner.transform = CGAffineTransform(translationX: 0, y: -44)
 
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
         let scanImage = UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)
@@ -519,11 +632,17 @@ extension MainViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.section == MainSection.pushToken.rawValue {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: pushTokenCardCellId, for: indexPath) as! PushTokenCardCell
-            cell.configure(serverURL: pushURL, deviceToken: deviceToken)
+            cell.configure(serverURL: pushURL, deviceToken: deviceToken, isRegistered: isTokenRegistered)
             cell.onCopyTapped = { [weak self] in
                 guard let self = self else { return }
-                UIPasteboard.general.string = self.pushURL
+                let token = PushNotificationManager.shared.deviceToken ?? ""
+                let copyText = token.isEmpty ? self.pushURL : "\(self.pushURL)/\(token)"
+                UIPasteboard.general.string = copyText
                 self.showAlert(title: "已复制", message: "推送地址已复制到剪贴板")
+            }
+            cell.onRegisterTapped = { [weak self] in
+                PushNotificationManager.shared.registerForPushNotifications()
+                self?.showAlert(title: "注册中", message: "正在注册推送通知，请稍后...")
             }
             return cell
         }
@@ -645,7 +764,19 @@ private class PushTokenCardCell: UICollectionViewCell {
         return button
     }()
 
+    private let registerButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("注册", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.tintColor = .white
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.25)
+        button.layer.cornerRadius = 14
+        button.isHidden = true
+        return button
+    }()
+
     var onCopyTapped: (() -> Void)?
+    var onRegisterTapped: (() -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -664,6 +795,7 @@ private class PushTokenCardCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         onCopyTapped = nil
+        onRegisterTapped = nil
     }
 
     private func setupUI() {
@@ -673,6 +805,7 @@ private class PushTokenCardCell: UICollectionViewCell {
         containerView.addSubview(urlLabel)
         containerView.addSubview(tokenLabel)
         containerView.addSubview(copyButton)
+        containerView.addSubview(registerButton)
 
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(4)
@@ -702,16 +835,37 @@ private class PushTokenCardCell: UICollectionViewCell {
             make.width.height.equalTo(32)
         }
 
+        registerButton.snp.makeConstraints { make in
+            make.right.equalToSuperview().offset(-16)
+            make.centerY.equalToSuperview()
+            make.width.equalTo(56)
+            make.height.equalTo(28)
+        }
+
         copyButton.addTarget(self, action: #selector(copyTapped), for: .touchUpInside)
+        registerButton.addTarget(self, action: #selector(registerTapped), for: .touchUpInside)
     }
 
-    func configure(serverURL: String, deviceToken: String) {
-        urlLabel.text = serverURL
-        tokenLabel.text = "Device: \(deviceToken.prefix(16))\(deviceToken.count > 16 ? "..." : "")"
+    func configure(serverURL: String, deviceToken: String, isRegistered: Bool) {
+        if isRegistered {
+            urlLabel.text = serverURL
+            tokenLabel.text = "Device: \(deviceToken.prefix(16))\(deviceToken.count > 16 ? "..." : "")"
+            copyButton.isHidden = false
+            registerButton.isHidden = true
+        } else {
+            urlLabel.text = serverURL
+            tokenLabel.text = "尚未注册推送服务"
+            copyButton.isHidden = true
+            registerButton.isHidden = false
+        }
     }
 
     @objc private func copyTapped() {
         onCopyTapped?()
+    }
+
+    @objc private func registerTapped() {
+        onRegisterTapped?()
     }
 }
 
@@ -818,5 +972,93 @@ class SectionHeaderView: UICollectionReusableView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+}
+
+// MARK: - CommandBannerView
+
+private class CommandBannerView: UIView {
+
+    var onTap: (() -> Void)?
+    var onDismiss: (() -> Void)?
+
+    private let iconView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.tintColor = .systemBlue
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+        iv.image = UIImage(systemName: "link.badge.plus", withConfiguration: config)
+        return iv
+    }()
+
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .label
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        return label
+    }()
+
+    private let dismissButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        button.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
+        button.tintColor = .secondaryLabel
+        return button
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupUI() {
+        backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        layer.cornerRadius = 10
+        clipsToBounds = true
+
+        addSubview(iconView)
+        addSubview(titleLabel)
+        addSubview(dismissButton)
+
+        iconView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(12)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(20)
+        }
+
+        dismissButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-8)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(28)
+        }
+
+        titleLabel.snp.makeConstraints { make in
+            make.leading.equalTo(iconView.snp.trailing).offset(8)
+            make.trailing.equalTo(dismissButton.snp.leading).offset(-4)
+            make.centerY.equalToSuperview()
+        }
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(bannerTapped))
+        addGestureRecognizer(tapGesture)
+
+        dismissButton.addTarget(self, action: #selector(dismissTapped), for: .touchUpInside)
+    }
+
+    func configure(title: String) {
+        titleLabel.text = "检测到口令，点击打开「\(title)」"
+    }
+
+    @objc private func bannerTapped() {
+        onTap?()
+    }
+
+    @objc private func dismissTapped() {
+        onDismiss?()
     }
 }

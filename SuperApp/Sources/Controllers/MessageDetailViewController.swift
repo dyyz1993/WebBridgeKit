@@ -126,7 +126,7 @@ class MessageDetailViewController: UIViewController {
         addAction(title: "复制内容", icon: "doc.on.doc") { [weak self] in
             guard let self = self else { return }
             UIPasteboard.general.string = self.message.payload.body
-            self.showAlert(title: "已复制", message: "消息内容已复制到剪贴板")
+            HUDService.shared.showSuccess(withStatus: "已复制到剪贴板")
         }
 
         if let urlString = message.payload.targetURL, let url = URL(string: urlString) {

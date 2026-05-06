@@ -28,6 +28,7 @@ class InboxViewModel: ViewModel {
         let isEmpty: Driver<Bool>
         let selectedMessage: Driver<StoredMessage>
         let unreadCount: Driver<Int>
+        let reloadData: Driver<Void>
     }
 
     enum FilterType: Int {
@@ -41,6 +42,10 @@ class InboxViewModel: ViewModel {
         var messages: [StoredMessage]
         var isExpanded: Bool = true
 
+        var mostRecentDate: Date {
+            messages.map(\.receivedAt).max() ?? .distantPast
+        }
+
         var unreadCount: Int {
             messages.filter { !$0.isRead }.count
         }
@@ -51,9 +56,11 @@ class InboxViewModel: ViewModel {
     private let isEmptyRelay = BehaviorRelay<Bool>(value: true)
     private let selectedMessageRelay = PublishRelay<StoredMessage>()
     private let unreadCountRelay = BehaviorRelay<Int>(value: 0)
+    private let reloadDataRelay = PublishRelay<Void>()
 
     private var searchText: String = ""
     private var currentFilter: FilterType = .all
+    private var searchDebounceWorkItem: DispatchWorkItem?
 
     var messageGroupsValue: [MessageGroup] {
         return messageGroupsRelay.value
@@ -69,8 +76,7 @@ class InboxViewModel: ViewModel {
 
         input.searchTextChanged
             .do(onNext: { [weak self] text in
-                self?.searchText = text
-                self?.applyFilters()
+                self?.debounceSearch(text)
             })
             .drive()
             .disposed(by: rx)
@@ -85,16 +91,10 @@ class InboxViewModel: ViewModel {
 
         input.itemSelect
             .withLatestFrom(messageGroupsRelay.asDriver()) { indexPath, groups -> StoredMessage? in
-                var offset = 0
-                for group in groups {
-                    if group.isExpanded {
-                        if indexPath.row >= offset && indexPath.row < offset + group.messages.count {
-                            return group.messages[indexPath.row - offset]
-                        }
-                        offset += group.messages.count
-                    }
-                }
-                return nil
+                guard indexPath.section < groups.count else { return nil }
+                let group = groups[indexPath.section]
+                guard indexPath.row < group.messages.count else { return nil }
+                return group.messages[indexPath.row]
             }
             .compactMap { $0 }
             .do(onNext: { [weak self] message in
@@ -142,7 +142,8 @@ class InboxViewModel: ViewModel {
             messageGroups: messageGroupsRelay.asDriver(),
             isEmpty: isEmptyRelay.asDriver(),
             selectedMessage: selectedMessageRelay.asDriver(onErrorDriveWith: .empty()),
-            unreadCount: unreadCountRelay.asDriver()
+            unreadCount: unreadCountRelay.asDriver(),
+            reloadData: reloadDataRelay.asDriver(onErrorJustReturn: ())
         )
     }
 
@@ -151,16 +152,11 @@ class InboxViewModel: ViewModel {
     }
 
     func messageAt(_ indexPath: IndexPath) -> StoredMessage {
-        var offset = 0
-        for group in messageGroupsRelay.value {
-            if group.isExpanded {
-                if indexPath.row >= offset && indexPath.row < offset + group.messages.count {
-                    return group.messages[indexPath.row - offset]
-                }
-                offset += group.messages.count
-            }
-        }
-        fatalError("Index out of bounds")
+        let groups = messageGroupsRelay.value
+        guard indexPath.section < groups.count else { fatalError("Section out of bounds") }
+        let group = groups[indexPath.section]
+        guard indexPath.row < group.messages.count else { fatalError("Row out of bounds") }
+        return group.messages[indexPath.row]
     }
 
     func numberOfRows() -> Int {
@@ -192,7 +188,8 @@ class InboxViewModel: ViewModel {
 
     func numberOfRowsInGroup(_ index: Int) -> Int {
         guard index < messageGroupsRelay.value.count else { return 0 }
-        return messageGroupsRelay.value[index].isExpanded ? messageGroupsRelay.value[index].messages.count : 0
+        let group = messageGroupsRelay.value[index]
+        return group.isExpanded ? group.messages.count : 0
     }
 
     func messageIndexPath(globalRow row: Int) -> (group: Int, localRow: Int)? {
@@ -208,6 +205,17 @@ class InboxViewModel: ViewModel {
         return nil
     }
 
+    private func debounceSearch(_ text: String) {
+        searchDebounceWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            self?.searchText = text
+            self?.applyFilters()
+            self?.reloadDataRelay.accept(())
+        }
+        searchDebounceWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: item)
+    }
+
     private func loadMessages() {
         Task { [weak self] in
             guard let self = self else { return }
@@ -217,6 +225,7 @@ class InboxViewModel: ViewModel {
                 self.messagesRelay.accept(messages)
                 self.unreadCountRelay.accept(unreadCount)
                 self.applyFilters()
+                self.reloadDataRelay.accept(())
             }
         }
     }
@@ -247,7 +256,7 @@ class InboxViewModel: ViewModel {
                 name: name,
                 messages: msgs.sorted { $0.receivedAt > $1.receivedAt }
             )
-        }.sorted { $0.name < $1.name }
+        }.sorted { $0.mostRecentDate > $1.mostRecentDate }
 
         messageGroupsRelay.accept(groups)
         isEmptyRelay.accept(messages.isEmpty)

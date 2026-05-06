@@ -27,6 +27,12 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         return table
     }()
 
+    private lazy var refreshControl: UIRefreshControl = {
+        let rc = UIRefreshControl()
+        rc.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        return rc
+    }()
+
     private let searchController: UISearchController = {
         let sc = UISearchController(searchResultsController: nil)
         sc.obscuresBackgroundDuringPresentation = false
@@ -95,6 +101,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
         setupFilterPills()
 
+        tableView.refreshControl = refreshControl
+
         view.addSubview(filterStackView)
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
@@ -129,6 +137,13 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             description: "收到的推送消息会显示在这里",
             actionTitle: nil
         )
+    }
+
+    @objc private func handleRefresh() {
+        viewModel.refreshData()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.refreshControl.endRefreshing()
+        }
     }
 
     private func setupFilterPills() {
@@ -184,8 +199,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
         let output = viewModel.transform(input: input)
 
-        output.messageGroups
-            .drive(onNext: { [weak self] _ in
+        output.reloadData
+            .drive(onNext: { [weak self] in
                 self?.tableView.reloadData()
             })
             .disposed(by: rx)
@@ -260,8 +275,25 @@ extension InboxViewController: UITableViewDataSource {
             isExpanded: viewModel.isGroupExpanded(section)
         )
         header.onTap = { [weak self] in
-            self?.viewModel.toggleGroup(section)
-            self?.tableView.reloadData()
+            guard let self = self else { return }
+            let wasExpanded = self.viewModel.isGroupExpanded(section)
+            self.viewModel.toggleGroup(section)
+            let isExpanded = self.viewModel.isGroupExpanded(section)
+            let rowsInGroup = self.viewModel.numberOfRowsInGroup(section)
+            if isExpanded {
+                var indexPaths: [IndexPath] = []
+                for row in 0..<rowsInGroup {
+                    indexPaths.append(IndexPath(row: row, section: section))
+                }
+                self.tableView.insertRows(at: indexPaths, with: .automatic)
+            } else {
+                var indexPaths: [IndexPath] = []
+                for row in 0..<rowsInGroup {
+                    indexPaths.append(IndexPath(row: row, section: section))
+                }
+                self.tableView.deleteRows(at: indexPaths, with: .automatic)
+            }
+            self.tableView.reloadSections(IndexSet(integer: section), with: .none)
         }
         return header
     }
