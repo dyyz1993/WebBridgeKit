@@ -10,29 +10,38 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+env:
+  CI_START_TIME: ${{ github.event.head_commit.timestamp }}
+
 jobs:
-  build:
-    name: Build
+  swiftlint:
+    name: SwiftLint
     runs-on: macos-15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache CocoaPods
+      - name: Cache Homebrew
         uses: actions/cache@v4
         with:
-          path: Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
-          restore-keys: |
-            pods-${{ runner.os }}-
+          path: ~/Library/Caches/Homebrew
+          key: brew-${{ runner.os }}-swiftlint
 
-      - name: Install XcodeGen
-        run: brew install xcodegen
+      - name: Run SwiftLint
+        run: |
+          brew install swiftlint
+          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/ || true
 
-      - name: Generate Xcode Project
-        run: xcodegen generate
+  build:
+    name: Build
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: swiftlint
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Install Pods
-        run: pod install
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
 
       - name: Build
         run: |
@@ -43,14 +52,24 @@ jobs:
             -sdk iphonesimulator \
             -arch arm64 \
             -configuration Debug \
+            -resultBundlePath build/BuildResults.xcresult \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
+      - name: Upload Build Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-results
+          path: build/BuildResults.xcresult
+          retention-days: 7
+
   unit-tests:
     name: Unit Tests (${{ matrix.scheme }})
     runs-on: macos-15
+    timeout-minutes: 30
     needs: build
     strategy:
       fail-fast: false
@@ -69,42 +88,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+
+      - name: Setup Simulator
+        id: sim
+        uses: ./.github/actions/setup-sim
         with:
-          path: Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
-          restore-keys: |
-            pods-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: |
-          brew install xcodegen
-          gem install cocoapods
-          xcodegen generate
-          pod install
-
-      - name: Prepare Simulator
-        run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          for rt in data.get('runtimes', []):
-              ident = rt.get('identifier', '')
-              if 'iOS' in ident and rt.get('isAvailable', False):
-                  print(ident)
-                  break
-          ")
-          echo "Using runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
-          if [ -z "$DEVICE_ID" ]; then
-            echo "ERROR: Failed to create simulator"
-            exit 1
-          fi
-          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
-          echo "Created simulator: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          device-type: 'iPhone 16 Pro'
 
       - name: Run ${{ matrix.scheme }}
         run: |
@@ -113,67 +104,75 @@ jobs:
             -workspace WebBridgeKit.xcworkspace \
             -scheme "${{ matrix.scheme }}" \
             -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
-            -resultBundlePath "TestResults-${{ matrix.scheme }}.xcresult" \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
+            -resultBundlePath "build/TestResults-${{ matrix.scheme }}.xcresult" \
             -enableCodeCoverage YES \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output "test-results-${{ matrix.scheme }}.xml"
+            | xcpretty --color --report junit --output "build/test-results-${{ matrix.scheme }}.xml"
 
       - name: Publish Coverage Report
         if: always() && success()
         run: |
-          xcrun xccov view --report "TestResults-${{ matrix.scheme }}.xcresult" > "coverage-${{ matrix.scheme }}.txt" 2>/dev/null || echo "No coverage data"
-          cat "coverage-${{ matrix.scheme }}.txt" || true
+          xcrun xccov view --report "build/TestResults-${{ matrix.scheme }}.xcresult" > "build/coverage-${{ matrix.scheme }}.txt" 2>/dev/null || echo "No coverage data"
+          cat "build/coverage-${{ matrix.scheme }}.txt" || true
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.scheme }}
+          path: "build/TestResults-${{ matrix.scheme }}.xcresult"
+          retention-days: 14
 
       - name: Upload Coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.scheme }}
-          path: "coverage-${{ matrix.scheme }}.txt"
+          path: "build/coverage-${{ matrix.scheme }}.txt"
           retention-days: 7
 
-      - name: Upload test results
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p screenshots
+          find ~/Library/Developer/Xcode/DerivedData -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
+          find /tmp -name "*.png" -newer /tmp/.CI_START 2>/dev/null -exec cp {} screenshots/ \; || true
+
+      - name: Upload Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.scheme }}
-          path: "TestResults-${{ matrix.scheme }}.xcresult"
-          retention-days: 7
+          name: screenshots-${{ matrix.scheme }}
+          path: screenshots/
+          retention-days: 14
 
       - name: Publish Test Report
         if: always()
         uses: mikepenz/action-junit-report@v4
         with:
-          report_paths: "test-results-${{ matrix.scheme }}.xml"
+          report_paths: "build/test-results-${{ matrix.scheme }}.xml"
           check_name: "Unit Test Results (${{ matrix.scheme }})"
 
   smoke-tests:
     name: 🚀 Smoke Tests
     runs-on: macos-15
+    timeout-minutes: 30
     needs: build
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+
+      - name: Setup Simulator
+        id: sim
+        uses: ./.github/actions/setup-sim
         with:
-          path: Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
-          restore-keys: |
-            pods-${{ runner.os }}-
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode Project
-        run: xcodegen generate
-
-      - name: Install Pods
-        run: pod install
+          device-type: 'iPhone 16 Pro'
 
       - name: Start Test Server
         run: |
@@ -181,28 +180,6 @@ jobs:
           python3 -m http.server 8080 &
           sleep 2
           curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
-
-      - name: Prepare Simulator
-        run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          for rt in data.get('runtimes', []):
-              ident = rt.get('identifier', '')
-              if 'iOS' in ident and rt.get('isAvailable', False):
-                  print(ident)
-                  break
-          ")
-          echo "Using runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
-          if [ -z "$DEVICE_ID" ]; then
-            echo "ERROR: Failed to create simulator"
-            exit 1
-          fi
-          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
-          echo "Created simulator: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
 
       - name: Run Smoke Tests
         env:
@@ -214,9 +191,9 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
             -configuration Debug \
-            -resultBundlePath build/test-results/SmokeResults \
+            -resultBundlePath build/test-results/SmokeResults.xcresult \
             -only-testing:SuperAppUITests/MainFlowTests \
             -only-testing:SuperAppUITests/SettingsNavigationTests \
             -only-testing:SuperAppUITests/PermissionTests \
@@ -226,22 +203,30 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output build/test-results/smoke-junit.xml
 
-      - name: Collect Screenshots
-        if: always()
-        run: |
-          mkdir -p build/screenshots
-          find build/test-results -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
-          DEVICE_ID=$(xcrun simctl list devices booted -j | python3 -c "import json,sys;[print(d['udid']) or sys.exit(0) for r,ds in json.load(sys.stdin)['devices'].items() for d in ds if d['state']=='Booted']" 2>/dev/null || echo "")
-          [ -n "$DEVICE_ID" ] && xcrun simctl io "$DEVICE_ID" screenshot build/screenshots/smoke_final.png || true
-          echo "Screenshots: $(ls build/screenshots/ | wc -l) files"
-
-      - name: Upload Smoke Screenshots
+      - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-test-screenshots
-          path: build/screenshots/
-          retention-days: 7
+          name: smoke-test-results
+          path: build/test-results/SmokeResults.xcresult
+          retention-days: 14
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p screenshots
+          find build/test-results -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
+          find ~/Library/Developer/Xcode/DerivedData -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
+          DEVICE_ID="${{ steps.sim.outputs.device-id }}"
+          [ -n "$DEVICE_ID" ] && xcrun simctl io "$DEVICE_ID" screenshot screenshots/smoke_final.png || true
+
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-smoke-tests
+          path: screenshots/
+          retention-days: 14
 
       - name: Publish Test Report
         if: always()
@@ -253,28 +238,21 @@ jobs:
   core-tests:
     name: ⚡ Core UI Tests
     runs-on: macos-15
+    timeout-minutes: 30
     needs: [build]
     continue-on-error: true
     if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+
+      - name: Setup Simulator
+        id: sim
+        uses: ./.github/actions/setup-sim
         with:
-          path: Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
-          restore-keys: |
-            pods-${{ runner.os }}-
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode Project
-        run: xcodegen generate
-
-      - name: Install Pods
-        run: pod install
+          device-type: 'iPhone 16 Pro'
 
       - name: Start Test Server
         run: |
@@ -282,28 +260,6 @@ jobs:
           python3 -m http.server 8080 &
           sleep 2
           curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
-
-      - name: Prepare Simulator
-        run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          for rt in data.get('runtimes', []):
-              ident = rt.get('identifier', '')
-              if 'iOS' in ident and rt.get('isAvailable', False):
-                  print(ident)
-                  break
-          ")
-          echo "Using runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
-          if [ -z "$DEVICE_ID" ]; then
-            echo "ERROR: Failed to create simulator"
-            exit 1
-          fi
-          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
-          echo "Created simulator: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
 
       - name: Run Core Tests (Parallel)
         run: |
@@ -313,9 +269,9 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
             -configuration Debug \
-            -resultBundlePath build/test-results/CoreResults \
+            -resultBundlePath build/test-results/CoreResults.xcresult \
             -parallel-testing-enabled YES \
             -maximum-parallel-testing-workers 3 \
             -skip-testing:SuperAppUITests/ManifestCacheUITests \
@@ -331,20 +287,28 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output build/test-results/core-junit.xml
 
-      - name: Collect Screenshots
-        if: always()
-        run: |
-          mkdir -p build/screenshots
-          find build/test-results -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
-          echo "Screenshots: $(ls build/screenshots/ | wc -l) files"
-
-      - name: Upload Core Screenshots
+      - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: core-test-screenshots
-          path: build/screenshots/
-          retention-days: 7
+          name: core-test-results
+          path: build/test-results/CoreResults.xcresult
+          retention-days: 14
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p screenshots
+          find build/test-results -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
+          find ~/Library/Developer/Xcode/DerivedData -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
+
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-core-tests
+          path: screenshots/
+          retention-days: 14
 
       - name: Publish Test Report
         if: always()
@@ -356,50 +320,21 @@ jobs:
   manifest-tests:
     name: 📦 Manifest Cache Tests
     runs-on: macos-15
+    timeout-minutes: 30
     needs: [build]
     continue-on-error: true
     if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+
+      - name: Setup Simulator
+        id: sim
+        uses: ./.github/actions/setup-sim
         with:
-          path: Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
-          restore-keys: |
-            pods-${{ runner.os }}-
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode Project
-        run: xcodegen generate
-
-      - name: Install Pods
-        run: pod install
-
-      - name: Prepare Simulator
-        run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          for rt in data.get('runtimes', []):
-              ident = rt.get('identifier', '')
-              if 'iOS' in ident and rt.get('isAvailable', False):
-                  print(ident)
-                  break
-          ")
-          echo "Using runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID" 2>/dev/null || echo "")
-          if [ -z "$DEVICE_ID" ]; then
-            echo "ERROR: Failed to create simulator"
-            exit 1
-          fi
-          echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
-          echo "Created simulator: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          device-type: 'iPhone 16 Pro'
 
       - name: Run Manifest Cache Tests (Sequential)
         run: |
@@ -409,9 +344,9 @@ jobs:
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
             -configuration Debug \
-            -resultBundlePath build/test-results/ManifestResults \
+            -resultBundlePath build/test-results/ManifestResults.xcresult \
             -only-testing:SuperAppUITests/ManifestCacheUITests \
             -only-testing:SuperAppUITests/ManifestCacheContentVerificationTests \
             -only-testing:SuperAppUITests/ManifestCacheVerificationTests \
@@ -425,20 +360,28 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output build/test-results/manifest-junit.xml
 
-      - name: Collect Screenshots
-        if: always()
-        run: |
-          mkdir -p build/screenshots
-          find build/test-results -name "*.png" -exec cp {} build/screenshots/ \; 2>/dev/null || true
-          echo "Screenshots: $(ls build/screenshots/ | wc -l) files"
-
-      - name: Upload Manifest Screenshots
+      - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: manifest-test-screenshots
-          path: build/screenshots/
-          retention-days: 7
+          name: manifest-test-results
+          path: build/test-results/ManifestResults.xcresult
+          retention-days: 14
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p screenshots
+          find build/test-results -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
+          find ~/Library/Developer/Xcode/DerivedData -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
+
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-manifest-tests
+          path: screenshots/
+          retention-days: 14
 
       - name: Publish Test Report
         if: always()
@@ -446,13 +389,3 @@ jobs:
         with:
           report_paths: build/test-results/manifest-junit.xml
           check_name: "Manifest Test Results"
-
-  swiftlint:
-    name: SwiftLint
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run SwiftLint
-        run: |
-          brew install swiftlint
-          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/ || true
