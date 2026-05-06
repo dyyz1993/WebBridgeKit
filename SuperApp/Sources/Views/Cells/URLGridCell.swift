@@ -100,17 +100,23 @@ class URLGridCell: UICollectionViewCell {
 
     private let cachedBadgeView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
-        view.layer.cornerRadius = 6
+        view.layer.cornerRadius = 8
         view.layer.masksToBounds = true
+        return view
+    }()
+
+    private let cachedDotView: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 4
+        view.backgroundColor = .systemGray
         return view
     }()
 
     private let cachedLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 9, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 9, weight: .medium)
         label.textColor = UIColor.systemGreen
-        label.text = "OFFLINE"
+        label.text = "未缓存"
         label.textAlignment = .center
         return label
     }()
@@ -285,6 +291,8 @@ class URLGridCell: UICollectionViewCell {
         actionStackView.addArrangedSubview(favoriteIconView)
 
         contentClipView.addSubview(cachedBadgeView)
+        cachedBadgeView.addSubview(cachedDotView)
+        cachedBadgeView.addSubview(cachedLabel)
         contentClipView.addSubview(titleLabel)
         contentClipView.addSubview(urlLabel)
         contentClipView.addSubview(sizeLabel)
@@ -339,8 +347,16 @@ class URLGridCell: UICollectionViewCell {
             make.height.equalTo(18)
         }
 
+        cachedDotView.snp.makeConstraints { make in
+            make.left.equalToSuperview().offset(6)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(8)
+        }
+
         cachedLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 6, bottom: 0, right: 6))
+            make.left.equalTo(cachedDotView.snp.right).offset(4)
+            make.right.equalToSuperview().offset(-6)
+            make.centerY.equalToSuperview()
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -459,7 +475,23 @@ class URLGridCell: UICollectionViewCell {
                 self.faviconImageView.setLetterIcon(for: history.title ?? history.url, size: CGSize(width: 52, height: 52))
             }
 
-            self.cachedBadgeView.isHidden = !history.isCached
+            self.cachedBadgeView.isHidden = false
+            if history.isCached && history.cachedSize > 0 {
+                self.cachedDotView.backgroundColor = .systemGreen
+                self.cachedLabel.text = "离线可用"
+                self.cachedLabel.textColor = .systemGreen
+                self.cachedBadgeView.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.12)
+            } else if history.cachedSize > 0 {
+                self.cachedDotView.backgroundColor = .systemOrange
+                self.cachedLabel.text = "需更新"
+                self.cachedLabel.textColor = .systemOrange
+                self.cachedBadgeView.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.12)
+            } else {
+                self.cachedDotView.backgroundColor = .systemGray3
+                self.cachedLabel.text = "未缓存"
+                self.cachedLabel.textColor = .systemGray
+                self.cachedBadgeView.backgroundColor = UIColor.systemGray.withAlphaComponent(0.08)
+            }
 
             // 更新按钮状态
             let pinImage = history.isPinned ? "pin.fill" : "pin"

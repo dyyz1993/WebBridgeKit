@@ -11,11 +11,7 @@ import WebBridgeKit
 import RxSwift
 import RxCocoa
 
-/// 主标签栏控制器
-/// 管理 3 个主要功能模块：首页、收藏、设置
 class TabBarController: UITabBarController {
-
-    // MARK: - Lifecycle
 
     private let disposeBag = DisposeBag()
 
@@ -25,8 +21,6 @@ class TabBarController: UITabBarController {
         setupAppearance()
         bindMessages()
 
-        // 设置初始页面
-        // 默认进入首页
         self.selectedIndex = 0
     }
 
@@ -52,11 +46,7 @@ class TabBarController: UITabBarController {
     private func handlePushJump(_ notification: Notification) {
         guard let url = notification.userInfo?["url"] as? URL else { return }
 
-        let title = notification.userInfo?["title"] as? String
-        let appId = notification.userInfo?["appId"] as? String
         let params = notification.userInfo?["params"] as? [String: String]
-
-        print("🚀 [TabBar] Handling push jump to: \(url.absoluteString)")
 
         self.selectedIndex = 0
         if let mainNav = viewControllers?.first as? UINavigationController {
@@ -71,15 +61,12 @@ class TabBarController: UITabBarController {
         }
     }
 
-
-
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         checkAndRestoreLastApp()
     }
 
     private func checkAndRestoreLastApp() {
-        // 使用 static 变量确保只在 App 启动后的第一次显示时执行
         struct Static {
             static var hasChecked = false
         }
@@ -93,11 +80,7 @@ class TabBarController: UITabBarController {
            let lastURLString = UserDefaults.standard.string(forKey: "LastOpenedURL"),
            let url = URL(string: lastURLString) {
 
-            print("🚀 [TabBar] Direct restoring last app: \(lastURLString)")
-
-            // 获取首页的导航控制器
             if let mainNav = viewControllers?.first as? UINavigationController {
-                // 使用 animated: false 实现"直接进入"效果
                 WebBrowserManager.shared.openBrowser(
                     url: url,
                     params: WebBrowserParams(displayMode: .normal),
@@ -108,55 +91,47 @@ class TabBarController: UITabBarController {
         }
     }
 
-    private func checkLastAppMemory() {
-        // 功能已在 viewDidLoad 中被跳过，不再执行任何自动跳转
-    }
-
     // MARK: - Setup
 
     private func setupTabs() {
-        // 创建主要 Tab
         let mainVC = createMainViewController()
-        let testCasesVC = createTestCasesViewController()
-        let manageVC = createManagementViewController()
+        let inboxVC = createInboxViewController()
+        let discoverVC = createDiscoverViewController()
         let settingsVC = createSettingsViewController()
 
-        // 设置 Tab Bar Item
         mainVC.tabBarItem = UITabBarItem(
             title: "首页",
             image: UIImage(systemName: "house"),
             selectedImage: UIImage(systemName: "house.fill")
         )
 
-        testCasesVC.tabBarItem = UITabBarItem(
-            title: "用例",
-            image: UIImage(systemName: "checklist"),
-            selectedImage: UIImage(systemName: "checklist")
+        inboxVC.tabBarItem = UITabBarItem(
+            title: "收信箱",
+            image: UIImage(systemName: "tray"),
+            selectedImage: UIImage(systemName: "tray.fill")
         )
 
-        manageVC.tabBarItem = UITabBarItem(
-            title: "管理",
-            image: UIImage(systemName: "square.grid.2x2"),
-            selectedImage: UIImage(systemName: "square.grid.2x2.fill")
+        discoverVC.tabBarItem = UITabBarItem(
+            title: "发现",
+            image: UIImage(systemName: "compass"),
+            selectedImage: UIImage(systemName: "compass.fill")
         )
 
         settingsVC.tabBarItem = UITabBarItem(
             title: "设置",
-            image: UIImage(systemName: "person"),
-            selectedImage: UIImage(systemName: "person.fill")
+            image: UIImage(systemName: "gearshape"),
+            selectedImage: UIImage(systemName: "gearshape.fill")
         )
 
-        // 包装导航控制器
         viewControllers = [
             UINavigationController(rootViewController: mainVC),
-            UINavigationController(rootViewController: testCasesVC),
-            UINavigationController(rootViewController: manageVC),
+            UINavigationController(rootViewController: inboxVC),
+            UINavigationController(rootViewController: discoverVC),
             UINavigationController(rootViewController: settingsVC)
         ]
     }
 
     private func setupAppearance() {
-        // Tab Bar 外观
         tabBar.backgroundColor = UIColor.systemBackground
         tabBar.barTintColor = UIColor.systemBackground
 
@@ -168,21 +143,6 @@ class TabBarController: UITabBarController {
         }
     }
 
-    private func configureNavigationBar(_ navigationBar: UINavigationBar) {
-        navigationBar.prefersLargeTitles = true
-        navigationBar.backgroundColor = UIColor.systemBackground
-
-        if #available(iOS 15.0, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
-            appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
-            navigationBar.standardAppearance = appearance
-            navigationBar.scrollEdgeAppearance = appearance
-            navigationBar.compactAppearance = appearance
-        }
-    }
-
     // MARK: - Create ViewControllers
 
     private func createMainViewController() -> MainViewController {
@@ -190,12 +150,13 @@ class TabBarController: UITabBarController {
         return MainViewController(viewModel: viewModel)
     }
 
-    private func createTestCasesViewController() -> ManifestTestCasesViewController {
-        return ManifestTestCasesViewController()
+    private func createInboxViewController() -> InboxViewController {
+        let viewModel = InboxViewModel()
+        return InboxViewController(viewModel: viewModel)
     }
 
-    private func createManagementViewController() -> ManagementViewController {
-        return ManagementViewController()
+    private func createDiscoverViewController() -> DiscoverViewController {
+        return DiscoverViewController()
     }
 
     private func createSettingsViewController() -> SettingsViewController {

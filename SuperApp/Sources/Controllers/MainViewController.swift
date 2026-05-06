@@ -12,10 +12,13 @@ import RxSwift
 import RxCocoa
 import WebBridgeKit
 
-/// 首页宫格视图控制器
-class MainViewController: BaseViewController<MainViewModel> {
+private enum MainSection: Int, CaseIterable {
+    case pushToken = 0
+    case quickActions = 1
+    case appGrid = 2
+}
 
-    // MARK: - UI Components
+class MainViewController: BaseViewController<MainViewModel> {
 
     private var collectionView: UICollectionView!
 
@@ -44,7 +47,25 @@ class MainViewController: BaseViewController<MainViewModel> {
         return label
     }()
 
-    // MARK: - Lifecycle
+    private let pushTokenCardCellId = "PushTokenCardCell"
+    private let quickActionCellId = "QuickActionCell"
+
+    private var pushURL: String {
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
+        let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
+        return key.isEmpty ? server : "\(server)/\(key)"
+    }
+
+    private var deviceToken: String {
+        return PushNotificationManager.shared.deviceToken ?? "未注册"
+    }
+
+    private let quickActions: [(icon: String, title: String, color: UIColor)] = [
+        ("qrcode.viewfinder", "扫码", .systemBlue),
+        ("doc.on.clipboard", "粘贴", .systemOrange),
+        ("text.badge.star", "口令", .systemPurple),
+        ("ladybug", "调试", .systemGreen)
+    ]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,14 +74,10 @@ class MainViewController: BaseViewController<MainViewModel> {
         setupUI()
         setupGestures()
         setupNotifications()
-        // Note: bindViewModel will be called by BaseViewController in viewWillAppear
-
-        // 启动时执行一次自动清理
         WebCacheManager.shared.performAutoCleanup()
     }
 
     private func setupNotifications() {
-        // 自动化测试支持：直接通过通知触发原生跳转，避免 URL Scheme 弹窗
         NotificationCenter.default.rx.notification(.automationTestOpenURL)
             .compactMap { $0.userInfo?["url"] as? String }
             .compactMap { URL(string: $0) }
@@ -70,7 +87,6 @@ class MainViewController: BaseViewController<MainViewModel> {
             })
             .disposed(by: rx)
 
-        // 监听历史记录更新通知
         NotificationCenter.default.rx.notification(.historyDidUpdate)
             .subscribe(onNext: { [weak self] _ in
                 Log.info("History updated notification received", category: .ui)
@@ -81,15 +97,11 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private func handleScannedResult(url: URL?, rawString: String?) {
         Log.debug("Handling scanned result - URL: \(url?.absoluteString ?? "nil"), Raw: \(rawString ?? "nil")", category: .ui)
-        // 1. 优先处理解析后的 URL
         if let url = url {
-            // 特殊协议处理：wb-app://
             if url.scheme == "wb-app" {
                 handleCustomProtocol(url)
                 return
             }
-
-            // 判断是否是 Manifest URL
             if url.pathExtension == "json" || url.absoluteString.contains("manifest") {
                 loadAndCacheManifest(url)
             } else {
@@ -97,8 +109,6 @@ class MainViewController: BaseViewController<MainViewModel> {
             }
             return
         }
-
-        // 2. 如果 URL 解析失败，但有原始字符串，尝试二次解析或报错
         if let raw = rawString {
             if raw.starts(with: "wb-app://") {
                 if let customUrl = URL(string: raw) {
@@ -114,16 +124,13 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private func handleCustomProtocol(_ url: URL) {
         Log.debug("Handling custom protocol: \(url.absoluteString)", category: .ui)
-        // 示例：wb-app://load?url=https://...
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
-
         if url.host == "load" {
             if let targetUrlString = components.queryItems?.first(where: { $0.name == "url" })?.value,
                let targetUrl = URL(string: targetUrlString) {
                 handleScannedResult(url: targetUrl, rawString: targetUrlString)
             }
         } else if url.host == "open" {
-            // 示例：wb-app://open?url=https://...
             if let targetUrlString = components.queryItems?.first(where: { $0.name == "url" })?.value,
                let targetUrl = URL(string: targetUrlString) {
                 openURL(targetUrl)
@@ -133,23 +140,18 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private func loadAndCacheManifest(_ url: URL) {
         loadingView.startLoading(message: "正在解析 Manifest...")
-
         Task {
             do {
-                // 使用 WebBridgeKit 的 Manifest 加载器获取 Manifest 信息
                 let manifest = try await PersistentManifestLoader.shared.fetchManifest(from: url)
-
                 await MainActor.run {
                     self.loadingView.stopLoading()
                     self.showAlert(title: "解析成功", message: "发现应用: \(manifest.name ?? "未知")\n已加入缓存队列")
-                    // 刷新列表
                     self.viewModel.refreshData()
                 }
             } catch {
                 await MainActor.run {
                     self.loadingView.stopLoading()
                     Log.error("Failed to load manifest: \(error)", category: .ui)
-                    // 如果解析失败，可能是普通 JSON，直接作为 URL 打开
                     self.openURL(url)
                 }
             }
@@ -172,40 +174,23 @@ class MainViewController: BaseViewController<MainViewModel> {
         }
     }
 
-    // MARK: - Setup UI
-
     private func setupUI() {
         view.backgroundColor = UIColor.systemGroupedBackground
-
-        // 导航栏大标题样式
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
 
-        // 创建CollectionView实例
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 16
-        layout.minimumLineSpacing = 20
-        layout.sectionInset = UIEdgeInsets(top: 10, left: 20, bottom: 30, right: 20)
-
-        // 计算 Cell 大小 (2列布局)
-        let screenWidth = UIScreen.main.bounds.width
-        let itemWidth = (screenWidth - 40 - 16) / 2
-        layout.itemSize = CGSize(width: itemWidth, height: 160)
-        layout.headerReferenceSize = CGSize(width: screenWidth, height: 50)
-
+        let layout = createCompositionalLayout()
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
         collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 20, right: 0)
         collectionView.register(URLGridCell.self, forCellWithReuseIdentifier: URLGridCell.identifier)
+        collectionView.register(PushTokenCardCell.self, forCellWithReuseIdentifier: pushTokenCardCellId)
+        collectionView.register(QuickActionCell.self, forCellWithReuseIdentifier: quickActionCellId)
         collectionView.register(SectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SectionHeaderView.identifier)
         collectionView.showsVerticalScrollIndicator = false
-
-        // 设置数据源
         collectionView.dataSource = self
-        collectionView.delegate = self // 初始设置代理
+        collectionView.delegate = self
 
-        // 添加背景装饰：顶部渐变或图形
         let topBackground = UIView()
         topBackground.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.05)
         view.insertSubview(topBackground, at: 0)
@@ -231,27 +216,78 @@ class MainViewController: BaseViewController<MainViewModel> {
             make.edges.equalToSuperview()
         }
 
-        // 导航栏按钮优化
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
         let scanImage = UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)
         let scanItem = UIBarButtonItem(image: scanImage, style: .plain, target: self, action: #selector(openScanner))
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
-        let clearImage = UIImage(systemName: "trash.circle.fill", withConfiguration: config)
-        let clearItem = UIBarButtonItem(image: clearImage, style: .plain, target: self, action: #selector(clearAllHistory))
-        clearItem.tintColor = .systemRed
-
         let storageItem = UIBarButtonItem(customView: storageLabel)
-        navigationItem.rightBarButtonItems = [clearItem, storageItem]
+        navigationItem.rightBarButtonItems = [storageItem]
 
-        // 配置空状态
         emptyStateView.configure(
             icon: "square.grid.2x2.fill",
             title: "开启您的极速体验",
             description: "扫描二维码或输入 URL 即可体验离线加载",
             actionTitle: nil
         )
+    }
+
+    private func createCompositionalLayout() -> UICollectionViewCompositionalLayout {
+        return UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
+            guard let self = self else { return nil }
+            let gridSections = self.viewModel.historiesRelayValue.count
+            if sectionIndex == MainSection.pushToken.rawValue {
+                return self.createPushTokenSection(environment: environment)
+            } else if sectionIndex == MainSection.quickActions.rawValue {
+                return self.createQuickActionsSection(environment: environment)
+            } else {
+                return self.createAppGridSection(sectionIndex: sectionIndex, gridSections: gridSections, environment: environment)
+            }
+        }
+    }
+
+    private func createPushTokenSection(environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(120))
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(120))
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        let section = NSCollectionLayoutSection(group: group)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0)
+        return section
+    }
+
+    private func createQuickActionsSection(environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .absolute(80))
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(80))
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 4)
+        group.interItemSpacing = .fixed(8)
+        group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        let section = NSCollectionLayoutSection(group: group)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 12, trailing: 0)
+        return section
+    }
+
+    private func createAppGridSection(sectionIndex: Int, gridSections: Int, environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+        let itemWidth = (environment.container.contentSize.width - 40 - 16) / 2
+        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(160))
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let groupSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(160))
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        let rowSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(160))
+        let row = NSCollectionLayoutGroup.horizontal(layoutSize: rowSize, subitem: group, count: 2)
+        row.interItemSpacing = .fixed(16)
+        row.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+        let section = NSCollectionLayoutSection(group: row)
+        section.interGroupSpacing = 20
+        section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 30, trailing: 0)
+
+        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(50))
+        let header = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
+        section.boundarySupplementaryItems = [header]
+        return section
     }
 
     @objc private func openScanner() {
@@ -273,24 +309,14 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func setupGestures() {
-        // 下拉刷新
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
         collectionView.refreshControl = refreshControl
-
-        // Note: RxSwift binding handles cell selection via collectionView.rx.itemSelected
     }
-
-    // MARK: - Bind ViewModel
 
     override func bindViewModel() {
         Log.debug("bindViewModel called", category: .ui)
-        Log.debug("navigationController: \(String(describing: navigationController))", category: .ui)
 
-        // Note: delegate 已在 setupUI 中设置，不需要使用 rx.setDelegate
-        // 因为我们同时需要 UICollectionViewDataSource 和 UICollectionViewDelegateFlowLayout
-
-        // 使用 Driver 合并刷新信号，确保每次回到首页都更新
         let refreshTrigger = Driver.merge(
             collectionView.refreshControl!.rx.controlEvent(.valueChanged).asDriver(onErrorJustReturn: ()),
             rx.methodInvoked(#selector(UIViewController.viewWillAppear(_:))).map { _ in () }.asDriver(onErrorJustReturn: ())
@@ -305,10 +331,8 @@ class MainViewController: BaseViewController<MainViewModel> {
         let scanButtonTap = scanButton.rx.tap
             .asDriver(onErrorDriveWith: .empty())
 
-        // 使用自定义 PublishRelay 处理长按
         let itemLongPressRelay = PublishRelay<IndexPath>()
 
-        // 添加长按手势
         let longPressGesture = UILongPressGestureRecognizer()
         collectionView.addGestureRecognizer(longPressGesture)
         longPressGesture.rx.event
@@ -317,8 +341,9 @@ class MainViewController: BaseViewController<MainViewModel> {
                 guard let self = self else { return }
                 let point = gesture.location(in: self.collectionView)
                 if let indexPath = self.collectionView.indexPathForItem(at: point) {
-                    Log.debug("Cell long pressed at indexPath: \(indexPath)", category: .ui)
-                    itemLongPressRelay.accept(indexPath)
+                    if indexPath.section >= MainSection.appGrid.rawValue {
+                        itemLongPressRelay.accept(indexPath)
+                    }
                 }
             })
             .disposed(by: rx)
@@ -332,7 +357,6 @@ class MainViewController: BaseViewController<MainViewModel> {
 
         let output = viewModel.transform(input: input)
 
-        // 绑定数据
         output.histories
             .drive(onNext: { [weak self] sections in
                 self?.updateCollectionView(sections: sections)
@@ -342,7 +366,6 @@ class MainViewController: BaseViewController<MainViewModel> {
         output.isEmpty
             .drive(onNext: { [weak self] (isEmpty: Bool) in
                 guard let self = self else { return }
-
                 if isEmpty {
                     self.view.bringSubviewToFront(self.emptyStateView)
                     self.emptyStateView.isHidden = false
@@ -377,9 +400,7 @@ class MainViewController: BaseViewController<MainViewModel> {
 
         output.loading
             .drive(onNext: { [weak self] (loading: Bool) in
-                if loading {
-                    // 下拉刷新不需要显示 loading view
-                } else {
+                if !loading {
                     self?.collectionView.refreshControl?.endRefreshing()
                 }
             })
@@ -391,67 +412,34 @@ class MainViewController: BaseViewController<MainViewModel> {
             .disposed(by: rx)
     }
 
-    // MARK: - Private Methods
-
     private func updateCollectionView(sections: [WebPageHistorySection]) {
         Log.debug("updateCollectionView called with \(sections.count) sections", category: .ui)
-
-        // 关键：直接刷新，不再使用带延迟的 Observable 订阅，避免内存泄漏和重复刷新
         DispatchQueue.main.async { [weak self] in
             self?.collectionView.reloadData()
-            Log.debug("collectionView.reloadData() executed", category: .ui)
         }
     }
 
     @objc private func refreshData() {
         Log.debug("refreshData (Pull-to-refresh) triggered", category: .ui)
-        // 不需要在这里手动调用 viewModel.refreshData()，
-        // 因为 bindViewModel 中已经绑定了 refreshControl.rx.controlEvent(.valueChanged)
-    }
-
-    @objc private func clearAllHistory() {
-        let alert = UIAlertController(title: "彻底清理", message: "这将删除所有访问历史、收藏以及本地缓存资源。确定要继续吗？", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "清理全部", style: .destructive) { [weak self] _ in
-            // 1. 清理历史记录
-            WebPageHistoryManager.shared.clearAllHistory()
-            // 2. 清理所有缓存 (WKWebView, Manifests, Resources)
-            WebCacheManager.shared.clearAll()
-            // 3. 刷新 UI
-            self?.viewModel.refreshData()
-            self?.showAlert(title: "清理完成", message: "所有历史和缓存已清空")
-        })
-        present(alert, animated: true)
     }
 
     private func openURL(_ url: URL) {
         Log.debug("openURL called: \(url.absoluteString)", category: .ui)
-
-        // 处理自定义协议：wb-app://test-cases
         if url.scheme == "wb-app" && url.host == "test-cases" {
-            Log.debug("Opening test cases page", category: .ui)
-            // 切换到测试用例 Tab (索引 1)
             if let tabBarController = self.tabBarController {
                 tabBarController.selectedIndex = 1
             }
             return
         }
-
-        // 保存上次打开的 URL（如果启用了记忆功能）
         if UserDefaults.standard.bool(forKey: "EnableLastAppMemory") {
             UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
             UserDefaults.standard.synchronize()
-            Log.debug("Saved LastOpenedURL: \(url.absoluteString)", category: .ui)
         }
-
-        // 使用 WebBrowserManager 打开浏览器
-        Log.debug("Calling WebBrowserManager.shared.openBrowser...", category: .ui)
         WebBrowserManager.shared.openBrowser(
             url: url,
             params: WebBrowserParams(displayMode: .normal),
             from: navigationController
         )
-        Log.debug("WebBrowserManager.shared.openBrowser returned", category: .ui)
     }
 
     private func showActionSheet(url: URL) {
@@ -465,38 +453,30 @@ class MainViewController: BaseViewController<MainViewModel> {
                 """,
             preferredStyle: .actionSheet
         )
-
         alert.addAction(UIAlertAction(title: "打开", style: .default, handler: { [weak self] _ in
             self?.openURL(url)
         }))
-
-        // 判断是否已置顶
         let isPinned = viewModel.isPinned(url: url)
         alert.addAction(UIAlertAction(title: isPinned ? "取消置顶" : "置顶", style: .default, handler: { [weak self] _ in
             self?.viewModel.togglePin(url: url)
             self?.viewModel.refreshData()
         }))
-
         alert.addAction(UIAlertAction(title: "收藏", style: .default, handler: { [weak self] _ in
             self?.viewModel.addToFavorites(url: url)
             self?.showAlert(title: "成功", message: "已添加到收藏")
             self?.viewModel.refreshData()
         }))
-
         alert.addAction(UIAlertAction(title: "清除缓存", style: .destructive, handler: { [weak self] _ in
             self?.viewModel.clearCache(url: url)
             self?.viewModel.refreshData()
         }))
-
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel, handler: nil))
-
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
         if let popoverController = alert.popoverPresentationController {
             popoverController.sourceView = self.view
             popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
             popoverController.permittedArrowDirections = []
         }
-
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true)
     }
 
     private func showAlert(title: String, message: String) {
@@ -504,48 +484,74 @@ class MainViewController: BaseViewController<MainViewModel> {
         alert.addAction(UIAlertAction(title: "确定", style: .default))
         present(alert, animated: true)
     }
-}
 
-// MARK: - UICollectionViewDelegateFlowLayout
+    private func handleQuickAction(index: Int) {
+        switch index {
+        case 0: openScanner()
+        case 1: CommandHandler.shared.checkClipboardOnForeground()
+        case 2:
+            let vc = TokenGenerateViewController(viewModel: TokenGenerateViewModel())
+            navigationController?.pushViewController(vc, animated: true)
+        case 3:
+            let vc = NotificationDebugViewController()
+            navigationController?.pushViewController(vc, animated: true)
+        default: break
+        }
+    }
+}
 
 // MARK: - UICollectionViewDataSource
 
 extension MainViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return viewModel.historiesRelayValue.count
+        return 2 + viewModel.historiesRelayValue.count
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if section == MainSection.pushToken.rawValue { return 1 }
+        if section == MainSection.quickActions.rawValue { return 1 }
         let sections = viewModel.historiesRelayValue
-        guard section < sections.count else { return 0 }
-        return sections[section].items.count
+        let gridIndex = section - MainSection.appGrid.rawValue
+        guard gridIndex >= 0 && gridIndex < sections.count else { return 0 }
+        return sections[gridIndex].items.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: URLGridCell.identifier,
-            for: indexPath
-        ) as! URLGridCell
+        if indexPath.section == MainSection.pushToken.rawValue {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: pushTokenCardCellId, for: indexPath) as! PushTokenCardCell
+            cell.configure(serverURL: pushURL, deviceToken: deviceToken)
+            cell.onCopyTapped = { [weak self] in
+                guard let self = self else { return }
+                UIPasteboard.general.string = self.pushURL
+                self.showAlert(title: "已复制", message: "推送地址已复制到剪贴板")
+            }
+            return cell
+        }
+        if indexPath.section == MainSection.quickActions.rawValue {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: quickActionCellId, for: indexPath) as! QuickActionCell
+            cell.configure(actions: quickActions)
+            cell.onActionTapped = { [weak self] index in
+                self?.handleQuickAction(index: index)
+            }
+            return cell
+        }
 
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: URLGridCell.identifier, for: indexPath) as! URLGridCell
         let sections = viewModel.historiesRelayValue
-        let history = sections[indexPath.section].items[indexPath.item]
+        let gridIndex = indexPath.section - MainSection.appGrid.rawValue
+        guard gridIndex >= 0 && gridIndex < sections.count else { return cell }
+        let history = sections[gridIndex].items[indexPath.item]
         cell.history = history
-
-        // 设置置顶和收藏的点击事件
         cell.onPinToggle = { [weak self] in
             guard let self = self, let url = URL(string: history.url) else { return }
-            Log.debug("Toggled pin for: \(url.absoluteString)", category: .ui)
             self.viewModel.togglePin(url: url)
             self.viewModel.refreshData()
         }
-
         cell.onFavoriteToggle = { [weak self] in
             guard let self = self, let url = URL(string: history.url) else { return }
-            Log.debug("Toggled favorite for: \(url.absoluteString)", category: .ui)
             self.viewModel.toggleFavorite(url: url)
             self.viewModel.refreshData()
         }
-
         return cell
     }
 
@@ -553,10 +559,225 @@ extension MainViewController: UICollectionViewDataSource {
         if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderView.identifier, for: indexPath) as! SectionHeaderView
             let sections = viewModel.historiesRelayValue
-            header.titleLabel.text = sections[indexPath.section].header
+            let gridIndex = indexPath.section - MainSection.appGrid.rawValue
+            if gridIndex >= 0 && gridIndex < sections.count {
+                header.titleLabel.text = sections[gridIndex].header
+            }
             return header
         }
         return UICollectionReusableView()
+    }
+}
+
+// MARK: - UICollectionViewDelegate
+
+extension MainViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard indexPath.section >= MainSection.appGrid.rawValue else { return }
+        let sections = viewModel.historiesRelayValue
+        let gridIndex = indexPath.section - MainSection.appGrid.rawValue
+        guard gridIndex >= 0 && gridIndex < sections.count else { return }
+        let history = sections[gridIndex].items[indexPath.item]
+        if let url = URL(string: history.url) {
+            openURL(url)
+            viewModel.refreshData()
+        }
+    }
+}
+
+// MARK: - PushTokenCardCell
+
+private class PushTokenCardCell: UICollectionViewCell {
+    static let identifier = "PushTokenCardCell"
+
+    private let gradientLayer: CAGradientLayer = {
+        let layer = CAGradientLayer()
+        layer.colors = [
+            UIColor.systemBlue.withAlphaComponent(0.8).cgColor,
+            UIColor.systemPurple.withAlphaComponent(0.8).cgColor
+        ]
+        layer.startPoint = CGPoint(x: 0, y: 0)
+        layer.endPoint = CGPoint(x: 1, y: 1)
+        layer.cornerRadius = 16
+        return layer
+    }()
+
+    private let containerView: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 16
+        view.layer.masksToBounds = true
+        return view
+    }()
+
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = .white.withAlphaComponent(0.9)
+        label.text = "Push Token"
+        return label
+    }()
+
+    private let urlLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        label.textColor = .white.withAlphaComponent(0.85)
+        label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingMiddle
+        return label
+    }()
+
+    private let tokenLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .regular)
+        label.textColor = .white.withAlphaComponent(0.7)
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingMiddle
+        return label
+    }()
+
+    private let copyButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        button.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: config), for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        button.layer.cornerRadius = 16
+        return button
+    }()
+
+    var onCopyTapped: (() -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer.frame = containerView.bounds
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        onCopyTapped = nil
+    }
+
+    private func setupUI() {
+        contentView.addSubview(containerView)
+        containerView.layer.insertSublayer(gradientLayer, at: 0)
+        containerView.addSubview(titleLabel)
+        containerView.addSubview(urlLabel)
+        containerView.addSubview(tokenLabel)
+        containerView.addSubview(copyButton)
+
+        containerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(4)
+        }
+
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(16)
+            make.left.equalToSuperview().offset(16)
+        }
+
+        urlLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalTo(copyButton.snp.left).offset(-12)
+        }
+
+        tokenLabel.snp.makeConstraints { make in
+            make.top.equalTo(urlLabel.snp.bottom).offset(4)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalTo(copyButton.snp.left).offset(-12)
+            make.bottom.equalToSuperview().offset(-16)
+        }
+
+        copyButton.snp.makeConstraints { make in
+            make.right.equalToSuperview().offset(-16)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(32)
+        }
+
+        copyButton.addTarget(self, action: #selector(copyTapped), for: .touchUpInside)
+    }
+
+    func configure(serverURL: String, deviceToken: String) {
+        urlLabel.text = serverURL
+        tokenLabel.text = "Device: \(deviceToken.prefix(16))\(deviceToken.count > 16 ? "..." : "")"
+    }
+
+    @objc private func copyTapped() {
+        onCopyTapped?()
+    }
+}
+
+// MARK: - QuickActionCell
+
+private class QuickActionCell: UICollectionViewCell {
+    static let identifier = "QuickActionCell"
+
+    private let stackView: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.distribution = .fillEqually
+        sv.spacing = 8
+        return sv
+    }()
+
+    var onActionTapped: ((Int) -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        onActionTapped = nil
+    }
+
+    private func setupUI() {
+        contentView.addSubview(stackView)
+        stackView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    func configure(actions: [(icon: String, title: String, color: UIColor)]) {
+        stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for (index, action) in actions.enumerated() {
+            let btn = createActionButton(icon: action.icon, title: action.title, color: action.color)
+            btn.tag = index
+            btn.addTarget(self, action: #selector(actionTapped(_:)), for: .touchUpInside)
+            stackView.addArrangedSubview(btn)
+        }
+    }
+
+    private func createActionButton(icon: String, title: String, color: UIColor) -> UIButton {
+        let button = UIButton(type: .system)
+        let cfg = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+        button.setImage(UIImage(systemName: icon, withConfiguration: cfg), for: .normal)
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+        button.tintColor = color
+        button.setTitleColor(color, for: .normal)
+        button.backgroundColor = .secondarySystemGroupedBackground
+        button.layer.cornerRadius = 12
+        button.imageEdgeInsets = UIEdgeInsets(top: -12, left: 0, bottom: 0, right: 0)
+        button.titleEdgeInsets = UIEdgeInsets(top: 20, left: -(button.titleLabel?.intrinsicContentSize.width ?? 0), bottom: 0, right: 0)
+        return button
+    }
+
+    @objc private func actionTapped(_ sender: UIButton) {
+        onActionTapped?(sender.tag)
     }
 }
 
@@ -583,14 +804,12 @@ class SectionHeaderView: UICollectionReusableView {
         super.init(frame: frame)
         addSubview(indicatorView)
         addSubview(titleLabel)
-
         indicatorView.snp.makeConstraints { make in
             make.left.equalToSuperview().offset(20)
             make.centerY.equalToSuperview()
             make.width.equalTo(4)
             make.height.equalTo(18)
         }
-
         titleLabel.snp.makeConstraints { make in
             make.left.equalTo(indicatorView.snp.right).offset(10)
             make.centerY.equalToSuperview()
@@ -599,19 +818,5 @@ class SectionHeaderView: UICollectionReusableView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-}
-
-// MARK: - UICollectionViewDelegateFlowLayout
-
-extension MainViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let screenWidth = collectionView.bounds.width
-        let itemWidth = (screenWidth - 40 - 16) / 2
-        return CGSize(width: itemWidth, height: 160)
-    }
-
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.bounds.width, height: 60)
     }
 }

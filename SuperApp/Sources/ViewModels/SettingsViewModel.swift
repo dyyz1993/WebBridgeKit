@@ -12,130 +12,116 @@ import RxSwift
 import UIKit
 import WebBridgeKit
 
-/// 设置中心 ViewModel
 class SettingsViewModel: ViewModel {
-
-    // MARK: - Input & Output
 
     struct Input {
         let itemSelect: Driver<IndexPath>
-        let lastAppMemoryToggle: Driver<Bool>
     }
 
     struct Output {
-        let navigateToTokenManage: Driver<Void>
         let navigateToServerConfig: Driver<Void>
         let navigateToAPIKeyManage: Driver<Void>
+        let navigateToTokenManage: Driver<Void>
         let navigateToManagement: Driver<Void>
         let navigateToAbout: Driver<Void>
-        let storageSize: Driver<String>
-        let lastAppMemoryEnabled: Driver<Bool>
+        let navigateToDebugPanel: Driver<Void>
+        let openNotificationSettings: Driver<Void>
+        let clearCache: Driver<Void>
     }
 
-    // MARK: - Properties
+    enum SettingsAction: String {
+        case serverConfig
+        case apiKeyManage
+        case notificationSettings
+        case tokenManage
+        case management
+        case clearCache
+        case debugPanel
+        case uiDebug
+        case about
+        case versionInfo
+    }
 
-    private let menuItems: [SettingsMenuItem] = [
-        SettingsMenuItem(icon: "text.command", title: "口令管理", action: .tokenManage),
-        SettingsMenuItem(icon: "server.rack", title: "服务器配置", action: .serverConfig),
-        SettingsMenuItem(icon: "key", title: "密钥管理", action: .apiKeyManage),
-        SettingsMenuItem(icon: "archivebox", title: "资源管理", action: .management),
-        SettingsMenuItem(icon: "arrow.counterclockwise", title: "记忆上次应用", action: .lastAppMemory),
-        SettingsMenuItem(icon: "info.circle", title: "关于", action: .about)
-    ]
+    struct SettingsItem {
+        let icon: String
+        let title: String
+        let action: SettingsAction
+        var value: String? = nil
+        var showArrow: Bool = true
+    }
 
-    private let storageSizeRelay = BehaviorRelay<String>(value: "计算中...")
-    private let lastAppMemoryEnabledRelay = BehaviorRelay<Bool>(value: UserDefaults.standard.bool(forKey: "EnableLastAppMemory"))
+    struct SettingsSection {
+        let header: String
+        let items: [SettingsItem]
+    }
 
-    private let navigateToTokenManageRelay = PublishRelay<Void>()
+    let sections: [SettingsSection] = {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+
+        return [
+            SettingsSection(header: "服务器", items: [
+                SettingsItem(icon: "server.rack", title: "服务器配置", action: .serverConfig),
+                SettingsItem(icon: "key", title: "密钥管理", action: .apiKeyManage)
+            ]),
+            SettingsSection(header: "通知", items: [
+                SettingsItem(icon: "bell", title: "通知设置", action: .notificationSettings),
+                SettingsItem(icon: "text.command", title: "口令管理", action: .tokenManage)
+            ]),
+            SettingsSection(header: "缓存", items: [
+                SettingsItem(icon: "archivebox", title: "缓存管理", action: .management),
+                SettingsItem(icon: "trash", title: "清除缓存", action: .clearCache, showArrow: false)
+            ]),
+            SettingsSection(header: "开发者", items: [
+                SettingsItem(icon: "ladybug", title: "调试面板", action: .debugPanel),
+                SettingsItem(icon: "paintbrush", title: "界面调试", action: .uiDebug)
+            ]),
+            SettingsSection(header: "关于", items: [
+                SettingsItem(icon: "info.circle", title: "关于", action: .about),
+                SettingsItem(icon: "number", title: "版本信息", action: .versionInfo, value: "v\(version) (\(build))", showArrow: false)
+            ])
+        ]
+    }()
+
     private let navigateToServerConfigRelay = PublishRelay<Void>()
     private let navigateToAPIKeyManageRelay = PublishRelay<Void>()
+    private let navigateToTokenManageRelay = PublishRelay<Void>()
     private let navigateToManagementRelay = PublishRelay<Void>()
     private let navigateToAboutRelay = PublishRelay<Void>()
-
-    // MARK: - Public Methods
-
-    func menuItem(at indexPath: IndexPath) -> SettingsMenuItem {
-        return menuItems[indexPath.row]
-    }
-
-    func numberOfItems() -> Int {
-        return menuItems.count
-    }
-
-    // MARK: - Transform
+    private let navigateToDebugPanelRelay = PublishRelay<Void>()
+    private let openNotificationSettingsRelay = PublishRelay<Void>()
+    private let clearCacheRelay = PublishRelay<Void>()
 
     func transform(input: Input) -> Output {
-        // 处理开关
-        input.lastAppMemoryToggle
-            .do(onNext: { enabled in
-                UserDefaults.standard.set(enabled, forKey: "EnableLastAppMemory")
-                UserDefaults.standard.synchronize()
-            })
-            .drive(lastAppMemoryEnabledRelay)
-            .disposed(by: rx)
-
-        // 定时更新存储空间显示
-        Observable<Int>.interval(.seconds(5), scheduler: MainScheduler.instance)
-            .startWith(0)
-            .observe(on: ConcurrentDispatchQueueScheduler(qos: .background)) // 在后台线程计算
-            .map { _ in
-                let totalSize = ManifestCacheManager.shared.calculateTotalCacheSize()
-                return ByteCountFormatter.string(fromByteCount: Int64(totalSize), countStyle: .file)
-            }
-            .observe(on: MainScheduler.instance) // 回到主线程更新 UI
-            .bind(to: storageSizeRelay)
-            .disposed(by: rx)
-
-        // 处理项目选择
         input.itemSelect
             .do(onNext: { [weak self] indexPath in
                 guard let self = self else { return }
-                let item = self.menuItem(at: indexPath)
-
+                let item = self.sections[indexPath.section].items[indexPath.row]
                 switch item.action {
-                case .tokenManage:
-                    self.navigateToTokenManageRelay.accept(())
-                case .serverConfig:
-                    self.navigateToServerConfigRelay.accept(())
-                case .apiKeyManage:
-                    self.navigateToAPIKeyManageRelay.accept(())
-                case .management:
-                    self.navigateToManagementRelay.accept(())
-                case .lastAppMemory:
-                    // 开关在 Cell 内部处理，这里不处理跳转
-                    break
-                case .about:
-                    self.navigateToAboutRelay.accept(())
+                case .serverConfig: self.navigateToServerConfigRelay.accept(())
+                case .apiKeyManage: self.navigateToAPIKeyManageRelay.accept(())
+                case .notificationSettings: self.openNotificationSettingsRelay.accept(())
+                case .tokenManage: self.navigateToTokenManageRelay.accept(())
+                case .management: self.navigateToManagementRelay.accept(())
+                case .clearCache: self.clearCacheRelay.accept(())
+                case .debugPanel: self.navigateToDebugPanelRelay.accept(())
+                case .uiDebug: self.navigateToDebugPanelRelay.accept(())
+                case .about: self.navigateToAboutRelay.accept(())
+                case .versionInfo: break
                 }
             })
             .drive()
             .disposed(by: rx)
 
         return Output(
-            navigateToTokenManage: navigateToTokenManageRelay.asDriver(onErrorJustReturn: ()),
             navigateToServerConfig: navigateToServerConfigRelay.asDriver(onErrorJustReturn: ()),
             navigateToAPIKeyManage: navigateToAPIKeyManageRelay.asDriver(onErrorJustReturn: ()),
+            navigateToTokenManage: navigateToTokenManageRelay.asDriver(onErrorJustReturn: ()),
             navigateToManagement: navigateToManagementRelay.asDriver(onErrorJustReturn: ()),
             navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
-            storageSize: storageSizeRelay.asDriver(),
-            lastAppMemoryEnabled: lastAppMemoryEnabledRelay.asDriver()
+            navigateToDebugPanel: navigateToDebugPanelRelay.asDriver(onErrorJustReturn: ()),
+            openNotificationSettings: openNotificationSettingsRelay.asDriver(onErrorJustReturn: ()),
+            clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ())
         )
     }
-}
-
-// MARK: - Settings Menu Item
-
-enum SettingsMenuAction {
-    case tokenManage
-    case serverConfig
-    case apiKeyManage
-    case management
-    case lastAppMemory
-    case about
-}
-
-struct SettingsMenuItem {
-    let icon: String
-    let title: String
-    let action: SettingsMenuAction
 }

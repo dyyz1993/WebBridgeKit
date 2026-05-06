@@ -12,7 +12,5 @@ import RxSwift
 import UIKit
 import WebBridgeKit
 
-/// 口令管理 ViewModel (占位符 - 将在 Task 3.5 中实现)
 class TokenManageViewModel: ViewModel {
-    // Placeholder implementation
 }
