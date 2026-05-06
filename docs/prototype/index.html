@@ -4,103 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>WebBridgeKit Prototype</title>
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
-:root{--primary:#007AFF;--accent:#34C759;--warning:#FF9500;--danger:#FF3B30;--bg:#F2F2F7;--card:#FFFFFF;--text:#1C1C1E;--text2:#8E8E93;--text3:#C7C7CC;--sep:#E5E5EA;--tab-bg:rgba(249,249,249,.94);--overlay:rgba(0,0,0,.4);--shadow:0 2px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);--radius:12px;--font:-apple-system,'SF Pro Display','SF Pro Text',system-ui,'Helvetica Neue',sans-serif}
+:root{--primary:#007AFF;--primary-l:rgba(0,122,255,.08);--accent:#34C759;--accent-l:rgba(52,199,89,.1);--warning:#FF9500;--warning-l:rgba(255,149,0,.1);--danger:#FF3B30;--danger-l:rgba(255,59,48,.1);--purple:#AF52DE;--purple-l:rgba(175,82,222,.1);--teal:#5AC8FA;--teal-l:rgba(90,200,250,.1);--bg:#F2F2F7;--card:#FFFFFF;--text:#1C1C1E;--text2:#8E8E93;--text3:#C7C7CC;--sep:#E5E5EA;--tab-bg:rgba(249,249,249,.94);--overlay:rgba(0,0,0,.4);--shadow:0 2px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);--radius:14px;--radius-sm:10px;--font:-apple-system,'SF Pro Display','SF Pro Text',system-ui,'Helvetica Neue',sans-serif;--g-blue:linear-gradient(135deg,#667eea,#764ba2);--g-pink:linear-gradient(135deg,#f093fb,#f5576c);--g-cyan:linear-gradient(135deg,#4facfe,#00f2fe);--g-green:linear-gradient(135deg,#43e97b,#38f9d7);--g-orange:linear-gradient(135deg,#fa709a,#fee140);--g-purple:linear-gradient(135deg,#a18cd1,#fbc2eb);--g-peach:linear-gradient(135deg,#fccb90,#d57eeb);--g-sky:linear-gradient(135deg,#89f7fe,#66a6ff)}
 @media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1C1C1E;--text:#FFF;--text2:#8E8E93;--text3:#48484A;--sep:#38383A;--tab-bg:rgba(30,30,30,.94);--overlay:rgba(0,0,0,.6);--shadow:0 2px 12px rgba(0,0,0,.3);--shadow-lg:0 8px 32px rgba(0,0,0,.5)}}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--font);background:#333;color:var(--text);overflow:hidden;height:100vh;display:flex;align-items:center;justify-content:center}
+body{font-family:var(--font);background:#1a1a1a;color:var(--text);overflow:hidden;height:100vh;display:flex;align-items:center;justify-content:center}
 button{font-family:inherit;cursor:pointer;border:none;background:none;-webkit-appearance:none}
 input,textarea,select{font-family:inherit}
-
-.phone{width:375px;height:812px;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0;border-radius:40px;box-shadow:0 0 0 8px #222}
+.lucide{width:20px;height:20px;stroke-width:1.8}
+.phone{width:375px;height:812px;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0;border-radius:44px;box-shadow:0 0 0 8px #222,0 0 0 10px #444,0 20px 60px rgba(0,0,0,.5)}
 @media(max-width:400px){.phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}}
-
 .sbar{height:54px;padding:14px 24px 0;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;flex-shrink:0;z-index:10;background:var(--bg)}
 .pages{flex:1;position:relative;overflow:hidden}
-.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;transition:transform .35s ease,opacity .35s ease;-webkit-overflow-scrolling:touch;padding-bottom:20px}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;transition:transform .4s cubic-bezier(.25,.1,.25,1),opacity .35s ease;-webkit-overflow-scrolling:touch;padding-bottom:20px}
 .page.off{transform:translateX(100%);opacity:0;pointer-events:none}
 .page.left{transform:translateX(-30%);opacity:0;pointer-events:none}
-
 .tbar{height:83px;padding-bottom:34px;display:flex;align-items:center;justify-content:space-around;background:var(--tab-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--sep);flex-shrink:0;z-index:100}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text2);font-size:10px;padding:6px 12px;min-width:60px;transition:color .2s;position:relative}
-.tab .ti{font-size:24px;line-height:1}
+.tab .ti{display:flex;align-items:center;justify-content:center}
 .tab.on{color:var(--primary)}
-.tab .bdg{position:absolute;top:2px;right:50%;transform:translateX(16px);background:var(--danger);color:#fff;font-size:10px;font-weight:600;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
-
+.tab .bdg{position:absolute;top:0;right:50%;transform:translateX(16px);background:var(--danger);color:#fff;font-size:10px;font-weight:600;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
 .nbar{padding:0 16px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.ntitle{font-size:34px;font-weight:700;padding:0 16px 12px;line-height:1.1}
-
+.nbar button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);color:var(--text2);transition:background .2s}
+.nbar button:active{background:var(--primary-l)}
+.ntitle{font-size:34px;font-weight:700;padding:0 16px 12px;line-height:1.1;letter-spacing:-.5px}
 .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform .15s ease}
 .card:active{transform:scale(.97)}
 .shdr{padding:24px 16px 8px;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
-
-.sbar-s{margin:0 16px 12px;background:var(--card);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;color:var(--text2);font-size:16px;box-shadow:var(--shadow)}
+.sbar-s{margin:0 16px 12px;background:var(--card);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:8px;color:var(--text2);font-size:16px;box-shadow:var(--shadow)}
 .sbar-s input{flex:1;border:none;background:none;font-size:16px;color:var(--text);outline:none}
-
-.btn{padding:12px 24px;border-radius:var(--radius);font-size:16px;font-weight:600;transition:transform .15s,opacity .15s;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.btn{padding:12px 24px;border-radius:var(--radius);font-size:16px;font-weight:600;transition:transform .15s,opacity .15s;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn:active{transform:scale(.97)}
 .btn-p{background:var(--primary);color:#fff}
 .btn-g{background:var(--accent);color:#fff}
 .btn-d{background:var(--danger);color:#fff}
 .btn-s{padding:8px 16px;font-size:14px;border-radius:8px}
 .btn-b{width:100%}
-
-/* overlay */
+.btn-o{border:1.5px solid var(--primary);color:var(--primary);background:transparent}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.pill-g{background:var(--accent-l);color:var(--accent)}
+.pill-b{background:var(--primary-l);color:var(--primary)}
+.pill-o{background:var(--warning-l);color:var(--warning)}
+.pill-r{background:var(--danger-l);color:var(--danger)}
+.pill-p{background:var(--purple-l);color:var(--purple)}
+.pill-gr{background:rgba(142,142,147,.12);color:var(--text2)}
 .ov{position:absolute;inset:0;z-index:200;pointer-events:none}
 .ov.on{pointer-events:auto}
 .ov-bg{position:absolute;inset:0;background:var(--overlay);opacity:0;transition:opacity .3s}
 .ov.on .ov-bg{opacity:1}
-.sheet{position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .35s ease;max-height:90%;display:flex;flex-direction:column}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .4s cubic-bezier(.25,.1,.25,1);max-height:92%;display:flex;flex-direction:column}
 .ov.on .sheet{transform:translateY(0)}
 .sh-handle{width:36px;height:5px;background:var(--text3);border-radius:3px;margin:8px auto 4px;flex-shrink:0}
 .sh-hdr{padding:8px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--sep);flex-shrink:0}
-.sh-hdr h3{font-size:17px;font-weight:600}
-.sh-body{flex:1;overflow-y:auto;padding:16px}
-.sh-close{font-size:28px;color:var(--text2);width:44px;height:44px;display:flex;align-items:center;justify-content:center}
-
-/* hud */
-.hud{position:absolute;top:60px;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--card);border-radius:14px;padding:12px 20px;box-shadow:var(--shadow-lg);z-index:300;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap}
+.sh-hdr h3{font-size:17px;font-weight:600;display:flex;align-items:center;gap:6px}
+.sh-body{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
+.sh-close{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--text2);border-radius:50%}
+.sh-close:active{background:var(--primary-l)}
+.hud{position:absolute;top:60px;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--card);border-radius:16px;padding:12px 20px;box-shadow:var(--shadow-lg);z-index:300;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;border:.5px solid var(--sep)}
 .hud.show{transform:translateX(-50%) translateY(0)}
-
-/* banner */
-.banner{margin:0 16px 12px;padding:12px 40px 12px 16px;background:rgba(0,122,255,.1);border-radius:var(--radius);display:flex;align-items:center;gap:10px;font-size:14px;color:var(--primary);position:relative;animation:slideDown .3s ease}
-.banner-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text2)}
+.banner{margin:0 16px 12px;padding:12px 40px 12px 16px;background:var(--primary-l);border-radius:var(--radius);display:flex;align-items:center;gap:10px;font-size:14px;color:var(--primary);position:relative;animation:slideDown .3s ease;border:1px solid rgba(0,122,255,.15)}
+.banner-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-
-/* home grid */
 .hgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
-.acard{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;min-height:140px;cursor:pointer;transition:transform .15s}
+.acard{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;min-height:140px;cursor:pointer;transition:transform .15s;border:1px solid transparent}
 .acard:active{transform:scale(.97)}
-.acard-i{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.ig1{background:linear-gradient(135deg,#667eea,#764ba2)}.ig2{background:linear-gradient(135deg,#f093fb,#f5576c)}
-.ig3{background:linear-gradient(135deg,#4facfe,#00f2fe)}.ig4{background:linear-gradient(135deg,#43e97b,#38f9d7)}
-.ig5{background:linear-gradient(135deg,#fa709a,#fee140)}.ig6{background:linear-gradient(135deg,#a18cd1,#fbc2eb)}
-.ig7{background:linear-gradient(135deg,#fccb90,#d57eeb)}.ig8{background:linear-gradient(135deg,#89f7fe,#66a6ff)}
+.acard-i{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff}
+.ig1{background:var(--g-blue)}.ig2{background:var(--g-pink)}.ig3{background:var(--g-cyan)}.ig4{background:var(--g-green)}.ig5{background:var(--g-orange)}.ig6{background:var(--g-purple)}.ig7{background:var(--g-peach)}.ig8{background:var(--g-sky)}
 .acard-n{font-size:14px;font-weight:600;line-height:1.2}
 .acard-s{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .dot-g{background:var(--accent)}.dot-o{background:var(--warning)}.dot-b{background:var(--primary)}.dot-gr{background:var(--text3)}
 .acard-t{font-size:11px;color:var(--text3)}
-.acard-tk{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);background:rgba(0,122,255,.06);padding:4px 8px;border-radius:6px;margin-top:auto}
-
-.srcard{margin:0 16px 16px;padding:16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow)}
-.srcard-url{font-size:13px;color:var(--text2);word-break:break-all;margin-bottom:8px}
-.srcard-tk{display:flex;align-items:center;justify-content:space-between;background:rgba(0,122,255,.06);border-radius:8px;padding:10px 12px}
-.srcard-tk code{font-size:13px;color:var(--primary);font-weight:500}
-.srcard-tk button{color:var(--primary);font-size:13px;font-weight:600;padding:4px 8px}
-
+.acard-tk{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);background:var(--primary-l);padding:4px 8px;border-radius:6px;margin-top:auto}
+.srcard{margin:0 16px 16px;padding:16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(0,122,255,.1)}
+.srcard-url{font-size:13px;color:var(--text2);word-break:break-all;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.srcard-tk{display:flex;align-items:center;justify-content:space-between;background:var(--primary-l);border-radius:8px;padding:10px 12px}
+.srcard-tk code{font-size:13px;color:var(--primary);font-weight:500;display:flex;align-items:center;gap:4px}
+.srcard-tk button{color:var(--primary);font-size:13px;font-weight:600;padding:4px 8px;display:flex;align-items:center;gap:4px}
 .qactions{display:flex;gap:12px;padding:16px}
 .qact{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);font-size:12px;color:var(--text2);font-weight:500;min-height:70px;cursor:pointer;transition:transform .15s}
 .qact:active{transform:scale(.97)}
-.qact .qi{font-size:24px}
-
-/* inbox */
+.qact .qi{display:flex;color:var(--primary)}
 .fbar{display:flex;gap:8px;padding:0 16px 12px}
-.fbtn{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;background:var(--card);color:var(--text2);transition:all .2s}
-.fbtn.on{background:var(--primary);color:#fff}
+.fbtn{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;background:var(--card);color:var(--text2);transition:all .2s;border:1px solid var(--sep)}
+.fbtn.on{background:var(--primary);color:#fff;border-color:var(--primary)}
 .ghdr{padding:12px 16px 6px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer}
 .ghdr .cnt{font-weight:400}
-.ghdr .ei{transition:transform .2s;font-size:12px}
+.ghdr .ei{transition:transform .2s;display:flex}
 .ghdr.col .ei{transform:rotate(-90deg)}
 .mlist{padding:0 16px}
 .mgrp{margin-bottom:4px}
@@ -108,26 +99,25 @@ input,textarea,select{font-family:inherit}
 .mcell:first-of-type{border-radius:var(--radius) var(--radius) 0 0}
 .mcell:last-of-type{border-radius:0 0 var(--radius) var(--radius);margin-bottom:8px}
 .mcell:only-of-type{border-radius:var(--radius)}
-.mcell:active{background:rgba(0,122,255,.04)}
-.mi{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.mi.app{background:rgba(0,122,255,.1)}.mi.url{background:rgba(52,199,89,.1)}.mi.sys{background:rgba(255,149,0,.1)}.mi.loc{background:rgba(142,142,147,.1)}
+.mcell:active{background:var(--primary-l)}
+.mi{width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mi.app{background:var(--primary-l);color:var(--primary)}
+.mi.url{background:var(--accent-l);color:var(--accent)}
+.mi.sys{background:var(--warning-l);color:var(--warning)}
+.mi.loc{background:rgba(142,142,147,.1);color:var(--text2)}
 .mb{flex:1;min-width:0}
 .mt{font-size:15px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mp{font-size:13px;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
 .mm{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:11px;color:var(--text3)}
-.mtag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;background:rgba(0,122,255,.08);color:var(--primary)}
+.mtag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;background:var(--primary-l);color:var(--primary)}
 .murd{width:10px;height:10px;border-radius:50%;background:var(--danger);position:absolute;top:12px;right:12px}
-.marr{color:var(--text3);font-size:14px;align-self:center}
-
+.marr{color:var(--text3);display:flex;align-self:center}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;text-align:center}
-.empty-i{font-size:64px;margin-bottom:16px;opacity:.4}
+.empty-i{width:80px;height:80px;border-radius:20px;background:var(--primary-l);display:flex;align-items:center;justify-content:center;color:var(--primary);margin-bottom:16px}
 .empty-t{font-size:20px;font-weight:600;margin-bottom:8px}
 .empty-d{font-size:14px;color:var(--text2);line-height:1.5}
-
-.fab{position:absolute;bottom:20px;right:20px;padding:0 20px;height:50px;border-radius:25px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;z-index:50;transition:transform .2s;gap:6px}
+.fab{position:absolute;bottom:20px;right:20px;padding:0 20px;height:50px;border-radius:25px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;z-index:50;transition:transform .2s;gap:8px}
 .fab:active{transform:scale(.9)}
-
-/* discover */
 .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
 .dcard{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s;display:flex;flex-direction:column;gap:8px}
 .dcard:active{transform:scale(.97)}
@@ -135,307 +125,494 @@ input,textarea,select{font-family:inherit}
 .dcard-info{flex:1;min-width:0}
 .dcard-nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dcard-sz{font-size:11px;color:var(--text2)}
-.cti{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px}
-.cti.per{background:rgba(52,199,89,.15);color:var(--accent)}.cti.tmp{background:rgba(255,149,0,.15);color:var(--warning)}
-
-/* settings */
 .ss{margin-bottom:24px}
 .sg{margin:0 16px;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
 .sg-title{padding:8px 16px 4px;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:0 16px}
 .scell{display:flex;align-items:center;padding:12px 16px;gap:12px;min-height:44px;cursor:pointer;transition:background .15s;position:relative}
 .scell:not(:last-child)::after{content:'';position:absolute;bottom:0;left:56px;right:0;height:.5px;background:var(--sep)}
-.scell:active{background:rgba(0,122,255,.04)}
-.si{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0}
-.si-b{background:var(--primary)}.si-g{background:var(--accent)}.si-o{background:var(--warning)}
-.si-r{background:var(--danger)}.si-p{background:#AF52DE}.si-t{background:#5AC8FA}.si-gr{background:#8E8E93}
-.sl{flex:1;font-size:16px}.sv{font-size:15px;color:var(--text2)}.sa{color:var(--text3);font-size:14px}
+.scell:active{background:var(--primary-l)}
+.si{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.si-b{background:var(--primary)}.si-g{background:var(--accent)}.si-o{background:var(--warning)}.si-r{background:var(--danger)}.si-p{background:var(--purple)}.si-t{background:var(--teal)}.si-gr{background:#8E8E93}
+.sl{flex:1;font-size:16px}.sv{font-size:15px;color:var(--text2)}.sa{color:var(--text3);display:flex}
 .stog{width:51px;height:31px;border-radius:16px;background:var(--text3);position:relative;transition:background .2s;cursor:pointer;flex-shrink:0}
 .stog.on{background:var(--accent)}
 .stog::after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
 .stog.on::after{transform:translateX(20px)}
 .ver{text-align:center;font-size:12px;color:var(--text3);padding:20px 0}
-
-/* detail page */
-.dtl{position:absolute;inset:0;background:var(--bg);z-index:150;transform:translateX(100%);transition:transform .35s ease;display:flex;flex-direction:column}
+.dtl{position:absolute;inset:0;background:var(--bg);z-index:150;transform:translateX(100%);transition:transform .4s cubic-bezier(.25,.1,.25,1);display:flex;flex-direction:column}
 .dtl.show{transform:translateX(0)}
 .dtl-nav{padding:54px 8px 8px;display:flex;align-items:center;flex-shrink:0}
-.dtl-back{font-size:28px;color:var(--primary);width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.dtl-back{color:var(--primary);width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm)}
+.dtl-back:active{background:var(--primary-l)}
 .dtl-title{font-size:17px;font-weight:600;flex:1;text-align:center;margin-right:44px}
 .dtl-body{flex:1;overflow-y:auto;padding:16px}
 .dtl-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
-.dtl-card h4{font-size:13px;color:var(--text2);margin-bottom:8px;text-transform:uppercase}
+.dtl-card h4{font-size:13px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
 .dtl-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--sep);font-size:14px}
 .dtl-row:last-child{border:none}.dtl-row .lb{color:var(--text2)}
 .dtl-acts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 .dtl-acts .btn{flex:1;font-size:14px;min-width:0}
-
 .dtl-hero{display:flex;align-items:center;gap:16px;padding:16px;background:var(--card);border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow)}
-.dtl-hero-i{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.dtl-hero-i{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff}
 .dtl-hero-info h2{font-size:20px;font-weight:700}.dtl-hero-info p{font-size:13px;color:var(--text2)}
-
-/* debug tabs */
 .dtabs{display:flex;border-bottom:.5px solid var(--sep);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .dtab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--text2);white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
 .dtab.on{color:var(--primary);border-bottom-color:var(--primary)}
-.hg-title{font-size:13px;font-weight:600;color:var(--text2);padding:12px 0 6px}
-.hi{display:flex;align-items:center;padding:12px;background:var(--bg);border-radius:8px;margin-bottom:6px;gap:12px}
+.hg-title{font-size:13px;font-weight:600;color:var(--text2);padding:12px 0 6px;display:flex;align-items:center;gap:6px}
+.hi{display:flex;align-items:center;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:6px;gap:12px}
 .hi-nm{font-size:14px;font-weight:500;font-family:'SF Mono',Menlo,monospace;flex:1}
 .hi-ds{font-size:12px;color:var(--text2)}
 .hi-btn{padding:6px 12px;border-radius:6px;background:var(--primary);color:#fff;font-size:12px;font-weight:600}
-.dform{display:flex;flex-direction:column;gap:12px}
-.fg label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:4px}
-.fg input,.fg textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--sep);background:var(--bg);color:var(--text);font-size:15px;outline:none}
-.fg textarea{min-height:80px;resize:vertical}
-
 .swipe-hint{display:flex;align-items:center;gap:6px;padding:8px 16px;font-size:11px;color:var(--text3);justify-content:center}
 .mgrp-items{overflow:hidden;transition:max-height .3s ease}
+.sec-title{font-size:13px;font-weight:600;color:var(--text2);margin:16px 0 8px;display:flex;align-items:center;gap:6px;padding-bottom:4px;border-bottom:1px solid var(--sep)}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.fg input,.fg textarea,.fg select{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--sep);background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--primary)}
+.fg textarea{min-height:80px;resize:vertical}
+.fg select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.tog-row .tl{font-size:14px;font-weight:500}
+.tmpl-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.tmpl-btn{padding:10px 8px;border-radius:var(--radius-sm);background:var(--bg);text-align:center;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;transition:all .15s;border:1.5px solid transparent}
+.tmpl-btn:active{transform:scale(.96);border-color:var(--primary);background:var(--primary-l)}
+.resp-box{background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-top:12px;font-family:'SF Mono',Menlo,monospace;font-size:12px;line-height:1.6}
+.resp-box .ok{color:var(--accent)}.resp-box .err{color:var(--danger)}.resp-box .meta{color:var(--text3);margin-top:6px;font-size:11px}
+.method-tabs{display:flex;gap:4px;margin-bottom:12px}
+.method-tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;background:var(--bg);color:var(--text2);transition:all .15s}
+.method-tab.on{background:var(--primary);color:#fff}
+.history-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.history-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.history-info{flex:1;min-width:0}
+.history-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-meta{font-size:11px;color:var(--text3)}
+.pie-wrap{display:flex;align-items:center;gap:20px;margin:16px 0}
+.pie{width:120px;height:120px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pie-center{width:60px;height:60px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;z-index:1}
+.pie-legend{display:flex;flex-direction:column;gap:8px}
+.pie-legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
+.pie-legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding:12px 0}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .5s ease}
+.bar-lbl{font-size:10px;color:var(--text3)}
+.qr-box{width:160px;height:160px;margin:16px auto;background:var(--card);border-radius:12px;display:flex;align-items:center;justify-content:center;border:2px solid var(--sep)}
+.sk{background:linear-gradient(90deg,var(--bg) 25%,var(--card) 50%,var(--bg) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;height:16px;margin-bottom:8px}
+.sk.w50{width:50%}.sk.w70{width:70%}.sk.w80{width:80%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
 <div class="phone" id="app">
 <div class="sbar"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="5" width="3" height="7" rx=".5" fill="currentColor"/><rect x="4.5" y="3" width="3" height="9" rx=".5" fill="currentColor"/><rect x="9" y="1" width="3" height="11" rx=".5" fill="currentColor"/><rect x="13.5" width="2.5" height="12" rx=".5" fill="currentColor" opacity=".3"/></svg><svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2C5.5 2 3.3 3 1.8 4.7L.4 3.3C2.3 1.2 5 0 8 0s5.7 1.2 7.6 3.3l-1.4 1.4C12.7 3 10.5 2 8 2z" fill="currentColor" opacity=".3"/><path d="M8 5.5c-1.7 0-3.2.7-4.3 1.8L2.3 6C3.8 4.4 5.8 3.5 8 3.5s4.2.9 5.7 2.5l-1.4 1.3C11.2 6.2 9.7 5.5 8 5.5z" fill="currentColor" opacity=".6"/><path d="M8 9c-1 0-1.8.4-2.4 1.1L4.2 8.8C5.2 7.7 6.5 7 8 7s2.8.7 3.8 1.8l-1.4 1.3C9.8 9.4 9 9 8 9z" fill="currentColor"/><circle cx="8" cy="11.5" r="1.2" fill="currentColor"/></svg><svg width="27" height="13" viewBox="0 0 27 13"><rect x="0" y=".5" width="23" height="12" rx="3.5" stroke="currentColor" stroke-width="1" fill="none"/><rect x="24" y="4" width="2.5" height="5" rx="1" fill="currentColor" opacity=".4"/><rect x="1.5" y="2" width="18" height="9" rx="2" fill="currentColor"/></svg></span></div>
-
 <div class="pages">
 <!-- HOME -->
 <div class="page" id="pg0">
-<div class="nbar"><button onclick="hud('📷','扫码功能开发中')" style="font-size:22px">📷</button><div></div><button onclick="hud('🗑','清理完成')" style="font-size:18px;color:var(--text2)">🗑</button></div>
-<div class="ntitle">首页</div>
-<div class="banner" id="cmdB"><span>🔐</span><span>检测到口令 — <b>wbsk://open?app=shop</b></span><button class="banner-x" onclick="this.parentElement.style.display='none'">×</button></div>
+<div class="nbar"><button onclick="hud('Scan','Opening camera...')"><i data-lucide="scan-line"></i></button><div></div><button onclick="hud('Cleaned','Cache cleared')" style="color:var(--text2)"><i data-lucide="trash-2"></i></button></div>
+<div class="ntitle">Home</div>
+<div class="banner" id="cmdB"><i data-lucide="shield" style="width:18px;height:18px;flex-shrink:0"></i><span>Detected command &mdash; <b>wbsk://open?app=shop</b></span><button class="banner-x" onclick="this.parentElement.style.display='none'"><i data-lucide="x" style="width:16px;height:16px"></i></button></div>
 <div class="srcard">
-<div class="srcard-url">https://api.day.app/your-key</div>
-<div class="srcard-tk"><code>abcd****efgh</code><button onclick="hud('✅','Token 已复制')">复制</button></div>
+<div class="srcard-url"><i data-lucide="server" style="width:14px;height:14px"></i> https://api.day.app/your-key</div>
+<div class="srcard-tk"><code><i data-lucide="key" style="width:12px;height:12px"></i> abcd****efgh</code><button onclick="hud('Copied','Token copied')"><i data-lucide="copy" style="width:14px;height:14px"></i> Copy</button></div>
 </div>
-<div class="shdr">已缓存应用</div>
+<div class="shdr">Cached Apps</div>
 <div class="hgrid">
-<div class="acard" onclick="openApp('shop')"><div class="acard-i ig2">🏪</div><div class="acard-n">电商应用</div><div class="acard-s"><span class="dot dot-g"></span>离线可用</div><div class="acard-t">2 分钟前</div><div class="acard-tk">🔑 abcd...efgh 📋</div></div>
-<div class="acard" onclick="openApp('data')"><div class="acard-i ig3">📊</div><div class="acard-n">数据面板</div><div class="acard-s"><span class="dot dot-o"></span>临时缓存</div><div class="acard-t">1 小时前</div><div class="acard-tk">🔑 defg...hijk 📋</div></div>
-<div class="acard" onclick="openApp('news')"><div class="acard-i ig4">📰</div><div class="acard-n">新闻阅读</div><div class="acard-s"><span class="dot dot-gr"></span>未缓存</div><div class="acard-t">昨天</div></div>
-<div class="acard" onclick="openApp('game')"><div class="acard-i ig5">🎮</div><div class="acard-n">小游戏</div><div class="acard-s"><span class="dot dot-b"></span>持久化</div><div class="acard-t">3 小时前</div><div class="acard-tk">🔑 mnop...qrst 📋</div></div>
-<div class="acard" onclick="openApp('tool')"><div class="acard-i ig6">🛠</div><div class="acard-n">工具箱</div><div class="acard-s"><span class="dot dot-g"></span>离线可用</div><div class="acard-t">5 分钟前</div><div class="acard-tk">🔑 uvwx...yzab 📋</div></div>
-<div class="acard" onclick="openApp('doc')"><div class="acard-i ig7">📄</div><div class="acard-n">文档中心</div><div class="acard-s"><span class="dot dot-o"></span>缓存中</div><div class="acard-t">刚刚</div></div>
+<div class="acard" onclick="openApp('shop')"><div class="acard-i ig2"><i data-lucide="shopping-bag"></i></div><div class="acard-n">E-Commerce</div><div class="acard-s"><span class="dot dot-g"></span>Offline ready</div><div class="acard-t">2 min ago</div><div class="acard-tk"><i data-lucide="key" style="width:10px;height:10px"></i> abcd...efgh</div></div>
+<div class="acard" onclick="openApp('data')"><div class="acard-i ig3"><i data-lucide="bar-chart-3"></i></div><div class="acard-n">Dashboard</div><div class="acard-s"><span class="dot dot-o"></span>Temp cache</div><div class="acard-t">1 hour ago</div><div class="acard-tk"><i data-lucide="key" style="width:10px;height:10px"></i> defg...hijk</div></div>
+<div class="acard" onclick="openApp('news')"><div class="acard-i ig4"><i data-lucide="newspaper"></i></div><div class="acard-n">News Reader</div><div class="acard-s"><span class="dot dot-gr"></span>Not cached</div><div class="acard-t">Yesterday</div></div>
+<div class="acard" onclick="openApp('game')"><div class="acard-i ig5"><i data-lucide="gamepad-2"></i></div><div class="acard-n">Mini Games</div><div class="acard-s"><span class="dot dot-b"></span>Persistent</div><div class="acard-t">3 hours ago</div><div class="acard-tk"><i data-lucide="key" style="width:10px;height:10px"></i> mnop...qrst</div></div>
+<div class="acard" onclick="openApp('tool')"><div class="acard-i ig6"><i data-lucide="wrench"></i></div><div class="acard-n">Toolbox</div><div class="acard-s"><span class="dot dot-g"></span>Offline ready</div><div class="acard-t">5 min ago</div><div class="acard-tk"><i data-lucide="key" style="width:10px;height:10px"></i> uvwx...yzab</div></div>
+<div class="acard" onclick="openApp('doc')"><div class="acard-i ig7"><i data-lucide="file-text"></i></div><div class="acard-n">Docs Center</div><div class="acard-s"><span class="dot dot-o"></span>Caching...</div><div class="acard-t">Just now</div></div>
 </div>
-<div class="shdr">快速操作</div>
+<div class="shdr">Quick Actions</div>
 <div class="qactions">
-<button class="qact" onclick="hud('📷','打开扫码器')"><span class="qi">📷</span>扫码添加</button>
-<button class="qact" onclick="hud('📋','请粘贴命令')"><span class="qi">📋</span>粘贴命令</button>
-<button class="qact" onclick="stab(1)"><span class="qi">📬</span>收信箱</button>
+<button class="qact" onclick="hud('Scan','Opening camera...')"><span class="qi"><i data-lucide="scan-line"></i></span>Scan QR</button>
+<button class="qact" onclick="hud('Paste','Paste a command')"><span class="qi"><i data-lucide="clipboard"></i></span>Paste Cmd</button>
+<button class="qact" onclick="stab(1)"><span class="qi"><i data-lucide="inbox"></i></span>Inbox</button>
 </div>
 </div>
-
 <!-- INBOX -->
 <div class="page off" id="pg1">
-<div class="nbar"><div></div><div></div><button onclick="clearInbox()" style="font-size:14px;color:var(--danger);font-weight:500">清空全部</button></div>
-<div class="ntitle">收信箱</div>
-<div class="sbar-s"><span>🔍</span><input type="text" placeholder="搜索消息..." id="sinp" oninput="filterMsg()"></div>
-<div class="fbar"><button class="fbtn on" onclick="setF(this)">全部</button><button class="fbtn" onclick="setF(this)">未读</button><button class="fbtn" onclick="setF(this)">应用</button></div>
-<div class="mlist" id="mlist">
-<div class="mgrp" data-g="today">
-<div class="ghdr" onclick="togG(this)"><span>今天 <span class="cnt">(3)</span></span><span class="ei">▼</span></div>
-<div class="mgrp-items">
-<div class="mcell" data-type="app" onclick="openMsg(0)"><div class="mi app">📦</div><div class="mb"><div class="mt">电商应用有新活动</div><div class="mp">春季大促已开始，全场商品低至5折，限时抢购中</div><div class="mm"><span class="mtag">APNs</span> 10:30</div></div><span class="murd"></span><span class="marr">›</span></div>
-<div class="mcell" data-type="url" onclick="openMsg(1)"><div class="mi url">🔗</div><div class="mb"><div class="mt">新版本已发布</div><div class="mp">v2.0.0 现已可用，包含全新的离线缓存引擎和性能优化</div><div class="mm"><span class="mtag">Bark</span> 09:15</div></div><span class="marr">›</span></div>
-<div class="mcell" data-type="sys" onclick="openMsg(2)"><div class="mi sys">🔔</div><div class="mb"><div class="mt">缓存更新通知</div><div class="mp">「数据面板」已自动更新至最新版本，缓存大小 3.2MB</div><div class="mm"><span class="mtag">LOCAL</span> 08:42</div></div><span class="murd"></span><span class="marr">›</span></div>
-</div></div>
-<div class="mgrp" data-g="yesterday">
-<div class="ghdr" onclick="togG(this)"><span>昨天 <span class="cnt">(2)</span></span><span class="ei">▼</span></div>
-<div class="mgrp-items">
-<div class="mcell" data-type="app" onclick="openMsg(3)"><div class="mi app">📦</div><div class="mb"><div class="mt">工具箱任务完成</div><div class="mp">您提交的数据导出任务已完成，共导出 1,234 条记录</div><div class="mm"><span class="mtag">Bridge</span> 昨天 14:22</div></div><span class="marr">›</span></div>
-<div class="mcell" data-type="local" onclick="openMsg(4)"><div class="mi loc">⚙️</div><div class="mb"><div class="mt">系统诊断报告</div><div class="mp">设备存储空间低于 10%，建议清理缓存以保持应用流畅运行</div><div class="mm"><span class="mtag">LOCAL</span> 昨天 09:05</div></div></div>
-</div></div>
-<div class="mgrp" data-g="earlier">
-<div class="ghdr" onclick="togG(this)"><span>更早 <span class="cnt">(3)</span></span><span class="ei">▼</span></div>
-<div class="mgrp-items">
-<div class="mcell" data-type="url" onclick="openMsg(5)"><div class="mi url">🔗</div><div class="mb"><div class="mt">分享了一个网页</div><div class="mp">https://example.com/article/2026-news 年度精选文章合集</div><div class="mm"><span class="mtag">APNs</span> 5月5日</div></div><span class="marr">›</span></div>
-<div class="mcell" data-type="sys" onclick="openMsg(6)"><div class="mi sys">🔔</div><div class="mb"><div class="mt">欢迎使用 WebBridgeKit</div><div class="mp">首次使用？试试扫描二维码添加一个离线应用</div><div class="mm"><span class="mtag">LOCAL</span> 5月4日</div></div></div>
-<div class="mcell" data-type="app" onclick="openMsg(7)"><div class="mi app">📦</div><div class="mb"><div class="mt">游戏成就解锁</div><div class="mp">恭喜！您已在「小游戏」中达成「连续7天登录」成就</div><div class="mm"><span class="mtag">Bridge</span> 5月3日</div></div><span class="marr">›</span></div>
-</div></div>
+<div class="nbar"><div></div><div></div><button onclick="clearInbox()" style="font-size:14px;color:var(--danger);font-weight:500">Clear All</button></div>
+<div class="ntitle">Inbox</div>
+<div class="sbar-s"><i data-lucide="search" style="width:16px;height:16px"></i><input type="text" placeholder="Search messages..." id="sinp" oninput="filterMsg()"></div>
+<div class="fbar"><button class="fbtn on" onclick="setF(this)">All</button><button class="fbtn" onclick="setF(this)">Unread</button><button class="fbtn" onclick="setF(this)">Apps</button></div>
+<div class="mlist" id="mlist"></div>
+<div class="swipe-hint"><i data-lucide="info" style="width:12px;height:12px"></i> Tap a message to view details</div>
+<button class="fab" onclick="openDebug()"><i data-lucide="send"></i> Send Test</button>
 </div>
-<div class="swipe-hint">← 左滑消息可删除</div>
-<button class="fab" onclick="openDebug()">📤 发送测试</button>
-</div>
-
 <!-- DISCOVER -->
 <div class="page off" id="pg2">
-<div class="nbar"><div></div><div></div><button onclick="hud('🔄','刷新完成')" style="font-size:18px;color:var(--text2)">🔄</button></div>
-<div class="ntitle">发现</div>
-<div class="shdr">最近使用</div>
+<div class="nbar"><div></div><div></div><button onclick="hud('Refreshed','List updated')" style="color:var(--text2)"><i data-lucide="refresh-cw"></i></button></div>
+<div class="ntitle">Discover</div>
+<div class="shdr">Recently Used</div>
 <div class="dgrid">
-<div class="dcard" onclick="openApp('shop')"><div class="dcard-top"><div class="acard-i ig2" style="width:36px;height:36px;border-radius:8px;font-size:18px">🏪</div><div class="dcard-info"><div class="dcard-nm">电商应用</div><div class="dcard-sz">12.0 MB</div></div><div class="cti per">●</div></div><div class="acard-s"><span class="dot dot-g"></span>持久化 · 2分钟前</div></div>
-<div class="dcard" onclick="openApp('tool')"><div class="dcard-top"><div class="acard-i ig6" style="width:36px;height:36px;border-radius:8px;font-size:18px">🛠</div><div class="dcard-info"><div class="dcard-nm">工具箱</div><div class="dcard-sz">5.6 MB</div></div><div class="cti per">●</div></div><div class="acard-s"><span class="dot dot-g"></span>持久化 · 5分钟前</div></div>
+<div class="dcard" onclick="openApp('shop')"><div class="dcard-top"><div class="acard-i ig2" style="width:36px;height:36px;border-radius:8px"><i data-lucide="shopping-bag" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">E-Commerce</div><div class="dcard-sz">12.0 MB</div></div><span class="pill pill-g">Saved</span></div><div class="acard-s"><span class="dot dot-g"></span>Persistent &middot; 2 min ago</div></div>
+<div class="dcard" onclick="openApp('tool')"><div class="dcard-top"><div class="acard-i ig6" style="width:36px;height:36px;border-radius:8px"><i data-lucide="wrench" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">Toolbox</div><div class="dcard-sz">5.6 MB</div></div><span class="pill pill-g">Saved</span></div><div class="acard-s"><span class="dot dot-g"></span>Persistent &middot; 5 min ago</div></div>
 </div>
-<div class="shdr">已缓存应用</div>
+<div class="shdr">Cached Apps</div>
 <div class="dgrid">
-<div class="dcard" onclick="openApp('game')"><div class="dcard-top"><div class="acard-i ig5" style="width:36px;height:36px;border-radius:8px;font-size:18px">🎮</div><div class="dcard-info"><div class="dcard-nm">小游戏</div><div class="dcard-sz">8.1 MB</div></div><div class="cti per">●</div></div><div class="acard-s"><span class="dot dot-b"></span>持久化 · 3小时前</div></div>
-<div class="dcard" onclick="openApp('data')"><div class="dcard-top"><div class="acard-i ig3" style="width:36px;height:36px;border-radius:8px;font-size:18px">📊</div><div class="dcard-info"><div class="dcard-nm">数据面板</div><div class="dcard-sz">3.2 MB</div></div><div class="cti tmp">○</div></div><div class="acard-s"><span class="dot dot-o"></span>临时 · 1小时前</div></div>
-<div class="dcard" onclick="openApp('doc')"><div class="dcard-top"><div class="acard-i ig7" style="width:36px;height:36px;border-radius:8px;font-size:18px">📄</div><div class="dcard-info"><div class="dcard-nm">文档中心</div><div class="dcard-sz">2.4 MB</div></div><div class="cti tmp">○</div></div><div class="acard-s"><span class="dot dot-o"></span>缓存中 · 刚刚</div></div>
-<div class="dcard" onclick="openApp('news')"><div class="dcard-top"><div class="acard-i ig4" style="width:36px;height:36px;border-radius:8px;font-size:18px">📰</div><div class="dcard-info"><div class="dcard-nm">新闻阅读</div><div class="dcard-sz">0 MB</div></div><div class="cti tmp">○</div></div><div class="acard-s"><span class="dot dot-gr"></span>未缓存 · 昨天</div></div>
+<div class="dcard" onclick="openApp('game')"><div class="dcard-top"><div class="acard-i ig5" style="width:36px;height:36px;border-radius:8px"><i data-lucide="gamepad-2" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">Mini Games</div><div class="dcard-sz">8.1 MB</div></div><span class="pill pill-g">Saved</span></div><div class="acard-s"><span class="dot dot-b"></span>Persistent &middot; 3h ago</div></div>
+<div class="dcard" onclick="openApp('data')"><div class="dcard-top"><div class="acard-i ig3" style="width:36px;height:36px;border-radius:8px"><i data-lucide="bar-chart-3" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">Dashboard</div><div class="dcard-sz">3.2 MB</div></div><span class="pill pill-o">Temp</span></div><div class="acard-s"><span class="dot dot-o"></span>Temporary &middot; 1h ago</div></div>
+<div class="dcard" onclick="openApp('doc')"><div class="dcard-top"><div class="acard-i ig7" style="width:36px;height:36px;border-radius:8px"><i data-lucide="file-text" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">Docs Center</div><div class="dcard-sz">2.4 MB</div></div><span class="pill pill-o">Temp</span></div><div class="acard-s"><span class="dot dot-o"></span>Caching &middot; Now</div></div>
+<div class="dcard" onclick="openApp('news')"><div class="dcard-top"><div class="acard-i ig4" style="width:36px;height:36px;border-radius:8px"><i data-lucide="newspaper" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">News Reader</div><div class="dcard-sz">0 MB</div></div><span class="pill pill-gr">None</span></div><div class="acard-s"><span class="dot dot-gr"></span>Not cached</div></div>
 </div>
-<div class="shdr">推荐</div>
+<div class="shdr">Recommended</div>
 <div class="dgrid">
-<div class="dcard" onclick="hud('📦','开始下载「天气」')"><div class="dcard-top"><div class="acard-i ig8" style="width:36px;height:36px;border-radius:8px;font-size:18px">🌤</div><div class="dcard-info"><div class="dcard-nm">天气</div><div class="dcard-sz">1.8 MB</div></div></div><div style="font-size:12px;color:var(--text2)">精美天气应用，支持离线查看</div></div>
-<div class="dcard" onclick="hud('📦','开始下载「记事本」')"><div class="dcard-top"><div class="acard-i ig1" style="width:36px;height:36px;border-radius:8px;font-size:18px">📝</div><div class="dcard-info"><div class="dcard-nm">记事本</div><div class="dcard-sz">0.9 MB</div></div></div><div style="font-size:12px;color:var(--text2)">轻量级笔记，支持 Markdown</div></div>
+<div class="dcard" onclick="hud('Download','Downloading Weather...')"><div class="dcard-top"><div class="acard-i ig8" style="width:36px;height:36px;border-radius:8px"><i data-lucide="cloud-sun" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">Weather</div><div class="dcard-sz">1.8 MB</div></div></div><div style="font-size:12px;color:var(--text2)">Beautiful weather, offline support</div></div>
+<div class="dcard" onclick="hud('Download','Downloading Notes...')"><div class="dcard-top"><div class="acard-i ig1" style="width:36px;height:36px;border-radius:8px"><i data-lucide="pencil" style="width:18px;height:18px"></i></div><div class="dcard-info"><div class="dcard-nm">Notes</div><div class="dcard-sz">0.9 MB</div></div></div><div style="font-size:12px;color:var(--text2)">Lightweight notes with Markdown</div></div>
 </div>
 </div>
-
 <!-- SETTINGS -->
 <div class="page off" id="pg3">
 <div class="nbar"><div></div><div></div><div></div></div>
-<div class="ntitle">设置</div>
-<div class="ss"><div class="sg" style="margin-bottom:0"><div class="scell" style="padding:16px;gap:14px;cursor:default"><div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#007AFF,#5856D6);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🌉</div><div style="flex:1"><div style="font-size:18px;font-weight:600">WebBridgeKit</div><div style="font-size:13px;color:var(--text2);margin-top:2px">Token: abcd****efgh</div><button class="btn btn-s btn-p" style="margin-top:8px" onclick="hud('✅','Token 已复制')">复制 Token</button></div></div></div></div>
-<div class="ss"><div class="sg-title">服务器</div><div class="sg"><div class="scell" onclick="hud('🌐','打开服务器配置')"><div class="si si-b">🌐</div><span class="sl">服务器配置</span><span class="sv">api.day.app</span><span class="sa">›</span></div></div></div>
-<div class="ss"><div class="sg-title">安全</div><div class="sg"><div class="scell" onclick="hud('🔑','打开 Token 管理')"><div class="si si-g">🔑</div><span class="sl">Token 管理</span><span class="sa">›</span></div><div class="scell" onclick="hud('🗝','打开 API Key 管理')"><div class="si si-p">🗝</div><span class="sl">API Key 管理</span><span class="sa">›</span></div></div></div>
-<div class="ss"><div class="sg-title">存储</div><div class="sg"><div class="scell" onclick="hud('📦','打开缓存管理')"><div class="si si-o">📦</div><span class="sl">缓存管理</span><span class="sv">2.3 GB</span><span class="sa">›</span></div><div class="scell" onclick="hud('⭐','打开收藏管理')"><div class="si si-t">⭐</div><span class="sl">收藏管理</span><span class="sa">›</span></div></div></div>
-<div class="ss"><div class="sg-title">通知</div><div class="sg"><div class="scell"><div class="si si-r">🔔</div><span class="sl">通知偏好</span><span class="sa">›</span></div></div></div>
-<div class="ss"><div class="sg-title">偏好</div><div class="sg"><div class="scell"><div class="si si-b">🔄</div><span class="sl">记忆上次应用</span><div class="stog on" onclick="this.classList.toggle('on')"></div></div><div class="scell"><div class="si si-p">🎨</div><span class="sl">外观</span><span class="sv">跟随系统</span><span class="sa">›</span></div></div></div>
-<div class="ss"><div class="sg-title">开发者</div><div class="sg"><div class="scell" onclick="openDebug()"><div class="si si-gr">🐛</div><span class="sl">调试面板</span><span class="sv" style="font-size:12px;color:var(--accent)">DEBUG</span><span class="sa">›</span></div><div class="scell" onclick="hud('📋','已复制诊断报告')"><div class="si si-t">📋</div><span class="sl">导出诊断信息</span><span class="sa">›</span></div></div></div>
-<div class="ss"><div class="sg-title">关于</div><div class="sg"><div class="scell" onclick="hud('ℹ️','WebBridgeKit v1.0.0')"><div class="si si-gr">ℹ️</div><span class="sl">关于</span><span class="sa">›</span></div></div></div>
+<div class="ntitle">Settings</div>
+<div class="ss"><div class="sg" style="margin-bottom:0"><div class="scell" style="padding:16px;gap:14px;cursor:default"><div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#007AFF,#5856D6);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff"><i data-lucide="globe" style="width:28px;height:28px"></i></div><div style="flex:1"><div style="font-size:18px;font-weight:600">WebBridgeKit</div><div style="font-size:13px;color:var(--text2);margin-top:2px">Token: abcd****efgh</div><button class="btn btn-s btn-p" style="margin-top:8px" onclick="hud('Copied','Token copied')"><i data-lucide="copy" style="width:14px;height:14px"></i> Copy Token</button></div></div></div></div>
+<div class="ss"><div class="sg-title">Server</div><div class="sg"><div class="scell" onclick="hud('Server','Opening config')"><div class="si si-b"><i data-lucide="server" style="width:16px;height:16px"></i></div><span class="sl">Server Config</span><span class="sv">api.day.app</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div></div></div>
+<div class="ss"><div class="sg-title">Security</div><div class="sg"><div class="scell" onclick="openTokenDetail()"><div class="si si-g"><i data-lucide="key" style="width:16px;height:16px"></i></div><span class="sl">Token Manager</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div><div class="scell" onclick="hud('API Key','Opening')"><div class="si si-p"><i data-lucide="key-round" style="width:16px;height:16px"></i></div><span class="sl">API Key Manager</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div></div></div>
+<div class="ss"><div class="sg-title">Storage</div><div class="sg"><div class="scell" onclick="openCacheDetail()"><div class="si si-o"><i data-lucide="hard-drive" style="width:16px;height:16px"></i></div><span class="sl">Cache Manager</span><span class="sv">2.3 GB</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div><div class="scell" onclick="hud('Favorites','Opening')"><div class="si si-t"><i data-lucide="star" style="width:16px;height:16px"></i></div><span class="sl">Favorites</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div></div></div>
+<div class="ss"><div class="sg-title">Notifications</div><div class="sg"><div class="scell"><div class="si si-r"><i data-lucide="bell" style="width:16px;height:16px"></i></div><span class="sl">Notification Preferences</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div></div></div>
+<div class="ss"><div class="sg-title">Preferences</div><div class="sg"><div class="scell"><div class="si si-b"><i data-lucide="clock" style="width:16px;height:16px"></i></div><span class="sl">Remember Last App</span><div class="stog on" onclick="this.classList.toggle('on')"></div></div><div class="scell"><div class="si si-p"><i data-lucide="palette" style="width:16px;height:16px"></i></div><span class="sl">Appearance</span><span class="sv">System</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div></div></div>
+<div class="ss"><div class="sg-title">Developer</div><div class="sg"><div class="scell" onclick="openDebug()"><div class="si si-gr"><i data-lucide="bug" style="width:16px;height:16px"></i></div><span class="sl">Debug Panel</span><span class="pill pill-g" style="font-size:10px">DEBUG</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div><div class="scell" onclick="hud('Copied','Diagnostics exported')"><div class="si si-t"><i data-lucide="download" style="width:16px;height:16px"></i></div><span class="sl">Export Diagnostics</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div></div></div>
+<div class="ss"><div class="sg-title">About</div><div class="sg"><div class="scell" onclick="hud('About','WebBridgeKit v1.0.0')"><div class="si si-gr"><i data-lucide="info" style="width:16px;height:16px"></i></div><span class="sl">About</span><span class="sa"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div></div></div>
 <div class="ver">WebBridgeKit v1.0.0 (Build 42)</div>
 </div>
 </div>
-
-<!-- TAB BAR -->
 <div class="tbar">
-<button class="tab on" onclick="stab(0)"><span class="ti">🏠</span><span>首页</span></button>
-<button class="tab" onclick="stab(1)" style="position:relative"><span class="ti">📬</span><span>收信箱</span><span class="bdg" id="ibdg">2</span></button>
-<button class="tab" onclick="stab(2)"><span class="ti">🧭</span><span>发现</span></button>
-<button class="tab" onclick="stab(3)"><span class="ti">⚙️</span><span>设置</span></button>
+<button class="tab on" onclick="stab(0)"><span class="ti"><i data-lucide="layout-grid"></i></span><span>Home</span></button>
+<button class="tab" onclick="stab(1)" style="position:relative"><span class="ti"><i data-lucide="inbox"></i></span><span>Inbox</span><span class="bdg" id="ibdg">2</span></button>
+<button class="tab" onclick="stab(2)"><span class="ti"><i data-lucide="compass"></i></span><span>Discover</span></button>
+<button class="tab" onclick="stab(3)"><span class="ti"><i data-lucide="settings"></i></span><span>Settings</span></button>
 </div>
-
-<!-- MESSAGE DETAIL -->
-<div class="dtl" id="msgDtl">
-<div class="dtl-nav"><button class="dtl-back" onclick="closeMsg()">‹</button><span class="dtl-title">消息详情</span></div>
-<div class="dtl-body" id="msgDtlBody"></div>
-</div>
-
-<!-- APP DETAIL -->
-<div class="dtl" id="appDtl">
-<div class="dtl-nav"><button class="dtl-back" onclick="closeApp()">‹</button><span class="dtl-title">应用详情</span></div>
-<div class="dtl-body" id="appDtlBody"></div>
-</div>
-
-<!-- DEBUG PANEL -->
+<div class="dtl" id="msgDtl"><div class="dtl-nav"><button class="dtl-back" onclick="closeMsg()"><i data-lucide="arrow-left"></i></button><span class="dtl-title">Message</span></div><div class="dtl-body" id="msgDtlBody"></div></div>
+<div class="dtl" id="appDtl"><div class="dtl-nav"><button class="dtl-back" onclick="closeApp()"><i data-lucide="arrow-left"></i></button><span class="dtl-title">App Details</span></div><div class="dtl-body" id="appDtlBody"></div></div>
+<div class="dtl" id="tokenDtl"><div class="dtl-nav"><button class="dtl-back" onclick="closeDetail('tokenDtl')"><i data-lucide="arrow-left"></i></button><span class="dtl-title">Token Details</span></div><div class="dtl-body" id="tokenDtlBody"></div></div>
+<div class="dtl" id="cacheDtl"><div class="dtl-nav"><button class="dtl-back" onclick="closeDetail('cacheDtl')"><i data-lucide="arrow-left"></i></button><span class="dtl-title">Cache Details</span></div><div class="dtl-body" id="cacheDtlBody"></div></div>
+<div class="dtl" id="histDtl"><div class="dtl-nav"><button class="dtl-back" onclick="closeDetail('histDtl')"><i data-lucide="arrow-left"></i></button><span class="dtl-title">Send History</span></div><div class="dtl-body" id="histDtlBody"></div></div>
 <div class="ov" id="dbgOv" onclick="closeDebug(event)">
 <div class="ov-bg"></div>
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="sh-handle"></div>
-<div class="sh-hdr"><h3>Debug Panel</h3><button class="sh-close" onclick="closeDebug()">×</button></div>
-<div class="dtabs" id="dtabs"><button class="dtab on" onclick="sdtab(0)">Handlers</button><button class="dtab" onclick="sdtab(1)">通知测试</button><button class="dtab" onclick="sdtab(2)">缓存</button><button class="dtab" onclick="sdtab(3)">日志</button><button class="dtab" onclick="sdtab(4)">诊断</button></div>
+<div class="sh-hdr"><h3><i data-lucide="bug" style="width:18px;height:18px"></i> Debug Panel</h3><button class="sh-close" onclick="closeDebug()"><i data-lucide="x"></i></button></div>
+<div class="dtabs" id="dtabs"><button class="dtab on" onclick="sdtab(0)">Handlers</button><button class="dtab" onclick="sdtab(1)">Notification Test</button><button class="dtab" onclick="sdtab(2)">Cache</button><button class="dtab" onclick="sdtab(3)">Logs</button><button class="dtab" onclick="sdtab(4)">Diagnostics</button></div>
 <div class="sh-body" id="dbgBody"></div>
 </div>
 </div>
-
-<!-- HUD -->
-<div class="hud" id="hudEl"><span id="hudI"></span><span id="hudT"></span></div>
+<div class="hud" id="hudEl"><i data-lucide="check" style="width:18px;height:18px;color:var(--accent)"></i><span id="hudT"></span></div>
 </div>
-
 <script>
-var cur=0;
+var cur=0,sendHistory=[],notifMethod='POST';
+function initIcons(){try{if(typeof lucide!=='undefined')lucide.createIcons();}catch(e){}}
+
 var msgs=[
-{title:'电商应用有新活动',body:'春季大促已开始，全场商品低至5折，限时抢购中！\n\n活动时间：5月7日 - 5月14日\n参与方式：点击进入活动页面\n\n精选好物推荐：\n• 数码配件专场 — 低至3折\n• 家居好物 — 买二送一\n• 美妆护肤 — 满减优惠',source:'APNs',time:'10:30',group:'应用通知',app:'电商应用',url:'https://shop.example.com/sale'},
-{title:'新版本已发布',body:'WebBridgeKit v2.0.0 现已可用！\n\n更新内容：\n• 全新离线缓存引擎\n• 消息路由性能优化\n• 支持 Manifest v2 规范\n• 深色模式优化\n\n点击查看完整更新日志。',source:'Bark',time:'09:15',group:'系统消息',url:'https://example.com/changelog'},
-{title:'缓存更新通知',body:'「数据面板」已自动更新至最新版本\n\n更新详情：\n• 缓存大小：3.2 MB\n• 资源文件：24 个\n• 更新时间：2026-05-07 08:42\n• 更新来源：自动刷新',source:'LOCAL',time:'08:42',group:'系统消息',app:'数据面板'},
-{title:'工具箱任务完成',body:'您提交的数据导出任务已完成。\n\n导出统计：\n• 总记录数：1,234 条\n• 文件大小：2.8 MB\n• 导出格式：CSV\n• 耗时：12 秒\n\n请前往工具箱查看导出文件。',source:'Bridge',time:'昨天 14:22',group:'应用通知',app:'工具箱'},
-{title:'系统诊断报告',body:'设备存储空间低于 10%。\n\n诊断详情：\n• 总容量：128 GB\n• 已使用：118 GB\n• 可用空间：10 GB\n• 缓存占用：2.3 GB\n\n建议：清理缓存或删除不常用应用以释放空间。',source:'LOCAL',time:'昨天 09:05',group:'系统消息'},
-{title:'分享了一个网页',body:'https://example.com/article/2026-news\n\n年度精选文章合集 — 探索2026年最值得关注的技术趋势和创新应用。',source:'APNs',time:'5月5日',group:'链接分享',url:'https://example.com/article/2026-news'},
-{title:'欢迎使用 WebBridgeKit',body:'首次使用？这里有一些快速上手提示：\n\n1. 扫描二维码添加离线应用\n2. 复制推送 Token 发送通知\n3. 在收信箱查看所有消息\n4. 使用口令快速跳转到目标应用\n\n祝您使用愉快！',source:'LOCAL',time:'5月4日',group:'系统消息'},
-{title:'游戏成就解锁',body:'恭喜！您已在「小游戏」中达成成就：\n\n🏆 连续7天登录\n• 奖励：100 金币\n• 解锁：专属头像框\n\n继续加油，下一个成就是「连续30天登录」！',source:'Bridge',time:'5月3日',group:'应用通知',app:'小游戏'}
+{title:'E-Commerce Sale Live',body:'Spring mega sale started! Up to 50% off everything.\n\nSale period: May 7 - May 14\n\nFeatured deals:\n\u2022 Digital accessories \u2014 up to 70% off\n\u2022 Home goods \u2014 buy 2 get 1 free\n\u2022 Beauty & skincare \u2014 bundle discounts',source:'APNs',time:'10:30',group:'App Notifications',app:'E-Commerce',url:'https://shop.example.com/sale'},
+{title:'New Version Released',body:'WebBridgeKit v2.0.0 is now available!\n\nChanges:\n\u2022 New offline cache engine\n\u2022 Message routing optimization\n\u2022 Manifest v2 support\n\u2022 Dark mode improvements',source:'Bark',time:'09:15',group:'System',url:'https://example.com/changelog'},
+{title:'Cache Update',body:'Dashboard auto-updated to latest version.\n\nDetails:\n\u2022 Cache size: 3.2 MB\n\u2022 Resource files: 24\n\u2022 Update time: 2026-05-07 08:42\n\u2022 Source: Auto-refresh',source:'LOCAL',time:'08:42',group:'System',app:'Dashboard'},
+{title:'Task Complete',body:'Data export finished.\n\nStats:\n\u2022 Total records: 1,234\n\u2022 File size: 2.8 MB\n\u2022 Format: CSV\n\u2022 Duration: 12s',source:'Bridge',time:'Yesterday 14:22',group:'App Notifications',app:'Toolbox'},
+{title:'Storage Warning',body:'Device storage below 10%.\n\nDiagnostics:\n\u2022 Total: 128 GB\n\u2022 Used: 118 GB\n\u2022 Available: 10 GB\n\u2022 Cache: 2.3 GB',source:'LOCAL',time:'Yesterday 09:05',group:'System'},
+{title:'Shared Link',body:'https://example.com/article/2026-news\n\nBest of 2026 \u2014 Most noteworthy tech trends.',source:'APNs',time:'May 5',group:'Links',url:'https://example.com/article/2026-news'},
+{title:'Welcome to WebBridgeKit',body:'Quick tips:\n\n1. Scan QR to add offline apps\n2. Copy push Token to send notifications\n3. View messages in Inbox\n4. Use commands to jump to apps',source:'LOCAL',time:'May 4',group:'System'},
+{title:'Achievement Unlocked',body:'Congrats! You earned in Mini Games:\n\n\u2B50 7-Day Login Streak\n\u2022 Reward: 100 coins\n\u2022 Unlocked: Exclusive avatar frame',source:'Bridge',time:'May 3',group:'App Notifications',app:'Mini Games'}
 ];
+
 var apps={
-shop:{name:'电商应用',icon:'🏪',ig:'ig2',id:'com.example.shop',type:'持久化',size:'12.0 MB',ver:'v1.2.0',res:'24 个文件',cached:'2026-05-06 14:30',exp:'永不过期',vis:'15 次',last:'2 分钟前',src:'QR 扫码',token:'abcd1234efgh5678'},
-data:{name:'数据面板',icon:'📊',ig:'ig3',id:'com.example.dashboard',type:'临时',size:'3.2 MB',ver:'v2.0.1',res:'18 个文件',cached:'2026-05-07 08:00',exp:'7天',vis:'8 次',last:'1 小时前',src:'URL 导入',token:'defg5678hijk9012'},
-news:{name:'新闻阅读',icon:'📰',ig:'ig4',id:'com.example.news',type:'未缓存',size:'0 MB',ver:'-',res:'-',cached:'-',exp:'-',vis:'3 次',last:'昨天',src:'推荐',token:'-'},
-game:{name:'小游戏',icon:'🎮',ig:'ig5',id:'com.example.game',type:'持久化',size:'8.1 MB',ver:'v3.1.0',res:'42 个文件',cached:'2026-05-05 10:00',exp:'永不过期',vis:'32 次',last:'3 小时前',src:'QR 扫码',token:'mnop9012qrst3456'},
-tool:{name:'工具箱',icon:'🛠',ig:'ig6',id:'com.example.tools',type:'持久化',size:'5.6 MB',ver:'v1.0.0',res:'15 个文件',cached:'2026-05-06 09:00',exp:'永不过期',vis:'22 次',last:'5 分钟前',src:'URL 导入',token:'uvwx3456yzab7890'},
-doc:{name:'文档中心',icon:'📄',ig:'ig7',id:'com.example.docs',type:'临时',size:'2.4 MB',ver:'v1.1.0',res:'12 个文件',cached:'缓存中...',exp:'3天',vis:'5 次',last:'刚刚',src:'链接分享',token:'-'}
+shop:{name:'E-Commerce',icon:'shopping-bag',ig:'ig2',id:'com.example.shop',type:'Persistent',size:'12.0 MB',ver:'v1.2.0',res:'24 files',cached:'2026-05-06 14:30',exp:'Never',vis:'15',last:'2 min ago',src:'QR Scan',token:'abcd1234efgh5678'},
+data:{name:'Dashboard',icon:'bar-chart-3',ig:'ig3',id:'com.example.dashboard',type:'Temporary',size:'3.2 MB',ver:'v2.0.1',res:'18 files',cached:'2026-05-07 08:00',exp:'7 days',vis:'8',last:'1 hour ago',src:'URL Import',token:'defg5678hijk9012'},
+news:{name:'News Reader',icon:'newspaper',ig:'ig4',id:'com.example.news',type:'None',size:'0 MB',ver:'-',res:'-',cached:'-',exp:'-',vis:'3',last:'Yesterday',src:'Recommended',token:'-'},
+game:{name:'Mini Games',icon:'gamepad-2',ig:'ig5',id:'com.example.game',type:'Persistent',size:'8.1 MB',ver:'v3.1.0',res:'42 files',cached:'2026-05-05 10:00',exp:'Never',vis:'32',last:'3 hours ago',src:'QR Scan',token:'mnop9012qrst3456'},
+tool:{name:'Toolbox',icon:'wrench',ig:'ig6',id:'com.example.tools',type:'Persistent',size:'5.6 MB',ver:'v1.0.0',res:'15 files',cached:'2026-05-06 09:00',exp:'Never',vis:'22',last:'5 min ago',src:'URL Import',token:'uvwx3456yzab7890'},
+doc:{name:'Docs Center',icon:'file-text',ig:'ig7',id:'com.example.docs',type:'Temporary',size:'2.4 MB',ver:'v1.1.0',res:'12 files',cached:'Caching...',exp:'3 days',vis:'5',last:'Just now',src:'Link Share',token:'-'}
 };
-var dbgC=[
-function(){return '<div class="hg-title">📷 硬件</div><div class="hi"><span class="hi-nm">camera</span><span class="hi-ds">相机拍照</span><button class="hi-btn" onclick="hud(\'✅\',\'camera 成功 (45ms)\')">测试</button></div><div class="hi"><span class="hi-nm">videoStream</span><span class="hi-ds">视频流</span><button class="hi-btn" onclick="hud(\'✅\',\'videoStream 成功 (120ms)\')">测试</button></div><div class="hi"><span class="hi-nm">scan</span><span class="hi-ds">扫码</span><button class="hi-btn" onclick="hud(\'✅\',\'scan 成功 (230ms)\')">测试</button></div><div class="hg-title">📍 定位</div><div class="hi"><span class="hi-nm">getLocation</span><span class="hi-ds">获取位置</span><button class="hi-btn" onclick="hud(\'✅\',\'getLocation 成功 (890ms)\')">测试</button></div><div class="hg-title">📱 系统</div><div class="hi"><span class="hi-nm">getSystemInfo</span><span class="hi-ds">系统信息</span><button class="hi-btn" onclick="hud(\'✅\',\'getSystemInfo 成功 (12ms)\')">测试</button></div><div class="hi"><span class="hi-nm">getNetworkInfo</span><span class="hi-ds">网络状态</span><button class="hi-btn" onclick="hud(\'✅\',\'getNetworkInfo 成功 (85ms)\')">测试</button></div><div class="hi"><span class="hi-nm">haptic</span><span class="hi-ds">触觉反馈</span><button class="hi-btn" onclick="hud(\'✅\',\'haptic 成功 (5ms)\')">测试</button></div><div class="hg-title">💾 存储</div><div class="hi"><span class="hi-nm">setStorage</span><span class="hi-ds">写入存储</span><button class="hi-btn" onclick="hud(\'✅\',\'setStorage 成功 (3ms)\')">测试</button></div><div class="hi"><span class="hi-nm">getStorage</span><span class="hi-ds">读取存储</span><button class="hi-btn" onclick="hud(\'✅\',\'getStorage 成功 (2ms)\')">测试</button></div>';},
-function(){return '<div style="margin-bottom:16px"><div style="font-size:13px;color:var(--text2);margin-bottom:8px">APNs Token</div><div style="background:var(--bg);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;word-break:break-all;margin-bottom:8px">a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6</div><button class="btn btn-s btn-p" onclick="hud(\'✅\',\'APNs Token 已复制\')">复制 Token</button></div><hr style="border:none;border-top:.5px solid var(--sep);margin:16px 0"><div style="font-size:15px;font-weight:600;margin-bottom:12px">发送测试通知</div><div class="dform"><div class="fg"><label>标题</label><input type="text" id="tTitle" value="测试通知标题"></div><div class="fg"><label>内容</label><textarea id="tBody">这是一条测试消息，用于验证推送通道是否正常。</textarea></div><div class="fg"><label>URL（可选）</label><input type="url" id="tUrl" value="https://shop.example.com"></div><button class="btn btn-p btn-b" onclick="sendTest()">📤 发送通知</button></div><hr style="border:none;border-top:.5px solid var(--sep);margin:16px 0"><div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">最近发送</div><div class="hi"><span style="color:var(--accent)">✅</span><span class="hi-ds">测试通知标题</span><span style="font-size:12px;color:var(--text3)">10:30 · APNs</span></div><div class="hi"><span style="color:var(--accent)">✅</span><span class="hi-ds">系统通知</span><span style="font-size:12px;color:var(--text3)">09:15 · Bark</span></div>';},
-function(){return '<div class="card" style="padding:16px;margin-bottom:16px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">缓存总览</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">总缓存</span><span>2.3 GB</span></div><div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;margin-bottom:16px"><div style="height:100%;width:46%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px"></div></div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text2)">持久化缓存</span><span>1.8 GB</span></div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text2)">临时缓存</span><span>0.5 GB</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">缓存命中率</span><span style="color:var(--accent)">94.2%</span></div></div><div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">缓存条目</div><div class="hi"><span class="hi-nm">电商应用</span><span class="hi-ds">12.0 MB</span><span style="color:var(--accent);font-size:12px">持久化</span></div><div class="hi"><span class="hi-nm">数据面板</span><span class="hi-ds">3.2 MB</span><span style="color:var(--warning);font-size:12px">临时</span></div><div class="hi"><span class="hi-nm">小游戏</span><span class="hi-ds">8.1 MB</span><span style="color:var(--accent);font-size:12px">持久化</span></div><div class="hi"><span class="hi-nm">工具箱</span><span class="hi-ds">5.6 MB</span><span style="color:var(--accent);font-size:12px">持久化</span></div><div class="hi"><span class="hi-nm">文档中心</span><span class="hi-ds">2.4 MB</span><span style="color:var(--warning);font-size:12px">缓存中</span></div>';},
-function(){return '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="fbtn on" style="font-size:12px" onclick="this.parentElement.querySelectorAll(\'.fbtn\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">全部</button><button class="fbtn" style="font-size:12px" onclick="this.parentElement.querySelectorAll(\'.fbtn\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">Bridge</button><button class="fbtn" style="font-size:12px" onclick="this.parentElement.querySelectorAll(\'.fbtn\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">Cache</button><button class="fbtn" style="font-size:12px" onclick="this.parentElement.querySelectorAll(\'.fbtn\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">Error</button></div><div style="font-family:\'SF Mono\',Menlo,monospace;font-size:12px;line-height:1.8;color:var(--text2)"><div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:15</span> Bridge.initialize() — 注册了 35 个 Handler</div><div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:16</span> Cache.loadManifest() — 加载电商应用缓存 (24 files)</div><div><span style="color:var(--primary)">[DEBUG]</span> <span style="color:var(--text3)">10:30:17</span> APNs.register() — 注册推送通知成功</div><div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:18</span> WebView.load() — 加载 https://shop.example.com</div><div><span style="color:var(--warning)">[WARN]</span> <span style="color:var(--text3)">10:30:18</span> Cache.checkExpire() — 数据面板缓存即将过期</div><div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:20</span> CommandParser.detect() — 未检测到剪贴板口令</div><div><span style="color:var(--danger)">[ERROR]</span> <span style="color:var(--text3)">10:30:22</span> Network.request() — 连接超时，正在重试 (1/3)</div><div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:25</span> Network.request() — 重试成功</div></div>';},
-function(){return '<div class="card" style="padding:16px;margin-bottom:16px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">环境信息</div><div class="dtl-row"><span class="lb">设备</span><span>iPhone 16 Pro</span></div><div class="dtl-row"><span class="lb">系统</span><span>iOS 19.4</span></div><div class="dtl-row"><span class="lb">App 版本</span><span>v1.0.0 (Build 42)</span></div><div class="dtl-row"><span class="lb">Bridge 版本</span><span>v2.1.0</span></div><div class="dtl-row"><span class="lb">网络</span><span>WiFi (已连接)</span></div><div class="dtl-row"><span class="lb">APNs 状态</span><span style="color:var(--accent)">已注册</span></div><div class="dtl-row"><span class="lb">权限</span><span>相机 ✅ 定位 ✅ 通知 ✅ 相册 ✅</span></div><div class="dtl-row"><span class="lb">存储</span><span>已用 118 GB / 128 GB</span></div></div><button class="btn btn-p btn-b" onclick="hud(\'📋\',\'诊断报告已复制\')">📋 一键复制诊断报告</button>';}
-];
+
+function buildInboxHTML(){
+  var h='',groups=[{label:'Today',ids:[0,1,2]},{label:'Yesterday',ids:[3,4]},{label:'Earlier',ids:[5,6,7]}];
+  var icons={app:'package',url:'link',sys:'bell',loc:'settings'};
+  groups.forEach(function(g){
+    h+='<div class="mgrp"><div class="ghdr" onclick="togG(this)"><span>'+g.label+' <span class="cnt">('+g.ids.length+')</span></span><span class="ei"><i data-lucide="chevron-down" style="width:14px;height:14px"></i></span></div><div class="mgrp-items">';
+    g.ids.forEach(function(id){
+      var m=msgs[id];if(!m)return;
+      var tp=m.source==='LOCAL'?'loc':m.source==='Bark'?'url':m.source==='APNs'?'app':'app';
+      h+='<div class="mcell" data-type="'+tp+'" onclick="openMsg('+id+')"><div class="mi '+tp+'"><i data-lucide="'+(icons[tp]||'bell')+'"></i></div><div class="mb"><div class="mt">'+m.title+'</div><div class="mp">'+m.body.split('\n')[0]+'</div><div class="mm"><span class="mtag">'+m.source+'</span> '+m.time+'</div></div>'+(id<3?'<span class="murd"></span>':'')+'<span class="marr"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></span></div>';
+    });
+    h+='</div></div>';
+  });
+  return h;
+}
 
 function stab(i){
-  var pages=document.querySelectorAll('.page');
-  var tabs=document.querySelectorAll('.tab');
+  var pages=document.querySelectorAll('.page'),tabs=document.querySelectorAll('.tab');
   pages.forEach(function(p,j){p.className='page '+(j===i?'':(j<i?'left':'off'));});
   tabs.forEach(function(t,j){t.className='tab'+(j===i?' on':'');});
   cur=i;
+  if(i===1)document.getElementById('mlist').innerHTML=buildInboxHTML();
+  initIcons();
 }
 
 var hudTimer;
-function hud(icon,text){
+function hud(title,text){
   var el=document.getElementById('hudEl');
-  document.getElementById('hudI').textContent=icon;
-  document.getElementById('hudT').textContent=text;
-  el.classList.add('show');
-  clearTimeout(hudTimer);
+  document.getElementById('hudT').textContent=title+(text?' \u2014 '+text:'');
+  el.classList.add('show');clearTimeout(hudTimer);
   hudTimer=setTimeout(function(){el.classList.remove('show');},1800);
 }
 
 function openMsg(i){
-  var m=msgs[i];
-  var html='<div class="dtl-card"><div style="font-size:20px;font-weight:700;margin-bottom:8px">'+m.title+'</div><div style="font-size:13px;color:var(--text2);line-height:1.8"><span>来源: '+m.source+'</span> · <span>'+m.time+'</span>'+(m.group?'<br>分组: '+m.group:'')+(m.app?'<br>应用: '+m.app:'')+'</div></div>';
-  html+='<div class="dtl-card"><h4>消息内容</h4><div style="font-size:15px;line-height:1.7;white-space:pre-wrap">'+m.body.replace(/</g,'&lt;')+'</div></div>';
-  if(m.url)html+='<div class="dtl-card"><h4>关联链接</h4><div style="font-size:13px;color:var(--primary);word-break:break-all">'+m.url+'</div></div>';
-  html+='<div class="dtl-acts"><button class="btn btn-s btn-p" onclick="hud(\'✅\',\'内容已复制\')">📋 复制</button>'+(m.url?'<button class="btn btn-s btn-g" onclick="hud(\'🔗\',\'打开链接\')">🔗 打开链接</button>':'')+(m.app?'<button class="btn btn-s btn-p" onclick="hud(\'📱\',\'打开应用\')">📱 打开应用</button>':'')+'<button class="btn btn-s btn-d" onclick="hud(\'🗑\',\'消息已删除\')">🗑 删除</button></div>';
-  document.getElementById('msgDtlBody').innerHTML=html;
-  document.getElementById('msgDtl').classList.add('show');
-  var urd=document.querySelector('.mcell:nth-child('+(i+1)+') .murd');
-  if(urd)urd.style.display='none';
-  updateBadge();
+  var m=msgs[i];if(!m)return;
+  var h='<div class="dtl-card"><div style="font-size:20px;font-weight:700;margin-bottom:8px">'+m.title+'</div><div style="font-size:13px;color:var(--text2);line-height:1.8"><span>Source: '+m.source+'</span> &middot; <span>'+m.time+'</span>'+(m.group?'<br>Group: '+m.group:'')+(m.app?'<br>App: '+m.app:'')+'</div></div>';
+  h+='<div class="dtl-card"><h4>Content</h4><div style="font-size:15px;line-height:1.7;white-space:pre-wrap">'+m.body.replace(/</g,'&lt;')+'</div></div>';
+  if(m.url)h+='<div class="dtl-card"><h4>Link</h4><div style="font-size:13px;color:var(--primary);word-break:break-all">'+m.url+'</div></div>';
+  h+='<div class="dtl-acts"><button class="btn btn-s btn-p" onclick="hud(\'Copied\',\'Content copied\')"><i data-lucide="copy" style="width:14px;height:14px"></i> Copy</button>';
+  if(m.url)h+='<button class="btn btn-s btn-g" onclick="hud(\'Open\',\'Opening link\')"><i data-lucide="link" style="width:14px;height:14px"></i> Open</button>';
+  if(m.app)h+='<button class="btn btn-s btn-p" onclick="hud(\'Open\',\'Opening app\')"><i data-lucide="smartphone" style="width:14px;height:14px"></i> App</button>';
+  h+='<button class="btn btn-s btn-d" onclick="hud(\'Deleted\',\'Message deleted\')"><i data-lucide="trash-2" style="width:14px;height:14px"></i> Delete</button></div>';
+  document.getElementById('msgDtlBody').innerHTML=h;
+  document.getElementById('msgDtl').classList.add('show');initIcons();
 }
 function closeMsg(){document.getElementById('msgDtl').classList.remove('show');}
 
 function openApp(key){
   var a=apps[key];if(!a)return;
-  var html='<div class="dtl-hero"><div class="dtl-hero-i '+a.ig+'">'+a.icon+'</div><div class="dtl-hero-info"><h2>'+a.name+'</h2><p>'+a.id+'</p></div></div>';
-  html+='<div class="dtl-card"><h4>缓存信息</h4><div class="dtl-row"><span class="lb">类型</span><span>'+a.type+'</span></div><div class="dtl-row"><span class="lb">大小</span><span>'+a.size+'</span></div><div class="dtl-row"><span class="lb">版本</span><span>'+a.ver+'</span></div><div class="dtl-row"><span class="lb">资源数</span><span>'+a.res+'</span></div><div class="dtl-row"><span class="lb">缓存时间</span><span>'+a.cached+'</span></div><div class="dtl-row"><span class="lb">过期时间</span><span>'+a.exp+'</span></div></div>';
-  html+='<div class="dtl-card"><h4>访问信息</h4><div class="dtl-row"><span class="lb">访问次数</span><span>'+a.vis+'</span></div><div class="dtl-row"><span class="lb">最近访问</span><span>'+a.last+'</span></div><div class="dtl-row"><span class="lb">来源</span><span>'+a.src+'</span></div></div>';
-  if(a.token!=='-')html+='<div class="dtl-card"><h4>推送配置</h4><div class="dtl-row"><span class="lb">Token</span><span style="font-family:monospace;font-size:13px">'+a.token.substring(0,4)+'****'+a.token.substring(a.token.length-4)+'</span></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-s btn-p" onclick="hud(\'✅\',\'Token 已复制\')">复制 Token</button><button class="btn btn-s btn-p" onclick="hud(\'✅\',\'URL 已复制\')">复制 URL</button></div></div>';
-  html+='<div class="dtl-acts"><button class="btn btn-s btn-p" onclick="hud(\'🔄\',\'刷新缓存中...\')">🔄 刷新缓存</button><button class="btn btn-s btn-d" onclick="hud(\'🗑\',\'缓存已清除\')">🗑 清除缓存</button><button class="btn btn-s btn-g" onclick="hud(\'📱\',\'打开应用\')">📱 打开应用</button></div>';
-  document.getElementById('appDtlBody').innerHTML=html;
-  document.getElementById('appDtl').classList.add('show');
+  var h='<div class="dtl-hero"><div class="dtl-hero-i '+a.ig+'"><i data-lucide="'+a.icon+'" style="width:28px;height:28px"></i></div><div class="dtl-hero-info"><h2>'+a.name+'</h2><p>'+a.id+'</p></div></div>';
+  h+='<div class="dtl-card"><h4>Cache Info</h4><div class="dtl-row"><span class="lb">Type</span><span class="pill pill-'+(a.type==='Persistent'?'g':a.type==='Temporary'?'o':'gr')+'">'+a.type+'</span></div><div class="dtl-row"><span class="lb">Size</span><span>'+a.size+'</span></div><div class="dtl-row"><span class="lb">Version</span><span>'+a.ver+'</span></div><div class="dtl-row"><span class="lb">Resources</span><span>'+a.res+'</span></div><div class="dtl-row"><span class="lb">Cached</span><span>'+a.cached+'</span></div><div class="dtl-row"><span class="lb">Expires</span><span>'+a.exp+'</span></div></div>';
+  h+='<div class="dtl-card"><h4>Access</h4><div class="dtl-row"><span class="lb">Visits</span><span>'+a.vis+'</span></div><div class="dtl-row"><span class="lb">Last Visit</span><span>'+a.last+'</span></div><div class="dtl-row"><span class="lb">Source</span><span>'+a.src+'</span></div></div>';
+  if(a.token!=='-')h+='<div class="dtl-card"><h4>Push Config</h4><div class="dtl-row"><span class="lb">Token</span><span style="font-family:monospace;font-size:13px">'+a.token.substring(0,4)+'****'+a.token.substring(a.token.length-4)+'</span></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-s btn-p" onclick="hud(\'Copied\',\'Token copied\')"><i data-lucide="copy" style="width:14px;height:14px"></i> Copy</button><button class="btn btn-s btn-o" onclick="hud(\'Copied\',\'URL copied\')"><i data-lucide="link" style="width:14px;height:14px"></i> URL</button></div></div>';
+  h+='<div class="dtl-acts"><button class="btn btn-s btn-p" onclick="hud(\'Refreshing\',\'Cache refresh...\')"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i> Refresh</button><button class="btn btn-s btn-d" onclick="hud(\'Cleared\',\'Cache cleared\')"><i data-lucide="trash-2" style="width:14px;height:14px"></i> Clear</button><button class="btn btn-s btn-g" onclick="hud(\'Open\',\'Opening app\')"><i data-lucide="play" style="width:14px;height:14px"></i> Open</button></div>';
+  document.getElementById('appDtlBody').innerHTML=h;
+  document.getElementById('appDtl').classList.add('show');initIcons();
 }
 function closeApp(){document.getElementById('appDtl').classList.remove('show');}
 
-function openDebug(e){
-  document.getElementById('dbgOv').classList.add('on');
-  sdtab(0);
+function openTokenDetail(){
+  var h='<div class="dtl-card" style="text-align:center;padding:24px"><div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--purple));display:flex;align-items:center;justify-content:center;color:#fff;margin:0 auto 12px"><i data-lucide="key" style="width:32px;height:32px"></i></div><div style="font-size:18px;font-weight:700;margin-bottom:4px">Push Token</div><div style="font-size:13px;color:var(--text2)">Bark Server Push</div></div>';
+  h+='<div class="qr-box"><canvas id="qrCanvas" width="140" height="140"></canvas></div>';
+  h+='<div class="dtl-card"><h4>Token</h4><div style="background:var(--bg);border-radius:8px;padding:12px;font-family:monospace;font-size:12px;word-break:break-all;margin-bottom:8px">abcd1234efgh5678ijkl9012mnop3456</div><div style="display:flex;gap:8px"><button class="btn btn-s btn-p" onclick="hud(\'Copied\',\'Token copied\')"><i data-lucide="copy" style="width:14px;height:14px"></i> Copy</button><button class="btn btn-s btn-o" onclick="hud(\'Shared\',\'Share sheet opened\')"><i data-lucide="share-2" style="width:14px;height:14px"></i> Share</button></div></div>';
+  h+='<div class="dtl-card"><h4>Server URL</h4><div class="dtl-row"><span class="lb">Protocol</span><span>HTTPS</span></div><div class="dtl-row"><span class="lb">Host</span><span>api.day.app</span></div><div class="dtl-row"><span class="lb">Full URL</span><span style="font-size:12px;word-break:break-all">https://api.day.app/abcd1234efgh5678ijkl9012mnop3456</span></div></div>';
+  h+='<div class="dtl-card"><h4>Statistics</h4><div class="dtl-row"><span class="lb">Created</span><span>2026-05-01</span></div><div class="dtl-row"><span class="lb">Notifications Sent</span><span>142</span></div><div class="dtl-row"><span class="lb">Success Rate</span><span style="color:var(--accent)">98.6%</span></div><div class="dtl-row"><span class="lb">Last Used</span><span>2 min ago</span></div></div>';
+  document.getElementById('tokenDtlBody').innerHTML=h;
+  document.getElementById('tokenDtl').classList.add('show');initIcons();drawQR();
 }
+
+function drawQR(){
+  var c=document.getElementById('qrCanvas');if(!c)return;
+  var ctx=c.getContext('2d'),s=140,cell=s/25;
+  ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,s,s);ctx.fillStyle='#1C1C1E';
+  for(var i=0;i<25;i++)for(var j=0;j<25;j++){
+    if(Math.random()>0.55||(i<7&&j<7)||(i<7&&j>17)||(i>17&&j<7))ctx.fillRect(i*cell,j*cell,cell-0.5,cell-0.5);
+  }
+  ctx.fillStyle='#FFFFFF';ctx.fillRect(2*cell,2*cell,3*cell,3*cell);
+  ctx.fillStyle='#007AFF';ctx.fillRect(2*cell+2,2*cell+2,3*cell-4,3*cell-4);
+}
+
+function openCacheDetail(){
+  var h='<div class="dtl-card"><div style="font-size:15px;font-weight:600;margin-bottom:12px">Storage Breakdown</div>';
+  h+='<div class="pie-wrap"><div class="pie" style="background:conic-gradient(var(--primary) 0% 48%,var(--accent) 48% 68%,var(--warning) 68% 82%,var(--purple) 82% 94%,var(--text3) 94% 100%)"><div class="pie-center">2.3G</div></div><div class="pie-legend">';
+  h+='<div class="pie-legend-item"><div class="pie-legend-dot" style="background:var(--primary)"></div><span>E-Commerce &middot; 1.1 GB</span></div>';
+  h+='<div class="pie-legend-item"><div class="pie-legend-dot" style="background:var(--accent)"></div><span>Mini Games &middot; 0.46 GB</span></div>';
+  h+='<div class="pie-legend-item"><div class="pie-legend-dot" style="background:var(--warning)"></div><span>Toolbox &middot; 0.32 GB</span></div>';
+  h+='<div class="pie-legend-item"><div class="pie-legend-dot" style="background:var(--purple)"></div><span>Dashboard &middot; 0.28 GB</span></div>';
+  h+='<div class="pie-legend-item"><div class="pie-legend-dot" style="background:var(--text3)"></div><span>Other &middot; 0.14 GB</span></div>';
+  h+='</div></div></div>';
+  h+='<div class="dtl-card"><div style="font-size:15px;font-weight:600;margin-bottom:12px">Weekly Usage</div><div class="bar-chart">';
+  var vals=[12,18,8,22,15,28,10],labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],mx=Math.max.apply(null,vals);
+  vals.forEach(function(v,i){h+='<div class="bar-col"><div class="bar" style="height:'+(v/mx*100)+'px;background:'+(i===5?'var(--primary)':'var(--primary-l)')+'"></div><span class="bar-lbl">'+labels[i]+'</span></div>';});
+  h+='</div></div>';
+  h+='<div class="dtl-card"><h4>Details</h4><div class="dtl-row"><span class="lb">Total Cache</span><span>2.3 GB</span></div><div class="dtl-row"><span class="lb">Persistent</span><span>1.88 GB</span></div><div class="dtl-row"><span class="lb">Temporary</span><span>0.42 GB</span></div><div class="dtl-row"><span class="lb">Hit Rate</span><span style="color:var(--accent)">94.2%</span></div><div class="dtl-row"><span class="lb">Cache Entries</span><span>5 apps</span></div></div>';
+  h+='<div class="dtl-acts"><button class="btn btn-s btn-p" onclick="hud(\'Refreshed\',\'Cache refreshed\')"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i> Refresh</button><button class="btn btn-s btn-d" onclick="hud(\'Cleared\',\'All cache cleared\')"><i data-lucide="trash-2" style="width:14px;height:14px"></i> Clear All</button></div>';
+  document.getElementById('cacheDtlBody').innerHTML=h;
+  document.getElementById('cacheDtl').classList.add('show');initIcons();
+}
+
+function openSendHistory(){
+  var h='<div style="font-size:15px;font-weight:600;margin-bottom:12px">Recent Test Notifications</div>';
+  if(sendHistory.length===0){
+    h+='<div class="empty" style="padding:40px 20px"><div class="empty-i" style="width:60px;height:60px"><i data-lucide="send" style="width:24px;height:24px"></i></div><div class="empty-t" style="font-size:16px">No History</div><div class="empty-d" style="font-size:13px">Send a test notification to see it here</div></div>';
+  } else {
+    sendHistory.forEach(function(item){
+      h+='<div class="history-item"><div class="history-dot" style="background:'+(item.ok?'var(--accent)':'var(--danger)')+'"></div><div class="history-info"><div class="history-title">'+item.title+'</div><div class="history-meta">'+item.time+' &middot; '+item.method+' &middot; '+item.status+' &middot; '+item.ms+'ms</div></div></div>';
+    });
+  }
+  h+='<button class="btn btn-s btn-d btn-b" style="margin-top:12px" onclick="sendHistory=[];openSendHistory();hud(\'Cleared\',\'History cleared\')"><i data-lucide="trash-2" style="width:14px;height:14px"></i> Clear History</button>';
+  document.getElementById('histDtlBody').innerHTML=h;
+  document.getElementById('histDtl').classList.add('show');initIcons();
+}
+
+function closeDetail(id){document.getElementById(id).classList.remove('show');}
+
+function buildNotifTab(){
+  var h='<div class="sec-title"><i data-lucide="type" style="width:14px;height:14px"></i> Content</div>';
+  h+='<div class="fg"><label>Title</label><input type="text" id="nTitle" value="Test Notification"></div>';
+  h+='<div class="fg"><label>Subtitle</label><input type="text" id="nSub" placeholder="Optional subtitle"></div>';
+  h+='<div class="fg"><label>Body</label><textarea id="nBody" rows="3">This is a test notification from WebBridgeKit debug panel.</textarea></div>';
+  h+='<div class="tog-row"><span class="tl">Markdown Mode</span><div class="stog" id="nMdTog" onclick="this.classList.toggle(\'on\')"></div></div>';
+
+  h+='<div class="sec-title"><i data-lucide="bell" style="width:14px;height:14px"></i> Behavior</div>';
+  h+='<div class="fg"><label>Level</label><select id="nLevel" onchange="document.getElementById(\'volRow\').style.display=this.value===\'critical\'?\'block\':\'none\'"><option value="active">Active</option><option value="timeSensitive">Time Sensitive</option><option value="passive">Passive</option><option value="critical">Critical</option></select></div>';
+  h+='<div class="fg" id="volRow" style="display:none"><label>Volume (0-10)</label><input type="range" id="nVol" min="0" max="10" value="7" style="padding:0"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>0</span><span id="volVal">7</span><span>10</span></div></div>';
+  h+='<div class="fg"><label>Sound</label><select id="nSound"><option value="default">Default</option><option value="alarm">Alarm</option><option value="birdsong">Birdsong</option><option value="minuet">Minuet</option><option value="glass">Glass</option><option value="silence">Silence</option></select></div>';
+  h+='<div class="tog-row"><span class="tl">Call Mode (30s ringtone)</span><div class="stog" id="nCallTog" onclick="this.classList.toggle(\'on\')"></div></div>';
+  h+='<div class="fg"><label>Badge Number</label><input type="number" id="nBadge" value="1" min="0"></div>';
+
+  h+='<div class="sec-title"><i data-lucide="image" style="width:14px;height:14px"></i> Visual</div>';
+  h+='<div class="fg"><label>Icon URL</label><input type="url" id="nIcon" placeholder="https://example.com/icon.png"></div>';
+  h+='<div class="fg"><label>Image URL</label><input type="url" id="nImage" placeholder="https://example.com/image.jpg"></div>';
+
+  h+='<div class="sec-title"><i data-lucide="mouse-pointer-click" style="width:14px;height:14px"></i> Actions</div>';
+  h+='<div class="fg"><label>URL (tap action)</label><input type="url" id="nUrl" placeholder="https://example.com"></div>';
+  h+='<div class="fg"><label>Group (threadIdentifier)</label><input type="text" id="nGroup" placeholder="e.g. app.notifications"></div>';
+  h+='<div class="tog-row"><span class="tl">Auto-copy</span><div class="stog" id="nCopyTog" onclick="this.classList.toggle(\'on\')"></div></div>';
+  h+='<div class="fg" id="copyTextRow" style="display:none"><label>Copy Text Override</label><input type="text" id="nCopyText" placeholder="Text to copy on notification tap"></div>';
+  h+='<div class="tog-row"><span class="tl">Archive (save to history)</span><div class="stog on" id="nArchiveTog" onclick="this.classList.toggle(\'on\')"></div></div>';
+
+  h+='<div class="sec-title"><i data-lucide="shield" style="width:14px;height:14px"></i> Advanced</div>';
+  h+='<div class="fg"><label>Notification ID (update-in-place)</label><input type="text" id="nId" placeholder="Optional unique ID"></div>';
+  h+='<div class="tog-row"><span class="tl">Encryption</span><div class="stog" id="nEncTog" onclick="this.classList.toggle(\'on\');document.getElementById(\'encFields\').style.display=this.classList.contains(\'on\')?\'block\':\'none\'"></div></div>';
+  h+='<div id="encFields" style="display:none"><div class="fg"><label>Ciphertext</label><input type="text" id="nCipher" placeholder="Encrypted body"></div><div class="fg"><label>IV</label><input type="text" id="nIv" placeholder="Initialization vector"></div><div class="fg"><label>Algorithm</label><select id="nAlgo"><option value="aes-256-cbc">AES-256-CBC</option><option value="aes-128-cbc">AES-128-CBC</option><option value="chacha20">ChaCha20</option></select></div></div>';
+
+  h+='<div class="sec-title"><i data-lucide="send" style="width:14px;height:14px"></i> Send</div>';
+  h+='<div style="font-size:13px;color:var(--text2);margin-bottom:8px">Request Method</div>';
+  h+='<div class="method-tabs"><button class="method-tab" onclick="setMethod(this,\'GET\')">GET</button><button class="method-tab on" onclick="setMethod(this,\'POST\')">POST JSON</button><button class="method-tab" onclick="setMethod(this,\'FORM\')">POST Form</button></div>';
+  h+='<button class="btn btn-p btn-b" style="font-size:17px;padding:14px" onclick="sendTestNotif()"><i data-lucide="send" style="width:18px;height:18px"></i> Send Test Notification</button>';
+  h+='<div id="respBox"></div>';
+
+  h+='<div class="sec-title"><i data-lucide="zap" style="width:14px;height:14px"></i> Quick Templates</div>';
+  h+='<div class="tmpl-grid">';
+  h+='<button class="tmpl-btn" onclick="applyTemplate(\'simple\')">Simple</button>';
+  h+='<button class="tmpl-btn" onclick="applyTemplate(\'image\')">With Image</button>';
+  h+='<button class="tmpl-btn" onclick="applyTemplate(\'urgent\')">Urgent</button>';
+  h+='<button class="tmpl-btn" onclick="applyTemplate(\'markdown\')">Markdown</button>';
+  h+='<button class="tmpl-btn" onclick="applyTemplate(\'link\')">With Link</button>';
+  h+='<button class="tmpl-btn" onclick="applyTemplate(\'encrypted\')">Encrypted</button>';
+  h+='</div>';
+
+  h+='<button class="btn btn-s btn-o btn-b" style="margin-top:8px" onclick="openSendHistory()"><i data-lucide="clock" style="width:14px;height:14px"></i> View Send History</button>';
+  return h;
+}
+
+function setMethod(el,m){
+  el.parentElement.querySelectorAll('.method-tab').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');notifMethod=m;
+}
+
+function applyTemplate(t){
+  var title=document.getElementById('nTitle'),sub=document.getElementById('nSub'),body=document.getElementById('nBody');
+  var url=document.getElementById('nUrl'),icon=document.getElementById('nIcon'),image=document.getElementById('nImage');
+  var level=document.getElementById('nLevel'),group=document.getElementById('nGroup');
+  switch(t){
+    case 'simple':title.value='Hello';body.value='This is a simple notification.';sub.value='';url.value='';icon.value='';image.value='';level.value='active';group.value='';break;
+    case 'image':title.value='Photo Update';body.value='Check out this amazing photo!';image.value='https://picsum.photos/800/400';icon.value='https://picsum.photos/100';level.value='active';group.value='photos';break;
+    case 'urgent':title.value='CRITICAL ALERT';body.value='Server CPU usage at 98%! Immediate action required.';level.value='critical';group.value='alerts';document.getElementById('volRow').style.display='block';break;
+    case 'markdown':title.value='Weekly Report';body.value='# Summary\n\n- **Users**: 1,234 (+12%)\n- **Revenue**: $56,789\n- `uptime: 99.9%`\n\n> Great week overall!';document.getElementById('nMdTog').classList.add('on');level.value='active';break;
+    case 'link':title.value='New Article';body.value='Check out the latest blog post about offline web apps.';url.value='https://example.com/blog/offline-web';group.value='articles';level.value='active';break;
+    case 'encrypted':title.value='Secret Message';body.value='[encrypted payload]';document.getElementById('nEncTog').classList.add('on');document.getElementById('encFields').style.display='block';document.getElementById('nCipher').value='U2FsdGVkX1+vupppZksvRf5pq5g5XjFRlipRkwB0K1Y=';document.getElementById('nIv').value='a1b2c3d4e5f6';document.getElementById('nAlgo').value='aes-256-cbc';level.value='active';break;
+  }
+  hud('Template','Applied "'+t+'" template');
+}
+
+function sendTestNotif(){
+  var t=document.getElementById('nTitle').value;
+  var b=document.getElementById('nBody').value;
+  if(!t){hud('Error','Title is required');return;}
+  var box=document.getElementById('respBox');
+  box.innerHTML='<div class="resp-box"><div class="sk w70"></div><div class="sk w50"></div><div class="sk w80"></div></div>';
+  var start=Date.now();
+  setTimeout(function(){
+    var ms=Date.now()-start;
+    var ok=Math.random()>0.1;
+    var status=ok?200:500;
+    var entry={title:t,method:notifMethod,status:status+'',ms:ms,ok:ok,time:new Date().toLocaleTimeString()};
+    sendHistory.unshift(entry);
+    box.innerHTML='<div class="resp-box"><div class="'+(ok?'ok':'err')+'">'+(ok?'200 OK':'500 Error')+'</div><div style="margin-top:4px">'+JSON.stringify({code:status,message:ok?'push success':'server error',id:Math.random().toString(36).substr(2,8),device:'iPhone 16 Pro'}).replace(/[,{}"]/g,function(m){return m===','?', ':m==='"'?'':m==='{'?'':m==='}'?'':m;})+'</div><div class="meta">'+notifMethod+' &middot; '+ms+'ms &middot; '+new Date().toLocaleTimeString()+'</div></div>';
+    if(ok){
+      msgs.unshift({title:t,body:b,source:'DEBUG',time:'Just now',group:'Test',url:document.getElementById('nUrl').value||''});
+      setTimeout(function(){stab(1);hud('Received','New message');},600);
+    }
+    initIcons();
+  },300+Math.random()*700);
+}
+
+var dbgC=[
+function(){
+  return '<div class="hg-title"><i data-lucide="camera" style="width:14px;height:14px"></i> Hardware</div>'+
+  '<div class="hi"><span class="hi-nm">camera</span><span class="hi-ds">Take photo</span><button class="hi-btn" onclick="hud(\'OK\',\'camera (45ms)\')">Test</button></div>'+
+  '<div class="hi"><span class="hi-nm">videoStream</span><span class="hi-ds">Video stream</span><button class="hi-btn" onclick="hud(\'OK\',\'videoStream (120ms)\')">Test</button></div>'+
+  '<div class="hi"><span class="hi-nm">scan</span><span class="hi-ds">QR scan</span><button class="hi-btn" onclick="hud(\'OK\',\'scan (230ms)\')">Test</button></div>'+
+  '<div class="hg-title"><i data-lucide="map-pin" style="width:14px;height:14px"></i> Location</div>'+
+  '<div class="hi"><span class="hi-nm">getLocation</span><span class="hi-ds">Get position</span><button class="hi-btn" onclick="hud(\'OK\',\'getLocation (890ms)\')">Test</button></div>'+
+  '<div class="hg-title"><i data-lucide="smartphone" style="width:14px;height:14px"></i> System</div>'+
+  '<div class="hi"><span class="hi-nm">getSystemInfo</span><span class="hi-ds">System info</span><button class="hi-btn" onclick="hud(\'OK\',\'getSystemInfo (12ms)\')">Test</button></div>'+
+  '<div class="hi"><span class="hi-nm">getNetworkInfo</span><span class="hi-ds">Network status</span><button class="hi-btn" onclick="hud(\'OK\',\'getNetworkInfo (85ms)\')">Test</button></div>'+
+  '<div class="hi"><span class="hi-nm">haptic</span><span class="hi-ds">Haptic feedback</span><button class="hi-btn" onclick="hud(\'OK\',\'haptic (5ms)\')">Test</button></div>'+
+  '<div class="hg-title"><i data-lucide="hard-drive" style="width:14px;height:14px"></i> Storage</div>'+
+  '<div class="hi"><span class="hi-nm">setStorage</span><span class="hi-ds">Write storage</span><button class="hi-btn" onclick="hud(\'OK\',\'setStorage (3ms)\')">Test</button></div>'+
+  '<div class="hi"><span class="hi-nm">getStorage</span><span class="hi-ds">Read storage</span><button class="hi-btn" onclick="hud(\'OK\',\'getStorage (2ms)\')">Test</button></div>';
+},
+function(){return buildNotifTab();},
+function(){
+  return '<div class="card" style="padding:16px;margin-bottom:16px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">Cache Overview</div>'+
+  '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2)">Total Cache</span><span>2.3 GB</span></div>'+
+  '<div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;margin-bottom:16px"><div style="height:100%;width:46%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px"></div></div>'+
+  '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text2)">Persistent</span><span>1.8 GB</span></div>'+
+  '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text2)">Temporary</span><span>0.5 GB</span></div>'+
+  '<div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Hit Rate</span><span style="color:var(--accent)">94.2%</span></div></div>'+
+  '<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">Entries</div>'+
+  '<div class="hi"><span class="hi-nm">E-Commerce</span><span class="hi-ds">12.0 MB</span><span class="pill pill-g">Persistent</span></div>'+
+  '<div class="hi"><span class="hi-nm">Dashboard</span><span class="hi-ds">3.2 MB</span><span class="pill pill-o">Temp</span></div>'+
+  '<div class="hi"><span class="hi-nm">Mini Games</span><span class="hi-ds">8.1 MB</span><span class="pill pill-g">Persistent</span></div>'+
+  '<div class="hi"><span class="hi-nm">Toolbox</span><span class="hi-ds">5.6 MB</span><span class="pill pill-g">Persistent</span></div>'+
+  '<div class="hi"><span class="hi-nm">Docs Center</span><span class="hi-ds">2.4 MB</span><span class="pill pill-o">Caching</span></div>';
+},
+function(){
+  return '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="fbtn on" style="font-size:12px" onclick="filterLog(this)">All</button><button class="fbtn" style="font-size:12px" onclick="filterLog(this)">Bridge</button><button class="fbtn" style="font-size:12px" onclick="filterLog(this)">Cache</button><button class="fbtn" style="font-size:12px" onclick="filterLog(this)">Error</button></div>'+
+  '<div style="font-family:\'SF Mono\',Menlo,monospace;font-size:12px;line-height:1.8;color:var(--text2)">'+
+  '<div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:15</span> Bridge.initialize() \u2014 35 handlers registered</div>'+
+  '<div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:16</span> Cache.loadManifest() \u2014 E-Commerce (24 files)</div>'+
+  '<div><span style="color:var(--primary)">[DEBUG]</span> <span style="color:var(--text3)">10:30:17</span> APNs.register() \u2014 push registration success</div>'+
+  '<div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:18</span> WebView.load() \u2014 https://shop.example.com</div>'+
+  '<div><span style="color:var(--warning)">[WARN]</span> <span style="color:var(--text3)">10:30:18</span> Cache.checkExpire() \u2014 Dashboard expiring soon</div>'+
+  '<div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:20</span> CommandParser.detect() \u2014 no clipboard command</div>'+
+  '<div><span style="color:var(--danger)">[ERROR]</span> <span style="color:var(--text3)">10:30:22</span> Network.request() \u2014 timeout, retry (1/3)</div>'+
+  '<div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:24</span> Network.request() \u2014 retry success (243ms)</div>'+
+  '<div><span style="color:var(--primary)">[DEBUG]</span> <span style="color:var(--text3)">10:30:25</span> Bridge.handleCall() \u2014 getSystemInfo (12ms)</div>'+
+  '<div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:26</span> Cache.write() \u2014 saved Toolbox v1.0.0</div>'+
+  '<div><span style="color:var(--danger)">[ERROR]</span> <span style="color:var(--text3)">10:30:28</span> APNs.send() \u2014 invalid token format</div>'+
+  '<div><span style="color:var(--accent)">[INFO]</span> <span style="color:var(--text3)">10:30:30</span> Bridge.initialize() \u2014 ready (1.2s)</div></div>';
+},
+function(){
+  return '<div class="card" style="padding:16px;margin-bottom:16px"><div style="font-size:15px;font-weight:600;margin-bottom:12px">Environment</div>'+
+  '<div class="dtl-row"><span class="lb">Device</span><span>iPhone 16 Pro</span></div>'+
+  '<div class="dtl-row"><span class="lb">System</span><span>iOS 19.4</span></div>'+
+  '<div class="dtl-row"><span class="lb">App Version</span><span>v1.0.0 (Build 42)</span></div>'+
+  '<div class="dtl-row"><span class="lb">Bridge Version</span><span>v2.1.0</span></div>'+
+  '<div class="dtl-row"><span class="lb">Network</span><span>WiFi (connected)</span></div>'+
+  '<div class="dtl-row"><span class="lb">APNs Status</span><span style="color:var(--accent)">Registered</span></div>'+
+  '<div class="dtl-row"><span class="lb">Permissions</span><span><i data-lucide="check" style="width:12px;height:12px;color:var(--accent)"></i> Camera <i data-lucide="check" style="width:12px;height:12px;color:var(--accent)"></i> Location <i data-lucide="check" style="width:12px;height:12px;color:var(--accent)"></i> Notifications <i data-lucide="check" style="width:12px;height:12px;color:var(--accent)"></i> Photos</span></div>'+
+  '<div class="dtl-row"><span class="lb">Storage</span><span>118 GB / 128 GB</span></div></div>'+
+  '<button class="btn btn-p btn-b" onclick="hud(\'Copied\',\'Diagnostics copied\')"><i data-lucide="clipboard" style="width:16px;height:16px"></i> Copy Diagnostics Report</button>';
+}
+];
+
+function openDebug(){document.getElementById('dbgOv').classList.add('on');sdtab(0);}
 function closeDebug(e){
   if(e&&e.target!==document.getElementById('dbgOv')&&!e.target.classList.contains('ov-bg'))return;
   document.getElementById('dbgOv').classList.remove('on');
 }
 function sdtab(i){
-  var tabs=document.querySelectorAll('.dtab');
-  tabs.forEach(function(t,j){t.className='dtab'+(j===i?' on':'');});
-  document.getElementById('dbgBody').innerHTML=dbgC[i]();
-}
-
-function sendTest(){
-  var t=document.getElementById('tTitle').value;
-  var b=document.getElementById('tBody').value;
-  if(!t){hud('⚠️','请输入标题');return;}
-  hud('✅','测试通知已发送');
-  setTimeout(function(){
-    msgs.unshift({title:t,body:b,source:'LOCAL',time:'刚刚',group:'测试通知',url:document.getElementById('tUrl').value||''});
-    closeDebug();
-    stab(1);
-    hud('📬','收到新消息');
-  },800);
+  document.querySelectorAll('.dtab').forEach(function(t,j){t.className='dtab'+(j===i?' on':'');});
+  document.getElementById('dbgBody').innerHTML=dbgC[i]();initIcons();
 }
 
 function togG(el){el.classList.toggle('col');var items=el.nextElementSibling;if(items)items.style.maxHeight=el.classList.contains('col')?'0px':'2000px';}
 function setF(el){el.parentElement.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');}
-function filterMsg(){var q=document.getElementById('sinp').value.toLowerCase();document.querySelectorAll('.mcell').forEach(function(c){var t=c.textContent.toLowerCase();c.style.display=(!q||t.indexOf(q)>-1)?'':'none';});}
+function filterMsg(){var q=document.getElementById('sinp').value.toLowerCase();document.querySelectorAll('.mcell').forEach(function(c){c.style.display=(!q||c.textContent.toLowerCase().indexOf(q)>-1)?'':'none';});}
+function filterLog(el){el.parentElement.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');}
 function clearInbox(){
-  document.getElementById('mlist').innerHTML='<div class="empty"><div class="empty-i">📬</div><div class="empty-t">暂无消息</div><div class="empty-d">当有推送通知到达时，消息会出现在这里</div></div>';
-  document.getElementById('ibdg').style.display='none';
-  hud('🗑','消息已清空');
+  document.getElementById('mlist').innerHTML='<div class="empty"><div class="empty-i"><i data-lucide="inbox" style="width:32px;height:32px"></i></div><div class="empty-t">No Messages</div><div class="empty-d">Push notifications will appear here</div></div>';
+  document.getElementById('ibdg').style.display='none';hud('Cleared','All messages deleted');initIcons();
 }
-function updateBadge(){var n=document.querySelectorAll('.murd[style]').length;var total=document.querySelectorAll('.murd').length;var left=total-n;if(left>0){document.getElementById('ibdg').textContent=left;}else{document.getElementById('ibdg').style.display='none';}}
+
+document.getElementById('nVol')&&document.getElementById('nVol').addEventListener('input',function(){document.getElementById('volVal').textContent=this.value;});
+stab(0);
 </script>
 </body>
 </html>
