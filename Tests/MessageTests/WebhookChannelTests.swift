@@ -16,20 +16,23 @@ final class WebhookChannelTests: XCTestCase {
 
     func testChannelStartsInactive() async {
         let channel = WebhookChannel()
-        XCTAssertFalse(await channel.isActive)
+        let active = await channel.isActive
+        XCTAssertFalse(active)
     }
 
     func testChannelBecomesActiveAfterStart() async {
         let channel = WebhookChannel()
         await channel.start()
-        XCTAssertTrue(await channel.isActive)
+        let active = await channel.isActive
+        XCTAssertTrue(active)
     }
 
     func testChannelBecomesInactiveAfterStop() async {
         let channel = WebhookChannel()
         await channel.start()
         await channel.stop()
-        XCTAssertFalse(await channel.isActive)
+        let active = await channel.isActive
+        XCTAssertFalse(active)
     }
 
     // MARK: - Send Always Fails
@@ -249,6 +252,8 @@ final class WebhookChannelTests: XCTestCase {
             } else {
                 XCTFail("Expected unauthorized error")
             }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -267,6 +272,8 @@ final class WebhookChannelTests: XCTestCase {
             } else {
                 XCTFail("Expected unauthorized error")
             }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
         }
     }
 
@@ -319,9 +326,11 @@ final class WebhookChannelTests: XCTestCase {
 
         for _ in 0..<3 {
             await channel.start()
-            XCTAssertTrue(await channel.isActive)
+            let activeAfterStart = await channel.isActive
+            XCTAssertTrue(activeAfterStart)
             await channel.stop()
-            XCTAssertFalse(await channel.isActive)
+            let activeAfterStop = await channel.isActive
+            XCTAssertFalse(activeAfterStop)
         }
     }
 

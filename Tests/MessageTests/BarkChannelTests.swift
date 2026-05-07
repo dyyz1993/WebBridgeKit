@@ -136,9 +136,11 @@ final class BarkChannelTests: XCTestCase {
 
         for _ in 0..<3 {
             await channel.start()
-            XCTAssertTrue(await channel.isActive)
+            let activeAfterStart = await channel.isActive
+            XCTAssertTrue(activeAfterStart)
             await channel.stop()
-            XCTAssertFalse(await channel.isActive)
+            let activeAfterStop = await channel.isActive
+            XCTAssertFalse(activeAfterStop)
         }
     }
 
@@ -164,18 +166,21 @@ final class BarkChannelTests: XCTestCase {
     func testPriorityMappingHighToActive() async {
         let channel = BarkChannel(key: "testkey")
         await channel.start()
-        XCTAssertTrue(await channel.isActive)
+        let active = await channel.isActive
+        XCTAssertTrue(active)
     }
 
     func testPriorityMappingLowToPassive() async {
         let channel = BarkChannel(key: "testkey")
         await channel.start()
-        XCTAssertTrue(await channel.isActive)
+        let active = await channel.isActive
+        XCTAssertTrue(active)
     }
 
     func testPriorityMappingNormalIsNil() async {
         let channel = BarkChannel(key: "testkey")
         await channel.start()
-        XCTAssertTrue(await channel.isActive)
+        let active = await channel.isActive
+        XCTAssertTrue(active)
     }
 }

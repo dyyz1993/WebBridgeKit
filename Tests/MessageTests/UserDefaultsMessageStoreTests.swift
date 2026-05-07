@@ -160,13 +160,15 @@ final class UserDefaultsMessageStoreTests: XCTestCase {
         let message = StoredMessage(payload: payload)
         try await store.save(message)
 
-        XCTAssertEqual(await store.count(), 1)
+        let countBefore = await store.count()
+        XCTAssertEqual(countBefore, 1)
 
         await store.delete(id: message.id)
 
         let retrieved = await store.get(id: message.id)
         XCTAssertNil(retrieved)
-        XCTAssertEqual(await store.count(), 0)
+        let countAfter = await store.count()
+        XCTAssertEqual(countAfter, 0)
     }
 
     func testDeleteNonExistentDoesNothing() async throws {
@@ -176,7 +178,8 @@ final class UserDefaultsMessageStoreTests: XCTestCase {
 
         await store.delete(id: "nonexistent")
 
-        XCTAssertEqual(await store.count(), 1)
+        let count = await store.count()
+        XCTAssertEqual(count, 1)
     }
 
     // MARK: - Delete All
@@ -188,27 +191,31 @@ final class UserDefaultsMessageStoreTests: XCTestCase {
             try await store.save(StoredMessage(payload: payload))
         }
 
-        XCTAssertEqual(await store.count(), 5)
+        let countBefore = await store.count()
+        XCTAssertEqual(countBefore, 5)
 
         await store.deleteAll()
 
         let all = await store.getAll()
         XCTAssertTrue(all.isEmpty)
-        XCTAssertEqual(await store.count(), 0)
+        let countAfter = await store.count()
+        XCTAssertEqual(countAfter, 0)
     }
 
     // MARK: - Count
 
     func testCountReturnsCorrectNumber() async throws {
         store = makeStore()
-        XCTAssertEqual(await store.count(), 0)
+        let countInitial = await store.count()
+        XCTAssertEqual(countInitial, 0)
 
         for i in 0..<10 {
             let payload = MessagePayload(title: "Msg \(i)", body: "Body", channel: "test")
             try await store.save(StoredMessage(payload: payload))
         }
 
-        XCTAssertEqual(await store.count(), 10)
+        let countFinal = await store.count()
+        XCTAssertEqual(countFinal, 10)
     }
 
     // MARK: - Persistence Across Instances
