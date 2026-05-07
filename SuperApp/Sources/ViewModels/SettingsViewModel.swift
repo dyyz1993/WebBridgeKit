@@ -26,6 +26,7 @@ class SettingsViewModel: ViewModel {
         let navigateToAbout: Driver<Void>
         let navigateToDebugPanel: Driver<Void>
         let navigateToUIDebug: Driver<Void>
+        let navigateToShowcase: Driver<Void>
         let openNotificationSettings: Driver<Void>
         let clearCache: Driver<Void>
     }
@@ -39,6 +40,7 @@ class SettingsViewModel: ViewModel {
         case clearCache
         case debugPanel
         case uiDebug
+        case showcase
         case about
         case versionInfo
     }
@@ -75,7 +77,8 @@ class SettingsViewModel: ViewModel {
             ]),
             SettingsSection(header: L10n.tr("settings.section.developer"), items: [
                 SettingsItem(icon: "ladybug", title: L10n.tr("settings.debug.panel"), action: .debugPanel),
-                SettingsItem(icon: "paintbrush", title: L10n.tr("settings.debug.ui"), action: .uiDebug)
+                SettingsItem(icon: "paintbrush", title: L10n.tr("settings.debug.ui"), action: .uiDebug),
+                SettingsItem(icon: "square.grid.2x2", title: "框架展示", action: .showcase)
             ]),
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
                 SettingsItem(icon: "info.circle", title: L10n.tr("settings.about"), action: .about),
@@ -91,6 +94,7 @@ class SettingsViewModel: ViewModel {
     private let navigateToAboutRelay = PublishRelay<Void>()
     private let navigateToDebugPanelRelay = PublishRelay<Void>()
     private let navigateToUIDebugRelay = PublishRelay<Void>()
+    private let navigateToShowcaseRelay = PublishRelay<Void>()
     private let openNotificationSettingsRelay = PublishRelay<Void>()
     private let clearCacheRelay = PublishRelay<Void>()
 
@@ -108,6 +112,7 @@ class SettingsViewModel: ViewModel {
                 case .clearCache: self.clearCacheRelay.accept(())
                 case .debugPanel: self.navigateToDebugPanelRelay.accept(())
                 case .uiDebug: self.navigateToUIDebugRelay.accept(())
+                case .showcase: self.navigateToShowcaseRelay.accept(())
                 case .about: self.navigateToAboutRelay.accept(())
                 case .versionInfo: break
                 }
@@ -123,6 +128,7 @@ class SettingsViewModel: ViewModel {
             navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
             navigateToDebugPanel: navigateToDebugPanelRelay.asDriver(onErrorJustReturn: ()),
             navigateToUIDebug: navigateToUIDebugRelay.asDriver(onErrorJustReturn: ()),
+            navigateToShowcase: navigateToShowcaseRelay.asDriver(onErrorJustReturn: ()),
             openNotificationSettings: openNotificationSettingsRelay.asDriver(onErrorJustReturn: ()),
             clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ())
         )

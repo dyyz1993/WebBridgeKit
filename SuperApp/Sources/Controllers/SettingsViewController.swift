@@ -91,6 +91,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .drive(onNext: { [weak self] in self?.navigateToUIDebug() })
             .disposed(by: rx)
 
+        output.navigateToShowcase
+            .drive(onNext: { [weak self] in self?.navigateToShowcase() })
+            .disposed(by: rx)
+
         output.clearCache
             .drive(onNext: { [weak self] in self?.showClearCacheConfirm() })
             .disposed(by: rx)
@@ -131,6 +135,13 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     private func navigateToUIDebug() {
         let vc = NotificationDebugViewController()
         navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func navigateToShowcase() {
+        let vc = ShowcaseTabBarController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
 
     private func openNotificationSettings() {
