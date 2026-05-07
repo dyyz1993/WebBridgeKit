@@ -219,7 +219,7 @@ final class PerformanceMonitorTests: XCTestCase {
         sleep(1)
 
         let json = monitor.exportMetricsAsJSON()
-        XCTAssertEqual(json, "{}")
+        XCTAssertEqual(json, "{\n\n}")
     }
 
     // MARK: - Slow Threshold

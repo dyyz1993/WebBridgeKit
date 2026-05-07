@@ -3,6 +3,7 @@
 //  CoreTests
 //
 
+import WebKit
 import XCTest
 @testable import WebBridgeKit
 
