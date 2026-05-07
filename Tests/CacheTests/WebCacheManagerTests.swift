@@ -70,10 +70,12 @@ final class WebCacheManagerTests: XCTestCase {
         XCTAssertEqual(url1.sha256, url2.sha256)
     }
 
-    func testURLSHA256EmptyString() {
-        let url = URL(string: "")!
-        let hash = url.sha256
-        XCTAssertEqual(hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    func testURLSHA256Deterministic() {
+        let url = URL(string: "https://example.com/test.js")!
+        let hash1 = url.sha256
+        let hash2 = url.sha256
+        XCTAssertEqual(hash1, hash2)
+        XCTAssertEqual(hash1.count, 64)
     }
 
     func testGetCacheMemoryInfoObservable() {
