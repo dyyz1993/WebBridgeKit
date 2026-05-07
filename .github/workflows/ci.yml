@@ -91,6 +91,41 @@ jobs:
       - name: Setup Project
         uses: ./.github/actions/setup-project
 
+      - name: Setup Simulator
+        id: sim
+        run: |
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for rt in data.get('runtimes', []):
+              if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable'):
+                  print(rt['identifier'])
+                  break
+          " 2>/dev/null || echo "")
+          if [ -z "$RUNTIME" ]; then
+            for ver in "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
+              candidate="com.apple.CoreSimulator.SimRuntime.iOS-$ver"
+              if xcrun simctl list runtimes | grep -q "$candidate"; then
+                RUNTIME="$candidate"
+                break
+              fi
+            done
+          fi
+          if [ -z "$RUNTIME" ]; then
+            echo "::error::No iOS runtime found for unit tests"
+            exit 1
+          fi
+          echo "Using runtime: $RUNTIME"
+          DEVICE_ID=$(xcrun simctl create "CI-Unit-${{ matrix.scheme }}" "iPhone 16 Pro" "$RUNTIME" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::Failed to create simulator for unit tests"
+            exit 1
+          fi
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "Simulator ready: $DEVICE_ID"
+
       - name: Run ${{ matrix.scheme }}
         run: |
           set -o pipefail
@@ -98,7 +133,7 @@ jobs:
             -workspace WebBridgeKit.xcworkspace \
             -scheme "${{ matrix.scheme }}" \
             -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
             -resultBundlePath "build/TestResults-${{ matrix.scheme }}.xcresult" \
             -enableCodeCoverage YES \
             CODE_SIGN_IDENTITY="" \
