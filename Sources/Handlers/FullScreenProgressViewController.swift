@@ -1,6 +1,6 @@
 //
 //  FullScreenProgressViewController.swift
-//  DemoApp
+//  WebBridgeKit
 //
 //  Created on 2025-02-03.
 //  Copyright © 2025年 WebBridgeKit. All rights reserved.

@@ -2,8 +2,8 @@
 //  DebugPanel.swift
 //  AppTemplate
 //
-//  This file bridges AppTemplate to DemoApp's debug controllers
-//  It provides a way for the Debug Panel to access DemoApp-specific debug features
+//  This file bridges AppTemplate to debug controllers
+//  It provides a way for the Debug Panel to access debug features
 //
 
 import UIKit
@@ -11,19 +11,19 @@ import WebBridgeKit
 
 // MARK: - Debug Panel Bridge
 
-/// Debug Panel Bridge - 连接 AppTemplate 的调试面板与 DemoApp 的调试控制器
-/// 所有基于 AppTemplate 的 App 都可以通过此桥接访问 DemoApp 的调试功能
+/// Debug Panel Bridge - 连接 AppTemplate 的调试面板与调试控制器
+/// 所有基于 AppTemplate 的 App 都可以通过此桥接访问调试功能
 public class DebugPanelBridge {
     
     public static let shared = DebugPanelBridge()
     
     private init() {}
     
-    // MARK: - DemoApp Debug Controllers
+    // MARK: - Debug Controllers
     
     /// 主页面调试控制器
     public func createMainViewController() -> UIViewController {
-        // 这里可以返回 DemoApp 的 MainViewController
+        // 这里可以返回 MainViewController
         // 或者创建一个占位符视图控制器
         return createPlaceholderViewController(title: "Main", message: "Main debug view")
     }
@@ -96,8 +96,8 @@ public class DebugPanelBridge {
 
 extension DebugPanelViewController {
     
-    /// 显示 DemoApp 特定的调试页面
-    public func showDemoAppDebugViewController(_ type: DemoAppDebugType) {
+    /// 显示调试页面
+    public func showDebugViewController(_ type: DebugType) {
         let viewController: UIViewController
         
         switch type {
@@ -125,9 +125,9 @@ extension DebugPanelViewController {
     }
 }
 
-// MARK: - DemoApp Debug Types
+// MARK: - Debug Types
 
-public enum DemoAppDebugType {
+public enum DebugType {
     case main
     case messageInbox
     case manifestCacheTest
