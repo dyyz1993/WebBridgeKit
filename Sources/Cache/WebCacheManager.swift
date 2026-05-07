@@ -480,7 +480,10 @@ private extension DateFormatter {
 public extension URL {
     /// SHA256 哈希值（用作缓存键）
     var sha256: String {
-        guard let data = self.absoluteString.data(using: .utf8) else { return "" }
+        let str = self.absoluteString
+        guard !str.isEmpty, let data = str.data(using: .utf8), !data.isEmpty else {
+            return String(str.hashValue)
+        }
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         data.withUnsafeBytes {
             _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash)
