@@ -76,8 +76,8 @@ private extension RootViewController {
             return
         }
         
-        let params = WebBrowserParams(url: url.absoluteString)
-        WebBrowserManager.shared.open(params: params, from: self)
+        let params = WebBrowserParams.from(url: url)
+        WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
     }
 }
 

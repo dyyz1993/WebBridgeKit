@@ -1,96 +1,42 @@
-//
-//  TabBarController.swift
-//  AppTemplate
-//
-//  Created on 2025-05-05.
-//  Copyright © 2025年 WebBridgeKit. All rights reserved.
-//
-
 import UIKit
 import WebBridgeKit
 
-/// 主标签栏控制器
-/// 管理 5 个功能模块：Web、Handlers、Logs、Diagnostics、Settings
 class TabBarController: UITabBarController {
-
-    #if DEBUG
-    // Debug-related tabs
-    private var debugTabs: [UITabBarItem] = []
-    #endif
-
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTabs()
         setupAppearance()
-
-        // 设置初始页面
         selectedIndex = 0
     }
 
-    // MARK: - Setup
-
     private func setupTabs() {
-        // 创建主要 Tab
-        let webVC = createWebViewController()
+        let webVC = RootViewController()
 
         #if DEBUG
-        let handlersVC = createHandlersViewController()
-        let logsVC = createLogsViewController()
-        let diagnosticsVC = createDiagnosticsViewController()
-        let settingsVC = createSettingsViewController()
+        let cacheVC = CacheShowcaseViewController()
+        let messageVC = MessageShowcaseViewController()
+        let commandVC = CommandShowcaseViewController()
+        let themeVC = ThemeShowcaseViewController()
+        let debugVC = DebugPanelViewController()
 
-        // 设置 Tab Bar Item
-        webVC.tabBarItem = UITabBarItem(
-            title: "Web",
-            image: UIImage(systemName: "globe"),
-            selectedImage: UIImage(systemName: "globe.fill")
-        )
+        webVC.tabBarItem = UITabBarItem(title: "网页", image: UIImage(systemName: "globe"), selectedImage: UIImage(systemName: "globe.fill"))
+        cacheVC.tabBarItem = UITabBarItem(title: "缓存", image: UIImage(systemName: "internaldrive"), selectedImage: UIImage(systemName: "internaldrive.fill"))
+        messageVC.tabBarItem = UITabBarItem(title: "消息", image: UIImage(systemName: "bell"), selectedImage: UIImage(systemName: "bell.fill"))
+        commandVC.tabBarItem = UITabBarItem(title: "口令", image: UIImage(systemName: "key"), selectedImage: UIImage(systemName: "key.fill"))
+        themeVC.tabBarItem = UITabBarItem(title: "主题", image: UIImage(systemName: "paintbrush"), selectedImage: UIImage(systemName: "paintbrush.fill"))
+        debugVC.tabBarItem = UITabBarItem(title: "调试", image: UIImage(systemName: "exclamationmark.bubble.fill"), selectedImage: UIImage(systemName: "exclamationmark.bubble"))
 
-        handlersVC.tabBarItem = UITabBarItem(
-            title: "Handlers",
-            image: UIImage(systemName: "square.grid.2x2"),
-            selectedImage: UIImage(systemName: "square.grid.2x2.fill")
-        )
-
-        logsVC.tabBarItem = UITabBarItem(
-            title: "Logs",
-            image: UIImage(systemName: "doc.text"),
-            selectedImage: UIImage(systemName: "doc.text.fill")
-        )
-
-        diagnosticsVC.tabBarItem = UITabBarItem(
-            title: "Diagnostics",
-            image: UIImage(systemName: "stethoscope"),
-            selectedImage: UIImage(systemName: "stethoscope.fill")
-        )
-
-        settingsVC.tabBarItem = UITabBarItem(
-            title: "Settings",
-            image: UIImage(systemName: "gearshape"),
-            selectedImage: UIImage(systemName: "gearshape.fill")
-        )
-
-        // 保存 debug tabs
-        debugTabs = [handlersVC.tabBarItem, logsVC.tabBarItem, diagnosticsVC.tabBarItem, settingsVC.tabBarItem]
-
-        // 包装导航控制器 (5 tabs in DEBUG mode)
         viewControllers = [
             UINavigationController(rootViewController: webVC),
-            UINavigationController(rootViewController: handlersVC),
-            UINavigationController(rootViewController: logsVC),
-            UINavigationController(rootViewController: diagnosticsVC),
-            UINavigationController(rootViewController: settingsVC)
+            UINavigationController(rootViewController: cacheVC),
+            UINavigationController(rootViewController: messageVC),
+            UINavigationController(rootViewController: commandVC),
+            UINavigationController(rootViewController: themeVC),
+            UINavigationController(rootViewController: debugVC)
         ]
         #else
-        // Release mode: only Web tab
-        webVC.tabBarItem = UITabBarItem(
-            title: "Web",
-            image: UIImage(systemName: "globe"),
-            selectedImage: UIImage(systemName: "globe.fill")
-        )
-
+        webVC.tabBarItem = UITabBarItem(title: "网页", image: UIImage(systemName: "globe"), selectedImage: UIImage(systemName: "globe.fill"))
         viewControllers = [
             UINavigationController(rootViewController: webVC)
         ]
@@ -98,52 +44,36 @@ class TabBarController: UITabBarController {
     }
 
     private func setupAppearance() {
-        // Tab Bar 外观
-        tabBar.backgroundColor = UIColor.systemBackground
-        tabBar.barTintColor = UIColor.systemBackground
+        tabBar.backgroundColor = ThemeColors.current.tabBarBackground
 
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = ThemeColors.current.tabBarBackground
             tabBar.standardAppearance = appearance
             tabBar.scrollEdgeAppearance = appearance
+        }
+
+        for nav in viewControllers ?? [] {
+            if let navigationController = nav as? UINavigationController {
+                configureNavigationBar(navigationController.navigationBar)
+            }
         }
     }
 
     private func configureNavigationBar(_ navigationBar: UINavigationBar) {
         navigationBar.prefersLargeTitles = true
-        navigationBar.backgroundColor = UIColor.systemBackground
+        navigationBar.backgroundColor = ThemeColors.current.navigationBarBackground
 
         if #available(iOS 15.0, *) {
             let appearance = UINavigationBarAppearance()
             appearance.configureWithOpaqueBackground()
-            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
-            appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            appearance.backgroundColor = ThemeColors.current.navigationBarBackground
+            appearance.largeTitleTextAttributes = [.foregroundColor: ThemeColors.current.navigationBarTitle]
+            appearance.titleTextAttributes = [.foregroundColor: ThemeColors.current.navigationBarTitle]
             navigationBar.standardAppearance = appearance
             navigationBar.scrollEdgeAppearance = appearance
             navigationBar.compactAppearance = appearance
         }
-    }
-
-    // MARK: - Create ViewControllers
-
-    private func createWebViewController() -> RootViewController {
-        return RootViewController()
-    }
-
-    private func createHandlersViewController() -> DebugPanelViewController {
-        return DebugPanelViewController()
-    }
-
-    private func createLogsViewController() -> LogViewerViewController {
-        return LogViewerViewController()
-    }
-
-    private func createDiagnosticsViewController() -> DiagnosticViewController {
-        return DiagnosticViewController()
-    }
-
-    private func createSettingsViewController() -> EnvironmentViewController {
-        return EnvironmentViewController()
     }
 }

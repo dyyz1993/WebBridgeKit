@@ -1,84 +1,54 @@
-//
-//  DebugTrigger.swift
-//  AppTemplate
-//
-
 import UIKit
 
-/// Debug Panel 触发器 - 摇一摇 / 长按 / URL Scheme
-#if DEBUG
 public class DebugTrigger {
-    #else
-internal class DebugTrigger {
-    #endif
-    
+
     public static let shared = DebugTrigger()
-    
-    #if DEBUG
-    /// 是否启用摇一摇触发
+
     public var shakeEnabled = true
-    #else
-    internal var shakeEnabled = false
-    #endif
-    
-    /// Debug Panel 是否已经显示
+
     private var isShowing = false
-    
+
     private init() {}
 
-    /// 在 AppDelegate 中调用，注册摇一摇
-    #if DEBUG
     public func setup(window: UIWindow?) {
         applicationSupportsShake = true
     }
-    #else
-    internal func setup(window: UIWindow?) {
-        // No-op in release mode
-    }
-    #endif
 
-    /// 显示 Debug Panel
-    #if DEBUG
     public func showDebugPanel(from viewController: UIViewController?) {
-    #else
-    internal func showDebugPanel(from viewController: UIViewController?) {
-        // No-op in release mode
-        return
-    #endif
         guard !isShowing else { return }
         guard let vc = viewController ?? topViewController() else { return }
-        
+
         isShowing = true
         let debugPanel = DebugPanelViewController()
         let nav = UINavigationController(rootViewController: debugPanel)
         nav.modalPresentationStyle = .fullScreen
-        
+
         debugPanel.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "✕ Close",
+            title: "Close",
             style: .plain,
             target: self,
             action: #selector(dismissDebugPanel)
         )
-        
+
         objc_setAssociatedObject(nav, &AssociatedKeys.debugPanel, self, .OBJC_ASSOCIATION_RETAIN)
-        
+
         vc.present(nav, animated: true) { [weak self] in
             self?.isShowing = false
         }
     }
-    
+
     @objc private func dismissDebugPanel() {
         if let rootVC = topViewController()?.presentedViewController {
             rootVC.dismiss(animated: true)
         }
     }
-    
+
     private func topViewController() -> UIViewController? {
         let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
         let root = scene?.windows.first?.rootViewController
         return getTopViewController(from: root)
     }
-    
+
     private func getTopViewController(from vc: UIViewController?) -> UIViewController? {
         guard let vc = vc else { return nil }
         if let presented = vc.presentedViewController {
@@ -92,7 +62,7 @@ internal class DebugTrigger {
         }
         return vc
     }
-    
+
     private var applicationSupportsShake = false
 }
 

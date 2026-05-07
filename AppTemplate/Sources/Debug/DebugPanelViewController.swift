@@ -12,11 +12,7 @@ import SnapKit
 
 /// 🧠 统一的调试面板入口
 /// 所有基于 App 的 Handler + 诊断系统都可以从这个面板访问
-#if DEBUG
 public class DebugPanelViewController: UIViewController {
-#else
-internal class DebugPanelViewController: UIViewController {
-#endif
 
     private var categories: [(HandlerCategory, [HandlerMeta])] = []
     private var handlerMap: [String: HandlerMeta] = [:]
@@ -112,7 +108,7 @@ internal class DebugPanelViewController: UIViewController {
     private func executeHandler(_ meta: HandlerMeta) {
         StructuredLogger.shared.info(
             "Executing test for handler: \(meta.displayName)",
-            category: .debug,
+            category: .diagnostic,
             action: meta.action
         )
 
@@ -131,15 +127,15 @@ internal class DebugPanelViewController: UIViewController {
 
 extension DebugPanelViewController: UITableViewDataSource {
 
-    func numberOfSections(in tableView: UITableView) -> Int {
+    public func numberOfSections(in tableView: UITableView) -> Int {
         return categories.count
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return categories[section].1.count
     }
 
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let handler = categories[indexPath.section].1[indexPath.row]
 
         let cell = tableView.dequeueReusableCell(withIdentifier: "HandlerCell", for: indexPath)
@@ -158,17 +154,15 @@ extension DebugPanelViewController: UITableViewDataSource {
         return cell
     }
 
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         let (category, handlers) = categories[section]
         return "\(category.emoji) \(category.displayName) (\(handlers.count))"
     }
 }
 
-// MARK: - UITableViewDelegate
-
 extension DebugPanelViewController: UITableViewDelegate {
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let handler = categories[indexPath.section].1[indexPath.row]
         let detail = HandlerDetailViewController(meta: handler)
