@@ -71,7 +71,7 @@ class HandlerDetailViewController: UIViewController {
             for param in meta.parameters {
                 let field = makeParamField(param)
                 stack.addArrangedSubview(field)
-                paramInputs[param.name] = field.view as? UITextField
+                paramInputs[param.name] = field.arrangedSubviews.first as? UITextField
             }
         }
         

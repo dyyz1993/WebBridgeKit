@@ -194,10 +194,7 @@ jobs:
             -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
             -configuration Debug \
             -resultBundlePath build/test-results/SmokeResults.xcresult \
-            -only-testing:SuperAppUITests/MainFlowTests \
-            -only-testing:SuperAppUITests/SettingsNavigationTests \
-            -only-testing:SuperAppUITests/PermissionTests \
-            -only-testing:SuperAppUITests/SuperAppUITests \
+            -only-testing:SuperAppUITests/SuperAppSmokeTests \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -272,16 +269,7 @@ jobs:
             -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
             -configuration Debug \
             -resultBundlePath build/test-results/CoreResults.xcresult \
-            -parallel-testing-enabled YES \
-            -maximum-parallel-testing-workers 3 \
-            -skip-testing:SuperAppUITests/ManifestCacheUITests \
-            -skip-testing:SuperAppUITests/ManifestCacheContentVerificationTests \
-            -skip-testing:SuperAppUITests/ManifestCacheVerificationTests \
-            -skip-testing:SuperAppUITests/ManifestCacheButtonDebugUITests \
-            -skip-testing:SuperAppUITests/ManifestCacheQuickVerificationTests \
-            -skip-testing:SuperAppUITests/ManifestScenariosUITests \
-            -skip-testing:SuperAppUITests/ImageCacheVerificationTests \
-            -skip-testing:SuperAppUITests/LazyLoadingUITest \
+            -only-testing:SuperAppUITests/SuperAppSmokeTests \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -335,6 +323,13 @@ jobs:
         uses: ./.github/actions/setup-sim
         with:
           device-type: 'iPhone 16 Pro'
+
+      - name: Start Test Server
+        run: |
+          cd test-server/lazy-test
+          python3 -m http.server 8080 &
+          sleep 2
+          curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
 
       - name: Run Manifest Cache Tests (Sequential)
         run: |

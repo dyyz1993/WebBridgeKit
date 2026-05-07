@@ -67,16 +67,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-        // 🔥 UI Testing shortcut: Auto-switch to test tab to avoid UI interactions
-        if ProcessInfo.processInfo.arguments.contains("-UITesting") && !ProcessInfo.processInfo.arguments.contains("-NoAutoTab") {
-            print("🧪 [AppDelegate] UI Testing detected, auto-switching to Test tab")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { // 减少延迟，尽快切换
-                if let tabBarController = self.window?.rootViewController as? UITabBarController {
-                    tabBarController.selectedIndex = 1
-                    print("✅ [AppDelegate] Switched to index 1")
-                }
-            }
-        }
+
 
         return true
     }
