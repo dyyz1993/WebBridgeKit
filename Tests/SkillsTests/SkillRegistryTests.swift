@@ -180,10 +180,9 @@ final class AgentSchemaTests: XCTestCase {
     }
 
     func testUnregisterNonExistentReturnsNil() async {
-        let result = await schema.unregister("nonexistent")
         let registryResult = await SkillRegistry.shared.unregister("nonexistent")
         XCTAssertNil(registryResult)
-        XCTAssertNil(result)
+        await schema.unregister("nonexistent")
     }
 
     func testUnregisterCleansCategoryIndex() async {

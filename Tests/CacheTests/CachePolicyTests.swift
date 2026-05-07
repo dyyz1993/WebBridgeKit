@@ -118,7 +118,7 @@ final class CachePolicyTests: XCTestCase {
         )
         XCTAssertEqual(config.maxSize, 100)
         XCTAssertTrue(config.enableCompression)
-        XCTAssertEqual(config.timeInterval, 30.0)
+        XCTAssertEqual(config.expirationPolicy.timeInterval, 30.0)
         XCTAssertEqual(config.evictionPolicy, .firstInFirstOut)
     }
 
@@ -129,7 +129,7 @@ final class CachePolicyTests: XCTestCase {
             maxSize: 0,
             enableCompression: false
         )
-        XCTAssertNil(config.timeInterval)
+        XCTAssertNil(config.expirationPolicy.timeInterval)
         XCTAssertEqual(config.maxSize, 0)
         XCTAssertFalse(config.enableCompression)
     }

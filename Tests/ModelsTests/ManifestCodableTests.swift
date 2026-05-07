@@ -105,9 +105,9 @@ final class ManifestCodableTests: XCTestCase {
     func testCodablePreservesBoolFlags() throws {
         let manifest = Manifest(
             resources: ["f": "u"],
+            persistent: true,
             isPinned: true,
-            isFavorite: false,
-            persistent: true
+            isFavorite: false
         )
 
         let data = try JSONEncoder().encode(manifest)

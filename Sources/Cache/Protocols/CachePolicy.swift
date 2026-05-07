@@ -25,7 +25,7 @@ public enum CacheExpirationPolicy: Sendable {
 }
 
 /// Cache eviction policy when cache is full
-public enum CacheEvictionPolicy: Sendable {
+public enum CacheEvictionPolicy: Sendable, Equatable {
     case leastRecentlyUsed
     case leastFrequentlyUsed
     case firstInFirstOut
