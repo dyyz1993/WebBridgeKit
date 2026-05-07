@@ -276,7 +276,7 @@ extension AboutViewController: UITableViewDataSource {
         switch section {
         case .introduction:
             content.textProperties.color = .secondaryLabel
-            content.textProperties.alignment = .left
+            content.textProperties.alignment = .natural
             cell.selectionStyle = .none
             cell.accessoryType = .none
         case .features:

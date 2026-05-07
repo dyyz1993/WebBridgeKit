@@ -199,17 +199,26 @@ class MessageDetailViewController: UIViewController {
     }
 
     private func addAction(title: String, icon: LucideIcon, isDestructive: Bool = false, handler: @escaping () -> Void) {
-        let button = UIButton(type: .system)
-        var config = UIButton.Configuration.plain()
-        config.title = "  \(title)"
-        config.image = icon.templateImage(pointSize: 16)
-        config.imagePadding = 8
-        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
-        config.baseBackgroundColor = ThemeColors.current.cardBackground
-        if isDestructive {
-            config.baseForegroundColor = .systemRed
+        let button: UIButton
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.title = "  \(title)"
+            config.image = icon.templateImage(pointSize: 16)
+            config.imagePadding = 8
+            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+            config.baseBackgroundColor = ThemeColors.current.cardBackground
+            if isDestructive {
+                config.baseForegroundColor = .systemRed
+            }
+            button = UIButton(configuration: config)
+        } else {
+            button = UIButton(type: .system)
+            button.setTitle("  \(title)", for: .normal)
+            button.setImage(icon.templateImage(pointSize: 16), for: .normal)
+            if isDestructive {
+                button.tintColor = .systemRed
+            }
         }
-        button.configuration = config
         button.contentHorizontalAlignment = .leading
         button.layer.cornerRadius = 10
         button.clipsToBounds = true

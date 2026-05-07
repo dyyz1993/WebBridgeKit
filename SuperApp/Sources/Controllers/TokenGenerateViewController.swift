@@ -105,29 +105,51 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     }()
 
     private lazy var copyButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "doc.on.doc")
-        config.title = L10n.tr("common.copy")
-        config.imagePadding = 4
-        config.baseForegroundColor = .label
-        let button = UIButton(configuration: config)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
-        button.backgroundColor = .systemGray6
-        return button
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.image = UIImage(systemName: "doc.on.doc")
+            config.title = L10n.tr("common.copy")
+            config.imagePadding = 4
+            config.baseForegroundColor = .label
+            let button = UIButton(configuration: config)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            button.layer.cornerRadius = 8
+            button.backgroundColor = .systemGray6
+            return button
+        } else {
+            let button = UIButton(type: .system)
+            button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
+            button.setTitle(L10n.tr("common.copy"), for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            button.layer.cornerRadius = 8
+            button.backgroundColor = .systemGray6
+            button.tintColor = .label
+            return button
+        }
     }()
 
     private lazy var shareButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "square.and.arrow.up")
-        config.title = L10n.tr("common.share")
-        config.imagePadding = 4
-        config.baseForegroundColor = .label
-        let button = UIButton(configuration: config)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
-        button.backgroundColor = .systemGray6
-        return button
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.image = UIImage(systemName: "square.and.arrow.up")
+            config.title = L10n.tr("common.share")
+            config.imagePadding = 4
+            config.baseForegroundColor = .label
+            let button = UIButton(configuration: config)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            button.layer.cornerRadius = 8
+            button.backgroundColor = .systemGray6
+            return button
+        } else {
+            let button = UIButton(type: .system)
+            button.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
+            button.setTitle(L10n.tr("common.share"), for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            button.layer.cornerRadius = 8
+            button.backgroundColor = .systemGray6
+            button.tintColor = .label
+            return button
+        }
     }()
 
     private let buttonStackView: UIStackView = {

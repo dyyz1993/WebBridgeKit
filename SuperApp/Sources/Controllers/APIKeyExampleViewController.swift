@@ -10,6 +10,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import WebBridgeKit
 
 /// API密钥使用示例视图控制器
 class APIKeyExampleViewController: UIViewController {

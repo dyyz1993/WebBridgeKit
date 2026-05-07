@@ -56,9 +56,15 @@ class ButtonCell: UITableViewCell {
     }()
 
     private let actionButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-        let button = UIButton(configuration: config)
+        let button: UIButton
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+            button = UIButton(configuration: config)
+        } else {
+            button = UIButton(type: .system)
+            button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        }
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         button.layer.cornerRadius = 8
         button.clipsToBounds = true

@@ -153,17 +153,26 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         ]
 
         for (title, type) in filters {
-            var config = UIButton.Configuration.filled()
-            config.baseBackgroundColor = .secondarySystemFill
-            config.baseForegroundColor = .secondaryLabel
-            config.cornerStyle = .capsule
-            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-                var outgoing = incoming
-                outgoing.font = .systemFont(ofSize: 13, weight: .medium)
-                return outgoing
+            let button: UIButton
+            if #available(iOS 15.0, *) {
+                var config = UIButton.Configuration.filled()
+                config.baseBackgroundColor = .secondarySystemFill
+                config.baseForegroundColor = .secondaryLabel
+                config.cornerStyle = .capsule
+                config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                    var outgoing = incoming
+                    outgoing.font = .systemFont(ofSize: 13, weight: .medium)
+                    return outgoing
+                }
+                config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+                button = UIButton(configuration: config)
+            } else {
+                button = UIButton(type: .system)
+                button.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
+                button.backgroundColor = .secondarySystemFill
+                button.layer.cornerRadius = 16
+                button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
             }
-            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-            let button = UIButton(configuration: config)
             button.setTitle(title, for: .normal)
             button.tag = type.rawValue
             button.addTarget(self, action: #selector(filterTapped(_:)), for: .touchUpInside)
@@ -183,17 +192,22 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private func updateFilterSelection(_ selected: InboxViewModel.FilterType) {
         for button in filterButtons {
             let isSelected = button.tag == selected.rawValue
-            var config = button.configuration ?? UIButton.Configuration.filled()
-            config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
-            config.baseForegroundColor = isSelected ? .white : .secondaryLabel
-            config.cornerStyle = .capsule
-            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-                var outgoing = incoming
-                outgoing.font = .systemFont(ofSize: 13, weight: .medium)
-                return outgoing
+            if #available(iOS 15.0, *) {
+                var config = button.configuration ?? UIButton.Configuration.filled()
+                config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
+                config.baseForegroundColor = isSelected ? .white : .secondaryLabel
+                config.cornerStyle = .capsule
+                config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                    var outgoing = incoming
+                    outgoing.font = .systemFont(ofSize: 13, weight: .medium)
+                    return outgoing
+                }
+                config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+                button.configuration = config
+            } else {
+                button.backgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
+                button.setTitleColor(isSelected ? .white : .secondaryLabel, for: .normal)
             }
-            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-            button.configuration = config
         }
     }
 

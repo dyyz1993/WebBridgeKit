@@ -38,31 +38,55 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }()
 
     private let copyButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.image = LucideIcon.copy.image(pointSize: 16)
-        config.title = L10n.tr("common.copy")
-        config.imagePadding = 4
-        config.baseForegroundColor = .white
-        let button = UIButton(configuration: config)
-        button.backgroundColor = ThemeColors.current.primary
-        button.layer.cornerRadius = 10
-        button.layer.masksToBounds = true
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        return button
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.image = LucideIcon.copy.image(pointSize: 16)
+            config.title = L10n.tr("common.copy")
+            config.imagePadding = 4
+            config.baseForegroundColor = .white
+            let button = UIButton(configuration: config)
+            button.backgroundColor = ThemeColors.current.primary
+            button.layer.cornerRadius = 10
+            button.layer.masksToBounds = true
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            return button
+        } else {
+            let button = UIButton(type: .system)
+            button.setImage(LucideIcon.copy.image(pointSize: 16), for: .normal)
+            button.setTitle(L10n.tr("common.copy"), for: .normal)
+            button.backgroundColor = ThemeColors.current.primary
+            button.layer.cornerRadius = 10
+            button.layer.masksToBounds = true
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            button.tintColor = .white
+            return button
+        }
     }()
 
     private let shareButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.image = LucideIcon.share.image(pointSize: 16)
-        config.title = L10n.tr("common.share")
-        config.imagePadding = 4
-        config.baseForegroundColor = .white
-        let button = UIButton(configuration: config)
-        button.backgroundColor = .systemGray
-        button.layer.cornerRadius = 10
-        button.layer.masksToBounds = true
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        return button
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.image = LucideIcon.share.image(pointSize: 16)
+            config.title = L10n.tr("common.share")
+            config.imagePadding = 4
+            config.baseForegroundColor = .white
+            let button = UIButton(configuration: config)
+            button.backgroundColor = .systemGray
+            button.layer.cornerRadius = 10
+            button.layer.masksToBounds = true
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            return button
+        } else {
+            let button = UIButton(type: .system)
+            button.setImage(LucideIcon.share.image(pointSize: 16), for: .normal)
+            button.setTitle(L10n.tr("common.share"), for: .normal)
+            button.backgroundColor = .systemGray
+            button.layer.cornerRadius = 10
+            button.layer.masksToBounds = true
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            button.tintColor = .white
+            return button
+        }
     }()
 
     private let qrCard = TokenManageViewController.makeCard()
