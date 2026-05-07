@@ -183,7 +183,7 @@ class InboxViewModel: ViewModel {
         guard index < messageGroupsRelay.value.count else { return "" }
         let group = messageGroupsRelay.value[index]
         let unread = group.unreadCount
-        return "\(group.name) (\(group.messages.count))" + (unread > 0 ? " · \(unread)未读" : "")
+        return "\(group.name) (\(group.messages.count))" + (unread > 0 ? " · \(unread) \(L10n.tr("inbox.filter.unread").lowercased())" : "")
     }
 
     func numberOfRowsInGroup(_ index: Int) -> Int {
@@ -250,7 +250,7 @@ class InboxViewModel: ViewModel {
             }
         }
 
-        let grouped = Dictionary(grouping: messages) { $0.payload.group ?? "未分组" }
+        let grouped = Dictionary(grouping: messages) { $0.payload.group ?? L10n.tr("inbox.group.ungrouped") }
         let groups = grouped.map { name, msgs in
             MessageGroup(
                 name: name,
@@ -272,10 +272,10 @@ class InboxViewModel: ViewModel {
     private func sendTestMessage() {
         Task {
             let payload = MessagePayload(
-                title: "测试通知",
-                body: "这是一条测试消息，发送于 \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))",
+                title: L10n.tr("inbox.test.title"),
+                body: L10n.tr("inbox.test.body_format", DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)),
                 channel: "test",
-                group: "测试消息"
+                group: L10n.tr("inbox.test.group")
             )
             try await MessageEngine.shared.receive(payload)
             loadMessages()

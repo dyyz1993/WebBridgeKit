@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import WebBridgeKit
 
 /// API Key 模型
 struct APIKey: Codable, Equatable {
@@ -79,21 +80,21 @@ struct APIKey: Codable, Equatable {
 
     /// 剩余时间文本
     var remainingTimeText: String? {
-        guard let expiresAt = expiresAt else { return "永久有效" }
+        guard let expiresAt = expiresAt else { return L10n.tr("model.api_key.permanent") }
         let interval = expiresAt.timeIntervalSinceNow
-        if interval <= 0 { return "已过期" }
+        if interval <= 0 { return L10n.tr("model.api_key.expired") }
 
         let minutes = Int(interval / 60)
         if minutes < 60 {
-            return "\(minutes) 分钟后过期"
+            return L10n.tr("model.api_key.expires_minutes_format", "\(minutes)")
         }
 
         let hours = minutes / 60
         if hours < 24 {
-            return "\(hours) 小时后过期"
+            return L10n.tr("model.api_key.expires_hours_format", "\(hours)")
         }
 
         let days = hours / 24
-        return "\(days) 天后过期"
+        return L10n.tr("model.api_key.expires_days_format", "\(days)")
     }
 }

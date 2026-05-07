@@ -23,8 +23,8 @@ class NotificationDebugViewController: UIViewController {
         return sv
     }()
 
-    private let titleInput = makeTextField(placeholder: "标题")
-    private let subtitleInput = makeTextField(placeholder: "副标题")
+    private let titleInput = makeTextField(placeholder: L10n.tr("notif_debug.field.title"))
+    private let subtitleInput = makeTextField(placeholder: L10n.tr("notif_debug.field.subtitle"))
     private let bodyInput: UITextView = {
         let tv = UITextView()
         tv.font = UIFont.systemFont(ofSize: 14)
@@ -45,12 +45,12 @@ class NotificationDebugViewController: UIViewController {
         s.isHidden = true
         return s
     }()
-    private let soundInput = makeTextField(placeholder: "声音")
+    private let soundInput = makeTextField(placeholder: L10n.tr("notif_debug.field.sound"))
     private let callSwitch = UISwitch()
-    private let badgeInput = makeTextField(placeholder: "角标数字")
+    private let badgeInput = makeTextField(placeholder: L10n.tr("notif_debug.field.badge_number"))
 
     private let iconInput = makeTextField(placeholder: "Icon URL")
-    private let imageInput = makeTextField(placeholder: "Image URL")
+    private let imageInput = makeTextField(placeholder: L10n.tr("notif_debug.field.image"))
     private let imagePreview: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
@@ -59,17 +59,17 @@ class NotificationDebugViewController: UIViewController {
         return iv
     }()
 
-    private let urlInput = makeTextField(placeholder: "跳转 URL")
-    private let groupInput = makeTextField(placeholder: "分组")
+    private let urlInput = makeTextField(placeholder: L10n.tr("notif_debug.field.url"))
+    private let groupInput = makeTextField(placeholder: L10n.tr("notif_debug.field.group"))
     private let autocopySwitch = UISwitch()
     private let archiveSwitch = UISwitch()
 
-    private let notifIdInput = makeTextField(placeholder: "通知 ID")
+    private let notifIdInput = makeTextField(placeholder: L10n.tr("notif_debug.field.notif_id"))
 
     private let methodSegment = UISegmentedControl(items: ["GET", "POST"])
     private let sendButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("发送", for: .normal)
+        btn.setTitle(L10n.tr("notif_debug.button.send"), for: .normal)
         btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         btn.backgroundColor = ThemeColors.current.primary
         btn.setTitleColor(.white, for: .normal)
@@ -85,7 +85,7 @@ class NotificationDebugViewController: UIViewController {
         tv.layer.borderWidth = 1
         tv.layer.cornerRadius = 8
         tv.heightAnchor.constraint(equalToConstant: 120).isActive = true
-        tv.text = "等待发送..."
+        tv.text = L10n.tr("notif_debug.waiting")
         tv.textColor = .secondaryLabel
         return tv
     }()
@@ -104,7 +104,7 @@ class NotificationDebugViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "调试面板"
+        title = L10n.tr("notif_debug.title")
         view.backgroundColor = ThemeColors.current.background
         setupUI()
         setupPicker()
@@ -127,48 +127,48 @@ class NotificationDebugViewController: UIViewController {
             make.bottom.equalToSuperview().offset(-32)
         }
 
-        addSection(title: "内容", views: [
-            makeRow(label: "标题", view: titleInput),
-            makeRow(label: "副标题", view: subtitleInput),
-            makeVerticalRow(label: "正文", view: bodyInput),
+        addSection(title: L10n.tr("notif_debug.section.content"), views: [
+            makeRow(label: L10n.tr("notif_debug.field.title"), view: titleInput),
+            makeRow(label: L10n.tr("notif_debug.field.subtitle"), view: subtitleInput),
+            makeVerticalRow(label: L10n.tr("notif_debug.field.body"), view: bodyInput),
             makeRow(label: "Markdown", view: markdownSwitch)
         ])
 
-        addSection(title: "行为", views: [
-            makeVerticalRow(label: "中断级别", view: levelSegment),
-            makeRow(label: "音量", view: volumeSlider),
-            makeRow(label: "声音", view: soundInput),
-            makeRow(label: "电话模式", view: callSwitch),
-            makeRow(label: "角标", view: badgeInput)
+        addSection(title: L10n.tr("notif_debug.section.behavior"), views: [
+            makeVerticalRow(label: L10n.tr("notif_debug.field.interruption_level"), view: levelSegment),
+            makeRow(label: L10n.tr("notif_debug.field.volume"), view: volumeSlider),
+            makeRow(label: L10n.tr("notif_debug.field.sound"), view: soundInput),
+            makeRow(label: L10n.tr("notif_debug.field.phone_mode"), view: callSwitch),
+            makeRow(label: L10n.tr("notif_debug.field.badge"), view: badgeInput)
         ])
 
-        addSection(title: "视觉", views: [
+        addSection(title: L10n.tr("notif_debug.section.visual"), views: [
             makeRow(label: "Icon", view: iconInput),
-            makeRow(label: "图片", view: imageInput),
+            makeRow(label: L10n.tr("notif_debug.field.image"), view: imageInput),
             imagePreview
         ])
 
-        addSection(title: "操作", views: [
+        addSection(title: L10n.tr("notif_debug.section.action"), views: [
             makeRow(label: "URL", view: urlInput),
-            makeRow(label: "分组", view: groupInput),
-            makeRow(label: "自动复制", view: autocopySwitch),
-            makeRow(label: "归档", view: archiveSwitch)
+            makeRow(label: L10n.tr("notif_debug.field.group"), view: groupInput),
+            makeRow(label: L10n.tr("notif_debug.field.auto_copy"), view: autocopySwitch),
+            makeRow(label: L10n.tr("notif_debug.field.archive"), view: archiveSwitch)
         ])
 
-        addSection(title: "高级", views: [
-            makeRow(label: "通知 ID", view: notifIdInput)
+        addSection(title: L10n.tr("notif_debug.section.advanced"), views: [
+            makeRow(label: L10n.tr("notif_debug.field.notif_id"), view: notifIdInput)
         ])
 
-        addSection(title: "发送", views: [
-            makeVerticalRow(label: "方法", view: methodSegment),
+        addSection(title: L10n.tr("notif_debug.section.send"), views: [
+            makeVerticalRow(label: L10n.tr("notif_debug.field.method"), view: methodSegment),
             sendButton
         ])
 
-        addSection(title: "响应", views: [
+        addSection(title: L10n.tr("notif_debug.section.response"), views: [
             responseView
         ])
 
-        addSection(title: "模板", views: [
+        addSection(title: L10n.tr("notif_debug.section.template"), views: [
             makeTemplateGrid()
         ])
 
@@ -277,7 +277,7 @@ class NotificationDebugViewController: UIViewController {
         let toolbar = UIToolbar()
         toolbar.items = [
             UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-            UIBarButtonItem(title: "完成", style: .done, target: self, action: #selector(pickerDone))
+            UIBarButtonItem(title: L10n.tr("notif_debug.button.done"), style: .done, target: self, action: #selector(pickerDone))
         ]
         toolbar.sizeToFit()
         soundInput.inputAccessoryView = toolbar
@@ -292,12 +292,12 @@ class NotificationDebugViewController: UIViewController {
 
     private func setupTemplates() {
         let templates: [(String, String, String, String, String, String, String, Bool)] = [
-            ("简单通知", "测试通知", "这是一条测试通知", "", "active", "", "", false),
-            ("图片通知", "图片通知", "查看图片", "https://via.placeholder.com/300", "active", "", "", false),
-            ("紧急通知", "紧急通知", "请立即查看!", "", "timeSensitive", "alarm", "", false),
+            (L10n.tr("notif_debug.template.simple"), L10n.tr("notif_debug.template.test_title"), L10n.tr("notif_debug.template.test_body"), "", "active", "", "", false),
+            (L10n.tr("notif_debug.template.image"), L10n.tr("notif_debug.template.image_title"), L10n.tr("notif_debug.template.image_body"), "https://via.placeholder.com/300", "active", "", "", false),
+            (L10n.tr("notif_debug.template.urgent"), L10n.tr("notif_debug.template.urgent_title"), L10n.tr("notif_debug.template.urgent_body"), "", "timeSensitive", "alarm", "", false),
             ("Markdown", "Markdown", "# Hello\n- Item 1\n- Item 2", "", "active", "", "", true),
-            ("链接通知", "链接", "点击打开", "", "active", "", "https://example.com", false),
-            ("加密通知", "加密通知", "encrypted content", "", "active", "", "", false)
+            (L10n.tr("notif_debug.template.link"), L10n.tr("notif_debug.template.link_title"), L10n.tr("notif_debug.template.link_body"), "", "active", "", "https://example.com", false),
+            (L10n.tr("notif_debug.template.encrypted"), L10n.tr("notif_debug.template.encrypted_title"), "encrypted content", "", "active", "", "", false)
         ]
         objc_setAssociatedObject(self, "templates", templates, .OBJC_ASSOCIATION_RETAIN)
     }
@@ -343,7 +343,7 @@ class NotificationDebugViewController: UIViewController {
         let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         guard !key.isEmpty else {
-            responseView.text = "错误: Bark Key 未配置\n请在设置中配置密钥"
+            responseView.text = L10n.tr("notif_debug.error_no_key")
             responseView.textColor = .systemRed
             return
         }
@@ -351,7 +351,7 @@ class NotificationDebugViewController: UIViewController {
         let title = titleInput.text ?? ""
         let body = bodyInput.text ?? ""
         guard !title.isEmpty else {
-            responseView.text = "错误: 标题不能为空"
+            responseView.text = L10n.tr("notif_debug.error_no_title")
             responseView.textColor = .systemRed
             return
         }
@@ -366,7 +366,7 @@ class NotificationDebugViewController: UIViewController {
         let group = groupInput.text ?? ""
         let notifId = notifIdInput.text ?? ""
 
-        responseView.text = "发送中..."
+        responseView.text = L10n.tr("notif_debug.sending")
         responseView.textColor = .secondaryLabel
 
         if isPost {
@@ -400,7 +400,7 @@ class NotificationDebugViewController: UIViewController {
         }
 
         guard let requestURL = URL(string: path) else {
-            responseView.text = "错误: URL 构建失败"
+            responseView.text = L10n.tr("notif_debug.error_url_failed")
             responseView.textColor = .systemRed
             return
         }
@@ -416,7 +416,7 @@ class NotificationDebugViewController: UIViewController {
 
     private func sendPOST(server: String, key: String, title: String, body: String, level: String, sound: String, badge: String, icon: String, image: String, url: String, group: String, notifId: String) {
         guard let requestURL = URL(string: "\(server)/\(key)") else {
-            responseView.text = "错误: URL 构建失败"
+            responseView.text = L10n.tr("notif_debug.error_url_failed")
             responseView.textColor = .systemRed
             return
         }
@@ -455,19 +455,19 @@ class NotificationDebugViewController: UIViewController {
 
     private func handleResponse(data: Data?, response: URLResponse?, error: Error?, elapsed: String) {
         if let error = error {
-            responseView.text = "请求失败 (\(elapsed)s)\n\n错误: \(error.localizedDescription)"
+            responseView.text = L10n.tr("notif_debug.error_request_failed_format", elapsed, error.localizedDescription)
             responseView.textColor = .systemRed
             return
         }
 
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-        let bodyStr = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(空)"
+        let bodyStr = data.flatMap { String(data: $0, encoding: .utf8) } ?? L10n.tr("notif_debug.empty_response")
 
         if (200...299).contains(statusCode) {
-            responseView.text = "成功 (\(elapsed)s)\n状态码: \(statusCode)\n\n\(bodyStr)"
+            responseView.text = L10n.tr("notif_debug.success_format", elapsed, "\(statusCode)", bodyStr)
             responseView.textColor = .systemGreen
         } else {
-            responseView.text = "失败 (\(elapsed)s)\n状态码: \(statusCode)\n\n\(bodyStr)"
+            responseView.text = L10n.tr("notif_debug.error_request_failed_format", elapsed, "HTTP \(statusCode)\n\n\(bodyStr)")
             responseView.textColor = .systemRed
         }
     }

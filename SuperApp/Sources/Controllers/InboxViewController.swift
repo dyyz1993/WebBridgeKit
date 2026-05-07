@@ -36,7 +36,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let searchController: UISearchController = {
         let sc = UISearchController(searchResultsController: nil)
         sc.obscuresBackgroundDuringPresentation = false
-        sc.searchBar.placeholder = "搜索消息"
+        sc.searchBar.placeholder = L10n.tr("inbox.search.placeholder")
         return sc
     }()
 
@@ -76,7 +76,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "收信箱"
+        title = L10n.tr("inbox.title")
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -133,8 +133,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
         emptyStateView.configure(
             icon: "tray",
-            title: "暂无消息",
-            description: "收到的推送消息会显示在这里",
+            title: L10n.tr("inbox.empty.title"),
+            description: L10n.tr("inbox.empty.description"),
             actionTitle: nil
         )
     }
@@ -148,9 +148,9 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     private func setupFilterPills() {
         let filters: [(String, InboxViewModel.FilterType)] = [
-            ("全部", .all),
-            ("未读", .unread),
-            ("今天", .today)
+            (L10n.tr("inbox.filter.all"), .all),
+            (L10n.tr("inbox.filter.unread"), .unread),
+            (L10n.tr("inbox.filter.today"), .today)
         ]
 
         for (title, type) in filters {
@@ -307,7 +307,7 @@ extension InboxViewController: UITableViewDataSource {
 
 extension InboxViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] _, _, completion in
+        let deleteAction = UIContextualAction(style: .destructive, title: L10n.tr("common.delete")) { [weak self] _, _, completion in
             guard let self = self else { return }
             let message = self.viewModel.messageAt(indexPath)
             Task {

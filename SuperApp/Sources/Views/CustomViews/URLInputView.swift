@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// URL 输入工具栏视图
 /// 包含 URL 输入框、缓存开关和缓存按钮
@@ -23,7 +24,7 @@ class URLInputView: UIView {
 
     let urlTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "输入或粘贴网址"
+        textField.placeholder = L10n.tr("common.open")
         textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textField.textColor = .label
         textField.backgroundColor = .tertiarySystemBackground
@@ -45,7 +46,7 @@ class URLInputView: UIView {
 
     private let cacheLabel: UILabel = {
         let label = UILabel()
-        label.text = "缓存"
+        label.text = L10n.tr("discover.action_sheet.cache")
         label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
         label.textColor = .secondaryLabel
         return label
@@ -60,7 +61,7 @@ class URLInputView: UIView {
 
     let cacheButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("缓存", for: .normal)
+        button.setTitle(L10n.tr("discover.action_sheet.cache"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         button.backgroundColor = .systemBlue
         button.setTitleColor(.white, for: .normal)
@@ -194,10 +195,10 @@ class URLInputView: UIView {
 
     func setCached(_ isCached: Bool) {
         if isCached {
-            cacheButton.setTitle("删除", for: .normal)
+            cacheButton.setTitle(L10n.tr("common.delete"), for: .normal)
             cacheButton.backgroundColor = .systemRed
         } else {
-            cacheButton.setTitle("缓存", for: .normal)
+            cacheButton.setTitle(L10n.tr("discover.action_sheet.cache"), for: .normal)
             cacheButton.backgroundColor = .systemBlue
         }
     }

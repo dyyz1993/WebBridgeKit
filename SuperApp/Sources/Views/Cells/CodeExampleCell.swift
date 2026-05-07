@@ -74,7 +74,7 @@ class CodeExampleCell: UITableViewCell {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         button.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: config), for: .normal)
-        button.setTitle(" 复制", for: .normal)
+        button.setTitle(" \(L10n.tr("common.copy"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         return button
     }()

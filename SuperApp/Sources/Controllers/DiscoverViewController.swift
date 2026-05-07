@@ -34,7 +34,7 @@ class DiscoverViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "发现"
+        title = L10n.tr("discover.title")
         setupUI()
         loadData()
     }
@@ -79,8 +79,8 @@ class DiscoverViewController: UIViewController {
 
         emptyStateView.configure(
             icon: "compass",
-            title: "发现应用",
-            description: "缓存的应用会显示在这里",
+            title: L10n.tr("discover.empty.title"),
+            description: L10n.tr("discover.empty.description"),
             actionTitle: nil
         )
 
@@ -145,7 +145,7 @@ class DiscoverViewController: UIViewController {
                 lastAccessed: lastAccessed
             )
         }
-        newSections.append(DiscoverSection(title: "最近使用", items: recentItems))
+        newSections.append(DiscoverSection(title: L10n.tr("discover.section.recent"), items: recentItems))
 
         var cachedItems: [DiscoverItem] = []
         let keys = ManifestStore.shared.getAllPageKeys()
@@ -168,7 +168,7 @@ class DiscoverViewController: UIViewController {
                 ))
             }
         }
-        newSections.append(DiscoverSection(title: "已缓存应用", items: cachedItems))
+        newSections.append(DiscoverSection(title: L10n.tr("discover.section.cached"), items: cachedItems))
 
         sections = newSections
     }
@@ -205,10 +205,10 @@ struct DiscoverItem {
 
         var displayText: String {
             switch self {
-            case .persistent: return "持久化"
-            case .cached: return "离线可用"
-            case .needsUpdate: return "需更新"
-            case .notCached: return "未缓存"
+            case .persistent: return L10n.tr("discover.badge.persistent")
+            case .cached: return L10n.tr("discover.badge.offline")
+            case .needsUpdate: return L10n.tr("discover.badge.needs_update")
+            case .notCached: return L10n.tr("discover.badge.not_cached")
             }
         }
 
@@ -295,19 +295,19 @@ extension DiscoverViewController {
     private func showItemActionSheet(item: DiscoverItem) {
         let alert = UIAlertController(
             title: item.name,
-            message: "缓存: \(item.cacheSize)\(item.lastAccessed.map { " · 访问: \($0)" } ?? "")",
+            message: "\(L10n.tr("discover.action_sheet.cache")): \(item.cacheSize)\(item.lastAccessed.map { " · \(L10n.tr("discover.action_sheet.visit")): \($0)" } ?? "")",
             preferredStyle: .actionSheet
         )
-        alert.addAction(UIAlertAction(title: "打开", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("discover.action_sheet.open"), style: .default) { [weak self] _ in
             self?.openURL(item.url)
         })
-        alert.addAction(UIAlertAction(title: "删除缓存", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("discover.action_sheet.delete_cache"), style: .destructive) { [weak self] _ in
             self?.deleteCache(for: item)
         })
-        alert.addAction(UIAlertAction(title: "分享", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("discover.action_sheet.share"), style: .default) { [weak self] _ in
             self?.shareURL(item.url)
         })
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
         if let popover = alert.popoverPresentationController {
             popover.sourceView = view
             popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)

@@ -61,25 +61,25 @@ class SettingsViewModel: ViewModel {
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
         return [
-            SettingsSection(header: "服务器", items: [
-                SettingsItem(icon: "server.rack", title: "服务器配置", action: .serverConfig),
-                SettingsItem(icon: "key", title: "密钥管理", action: .apiKeyManage)
+            SettingsSection(header: L10n.tr("settings.section.server"), items: [
+                SettingsItem(icon: "server.rack", title: L10n.tr("settings.server.config"), action: .serverConfig),
+                SettingsItem(icon: "key", title: L10n.tr("settings.key.manage"), action: .apiKeyManage)
             ]),
-            SettingsSection(header: "通知", items: [
-                SettingsItem(icon: "bell", title: "通知设置", action: .notificationSettings),
-                SettingsItem(icon: "text.command", title: "口令管理", action: .tokenManage)
+            SettingsSection(header: L10n.tr("settings.section.notification"), items: [
+                SettingsItem(icon: "bell", title: L10n.tr("settings.notification.settings"), action: .notificationSettings),
+                SettingsItem(icon: "text.command", title: L10n.tr("settings.token.manage"), action: .tokenManage)
             ]),
-            SettingsSection(header: "缓存", items: [
-                SettingsItem(icon: "archivebox", title: "缓存管理", action: .management),
-                SettingsItem(icon: "trash", title: "清除缓存", action: .clearCache, showArrow: false)
+            SettingsSection(header: L10n.tr("settings.section.cache"), items: [
+                SettingsItem(icon: "archivebox", title: L10n.tr("settings.cache.manage"), action: .management),
+                SettingsItem(icon: "trash", title: L10n.tr("settings.cache.clear"), action: .clearCache, showArrow: false)
             ]),
-            SettingsSection(header: "开发者", items: [
-                SettingsItem(icon: "ladybug", title: "调试面板", action: .debugPanel),
-                SettingsItem(icon: "paintbrush", title: "界面调试", action: .uiDebug)
+            SettingsSection(header: L10n.tr("settings.section.developer"), items: [
+                SettingsItem(icon: "ladybug", title: L10n.tr("settings.debug.panel"), action: .debugPanel),
+                SettingsItem(icon: "paintbrush", title: L10n.tr("settings.debug.ui"), action: .uiDebug)
             ]),
-            SettingsSection(header: "关于", items: [
-                SettingsItem(icon: "info.circle", title: "关于", action: .about),
-                SettingsItem(icon: "number", title: "版本信息", action: .versionInfo, value: "v\(version) (\(build))", showArrow: false)
+            SettingsSection(header: L10n.tr("settings.section.about"), items: [
+                SettingsItem(icon: "info.circle", title: L10n.tr("settings.about"), action: .about),
+                SettingsItem(icon: "number", title: L10n.tr("settings.version"), action: .versionInfo, value: "v\(version) (\(build))", showArrow: false)
             ])
         ]
     }()

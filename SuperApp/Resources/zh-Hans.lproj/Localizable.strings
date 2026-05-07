@@ -1,0 +1,252 @@
+// Tab Bar
+"tab.home" = "首页";
+"tab.inbox" = "收信箱";
+"tab.discover" = "发现";
+"tab.settings" = "设置";
+
+// Home - Main
+"home.title" = "首页";
+"home.token_card.push_token" = "Push Token";
+"home.token_card.not_registered" = "尚未注册推送服务";
+"home.token_card.register" = "注册";
+"home.token_card.copied_title" = "已复制";
+"home.token_card.copied_message" = "推送地址已复制到剪贴板";
+"home.token_card.registering_title" = "注册中";
+"home.token_card.registering_message" = "正在注册推送通知，请稍后...";
+"home.quick_action.scan" = "扫码";
+"home.quick_action.paste" = "粘贴";
+"home.quick_action.token" = "口令";
+"home.quick_action.debug" = "调试";
+"home.empty.title" = "开启您的极速体验";
+"home.empty.description" = "扫描二维码或输入 URL 即可体验离线加载";
+"home.scanner.tip" = "将二维码放入框内即可自动扫描";
+"home.command.banner_format" = "检测到口令，点击打开「%@」";
+"home.action_sheet.domain" = "域名";
+"home.action_sheet.cache_size" = "缓存大小";
+"home.action_sheet.visit_count_format" = "访问次数: %@ 次";
+"home.action_sheet.open" = "打开";
+"home.action_sheet.unpin" = "取消置顶";
+"home.action_sheet.pin" = "置顶";
+"home.action_sheet.favorite" = "收藏";
+"home.action_sheet.favorited_title" = "成功";
+"home.action_sheet.favorited_message" = "已添加到收藏";
+"home.action_sheet.clear_cache" = "清除缓存";
+"home.action_sheet.cancel" = "取消";
+"home.action_sheet.unknown" = "未知";
+"home.manifest.loading" = "正在解析 Manifest...";
+"home.manifest.success_title" = "解析成功";
+"home.manifest.success_message_format" = "发现应用: %@\n已加入缓存队列";
+"home.alert.protocol_error" = "协议错误";
+"home.alert.protocol_error_message" = "无法解析自定义协议内容: %@";
+"home.alert.invalid_content" = "无效内容";
+"home.alert.invalid_content_message" = "无法识别扫描内容: %@";
+"home.command.success_title" = "口令解析成功";
+"home.command.not_found_message_format" = "应用 %@ 未找到本地缓存";
+"home.device_token.not_registered" = "未注册";
+"home.section.frequently_used" = "常用应用";
+"home.section.my_favorites" = "我的收藏";
+"home.section.recent_visits" = "最近访问";
+"home.test_cases_entry" = "🧪 自动化测试用例";
+
+// Inbox
+"inbox.title" = "收信箱";
+"inbox.search.placeholder" = "搜索消息";
+"inbox.filter.all" = "全部";
+"inbox.filter.unread" = "未读";
+"inbox.filter.today" = "今天";
+"inbox.empty.title" = "暂无消息";
+"inbox.empty.description" = "收到的推送消息会显示在这里";
+"inbox.swipe.delete" = "删除";
+"inbox.group.unread_format" = "%@未读";
+"inbox.group.ungrouped" = "未分组";
+"inbox.test.title" = "测试通知";
+"inbox.test.body_format" = "这是一条测试消息，发送于 %@";
+"inbox.test.group" = "测试消息";
+
+// Discover
+"discover.title" = "发现";
+"discover.empty.title" = "发现应用";
+"discover.empty.description" = "缓存的应用会显示在这里";
+"discover.section.recent" = "最近使用";
+"discover.section.cached" = "已缓存应用";
+"discover.badge.persistent" = "持久化";
+"discover.badge.offline" = "离线可用";
+"discover.badge.needs_update" = "需更新";
+"discover.badge.not_cached" = "未缓存";
+"discover.action_sheet.cache" = "缓存";
+"discover.action_sheet.visit" = "访问";
+"discover.action_sheet.open" = "打开";
+"discover.action_sheet.delete_cache" = "删除缓存";
+"discover.action_sheet.share" = "分享";
+"discover.action_sheet.cancel" = "取消";
+
+// Settings
+"settings.title" = "设置";
+"settings.section.server" = "服务器";
+"settings.section.notification" = "通知";
+"settings.section.cache" = "缓存";
+"settings.section.developer" = "开发者";
+"settings.section.about" = "关于";
+"settings.server.config" = "服务器配置";
+"settings.key.manage" = "密钥管理";
+"settings.notification.settings" = "通知设置";
+"settings.token.manage" = "口令管理";
+"settings.cache.manage" = "缓存管理";
+"settings.cache.clear" = "清除缓存";
+"settings.debug.panel" = "调试面板";
+"settings.debug.ui" = "界面调试";
+"settings.about" = "关于";
+"settings.version" = "版本信息";
+"settings.clear_cache.title" = "清除缓存";
+"settings.clear_cache.message" = "确定要清除所有缓存资源吗？";
+"settings.clear_cache.confirm" = "清除";
+
+// Message Detail
+"message.detail.title" = "消息详情";
+"message.detail.received_time" = "接收时间";
+"message.detail.source" = "来源";
+"message.detail.group" = "分组";
+"message.detail.read_time" = "已读时间";
+"message.detail.copy_content" = "复制内容";
+"message.detail.open_link" = "打开链接";
+"message.detail.open_app" = "打开应用";
+"message.detail.delete" = "删除";
+"message.detail.confirm_delete_title" = "确认删除";
+"message.detail.confirm_delete_message" = "确定要删除这条消息吗？";
+"message.detail.copied" = "已复制到剪贴板";
+
+// Token Management
+"token.manage.title" = "口令管理";
+"token.manage.push_url" = "推送地址";
+"token.manage.qr_code" = "二维码";
+"token.manage.device_token" = "设备 Token";
+"token.manage.statistics" = "统计";
+"token.manage.copy" = "复制";
+"token.manage.share" = "分享";
+"token.manage.not_registered" = "未注册";
+"token.manage.copied_title" = "已复制";
+"token.manage.copied_message" = "推送地址已复制到剪贴板";
+"token.manage.stats_format" = "总消息数: %@\n已接收: %@\n已发送: %@\n失败: %@";
+
+// Debug Panel
+"debug.panel.title" = "调试面板";
+"debug.panel.handlers" = "Handlers";
+"debug.panel.notification_test" = "通知测试";
+"debug.panel.logs" = "日志";
+"debug.panel.environment" = "环境";
+"debug.panel.done" = "完成";
+"debug.panel.execute_test" = "执行测试";
+
+// About
+"about.title" = "关于";
+"about.section.introduction" = "项目简介";
+"about.section.features" = "功能列表";
+"about.section.license" = "开源协议";
+"about.section.feedback" = "反馈";
+"about.introduction" = "WebBridgeKit 是一个功能强大的 iOS WebView 缓存浏览器框架，为开发者提供完整的 WebView 缓存管理解决方案。";
+"about.feature.cache" = "URL 缓存管理";
+"about.feature.favorite" = "收藏夹管理";
+"about.feature.token" = "口令分享功能";
+"about.feature.api_key" = "密钥管理";
+"about.feedback.github" = "GitHub Issues";
+"about.feedback.email" = "发送邮件";
+"about.version_format" = "版本 %@ (%@)";
+"about.version_default" = "版本 1.0 (1)";
+"about.close" = "关闭";
+
+// Common
+"common.copy" = "复制";
+"common.share" = "分享";
+"common.delete" = "删除";
+"common.cancel" = "取消";
+"common.confirm" = "确认";
+"common.close" = "关闭";
+"common.save" = "保存";
+"common.done" = "完成";
+"common.ok" = "确定";
+"common.open" = "打开";
+"common.loading" = "加载中...";
+"common.error" = "错误";
+"common.success" = "成功";
+"common.unknown" = "未知";
+
+// Models
+"model.api_key.permanent" = "永久有效";
+"model.api_key.expired" = "已过期";
+"model.api_key.expires_minutes_format" = "%@ 分钟后过期";
+"model.api_key.expires_hours_format" = "%@ 小时后过期";
+"model.api_key.expires_days_format" = "%@ 天后过期";
+"model.access_token.expired" = "已过期";
+"model.access_token.days_hours_format" = "%@天%@小时";
+"model.access_token.hours_minutes_format" = "%@小时%@分钟";
+"model.access_token.minutes_format" = "%@分钟";
+
+// Token Generate
+"token.generate.select_url_error" = "请先选择要生成口令的URL";
+"token.generate.failure" = "生成口令失败，请重试";
+
+// Web Access
+"web_access.cache_count_format" = "%@ 个资源";
+"web_access.not_cached" = "未缓存";
+"web_access.cannot_cache" = "无法缓存该页面";
+"web_access.cache_failure_format" = "缓存失败: %@";
+"web_access.auto_cache_failure_format" = "自动缓存失败: %@";
+
+// Favorite
+"favorite.section.pinned" = "置顶收藏";
+"favorite.section.normal" = "收藏";
+
+// Notification Debug
+"notif_debug.title" = "调试面板";
+"notif_debug.section.content" = "内容";
+"notif_debug.section.behavior" = "行为";
+"notif_debug.section.visual" = "视觉";
+"notif_debug.section.action" = "操作";
+"notif_debug.section.advanced" = "高级";
+"notif_debug.section.send" = "发送";
+"notif_debug.section.response" = "响应";
+"notif_debug.section.template" = "模板";
+"notif_debug.field.title" = "标题";
+"notif_debug.field.subtitle" = "副标题";
+"notif_debug.field.body" = "正文";
+"notif_debug.field.interruption_level" = "中断级别";
+"notif_debug.field.volume" = "音量";
+"notif_debug.field.sound" = "声音";
+"notif_debug.field.phone_mode" = "电话模式";
+"notif_debug.field.badge" = "角标";
+"notif_debug.field.image" = "图片";
+"notif_debug.field.url" = "跳转 URL";
+"notif_debug.field.group" = "分组";
+"notif_debug.field.auto_copy" = "自动复制";
+"notif_debug.field.archive" = "归档";
+"notif_debug.field.notif_id" = "通知 ID";
+"notif_debug.field.badge_number" = "角标数字";
+"notif_debug.field.method" = "方法";
+"notif_debug.button.send" = "发送";
+"notif_debug.button.done" = "完成";
+"notif_debug.waiting" = "等待发送...";
+"notif_debug.sending" = "发送中...";
+"notif_debug.error_no_key" = "错误: Bark Key 未配置\n请在设置中配置密钥";
+"notif_debug.error_no_title" = "错误: 标题不能为空";
+"notif_debug.error_url_failed" = "错误: URL 构建失败";
+"notif_debug.error_request_failed_format" = "请求失败 (%@s)\n\n错误: %@";
+"notif_debug.success_format" = "成功 (%@s)\n状态码: %@\n\n%@";
+"notif_debug.empty_response" = "(空)";
+"notif_debug.template.simple" = "简单通知";
+"notif_debug.template.test_title" = "测试通知";
+"notif_debug.template.test_body" = "这是一条测试通知";
+"notif_debug.template.image" = "图片通知";
+"notif_debug.template.image_title" = "图片通知";
+"notif_debug.template.image_body" = "查看图片";
+"notif_debug.template.urgent" = "紧急通知";
+"notif_debug.template.urgent_title" = "紧急通知";
+"notif_debug.template.urgent_body" = "请立即查看!";
+"notif_debug.template.link" = "链接通知";
+"notif_debug.template.link_title" = "链接";
+"notif_debug.template.link_body" = "点击打开";
+"notif_debug.template.encrypted" = "加密通知";
+"notif_debug.template.encrypted_title" = "加密通知";
+
+// WebView Display
+"webview.close" = "✕ 关闭";
+"webview.render_label" = "📱 WebView 实际渲染效果";

@@ -130,14 +130,14 @@ class FavoriteViewModel: ViewModel {
 
         if !pinnedFavorites.isEmpty {
             sections.append(URLFavoriteSection(
-                header: "置顶收藏",
+                header: L10n.tr("favorite.section.pinned"),
                 items: pinnedFavorites
             ))
         }
 
         if !normalFavorites.isEmpty {
             sections.append(URLFavoriteSection(
-                header: "收藏",
+                header: L10n.tr("favorite.section.normal"),
                 items: normalFavorites
             ))
         }

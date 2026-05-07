@@ -30,7 +30,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "设置"
+        title = L10n.tr("settings.title")
         setupUI()
     }
 
@@ -140,9 +140,9 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func showClearCacheConfirm() {
-        let alert = UIAlertController(title: "清除缓存", message: "确定要清除所有缓存资源吗？", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "清除", style: .destructive) { _ in
+        let alert = UIAlertController(title: L10n.tr("settings.clear_cache.title"), message: L10n.tr("settings.clear_cache.message"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("settings.clear_cache.confirm"), style: .destructive) { _ in
             WebCacheManager.shared.clearAll()
         })
         present(alert, animated: true)

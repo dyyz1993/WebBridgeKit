@@ -182,7 +182,7 @@ class MainViewModel: ViewModel {
                         let history = WebPageHistory()
                         history.id = favorite.id
                         history.url = favorite.url
-                        history.title = favorite.title ?? favorite.domain ?? "未知"
+                        history.title = favorite.title ?? favorite.domain ?? L10n.tr("common.unknown")
                         history.favicon = favorite.favicon
                         history.isPinned = true
                         history.isFavorite = true
@@ -212,7 +212,7 @@ class MainViewModel: ViewModel {
                         let history = WebPageHistory()
                         history.id = favorite.id
                         history.url = favorite.url
-                        history.title = favorite.title ?? favorite.domain ?? "未知"
+                        history.title = favorite.title ?? favorite.domain ?? L10n.tr("common.unknown")
                         history.favicon = favorite.favicon
                         history.isPinned = false
                         history.isFavorite = true
@@ -257,7 +257,7 @@ class MainViewModel: ViewModel {
                 let testEntry = WebPageHistory()
                 testEntry.id = "test_cases_entry"
                 testEntry.url = "wb-app://test-cases"
-                testEntry.title = "🧪 自动化测试用例"
+                testEntry.title = L10n.tr("home.test_cases_entry")
                 testEntry.isPinned = true
 
                 // 构造 Section 数据
@@ -266,15 +266,15 @@ class MainViewModel: ViewModel {
                 if !pinnedItems.isEmpty || true { // 始终显示常用应用区，包含测试入口
                     var topItems = pinnedItems
                     topItems.insert(testEntry, at: 0)
-                    sections.append(WebPageHistorySection(header: "常用应用", items: topItems))
+                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.frequently_used"), items: topItems))
                 }
 
                 if !favoriteItems.isEmpty {
-                    sections.append(WebPageHistorySection(header: "我的收藏", items: favoriteItems))
+                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.my_favorites"), items: favoriteItems))
                 }
 
                 if !histories.isEmpty {
-                    sections.append(WebPageHistorySection(header: "最近访问", items: Array(histories)))
+                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.recent_visits"), items: Array(histories)))
                 }
 
                 // 计算总存储大小 (异步)

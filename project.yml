@@ -54,7 +54,11 @@ targets:
     deploymentTarget: "14.0"
     sources:
       - SuperApp/Sources
-      - SuperApp/Resources
+    resources:
+      - SuperApp/Resources/**/*.strings
+      - path: SuperApp/Resources
+        excludes:
+          - "**/*.strings"
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp
       SWIFT_VERSION: "5.0"

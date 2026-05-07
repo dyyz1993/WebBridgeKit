@@ -12,7 +12,7 @@ import WebBridgeKit
 
 class DebugPanelViewController: UIViewController {
 
-    private let segmentedControl = UISegmentedControl(items: ["Handlers", "通知测试", "日志", "环境"])
+    private let segmentedControl = UISegmentedControl(items: [L10n.tr("debug.panel.handlers"), L10n.tr("debug.panel.notification_test"), L10n.tr("debug.panel.logs"), L10n.tr("debug.panel.environment")])
     private let containerView = UIView()
 
     private var currentViewController: UIViewController?
@@ -24,11 +24,11 @@ class DebugPanelViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "调试面板"
+        title = L10n.tr("debug.panel.title")
         view.backgroundColor = ThemeColors.current.background
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "完成",
+            title: L10n.tr("common.done"),
             style: .done,
             target: self,
             action: #selector(closeTapped)
@@ -109,7 +109,7 @@ private class HandlerDebugListViewController: UIViewController {
         }
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "执行测试",
+            title: L10n.tr("debug.panel.execute_test"),
             style: .plain,
             target: self,
             action: #selector(performOneClickTest)
@@ -130,7 +130,7 @@ private class HandlerDebugListViewController: UIViewController {
     }
 
     @objc private func performOneClickTest() {
-        let alert = UIAlertController(title: "执行测试", message: "选择要执行的 Handler 测试", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: L10n.tr("debug.panel.execute_test"), message: "Select Handler test", preferredStyle: .actionSheet)
 
         for (_, handlers) in categories {
             for handler in handlers {
@@ -144,7 +144,7 @@ private class HandlerDebugListViewController: UIViewController {
             }
         }
 
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
         present(alert, animated: true)
     }
 

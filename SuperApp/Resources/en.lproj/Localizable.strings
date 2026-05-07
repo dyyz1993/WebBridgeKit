@@ -1,0 +1,252 @@
+// Tab Bar
+"tab.home" = "Home";
+"tab.inbox" = "Inbox";
+"tab.discover" = "Discover";
+"tab.settings" = "Settings";
+
+// Home - Main
+"home.title" = "Home";
+"home.token_card.push_token" = "Push Token";
+"home.token_card.not_registered" = "Push service not registered";
+"home.token_card.register" = "Register";
+"home.token_card.copied_title" = "Copied";
+"home.token_card.copied_message" = "Push URL copied to clipboard";
+"home.token_card.registering_title" = "Registering";
+"home.token_card.registering_message" = "Registering for push notifications...";
+"home.quick_action.scan" = "Scan";
+"home.quick_action.paste" = "Paste";
+"home.quick_action.token" = "Token";
+"home.quick_action.debug" = "Debug";
+"home.empty.title" = "Start Your Fast Experience";
+"home.empty.description" = "Scan QR code or enter URL for offline loading";
+"home.scanner.tip" = "Place the QR code in the frame to scan automatically";
+"home.command.banner_format" = "Command detected, tap to open \"%@\"";
+"home.action_sheet.domain" = "Domain";
+"home.action_sheet.cache_size" = "Cache Size";
+"home.action_sheet.visit_count_format" = "Visits: %@ times";
+"home.action_sheet.open" = "Open";
+"home.action_sheet.unpin" = "Unpin";
+"home.action_sheet.pin" = "Pin";
+"home.action_sheet.favorite" = "Favorite";
+"home.action_sheet.favorited_title" = "Success";
+"home.action_sheet.favorited_message" = "Added to favorites";
+"home.action_sheet.clear_cache" = "Clear Cache";
+"home.action_sheet.cancel" = "Cancel";
+"home.action_sheet.unknown" = "Unknown";
+"home.manifest.loading" = "Parsing Manifest...";
+"home.manifest.success_title" = "Parse Success";
+"home.manifest.success_message_format" = "App found: %@\nAdded to cache queue";
+"home.alert.protocol_error" = "Protocol Error";
+"home.alert.protocol_error_message" = "Cannot parse custom protocol: %@";
+"home.alert.invalid_content" = "Invalid Content";
+"home.alert.invalid_content_message" = "Cannot recognize scanned content: %@";
+"home.command.success_title" = "Command Parsed";
+"home.command.not_found_message_format" = "App %@ not found in local cache";
+"home.device_token.not_registered" = "Not Registered";
+"home.section.frequently_used" = "Frequently Used";
+"home.section.my_favorites" = "My Favorites";
+"home.section.recent_visits" = "Recent Visits";
+"home.test_cases_entry" = "🧪 Automated Test Cases";
+
+// Inbox
+"inbox.title" = "Inbox";
+"inbox.search.placeholder" = "Search Messages";
+"inbox.filter.all" = "All";
+"inbox.filter.unread" = "Unread";
+"inbox.filter.today" = "Today";
+"inbox.empty.title" = "No Messages";
+"inbox.empty.description" = "Push messages will appear here";
+"inbox.swipe.delete" = "Delete";
+"inbox.group.unread_format" = "%@ unread";
+"inbox.group.ungrouped" = "Ungrouped";
+"inbox.test.title" = "Test Notification";
+"inbox.test.body_format" = "This is a test message, sent at %@";
+"inbox.test.group" = "Test Messages";
+
+// Discover
+"discover.title" = "Discover";
+"discover.empty.title" = "Discover Apps";
+"discover.empty.description" = "Cached apps will appear here";
+"discover.section.recent" = "Recently Used";
+"discover.section.cached" = "Cached Apps";
+"discover.badge.persistent" = "Persistent";
+"discover.badge.offline" = "Offline";
+"discover.badge.needs_update" = "Update";
+"discover.badge.not_cached" = "Not Cached";
+"discover.action_sheet.cache" = "Cache";
+"discover.action_sheet.visit" = "Visit";
+"discover.action_sheet.open" = "Open";
+"discover.action_sheet.delete_cache" = "Delete Cache";
+"discover.action_sheet.share" = "Share";
+"discover.action_sheet.cancel" = "Cancel";
+
+// Settings
+"settings.title" = "Settings";
+"settings.section.server" = "Server";
+"settings.section.notification" = "Notifications";
+"settings.section.cache" = "Cache";
+"settings.section.developer" = "Developer";
+"settings.section.about" = "About";
+"settings.server.config" = "Server Configuration";
+"settings.key.manage" = "API Key Management";
+"settings.notification.settings" = "Notification Settings";
+"settings.token.manage" = "Token Management";
+"settings.cache.manage" = "Cache Management";
+"settings.cache.clear" = "Clear Cache";
+"settings.debug.panel" = "Debug Panel";
+"settings.debug.ui" = "UI Debug";
+"settings.about" = "About";
+"settings.version" = "Version Info";
+"settings.clear_cache.title" = "Clear Cache";
+"settings.clear_cache.message" = "Are you sure you want to clear all cached resources?";
+"settings.clear_cache.confirm" = "Clear";
+
+// Message Detail
+"message.detail.title" = "Message Detail";
+"message.detail.received_time" = "Received";
+"message.detail.source" = "Source";
+"message.detail.group" = "Group";
+"message.detail.read_time" = "Read Time";
+"message.detail.copy_content" = "Copy Content";
+"message.detail.open_link" = "Open Link";
+"message.detail.open_app" = "Open App";
+"message.detail.delete" = "Delete";
+"message.detail.confirm_delete_title" = "Confirm Delete";
+"message.detail.confirm_delete_message" = "Are you sure you want to delete this message?";
+"message.detail.copied" = "Copied to clipboard";
+
+// Token Management
+"token.manage.title" = "Token Management";
+"token.manage.push_url" = "Push URL";
+"token.manage.qr_code" = "QR Code";
+"token.manage.device_token" = "Device Token";
+"token.manage.statistics" = "Statistics";
+"token.manage.copy" = "Copy";
+"token.manage.share" = "Share";
+"token.manage.not_registered" = "Not Registered";
+"token.manage.copied_title" = "Copied";
+"token.manage.copied_message" = "Push URL copied to clipboard";
+"token.manage.stats_format" = "Total: %@\nReceived: %@\nSent: %@\nFailed: %@";
+
+// Debug Panel
+"debug.panel.title" = "Debug Panel";
+"debug.panel.handlers" = "Handlers";
+"debug.panel.notification_test" = "Notification Test";
+"debug.panel.logs" = "Logs";
+"debug.panel.environment" = "Environment";
+"debug.panel.done" = "Done";
+"debug.panel.execute_test" = "Run Tests";
+
+// About
+"about.title" = "About";
+"about.section.introduction" = "Introduction";
+"about.section.features" = "Features";
+"about.section.license" = "License";
+"about.section.feedback" = "Feedback";
+"about.introduction" = "WebBridgeKit is a powerful iOS WebView caching browser framework, providing developers with a complete WebView cache management solution.";
+"about.feature.cache" = "URL Cache Management";
+"about.feature.favorite" = "Favorites Management";
+"about.feature.token" = "Token Sharing";
+"about.feature.api_key" = "API Key Management";
+"about.feedback.github" = "GitHub Issues";
+"about.feedback.email" = "Send Email";
+"about.version_format" = "Version %@ (%@)";
+"about.version_default" = "Version 1.0 (1)";
+"about.close" = "Close";
+
+// Common
+"common.copy" = "Copy";
+"common.share" = "Share";
+"common.delete" = "Delete";
+"common.cancel" = "Cancel";
+"common.confirm" = "Confirm";
+"common.close" = "Close";
+"common.save" = "Save";
+"common.done" = "Done";
+"common.ok" = "OK";
+"common.open" = "Open";
+"common.loading" = "Loading...";
+"common.error" = "Error";
+"common.success" = "Success";
+"common.unknown" = "Unknown";
+
+// Models
+"model.api_key.permanent" = "Permanent";
+"model.api_key.expired" = "Expired";
+"model.api_key.expires_minutes_format" = "Expires in %@ minutes";
+"model.api_key.expires_hours_format" = "Expires in %@ hours";
+"model.api_key.expires_days_format" = "Expires in %@ days";
+"model.access_token.expired" = "Expired";
+"model.access_token.days_hours_format" = "%@d %@h";
+"model.access_token.hours_minutes_format" = "%@h %@m";
+"model.access_token.minutes_format" = "%@m";
+
+// Token Generate
+"token.generate.select_url_error" = "Please select a URL first";
+"token.generate.failure" = "Token generation failed, please retry";
+
+// Web Access
+"web_access.cache_count_format" = "%@ resources";
+"web_access.not_cached" = "Not Cached";
+"web_access.cannot_cache" = "Cannot cache this page";
+"web_access.cache_failure_format" = "Cache failed: %@";
+"web_access.auto_cache_failure_format" = "Auto-cache failed: %@";
+
+// Favorite
+"favorite.section.pinned" = "Pinned";
+"favorite.section.normal" = "Favorites";
+
+// Notification Debug
+"notif_debug.title" = "Debug Panel";
+"notif_debug.section.content" = "Content";
+"notif_debug.section.behavior" = "Behavior";
+"notif_debug.section.visual" = "Visual";
+"notif_debug.section.action" = "Actions";
+"notif_debug.section.advanced" = "Advanced";
+"notif_debug.section.send" = "Send";
+"notif_debug.section.response" = "Response";
+"notif_debug.section.template" = "Templates";
+"notif_debug.field.title" = "Title";
+"notif_debug.field.subtitle" = "Subtitle";
+"notif_debug.field.body" = "Body";
+"notif_debug.field.interruption_level" = "Interruption Level";
+"notif_debug.field.volume" = "Volume";
+"notif_debug.field.sound" = "Sound";
+"notif_debug.field.phone_mode" = "Phone Mode";
+"notif_debug.field.badge" = "Badge";
+"notif_debug.field.image" = "Image";
+"notif_debug.field.url" = "Jump URL";
+"notif_debug.field.group" = "Group";
+"notif_debug.field.auto_copy" = "Auto Copy";
+"notif_debug.field.archive" = "Archive";
+"notif_debug.field.notif_id" = "Notification ID";
+"notif_debug.field.badge_number" = "Badge Number";
+"notif_debug.field.method" = "Method";
+"notif_debug.button.send" = "Send";
+"notif_debug.button.done" = "Done";
+"notif_debug.waiting" = "Waiting to send...";
+"notif_debug.sending" = "Sending...";
+"notif_debug.error_no_key" = "Error: Bark Key not configured\nPlease configure in Settings";
+"notif_debug.error_no_title" = "Error: Title cannot be empty";
+"notif_debug.error_url_failed" = "Error: URL build failed";
+"notif_debug.error_request_failed_format" = "Request failed (%@s)\n\nError: %@";
+"notif_debug.success_format" = "Success (%@s)\nStatus: %@\n\n%@";
+"notif_debug.empty_response" = "(empty)";
+"notif_debug.template.simple" = "Simple Notification";
+"notif_debug.template.test_title" = "Test Notification";
+"notif_debug.template.test_body" = "This is a test notification";
+"notif_debug.template.image" = "Image Notification";
+"notif_debug.template.image_title" = "Image Notification";
+"notif_debug.template.image_body" = "View Image";
+"notif_debug.template.urgent" = "Urgent Notification";
+"notif_debug.template.urgent_title" = "Urgent Notification";
+"notif_debug.template.urgent_body" = "Please check immediately!";
+"notif_debug.template.link" = "Link Notification";
+"notif_debug.template.link_title" = "Link";
+"notif_debug.template.link_body" = "Tap to open";
+"notif_debug.template.encrypted" = "Encrypted Notification";
+"notif_debug.template.encrypted_title" = "Encrypted Notification";
+
+// WebView Display
+"webview.close" = "✕ Close";
+"webview.render_label" = "📱 WebView Render Preview";

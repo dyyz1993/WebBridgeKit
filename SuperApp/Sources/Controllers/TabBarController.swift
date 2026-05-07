@@ -100,25 +100,25 @@ class TabBarController: UITabBarController {
         let settingsVC = createSettingsViewController()
 
         mainVC.tabBarItem = UITabBarItem(
-            title: "首页",
+            title: L10n.tr("tab.home"),
             image: UIImage(systemName: "house"),
             selectedImage: LucideIcon.home.image(pointSize: 20)
         )
 
         inboxVC.tabBarItem = UITabBarItem(
-            title: "收信箱",
+            title: L10n.tr("tab.inbox"),
             image: UIImage(systemName: "tray"),
             selectedImage: LucideIcon.inbox.image(pointSize: 20)
         )
 
         discoverVC.tabBarItem = UITabBarItem(
-            title: "发现",
+            title: L10n.tr("tab.discover"),
             image: UIImage(systemName: "compass"),
             selectedImage: LucideIcon.compass.image(pointSize: 20)
         )
 
         settingsVC.tabBarItem = UITabBarItem(
-            title: "设置",
+            title: L10n.tr("tab.settings"),
             image: UIImage(systemName: "gearshape"),
             selectedImage: LucideIcon.settings.image(pointSize: 20)
         )

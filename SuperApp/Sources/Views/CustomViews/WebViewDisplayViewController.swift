@@ -9,6 +9,7 @@
 import UIKit
 import SnapKit
 import WebKit
+import WebBridgeKit
 
 /// 全屏 WebView 展示控制器
 /// 用于展示已加载内容的 WebView，提供全屏浏览体验
@@ -21,7 +22,7 @@ public class WebViewDisplayViewController: UIViewController {
 
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("✕ 关闭", for: .normal)
+        button.setTitle(L10n.tr("webview.close"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         button.backgroundColor = UIColor.systemBackground
         button.layer.cornerRadius = 20
@@ -36,7 +37,7 @@ public class WebViewDisplayViewController: UIViewController {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "📱 WebView 实际渲染效果"
+        label.text = L10n.tr("webview.render_label")
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textColor = .white
         label.backgroundColor = UIColor.black.withAlphaComponent(0.7)

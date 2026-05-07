@@ -75,7 +75,7 @@ class MessageDetailViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "消息详情"
+        title = L10n.tr("message.detail.title")
         view.backgroundColor = ThemeColors.current.background
         setupUI()
         configure()
@@ -114,23 +114,23 @@ class MessageDetailViewController: UIViewController {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
-        addMetaRow(label: "接收时间", value: formatter.string(from: message.receivedAt))
-        addMetaRow(label: "来源", value: message.payload.channel)
+        addMetaRow(label: L10n.tr("message.detail.received_time"), value: formatter.string(from: message.receivedAt))
+        addMetaRow(label: L10n.tr("message.detail.source"), value: message.payload.channel)
         if let group = message.payload.group {
-            addMetaRow(label: "分组", value: group)
+            addMetaRow(label: L10n.tr("message.detail.group"), value: group)
         }
         if message.isRead, let readAt = message.readAt {
-            addMetaRow(label: "已读时间", value: formatter.string(from: readAt))
+            addMetaRow(label: L10n.tr("message.detail.read_time"), value: formatter.string(from: readAt))
         }
 
-        addAction(title: "复制内容", icon: .copy) { [weak self] in
+        addAction(title: L10n.tr("message.detail.copy_content"), icon: .copy) { [weak self] in
             guard let self = self else { return }
             UIPasteboard.general.string = self.message.payload.body
-            HUDService.shared.showSuccess(withStatus: "已复制到剪贴板")
+            HUDService.shared.showSuccess(withStatus: L10n.tr("message.detail.copied"))
         }
 
         if let urlString = message.payload.targetURL, let url = URL(string: urlString) {
-            addAction(title: "打开链接", icon: .link) { [weak self] in
+            addAction(title: L10n.tr("message.detail.open_link"), icon: .link) { [weak self] in
                 guard let self = self else { return }
                 WebBrowserManager.shared.openBrowser(
                     url: url,
@@ -141,7 +141,7 @@ class MessageDetailViewController: UIViewController {
         }
 
         if let appId = message.payload.targetAppId {
-            addAction(title: "打开应用", icon: .appBadge) { [weak self] in
+            addAction(title: L10n.tr("message.detail.open_app"), icon: .appBadge) { [weak self] in
                 guard let self = self else { return }
                 if let result = ManifestStore.shared.getManifestByAppId(appId),
                    let url = URL(string: result.key) {
@@ -154,11 +154,11 @@ class MessageDetailViewController: UIViewController {
             }
         }
 
-        addAction(title: "删除", icon: .trash, isDestructive: true) { [weak self] in
+        addAction(title: L10n.tr("common.delete"), icon: .trash, isDestructive: true) { [weak self] in
             guard let self = self else { return }
-            let alert = UIAlertController(title: "确认删除", message: "确定要删除这条消息吗？", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-            alert.addAction(UIAlertAction(title: "删除", style: .destructive) { _ in
+            let alert = UIAlertController(title: L10n.tr("message.detail.confirm_delete_title"), message: L10n.tr("message.detail.confirm_delete_message"), preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+            alert.addAction(UIAlertAction(title: L10n.tr("common.delete"), style: .destructive) { _ in
                 Task {
                     await MessageEngine.shared.deleteMessage(id: self.message.id)
                     self.navigationController?.popViewController(animated: true)
@@ -224,7 +224,7 @@ class MessageDetailViewController: UIViewController {
 
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 }

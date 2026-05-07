@@ -39,7 +39,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
 
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("复制", for: .normal)
+        button.setTitle(L10n.tr("common.copy"), for: .normal)
         button.setImage(LucideIcon.copy.image(pointSize: 16), for: .normal)
         button.backgroundColor = ThemeColors.current.primary
         button.setTitleColor(.white, for: .normal)
@@ -51,7 +51,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
 
     private let shareButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("分享", for: .normal)
+        button.setTitle(L10n.tr("common.share"), for: .normal)
         button.setImage(LucideIcon.share.image(pointSize: 16), for: .normal)
         button.backgroundColor = .systemGray
         button.setTitleColor(.white, for: .normal)
@@ -105,7 +105,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "口令管理"
+        title = L10n.tr("token.manage.title")
         setupUI()
         updateData()
     }
@@ -134,7 +134,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     private func setupPushURLCard() {
-        let header = TokenManageViewController.makeCardHeader("推送地址")
+        let header = TokenManageViewController.makeCardHeader(L10n.tr("token.manage.push_url"))
         let buttonStack = UIStackView(arrangedSubviews: [copyButton, shareButton])
         buttonStack.axis = .horizontal
         buttonStack.spacing = 12
@@ -166,7 +166,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     private func setupQRCard() {
-        let header = TokenManageViewController.makeCardHeader("二维码")
+        let header = TokenManageViewController.makeCardHeader(L10n.tr("token.manage.qr_code"))
 
         qrCard.addSubview(header)
         qrCard.addSubview(qrImageView)
@@ -186,7 +186,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     private func setupTokenCard() {
-        let header = TokenManageViewController.makeCardHeader("设备 Token")
+        let header = TokenManageViewController.makeCardHeader(L10n.tr("token.manage.device_token"))
 
         tokenCard.addSubview(header)
         tokenCard.addSubview(tokenLabel)
@@ -205,7 +205,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     private func setupStatsCard() {
-        let header = TokenManageViewController.makeCardHeader("统计")
+        let header = TokenManageViewController.makeCardHeader(L10n.tr("token.manage.statistics"))
 
         statsCard.addSubview(header)
         statsCard.addSubview(statsLabel)
@@ -229,14 +229,14 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
         let pushURL = key.isEmpty ? server : "\(server)/\(key)"
 
         pushURLLabel.text = pushURL
-        tokenLabel.text = PushNotificationManager.shared.deviceToken ?? "未注册"
+        tokenLabel.text = PushNotificationManager.shared.deviceToken ?? L10n.tr("token.manage.not_registered")
         qrImageView.image = generateQRCode(from: pushURL)
 
         Task {
             let stats = await MessageEngine.shared.getStatistics()
             let total = stats.totalReceived + stats.totalSent
             await MainActor.run {
-                self.statsLabel.text = "总消息数: \(total)\n已接收: \(stats.totalReceived)\n已发送: \(stats.totalSent)\n失败: \(stats.totalFailed)"
+                self.statsLabel.text = L10n.tr("token.manage.stats_format", "\(total)", "\(stats.totalReceived)", "\(stats.totalSent)", "\(stats.totalFailed)")
             }
         }
     }
@@ -258,8 +258,8 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
         let pushURL = key.isEmpty ? server : "\(server)/\(key)"
         UIPasteboard.general.string = pushURL
 
-        let alert = UIAlertController(title: "已复制", message: "推送地址已复制到剪贴板", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let alert = UIAlertController(title: L10n.tr("token.manage.copied_title"), message: L10n.tr("token.manage.copied_message"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 

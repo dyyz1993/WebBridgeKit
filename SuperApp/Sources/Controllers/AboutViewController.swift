@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 关于视图控制器
 class AboutViewController: UIViewController {
@@ -84,23 +85,23 @@ class AboutViewController: UIViewController {
 
         var title: String? {
             switch self {
-            case .introduction: return "项目简介"
-            case .features: return "功能列表"
-            case .license: return "开源协议"
-            case .feedback: return "反馈"
+            case .introduction: return L10n.tr("about.section.introduction")
+            case .features: return L10n.tr("about.section.features")
+            case .license: return L10n.tr("about.section.license")
+            case .feedback: return L10n.tr("about.section.feedback")
             }
         }
 
         var items: [String] {
             switch self {
             case .introduction:
-                return ["WebBridgeKit 是一个功能强大的 iOS WebView 缓存浏览器框架，为开发者提供完整的 WebView 缓存管理解决方案。"]
+                return [L10n.tr("about.introduction")]
             case .features:
-                return ["URL 缓存管理", "收藏夹管理", "口令分享功能", "密钥管理"]
+                return [L10n.tr("about.feature.cache"), L10n.tr("about.feature.favorite"), L10n.tr("about.feature.token"), L10n.tr("about.feature.api_key")]
             case .license:
                 return ["MIT License"]
             case .feedback:
-                return ["GitHub Issues", "发送邮件"]
+                return [L10n.tr("about.feedback.github"), L10n.tr("about.feedback.email")]
             }
         }
     }
@@ -134,7 +135,7 @@ class AboutViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "关于"
+        title = L10n.tr("about.title")
         setupUI()
         loadAppInfo()
     }
@@ -206,9 +207,9 @@ class AboutViewController: UIViewController {
         // 加载版本号
         if let version = Bundle.main.version,
            let build = Bundle.main.build {
-            versionLabel.text = "版本 \(version) (\(build))"
+            versionLabel.text = L10n.tr("about.version_format", version, build)
         } else {
-            versionLabel.text = "版本 1.0 (1)"
+            versionLabel.text = L10n.tr("about.version_default")
         }
     }
 
@@ -240,7 +241,7 @@ class AboutViewController: UIViewController {
         let height: CGFloat = 400
         alert.setValue(height, forKey: "heightConstraintFactor")
 
-        alert.addAction(UIAlertAction(title: "关闭", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("about.close"), style: .default))
 
         // 使用 attributed string 来显示文本
         let paragraphStyle = NSMutableParagraphStyle()

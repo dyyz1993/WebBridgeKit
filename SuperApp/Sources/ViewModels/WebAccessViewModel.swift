@@ -46,7 +46,7 @@ class WebAccessViewModel: ViewModel {
     private let canCacheRelay = BehaviorRelay<Bool>(value: false)
     private let isCachedRelay = BehaviorRelay<Bool>(value: false)
     private let cacheProgressRelay = BehaviorRelay<Double>(value: 0)
-    private let cacheCountRelay = BehaviorRelay<String>(value: "0 个资源")
+    private let cacheCountRelay = BehaviorRelay<String>(value: L10n.tr("web_access.cache_count_format", "0"))
     private let showCacheResourcesRelay = PublishRelay<Void>()
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorMessageRelay = PublishRelay<String?>()
@@ -141,11 +141,11 @@ class WebAccessViewModel: ViewModel {
             if history.isCached {
                 // 已缓存，显示资源数量
                 let count = history.resourcePaths.count
-                cacheCountRelay.accept("\(count) 个资源")
+                cacheCountRelay.accept(L10n.tr("web_access.cache_count_format", "\(count)"))
                 canCacheRelay.accept(false)
             } else {
                 // 未缓存，可以缓存
-                cacheCountRelay.accept("未缓存")
+                cacheCountRelay.accept(L10n.tr("web_access.not_cached"))
                 canCacheRelay.accept(true)
             }
 
@@ -163,7 +163,7 @@ class WebAccessViewModel: ViewModel {
     private func handleCacheButtonTap() {
         guard let url = currentURL,
               let history = currentHistory else {
-            errorMessageRelay.accept("无法缓存该页面")
+            errorMessageRelay.accept(L10n.tr("web_access.cannot_cache"))
             return
         }
 
@@ -189,7 +189,7 @@ class WebAccessViewModel: ViewModel {
                     self?.isCachedRelay.accept(true)
                     self?.updateURLInfo(url: url)
                 case .failure(let error):
-                    self?.errorMessageRelay.accept("缓存失败: \(error.localizedDescription)")
+                    self?.errorMessageRelay.accept(L10n.tr("web_access.cache_failure_format", error.localizedDescription))
                     self?.canCacheRelay.accept(true)
                 }
             })
@@ -232,7 +232,7 @@ class WebAccessViewModel: ViewModel {
                 self?.updateURLInfo(url: url)
                 print("✅ Auto-cache completed for: \(url.absoluteString)")
             case .failure(let error):
-                self?.errorMessageRelay.accept("自动缓存失败: \(error.localizedDescription)")
+                self?.errorMessageRelay.accept(L10n.tr("web_access.auto_cache_failure_format", error.localizedDescription))
                 self?.canCacheRelay.accept(true)
                 print("❌ Auto-cache failed: \(error.localizedDescription)")
             }

@@ -62,7 +62,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private var deviceToken: String {
-        return PushNotificationManager.shared.deviceToken ?? "未注册"
+        return PushNotificationManager.shared.deviceToken ?? L10n.tr("home.device_token.not_registered")
     }
 
     private var isTokenRegistered: Bool {
@@ -70,10 +70,10 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private let quickActions: [(icon: String, title: String, color: UIColor)] = [
-        ("qrcode.viewfinder", "扫码", .systemBlue),
-        ("doc.on.clipboard", "粘贴", .systemOrange),
-        ("text.badge.star", "口令", .systemPurple),
-        ("ladybug", "调试", .systemGreen)
+        ("qrcode.viewfinder", L10n.tr("home.quick_action.scan"), .systemBlue),
+        ("doc.on.clipboard", L10n.tr("home.quick_action.paste"), .systemOrange),
+        ("text.badge.star", L10n.tr("home.quick_action.token"), .systemPurple),
+        ("ladybug", L10n.tr("home.quick_action.debug"), .systemGreen)
     ]
 
     private lazy var commandBanner: CommandBannerView = {
@@ -93,7 +93,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     override func viewDidLoad() {
         super.viewDidLoad()
         Log.debug("viewDidLoad called", category: .ui)
-        title = "首页"
+        title = L10n.tr("home.title")
         setupUI()
         setupGestures()
         setupNotifications()
@@ -137,10 +137,10 @@ class MainViewController: BaseViewController<MainViewModel> {
                 if let customUrl = URL(string: raw) {
                     handleCustomProtocol(customUrl)
                 } else {
-                    showAlert(title: "协议错误", message: "无法解析自定义协议内容: \(raw)")
+                    showAlert(title: L10n.tr("home.alert.protocol_error"), message: L10n.tr("home.alert.protocol_error_message", raw))
                 }
             } else {
-                showAlert(title: "无效内容", message: "无法识别扫描内容: \(raw)")
+                showAlert(title: L10n.tr("home.alert.invalid_content"), message: L10n.tr("home.alert.invalid_content_message", raw))
             }
         }
     }
@@ -162,13 +162,13 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func loadAndCacheManifest(_ url: URL) {
-        loadingView.startLoading(message: "正在解析 Manifest...")
+        loadingView.startLoading(message: L10n.tr("home.manifest.loading"))
         Task {
             do {
                 let manifest = try await PersistentManifestLoader.shared.fetchManifest(from: url)
                 await MainActor.run {
                     self.loadingView.stopLoading()
-                    self.showAlert(title: "解析成功", message: "发现应用: \(manifest.name ?? "未知")\n已加入缓存队列")
+                    self.showAlert(title: L10n.tr("home.manifest.success_title"), message: L10n.tr("home.manifest.success_message_format", manifest.name ?? L10n.tr("common.unknown")))
                     self.viewModel.refreshData()
                 }
             } catch {
@@ -256,7 +256,7 @@ class MainViewController: BaseViewController<MainViewModel> {
                         if let urlStr = payload.url, let url = URL(string: urlStr) {
                             WebBrowserManager.shared.openBrowser(url: url)
                         } else {
-                            showAlert(title: "口令解析成功", message: "应用 \(appid) 未找到本地缓存")
+                            showAlert(title: L10n.tr("home.command.success_title"), message: L10n.tr("home.command.not_found_message_format", appid))
                         }
                     case .url(let urlString):
                         if let url = URL(string: urlString) {
@@ -340,8 +340,8 @@ class MainViewController: BaseViewController<MainViewModel> {
 
         emptyStateView.configure(
             icon: "square.grid.2x2.fill",
-            title: "开启您的极速体验",
-            description: "扫描二维码或输入 URL 即可体验离线加载",
+            title: L10n.tr("home.empty.title"),
+            description: L10n.tr("home.empty.description"),
             actionTitle: nil
         )
     }
@@ -407,7 +407,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         let config = QRScannerViewController.Configuration(
             showScanRegionOverlay: true,
             showCloseButton: true,
-            tipText: "将二维码放入框内即可自动扫描",
+            tipText: L10n.tr("home.scanner.tip"),
             enableBase64Decoding: true,
             autoDismiss: true
         )
@@ -560,30 +560,30 @@ class MainViewController: BaseViewController<MainViewModel> {
         let alert = UIAlertController(
             title: history?.title ?? url.host ?? url.absoluteString,
             message: """
-                域名: \(url.host ?? "未知")
-                缓存大小: \(history?.formattedSize ?? "0 KB")
-                访问次数: \(history?.visitCount ?? 0) 次
+                \(L10n.tr("home.action_sheet.domain")): \(url.host ?? L10n.tr("common.unknown"))
+                \(L10n.tr("home.action_sheet.cache_size")): \(history?.formattedSize ?? "0 KB")
+                \(L10n.tr("home.action_sheet.visit_count_format", "\(history?.visitCount ?? 0)"))
                 """,
             preferredStyle: .actionSheet
         )
-        alert.addAction(UIAlertAction(title: "打开", style: .default, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("home.action_sheet.open"), style: .default, handler: { [weak self] _ in
             self?.openURL(url)
         }))
         let isPinned = viewModel.isPinned(url: url)
-        alert.addAction(UIAlertAction(title: isPinned ? "取消置顶" : "置顶", style: .default, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: isPinned ? L10n.tr("home.action_sheet.unpin") : L10n.tr("home.action_sheet.pin"), style: .default, handler: { [weak self] _ in
             self?.viewModel.togglePin(url: url)
             self?.viewModel.refreshData()
         }))
-        alert.addAction(UIAlertAction(title: "收藏", style: .default, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("home.action_sheet.favorite"), style: .default, handler: { [weak self] _ in
             self?.viewModel.addToFavorites(url: url)
-            self?.showAlert(title: "成功", message: "已添加到收藏")
+            self?.showAlert(title: L10n.tr("common.success"), message: L10n.tr("home.action_sheet.favorited_message"))
             self?.viewModel.refreshData()
         }))
-        alert.addAction(UIAlertAction(title: "清除缓存", style: .destructive, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("home.action_sheet.clear_cache"), style: .destructive, handler: { [weak self] _ in
             self?.viewModel.clearCache(url: url)
             self?.viewModel.refreshData()
         }))
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
         if let popoverController = alert.popoverPresentationController {
             popoverController.sourceView = self.view
             popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
@@ -594,7 +594,7 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
@@ -638,11 +638,11 @@ extension MainViewController: UICollectionViewDataSource {
                 let token = PushNotificationManager.shared.deviceToken ?? ""
                 let copyText = token.isEmpty ? self.pushURL : "\(self.pushURL)/\(token)"
                 UIPasteboard.general.string = copyText
-                self.showAlert(title: "已复制", message: "推送地址已复制到剪贴板")
+                self.showAlert(title: L10n.tr("home.token_card.copied_title"), message: L10n.tr("home.token_card.copied_message"))
             }
             cell.onRegisterTapped = { [weak self] in
                 PushNotificationManager.shared.registerForPushNotifications()
-                self?.showAlert(title: "注册中", message: "正在注册推送通知，请稍后...")
+                self?.showAlert(title: L10n.tr("home.token_card.registering_title"), message: L10n.tr("home.token_card.registering_message"))
             }
             return cell
         }
@@ -766,7 +766,7 @@ private class PushTokenCardCell: UICollectionViewCell {
 
     private let registerButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("注册", for: .normal)
+        button.setTitle(L10n.tr("home.token_card.register"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.tintColor = .white
         button.backgroundColor = UIColor.white.withAlphaComponent(0.25)
@@ -854,7 +854,7 @@ private class PushTokenCardCell: UICollectionViewCell {
             registerButton.isHidden = true
         } else {
             urlLabel.text = serverURL
-            tokenLabel.text = "尚未注册推送服务"
+            tokenLabel.text = L10n.tr("home.token_card.not_registered")
             copyButton.isHidden = true
             registerButton.isHidden = false
         }
@@ -1051,7 +1051,7 @@ private class CommandBannerView: UIView {
     }
 
     func configure(title: String) {
-        titleLabel.text = "检测到口令，点击打开「\(title)」"
+        titleLabel.text = L10n.tr("home.command.banner_format", title)
     }
 
     @objc private func bannerTapped() {

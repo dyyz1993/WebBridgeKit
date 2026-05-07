@@ -9,6 +9,7 @@
 import Foundation
 import RealmSwift
 import RxDataSources
+import WebBridgeKit
 
 /// 访问口令模型
 public class AccessToken: Object {
@@ -45,7 +46,7 @@ public class AccessToken: Object {
         let remaining = remainingSeconds
 
         if remaining == 0 {
-            return "已过期"
+            return L10n.tr("model.access_token.expired")
         }
 
         let days = remaining / 86400
@@ -53,11 +54,11 @@ public class AccessToken: Object {
         let minutes = (remaining % 3600) / 60
 
         if days > 0 {
-            return "\(days)天\(hours)小时"
+            return L10n.tr("model.access_token.days_hours_format", "\(days)", "\(hours)")
         } else if hours > 0 {
-            return "\(hours)小时\(minutes)分钟"
+            return L10n.tr("model.access_token.hours_minutes_format", "\(hours)", "\(minutes)")
         } else {
-            return "\(minutes)分钟"
+            return L10n.tr("model.access_token.minutes_format", "\(minutes)")
         }
     }
 

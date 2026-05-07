@@ -79,7 +79,7 @@ class TokenGenerateViewModel: ViewModel {
             .do(onNext: { [weak self] in
                 guard let self = self else { return }
                 guard let url = self.currentSelectedURL else {
-                    self.errorMessageRelay.accept("请先选择要生成口令的URL")
+                    self.errorMessageRelay.accept(L10n.tr("token.generate.select_url_error"))
                     return
                 }
 
@@ -95,7 +95,7 @@ class TokenGenerateViewModel: ViewModel {
                 if let token = self.tokenManager.generateToken(url: url, duration: durationInSeconds) {
                     self.generatedTokenRelay.accept(token.token)
                 } else {
-                    self.errorMessageRelay.accept("生成口令失败，请重试")
+                    self.errorMessageRelay.accept(L10n.tr("token.generate.failure"))
                 }
             })
             .drive()
