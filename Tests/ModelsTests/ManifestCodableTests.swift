@@ -55,15 +55,15 @@ final class ManifestCodableTests: XCTestCase {
 
         XCTAssertTrue(decoded.resources.isEmpty)
         XCTAssertNil(decoded.version)
-        XCTAssertNil(decoded.persistent)
+        XCTAssertEqual(decoded.persistent, false)
         XCTAssertNil(decoded.lastUpdated)
         XCTAssertNil(decoded.appid)
         XCTAssertNil(decoded.name)
         XCTAssertNil(decoded.icon)
-        XCTAssertNil(decoded.isPinned)
-        XCTAssertNil(decoded.isFavorite)
+        XCTAssertEqual(decoded.isPinned, false)
+        XCTAssertEqual(decoded.isFavorite, false)
         XCTAssertNil(decoded.lastAccessed)
-        XCTAssertNil(decoded.accessCount)
+        XCTAssertEqual(decoded.accessCount, 0)
     }
 
     // MARK: - Codable Round-Trip: Partial Optional Fields

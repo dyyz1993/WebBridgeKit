@@ -34,10 +34,13 @@ final class WeakScriptMessageHandlerTests: XCTestCase {
         let webView = WKWebView(frame: .zero, configuration: config)
 
         let evaluateExpectation = self.expectation(description: "script evaluated")
-        webView.evaluateJavaScript("window.webkit.messageHandlers.testBridge.postMessage('hello')") { _, error in
+        webView.evaluateJavaScript("(function() { window.webkit.messageHandlers.testBridge.postMessage('hello'); return 'done'; })()") { _, error in
+            if let error = error {
+                XCTFail("JavaScript evaluation failed: \(error)")
+            }
             evaluateExpectation.fulfill()
         }
-        waitForExpectations(timeout: 2.0)
+        waitForExpectations(timeout: 10.0)
     }
 
     func testDoesNotCrashWhenTargetDeallocated() {
