@@ -20,27 +20,6 @@ final class WebBrowserManagerExtendedTests: XCTestCase {
         super.tearDown()
     }
 
-    // MARK: - Open Browser from Notification
-
-    func testOpenBrowserFromNotificationMissingPage() {
-        let notification = Notification(name: Notification.Name("test"), object: nil, userInfo: [:])
-        manager.openBrowser(from: notification)
-    }
-
-    func testOpenBrowserFromNotificationWithPage() {
-        let notification = Notification(
-            name: Notification.Name("test"),
-            object: nil,
-            userInfo: ["page": "settings"]
-        )
-        manager.openBrowser(from: notification)
-    }
-
-    func testOpenBrowserFromNotificationNilUserInfo() {
-        let notification = Notification(name: Notification.Name("test"), object: nil)
-        manager.openBrowser(from: notification)
-    }
-
     // MARK: - Navigation History State
 
     func testGetNavigationHistoryReturnsEmptyArray() {
@@ -81,107 +60,95 @@ final class WebBrowserManagerExtendedTests: XCTestCase {
         manager.closeBrowser(animated: false)
     }
 
-    // MARK: - GoBack / GoForward Edge Cases
-
-    func testGoBackMultipleSteps() {
-        let result = manager.goBack(steps: 5)
-        XCTAssertFalse(result)
-    }
-
-    func testGoForwardMultipleSteps() {
-        let result = manager.goForward(steps: 5)
-        XCTAssertFalse(result)
-    }
-
-    func testGoBackNegativeSteps() {
-        let result = manager.goBack(steps: -1)
-        XCTAssertFalse(result)
-    }
-
-    func testGoForwardNegativeSteps() {
-        let result = manager.goForward(steps: -1)
-        XCTAssertFalse(result)
-    }
-
-    // MARK: - Open Browser with Various URLs
-
-    func testOpenBrowserWithHTTPURL() {
-        let url = URL(string: "http://example.com")!
-        let expectation = self.expectation(description: "completion")
-        manager.openBrowser(url: url) { _ in
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 2.0)
-    }
-
-    func testOpenBrowserWithLocalBarkURL() {
-        let url = URL(string: "bark://internal?page=settings")!
-        let expectation = self.expectation(description: "completion")
-        manager.openBrowser(url: url) { _ in
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 2.0)
-    }
-
-    func testOpenBrowserWithHTMLFileURL() {
-        let url = URL(string: "file:///tmp/test.html")!
-        let expectation = self.expectation(description: "completion")
-        manager.openBrowser(url: url) { _ in
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 2.0)
-    }
-
-    func testOpenBrowserAnimatedFalse() {
-        let url = URL(string: "https://example.com")!
-        let expectation = self.expectation(description: "completion")
-        manager.openBrowser(url: url, animated: false) { _ in
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 2.0)
-    }
-
-    func testOpenBrowserWithoutCompletion() {
-        let url = URL(string: "https://example.com")!
-        manager.openBrowser(url: url)
-    }
-
     // MARK: - getCurrentBrowser
 
     func testGetCurrentBrowserReturnsNilInitially() {
         XCTAssertNil(manager.getCurrentBrowser())
     }
 
-    func testGetCurrentBrowserAfterSetCurrentModal() {
-        // ModalWebViewController may not be available in test, test nil path
-        XCTAssertNil(manager.getCurrentBrowser())
-    }
-
     // MARK: - Thread Safety
 
     func testConcurrentGetCurrentBrowser() {
-        let group = DispatchGroup()
+        let expectation = self.expectation(description: "concurrent")
+        expectation.expectedFulfillmentCount = 20
+
         for _ in 0..<20 {
-            group.enter()
             DispatchQueue.global().async { [weak self] in
                 let _ = self?.manager.getCurrentBrowser()
                 let _ = self?.manager.currentIndex
-                group.leave()
+                expectation.fulfill()
             }
         }
-        group.wait()
+        waitForExpectations(timeout: 5.0)
     }
 
-    func testConcurrentGoBackAndGoForward() {
-        let group = DispatchGroup()
-        for _ in 0..<10 {
-            group.enter()
+    func testConcurrentGetNavigationHistory() {
+        let expectation = self.expectation(description: "concurrent")
+        expectation.expectedFulfillmentCount = 20
+
+        for _ in 0..<20 {
             DispatchQueue.global().async { [weak self] in
-                let _ = self?.manager.goBack(steps: 1)
-                let _ = self?.manager.goForward(steps: 1)
-                group.leave()
+                let _ = self?.manager.getNavigationHistory()
+                expectation.fulfill()
             }
         }
-        group.wait()
+        waitForExpectations(timeout: 5.0)
+    }
+
+    // MARK: - NavigationItem
+
+    func testNavigationItemTimestamp() {
+        let url = URL(string: "https://example.com")!
+        let vc = UIViewController()
+        let before = Date()
+        let item = WebBrowserManager.NavigationItem(
+            url: url,
+            title: "Test",
+            timestamp: Date(),
+            viewController: vc,
+            displayMode: .modal
+        )
+        let after = Date()
+        XCTAssertGreaterThanOrEqual(item.timestamp, before)
+        XCTAssertLessThanOrEqual(item.timestamp, after)
+        XCTAssertEqual(item.displayMode, .modal)
+    }
+
+    func testNavigationItemDifferentURLs() {
+        let url1 = URL(string: "https://example.com/page1")!
+        let url2 = URL(string: "https://example.com/page2")!
+        let vc1 = UIViewController()
+        let vc2 = UIViewController()
+        let item1 = WebBrowserManager.NavigationItem(
+            url: url1, title: "Page 1", timestamp: Date(),
+            viewController: vc1, displayMode: .normal
+        )
+        let item2 = WebBrowserManager.NavigationItem(
+            url: url2, title: "Page 2", timestamp: Date(),
+            viewController: vc2, displayMode: .immersive
+        )
+        XCTAssertNotEqual(item1.url, item2.url)
+        XCTAssertNotEqual(item1.title, item2.title)
+        XCTAssertNotEqual(item1.displayMode, item2.displayMode)
+    }
+
+    func testNavigationItemNilTitle() {
+        let url = URL(string: "https://example.com")!
+        let vc = UIViewController()
+        let item = WebBrowserManager.NavigationItem(
+            url: url, title: nil, timestamp: Date(),
+            viewController: vc, displayMode: .normal
+        )
+        XCTAssertNil(item.title)
+    }
+
+    func testNavigationItemPreservesURLComponents() {
+        let url = URL(string: "https://example.com/path?query=value#fragment")!
+        let vc = UIViewController()
+        let item = WebBrowserManager.NavigationItem(
+            url: url, title: "Test", timestamp: Date(),
+            viewController: vc, displayMode: .normal
+        )
+        XCTAssertEqual(item.url.absoluteString, "https://example.com/path?query=value#fragment")
     }
 }

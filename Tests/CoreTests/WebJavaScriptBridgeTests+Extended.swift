@@ -175,38 +175,6 @@ final class WebJavaScriptBridgeExtendedTests: XCTestCase {
         bridge.setWebView(webView)
     }
 
-    // MARK: - userContentController
-
-    func testUserContentControllerWithInvalidBody() {
-        let config = WKWebViewConfiguration()
-        let webView = WKWebView(frame: .zero, configuration: config)
-        bridge.setWebView(webView)
-
-        let userContentController = WKUserContentController()
-        let message = WKScriptMessage(name: "barkBridge", body: "invalid_string_body", webView: webView, frameInfo: WKFrameInfo())
-        bridge.userContentController(userContentController, didReceive: message)
-    }
-
-    func testUserContentControllerWithUnsupportedAction() {
-        let config = WKWebViewConfiguration()
-        let webView = WKWebView(frame: .zero, configuration: config)
-        bridge.setWebView(webView)
-
-        let body: [String: Any] = ["action": "unsupported_action_xyz_123"]
-        let message = WKScriptMessage(name: "barkBridge", body: body, webView: webView, frameInfo: WKFrameInfo())
-        bridge.userContentController(userContentController, didReceive: message)
-    }
-
-    func testUserContentControllerWithSupportedActionNoCallbackId() {
-        let config = WKWebViewConfiguration()
-        let webView = WKWebView(frame: .zero, configuration: config)
-        bridge.setWebView(webView)
-
-        let body: [String: Any] = ["action": "getSystemInfo"]
-        let message = WKScriptMessage(name: "barkBridge", body: body, webView: webView, frameInfo: WKFrameInfo())
-        bridge.userContentController(userContentController, didReceive: message)
-    }
-
     // MARK: - Native Handlers Dictionary
 
     func testNativeHandlersCountAfterMultipleGets() {

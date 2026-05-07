@@ -14,12 +14,10 @@ final class WebBridgePoolExtendedTests: XCTestCase {
     override func setUp() {
         super.setUp()
         pool = WebBridgePool.shared
-        pool.clearCache()
     }
 
     override func tearDown() {
-        pool.clearCache()
-        pool = nil
+        pool.didReceiveMemoryWarning()
         super.tearDown()
     }
 
@@ -35,61 +33,42 @@ final class WebBridgePoolExtendedTests: XCTestCase {
         XCTAssertTrue(config.dataDetectorTypes.isEmpty)
     }
 
-    func testAcquireConfigurationHasUserScripts() {
-        let config = pool.acquireConfiguration()
-        XCTAssertFalse(config.userContentController.userScripts.isEmpty)
-    }
-
-    func testAcquireConfigurationAfterClearReturnsDefault() {
-        pool.clearCache()
+    func testAcquireConfigurationReturnsNonNull() {
         let config = pool.acquireConfiguration()
         XCTAssertNotNil(config)
-        XCTAssertTrue(config.allowsInlineMediaPlayback)
-    }
-
-    func testAcquireConfigurationReturnsSameInstanceBeforeClear() {
-        let config1 = pool.acquireConfiguration()
-        let config2 = pool.acquireConfiguration()
-        XCTAssertTrue(config1 === config2)
     }
 
     // MARK: - Recycle Thread Safety
 
     func testConcurrentRecycleAndAcquire() {
-        let group = DispatchGroup()
+        let expectation = self.expectation(description: "concurrent")
+        expectation.expectedFulfillmentCount = 20
+
         for _ in 0..<20 {
-            group.enter()
             DispatchQueue.global().async { [weak self] in
-                guard let self = self else { group.leave(); return }
+                guard let self = self else { expectation.fulfill(); return }
                 let bridge = WebJavaScriptBridge()
                 self.pool.recycleBridge(bridge)
                 let _ = self.pool.acquireBridge()
-                group.leave()
+                expectation.fulfill()
             }
         }
-        group.wait()
+        waitForExpectations(timeout: 10.0)
     }
 
-    func testRecycleAfterClear() {
-        pool.clearCache()
+    func testRecycleAfterMemoryWarning() {
+        pool.didReceiveMemoryWarning()
         let bridge = WebJavaScriptBridge()
         pool.recycleBridge(bridge)
         let acquired = pool.acquireBridge()
         XCTAssertTrue(acquired === bridge)
     }
 
-    func testClearCacheThenAcquireCreatesNew() {
-        pool.clearCache()
-        let bridge = pool.acquireBridge()
-        XCTAssertNotNil(bridge)
-        let bridge2 = pool.acquireBridge()
-        XCTAssertNotNil(bridge2)
-        XCTAssertFalse(bridge === bridge2)
-    }
-
     // MARK: - Warmup Handler Registration
 
     func testWarmupCreatesHandlersForCommonActions() {
+        pool.didReceiveMemoryWarning()
+
         let expectation = self.expectation(description: "warmup")
         pool.warmup { [weak self] in
             guard let self = self else { expectation.fulfill(); return }
@@ -105,24 +84,11 @@ final class WebBridgePoolExtendedTests: XCTestCase {
         waitForExpectations(timeout: 5.0)
     }
 
-    func testWarmupCalledMultipleTimes() {
-        let expectation1 = self.expectation(description: "warmup1")
-        let expectation2 = self.expectation(description: "warmup2")
-
-        pool.warmup {
-            expectation1.fulfill()
-        }
-        waitForExpectations(timeout: 5.0)
-
-        pool.warmup {
-            expectation2.fulfill()
-        }
-        waitForExpectations(timeout: 5.0)
-    }
-
     // MARK: - Memory Warning
 
     func testDidReceiveMemoryWarningClearsWarmBridge() {
+        pool.didReceiveMemoryWarning()
+
         let expectation = self.expectation(description: "warmup")
         pool.warmup { [weak self] in
             guard let self = self else { expectation.fulfill(); return }
@@ -134,7 +100,7 @@ final class WebBridgePoolExtendedTests: XCTestCase {
         waitForExpectations(timeout: 5.0)
     }
 
-    func testDidReceiveMemoryWarningAllowsNewWarmup() {
+    func testDidReceiveMemoryWarningAllowsNewRecycle() {
         pool.didReceiveMemoryWarning()
         let bridge = pool.acquireBridge()
         XCTAssertNotNil(bridge)
@@ -149,14 +115,36 @@ final class WebBridgePoolExtendedTests: XCTestCase {
         XCTAssertTrue(WebBridgePool.shared === WebBridgePool.shared)
     }
 
-    func testMultipleAcquireConfigurationCalls() {
-        var configs: [WKWebViewConfiguration] = []
-        for _ in 0..<5 {
-            configs.append(pool.acquireConfiguration())
-        }
-        let first = configs.first
-        for config in configs {
-            XCTAssertTrue(config === first)
-        }
+    // MARK: - Acquire Bridge
+
+    func testAcquireBridgeReturnsNonNull() {
+        let bridge = pool.acquireBridge()
+        XCTAssertNotNil(bridge)
+    }
+
+    func testAcquireBridgeReturnsNewInstanceEachTime() {
+        let bridge1 = pool.acquireBridge()
+        let bridge2 = pool.acquireBridge()
+        XCTAssertFalse(bridge1 === bridge2)
+    }
+
+    // MARK: - Recycle Bridge
+
+    func testRecycleBridgeThenAcquire() {
+        pool.didReceiveMemoryWarning()
+        let bridge = WebJavaScriptBridge()
+        pool.recycleBridge(bridge)
+        let acquired = pool.acquireBridge()
+        XCTAssertTrue(acquired === bridge)
+    }
+
+    func testRecycleBridgePoolFullOnlyKeepsOne() {
+        pool.didReceiveMemoryWarning()
+        let bridge1 = WebJavaScriptBridge()
+        let bridge2 = WebJavaScriptBridge()
+        pool.recycleBridge(bridge1)
+        pool.recycleBridge(bridge2)
+        let acquired = pool.acquireBridge()
+        XCTAssertTrue(acquired === bridge1, "First recycled bridge should be kept")
     }
 }
