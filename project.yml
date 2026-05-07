@@ -611,6 +611,15 @@ schemes:
       config: Release
 
   ThemeTests:
+    build:
+      targets:
+        ThemeTests: all
+    test:
+      config: Debug
+      targets:
+        - ThemeTests
+      coverageTargets:
+        - WebBridgeKit
 
   Skills:
     build:
