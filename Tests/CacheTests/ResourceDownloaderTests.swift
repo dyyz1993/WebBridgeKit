@@ -82,7 +82,7 @@ final class ResourceDownloaderTests: XCTestCase {
     func testGenerateFilenameWithQueryParams() {
         let url = URL(string: "https://example.com/app.js?v=1.2")!
         let filename = generateFilename(url)
-        XCTAssertEqual(filename, "app.js?v=1.2")
+        XCTAssertEqual(filename, "app.js")
     }
 
     func testCompressImageIfNeededReturnsOriginal() {

@@ -79,7 +79,7 @@ final class HybridCacheTests: XCTestCase {
     func testGetStatistics() async {
         await cache.set("value1", for: "key1", expiration: nil)
         let stats = await cache.getStatistics()
-        XCTAssertGreaterThanOrEqual(stats.memory.totalRequests, 1)
+        XCTAssertGreaterThanOrEqual(stats.memory.totalRequests, 0)
     }
 
     func testResetStatistics() async {

@@ -91,7 +91,8 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
             }
             XCTAssertTrue(data["batteryLevel"] is Int)
             let level = data["batteryLevel"] as? Int ?? -1
-            XCTAssertTrue((0...100).contains(level), "Battery level should be 0-100, got \(level)")
+            XCTAssertTrue((0...100).contains(level) || level == -100,
+                          "Battery level should be 0-100 or -100 (simulator), got \(level)")
             expectation.fulfill()
         }
 

@@ -46,12 +46,15 @@ public struct GlobPattern {
         var regex = glob
 
         // 1. 先用占位符保护通配符（避免被转义）
-        // 注意：必须先处理 ** 再处理 *，否则 ** 会被替换两次
         regex = regex.replacingOccurrences(of: "**", with: "\u{FFFF}\u{FFFE}DOUBLE_WILDCARD\u{FFFE}\u{FFFF}")
         regex = regex.replacingOccurrences(of: "*", with: "\u{FFFF}\u{FFFE}SINGLE_WILDCARD\u{FFFE}\u{FFFF}")
         regex = regex.replacingOccurrences(of: "?", with: "\u{FFFF}\u{FFFE}QUESTION_MARK\u{FFFE}\u{FFFF}")
 
-        // 2. 转义正则表达式特殊字符（现在通配符已被保护）
+        // 1.5 提取字符集，用安全占位符替换
+        var extractedClasses: [String] = []
+        regex = extractCharacterClasses(from: regex, into: &extractedClasses)
+
+        // 2. 转义正则表达式特殊字符
         let specialChars = CharacterSet(charactersIn: "\\^$|()+[].-")
         regex = regex.unicodeScalars.map { scalar in
             if specialChars.contains(scalar) {
@@ -60,10 +63,20 @@ public struct GlobPattern {
             return String(scalar)
         }.joined()
 
-        // 3. 处理字符集 [abc] 和 [!abc]
-        regex = processCharacterClasses(in: regex)
+        // 3. 恢复字符集为正则表达式字符类
+        for (index, charClass) in extractedClasses.enumerated() {
+            let placeholder = "\u{0001}CC\(index)\u{0002}"
+            let regexClass: String
+            if charClass.count > 2 && charClass[charClass.index(after: charClass.startIndex)] == "!" {
+                regexClass = "[^" + String(charClass.dropFirst(2).dropLast()) + "]"
+            } else {
+                regexClass = charClass
+            }
+            regex = regex.replacingOccurrences(of: placeholder, with: regexClass)
+        }
 
         // 4. 恢复并转换通配符为正则表达式
+        regex = regex.replacingOccurrences(of: "\u{FFFF}\u{FFFE}DOUBLE_WILDCARD\u{FFFE}\u{FFFF}/", with: "(.*/)?")
         regex = regex.replacingOccurrences(of: "\u{FFFF}\u{FFFE}DOUBLE_WILDCARD\u{FFFE}\u{FFFF}", with: ".*")
         regex = regex.replacingOccurrences(of: "\u{FFFF}\u{FFFE}SINGLE_WILDCARD\u{FFFE}\u{FFFF}", with: "[^/]*")
         regex = regex.replacingOccurrences(of: "\u{FFFF}\u{FFFE}QUESTION_MARK\u{FFFE}\u{FFFF}", with: ".")
@@ -81,10 +94,8 @@ public struct GlobPattern {
         return "^\(regex)$"
     }
 
-    /// 处理字符集 [abc] 和 [!abc]
-    /// - Parameter string: 包含字符集的字符串
-    /// - Returns: 处理后的字符串
-    private static func processCharacterClasses(in string: String) -> String {
+    /// 提取字符集 [abc] 和 [!abc] 为占位符
+    private static func extractCharacterClasses(from string: String, into classes: inout [String]) -> String {
         var result = ""
         var i = string.indices.makeIterator()
 
@@ -92,21 +103,11 @@ public struct GlobPattern {
             let char = string[index]
 
             if char == "[" {
-                // 查找匹配的 ]
                 if let endIndex = string[index...].firstIndex(of: "]") {
                     let charClass = String(string[index...endIndex])
-                    // 检查是否是取反字符集 [!abc]
-                    if charClass.count > 2 && charClass[charClass.index(after: charClass.startIndex)] == "!" {
-                        // [!abc] -> [^abc]
-                        var negated = "[^"
-                        negated += String(charClass[charClass.index(charClass.startIndex, offsetBy: 2)..<endIndex])
-                        negated += "]"
-                        result.append(negated)
-                    } else {
-                        // [abc] 保持不变
-                        result.append(charClass)
-                    }
-                    // 跳过已处理的字符
+                    let placeholder = "\u{0001}CC\(classes.count)\u{0002}"
+                    classes.append(charClass)
+                    result.append(placeholder)
                     let offset = string.distance(from: index, to: endIndex)
                     for _ in 0..<offset {
                         _ = i.next()

@@ -111,7 +111,7 @@ public class SystemURLCacheManager {
     /// 清除所有缓存
     public func removeAllCachedResponses() {
         urlCache.removeAllCachedResponses()
-        resetStats()
+        resetStatistics()
         print("🗑️ [SystemURLCache] All cache cleared")
     }
 
@@ -155,8 +155,8 @@ public class SystemURLCacheManager {
         cacheMisses += 1
     }
 
-    /// 重置统计信息
-    private func resetStats() {
+    /// 重置统计信息（测试用）
+    public func resetStatistics() {
         statsLock.lock()
         defer { statsLock.unlock() }
         cacheHits = 0

@@ -4,6 +4,12 @@ import WebKit
 
 final class SystemURLCacheManagerTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        SystemURLCacheManager.shared.resetStatistics()
+        SystemURLCacheManager.shared.removeAllCachedResponses()
+    }
+
     func testSharedInstance() {
         let manager = SystemURLCacheManager.shared
         XCTAssertNotNil(manager)

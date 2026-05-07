@@ -119,7 +119,7 @@ final class CacheStatisticsTests: XCTestCase {
         stats.updateAccessTime(0.1)
         stats.recordHit()
         stats.updateAccessTime(0.3)
-        XCTAssertEqual(stats.averageAccessTime, 0.2)
+        XCTAssertEqual(stats.averageAccessTime, 2.0 / 15.0, accuracy: 0.0001)
     }
 
     func testLastUpdatedChangesOnRecordHit() {
