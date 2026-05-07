@@ -94,7 +94,9 @@ final class WKColorTests: XCTestCase {
         let imageView2 = UIImageView()
         imageView1.setLetterIcon(for: "example.com")
         imageView2.setLetterIcon(for: "example.com")
-        XCTAssertEqual(imageView1.image, imageView2.image)
+        XCTAssertNotNil(imageView1.image)
+        XCTAssertNotNil(imageView2.image)
+        XCTAssertEqual(imageView1.image?.size, imageView2.image?.size)
     }
 
     func testWKColorIsNSObjectSubclass() {

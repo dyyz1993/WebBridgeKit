@@ -231,21 +231,20 @@ final class WebBrowserManagerTests: XCTestCase {
 
     func testConcurrentAccessDoesNotCrash() {
         let url = URL(string: "https://example.com")!
-        let group = DispatchGroup()
+        let expectation = self.expectation(description: "concurrent")
+        expectation.expectedFulfillmentCount = 10
 
-        for i in 0..<10 {
-            group.enter()
+        for _ in 0..<10 {
             DispatchQueue.global().async { [weak self] in
                 _ = self?.manager.getNavigationHistory()
                 _ = self?.manager.getCurrentBrowser()
                 _ = self?.manager.currentIndex
                 self?.manager.openBrowser(url: url) { _ in
-                    group.leave()
+                    expectation.fulfill()
                 }
             }
         }
 
-        let result = waitForExpectations(timeout: 5.0)
-        group.wait()
+        waitForExpectations(timeout: 5.0)
     }
 }

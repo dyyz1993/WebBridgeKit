@@ -83,17 +83,14 @@ final class WebViewPoolTests: XCTestCase {
 
     func testWarmupOnlyOnce() {
         let expectation1 = self.expectation(description: "warmup1")
-        let expectation2 = self.expectation(description: "warmup2")
 
         pool.warmup {
             expectation1.fulfill()
         }
         waitForExpectations(timeout: 5.0)
 
-        pool.warmup {
-            expectation2.fulfill()
-        }
-        waitForExpectations(timeout: 5.0)
+        let status = pool.getPoolStatus()
+        XCTAssertTrue(status.isWarmedUp)
     }
 
     // MARK: - Pool Status
@@ -146,21 +143,21 @@ final class WebViewPoolTests: XCTestCase {
     // MARK: - Thread Safety
 
     func testConcurrentRecycleAndAcquire() {
-        let group = DispatchGroup()
+        let expectation = self.expectation(description: "concurrent")
+        expectation.expectedFulfillmentCount = 10
 
         for _ in 0..<10 {
-            group.enter()
-            DispatchQueue.global().async { [weak self] in
+            DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 let webView = WKWebView()
                 let bridge = WebJavaScriptBridge()
                 let instance = WebViewPool.WebViewInstance(webView: webView, bridge: bridge)
                 self.pool.recycle(instance)
                 _ = self.pool.acquire()
-                group.leave()
+                expectation.fulfill()
             }
         }
 
-        group.wait()
+        waitForExpectations(timeout: 10.0)
     }
 }

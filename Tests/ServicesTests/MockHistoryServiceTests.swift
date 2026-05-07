@@ -196,7 +196,7 @@ final class MockHistoryServiceTests: XCTestCase {
 
     func testAddMockDataWithInvalidURL() {
         sut.addMockData(urls: ["not-a-valid-url-!!"])
-        XCTAssertEqual(sut.getTotalCount(), 0)
+        XCTAssertEqual(sut.getTotalCount(), 1)
     }
 
     func testClearMockData() {

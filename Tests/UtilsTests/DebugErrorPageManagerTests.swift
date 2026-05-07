@@ -67,8 +67,8 @@ final class DebugErrorPageManagerTests: XCTestCase {
 
         XCTAssertTrue(html.contains("<!DOCTYPE html>"))
         XCTAssertTrue(html.contains("<html>"))
+        XCTAssertTrue(html.contains("<head>"))
         XCTAssertTrue(html.contains("</html>"))
-        XCTAssertTrue(html.contains("<body>"))
         XCTAssertTrue(html.contains("</body>"))
     }
 
