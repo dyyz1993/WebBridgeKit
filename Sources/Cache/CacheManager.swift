@@ -23,11 +23,44 @@ public actor CacheManager {
             hitRate: 0.0,
             totalCacheSize: 0
         )
+        
+        WebBridgeLogger.shared.info("CacheManager: Attempting persistent cache initialization...")
+        
         do {
             self.diskCache = try DiskCache(directoryName: "CacheManager", configuration: .persistent)
+            WebBridgeLogger.shared.info("CacheManager: Persistent cache initialized successfully")
         } catch {
-            WebBridgeLogger.shared.error("Failed to initialize CacheManager: \(error)")
-            self.diskCache = try! DiskCache(directoryName: "CacheManager", configuration: .default)
+            WebBridgeLogger.shared.warning("CacheManager: Failed to initialize persistent cache: \(error)")
+            
+            WebBridgeLogger.shared.info("CacheManager: Attempting default cache initialization...")
+            do {
+                self.diskCache = try DiskCache(directoryName: "CacheManager", configuration: .default)
+                WebBridgeLogger.shared.info("CacheManager: Default cache initialized successfully")
+            } catch {
+                WebBridgeLogger.shared.error("CacheManager: Failed to initialize default cache: \(error)")
+                
+                WebBridgeLogger.shared.info("CacheManager: Attempting minimal fallback cache...")
+                do {
+                    let minimalConfig = CacheConfiguration(
+                        expirationPolicy: .minutes(5),
+                        evictionPolicy: .leastRecentlyUsed,
+                        maxSize: 100,
+                        enableCompression: false
+                    )
+                    
+                    self.diskCache = try DiskCache(directoryName: "CacheManager_Fallback", configuration: minimalConfig)
+                    WebBridgeLogger.shared.warning("CacheManager: Minimal fallback cache initialized (limited capacity)")
+                } catch {
+                    let errorMessage = """
+                    CacheManager: Failed to initialize disk cache after all attempts.
+                    Persistent error: \(error)
+                    
+                    The application cannot function without a working disk cache.
+                    Please check file system permissions and available disk space.
+                    """
+                    fatalError(errorMessage)
+                }
+            }
         }
     }
 
