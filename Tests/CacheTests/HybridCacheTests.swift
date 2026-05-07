@@ -61,15 +61,19 @@ final class HybridCacheTests: XCTestCase {
         await cache.set("a", for: "k1", expiration: nil)
         await cache.set("b", for: "k2", expiration: nil)
         await cache.set("c", for: "k3", expiration: nil)
-        XCTAssertEqual(await cache.get(for: "k1"), "a")
-        XCTAssertEqual(await cache.get(for: "k2"), "b")
-        XCTAssertEqual(await cache.get(for: "k3"), "c")
+        let v1 = await cache.get(for: "k1")
+        let v2 = await cache.get(for: "k2")
+        let v3 = await cache.get(for: "k3")
+        XCTAssertEqual(v1, "a")
+        XCTAssertEqual(v2, "b")
+        XCTAssertEqual(v3, "c")
     }
 
     func testOverwriteValue() async {
         await cache.set("old", for: "key1", expiration: nil)
         await cache.set("new", for: "key1", expiration: nil)
-        XCTAssertEqual(await cache.get(for: "key1"), "new")
+        let updated = await cache.get(for: "key1")
+        XCTAssertEqual(updated, "new")
     }
 
     func testGetStatistics() async {

@@ -5,12 +5,12 @@ final class ResourceDownloaderTests: XCTestCase {
 
     func testDownloadErrorInvalidResponse() {
         let error = ResourceDownloader.DownloadError.invalidResponse
-        XCTAssertEqual(error as Error, ResourceDownloader.DownloadError.invalidResponse)
+        XCTAssertEqual(error, ResourceDownloader.DownloadError.invalidResponse)
     }
 
     func testDownloadErrorInvalidEncoding() {
         let error = ResourceDownloader.DownloadError.invalidEncoding
-        XCTAssertEqual(error as Error, ResourceDownloader.DownloadError.invalidEncoding)
+        XCTAssertEqual(error, ResourceDownloader.DownloadError.invalidEncoding)
     }
 
     func testDownloadErrorEquality() {
