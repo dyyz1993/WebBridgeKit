@@ -174,13 +174,6 @@ jobs:
         with:
           device-type: 'iPhone 16 Pro'
 
-      - name: Start Test Server
-        run: |
-          cd test-server/lazy-test
-          python3 -m http.server 8080 &
-          sleep 2
-          curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
-
       - name: Run Smoke Tests
         env:
           CI: "true"
@@ -250,13 +243,6 @@ jobs:
         uses: ./.github/actions/setup-sim
         with:
           device-type: 'iPhone 16 Pro'
-
-      - name: Start Test Server
-        run: |
-          cd test-server/lazy-test
-          python3 -m http.server 8080 &
-          sleep 2
-          curl -s http://localhost:8080/manifest.json > /dev/null && echo "Server started OK" || echo "Server failed"
 
       - name: Run Core Tests (Parallel)
         run: |
