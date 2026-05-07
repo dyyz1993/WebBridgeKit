@@ -237,7 +237,8 @@ extension WebResourceURLSchemeHandler {
     public static var defaultCacheDirectory: URL {
         let cachePaths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
         guard let cachePath = cachePaths.first else {
-            fatalError("Unable to determine cache directory")
+            WebBridgeLogger.shared.error("Unable to determine cache directory, falling back to tmp")
+            return FileManager.default.temporaryDirectory.appendingPathComponent("WebBridgeKit", isDirectory: true)
         }
         return cachePath.appendingPathComponent("WebBridgeKit", isDirectory: true)
     }

@@ -1,146 +1,167 @@
 import XCTest
 @testable import Skills
 
-final class SkillRegistryTests: XCTestCase {
-    
-    var registry: SkillRegistry!
-    
+final class AgentSchemaTests: XCTestCase {
+
+    var schema: AgentSchema!
+
     override func setUp() async throws {
         try await super.setUp()
-        registry = SkillRegistry()
+        schema = AgentSchema()
     }
-    
+
     // MARK: - Registration
-    
-    func testRegisterSkill() async {
-        let skill = Skill(name: "test", description: "Test skill", execute: { _ in .success })
-        await registry.register(skill)
-        
-        let retrieved = await registry.get(skill.id)
+
+    func testBuiltinCapabilitiesLoaded() async {
+        let capabilities = await schema.getFullSchema()
+        XCTAssertFalse(capabilities.isEmpty)
+    }
+
+    func testRegisterCapability() async {
+        let capability = AgentSchema.FrameworkCapability(
+            name: "test",
+            category: "test",
+            description: "Test capability",
+            debuggingMethods: ["method1"],
+            commonIssues: [],
+            apiEndpoints: []
+        )
+        await schema.register(capability)
+
+        let retrieved = await schema.get("test")
         XCTAssertNotNil(retrieved)
         XCTAssertEqual(retrieved?.name, "test")
+        XCTAssertEqual(retrieved?.category, "test")
     }
-    
-    func testUnregisterSkill() async {
-        let skill = Skill(name: "test", description: "Test skill", execute: { _ in .success })
-        await registry.register(skill)
-        await registry.unregister(skill.id)
-        
-        let retrieved = await registry.get(skill.id)
+
+    func testUnregisterCapability() async {
+        let capability = AgentSchema.FrameworkCapability(
+            name: "remove_me",
+            category: "test",
+            description: "To be removed",
+            debuggingMethods: [],
+            commonIssues: [],
+            apiEndpoints: []
+        )
+        await schema.register(capability)
+        await schema.unregister("remove_me")
+
+        let retrieved = await schema.get("remove_me")
         XCTAssertNil(retrieved)
     }
-    
-    // MARK: - Listing
-    
-    func testListAll() async {
-        let skill1 = Skill(name: "alpha", description: "First", execute: { _ in .success })
-        let skill2 = Skill(name: "beta", description: "Second", execute: { _ in .success })
-        
-        await registry.register(skill1)
-        await registry.register(skill2)
-        
-        let skills = await registry.listAll()
-        XCTAssertEqual(skills.count, 2)
-        // Should be sorted by name
-        XCTAssertEqual(skills[0].name, "alpha")
-        XCTAssertEqual(skills[1].name, "beta")
-    }
-    
-    func testListByCategory() async {
-        let navSkill = Skill(name: "nav", description: "Nav", category: .navigation, execute: { _ in .success })
-        let mediaSkill = Skill(name: "media", description: "Media", category: .media, execute: { _ in .success })
-        
-        await registry.register(navSkill)
-        await registry.register(mediaSkill)
-        
-        let navSkills = await registry.listByCategory(.navigation)
-        XCTAssertEqual(navSkills.count, 1)
-        XCTAssertEqual(navSkills[0].name, "nav")
-    }
-    
-    // MARK: - Execution
-    
-    func testExecuteSkill() async throws {
-        let skill = Skill(
-            name: "echo",
-            description: "Echo",
-            execute: { context in
-                .success(data: context.parameters["message"] ?? "")
-            }
+
+    // MARK: - Query by Category
+
+    func testGetCapabilitiesByCategory() async {
+        let cap1 = AgentSchema.FrameworkCapability(
+            name: "cap_a",
+            category: "core",
+            description: "Core A",
+            debuggingMethods: [],
+            commonIssues: [],
+            apiEndpoints: []
         )
-        
-        await registry.register(skill)
-        
-        let result = try await registry.execute(skill.id, context: SkillContext(parameters: ["message": "hello"]))
-        
-        switch result {
-        case .success(let data):
-            XCTAssertEqual(data as? String, "hello")
-        default:
-            XCTFail("Expected success result")
-        }
+        let cap2 = AgentSchema.FrameworkCapability(
+            name: "cap_b",
+            category: "debug",
+            description: "Debug B",
+            debuggingMethods: [],
+            commonIssues: [],
+            apiEndpoints: []
+        )
+
+        await schema.register(cap1)
+        await schema.register(cap2)
+
+        let coreCaps = await schema.getCapabilities(category: "core")
+        XCTAssertTrue(coreCaps.contains { $0.name == "cap_a" })
+        XCTAssertFalse(coreCaps.contains { $0.name == "cap_b" })
     }
-    
-    func testExecuteNonExistentSkill() async {
-        do {
-            _ = try await registry.execute("nonexistent", context: SkillContext())
-            XCTFail("Should throw error")
-        } catch let error as SkillError {
-            if case .notFound(let skillId) = error {
-                XCTAssertEqual(skillId, "nonexistent")
-            } else {
-                XCTFail("Wrong error type")
-            }
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+
+    // MARK: - Troubleshooting
+
+    func testGetTroubleshootingGuide() async {
+        let capability = AgentSchema.FrameworkCapability(
+            name: "troubleshoot_test",
+            category: "test",
+            description: "Test",
+            debuggingMethods: [],
+            commonIssues: [
+                AgentSchema.IssueSolution(
+                    symptom: "JS 调用不响应",
+                    cause: "Handler 未注册",
+                    solution: "检查 list_handlers"
+                ),
+                AgentSchema.IssueSolution(
+                    symptom: "缓存命中率低",
+                    cause: "容量过小",
+                    solution: "调整配置"
+                )
+            ],
+            apiEndpoints: []
+        )
+        await schema.register(capability)
+
+        let results = await schema.getTroubleshootingGuide(issue: "不响应")
+        XCTAssertFalse(results.isEmpty)
+        XCTAssertTrue(results.any { $0.symptom.contains("不响应") })
     }
-    
-    func testExecuteDisabledSkill() async throws {
-        let skill = Skill(name: "disabled", description: "Disabled", isEnabled: false, execute: { _ in .success })
-        
-        await registry.register(skill)
-        
-        do {
-            _ = try await registry.execute(skill.id, context: SkillContext())
-            XCTFail("Should throw error")
-        } catch let error as SkillError {
-            if case .disabled(let skillId) = error {
-                XCTAssertEqual(skillId, skill.id)
-            }
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+
+    // MARK: - API Guide
+
+    func testGetAPIGuide() async {
+        let guide = await schema.getAPIGuide()
+        XCTAssertFalse(guide.isEmpty)
+
+        let healthEndpoint = guide.first { $0.path == "/health" }
+        XCTAssertNotNil(healthEndpoint)
+        XCTAssertEqual(healthEndpoint?.method, "GET")
     }
-    
-    // MARK: - Enable/Disable
-    
-    func testEnableDisable() async {
-        let skill = Skill(name: "test", description: "Test", execute: { _ in .success })
-        
-        await registry.register(skill)
-        await registry.disable(skill.id)
-        
-        var retrieved = await registry.get(skill.id)
-        XCTAssertFalse(retrieved!.isEnabled)
-        
-        await registry.enable(skill.id)
-        retrieved = await registry.get(skill.id)
-        XCTAssertTrue(retrieved!.isEnabled)
+
+    // MARK: - Builtin Skills
+
+    func testBuiltinSkillsCount() async {
+        XCTAssertEqual(BuiltinSkills.all.count, 3)
     }
-    
-    // MARK: - Built-in Skills
-    
-    func testBuiltinSkillsCount() {
-        XCTAssertEqual(BuiltinSkills.all.count, 5)
+
+    func testBuiltinSkillsContainExpectedCapabilities() {
+        let names = Set(BuiltinSkills.all.map { $0.name })
+        XCTAssertTrue(names.contains("Bridge"))
+        XCTAssertTrue(names.contains("Cache"))
+        XCTAssertTrue(names.contains("Message"))
     }
-    
-    func testBuiltinSkillsCategories() {
-        let categories = Set(BuiltinSkills.all.map { $0.category })
-        XCTAssertTrue(categories.contains(.navigation))
-        XCTAssertTrue(categories.contains(.communication))
-        XCTAssertTrue(categories.contains(.media))
-        XCTAssertTrue(categories.contains(.device))
-        XCTAssertTrue(categories.contains(.data))
+
+    // MARK: - Codable Conformance
+
+    func testFrameworkCapabilityCodable() throws {
+        let capability = AgentSchema.FrameworkCapability(
+            name: "codable_test",
+            category: "test",
+            description: "Codable test",
+            debuggingMethods: ["method1", "method2"],
+            commonIssues: [
+                AgentSchema.IssueSolution(symptom: "s1", cause: "c1", solution: "sol1")
+            ],
+            apiEndpoints: [
+                AgentSchema.APIEndpoint(method: "GET", path: "/test", description: "Test endpoint", parameters: ["key": "value"])
+            ]
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(capability)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(AgentSchema.FrameworkCapability.self, from: data)
+
+        XCTAssertEqual(decoded.name, "codable_test")
+        XCTAssertEqual(decoded.debuggingMethods.count, 2)
+        XCTAssertEqual(decoded.commonIssues.count, 1)
+        XCTAssertEqual(decoded.apiEndpoints.count, 1)
+    }
+}
+
+private extension Array {
+    func any(_ predicate: (Element) throws -> Bool) -> Bool {
+        (try? contains(where: predicate)) ?? false
     }
 }

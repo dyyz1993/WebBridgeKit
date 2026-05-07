@@ -14,19 +14,20 @@ public actor CacheManager {
     public private(set) var globalStatistics: SystemCacheStatistics
 
     private init() {
+        self.memoryCache = MemoryCache<String, Data>(configuration: .default)
+        self.configuration = .default
+        self.globalStatistics = SystemCacheStatistics(
+            totalRequests: 0,
+            cacheHits: 0,
+            cacheMisses: 0,
+            hitRate: 0.0,
+            totalCacheSize: 0
+        )
         do {
-            self.memoryCache = MemoryCache<String, Data>(configuration: .default)
             self.diskCache = try DiskCache(directoryName: "CacheManager", configuration: .persistent)
-            self.configuration = .default
-            self.globalStatistics = SystemCacheStatistics(
-                totalRequests: 0,
-                cacheHits: 0,
-                cacheMisses: 0,
-                hitRate: 0.0,
-                totalCacheSize: 0
-            )
         } catch {
-            fatalError("Failed to initialize CacheManager: \(error)")
+            WebBridgeLogger.shared.error("Failed to initialize CacheManager: \(error)")
+            self.diskCache = try! DiskCache(directoryName: "CacheManager", configuration: .default)
         }
     }
 

@@ -55,7 +55,7 @@ public class PageCacheRuleManager {
                 return realm
             } catch {
                 WebBridgeLogger.shared.error("Failed to create Realm after cleanup: \(error.localizedDescription)")
-                fatalError("Failed to initialize Realm: \(error.localizedDescription)")
+                return try! Realm(configuration: Realm.Configuration())
             }
         }
     }

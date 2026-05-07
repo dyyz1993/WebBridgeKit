@@ -94,6 +94,10 @@ final class SuperAppSmokeTests: XCTestCase {
     // MARK: - Home Screen
 
     func testHomeScreenHasCollectionView() {
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
+        tabBar.buttons["首页"].tap()
+
         let collectionView = app.collectionViews["MainCollectionView"]
         let emptyState = app.otherElements["EmptyStateView"]
         let collectionViewExists = collectionView.waitForExistence(timeout: 5)

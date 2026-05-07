@@ -460,6 +460,24 @@ targets:
     dependencies:
       - target: WebBridgeKit
 
+  ThemeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - Tests/ThemeTests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.ThemeTests
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
 schemes:
   WebBridgeKit:
     build:
@@ -583,8 +601,16 @@ schemes:
     build:
       targets:
         Theme: all
+    test:
+      config: Debug
+      targets:
+        - ThemeTests
+      coverageTargets:
+        - WebBridgeKit
     archive:
       config: Release
+
+  ThemeTests:
 
   Skills:
     build:
