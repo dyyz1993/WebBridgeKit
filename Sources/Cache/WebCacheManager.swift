@@ -481,12 +481,10 @@ public extension URL {
     /// SHA256 哈希值（用作缓存键）
     var sha256: String {
         let str = self.absoluteString
-        guard !str.isEmpty, let data = str.data(using: .utf8), !data.isEmpty else {
-            return String(str.hashValue)
-        }
+        let data = Data(str.utf8)
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-        data.withUnsafeBytes {
-            _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash)
+        data.withUnsafeBytes { buffer in
+            _ = CC_SHA256(buffer.baseAddress, CC_LONG(buffer.count), &hash)
         }
         return hash.map { String(format: "%02x", $0) }.joined()
     }
