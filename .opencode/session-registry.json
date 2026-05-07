@@ -159,5 +159,26 @@
     "parentID": "ses_1fe594a52ffeLLhHjTXRQLYBf1",
     "status": "running",
     "createdAt": 1778144445944
+  },
+  "task-test-cachedebug-handler": {
+    "id": "ses_1fe0f7826ffeDUUYxAZHcrk64Y",
+    "name": "task-test-cachedebug-handler",
+    "parentID": "ses_1fe145fb1ffe8mOVFEZIgBFezC",
+    "status": "running",
+    "createdAt": 1778149001179
+  },
+  "task-test-gesture-handler": {
+    "id": "ses_1fe134e3fffe5LIjowBOLISdgY",
+    "name": "task-test-gesture-handler",
+    "parentID": "ses_20182a8bcffezXkEF1Q7rsVOtY",
+    "status": "running",
+    "createdAt": 1778148749761
+  },
+  "task-test-permission-manager": {
+    "id": "ses_1fe1308a1ffd52AnLt03JELfKX",
+    "name": "task-test-permission-manager",
+    "parentID": "ses_20182a8bcffezXkEF1Q7rsVOtY",
+    "status": "running",
+    "createdAt": 1778148767583
   }
 }

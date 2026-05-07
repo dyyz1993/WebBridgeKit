@@ -429,8 +429,7 @@ jobs:
 
       - name: Start Test Server
         run: |
-          cd test-server/lazy-test 2>/dev/null || mkdir -p test-server/lazy-test
-          cd test-server/lazy-test
+          mkdir -p test-server/lazy-test && cd test-server/lazy-test
           python3 -m http.server 8080 &
           sleep 2
           curl -s http://localhost:8080/ > /dev/null && echo "Server started" || echo "No server dir, tests may skip"
