@@ -124,5 +124,40 @@
     "parentID": "main",
     "status": "running",
     "createdAt": 1778137332856
+  },
+  "task-split-mainvc": {
+    "id": "ses_1fe55084effepATrdcAbWD33Yp",
+    "name": "task-split-mainvc",
+    "parentID": "ses_1fe594a52ffeLLhHjTXRQLYBf1",
+    "status": "running",
+    "createdAt": 1778144442291
+  },
+  "task-split-debugpanel": {
+    "id": "ses_1fe5504bcffeIdd3dkiUz8yH87",
+    "name": "task-split-debugpanel",
+    "parentID": "ses_1fe594a52ffeLLhHjTXRQLYBf1",
+    "status": "running",
+    "createdAt": 1778144443204
+  },
+  "task-split-camera": {
+    "id": "ses_1fe550161ffezskJnsrgmoiyrd",
+    "name": "task-split-camera",
+    "parentID": "ses_1fe594a52ffeLLhHjTXRQLYBf1",
+    "status": "running",
+    "createdAt": 1778144444064
+  },
+  "task-split-webvc": {
+    "id": "ses_1fe54fdefffeJbr1YowvDgKjRQ",
+    "name": "task-split-webvc",
+    "parentID": "ses_1fe594a52ffeLLhHjTXRQLYBf1",
+    "status": "running",
+    "createdAt": 1778144444944
+  },
+  "task-split-cachedebug-handler": {
+    "id": "ses_1fe54fa08ffeS22W3RPnPnRnoA",
+    "name": "task-split-cachedebug-handler",
+    "parentID": "ses_1fe594a52ffeLLhHjTXRQLYBf1",
+    "status": "running",
+    "createdAt": 1778144445944
   }
 }
