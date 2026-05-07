@@ -621,3 +621,219 @@ SuperApp（待开发 Phase 8）
 | `fcb491d` | feat(ui): polish all pages with real data binding |
 | `9df233b` | docs: add SuperApp UI screenshots |
 | `071af92` | feat: add Debug Panel with Handler testing + shake-to-debug |
+
+## 模块审计清单（Module Audit Checklist）
+
+### 图例
+- ✅ = 完整覆盖（测试 + 功能完整）
+- 🟡 = 部分覆盖（核心功能有测试，部分子模块缺失）
+- ❌ = 未测试（无测试文件）
+- 🔴 = 未实现（功能缺失）
+
+### 底层框架模块（Sources/）
+
+#### ✅ Bridge（4 文件 / 49 API）
+- [x] HandlerRegistry — 注册/查询/批量/分类/文档生成
+- [x] HandlerMeta — 元数据/参数/返回值定义
+- [x] BridgeError — 8 种错误类型/描述/建议
+- [x] HandlerMetaRegistry — 自动注册所有 handler
+- **测试**: BridgeCoreTests (37 tests) ✅ 全覆盖
+
+#### 🟡 Core（6 文件 / 79 API）
+- [x] WebBrowserParams — 显示模式/模态配置/URL解析
+- [x] WebJavaScriptBridge — JS桥接/消息处理
+- [ ] WebBrowserManager — 打开/关闭/导航历史 ❌ 未测试
+- [ ] WebBridgePool — 预热/获取/回收 ❌ 未测试
+- [ ] WebViewPool — WebView 复用池 ❌ 未测试
+- [ ] WebViewPerformanceMonitor — 性能监控 ❌ 未测试
+- **测试**: WebBrowserParamsTests (21) + WebJavaScriptBridgeTests (10) — 2/6 文件覆盖
+
+#### 🟡 Cache（26 文件 / 380+ API）
+- [x] CacheManager — 统一缓存管理器
+- [x] MemoryCache — 内存缓存/LRU/LFU
+- [x] DiskCache — 磁盘缓存/过期/容量淘汰
+- [x] CacheKeyGenerator — 命名空间/版本化 key
+- [x] GlobPattern — 通配符匹配
+- [x] PageCacheRuleManager — 缓存规则管理
+- [x] ManifestStore — Manifest 存储
+- [ ] HybridCache — 混合缓存 ❌ 未直接测试
+- [ ] CacheURLSchemeHandler — URL 拦截 ❌ 未直接测试
+- [ ] ManifestCacheManager — Manifest 缓存 ❌ 未直接测试
+- [ ] WebResourceCacheManager — 资源缓存 ❌ 未直接测试
+- [ ] WebPageOfflineCacheManager — 离线缓存 ❌ 未直接测试
+- [ ] HTMLResourceParser — HTML 解析 ❌ 未直接测试
+- [ ] ResourceDownloader — 资源下载 ❌ 未直接测试
+- [ ] ManifestDownloader — Manifest 下载 ❌ 未直接测试
+- [ ] WebCacheManager — Web 缓存管理 ❌ 未直接测试
+- [ ] WebCompressedCacheStore — 压缩缓存 ❌ 未直接测试
+- [ ] CacheRuleManager — 缓存规则匹配 ❌ 未直接测试
+- [ ] URLRuleMatcher — URL 规则匹配 ❌ 未直接测试
+- [ ] WebPageHistoryManager — 浏览历史 ❌ 未直接测试
+- [ ] WebPageThumbnailGenerator — 缩略图 ❌ 未直接测试
+- [ ] SystemURLCacheManager — 系统 URL 缓存 ❌ 未直接测试
+- **测试**: CacheManagerTests(10) + DiskCacheTests(10) + MemoryCacheTests(11) + KeyGenTests(10) — 4/26 文件覆盖
+
+#### 🟡 Message（10 文件 / 206 API）
+- [x] MessageEngine — 核心 actor（收发/路由/统计）
+- [x] MessagePayload — 消息模型/优先级/路由检测
+- [x] InMemoryMessageStore — 内存存储
+- [x] MessageRouter — appId/URL/deeplink 路由
+- [ ] BarkChannel — Bark 推送通道 ❌ 未直接测试
+- [ ] WebhookChannel — Webhook 接收通道 ❌ 未直接测试
+- [ ] UserDefaultsMessageStore — 持久化存储 ❌ 未直接测试
+- [ ] BuiltinProcessors — 6 个处理器 ❌ 未直接测试
+- [ ] PushPayloadParser — 推送解析 ❌ 未直接测试
+- **测试**: EngineTests(15) + PayloadTests(11) + StoreTests(14) + RouterTests(12) — 4/10 文件覆盖
+
+#### 🟡 AI（3 文件 / 50 API）
+- [x] AIRouter — 路由匹配/参数化/MCP 协议
+- [x] AITool/AIParameter — 工具定义/MCP Schema
+- [x] BuiltinAITools — 13 个内置工具
+- [ ] AIHTTPServer — HTTP 服务器（socket 测试被跳过）❌ 未完全测试
+- **测试**: AIRouterTests(24) + AIHTTPServerTests(10) — 覆盖良好
+
+#### ✅ Theme（8 文件 / 95 API）
+- [x] ThemeManager — 3 模式/动态颜色/窗口应用
+- [x] ThemeColors — 21 色彩令牌（暗/亮自适应）
+- [x] ThemeTypography — 7 字体令牌（Dynamic Type）
+- [x] LucideIcon — 48 图标枚举
+- [x] ThemeCard/Badge/Button/EmptyState/SectionHeader/GradientView — 6 组件
+- **测试**: ThemeManagerTests (20+) ✅ 全覆盖
+
+#### ✅ CommandParser（5 文件 / 60 API）
+- [x] CommandParser — actor 解析器/签名验证
+- [x] CommandDecoder — 3 格式（Base64/URLScheme/PlainText）
+- [x] CommandRouter — 路由到 cachedApp/URL/deeplink
+- [x] ClipboardMonitor — 剪贴板检测
+- [x] CommandPayload — 数据模型
+- **测试**: ParserTests(20) + DecoderTests(16) + PayloadTests(13) ✅ 全覆盖
+
+#### 🟡 Handlers（41 文件 / 162 API）
+- [x] 35 个 Handler 类 — 全部有测试（至少实例化 + 基础 handle）
+- [x] BaseWebNativeHandler — 基类/resolve/reject
+- [ ] WebGestureInterceptor — 手势拦截 ❌ 未直接测试
+- [ ] PersistentManifestLoader — 持久化加载 ❌ 未直接测试
+- [ ] LazyManifestLoader — 懒加载 ❌ 未直接测试
+- [ ] FullScreenProgressViewController — 进度条 ❌ 未直接测试
+- [ ] WebPermissionManager — 权限管理 ❌ 未直接测试
+- [ ] WebResourceURLSchemeHandler — URL Scheme ❌ 未直接测试
+- **测试**: SimpleHandlerTests(45) + AdvancedHandlerTests(65) + RegistryTests(14) — 35/41 文件覆盖
+
+#### 🟡 Infrastructure（8 文件 / 131 API）
+- [x] StructuredLogger — 结构化日志/查询/导出
+- [x] LogEntry/LogLevel/LogCategory — 日志模型
+- [x] LogOutput — Console/Memory/File/Callback
+- [x] EnvironmentInfo — 设备/系统信息
+- [x] DiagnosticEngine — 健康检查
+- [ ] DebugPanel — 调试面板 🟡 部分测试
+- [ ] ErrorContext — 错误上下文 🟡 部分测试
+- **测试**: LoggingTests(20) + DiagnosticTests(10) + DebugPanelTests(15) + HandlerRegistryTests(7)
+
+#### 🟡 Models（10 文件 / 175 API）
+- [x] Manifest — 验证/过期/版本解析
+- [x] CacheModels — CachedResource/CacheStats 等
+- [x] WebPageHistory — 浏览历史模型
+- [x] URLFavorite — 收藏模型
+- [ ] PageCacheRule — 缓存规则 ❌ 未直接测试
+- [ ] ManifestError — Manifest 错误 ❌ 未直接测试
+- [ ] CacheEntryRealm — Realm 模型 ❌ 未直接测试
+- [ ] WebBridgeError — 框架错误 ❌ 未直接测试
+- **测试**: CacheModelsTests(40) + ManifestModelsTests(30) + HistoryTests(12) + FavoriteTests(10)
+
+#### 🟡 Utils（14 文件 / 109 API）
+- [x] InputValidator — 输入校验/URL验证/Hash
+- [x] RetryHelper — 重试/指数退避
+- [x] RequestDeduplicator — 请求去重
+- [x] NetworkMonitor — 网络状态检测
+- [x] WebBridgeLogger — 日志封装
+- [ ] HUDService — 原生 HUD ❌ 未测试
+- [ ] PerformanceMonitor — 性能监控 ❌ 未测试
+- [ ] NetworkHelper — 网络请求 ❌ 未测试
+- [ ] WKColor — 颜色系统 ❌ 未测试
+- [ ] WebBridgeKitConfiguration — 全局配置 ❌ 未测试
+- [ ] SignpostLogger — Signpost 日志 ❌ 未测试
+- [ ] DebugErrorPageManager — 错误页面 ❌ 未测试
+- [ ] WebBridgeNotifications — 通知名 ❌ 未测试
+- [ ] TestLogger — 测试日志 ❌ 未测试
+- **测试**: 5/14 文件有测试
+
+#### 🟡 Services（8 文件 / 76 API）
+- [x] ServiceLocator — 服务定位/生产/Mock/自定义
+- [x] MockHistoryService/MockFavoriteService — Mock 实现
+- [ ] RealmHistoryService — Realm 持久化 ❌ 未直接测试
+- [ ] RealmFavoriteService — Realm 持久化 ❌ 未直接测试
+- **测试**: NetworkServiceTests (30) — 4/8 文件覆盖
+
+#### ✅ Skills（2 文件 / 28 API）
+- [x] BuiltinSkills — 内置技能列表
+- [x] AgentSchema — Schema/Capabilities/Guide
+- **测试**: SkillRegistryTests (12) ✅ 全覆盖
+
+### UI 层模块（无单元测试，由 UI 测试覆盖）
+
+#### ❌ Controllers（11 文件 / 88 API）
+- WebBrowserViewController, WebViewController, ModalWebViewController
+- CacheManagementViewController, CacheAppDetailViewController
+- WebPageHistoryViewController, QRScannerViewController
+- WebPermissionsViewController, WebBookmarkViewController
+- WebCacheDebugPanelViewController, CacheResourceViewController
+- **测试**: 无直接单元测试（UI 测试间接覆盖）
+
+#### ❌ Views（8 文件 / 36 API）
+- EmptyStateView, LoadingView, CacheAppCell, CacheResourceCell
+- WebPageHistoryCell, WebPageHistoryGalleryCell, WebCacheDebugFloatingButton
+- **测试**: 无直接单元测试
+
+#### ❌ ViewModels（5 文件 / 47 API）
+- CacheManagementViewModel, CacheResourceViewModel
+- WebBrowserViewModel, WebPageHistoryViewModel, WebBookmarkViewModel
+- **测试**: 无直接单元测试
+
+#### ❌ Base + Extensions + Managers（4 文件）
+- ViewModel, BaseViewController, WKWebView+Rx, URLFavoriteManager
+- **测试**: 无直接单元测试
+
+### 服务端（Server/）
+
+#### 🟡 Server（14 文件 + 3 测试文件）
+- [x] PushRoutes — Bark 兼容推送 API
+- [x] CommandRoutes — 口令生成/解析
+- [x] ManifestRoutes — Manifest CRUD
+- [ ] HealthRoutes — 健康检查 ❌ 未测试
+- [ ] AuthMiddleware — API Key 鉴权 ❌ 未测试
+- [ ] APNsService — APNs 推送 ❌ 未测试
+- [ ] TokenStore — 设备 Token 存储 ❌ 未测试
+- [ ] Configuration — 服务配置 ❌ 未测试
+- **测试**: PushRoutesTests + CommandRoutesTests + ManifestRoutesTests
+
+### 应用层
+
+#### ❌ SuperApp（63 文件）
+- 仅 1 个 UI Smoke Test
+- 无单元测试
+
+#### ❌ AppTemplate（15 文件）
+- Demo/展示应用，无测试
+
+#### ❌ NotificationServiceExtension（1 文件）
+- 推送处理扩展，无测试
+
+---
+
+### 统计摘要
+
+| 状态 | 模块数 | 文件数 |
+|------|--------|--------|
+| ✅ 完整覆盖 | 4 (Bridge/Theme/CommandParser/Skills) | 19 |
+| 🟡 部分覆盖 | 8 (Core/Cache/Message/AI/Handlers/Infra/Models/Utils/Services) | 126 |
+| ❌ 未测试 | 7 (Controllers/Views/ViewModels/Base/Server部分/SuperApp/AppTemplate/NSE) | 98 |
+
+### 优先补充测试（按价值排序）
+
+1. **Message Processors** — Markdown/Level/Badge 等处理器（核心业务逻辑）
+2. **BarkChannel** — 推送通道（核心功能）
+3. **Cache: ManifestCacheManager/WebResourceCacheManager** — 缓存核心
+4. **Core: WebBrowserManager** — 浏览器管理（核心入口）
+5. **Handlers: PersistentManifestLoader** — 缓存加载核心
+6. **Utils: PerformanceMonitor/HUDService** — 高频使用工具
+7. **Server: APNsService/TokenStore** — 推送服务核心
