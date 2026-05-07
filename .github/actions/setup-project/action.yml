@@ -32,8 +32,8 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/Library/Developer/Xcode/DerivedData
-        key: derived-${{ runner.os }}-${{ hashFiles('Podfile.lock', 'project.yml') }}
-        restore-keys: derived-${{ runner.os }}-
+        key: derived-${{ runner.os }}-xcode16.4-${{ hashFiles('Podfile.lock', 'project.yml') }}
+        restore-keys: derived-${{ runner.os }}-xcode16.4-
 
     - name: Generate & Install
       shell: bash

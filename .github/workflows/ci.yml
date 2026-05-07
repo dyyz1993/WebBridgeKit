@@ -21,6 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
       - name: Cache Homebrew
         uses: actions/cache@v4
         with:
@@ -39,6 +44,11 @@ jobs:
     needs: swiftlint
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -87,6 +97,11 @@ jobs:
           - ServicesTests
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -224,6 +239,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
       - name: Setup Project
         uses: ./.github/actions/setup-project
 
@@ -351,6 +371,11 @@ jobs:
     if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
