@@ -94,37 +94,56 @@ jobs:
       - name: Setup Simulator
         id: sim
         run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes -j | python3 -c "
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
+          echo "=== Available runtimes ==="
+          xcrun simctl list runtimes
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
-          runtimes = [rt for rt in data.get('runtimes', []) if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
-          runtimes.sort(key=lambda x: x.get('version', ''), reverse=True)
-          if runtimes:
-              print(runtimes[0]['identifier'])
-          " 2>/dev/null || true)
-          if [ -z "$RUNTIME_ID" ]; then
-            RUNTIME_ID=$(xcrun simctl list runtimes available | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.iOS[^ ]+' | head -1)
+          for rt in data.get('runtimes', []):
+              if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable'):
+                  print(rt['identifier'])
+                  break
+          " 2>/dev/null || echo "")
+          if [ -z "$RUNTIME" ]; then
+            for ver in "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
+              candidate="com.apple.CoreSimulator.SimRuntime.iOS-$ver"
+              if xcrun simctl list runtimes | grep -q "$candidate"; then
+                RUNTIME="$candidate"
+                break
+              fi
+            done
           fi
-          if [ -z "$RUNTIME_ID" ]; then
-            echo "ERROR: No iOS runtime found"
-            xcrun simctl list runtimes
-            exit 1
+          if [ -z "$RUNTIME" ]; then
+            echo "::warning::No iOS runtime found, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
-          echo "Runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID")
-          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "Using runtime: $RUNTIME"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::warning::Failed to create simulator, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "use_simulator=true" >> $GITHUB_OUTPUT
           echo "Simulator ready: $DEVICE_ID"
 
       - name: Run ${{ matrix.scheme }}
         run: |
           set -o pipefail
+          if [ "${{ steps.sim.outputs.use_simulator }}" = "true" ]; then
+            DEST="platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}"
+          else
+            DEST="generic/platform=iOS Simulator"
+          fi
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme "${{ matrix.scheme }}" \
             -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
+            -destination "$DEST" \
             -resultBundlePath "build/TestResults-${{ matrix.scheme }}.xcresult" \
             -enableCodeCoverage YES \
             CODE_SIGN_IDENTITY="" \
@@ -191,27 +210,41 @@ jobs:
       - name: Setup Simulator
         id: sim
         run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes -j | python3 -c "
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
+          echo "=== Available runtimes ==="
+          xcrun simctl list runtimes
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
-          runtimes = [rt for rt in data.get('runtimes', []) if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
-          runtimes.sort(key=lambda x: x.get('version', ''), reverse=True)
-          if runtimes:
-              print(runtimes[0]['identifier'])
-          " 2>/dev/null || true)
-          if [ -z "$RUNTIME_ID" ]; then
-            RUNTIME_ID=$(xcrun simctl list runtimes available | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.iOS[^ ]+' | head -1)
+          for rt in data.get('runtimes', []):
+              if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable'):
+                  print(rt['identifier'])
+                  break
+          " 2>/dev/null || echo "")
+          if [ -z "$RUNTIME" ]; then
+            for ver in "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
+              candidate="com.apple.CoreSimulator.SimRuntime.iOS-$ver"
+              if xcrun simctl list runtimes | grep -q "$candidate"; then
+                RUNTIME="$candidate"
+                break
+              fi
+            done
           fi
-          if [ -z "$RUNTIME_ID" ]; then
-            echo "ERROR: No iOS runtime found"
-            xcrun simctl list runtimes
-            exit 1
+          if [ -z "$RUNTIME" ]; then
+            echo "::warning::No iOS runtime found, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
-          echo "Runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID")
-          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "Using runtime: $RUNTIME"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::warning::Failed to create simulator, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "use_simulator=true" >> $GITHUB_OUTPUT
           echo "Simulator ready: $DEVICE_ID"
 
       - name: Run Smoke Tests
@@ -220,11 +253,15 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/test-results
-          
+          if [ "${{ steps.sim.outputs.use_simulator }}" = "true" ]; then
+            DEST="platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}"
+          else
+            DEST="generic/platform=iOS Simulator"
+          fi
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
+            -destination "$DEST" \
             -configuration Debug \
             -resultBundlePath build/test-results/SmokeResults.xcresult \
             -only-testing:SuperAppUITests/SuperAppSmokeTests \
@@ -247,7 +284,7 @@ jobs:
           mkdir -p screenshots
           find build/test-results -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
           find ~/Library/Developer/Xcode/DerivedData -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
-          DEVICE_ID="${{ steps.sim.outputs.device-id }}"
+          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
           [ -n "$DEVICE_ID" ] && xcrun simctl io "$DEVICE_ID" screenshot screenshots/smoke_final.png || true
 
       - name: Upload Screenshots
@@ -281,38 +318,56 @@ jobs:
       - name: Setup Simulator
         id: sim
         run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes -j | python3 -c "
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
+          echo "=== Available runtimes ==="
+          xcrun simctl list runtimes
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
-          runtimes = [rt for rt in data.get('runtimes', []) if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
-          runtimes.sort(key=lambda x: x.get('version', ''), reverse=True)
-          if runtimes:
-              print(runtimes[0]['identifier'])
-          " 2>/dev/null || true)
-          if [ -z "$RUNTIME_ID" ]; then
-            RUNTIME_ID=$(xcrun simctl list runtimes available | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.iOS[^ ]+' | head -1)
+          for rt in data.get('runtimes', []):
+              if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable'):
+                  print(rt['identifier'])
+                  break
+          " 2>/dev/null || echo "")
+          if [ -z "$RUNTIME" ]; then
+            for ver in "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
+              candidate="com.apple.CoreSimulator.SimRuntime.iOS-$ver"
+              if xcrun simctl list runtimes | grep -q "$candidate"; then
+                RUNTIME="$candidate"
+                break
+              fi
+            done
           fi
-          if [ -z "$RUNTIME_ID" ]; then
-            echo "ERROR: No iOS runtime found"
-            xcrun simctl list runtimes
-            exit 1
+          if [ -z "$RUNTIME" ]; then
+            echo "::warning::No iOS runtime found, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
-          echo "Runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID")
-          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "Using runtime: $RUNTIME"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::warning::Failed to create simulator, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "use_simulator=true" >> $GITHUB_OUTPUT
           echo "Simulator ready: $DEVICE_ID"
 
       - name: Run Core Tests (Parallel)
         run: |
           set -o pipefail
           mkdir -p build/test-results
-          
+          if [ "${{ steps.sim.outputs.use_simulator }}" = "true" ]; then
+            DEST="platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}"
+          else
+            DEST="generic/platform=iOS Simulator"
+          fi
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
+            -destination "$DEST" \
             -configuration Debug \
             -resultBundlePath build/test-results/CoreResults.xcresult \
             -only-testing:SuperAppUITests/SuperAppSmokeTests \
@@ -367,27 +422,41 @@ jobs:
       - name: Setup Simulator
         id: sim
         run: |
-          xcrun simctl list runtimes available | grep iOS
-          RUNTIME_ID=$(xcrun simctl list runtimes -j | python3 -c "
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
+          echo "=== Available runtimes ==="
+          xcrun simctl list runtimes
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
-          runtimes = [rt for rt in data.get('runtimes', []) if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
-          runtimes.sort(key=lambda x: x.get('version', ''), reverse=True)
-          if runtimes:
-              print(runtimes[0]['identifier'])
-          " 2>/dev/null || true)
-          if [ -z "$RUNTIME_ID" ]; then
-            RUNTIME_ID=$(xcrun simctl list runtimes available | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.iOS[^ ]+' | head -1)
+          for rt in data.get('runtimes', []):
+              if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable'):
+                  print(rt['identifier'])
+                  break
+          " 2>/dev/null || echo "")
+          if [ -z "$RUNTIME" ]; then
+            for ver in "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
+              candidate="com.apple.CoreSimulator.SimRuntime.iOS-$ver"
+              if xcrun simctl list runtimes | grep -q "$candidate"; then
+                RUNTIME="$candidate"
+                break
+              fi
+            done
           fi
-          if [ -z "$RUNTIME_ID" ]; then
-            echo "ERROR: No iOS runtime found"
-            xcrun simctl list runtimes
-            exit 1
+          if [ -z "$RUNTIME" ]; then
+            echo "::warning::No iOS runtime found, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
-          echo "Runtime: $RUNTIME_ID"
-          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME_ID")
-          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "Using runtime: $RUNTIME"
+          DEVICE_ID=$(xcrun simctl create "CI-iPhone" "iPhone 16 Pro" "$RUNTIME" 2>/dev/null || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::warning::Failed to create simulator, tests will use generic destination"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "use_simulator=true" >> $GITHUB_OUTPUT
           echo "Simulator ready: $DEVICE_ID"
 
       - name: Start Test Server
@@ -402,11 +471,15 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/test-results
-          
+          if [ "${{ steps.sim.outputs.use_simulator }}" = "true" ]; then
+            DEST="platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}"
+          else
+            DEST="generic/platform=iOS Simulator"
+          fi
           xcodebuild test \
             -workspace WebBridgeKit.xcworkspace \
             -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device-id }}" \
+            -destination "$DEST" \
             -configuration Debug \
             -resultBundlePath build/test-results/ManifestResults.xcresult \
             -only-testing:SuperAppUITests/ManifestCacheUITests \
