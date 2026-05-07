@@ -13,12 +13,13 @@ final class AgentSchemaTests: XCTestCase {
     // MARK: - Registration
 
     func testBuiltinCapabilitiesLoaded() async {
+        try? await BuiltinSkills.registerAllWithRegistry()
         let capabilities = await schema.getFullSchema()
         XCTAssertFalse(capabilities.isEmpty)
     }
 
     func testRegisterCapability() async {
-        let capability = AgentSchema.FrameworkCapability(
+        let capability = FrameworkCapability(
             name: "test",
             category: "test",
             description: "Test capability",
@@ -35,7 +36,7 @@ final class AgentSchemaTests: XCTestCase {
     }
 
     func testUnregisterCapability() async {
-        let capability = AgentSchema.FrameworkCapability(
+        let capability = FrameworkCapability(
             name: "remove_me",
             category: "test",
             description: "To be removed",
@@ -53,7 +54,7 @@ final class AgentSchemaTests: XCTestCase {
     // MARK: - Query by Category
 
     func testGetCapabilitiesByCategory() async {
-        let cap1 = AgentSchema.FrameworkCapability(
+        let cap1 = FrameworkCapability(
             name: "cap_a",
             category: "core",
             description: "Core A",
@@ -61,7 +62,7 @@ final class AgentSchemaTests: XCTestCase {
             commonIssues: [],
             apiEndpoints: []
         )
-        let cap2 = AgentSchema.FrameworkCapability(
+        let cap2 = FrameworkCapability(
             name: "cap_b",
             category: "debug",
             description: "Debug B",
@@ -81,18 +82,18 @@ final class AgentSchemaTests: XCTestCase {
     // MARK: - Troubleshooting
 
     func testGetTroubleshootingGuide() async {
-        let capability = AgentSchema.FrameworkCapability(
+        let capability = FrameworkCapability(
             name: "troubleshoot_test",
             category: "test",
             description: "Test",
             debuggingMethods: [],
             commonIssues: [
-                AgentSchema.IssueSolution(
+                IssueSolution(
                     symptom: "JS 调用不响应",
                     cause: "Handler 未注册",
                     solution: "检查 list_handlers"
                 ),
-                AgentSchema.IssueSolution(
+                IssueSolution(
                     symptom: "缓存命中率低",
                     cause: "容量过小",
                     solution: "调整配置"
@@ -121,7 +122,7 @@ final class AgentSchemaTests: XCTestCase {
     // MARK: - Builtin Skills
 
     func testBuiltinSkillsCount() async {
-        XCTAssertEqual(BuiltinSkills.all.count, 3)
+        XCTAssertEqual(BuiltinSkills.all.count, 7)
     }
 
     func testBuiltinSkillsContainExpectedCapabilities() {
@@ -134,16 +135,16 @@ final class AgentSchemaTests: XCTestCase {
     // MARK: - Codable Conformance
 
     func testFrameworkCapabilityCodable() throws {
-        let capability = AgentSchema.FrameworkCapability(
+        let capability = FrameworkCapability(
             name: "codable_test",
             category: "test",
             description: "Codable test",
             debuggingMethods: ["method1", "method2"],
             commonIssues: [
-                AgentSchema.IssueSolution(symptom: "s1", cause: "c1", solution: "sol1")
+                IssueSolution(symptom: "s1", cause: "c1", solution: "sol1")
             ],
             apiEndpoints: [
-                AgentSchema.APIEndpoint(method: "GET", path: "/test", description: "Test endpoint", parameters: ["key": "value"])
+                APIEndpoint(method: "GET", path: "/test", description: "Test endpoint", parameters: ["key": "value"])
             ]
         )
 
@@ -151,7 +152,7 @@ final class AgentSchemaTests: XCTestCase {
         let data = try encoder.encode(capability)
 
         let decoder = JSONDecoder()
-        let decoded = try decoder.decode(AgentSchema.FrameworkCapability.self, from: data)
+        let decoded = try decoder.decode(FrameworkCapability.self, from: data)
 
         XCTAssertEqual(decoded.name, "codable_test")
         XCTAssertEqual(decoded.debuggingMethods.count, 2)

@@ -120,13 +120,13 @@ final class ServiceLocatorAdvancedTests: XCTestCase {
 
     func testRegisterNilServicesDoesNotChangeExisting() {
         locator.setupMockServices()
-        let previousHistoryType = type(of: locator.historyService)
-        let previousFavoriteType = type(of: locator.favoriteService)
+        let previousHistoryType = String(describing: type(of: locator.historyService))
+        let previousFavoriteType = String(describing: type(of: locator.favoriteService))
 
         locator.registerCustomServices(historyService: nil, favoriteService: nil)
 
-        XCTAssertTrue(type(of: locator.historyService) == previousHistoryType)
-        XCTAssertTrue(type(of: locator.favoriteService) == previousFavoriteType)
+        XCTAssertEqual(String(describing: type(of: locator.historyService)), previousHistoryType)
+        XCTAssertEqual(String(describing: type(of: locator.favoriteService)), previousFavoriteType)
     }
 
     // MARK: - Convenience Access

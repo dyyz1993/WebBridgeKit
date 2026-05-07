@@ -29,7 +29,7 @@ final class WebBrowserManagerTests: XCTestCase {
 
     func testSharedSingletonIsSameInstance() {
         let a = WebBrowserManager.shared
-        let b = WebBridgeKit.WebBrowserManager.shared
+        let b = WebBrowserManager.shared
         XCTAssertTrue(a === b)
     }
 
