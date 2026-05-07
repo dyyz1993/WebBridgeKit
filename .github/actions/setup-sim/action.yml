@@ -48,3 +48,9 @@ runs:
       run: |
         xcrun simctl boot "${{ steps.create.outputs.device_id }}" 2>/dev/null || true
         echo "Simulator booted: ${{ steps.create.outputs.device_id }}"
+
+    - name: Wait for Simulator Ready
+      shell: bash
+      run: |
+        timeout 60 bash -c 'while ! xcrun simctl list devices booted | grep -q "${{ inputs.sim-name }}"; do sleep 2; done'
+        echo "Simulator ready"

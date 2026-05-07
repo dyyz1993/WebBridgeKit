@@ -14,7 +14,7 @@ final class SuperAppSmokeTests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        app.launchArguments = ["--UITesting"]
+        app.launchArguments = ["--UITesting", "-UITesting"]
         app.launch()
     }
 

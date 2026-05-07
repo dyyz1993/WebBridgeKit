@@ -36,14 +36,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             WebBridgeKit.shared.initialize()
         }
 
-        // Initialize all new engines
-        Task {
-            await EngineBootstrap.shared.initialize(in: self.window)
-        }
-
-        // 注册推送通知
-        registerForPushNotifications(application)
-
         // 创建窗口（支持摇一摇触发调试面板）
         window = DebugWindow(frame: UIScreen.main.bounds)
 
@@ -52,6 +44,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
+
+        // Initialize all new engines
+        Task {
+            await EngineBootstrap.shared.initialize(in: self.window)
+        }
+
+        // 注册推送通知
+        registerForPushNotifications(application)
 
         // 🔥 Support automated testing via launch arguments
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
