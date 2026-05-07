@@ -63,6 +63,7 @@ final class ServiceLocatorTests: XCTestCase {
     func testClearServices() {
         sut.setupMockServices()
         sut.clearServices()
+        sut.setupMockServices()
     }
 
     func testResetSetsProductionMode() {

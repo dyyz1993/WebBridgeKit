@@ -222,16 +222,35 @@ class QuickActionCell: UICollectionViewCell {
 
     private func createActionButton(icon: String, title: String, color: UIColor) -> UIButton {
         let button = UIButton(type: .system)
-        let cfg = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
-        button.setImage(UIImage(systemName: icon, withConfiguration: cfg), for: .normal)
-        button.setTitle(title, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 11, weight: .medium)
-        button.tintColor = color
-        button.setTitleColor(color, for: .normal)
         button.backgroundColor = .secondarySystemGroupedBackground
         button.layer.cornerRadius = 12
-        button.imageEdgeInsets = UIEdgeInsets(top: -12, left: 0, bottom: 0, right: 0)
-        button.titleEdgeInsets = UIEdgeInsets(top: 20, left: -(button.titleLabel?.intrinsicContentSize.width ?? 0), bottom: 0, right: 0)
+
+        let iconView = UIImageView()
+        iconView.image = UIImage(systemName: icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .medium))
+        iconView.tintColor = color
+        iconView.contentMode = .scaleAspectFit
+
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+        titleLabel.textColor = color
+        titleLabel.textAlignment = .center
+
+        let stack = UIStackView(arrangedSubviews: [iconView, titleLabel])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 4
+        stack.isUserInteractionEnabled = false
+
+        button.addSubview(stack)
+        stack.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.top.greaterThanOrEqualToSuperview().offset(8)
+            make.bottom.lessThanOrEqualToSuperview().offset(-8)
+            make.left.greaterThanOrEqualToSuperview().offset(4)
+            make.right.lessThanOrEqualToSuperview().offset(-4)
+        }
+
         return button
     }
 

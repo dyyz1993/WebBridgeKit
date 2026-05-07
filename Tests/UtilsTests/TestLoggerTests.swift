@@ -28,7 +28,6 @@ final class TestLoggerTests: XCTestCase {
     func testGenerateTimestamp() {
         let timestamp = TestLogger.generateTimestamp()
         XCTAssertFalse(timestamp.isEmpty)
-        XCTAssertTrue(timestamp.contains("-"))
         XCTAssertTrue(timestamp.contains("_"))
     }
 

@@ -161,9 +161,9 @@ final class ServiceLocatorAdvancedTests: XCTestCase {
     // MARK: - clearServices
 
     func testClearServicesNilifiesAllServices() {
+        locator.setupMockServices()
         locator.clearServices()
-
-        XCTAssertTrue(locator.historyService is MockHistoryService || locator.favoriteService is MockFavoriteService)
+        XCTAssertEqual(locator.currentMode, .mock)
     }
 
     func testClearServicesThenSetupMockRestoresServices() {

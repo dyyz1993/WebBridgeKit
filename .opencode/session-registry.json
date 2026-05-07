@@ -208,5 +208,68 @@
     "parentID": "opencode",
     "status": "running",
     "createdAt": 1778152277019
+  },
+  "task-test-webbridge-error": {
+    "id": "ses_1fd8fba26ffeZhr3X6S1M1Mcoy",
+    "name": "task-test-webbridge-error",
+    "parentID": "ses_1fd911ff3ffeGjE80I67gUKSM2",
+    "status": "running",
+    "createdAt": 1778157372902
+  },
+  "task-test-cache-entry-realm": {
+    "id": "ses_1fd8fb88bffefmSiLtRX7pJ5Cv",
+    "name": "task-test-cache-entry-realm",
+    "parentID": "ses_1fd911ff3ffeGjE80I67gUKSM2",
+    "status": "running",
+    "createdAt": 1778157373301
+  },
+  "task-test-manifest-codable": {
+    "id": "ses_1fd8fb6baffeXbaiRUOVuTT0s2",
+    "name": "task-test-manifest-codable",
+    "parentID": "ses_1fd911ff3ffeGjE80I67gUKSM2",
+    "status": "running",
+    "createdAt": 1778157373766
+  },
+  "task-test-manifest-error-extra": {
+    "id": "ses_1fd8fb4f6ffeskDL01pbp4QcwF",
+    "name": "task-test-manifest-error-extra",
+    "parentID": "ses_1fd911ff3ffeGjE80I67gUKSM2",
+    "status": "running",
+    "createdAt": 1778157374218
+  },
+  "task-test-batch1-protocols": {
+    "id": "ses_1fd445daeffe4lQMKV4c4f66Ar",
+    "name": "task-test-batch1-protocols",
+    "parentID": "ses_1fd467faeffePf8jMRzrb1q03t",
+    "status": "running",
+    "createdAt": 1778162311763
+  },
+  "task-test-batch2-models": {
+    "id": "ses_1fd445a1dffe1JOh5YMEj0R1rr",
+    "name": "task-test-batch2-models",
+    "parentID": "ses_1fd467faeffePf8jMRzrb1q03t",
+    "status": "running",
+    "createdAt": 1778162312675
+  },
+  "task-test-batch3-managers": {
+    "id": "ses_1fd445909ffe90lCPym3zFsTAy",
+    "name": "task-test-batch3-managers",
+    "parentID": "ses_1fd467faeffePf8jMRzrb1q03t",
+    "status": "running",
+    "createdAt": 1778162312952
+  },
+  "task-test-batch4-extra": {
+    "id": "ses_1fd44558bffeLfDM0Enzw6Z5va",
+    "name": "task-test-batch4-extra",
+    "parentID": "ses_1fd467faeffePf8jMRzrb1q03t",
+    "status": "running",
+    "createdAt": 1778162313845
+  },
+  "task-skills-tests": {
+    "id": "ses_1fd335e45fferTSBmzmxgdF53A",
+    "name": "task-skills-tests",
+    "parentID": "ses_1fd34a926ffeQT00U5nX5icyH2",
+    "status": "running",
+    "createdAt": 1778163425723
   }
 }

@@ -371,30 +371,32 @@ class URLGridCell: UICollectionViewCell {
 
         lastVisitedLabel.snp.makeConstraints { make in
             make.top.equalTo(urlLabel.snp.bottom).offset(6)
-            make.left.right.equalTo(urlLabel)
-        }
-
-        sizeLabel.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().offset(-12)
             make.left.equalToSuperview().offset(12)
         }
 
-        appIdBadgeView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().offset(-12)
-            make.centerX.equalToSuperview()
-            make.height.equalTo(14)
-            make.left.greaterThanOrEqualTo(sizeLabel.snp.right).offset(4)
-            make.right.lessThanOrEqualTo(modeBadgeView.snp.left).offset(-4)
+        sizeLabel.snp.makeConstraints { make in
+            make.top.equalTo(urlLabel.snp.bottom).offset(6)
+            make.right.equalToSuperview().offset(-12)
+            make.left.greaterThanOrEqualTo(lastVisitedLabel.snp.right).offset(8)
         }
+
+        let bottomStack = UIStackView(arrangedSubviews: [appIdBadgeView, modeBadgeView])
+        bottomStack.axis = .horizontal
+        bottomStack.spacing = 6
+        bottomStack.alignment = .trailing
+        contentClipView.addSubview(bottomStack)
+
+        bottomStack.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-10)
+            make.right.equalToSuperview().offset(-12)
+            make.height.equalTo(14)
+        }
+
+        appIdBadgeView.snp.removeConstraints()
+        modeBadgeView.snp.removeConstraints()
 
         appIdLabel.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4))
-        }
-
-        modeBadgeView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().offset(-12)
-            make.right.equalToSuperview().offset(-12)
-            make.height.equalTo(14)
         }
 
         modeLabel.snp.makeConstraints { make in
@@ -437,7 +439,7 @@ class URLGridCell: UICollectionViewCell {
                 self.glassEffectView.isHidden = true
             }
 
-            self.titleLabel.text = history.title ?? "未知页面"
+            self.titleLabel.text = history.title ?? (URL(string: history.url)?.host ?? history.url)
 
             // 格式化上次访问时间
             let formatter = DateFormatter()
@@ -485,10 +487,10 @@ class URLGridCell: UICollectionViewCell {
                 self.cachedLabel.textColor = .systemOrange
                 self.cachedBadgeView.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.12)
             } else {
-                self.cachedDotView.backgroundColor = .systemGray3
+                self.cachedDotView.backgroundColor = .systemGray
                 self.cachedLabel.text = "未缓存"
-                self.cachedLabel.textColor = .systemGray
-                self.cachedBadgeView.backgroundColor = UIColor.systemGray.withAlphaComponent(0.08)
+                self.cachedLabel.textColor = .secondaryLabel
+                self.cachedBadgeView.backgroundColor = UIColor.systemFill
             }
 
             // 更新按钮状态
