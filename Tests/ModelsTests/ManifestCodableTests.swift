@@ -81,9 +81,11 @@ final class ManifestCodableTests: XCTestCase {
         XCTAssertEqual(decoded.resources.count, 1)
         XCTAssertEqual(decoded.version, "2.0.0")
         XCTAssertEqual(decoded.name, "MyApp")
-        XCTAssertNil(decoded.persistent)
+        XCTAssertEqual(decoded.persistent, false)
         XCTAssertNil(decoded.appid)
         XCTAssertNil(decoded.icon)
+        XCTAssertEqual(decoded.isPinned, false)
+        XCTAssertEqual(decoded.isFavorite, false)
     }
 
     // MARK: - Codable Preserves Specific Values
