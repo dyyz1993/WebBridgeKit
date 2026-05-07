@@ -2,57 +2,264 @@ import Foundation
 
 // MARK: - Data Models
 
-extension AgentSchema {
+public struct FrameworkCapability: Codable, Sendable {
+    public let name: String
+    public let category: String
+    public let description: String
+    public let debuggingMethods: [String]
+    public let commonIssues: [IssueSolution]
+    public let apiEndpoints: [APIEndpoint]
+    public let parameters: [Parameter]
+    public let tags: [String]
+    public let examples: [String]
 
-    public struct FrameworkCapability: Codable, Sendable {
-        public let name: String
-        public let category: String
-        public let description: String
-        public let debuggingMethods: [String]
-        public let commonIssues: [IssueSolution]
-        public let apiEndpoints: [APIEndpoint]
+    public init(
+        name: String,
+        category: String,
+        description: String,
+        debuggingMethods: [String],
+        commonIssues: [IssueSolution],
+        apiEndpoints: [APIEndpoint] = [],
+        parameters: [Parameter] = [],
+        tags: [String] = [],
+        examples: [String] = []
+    ) {
+        self.name = name
+        self.category = category
+        self.description = description
+        self.debuggingMethods = debuggingMethods
+        self.commonIssues = commonIssues
+        self.apiEndpoints = apiEndpoints
+        self.parameters = parameters
+        self.tags = tags
+        self.examples = examples
+    }
+}
 
-        public init(
-            name: String,
-            category: String,
-            description: String,
-            debuggingMethods: [String],
-            commonIssues: [IssueSolution],
-            apiEndpoints: [APIEndpoint] = []
-        ) {
-            self.name = name
-            self.category = category
-            self.description = description
-            self.debuggingMethods = debuggingMethods
-            self.commonIssues = commonIssues
-            self.apiEndpoints = apiEndpoints
+public struct Parameter: Codable, Sendable {
+    public let name: String
+    public let type: String
+    public let required: Bool
+    public let description: String
+
+    public init(name: String, type: String, required: Bool, description: String) {
+        self.name = name
+        self.type = type
+        self.required = required
+        self.description = description
+    }
+}
+
+public struct IssueSolution: Codable, Sendable {
+    public let symptom: String
+    public let cause: String
+    public let solution: String
+
+    public init(symptom: String, cause: String, solution: String) {
+        self.symptom = symptom
+        self.cause = cause
+        self.solution = solution
+    }
+}
+
+public struct APIEndpoint: Codable, Sendable {
+    public let method: String
+    public let path: String
+    public let description: String
+    public let parameters: [String: String]
+
+    public init(method: String, path: String, description: String, parameters: [String: String] = [:]) {
+        self.method = method
+        self.path = path
+        self.description = description
+        self.parameters = parameters
+    }
+}
+
+// MARK: - Skill Error
+
+public enum SkillError: LocalizedError {
+    case duplicateSkill(String)
+    case skillNotFound(String)
+    case invalidRegistration
+
+    public var errorDescription: String? {
+        switch self {
+        case .duplicateSkill(let name):
+            return "Skill '\(name)' is already registered"
+        case .skillNotFound(let name):
+            return "Skill '\(name)' not found"
+        case .invalidRegistration:
+            return "Invalid skill registration"
+        }
+    }
+}
+
+// MARK: - SkillRegistry
+
+/// Central registry for all framework capabilities (skills)
+/// Provides unified interface for registration, discovery, and querying
+public actor SkillRegistry {
+    /// Shared singleton
+    public static let shared = SkillRegistry()
+
+    /// All registered skills
+    private var skills: [String: FrameworkCapability] = [:]
+
+    /// Skills by category
+    private var categoryIndex: [String: [FrameworkCapability]] = [:]
+
+    /// Skills by tag
+    private var tagIndex: [String: [FrameworkCapability]] = [:]
+
+    private init() {}
+
+    // MARK: - Registration
+
+    /// Register a skill capability
+    /// - Parameter skill: The skill to register
+    /// - Throws: If a skill with the same name already exists
+    public func register(_ skill: FrameworkCapability) throws {
+        if skills[skill.name] != nil {
+            throw SkillError.duplicateSkill(skill.name)
+        }
+
+        skills[skill.name] = skill
+
+        // Update category index
+        categoryIndex[skill.category, default: []].append(skill)
+
+        // Update tag index
+        for tag in skill.tags {
+            tagIndex[tag, default: []].append(skill)
         }
     }
 
-    public struct IssueSolution: Codable, Sendable {
-        public let symptom: String
-        public let cause: String
-        public let solution: String
-
-        public init(symptom: String, cause: String, solution: String) {
-            self.symptom = symptom
-            self.cause = cause
-            self.solution = solution
+    /// Register multiple skills at once
+    /// - Parameter skills: Array of skills to register
+    /// - Throws: If any registration fails
+    public func registerAll(_ skills: [FrameworkCapability]) throws {
+        for skill in skills {
+            try register(skill)
         }
     }
 
-    public struct APIEndpoint: Codable, Sendable {
-        public let method: String
-        public let path: String
-        public let description: String
-        public let parameters: [String: String]
-
-        public init(method: String, path: String, description: String, parameters: [String: String] = [:]) {
-            self.method = method
-            self.path = path
-            self.description = description
-            self.parameters = parameters
+    /// Unregister a skill
+    /// - Parameter name: Name of the skill to unregister
+    /// - Returns: The unregistered skill if found
+    @discardableResult
+    public func unregister(_ name: String) -> FrameworkCapability? {
+        guard let skill = skills.removeValue(forKey: name) else {
+            return nil
         }
+
+        // Update category index
+        categoryIndex[skill.category]?.removeAll { $0.name == name }
+
+        // Update tag index
+        for tag in skill.tags {
+            tagIndex[tag]?.removeAll { $0.name == name }
+        }
+
+        return skill
+    }
+
+    /// Clear all registered skills
+    public func clearAll() {
+        skills.removeAll()
+        categoryIndex.removeAll()
+        tagIndex.removeAll()
+    }
+
+    // MARK: - Query
+
+    /// Get a specific skill by name
+    /// - Parameter name: Skill name
+    /// - Returns: The skill if found
+    public func get(_ name: String) -> FrameworkCapability? {
+        skills[name]
+    }
+
+    /// Get all registered skills
+    /// - Returns: Array of all skills
+    public func getAll() -> [FrameworkCapability] {
+        Array(skills.values).sorted { $0.name < $1.name }
+    }
+
+    /// Get skills by category
+    /// - Parameter category: Category name
+    /// - Returns: Array of skills in the category
+    public func getByCategory(_ category: String) -> [FrameworkCapability] {
+        categoryIndex[category] ?? []
+    }
+
+    /// Get skills by tag
+    /// - Parameter tag: Tag name
+    /// - Returns: Array of skills with the tag
+    public func getByTag(_ tag: String) -> [FrameworkCapability] {
+        tagIndex[tag] ?? []
+    }
+
+    /// Search skills by name or description
+    /// - Parameter query: Search query
+    /// - Returns: Array of matching skills
+    public func search(_ query: String) -> [FrameworkCapability] {
+        let lowerQuery = query.lowercased()
+        return getAll().filter { skill in
+            skill.name.lowercased().contains(lowerQuery) ||
+            skill.description.lowercased().contains(lowerQuery)
+        }
+    }
+
+    // MARK: - Statistics
+
+    /// Get count of registered skills
+    /// - Returns: Number of skills
+    public func count() -> Int {
+        skills.count
+    }
+
+    /// Get all categories
+    /// - Returns: Array of category names
+    public func getCategories() -> [String] {
+        Array(categoryIndex.keys).sorted()
+    }
+
+    /// Get all tags
+    /// - Returns: Array of tag names
+    public func getTags() -> [String] {
+        Array(tagIndex.keys).sorted()
+    }
+
+    // MARK: - Export
+
+    /// Export all skills as structured data for AI agents
+    /// - Returns: Structured skill data
+    public func exportForAI() -> [[String: Any]] {
+        getAll().map { skill in
+            [
+                "name": skill.name,
+                "category": skill.category,
+                "description": skill.description,
+                "parameters": skill.parameters.map { param in
+                    [
+                        "name": param.name,
+                        "type": param.type,
+                        "required": param.required,
+                        "description": param.description
+                    ]
+                },
+                "tags": skill.tags,
+                "examples": skill.examples
+            ]
+        }
+    }
+
+    /// Export skills as JSON string
+    /// - Returns: JSON string
+    public func exportAsJSON() throws -> String {
+        let data = try JSONSerialization.data(withJSONObject: exportForAI())
+        return String(data: data, encoding: .utf8) ?? ""
     }
 }
 
@@ -60,27 +267,25 @@ extension AgentSchema {
 
 /// AI Agent 能力 Schema
 /// 给 AI Agent 看的框架能力清单：调试手段、功能介绍、排查 Bug 方法
+/// Delegates to SkillRegistry.shared for centralized skill management
 public actor AgentSchema {
     public static let shared = AgentSchema()
 
-    private var capabilities: [String: FrameworkCapability] = [:]
-
     public init() {
-        for cap in Self.builtinCapabilities {
-            capabilities[cap.name] = cap
-        }
+        // Empty init - registration handled by SkillRegistry
     }
 
-    public func getFullSchema() -> [FrameworkCapability] {
-        Array(capabilities.values).sorted { $0.category < $1.category }
+    public func getFullSchema() async -> [FrameworkCapability] {
+        await SkillRegistry.shared.getAll()
     }
 
-    public func getCapabilities(category: String) -> [FrameworkCapability] {
-        capabilities.values.filter { $0.category == category }.sorted { $0.name < $1.name }
+    public func getCapabilities(category: String) async -> [FrameworkCapability] {
+        await SkillRegistry.shared.getByCategory(category)
     }
 
-    public func getTroubleshootingGuide(issue: String) -> [IssueSolution] {
-        capabilities.values.flatMap { cap in
+    public func getTroubleshootingGuide(issue: String) async -> [IssueSolution] {
+        let capabilities = await SkillRegistry.shared.getAll()
+        return capabilities.flatMap { cap in
             cap.commonIssues.filter {
                 $0.symptom.localizedCaseInsensitiveContains(issue) ||
                 $0.cause.localizedCaseInsensitiveContains(issue)
@@ -88,22 +293,57 @@ public actor AgentSchema {
         }
     }
 
-    public func getAPIGuide() -> [APIEndpoint] {
+    public func getAPIGuide() async -> [APIEndpoint] {
         let httpAPI = Self.httpAPIReference
-        let moduleAPIs = capabilities.values.flatMap { $0.apiEndpoints }
+        let capabilities = await SkillRegistry.shared.getAll()
+        let moduleAPIs = capabilities.flatMap { $0.apiEndpoints }
         return (httpAPI + moduleAPIs).sorted { $0.path < $1.path }
     }
 
-    public func register(_ capability: FrameworkCapability) {
-        capabilities[capability.name] = capability
+    public func register(_ capability: FrameworkCapability) async {
+        try? await SkillRegistry.shared.register(capability)
     }
 
-    public func unregister(_ name: String) {
-        capabilities.removeValue(forKey: name)
+    public func unregister(_ name: String) async {
+        _ = await SkillRegistry.shared.unregister(name)
     }
 
-    public func get(_ name: String) -> FrameworkCapability? {
-        capabilities[name]
+    public func get(_ name: String) async -> FrameworkCapability? {
+        await SkillRegistry.shared.get(name)
+    }
+
+    // MARK: - Convenience Methods
+
+    /// Get skills by tag
+    /// - Parameter tag: Tag name
+    /// - Returns: Array of skills with the tag
+    public func getByTag(_ tag: String) async -> [FrameworkCapability] {
+        await SkillRegistry.shared.getByTag(tag)
+    }
+
+    /// Search skills by name or description
+    /// - Parameter query: Search query
+    /// - Returns: Array of matching skills
+    public func search(_ query: String) async -> [FrameworkCapability] {
+        await SkillRegistry.shared.search(query)
+    }
+
+    /// Get all registered categories
+    /// - Returns: Array of category names
+    public func getCategories() async -> [String] {
+        await SkillRegistry.shared.getCategories()
+    }
+
+    /// Get all registered tags
+    /// - Returns: Array of tag names
+    public func getTags() async -> [String] {
+        await SkillRegistry.shared.getTags()
+    }
+
+    /// Export skills as JSON for AI consumption
+    /// - Returns: JSON string
+    public func exportAsJSON() async throws -> String {
+        try await SkillRegistry.shared.exportAsJSON()
     }
 }
 

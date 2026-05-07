@@ -146,17 +146,23 @@ public final class EngineBootstrap {
         }
     }
 
-    // MARK: - Agent Schema
+    // MARK: - Skills
 
     private func bootstrapSkills() async {
-        let schema = AgentSchema.shared
+        do {
+            // Register all built-in skills with the unified SkillRegistry
+            try await BuiltinSkills.registerAllWithRegistry()
 
-        for capability in BuiltinSkills.all {
-            await schema.register(capability)
+            // AgentSchema now delegates to SkillRegistry.shared
+            let capabilities = await AgentSchema.shared.getFullSchema()
+            print("  ✅ Skills: \(capabilities.count) framework capabilities registered (via SkillRegistry)")
+
+            let categories = await AgentSchema.shared.getCategories()
+            let tags = await AgentSchema.shared.getTags()
+            print("  ✅ Skills: \(categories.count) categories, \(tags.count) tags indexed")
+        } catch {
+            print("  ⚠️ Skills: Failed to register capabilities - \(error)")
         }
-
-        let capabilities = await schema.getFullSchema()
-        print("  ✅ AgentSchema: \(capabilities.count) framework capabilities registered")
     }
 
     // MARK: - CommandParser
