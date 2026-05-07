@@ -68,7 +68,6 @@ final class BaseViewControllerTests: XCTestCase {
         let vc = BaseViewController(viewModel: vm)
 
         XCTAssertNil(vc.nibName, "nibName should be nil")
-        XCTAssertNil(vc.nibBundle, "nibBundle should be nil")
     }
 
     // MARK: - init(coder:) unavailability

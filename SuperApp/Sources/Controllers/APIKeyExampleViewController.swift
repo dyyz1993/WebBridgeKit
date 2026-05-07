@@ -18,39 +18,39 @@ class APIKeyExampleViewController: UIViewController {
 
     private let examples = [
         CodeExample(
-            title: "Bark 基础推送",
+            title: L10n.tr("apikey.example.bark_basic"),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit
             """,
-            description: "最基本的推送方式，包含标题、内容和分组"
+            description: L10n.tr("apikey.example.bark_basic_desc")
         ),
         CodeExample(
-            title: "Bark 自动复制 (iOS 14.5+)",
+            title: L10n.tr("apikey.example.bark_autocopy"),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/复制测试?copy=测试内容&autoCopy=1
             """,
-            description: "收到推送时自动将指定内容复制到剪贴板，非常适合传输验证码"
+            description: L10n.tr("apikey.example.bark_autocopy_desc")
         ),
         CodeExample(
-            title: "Bark 重要警告 (时效性通知)",
+            title: L10n.tr("apikey.example.bark_critical"),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/严重警告?level=critical&volume=5
             """,
-            description: "即使在静音或勿扰模式下也会发出声音，适用于监控报警等高优先级场景"
+            description: L10n.tr("apikey.example.bark_critical_desc")
         ),
         CodeExample(
-            title: "Bark 自定义图标与角标",
+            title: L10n.tr("apikey.example.bark_icon"),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/图标测试?icon=https://day.app/assets/images/avatar.jpg&badge=1
             """,
-            description: "自定义通知显示的图标，并设置 App 的角标数字"
+            description: L10n.tr("apikey.example.bark_icon_desc")
         ),
         CodeExample(
-            title: "Swift 集成示例",
+            title: L10n.tr("apikey.example.swift_integration"),
             language: "Swift",
             code: """
             import Alamofire
@@ -61,16 +61,16 @@ class APIKeyExampleViewController: UIViewController {
                     // 处理响应
                 }
             """,
-            description: "在 iOS 应用中使用 Alamofire 携带 API Key 进行请求"
+            description: L10n.tr("apikey.example.swift_integration_desc")
         ),
         CodeExample(
-            title: "cURL 命令行",
+            title: L10n.tr("apikey.example.curl"),
             language: "Bash",
             code: """
             curl -H "X-API-Key: YOUR_KEY_HERE" \\
                  https://api.webbridgekit.com/v1/pages
             """,
-            description: "在终端或脚本中快速验证 API 有效性"
+            description: L10n.tr("apikey.example.curl_desc")
         )
     ]
 
@@ -85,7 +85,7 @@ class APIKeyExampleViewController: UIViewController {
         label.font = .systemFont(ofSize: 15, weight: .regular)
         label.textColor = .secondaryLabel
         label.numberOfLines = 0
-        label.text = "以下是使用 API Key 的示例代码，点击示例或复制按钮即可复制代码。"
+        label.text = L10n.tr("apikey.example.header")
         return label
     }()
 
@@ -95,7 +95,7 @@ class APIKeyExampleViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "使用示例"
+        title = L10n.tr("apikey.example.title")
         setupUI()
         bindData()
     }
@@ -137,12 +137,12 @@ class APIKeyExampleViewController: UIViewController {
         guard index >= 0 && index < examples.count else { return }
         let example = examples[index]
         UIPasteboard.general.string = example.code
-        showAlert(title: "已复制", message: "示例代码已复制到剪贴板")
+        showAlert(title: L10n.tr("apikey.example.copied_title"), message: L10n.tr("apikey.example.copied_message"))
     }
 
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 }

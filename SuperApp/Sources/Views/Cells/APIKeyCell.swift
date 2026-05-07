@@ -42,6 +42,7 @@ class APIKeyCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         label.textColor = UIColor.label
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -50,6 +51,7 @@ class APIKeyCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         label.textColor = UIColor.secondaryLabel
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingMiddle
         return label
     }()
 
@@ -179,7 +181,7 @@ class APIKeyCell: UITableViewCell {
         copyButton.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
             make.right.equalToSuperview().offset(-12)
-            make.width.height.equalTo(32)
+            make.width.height.equalTo(44)
         }
 
         statusBadge.snp.makeConstraints { make in
@@ -279,5 +281,14 @@ class APIKeyCell: UITableViewCell {
         super.prepareForReuse()
         currentKey = nil
         onCopyTap = nil
+        typeLabel.text = ""
+        keyLabel.text = ""
+        dateLabel.text = ""
+        statusBadge.isHidden = true
+        statusLabel.text = ""
+        groupBadge.isHidden = true
+        groupLabel.text = ""
+        iconImageView.tintColor = UIColor.systemBlue
+        iconImageView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
     }
 }

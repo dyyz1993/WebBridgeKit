@@ -42,6 +42,7 @@ class TokenCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         label.textColor = UIColor.label
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingMiddle
         return label
     }()
 
@@ -50,6 +51,7 @@ class TokenCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         label.textColor = UIColor.secondaryLabel
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingMiddle
         return label
     }()
 
@@ -216,5 +218,12 @@ class TokenCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         currentToken = nil
+        tokenLabel.text = ""
+        urlLabel.text = ""
+        dateLabel.text = ""
+        accessCountLabel.text = ""
+        statusBadge.isHidden = true
+        statusLabel.text = ""
+        statusBadge.backgroundColor = .clear
     }
 }

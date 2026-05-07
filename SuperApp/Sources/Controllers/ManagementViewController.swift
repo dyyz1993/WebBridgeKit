@@ -13,7 +13,7 @@ import WebBridgeKit
 class ManagementViewController: UIViewController {
 
     private let segmentedControl: UISegmentedControl = {
-        let control = UISegmentedControl(items: ["收藏", "缓存"])
+        let control = UISegmentedControl(items: [L10n.tr("management.tab_favorites"), L10n.tr("management.tab_cache")])
         control.selectedSegmentIndex = 0
         return control
     }()
@@ -62,16 +62,16 @@ class ManagementViewController: UIViewController {
         }
         targetVC.didMove(toParent: self)
 
-        // 同步导航项按钮
         navigationItem.leftBarButtonItems = targetVC.navigationItem.leftBarButtonItems
         navigationItem.rightBarButtonItems = targetVC.navigationItem.rightBarButtonItems
 
-        // 如果只有一个按钮且没设置 items，尝试同步单个按钮
-        if navigationItem.leftBarButtonItems == nil {
+        if navigationItem.leftBarButtonItems == nil || navigationItem.leftBarButtonItems?.isEmpty == true {
             navigationItem.leftBarButtonItem = targetVC.navigationItem.leftBarButtonItem
+            navigationItem.leftBarButtonItems = nil
         }
-        if navigationItem.rightBarButtonItems == nil {
+        if navigationItem.rightBarButtonItems == nil || navigationItem.rightBarButtonItems?.isEmpty == true {
             navigationItem.rightBarButtonItem = targetVC.navigationItem.rightBarButtonItem
+            navigationItem.rightBarButtonItems = nil
         }
     }
 }

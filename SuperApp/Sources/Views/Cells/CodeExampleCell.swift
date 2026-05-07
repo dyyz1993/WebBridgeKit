@@ -30,6 +30,7 @@ class CodeExampleCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         label.textColor = UIColor.label
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -154,7 +155,7 @@ class CodeExampleCell: UITableViewCell {
         copyButton.snp.makeConstraints { make in
             make.top.equalTo(descriptionLabel.snp.bottom).offset(12)
             make.right.equalToSuperview().offset(-16)
-            make.height.equalTo(32)
+            make.height.equalTo(44)
             make.bottom.equalToSuperview().offset(-16)
         }
 

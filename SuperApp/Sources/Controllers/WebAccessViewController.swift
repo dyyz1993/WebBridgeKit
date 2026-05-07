@@ -184,7 +184,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         // 绑定标题
         output.title
             .drive(onNext: { [weak self] title in
-                self?.title = title ?? "网页访问"
+                self?.title = title ?? L10n.tr("web_access.title")
             })
             .disposed(by: rx)
 
@@ -214,7 +214,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         output.cacheProgress
             .drive(onNext: { [weak self] progress in
                 if progress > 0 && progress < 1 {
-                    self?.loadingView.updateProgress(progress, message: "缓存中...")
+                    self?.loadingView.updateProgress(progress, message: L10n.tr("web_access.caching"))
                 } else if progress >= 1 {
                     self?.loadingView.stopLoading()
                 }
@@ -237,7 +237,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         output.loading
             .drive(onNext: { [weak self] loading in
                 if loading {
-                    self?.loadingView.startLoading(message: "加载中...")
+                    self?.loadingView.startLoading(message: L10n.tr("web_access.loading"))
                 } else {
                     self?.loadingView.stopLoading()
                 }
@@ -248,7 +248,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         output.errorMessage
             .drive(onNext: { [weak self] message in
                 guard let message = message else { return }
-                self?.showAlert(title: "提示", message: message)
+                self?.showAlert(title: L10n.tr("common.notice"), message: message)
             })
             .disposed(by: rx)
     }
@@ -387,12 +387,12 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private func openCacheResources() {
         guard let history = viewModel.getCurrentHistory() else {
-            showAlert(title: "提示", message: "该页面尚未缓存")
+            showAlert(title: L10n.tr("common.notice"), message: L10n.tr("web_access.not_cached"))
             return
         }
 
         guard let url = URL(string: history.url) else {
-            showAlert(title: "提示", message: "无效的页面地址")
+            showAlert(title: L10n.tr("common.notice"), message: L10n.tr("web_access.invalid_url"))
             return
         }
 
@@ -402,22 +402,20 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     @objc private func handleRefresh() {
         guard currentURL != nil else {
-            refreshControl.endRefreshing()
+            webView.scrollView.refreshControl?.endRefreshing()
             return
         }
 
-        // 重新加载页面
         webView.reload()
 
-        // 延迟结束刷新
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.refreshControl.endRefreshing()
+            self?.webView.scrollView.refreshControl?.endRefreshing()
         }
     }
 
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.confirm"), style: .default))
         present(alert, animated: true)
     }
 
@@ -461,14 +459,14 @@ extension WebAccessViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         let alert = UIAlertController(
-            title: "加载失败",
+            title: L10n.tr("web_access.load_failed"),
             message: error.localizedDescription,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "重试", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("web_access.retry"), style: .default) { [weak self] _ in
             self?.webView.reload()
         })
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
         present(alert, animated: true)
     }
 

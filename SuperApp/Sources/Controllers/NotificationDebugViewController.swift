@@ -64,7 +64,7 @@ class NotificationDebugViewController: UIViewController {
     private let callSwitch = UISwitch()
     private let badgeInput = makeTextField(placeholder: L10n.tr("notif_debug.field.badge_number"))
 
-    private let iconInput = makeTextField(placeholder: "Icon URL")
+    private let iconInput = makeTextField(placeholder: L10n.tr("notif_debug.field.icon_url"))
     private let imageInput = makeTextField(placeholder: L10n.tr("notif_debug.field.image"))
     private let imagePreview: UIImageView = {
         let iv = UIImageView()
@@ -146,7 +146,7 @@ class NotificationDebugViewController: UIViewController {
             makeRow(label: L10n.tr("notif_debug.field.title"), view: titleInput),
             makeRow(label: L10n.tr("notif_debug.field.subtitle"), view: subtitleInput),
             makeVerticalRow(label: L10n.tr("notif_debug.field.body"), view: bodyInput),
-            makeRow(label: "Markdown", view: markdownSwitch)
+            makeRow(label: L10n.tr("notif_debug.field.markdown"), view: markdownSwitch)
         ])
 
         addSection(title: L10n.tr("notif_debug.section.behavior"), views: [
@@ -158,13 +158,13 @@ class NotificationDebugViewController: UIViewController {
         ])
 
         addSection(title: L10n.tr("notif_debug.section.visual"), views: [
-            makeRow(label: "Icon", view: iconInput),
+            makeRow(label: L10n.tr("notif_debug.field.icon"), view: iconInput),
             makeRow(label: L10n.tr("notif_debug.field.image"), view: imageInput),
             imagePreview
         ])
 
         addSection(title: L10n.tr("notif_debug.section.action"), views: [
-            makeRow(label: "URL", view: urlInput),
+            makeRow(label: L10n.tr("notif_debug.field.url"), view: urlInput),
             makeRow(label: L10n.tr("notif_debug.field.group"), view: groupInput),
             makeRow(label: L10n.tr("notif_debug.field.auto_copy"), view: autocopySwitch),
             makeRow(label: L10n.tr("notif_debug.field.archive"), view: archiveSwitch)
@@ -189,6 +189,10 @@ class NotificationDebugViewController: UIViewController {
 
         sendButton.addTarget(self, action: #selector(sendNotification), for: .touchUpInside)
         levelSegment.addTarget(self, action: #selector(levelChanged), for: .valueChanged)
+
+        sendButton.snp.makeConstraints { make in
+            make.height.equalTo(48)
+        }
     }
 
     private func addSection(title: String, views: [UIView]) {
@@ -249,34 +253,37 @@ class NotificationDebugViewController: UIViewController {
     }
 
     private func makeTemplateGrid() -> UIStackView {
-        let templates: [(String, String, String, String, String, String, String, Bool)] = [
-            ("简单通知", "测试通知", "这是一条测试通知", "", "active", "", "", false),
-            ("图片通知", "图片通知", "查看图片", "https://via.placeholder.com/300", "active", "", "", false),
-            ("紧急通知", "紧急通知", "请立即查看!", "", "timeSensitive", "alarm", "", false),
-            ("Markdown", "Markdown", "# Hello\n- Item 1\n- Item 2", "", "active", "", "", true),
-            ("链接通知", "链接", "点击打开", "", "active", "", "https://example.com", false),
-            ("加密通知", "加密通知", "encrypted content", "", "active", "", "", false)
+        let templateDisplayNames = [
+            L10n.tr("notif_debug.template.simple"),
+            L10n.tr("notif_debug.template.image"),
+            L10n.tr("notif_debug.template.urgent"),
+            "Markdown",
+            L10n.tr("notif_debug.template.link"),
+            L10n.tr("notif_debug.template.encrypted")
         ]
 
         let outerStack = UIStackView()
         outerStack.axis = .vertical
         outerStack.spacing = 8
 
-        for i in stride(from: 0, to: templates.count, by: 2) {
+        for i in stride(from: 0, to: templateDisplayNames.count, by: 2) {
             let row = UIStackView()
             row.axis = .horizontal
             row.spacing = 8
             row.distribution = .fillEqually
 
-            for j in i..<min(i + 2, templates.count) {
-                let t = templates[j]
+            for j in i..<min(i + 2, templateDisplayNames.count) {
                 let btn = UIButton(type: .system)
-                btn.setTitle(t.0, for: .normal)
+                btn.setTitle(templateDisplayNames[j], for: .normal)
+                btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
                 btn.layer.cornerRadius = 8
                 btn.layer.borderWidth = 1
                 btn.layer.borderColor = ThemeColors.current.primary.cgColor
                 btn.tag = j
                 btn.addTarget(self, action: #selector(applyTemplate(_:)), for: .touchUpInside)
+                btn.snp.makeConstraints { make in
+                    make.height.equalTo(44)
+                }
                 row.addArrangedSubview(btn)
             }
             outerStack.addArrangedSubview(row)

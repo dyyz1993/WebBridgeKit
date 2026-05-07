@@ -144,4 +144,11 @@ class ButtonCell: UITableViewCell {
             actionButton.backgroundColor = UIColor.quaternarySystemFill
         }
     }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        buttonType = .test
+        titleLabel.text = ""
+        onButtonTap = nil
+    }
 }

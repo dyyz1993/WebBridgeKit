@@ -130,7 +130,7 @@ private class HandlerDebugListViewController: UIViewController {
     }
 
     @objc private func performOneClickTest() {
-        let alert = UIAlertController(title: L10n.tr("debug.panel.execute_test"), message: "Select Handler test", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: L10n.tr("debug.panel.execute_test"), message: L10n.tr("debug.panel.select_handler_test"), preferredStyle: .actionSheet)
 
         for (_, handlers) in categories {
             for handler in handlers {
@@ -296,6 +296,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         copyButton.addTarget(self, action: #selector(copyResult), for: .touchUpInside)
         stack.addArrangedSubview(copyButton)
 
+        view.addSubview(scrollView)
         scrollView.addSubview(stack)
 
         scrollView.snp.makeConstraints { make in
@@ -351,7 +352,7 @@ private class HandlerDebugDetailViewController: UIViewController {
             }
         }
 
-        resultTextView.text = "Executing \(meta.action)...\nParams: \(params)"
+        resultTextView.text = L10n.tr("debug.panel.executing_format", meta.action)
 
         StructuredLogger.shared.info("Debug execute: \(meta.action)", category: .diagnostic, action: meta.action)
 

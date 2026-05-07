@@ -83,4 +83,10 @@ class SegmentedCell: UITableViewCell {
     @objc private func segmentChanged() {
         onSegmentChange?(segmentedControl.selectedSegmentIndex)
     }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = ""
+        onSegmentChange = nil
+    }
 }

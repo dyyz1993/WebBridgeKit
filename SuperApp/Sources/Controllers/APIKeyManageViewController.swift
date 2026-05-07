@@ -122,7 +122,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     // 临时密钥标题
     private let temporaryKeysHeader: UILabel = {
         let label = UILabel()
-        label.text = "临时密钥"
+        label.text = L10n.tr("apikey.manage.temporary_keys")
         label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
         label.textColor = UIColor.label
         return label
@@ -130,7 +130,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private let temporaryKeysDescription: UILabel = {
         let label = UILabel()
-        label.text = "创建有时效性的临时密钥用于临时访问"
+        label.text = L10n.tr("apikey.manage.temporary_keys_desc")
         label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         label.textColor = UIColor.secondaryLabel
         label.numberOfLines = 0
@@ -159,39 +159,42 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private let barkConfigTitle: UILabel = {
         let label = UILabel()
-        label.text = "Bark 推送配置 (开发调试)"
+        label.text = L10n.tr("apikey.manage.bark_config_title")
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         label.textColor = UIColor.label
+        label.numberOfLines = 0
         return label
     }()
 
     private let barkKeyTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "在此输入您的 Bark Key (从手机 Bark App 获取)"
+        tf.placeholder = L10n.tr("apikey.manage.bark_key_placeholder")
         tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         tf.borderStyle = .none
         tf.backgroundColor = UIColor.tertiarySystemBackground
         tf.layer.cornerRadius = 8
-        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
+        tf.leftView = paddingView
         tf.leftViewMode = .always
         return tf
     }()
 
     private let barkServerTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "服务器地址 (默认: https://api.day.app)"
+        tf.placeholder = L10n.tr("apikey.manage.bark_server_placeholder")
         tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         tf.borderStyle = .none
         tf.backgroundColor = UIColor.tertiarySystemBackground
         tf.layer.cornerRadius = 8
-        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
+        tf.leftView = paddingView
         tf.leftViewMode = .always
         return tf
     }()
 
     private let saveBarkConfigButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("保存配置", for: .normal)
+        button.setTitle(L10n.tr("apikey.manage.save_config"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         button.backgroundColor = UIColor.systemBlue
         button.setTitleColor(.white, for: .normal)
@@ -272,19 +275,19 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         copyPermanentKeyButton.snp.makeConstraints { make in
             make.left.equalTo(permanentKeyIcon.snp.right).offset(12)
             make.top.equalTo(permanentKeyValue.snp.bottom).offset(12)
-            make.height.equalTo(32)
+            make.height.equalTo(36)
         }
 
         refreshKeyButton.snp.makeConstraints { make in
             make.left.equalTo(copyPermanentKeyButton.snp.right).offset(12)
             make.centerY.equalTo(copyPermanentKeyButton)
-            make.height.equalTo(32)
+            make.height.equalTo(36)
         }
 
         testPermanentKeyButton.snp.makeConstraints { make in
             make.left.equalTo(refreshKeyButton.snp.right).offset(12)
             make.centerY.equalTo(copyPermanentKeyButton)
-            make.height.equalTo(32)
+            make.height.equalTo(36)
         }
 
         permanentKeySeparator.snp.makeConstraints { make in
@@ -298,7 +301,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
             make.top.equalTo(permanentKeySeparator.snp.bottom).offset(12)
             make.left.equalToSuperview().offset(16)
             make.right.equalToSuperview().offset(-16)
-            make.height.equalTo(32)
+            make.height.equalTo(44)
             make.bottom.equalToSuperview().offset(-16)
         }
 
@@ -379,8 +382,8 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         // 空状态视图配置
         emptyStateView.configure(
             icon: "clock.badge.xmark",
-            title: "暂无临时密钥",
-            description: "点击右上角 + 按钮创建临时密钥",
+            title: L10n.tr("apikey.manage.empty_title"),
+            description: L10n.tr("apikey.manage.empty_description"),
             actionTitle: nil
         )
 
@@ -492,14 +495,13 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     @objc private func refreshKeyTapped() {
         let alert = UIAlertController(
-            title: "刷新永久密钥",
-            message: "刷新后旧的永久密钥将失效，确认要继续吗？",
+            title: L10n.tr("apikey.manage.refresh_confirm_title"),
+            message: L10n.tr("apikey.manage.refresh_confirm_message"),
             preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "确认刷新", style: .destructive) { [weak self] _ in
-            // 触发刷新
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("apikey.manage.refresh_confirm"), style: .destructive) { [weak self] _ in
             self?.refreshKeySubject.onNext(())
         })
 
@@ -520,8 +522,8 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
         viewModel.saveBarkConfig(key: key, server: server)
 
-        let alert = UIAlertController(title: "保存成功", message: "Bark 配置已更新", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let alert = UIAlertController(title: L10n.tr("apikey.manage.save_success"), message: L10n.tr("apikey.manage.bark_save_message"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
 
         view.endEditing(true)
@@ -560,40 +562,38 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private func showKeyCreationDialog() {
         let alert = UIAlertController(
-            title: "创建临时密钥",
-            message: "请输入密钥名称和绑定的群组 ID（可选）",
+            title: L10n.tr("apikey.manage.create_title"),
+            message: L10n.tr("apikey.manage.create_message"),
             preferredStyle: .alert
         )
 
         alert.addTextField { textField in
-            textField.placeholder = "密钥名称（如：GitHub 推送）"
+            textField.placeholder = L10n.tr("apikey.manage.create_name_placeholder")
         }
 
         alert.addTextField { textField in
-            textField.placeholder = "群组 ID (可选)"
+            textField.placeholder = L10n.tr("apikey.manage.create_group_placeholder")
         }
 
         let durations: [(String, TimeInterval)] = [
-            ("1 小时", 3600),
-            ("1 天", 86400),
-            ("7 天", 604800),
-            ("30 天", 2592000)
+            (L10n.tr("apikey.manage.duration_1h"), 3600),
+            (L10n.tr("apikey.manage.duration_1d"), 86400),
+            (L10n.tr("apikey.manage.duration_7d"), 604800),
+            (L10n.tr("apikey.manage.duration_30d"), 2592000)
         ]
 
-        // 这里为了简化 UI，使用二级弹窗选择时长
-        alert.addAction(UIAlertAction(title: "下一步", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("apikey.manage.next_step"), style: .default) { [weak self] _ in
             let name = alert.textFields?[0].text
             let groupId = alert.textFields?[1].text
 
-            let durationAlert = UIAlertController(title: "选择有效期", message: nil, preferredStyle: .actionSheet)
+            let durationAlert = UIAlertController(title: L10n.tr("apikey.manage.select_duration"), message: nil, preferredStyle: .actionSheet)
             for (title, duration) in durations {
                 durationAlert.addAction(UIAlertAction(title: title, style: .default) { _ in
                     self?.viewModel.addTemporaryKey(duration: duration, name: name, groupId: groupId)
                 })
             }
-            durationAlert.addAction(UIAlertAction(title: "取消", style: .cancel))
+            durationAlert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
 
-            // iPad 支持
             if let popoverController = durationAlert.popoverPresentationController {
                 popoverController.barButtonItem = self?.navigationItem.rightBarButtonItem
             }
@@ -601,47 +601,47 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
             self?.present(durationAlert, animated: true)
         })
 
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
         present(alert, animated: true)
     }
 
     private func showRefreshSuccess() {
         let alert = UIAlertController(
-            title: "刷新成功",
-            message: "永久密钥已刷新",
+            title: L10n.tr("apikey.manage.refresh_success"),
+            message: L10n.tr("apikey.manage.refresh_success_message"),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     private func showCopySuccess() {
         let alert = UIAlertController(
-            title: "复制成功",
-            message: "密钥已复制到剪贴板",
+            title: L10n.tr("apikey.manage.copy_success"),
+            message: L10n.tr("apikey.manage.copy_success_message"),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     private func showAddSuccess() {
         let alert = UIAlertController(
-            title: "创建成功",
-            message: "临时密钥已创建",
+            title: L10n.tr("apikey.manage.add_success"),
+            message: L10n.tr("apikey.manage.add_success_message"),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     private func showTestPushResult(success: Bool, message: String) {
         let alert = UIAlertController(
-            title: success ? "测试成功" : "测试失败",
+            title: success ? L10n.tr("apikey.manage.test_success") : L10n.tr("apikey.manage.test_failure"),
             message: message,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
@@ -689,14 +689,14 @@ extension APIKeyManageViewController: UITableViewDelegate {
         let key = currentTemporaryKeys[indexPath.row]
 
         // 删除操作
-        let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] _, _, completion in
+        let deleteAction = UIContextualAction(style: .destructive, title: L10n.tr("common.delete")) { [weak self] _, _, completion in
             self?.deleteKeySubject.onNext(key.id)
             completion(true)
         }
         deleteAction.image = UIImage(systemName: "trash")
 
         // 测试操作
-        let testAction = UIContextualAction(style: .normal, title: "测试") { [weak self] _, _, completion in
+        let testAction = UIContextualAction(style: .normal, title: L10n.tr("apikey.manage.test")) { [weak self] _, _, completion in
             self?.viewModel.sendTemporaryKeyTestPush(key: key)
             completion(true)
         }
@@ -704,7 +704,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
         testAction.image = UIImage(systemName: "paperplane.fill")
 
         // 编辑操作
-        let editAction = UIContextualAction(style: .normal, title: "编辑") { [weak self] _, _, completion in
+        let editAction = UIContextualAction(style: .normal, title: L10n.tr("common.edit")) { [weak self] _, _, completion in
             self?.showEditGroupIdDialog(for: key)
             completion(true)
         }
@@ -723,18 +723,18 @@ extension APIKeyManageViewController {
 
     private func showEditGroupIdDialog(for key: APIKey) {
         let alert = UIAlertController(
-            title: "编辑群组绑定",
-            message: "修改密钥 \"\(key.name)\" 绑定的群组 ID",
+            title: L10n.tr("apikey.manage.edit_group_title"),
+            message: L10n.tr("apikey.manage.edit_group_message", key.name),
             preferredStyle: .alert
         )
 
         alert.addTextField { textField in
-            textField.placeholder = "群组 ID"
+            textField.placeholder = L10n.tr("apikey.manage.group_id")
             textField.text = key.boundGroupId
         }
 
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "保存", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.save"), style: .default) { [weak self] _ in
             let newGroupId = alert.textFields?.first?.text
             self?.viewModel.updateKeyGroupId(id: key.id, groupId: newGroupId)
         })

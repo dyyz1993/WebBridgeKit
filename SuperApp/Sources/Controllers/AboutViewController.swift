@@ -58,7 +58,6 @@ class AboutViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        tableView.isScrollEnabled = false
         tableView.separatorStyle = .singleLine
         return tableView
     }()
@@ -178,11 +177,10 @@ class AboutViewController: UIViewController {
         tableView.snp.makeConstraints { make in
             make.top.equalTo(headerContainerView.snp.bottom)
             make.left.right.equalToSuperview()
-            make.height.equalTo(calculateTableViewHeight())
+            make.bottom.equalTo(footerLabel.snp.top).offset(-16)
         }
 
         footerLabel.snp.makeConstraints { make in
-            make.top.equalTo(tableView.snp.bottom).offset(16)
             make.left.right.equalToSuperview().inset(20)
             make.bottom.lessThanOrEqualTo(view.safeAreaLayoutGuide).offset(-16)
         }
@@ -215,35 +213,9 @@ class AboutViewController: UIViewController {
 
     // MARK: - Helper Methods
 
-    private func calculateTableViewHeight() -> CGFloat {
-        var height: CGFloat = 0
-        for section in Section.allCases {
-            height += 44 // header height
-            height += CGFloat(section.items.count) * 44 // cell height
-            height += 8 // footer height
-        }
-        return height
-    }
-
     private func showLicenseAlert() {
         let alert = UIAlertController(title: "MIT License", message: nil, preferredStyle: .alert)
 
-        // 创建自定义视图来显示完整的许可证文本
-        let textView = UITextView()
-        textView.text = mitLicenseText
-        textView.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        textView.textColor = .label
-        textView.backgroundColor = .clear
-        textView.isEditable = false
-        textView.isScrollEnabled = true
-        textView.translatesAutoresizingMaskIntoConstraints = false
-
-        let height: CGFloat = 400
-        alert.setValue(height, forKey: "heightConstraintFactor")
-
-        alert.addAction(UIAlertAction(title: L10n.tr("about.close"), style: .default))
-
-        // 使用 attributed string 来显示文本
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .left
         paragraphStyle.lineSpacing = 4
@@ -257,7 +229,9 @@ class AboutViewController: UIViewController {
             ]
         )
 
-        alert.setValue(attributedString.string, forKey: "attributedMessage")
+        alert.setValue(attributedString, forKey: "attributedMessage")
+
+        alert.addAction(UIAlertAction(title: L10n.tr("about.close"), style: .default))
 
         present(alert, animated: true)
     }
@@ -294,28 +268,32 @@ extension AboutViewController: UITableViewDataSource {
         let section = Section.allCases[indexPath.section]
         let item = section.items[indexPath.row]
 
-        cell.textLabel?.text = item
-        cell.textLabel?.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        cell.textLabel?.numberOfLines = 0
-        cell.selectionStyle = .default
+        var content = cell.defaultContentConfiguration()
+        content.text = item
+        content.textProperties.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        content.textProperties.numberOfLines = 0
 
-        // 为不同的 section 设置不同的样式
         switch section {
         case .introduction:
-            cell.textLabel?.textColor = .secondaryLabel
+            content.textProperties.color = .secondaryLabel
+            content.textProperties.alignment = .left
             cell.selectionStyle = .none
-            cell.textLabel?.textAlignment = .left
-        case .features:
-            cell.textLabel?.textColor = .label
             cell.accessoryType = .none
+        case .features:
+            content.textProperties.color = .label
             cell.selectionStyle = .none
+            cell.accessoryType = .none
         case .license:
-            cell.textLabel?.textColor = .systemBlue
+            content.textProperties.color = .systemBlue
             cell.accessoryType = .disclosureIndicator
+            cell.selectionStyle = .default
         case .feedback:
-            cell.textLabel?.textColor = .systemBlue
+            content.textProperties.color = .systemBlue
             cell.accessoryType = .disclosureIndicator
+            cell.selectionStyle = .default
         }
+
+        cell.contentConfiguration = content
 
         return cell
     }
@@ -346,20 +324,6 @@ extension AboutViewController: UITableViewDelegate {
         default:
             break
         }
-    }
-
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        let section = Section.allCases[indexPath.section]
-
-        if section == .introduction {
-            // 为简介内容计算动态高度
-            let text = section.items[indexPath.row]
-            let width = tableView.bounds.width - 40
-            let height = text.height(withConstrainedWidth: width, font: UIFont.systemFont(ofSize: 15, weight: .regular))
-            return max(height + 20, 44)
-        }
-
-        return UITableView.automaticDimension
     }
 }
 

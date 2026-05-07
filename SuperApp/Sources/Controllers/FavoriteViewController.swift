@@ -42,6 +42,9 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         let image = UIImage(systemName: "plus", withConfiguration: config)
         button.setImage(image, for: .normal)
         button.tintColor = .label
+        button.snp.makeConstraints { make in
+            make.width.height.equalTo(44)
+        }
         return button
     }()
 
@@ -54,7 +57,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "收藏"
+        title = L10n.tr("favorite.title")
 
         // Set accessibility identifier for the view
         view.accessibilityIdentifier = "FavoriteViewController"
@@ -96,8 +99,8 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         // 配置空状态
         emptyStateView.configure(
             icon: "star",
-            title: "暂无收藏",
-            description: "点击右上角添加收藏，或浏览网页时收藏页面",
+            title: L10n.tr("favorite.empty_title"),
+            description: L10n.tr("favorite.empty_description"),
             actionTitle: nil
         )
 
@@ -247,13 +250,13 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
     private func handleDelete(id: String) {
         let alert = UIAlertController(
-            title: "确认删除",
-            message: "确定要删除这个收藏吗？",
+            title: L10n.tr("favorite.confirm_delete"),
+            message: L10n.tr("favorite.delete_message"),
             preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "删除", style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.delete"), style: .destructive) { _ in
             let input = FavoriteViewModel.Input(
                 refresh: .empty(),
                 itemSelect: .empty(),
@@ -278,14 +281,14 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         tableView.setEditing(true, animated: true)
 
         // 显示操作菜单
-        let alert = UIAlertController(title: "操作", message: "请选择操作", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: L10n.tr("favorite.actions"), message: L10n.tr("favorite.select_action"), preferredStyle: .actionSheet)
 
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel) { _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel) { _ in
             self.isEditingMode = false
             self.tableView.setEditing(false, animated: true)
         })
 
-        alert.addAction(UIAlertAction(title: "删除", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.tr("common.delete"), style: .destructive) { [weak self] _ in
             guard let self = self else { return }
 
             // Get all favorites flattened from sections
@@ -316,7 +319,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
 extension FavoriteViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] _, _, completion in
+        let deleteAction = UIContextualAction(style: .destructive, title: L10n.tr("common.delete")) { [weak self] _, _, completion in
             guard let self = self else {
                 completion(false)
                 return
@@ -383,7 +386,7 @@ extension FavoriteViewController: UITableViewDropDelegate {
         if let destinationIndexPath = destinationIndexPath,
            let section = currentSections[safe: destinationIndexPath.section] {
             // 只有普通收藏可以拖拽，置顶的不可以
-            if section.header == "收藏" {
+            if section.header == L10n.tr("favorite.section_favorites") {
                 return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
             }
         }

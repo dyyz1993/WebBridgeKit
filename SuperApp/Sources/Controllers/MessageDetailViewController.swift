@@ -200,18 +200,20 @@ class MessageDetailViewController: UIViewController {
 
     private func addAction(title: String, icon: LucideIcon, isDestructive: Bool = false, handler: @escaping () -> Void) {
         let button = UIButton(type: .system)
-        button.setImage(icon.templateImage(pointSize: 16), for: .normal)
-        button.setTitle("  \(title)", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.contentHorizontalAlignment = .leading
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-        button.backgroundColor = ThemeColors.current.cardBackground
-        button.layer.cornerRadius = 10
-
+        var config = UIButton.Configuration.plain()
+        config.title = "  \(title)"
+        config.image = icon.templateImage(pointSize: 16)
+        config.imagePadding = 8
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+        config.baseBackgroundColor = ThemeColors.current.cardBackground
         if isDestructive {
-            button.tintColor = .systemRed
-            button.setTitleColor(.systemRed, for: .normal)
+            config.baseForegroundColor = .systemRed
         }
+        button.configuration = config
+        button.contentHorizontalAlignment = .leading
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
+        button.backgroundColor = ThemeColors.current.cardBackground
 
         button.addAction(UIAction { _ in handler() }, for: .touchUpInside)
 

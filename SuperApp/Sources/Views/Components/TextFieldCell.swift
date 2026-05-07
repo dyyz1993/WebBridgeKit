@@ -150,4 +150,15 @@ class TextFieldCell: UITableViewCell {
     override func resignFirstResponder() -> Bool {
         return textField.resignFirstResponder()
     }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = ""
+        textField.text = ""
+        textField.placeholder = ""
+        errorLabel.text = ""
+        errorLabel.isHidden = true
+        separatorLine.backgroundColor = UIColor.separator
+        onTextChange = nil
+    }
 }

@@ -30,6 +30,7 @@ class FavoriteCell: UITableViewCell {
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = ThemeColors.current.primary
         imageView.backgroundColor = .tertiarySystemBackground
+        imageView.layer.cornerRadius = 8
         imageView.layer.masksToBounds = true
         imageView.clipsToBounds = true
         return imageView
@@ -40,6 +41,7 @@ class FavoriteCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         label.textColor = UIColor.label
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -48,6 +50,7 @@ class FavoriteCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         label.textColor = UIColor.secondaryLabel
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingMiddle
         return label
     }()
 
@@ -79,7 +82,7 @@ class FavoriteCell: UITableViewCell {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = UIColor.secondaryLabel
-        label.text = "缓存模式"
+        label.text = L10n.tr("favorite.cache_mode")
         return label
     }()
 
@@ -139,27 +142,27 @@ class FavoriteCell: UITableViewCell {
         }
 
         pinButton.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(8)
-            make.right.equalToSuperview().offset(-12)
-            make.width.height.equalTo(32)
+            make.top.equalToSuperview().offset(4)
+            make.right.equalToSuperview().offset(-4)
+            make.width.height.equalTo(44)
         }
 
         favoriteIconView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().offset(-8)
-            make.right.equalToSuperview().offset(-12)
+            make.bottom.equalToSuperview().offset(-4)
+            make.right.equalToSuperview().offset(-8)
             make.width.height.equalTo(20)
         }
 
         titleLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
             make.left.equalTo(faviconImageView.snp.right).offset(12)
-            make.right.equalTo(pinButton.snp.left).offset(-8)
+            make.right.equalTo(pinButton.snp.left).offset(-4)
         }
 
         urlLabel.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
             make.left.equalTo(faviconImageView.snp.right).offset(12)
-            make.right.equalTo(pinButton.snp.left).offset(-8)
+            make.right.equalTo(pinButton.snp.left).offset(-4)
         }
 
         cacheModeLabel.snp.makeConstraints { make in
@@ -192,7 +195,7 @@ class FavoriteCell: UITableViewCell {
         }
 
         // 设置标题
-        titleLabel.text = favorite.title ?? "未知页面"
+        titleLabel.text = favorite.title ?? L10n.tr("favorite.unknown_page")
 
         // 设置 URL
         if let url = URL(string: favorite.url) {

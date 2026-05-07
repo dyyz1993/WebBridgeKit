@@ -38,25 +38,29 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }()
 
     private let copyButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle(L10n.tr("common.copy"), for: .normal)
-        button.setImage(LucideIcon.copy.image(pointSize: 16), for: .normal)
+        var config = UIButton.Configuration.plain()
+        config.image = LucideIcon.copy.image(pointSize: 16)
+        config.title = L10n.tr("common.copy")
+        config.imagePadding = 4
+        config.baseForegroundColor = .white
+        let button = UIButton(configuration: config)
         button.backgroundColor = ThemeColors.current.primary
-        button.setTitleColor(.white, for: .normal)
-        button.tintColor = .white
         button.layer.cornerRadius = 10
+        button.layer.masksToBounds = true
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         return button
     }()
 
     private let shareButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle(L10n.tr("common.share"), for: .normal)
-        button.setImage(LucideIcon.share.image(pointSize: 16), for: .normal)
+        var config = UIButton.Configuration.plain()
+        config.image = LucideIcon.share.image(pointSize: 16)
+        config.title = L10n.tr("common.share")
+        config.imagePadding = 4
+        config.baseForegroundColor = .white
+        let button = UIButton(configuration: config)
         button.backgroundColor = .systemGray
-        button.setTitleColor(.white, for: .normal)
-        button.tintColor = .white
         button.layer.cornerRadius = 10
+        button.layer.masksToBounds = true
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         return button
     }()

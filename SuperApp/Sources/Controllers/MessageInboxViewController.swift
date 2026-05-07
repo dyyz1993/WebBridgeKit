@@ -25,7 +25,7 @@ class MessageInboxViewController: UIViewController {
     }
 
     private let segmentedControl: UISegmentedControl = {
-        let control = UISegmentedControl(items: ["全部", "未读", "应用"])
+        let control = UISegmentedControl(items: [L10n.tr("message.inbox.all"), L10n.tr("message.inbox.unread"), L10n.tr("message.inbox.apps")])
         control.selectedSegmentIndex = 0
         return control
     }()
@@ -42,7 +42,7 @@ class MessageInboxViewController: UIViewController {
 
     private lazy var emptyLabel: UILabel = {
         let label = UILabel()
-        label.text = "暂无消息"
+        label.text = L10n.tr("message.inbox.empty")
         label.textColor = .secondaryLabel
         label.isHidden = true
         return label
@@ -85,10 +85,10 @@ class MessageInboxViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
-        title = "消息中心"
+        title = L10n.tr("message.inbox.title")
 
         navigationItem.titleView = segmentedControl
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "清空", style: .plain, target: self, action: #selector(clearAll))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: L10n.tr("message.inbox.clear_all"), style: .plain, target: self, action: #selector(clearAll))
 
         view.addSubview(tableView)
         view.addSubview(emptyLabel)
@@ -154,18 +154,15 @@ class MessageInboxViewController: UIViewController {
         } else if let appId = message.payload.targetAppId {
             if let result = ManifestStore.shared.getManifestByAppId(appId),
                let url = URL(string: result.key) {
-                print("🚀 [Inbox] Opening AppID: \(appId) with URL: \(url)")
                 let params = WebBrowserParams(payload: message.payload.userInfo)
                 WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
             } else {
-                print("⚠️ [Inbox] AppID not found in cache: \(appId)")
-
                 if let url = URL(string: appId), url.scheme == "http" || url.scheme == "https" {
                     let params = WebBrowserParams(payload: message.payload.userInfo)
                     WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
                 } else {
-                    let alert = UIAlertController(title: "无法打开应用", message: "未找到 AppID 为 \(appId) 的本地缓存。请确保该应用已安装或已同步。", preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "确定", style: .default))
+                    let alert = UIAlertController(title: L10n.tr("message.inbox.cannot_open_app"), message: L10n.tr("message.inbox.app_not_found_format", appId), preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
                     present(alert, animated: true)
                 }
             }
@@ -173,9 +170,9 @@ class MessageInboxViewController: UIViewController {
     }
 
     @objc private func clearAll() {
-        let alert = UIAlertController(title: "确认清空", message: "是否删除所有消息？", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "清空", style: .destructive) { [weak self] _ in
+        let alert = UIAlertController(title: L10n.tr("message.inbox.confirm_clear_title"), message: L10n.tr("message.inbox.confirm_clear_message"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("message.inbox.clear_all"), style: .destructive) { [weak self] _ in
             Task {
                 await MessageEngine.shared.clearAllMessages()
                 self?.refreshMessages()
@@ -223,17 +220,22 @@ class MessageCell: UITableViewCell {
         iconImageView.tintColor = .systemBlue
 
         titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.numberOfLines = 2
+        titleLabel.lineBreakMode = .byTruncatingTail
         bodyLabel.font = .systemFont(ofSize: 14)
         bodyLabel.textColor = .secondaryLabel
         bodyLabel.numberOfLines = 2
+        bodyLabel.lineBreakMode = .byTruncatingTail
 
         timeLabel.font = .systemFont(ofSize: 11)
         timeLabel.textColor = .tertiaryLabel
+        timeLabel.numberOfLines = 1
 
         sourceBadge.backgroundColor = UIColor.systemGray.withAlphaComponent(0.1)
         sourceBadge.layer.cornerRadius = 4
         sourceLabel.font = .systemFont(ofSize: 10, weight: .medium)
         sourceLabel.textColor = .secondaryLabel
+        sourceLabel.numberOfLines = 1
 
         unreadDot.backgroundColor = .systemRed
         unreadDot.layer.cornerRadius = 4
@@ -309,6 +311,19 @@ class MessageCell: UITableViewCell {
             make.trailing.equalToSuperview().offset(-12)
             make.bottom.equalToSuperview().offset(-12)
         }
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = nil
+        bodyLabel.text = nil
+        timeLabel.text = nil
+        sourceLabel.text = nil
+        unreadDot.isHidden = true
+        iconImageView.image = nil
+        iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        iconImageView.tintColor = .systemBlue
+        actionImageView.isHidden = true
     }
 
     func configure(with message: StoredMessage) {
