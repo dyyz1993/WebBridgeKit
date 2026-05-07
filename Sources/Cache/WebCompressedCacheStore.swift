@@ -151,15 +151,17 @@ public class WebCompressedCacheStore {
             try realm.write {
                 let compressedData = isCompressed ? finalData : nil
                 let entry = CacheEntryRealm.createOrUpdate(
-                    key: key,
-                    url: url,
-                    data: data,
-                    compressedData: compressedData,
-                    mimeType: mimeType,
-                    filePath: filePath.path,
-                    etag: etag,
-                    lastModified: lastModified,
-                    responseHeaders: responseHeaders
+                    options: CacheEntryRealm.CreationOptions(
+                        key: key,
+                        url: url,
+                        data: data,
+                        compressedData: compressedData,
+                        mimeType: mimeType,
+                        filePath: filePath.path,
+                        etag: etag,
+                        lastModified: lastModified,
+                        responseHeaders: responseHeaders
+                    )
                 )
                 realm.add(entry, update: .all)
             }

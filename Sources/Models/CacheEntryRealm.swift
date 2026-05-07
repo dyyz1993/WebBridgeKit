@@ -183,41 +183,52 @@ public class CacheEntryRealm: Object {
         accessCount += 1
     }
 
-    // 创建或更新缓存条目
-    // - Parameters:
-    //   - key: 缓存键
-    //   - url: URL
-    //   - data: 原始数据
-    //   - compressedData: 压缩后的数据（如果未压缩则为 nil）
-    //   - mimeType: MIME 类型
-    //   - filePath: 文件路径
-    //   - etag: ETag（可选）
-    //   - lastModified: 最后修改时间（可选）
-    //   - responseHeaders: 响应头（可选）
-    // - Returns: CacheEntryRealm 实例
-    // swiftlint:disable:next function_parameter_count
-    public static func createOrUpdate(
-        key: String,
-        url: String,
-        data: Data,
-        compressedData: Data?,
-        mimeType: String,
-        filePath: String,
-        etag: String? = nil,
-        lastModified: Date? = nil,
-        responseHeaders: [String: String]? = nil
-    ) -> CacheEntryRealm {
-        let entry = CacheEntryRealm()
-        entry.key = key
-        entry.url = url
-        entry.mimeType = mimeType
-        entry.originalSize = Int64(data.count)
-        entry.filePath = filePath
+    public struct CreationOptions {
+        public let key: String
+        public let url: String
+        public let data: Data
+        public let compressedData: Data?
+        public let mimeType: String
+        public let filePath: String
+        public let etag: String?
+        public let lastModified: Date?
+        public let responseHeaders: [String: String]?
 
-        if let compressed = compressedData {
+        public init(
+            key: String,
+            url: String,
+            data: Data,
+            compressedData: Data?,
+            mimeType: String,
+            filePath: String,
+            etag: String? = nil,
+            lastModified: Date? = nil,
+            responseHeaders: [String: String]? = nil
+        ) {
+            self.key = key
+            self.url = url
+            self.data = data
+            self.compressedData = compressedData
+            self.mimeType = mimeType
+            self.filePath = filePath
+            self.etag = etag
+            self.lastModified = lastModified
+            self.responseHeaders = responseHeaders
+        }
+    }
+
+    public static func createOrUpdate(options: CreationOptions) -> CacheEntryRealm {
+        let entry = CacheEntryRealm()
+        entry.key = options.key
+        entry.url = options.url
+        entry.mimeType = options.mimeType
+        entry.originalSize = Int64(options.data.count)
+        entry.filePath = options.filePath
+
+        if let compressed = options.compressedData {
             entry.isCompressed = true
             entry.compressedSize = Int64(compressed.count)
-            entry.compressionRatio = Double(compressed.count) / Double(data.count)
+            entry.compressionRatio = Double(compressed.count) / Double(options.data.count)
         } else {
             entry.isCompressed = false
             entry.compressedSize = entry.originalSize
@@ -227,11 +238,10 @@ public class CacheEntryRealm: Object {
         entry.createdAt = Date()
         entry.lastAccessedAt = Date()
         entry.accessCount = 1
-        entry.etag = etag
-        entry.lastModified = lastModified
+        entry.etag = options.etag
+        entry.lastModified = options.lastModified
 
-        // 将响应头字典转换为 JSON 字符串
-        if let headers = responseHeaders,
+        if let headers = options.responseHeaders,
            let jsonData = try? JSONSerialization.data(withJSONObject: headers, options: []) {
             entry.responseHeaders = String(data: jsonData, encoding: .utf8)
         }

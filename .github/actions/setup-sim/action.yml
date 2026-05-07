@@ -16,15 +16,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: List Available Runtimes
-      shell: bash
-      run: xcrun simctl list runtimes available | grep iOS
-
     - name: Create Simulator
       id: create
       shell: bash
       run: |
-        RUNTIME_ID=$(xcrun simctl list runtimes available -j | python3 -c "
+        xcrun simctl list runtimes available | grep iOS
+
+        RUNTIME_ID=$(xcrun simctl list runtimes available -j 2>/dev/null | python3 -c "
         import json, sys
         data = json.load(sys.stdin)
         for rt in data.get('runtimes', []):
@@ -35,11 +33,35 @@ runs:
         " 2>/dev/null)
 
         if [ -z "$RUNTIME_ID" ]; then
+          RUNTIME_ID=$(xcrun simctl list runtimes available | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.iOS[^ ]+' | head -1)
+        fi
+
+        if [ -z "$RUNTIME_ID" ]; then
+          RUNTIME_LINE=$(xcrun simctl list runtimes available | grep "iOS" | head -1)
+          echo "Available runtime line: $RUNTIME_LINE"
+          RUNTIME_ID=$(echo "$RUNTIME_LINE" | grep -oE '[A-F0-9-]{36}' | head -1)
+        fi
+
+        if [ -z "$RUNTIME_ID" ]; then
+          IOS_VERSION=$(xcrun simctl list runtimes | grep "iOS" | grep -oE '[0-9]+\.[0-9]+' | head -1)
+          RUNTIME_ID="com.apple.CoreSimulator.SimRuntime.iOS-${IOS_VERSION//./-}"
+        fi
+
+        if [ -z "$RUNTIME_ID" ]; then
           echo "ERROR: No iOS runtime found"
+          xcrun simctl list runtimes
           exit 1
         fi
 
+        echo "Using runtime: $RUNTIME_ID"
+
         DEVICE_ID=$(xcrun simctl create "${{ inputs.sim-name }}" "${{ inputs.device-type }}" "$RUNTIME_ID")
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Failed to create simulator"
+          xcrun simctl list devicetypes | grep -i "iphone"
+          exit 1
+        fi
+
         echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
         echo "Created simulator: $DEVICE_ID with runtime $RUNTIME_ID"
 
@@ -52,5 +74,9 @@ runs:
     - name: Wait for Simulator Ready
       shell: bash
       run: |
-        timeout 60 bash -c 'while ! xcrun simctl list devices booted | grep -q "${{ inputs.sim-name }}"; do sleep 2; done'
+        elapsed=0
+        while ! xcrun simctl list devices booted | grep -q "${{ inputs.sim-name }}" && [ $elapsed -lt 60 ]; do
+          sleep 2
+          elapsed=$((elapsed + 2))
+        done
         echo "Simulator ready"
