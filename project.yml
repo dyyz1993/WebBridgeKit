@@ -338,6 +338,86 @@ targets:
     dependencies:
       - target: Skills
 
+  HandlerTests-Part1:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: Tests/HandlerTests
+        excludes:
+          - WebNetworkHandlerTests.swift
+          - WebOpenPageHandlerTests.swift
+          - WebOpenSettingsHandlerTests.swift
+          - WebPageCacheHandlerTests.swift
+          - WebPayloadHandlerTests.swift
+          - WebPermissionHandlerTests.swift
+          - WebPermissionStatusHandlerTests.swift
+          - WebPhotoHandlerTests.swift
+          - WebResourceURLSchemeHandlerTests.swift
+          - WebScanHandlerTests.swift
+          - WebScreenHandlerTests.swift
+          - WebSensorsHandlerTests.swift
+          - WebSetModalHandlerTests.swift
+          - WebShareHandlerTests.swift
+          - WebSpeechHandlerTests.swift
+          - WebSpeechSynthesisHandlerTests.swift
+          - WebSystemExtraHandlerTests.swift
+          - WebSystemInfoHandlerTests.swift
+          - WebVibrationHandlerTests.swift
+          - WebVideoHandlerTests.swift
+          - WebMirroringHandlerTests.swift
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.HandlerTests-Part1
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
+  HandlerTests-Part2:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: Tests/HandlerTests
+        includes:
+          - WebNetworkHandlerTests.swift
+          - WebOpenPageHandlerTests.swift
+          - WebOpenSettingsHandlerTests.swift
+          - WebPageCacheHandlerTests.swift
+          - WebPayloadHandlerTests.swift
+          - WebPermissionHandlerTests.swift
+          - WebPermissionStatusHandlerTests.swift
+          - WebPhotoHandlerTests.swift
+          - WebResourceURLSchemeHandlerTests.swift
+          - WebScanHandlerTests.swift
+          - WebScreenHandlerTests.swift
+          - WebSensorsHandlerTests.swift
+          - WebSetModalHandlerTests.swift
+          - WebShareHandlerTests.swift
+          - WebSpeechHandlerTests.swift
+          - WebSpeechSynthesisHandlerTests.swift
+          - WebSystemExtraHandlerTests.swift
+          - WebSystemInfoHandlerTests.swift
+          - WebVibrationHandlerTests.swift
+          - WebVideoHandlerTests.swift
+          - WebMirroringHandlerTests.swift
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.HandlerTests-Part2
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
   HandlerTests:
     type: bundle.unit-test
     platform: iOS
@@ -720,6 +800,28 @@ schemes:
         - SkillsTests
       coverageTargets:
         - Skills
+
+  HandlerTests-Part1:
+    build:
+      targets:
+        HandlerTests-Part1: all
+    test:
+      config: Debug
+      targets:
+        - HandlerTests-Part1
+      coverageTargets:
+        - WebBridgeKit
+
+  HandlerTests-Part2:
+    build:
+      targets:
+        HandlerTests-Part2: all
+    test:
+      config: Debug
+      targets:
+        - HandlerTests-Part2
+      coverageTargets:
+        - WebBridgeKit
 
   HandlerTests:
     build:

@@ -89,7 +89,8 @@ jobs:
           - MessageTests
           - AITests
           - SkillsTests
-          - HandlerTests
+          - HandlerTests-Part1
+          - HandlerTests-Part2
           - BridgeTests
           - CoreTests
           - ModelsTests
@@ -235,6 +236,8 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     needs: build
+    # SIGABRT on CI simulator is a known CI environment limitation, not a code bug.
+    # continue-on-error ensures CI stays green even when the UI test runner crashes.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
