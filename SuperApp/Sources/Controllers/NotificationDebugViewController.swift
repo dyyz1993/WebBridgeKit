@@ -11,6 +11,21 @@ import SnapKit
 import RxSwift
 import WebBridgeKit
 
+private struct NotificationParams {
+    let server: String
+    let key: String
+    let title: String
+    let body: String
+    let level: String
+    let sound: String
+    let badge: String
+    let icon: String
+    let image: String
+    let url: String
+    let group: String
+    let notifId: String
+}
+
 class NotificationDebugViewController: UIViewController {
 
     private let disposeBag = DisposeBag()
@@ -369,29 +384,35 @@ class NotificationDebugViewController: UIViewController {
         responseView.text = L10n.tr("notif_debug.sending")
         responseView.textColor = .secondaryLabel
 
+        let params = NotificationParams(
+            server: server, key: key, title: title, body: body,
+            level: level, sound: sound, badge: badge, icon: icon,
+            image: image, url: url, group: group, notifId: notifId
+        )
+
         if isPost {
-            sendPOST(server: server, key: key, title: title, body: body, level: level, sound: sound, badge: badge, icon: icon, image: image, url: url, group: group, notifId: notifId)
+            sendPOST(params: params)
         } else {
-            sendGET(server: server, key: key, title: title, body: body, level: level, sound: sound, badge: badge, icon: icon, image: image, url: url, group: group, notifId: notifId)
+            sendGET(params: params)
         }
     }
 
-    private func sendGET(server: String, key: String, title: String, body: String, level: String, sound: String, badge: String, icon: String, image: String, url: String, group: String, notifId: String) {
-        let encodedTitle = title.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? title
-        let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? body
-        var path = "\(server)/\(key)/\(encodedTitle)/\(encodedBody)"
+    private func sendGET(params: NotificationParams) {
+        let encodedTitle = params.title.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? params.title
+        let encodedBody = params.body.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? params.body
+        var path = "\(params.server)/\(params.key)/\(encodedTitle)/\(encodedBody)"
 
         var items: [URLQueryItem] = []
-        if !level.isEmpty && level != "active" { items.append(URLQueryItem(name: "level", value: level)) }
-        if !sound.isEmpty { items.append(URLQueryItem(name: "sound", value: sound)) }
-        if !badge.isEmpty, let b = Int(badge) { items.append(URLQueryItem(name: "badge", value: "\(b)")) }
-        if !icon.isEmpty { items.append(URLQueryItem(name: "icon", value: icon)) }
-        if !image.isEmpty { items.append(URLQueryItem(name: "img", value: image)) }
-        if !url.isEmpty { items.append(URLQueryItem(name: "url", value: url)) }
-        if !group.isEmpty { items.append(URLQueryItem(name: "group", value: group)) }
+        if !params.level.isEmpty && params.level != "active" { items.append(URLQueryItem(name: "level", value: params.level)) }
+        if !params.sound.isEmpty { items.append(URLQueryItem(name: "sound", value: params.sound)) }
+        if !params.badge.isEmpty, let b = Int(params.badge) { items.append(URLQueryItem(name: "badge", value: "\(b)")) }
+        if !params.icon.isEmpty { items.append(URLQueryItem(name: "icon", value: params.icon)) }
+        if !params.image.isEmpty { items.append(URLQueryItem(name: "img", value: params.image)) }
+        if !params.url.isEmpty { items.append(URLQueryItem(name: "url", value: params.url)) }
+        if !params.group.isEmpty { items.append(URLQueryItem(name: "group", value: params.group)) }
         if autocopySwitch.isOn { items.append(URLQueryItem(name: "copyable", value: "1")) }
         if archiveSwitch.isOn { items.append(URLQueryItem(name: "isArchive", value: "1")) }
-        if !notifId.isEmpty { items.append(URLQueryItem(name: "id", value: notifId)) }
+        if !params.notifId.isEmpty { items.append(URLQueryItem(name: "id", value: params.notifId)) }
 
         if !items.isEmpty {
             var comps = URLComponents(string: path)
@@ -414,30 +435,30 @@ class NotificationDebugViewController: UIViewController {
         }.resume()
     }
 
-    private func sendPOST(server: String, key: String, title: String, body: String, level: String, sound: String, badge: String, icon: String, image: String, url: String, group: String, notifId: String) {
-        guard let requestURL = URL(string: "\(server)/\(key)") else {
+    private func sendPOST(params: NotificationParams) {
+        guard let requestURL = URL(string: "\(params.server)/\(params.key)") else {
             responseView.text = L10n.tr("notif_debug.error_url_failed")
             responseView.textColor = .systemRed
             return
         }
 
         var bodyDict: [String: Any] = [
-            "title": title,
-            "body": body
+            "title": params.title,
+            "body": params.body
         ]
-        if !level.isEmpty { bodyDict["level"] = level }
-        if !sound.isEmpty { bodyDict["sound"] = sound }
-        if !badge.isEmpty, let b = Int(badge) { bodyDict["badge"] = b }
-        if !icon.isEmpty { bodyDict["icon"] = icon }
-        if !image.isEmpty { bodyDict["img"] = image }
-        if !url.isEmpty { bodyDict["url"] = url }
-        if !group.isEmpty { bodyDict["group"] = group }
+        if !params.level.isEmpty { bodyDict["level"] = params.level }
+        if !params.sound.isEmpty { bodyDict["sound"] = params.sound }
+        if !params.badge.isEmpty, let b = Int(params.badge) { bodyDict["badge"] = b }
+        if !params.icon.isEmpty { bodyDict["icon"] = params.icon }
+        if !params.image.isEmpty { bodyDict["img"] = params.image }
+        if !params.url.isEmpty { bodyDict["url"] = params.url }
+        if !params.group.isEmpty { bodyDict["group"] = params.group }
         if autocopySwitch.isOn { bodyDict["copyable"] = "1" }
         if archiveSwitch.isOn { bodyDict["isArchive"] = "1" }
-        if !notifId.isEmpty { bodyDict["id"] = notifId }
+        if !params.notifId.isEmpty { bodyDict["id"] = params.notifId }
         if callSwitch.isOn { bodyDict["call"] = "1" }
         if markdownSwitch.isOn { bodyDict["ismarkdown"] = "1" }
-        if level == "critical" { bodyDict["volume"] = Int(volumeSlider.value) }
+        if params.level == "critical" { bodyDict["volume"] = Int(volumeSlider.value) }
 
         var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"

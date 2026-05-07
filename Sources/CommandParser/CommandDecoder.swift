@@ -54,10 +54,8 @@ public final class CommandDecoderRegistry: Sendable {
     }
 
     public func findDecoder(for input: String) -> (any CommandDecoderProtocol)? {
-        for (_, decoder) in decoders {
-            if decoder.canDecode(input) {
-                return decoder
-            }
+        for (_, decoder) in decoders where decoder.canDecode(input) {
+            return decoder
         }
         return nil
     }

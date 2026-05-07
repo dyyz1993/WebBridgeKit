@@ -113,13 +113,17 @@ public final class HUDService {
 
         cancelAutoDismiss()
 
-        UIView.animate(withDuration: animationDuration, animations: {
-            window.alpha = 0
-        }) { _ in
-            window.isHidden = true
-            self.hudView = nil
-            self.hudWindow = nil
-        }
+        UIView.animate(
+            withDuration: animationDuration,
+            animations: {
+                window.alpha = 0
+            },
+            completion: { _ in
+                window.isHidden = true
+                self.hudView = nil
+                self.hudWindow = nil
+            }
+        )
     }
 
     private func scheduleAutoDismiss(delay: TimeInterval) {
@@ -300,5 +304,3 @@ private final class HUDContainerView: UIView {
         iconView.isHidden = false
     }
 }
-
-

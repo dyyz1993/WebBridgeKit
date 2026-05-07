@@ -49,7 +49,7 @@ class SettingsViewModel: ViewModel {
         let icon: String
         let title: String
         let action: SettingsAction
-        var value: String? = nil
+        var value: String?
         var showArrow: Bool = true
     }
 

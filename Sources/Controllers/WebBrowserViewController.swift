@@ -17,7 +17,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     // MARK: - UI Components
 
-    private lazy var webView: WKWebView = {
+    lazy var webView: WKWebView = {
         return viewModel.getWebView()
     }()
 
@@ -356,7 +356,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     }
 
     /// 检查 URL 参数
-    private func checkURLParameters(_ url: URL) {
+    func checkURLParameters(_ url: URL) {
         print("🔍 [WebBrowserVC] checkURLParameters called: \(url.absoluteString)")
 
         updateCacheStatus(source: "LIVE")

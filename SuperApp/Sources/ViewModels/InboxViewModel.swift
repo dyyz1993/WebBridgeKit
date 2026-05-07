@@ -194,13 +194,11 @@ class InboxViewModel: ViewModel {
 
     func messageIndexPath(globalRow row: Int) -> (group: Int, localRow: Int)? {
         var offset = 0
-        for (gi, group) in messageGroupsRelay.value.enumerated() {
-            if group.isExpanded {
-                if row >= offset && row < offset + group.messages.count {
-                    return (gi, row - offset)
-                }
-                offset += group.messages.count
+        for (gi, group) in messageGroupsRelay.value.enumerated() where group.isExpanded {
+            if row >= offset && row < offset + group.messages.count {
+                return (gi, row - offset)
             }
+            offset += group.messages.count
         }
         return nil
     }

@@ -94,10 +94,8 @@ final class CommandHandler {
 
     private func findEntryPath(in resources: [String: String]) -> String? {
         let candidates = ["index.html", "index.htm", "/", "main.html", "app.html"]
-        for candidate in candidates {
-            if resources[candidate] != nil {
-                return candidate
-            }
+        for candidate in candidates where resources[candidate] != nil {
+            return candidate
         }
         return resources.keys.sorted().first
     }
