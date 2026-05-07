@@ -12,7 +12,7 @@ final class PerformanceMonitorTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        monitor = PerformanceMonitor()
+        monitor = PerformanceMonitor.shared
         monitor.clearAllMetrics()
         monitor.isEnabled = true
     }

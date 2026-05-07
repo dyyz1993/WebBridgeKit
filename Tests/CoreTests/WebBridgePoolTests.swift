@@ -93,7 +93,7 @@ final class WebBridgePoolTests: XCTestCase {
 
     // MARK: - Memory Warning
 
-    func test.didReceiveMemoryWarning() {
+    func testDidReceiveMemoryWarning() {
         let expectation = self.expectation(description: "warmup")
         pool.warmup { [weak self] in
             guard let self = self else { return }

@@ -115,28 +115,28 @@ final class WebhookChannelTests: XCTestCase {
 
     func testProcessWebhookLevelPassive() async throws {
         let channel = WebhookChannel()
-        let body = """{"level":"passive"}"""
+        let body = "{\"level\":\"passive\"}"
         let payload = try await channel.processWebhook(body: Data(body.utf8), headers: [:])
         XCTAssertEqual(payload.priority, .low)
     }
 
     func testProcessWebhookLevelActive() async throws {
         let channel = WebhookChannel()
-        let body = """{"level":"active"}"""
+        let body = "{\"level\":\"active\"}"
         let payload = try await channel.processWebhook(body: Data(body.utf8), headers: [:])
         XCTAssertEqual(payload.priority, .high)
     }
 
     func testProcessWebhookLevelTimeSensitive() async throws {
         let channel = WebhookChannel()
-        let body = """{"level":"timeSensitive"}"""
+        let body = "{\"level\":\"timeSensitive\"}"
         let payload = try await channel.processWebhook(body: Data(body.utf8), headers: [:])
         XCTAssertEqual(payload.priority, .critical)
     }
 
     func testProcessWebhookLevelUnknownDefaultsToNormal() async throws {
         let channel = WebhookChannel()
-        let body = """{"level":"unknown"}"""
+        let body = "{\"level\":\"unknown\"}"
         let payload = try await channel.processWebhook(body: Data(body.utf8), headers: [:])
         XCTAssertEqual(payload.priority, .normal)
     }
@@ -169,14 +169,14 @@ final class WebhookChannelTests: XCTestCase {
 
     func testProcessWebhookAppIdFields() async throws {
         let channel = WebhookChannel()
-        let body = """{"title":"T","body":"B","appid":"com.test.app"}"""
+        let body = "{\"title\":\"T\",\"body\":\"B\",\"appid\":\"com.test.app\"}"
         let payload = try await channel.processWebhook(body: Data(body.utf8), headers: [:])
         XCTAssertEqual(payload.targetAppId, "com.test.app")
     }
 
     func testProcessWebhookModeField() async throws {
         let channel = WebhookChannel()
-        let body = """{"title":"T","body":"B","mode":"fullscreen"}"""
+        let body = "{\"title\":\"T\",\"body\":\"B\",\"mode\":\"fullscreen\"}"
         let payload = try await channel.processWebhook(body: Data(body.utf8), headers: [:])
         XCTAssertEqual(payload.targetMode, "fullscreen")
     }
@@ -205,7 +205,7 @@ final class WebhookChannelTests: XCTestCase {
         let secret = "my-secret-key"
         let channel = WebhookChannel(secret: secret)
 
-        let body = """{"title":"Signed","body":"Message"}"""
+        let body = "{\"title\":\"Signed\",\"body\":\"Message\"}"
         let bodyData = Data(body.utf8)
         let signature = computeHMAC(body: bodyData, secret: secret)
 
@@ -220,7 +220,7 @@ final class WebhookChannelTests: XCTestCase {
         let secret = "my-secret"
         let channel = WebhookChannel(secret: secret)
 
-        let body = """{"title":"Prefixed","body":"Msg"}"""
+        let body = "{\"title\":\"Prefixed\",\"body\":\"Msg\"}"
         let bodyData = Data(body.utf8)
         let signature = "sha256=" + computeHMAC(body: bodyData, secret: secret)
 
@@ -235,7 +235,7 @@ final class WebhookChannelTests: XCTestCase {
         let secret = "correct-secret"
         let channel = WebhookChannel(secret: secret)
 
-        let body = """{"title":"Wrong","body":"Sig"}"""
+        let body = "{\"title\":\"Wrong\",\"body\":\"Sig\"}"
         let bodyData = Data(body.utf8)
 
         do {
@@ -256,7 +256,7 @@ final class WebhookChannelTests: XCTestCase {
         let secret = "my-secret"
         let channel = WebhookChannel(secret: secret)
 
-        let body = """{"title":"No","body":"Sig"}"""
+        let body = "{\"title\":\"No\",\"body\":\"Sig\"}"
         let bodyData = Data(body.utf8)
 
         do {
@@ -273,7 +273,7 @@ final class WebhookChannelTests: XCTestCase {
     func testProcessWebhookNoSecretNoValidation() async throws {
         let channel = WebhookChannel()
 
-        let body = """{"title":"NoSecret","body":"Works"}"""
+        let body = "{\"title\":\"NoSecret\",\"body\":\"Works\"}"
         let bodyData = Data(body.utf8)
 
         let payload = try await channel.processWebhook(body: bodyData, headers: [:])
@@ -284,7 +284,7 @@ final class WebhookChannelTests: XCTestCase {
         let secret = "hub-secret"
         let channel = WebhookChannel(secret: secret)
 
-        let body = """{"title":"Hub","body":"Sig"}"""
+        let body = "{\"title\":\"Hub\",\"body\":\"Sig\"}"
         let bodyData = Data(body.utf8)
         let signature = computeHMAC(body: bodyData, secret: secret)
 
@@ -306,7 +306,7 @@ final class WebhookChannelTests: XCTestCase {
             expectation.fulfill()
         }
 
-        let body = """{"title":"Callback","body":"Test"}"""
+        let body = "{\"title\":\"Callback\",\"body\":\"Test\"}"
         _ = try await channel.processWebhook(body: Data(body.utf8), headers: [:])
 
         await fulfillment(of: [expectation], timeout: 2.0)

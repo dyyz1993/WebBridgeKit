@@ -4,6 +4,7 @@
 //
 
 import XCTest
+import WebKit
 @testable import WebBridgeKit
 
 final class PersistentManifestLoaderTests: XCTestCase {

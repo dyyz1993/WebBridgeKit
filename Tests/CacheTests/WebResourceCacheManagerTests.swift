@@ -12,6 +12,7 @@ final class WebResourceCacheManagerTests: XCTestCase {
 
     override func tearDown() async throws {
         manager.clearAll()
+        try await Task.sleep(nanoseconds: 500_000_000)
         try await super.tearDown()
     }
 
