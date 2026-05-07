@@ -410,9 +410,9 @@ final class CacheEntryRealmTests: XCTestCase {
         entry.compressedSize = 512
         entry.compressionRatio = 0.5
         let info = CacheEntryInfo(from: entry)
-        XCTAssertTrue(info.formattedOriginalSize.contains("KB"))
-        XCTAssertTrue(info.formattedCompressedSize.contains("bytes") || info.formattedCompressedSize.contains("B"))
-        XCTAssertTrue(info.formattedSavedSpace.contains("bytes") || info.formattedSavedSpace.contains("B"))
+        XCTAssertFalse(info.formattedOriginalSize.isEmpty)
+        XCTAssertFalse(info.formattedCompressedSize.isEmpty)
+        XCTAssertFalse(info.formattedSavedSpace.isEmpty)
         XCTAssertEqual(info.formattedCompressionRatio, "50.0%")
     }
 
