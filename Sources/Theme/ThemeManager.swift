@@ -20,12 +20,12 @@ public actor ThemeManager {
         currentMode
     }
 
-    public func getTheme() -> Theme {
+    public func getTheme() async -> Theme {
         let isDark: Bool
         if currentMode == .dark {
             isDark = true
         } else if currentMode == .system {
-            isDark = UIScreen.main.traitCollection.userInterfaceStyle == .dark
+            isDark = await MainActor.run { UIScreen.main.traitCollection.userInterfaceStyle == .dark }
         } else {
             isDark = false
         }

@@ -26,7 +26,7 @@ public class WebBrowserManager: WebBrowserManaging {
     // MARK: - Navigation History
 
     /// 导航历史项
-    public struct NavigationItem {
+    public struct NavigationItem: @unchecked Sendable {
         public let url: URL
         public let title: String?
         public let timestamp: Date

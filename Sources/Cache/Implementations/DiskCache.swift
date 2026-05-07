@@ -147,7 +147,8 @@ public actor DiskCache: AnyCacheStorage {
         var files: [(URL, Date)] = []
 
         if let enumerator = fileManager.enumerator(at: cacheDirectory, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey]) {
-            for case let fileURL as URL in enumerator {
+            let allURLs = enumerator.compactMap { $0 as? URL }
+            for fileURL in allURLs {
                 if let resourceValues = try? fileURL.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey]),
                    let fileSize = resourceValues.fileSize,
                    let modificationDate = resourceValues.contentModificationDate {

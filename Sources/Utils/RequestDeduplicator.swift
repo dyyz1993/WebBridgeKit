@@ -58,18 +58,14 @@ public class RequestDeduplicator {
         priority: TaskPriority = .userInitiated,
         operation: @escaping () async throws -> T
     ) async throws -> T {
-        // Check if a task with this key is already running
-        lock.lock()
-        if let existingTask = pendingTasks[key] {
-            lock.unlock()
+        let existingTask = lock.withLock { pendingTasks[key] }
 
+        if let existingTask = existingTask {
             NSLog( "♻️ [RequestDeduplicator] Reusing existing task for key: \(key)")
 
             do {
-                // Wait for the existing task to complete
                 let result = try await existingTask.value
 
-                // Attempt to cast to the expected type
                 guard let typedResult = result as? T else {
                     throw WebBridgeError.cacheLoadFailed(
                         reason: "Type mismatch in deduplicated request for key: \(key)"
@@ -78,23 +74,20 @@ public class RequestDeduplicator {
 
                 return typedResult
             } catch {
-                // If the existing task fails, we might want to retry
-                // For now, we'll propagate the error
                 throw error
             }
         }
 
-        // No existing task, create a new one
         NSLog( "🚀 [RequestDeduplicator] Creating new task for key: \(key)")
 
         let task = Task(priority: priority) {
             return try await operation() as Any
         }
 
-        // Store the task
-        pendingTasks[key] = task
-        taskTimestamps[key] = Date()
-        lock.unlock()
+        lock.withLock {
+            pendingTasks[key] = task
+            taskTimestamps[key] = Date()
+        }
 
         // Wait for the task to complete
         do {

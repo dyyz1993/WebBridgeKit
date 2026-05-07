@@ -16,7 +16,7 @@ import WebKit
 /// 2. baseURL = "custom://" 使相对路径补全为 "custom://logo.png"
 /// 3. WKURLSchemeHandler 拦截 custom:// 请求
 /// 4. 从 manifest.json 查找相对路径对应的真实 URL
-public class ManifestCacheManager {
+public class ManifestCacheManager: @unchecked Sendable {
 
     public static let shared = ManifestCacheManager()
 

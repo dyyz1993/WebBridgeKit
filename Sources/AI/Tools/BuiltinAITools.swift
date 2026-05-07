@@ -235,8 +235,8 @@ public enum BuiltinAITools {
                 ],
                 "system": [
                     "platform": "iOS",
-                    "osVersion": UIDevice.current.systemVersion,
-                    "deviceModel": UIDevice.current.model,
+                    "osVersion": await MainActor.run { UIDevice.current.systemVersion },
+                    "deviceModel": await MainActor.run { UIDevice.current.model },
                     "debugLogging": WebBridgeKitConfiguration.Debug.isLoggingEnabled,
                     "performanceMonitoring": WebBridgeKitConfiguration.Debug.isPerformanceMonitoringEnabled
                 ]
@@ -355,9 +355,9 @@ public enum BuiltinAITools {
                 ],
                 "system": [
                     "platform": "iOS",
-                    "osVersion": UIDevice.current.systemVersion,
+                    "osVersion": await MainActor.run { UIDevice.current.systemVersion },
                     "kernelVersion": osVersion,
-                    "deviceModel": UIDevice.current.model,
+                    "deviceModel": await MainActor.run { UIDevice.current.model },
                     "physicalMemory": ByteCountFormatter.string(fromByteCount: Int64(physicalMem), countStyle: .memory),
                     "uptime": String(format: "%.0f", uptime) + "s",
                     "processId": ProcessInfo.processInfo.processIdentifier

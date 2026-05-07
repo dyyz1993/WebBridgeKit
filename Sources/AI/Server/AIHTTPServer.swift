@@ -221,7 +221,7 @@ public enum HTTPMethod: String, Sendable {
     case GET, POST, PUT, DELETE, OPTIONS, PATCH
 }
 
-public struct AIRequest: Sendable {
+public struct AIRequest: @unchecked Sendable {
     public let method: HTTPMethod
     public let path: String
     public let headers: [String: String]
@@ -232,7 +232,7 @@ public struct AIRequest: Sendable {
     }
 }
 
-public struct AIResponse: Sendable {
+public struct AIResponse: @unchecked Sendable {
     public let statusCode: Int
     public let body: [String: Any]
 

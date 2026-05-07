@@ -46,7 +46,7 @@ public struct CommandPayload: Codable, Sendable, Equatable {
     }
 }
 
-public struct CommandRawPayload: Sendable {
+public struct CommandRawPayload: @unchecked Sendable {
     public let data: Data
     public let json: [String: Any]
     public let signature: String?

@@ -268,9 +268,9 @@ public class PersistentManifestLoader: NSObject {
         let cacheID = generateCacheID(for: url, manifest: manifest)
 
         // 记录 URL 到 CacheID 的映射
-        urlMappingLock.lock()
-        urlToAppID[url] = cacheID
-        urlMappingLock.unlock()
+        urlMappingLock.withLock {
+            urlToAppID[url] = cacheID
+        }
 
         NSLog("   缓存 ID: %@", cacheID)
         let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
@@ -551,10 +551,10 @@ public class PersistentManifestLoader: NSObject {
 
             // 收集完成的任务并更新进度
             for try await (_, resourceName) in group {
-                progressLock.lock()
-                completedCount += 1
-                let current = completedCount
-                progressLock.unlock()
+                let current = progressLock.withLock {
+                    completedCount += 1
+                    return completedCount
+                }
 
                 // ⚠️ 确保进度更新在主线程执行
                 await MainActor.run {

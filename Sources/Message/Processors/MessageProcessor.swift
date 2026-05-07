@@ -20,7 +20,7 @@ public protocol MessageProcessor: Sendable {
 }
 
 /// Mutable message content passed through the processor pipeline
-public struct MutableMessageContent: Sendable {
+public struct MutableMessageContent: @unchecked Sendable {
     public var title: String
     public var subtitle: String?
     public var body: String

@@ -232,7 +232,7 @@ public class FullScreenProgressViewController: UIViewController {
     ///   - total: 总数量
     ///   - message: 状态消息
     ///   - resourceName: 当前下载的资源名称
-    public func updateProgress(current: Int, total: Int, message: String, resourceName: String? = nil) {
+    nonisolated public func updateProgress(current: Int, total: Int, message: String, resourceName: String? = nil) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 

@@ -172,25 +172,24 @@ public class PageCacheManager {
                 let cachedPage = CachedPage(pageName: pageName, html: html, baseURL: baseURL)
                 let newPageSizeMB = cachedPage.estimatedSizeKB / 1024
 
-                self.lock.lock()
-                defer { self.lock.unlock() }
+                self.lock.withLock {
+                    // 检查是否超过内存限制
+                    let potentialMemoryUsage = self.currentMemoryUsageMB + newPageSizeMB
+                    if potentialMemoryUsage > self.maxMemorySizeMB {
+                        // 需要释放内存
+                        self.evictToFreeMemory(requiredMB: newPageSizeMB)
+                    }
 
-                // 检查是否超过内存限制
-                let potentialMemoryUsage = self.currentMemoryUsageMB + newPageSizeMB
-                if potentialMemoryUsage > self.maxMemorySizeMB {
-                    // 需要释放内存
-                    self.evictToFreeMemory(requiredMB: newPageSizeMB)
+                    // 使用 LRU 策略（数量限制）
+                    if self.pageCache.count >= self.maxCacheSize {
+                        self.evictLeastRecentlyUsed()
+                    }
+
+                    self.pageCache[pageName] = cachedPage
+                    self.currentMemoryUsageMB = self.calculateCurrentMemoryUsage()
+
+                    WebBridgeLogger.shared.log(.info, "✅ [PageCache] Preloaded page '\(pageName)' (size: \(newPageSizeMB)MB, total: \(self.currentMemoryUsageMB)MB/\(self.maxMemorySizeMB)MB, count: \(self.pageCache.count))")
                 }
-
-                // 使用 LRU 策略（数量限制）
-                if self.pageCache.count >= self.maxCacheSize {
-                    self.evictLeastRecentlyUsed()
-                }
-
-                self.pageCache[pageName] = cachedPage
-                self.currentMemoryUsageMB = self.calculateCurrentMemoryUsage()
-
-                WebBridgeLogger.shared.log(.info, "✅ [PageCache] Preloaded page '\(pageName)' (size: \(newPageSizeMB)MB, total: \(self.currentMemoryUsageMB)MB/\(self.maxMemorySizeMB)MB, count: \(self.pageCache.count))")
                 return true
             }
         }

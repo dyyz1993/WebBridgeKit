@@ -12,7 +12,7 @@ import UIKit
 // MARK: - Manifest
 
 /// 资源清单
-public struct Manifest: Codable {
+public struct Manifest: Codable, Sendable {
     /// 资源映射：相对路径 -> 真实 URL
     public var resources: [String: String]
 
