@@ -82,6 +82,18 @@ target 'WebBridgeKit' do
   target 'WebSocketTests' do
     inherit! :complete
   end
+
+  target 'BaseTests' do
+    inherit! :complete
+  end
+
+  target 'ExtensionsTests' do
+    inherit! :complete
+  end
+
+  target 'ManagersTests' do
+    inherit! :complete
+  end
 end
 
 target 'SuperApp' do

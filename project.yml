@@ -634,6 +634,60 @@ targets:
     dependencies:
       - target: WebBridgeKit
 
+  BaseTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - Tests/BaseTests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.BaseTests
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
+  ExtensionsTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - Tests/ExtensionsTests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.ExtensionsTests
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
+  ManagersTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - Tests/ManagersTests
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.ManagersTests
+      TEST_TARGET_NAME: WebBridgeKit
+      SWIFT_VERSION: "5.0"
+      GENERATE_INFOPLIST_FILE: YES
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      SDKROOT: iphonesimulator
+      SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
+
 schemes:
   WebBridgeKit:
     build:
@@ -941,5 +995,38 @@ schemes:
       config: Debug
       targets:
         - WebBridgeKitTests
+      coverageTargets:
+        - WebBridgeKit
+
+  BaseTests:
+    build:
+      targets:
+        BaseTests: all
+    test:
+      config: Debug
+      targets:
+        - BaseTests
+      coverageTargets:
+        - WebBridgeKit
+
+  ExtensionsTests:
+    build:
+      targets:
+        ExtensionsTests: all
+    test:
+      config: Debug
+      targets:
+        - ExtensionsTests
+      coverageTargets:
+        - WebBridgeKit
+
+  ManagersTests:
+    build:
+      targets:
+        ManagersTests: all
+    test:
+      config: Debug
+      targets:
+        - ManagersTests
       coverageTargets:
         - WebBridgeKit

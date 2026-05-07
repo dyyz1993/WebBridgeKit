@@ -345,6 +345,8 @@ class DiscoverSectionHeader: UICollectionReusableView {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .bold)
         label.textColor = .label
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -421,6 +423,7 @@ class DiscoverAppCell: UICollectionViewCell {
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 

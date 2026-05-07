@@ -29,6 +29,8 @@ class MenuCell: UITableViewCell {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         label.textColor = ThemeColors.current.text
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -45,6 +47,8 @@ class MenuCell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .right
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 

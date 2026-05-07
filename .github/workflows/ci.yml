@@ -110,24 +110,42 @@ jobs:
       - name: Setup Simulator
         id: sim
         run: |
+          echo "=== SDK Info ==="
+          xcodebuild -version
+          xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || true
           xcodebuild -downloadPlatform iOS 2>/dev/null || true
           echo "=== Available runtimes ==="
           xcrun simctl list runtimes
+          SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
+          echo "SDK major version: $SDK_VER"
           RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
           runtimes = data.get('runtimes', [])
           ios = [rt for rt in runtimes if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
           if ios:
-              ios.sort(key=lambda r: r.get('version', ''), reverse=True)
-              print(ios[0]['identifier'])
+              sdk_ver = '${SDK_VER}'
+              preferred = [rt for rt in ios if rt.get('version', '').startswith(sdk_ver + '.')]
+              if preferred:
+                  preferred.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
+                  print(preferred[0]['identifier'])
+              else:
+                  ios.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
+                  for rt in ios:
+                      v = rt.get('version', '')
+                      major = int(v.split('.')[0]) if v else 99
+                      if major <= int(sdk_ver):
+                          print(rt['identifier'])
+                          break
+                  else:
+                      print(ios[0]['identifier'])
           else:
               print('', file=sys.stderr)
               sys.exit(1)
           " 2>/dev/null || echo "")
           if [ -z "$RUNTIME" ]; then
             echo "::warning::JSON parse failed, trying runtime identifier fallback"
-            for ver in "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
+            for ver in "${SDK_VER}-2" "${SDK_VER}-1" "${SDK_VER}-0" "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
               for sep in "-" "_"; do
                 candidate="com.apple.CoreSimulator.SimRuntime.iOS${sep}${ver}"
                 if xcrun simctl list runtimes | grep -qF "$candidate"; then
@@ -152,7 +170,7 @@ jobs:
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
           echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
           echo "use_simulator=true" >> $GITHUB_OUTPUT
-          echo "Simulator ready: $DEVICE_ID"
+          echo "Simulator ready: $DEVICE_ID (runtime: $RUNTIME)"
 
       - name: Skip ${{ matrix.scheme }} (no simulator)
         if: steps.sim.outputs.use_simulator != 'true'
@@ -221,6 +239,25 @@ jobs:
           report_paths: "build/test-results-${{ matrix.scheme }}.xml"
           check_name: "Unit Test Results (${{ matrix.scheme }})"
 
+      - name: Capture Diagnostics
+        if: always() && failure()
+        run: |
+          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
+          if [ -n "$DEVICE_ID" ]; then
+            mkdir -p diagnostics
+            xcrun simctl spawn "$DEVICE_ID" log show --last 2m 2>/dev/null > diagnostics/sim-device.log || true
+            echo "=== Device State ===" > diagnostics/device-state.txt
+            xcrun simctl list devices | grep -A2 "$DEVICE_ID" >> diagnostics/device-state.txt 2>/dev/null || true
+          fi
+
+      - name: Upload Diagnostics
+        if: always() && failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-${{ matrix.scheme }}
+          path: diagnostics/
+          retention-days: 7
+
       - name: Cleanup Simulator
         if: always()
         run: |
@@ -253,24 +290,42 @@ jobs:
       - name: Setup Simulator
         id: sim
         run: |
+          echo "=== SDK Info ==="
+          xcodebuild -version
+          xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || true
           xcodebuild -downloadPlatform iOS 2>/dev/null || true
           echo "=== Available runtimes ==="
           xcrun simctl list runtimes
+          SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
+          echo "SDK major version: $SDK_VER"
           RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
           runtimes = data.get('runtimes', [])
           ios = [rt for rt in runtimes if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
           if ios:
-              ios.sort(key=lambda r: r.get('version', ''), reverse=True)
-              print(ios[0]['identifier'])
+              sdk_ver = '${SDK_VER}'
+              preferred = [rt for rt in ios if rt.get('version', '').startswith(sdk_ver + '.')]
+              if preferred:
+                  preferred.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
+                  print(preferred[0]['identifier'])
+              else:
+                  ios.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
+                  for rt in ios:
+                      v = rt.get('version', '')
+                      major = int(v.split('.')[0]) if v else 99
+                      if major <= int(sdk_ver):
+                          print(rt['identifier'])
+                          break
+                  else:
+                      print(ios[0]['identifier'])
           else:
               print('', file=sys.stderr)
               sys.exit(1)
           " 2>/dev/null || echo "")
           if [ -z "$RUNTIME" ]; then
             echo "::warning::JSON parse failed, trying runtime identifier fallback"
-            for ver in "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
+            for ver in "${SDK_VER}-2" "${SDK_VER}-1" "${SDK_VER}-0" "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
               for sep in "-" "_"; do
                 candidate="com.apple.CoreSimulator.SimRuntime.iOS${sep}${ver}"
                 if xcrun simctl list runtimes | grep -qF "$candidate"; then
@@ -295,7 +350,7 @@ jobs:
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
           echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
           echo "use_simulator=true" >> $GITHUB_OUTPUT
-          echo "Simulator ready: $DEVICE_ID"
+          echo "Simulator ready: $DEVICE_ID (runtime: $RUNTIME)"
 
       - name: Skip Smoke Tests (no simulator)
         if: steps.sim.outputs.use_simulator != 'true'
@@ -354,6 +409,26 @@ jobs:
         with:
           report_paths: build/test-results/smoke-junit.xml
           check_name: "Smoke Test Results"
+
+      - name: Capture Diagnostics
+        if: always()
+        run: |
+          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
+          if [ -n "$DEVICE_ID" ]; then
+            mkdir -p diagnostics
+            xcrun simctl diagnose --output diagnostics/ 2>/dev/null || true
+            xcrun simctl spawn "$DEVICE_ID" log show --last 2m 2>/dev/null > diagnostics/sim-device.log || true
+            echo "=== Device State ===" > diagnostics/device-state.txt
+            xcrun simctl list devices | grep -A2 "$DEVICE_ID" >> diagnostics/device-state.txt 2>/dev/null || true
+          fi
+
+      - name: Upload Diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-diagnostics
+          path: diagnostics/
+          retention-days: 7
 
       - name: Cleanup Simulator
         if: always()

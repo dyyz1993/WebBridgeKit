@@ -33,7 +33,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         label.textColor = .label
-        label.text = "选择URL"
+        label.text = L10n.tr("token.generate.select_url")
         return label
     }()
 
@@ -48,21 +48,26 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         label.textColor = .label
-        label.text = "有效时长"
+        label.text = L10n.tr("token.generate.duration")
         return label
     }()
 
     private lazy var durationSegmentedControl: UISegmentedControl = {
-        let items = ["1天", "7天", "30天", "永久"]
+        let items = [
+            L10n.tr("token.generate.duration_1d"),
+            L10n.tr("token.generate.duration_7d"),
+            L10n.tr("token.generate.duration_30d"),
+            L10n.tr("token.generate.duration_permanent")
+        ]
         let control = UISegmentedControl(items: items)
-        control.selectedSegmentIndex = 1  // 默认7天
+        control.selectedSegmentIndex = 1
         return control
     }()
 
     // 生成按钮
     private lazy var generateButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("生成口令", for: .normal)
+        button.setTitle(L10n.tr("token.generate.button"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         button.backgroundColor = .systemBlue
         button.setTitleColor(.white, for: .normal)
@@ -84,7 +89,8 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textColor = .secondaryLabel
-        label.text = "生成的口令"
+        label.text = L10n.tr("token.generate.result_title")
+        label.numberOfLines = 1
         return label
     }()
 
@@ -99,24 +105,26 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     }()
 
     private lazy var copyButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("复制", for: .normal)
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "doc.on.doc")
+        config.title = L10n.tr("common.copy")
+        config.imagePadding = 4
+        config.baseForegroundColor = .label
+        let button = UIButton(configuration: config)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
         button.layer.cornerRadius = 8
         button.backgroundColor = .systemGray6
         return button
     }()
 
     private lazy var shareButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("分享", for: .normal)
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "square.and.arrow.up")
+        config.title = L10n.tr("common.share")
+        config.imagePadding = 4
+        config.baseForegroundColor = .label
+        let button = UIButton(configuration: config)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
         button.layer.cornerRadius = 8
         button.backgroundColor = .systemGray6
         return button
@@ -146,7 +154,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "生成口令"
+        title = L10n.tr("token.generate.title")
         setupUI()
         setupPickerView()
 
@@ -255,8 +263,8 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
         // 配置空状态
         emptyStateView.configure(
             icon: "link",
-            title: "暂无历史记录",
-            description: "请先浏览一些网页，然后再来生成口令",
+            title: L10n.tr("token.generate.empty_title"),
+            description: L10n.tr("token.generate.empty_description"),
             actionTitle: nil
         )
 
@@ -376,8 +384,8 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
 
     private func showCopySuccessToast() {
         let alert = UIAlertController(
-            title: "已复制",
-            message: "口令已复制到剪贴板",
+            title: L10n.tr("token.generate.copied_title"),
+            message: L10n.tr("token.generate.copied_message"),
             preferredStyle: .alert
         )
         present(alert, animated: true)
@@ -388,14 +396,13 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     }
 
     private func showShareSheet(token: String) {
-        let text = "这是我的访问口令：\(token)"
+        let text = L10n.tr("token.generate.share_text", token)
 
         let activityVC = UIActivityViewController(
             activityItems: [text],
             applicationActivities: nil
         )
 
-        // 支持 iPad
         if let popoverController = activityVC.popoverPresentationController {
             popoverController.sourceView = view
             popoverController.sourceRect = CGRect(
@@ -412,11 +419,11 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
 
     private func showErrorAlert(message: String) {
         let alert = UIAlertController(
-            title: "提示",
+            title: L10n.tr("common.notice"),
             message: message,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 }
@@ -438,7 +445,7 @@ extension TokenGenerateViewController: UIPickerViewDataSource {
 extension TokenGenerateViewController: UIPickerViewDelegate {
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         if histories.isEmpty {
-            return "暂无历史记录"
+            return L10n.tr("token.generate.empty_title")
         }
 
         let history = histories[row]
@@ -462,7 +469,7 @@ extension TokenGenerateViewController: UIPickerViewDelegate {
         label.textAlignment = .center
 
         if histories.isEmpty {
-            label.text = "暂无历史记录"
+            label.text = L10n.tr("token.generate.empty_title")
             label.textColor = .secondaryLabel
         } else {
             let history = histories[row]

@@ -220,7 +220,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         view.backgroundColor = .systemGroupedBackground
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Copy Info",
+            title: L10n.tr("common.copy"),
             style: .plain,
             target: self,
             action: #selector(copyHandlerInfo)
@@ -255,7 +255,7 @@ private class HandlerDebugDetailViewController: UIViewController {
 
         if !meta.parameters.isEmpty {
             let header = UILabel()
-            header.text = "Parameters"
+            header.text = L10n.tr("debug.panel.parameters")
             header.font = .systemFont(ofSize: 15, weight: .semibold)
             stack.addArrangedSubview(header)
 
@@ -267,35 +267,47 @@ private class HandlerDebugDetailViewController: UIViewController {
         }
 
         let button = UIButton(type: .system)
-        button.setTitle("▶️ Execute", for: .normal)
+        button.setTitle(L10n.tr("debug.panel.execute"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         button.backgroundColor = ThemeColors.current.primary
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 10
+        button.addTarget(self, action: #selector(execute), for: .touchUpInside)
+        button.snp.makeConstraints { make in
+            make.height.equalTo(48)
+        }
+        stack.addArrangedSubview(button)
+
+        resultTextView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        resultTextView.layer.borderColor = UIColor.separator.cgColor
+        resultTextView.layer.borderWidth = 1
         resultTextView.layer.cornerRadius = 8
-        resultTextView.text = "Tap Execute to test..."
+        resultTextView.isEditable = false
+        resultTextView.isScrollEnabled = false
+        resultTextView.text = L10n.tr("debug.panel.tap_execute_hint")
+        resultTextView.textColor = .secondaryLabel
+        resultTextView.snp.makeConstraints { make in
+            make.height.greaterThanOrEqualTo(80)
+        }
         stack.addArrangedSubview(resultTextView)
 
         let copyButton = UIButton(type: .system)
-        copyButton.setTitle("📋 Copy Result", for: .normal)
+        copyButton.setTitle(L10n.tr("debug.panel.copy_result"), for: .normal)
         copyButton.addTarget(self, action: #selector(copyResult), for: .touchUpInside)
         stack.addArrangedSubview(copyButton)
 
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(scrollView)
         scrollView.addSubview(stack)
 
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leftAnchor.constraint(equalTo: view.leftAnchor),
-            scrollView.rightAnchor.constraint(equalTo: view.rightAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
 
-            stack.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 16),
-            stack.leftAnchor.constraint(equalTo: scrollView.leftAnchor, constant: 16),
-            stack.rightAnchor.constraint(equalTo: scrollView.rightAnchor, constant: -16),
-            stack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -16),
-            stack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -32)
-        ])
+        stack.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(16)
+            make.left.right.equalToSuperview().inset(16)
+            make.width.equalTo(scrollView).offset(-32)
+            make.bottom.equalToSuperview().offset(-16)
+        }
     }
 
     private func makeParamField(_ param: ParamDef) -> UIStackView {
@@ -314,7 +326,7 @@ private class HandlerDebugDetailViewController: UIViewController {
 
         let textField = UITextField()
         textField.borderStyle = .roundedRect
-        textField.placeholder = param.defaultValue ?? "Enter \(param.name)"
+        textField.placeholder = param.defaultValue ?? L10n.tr("debug.panel.enter_param", param.name)
         if let options = param.options {
             textField.text = options.first
         }
@@ -322,7 +334,7 @@ private class HandlerDebugDetailViewController: UIViewController {
 
         if let options = param.options {
             let optionsLabel = UILabel()
-            optionsLabel.text = "Options: \(options.joined(separator: " | "))"
+            optionsLabel.text = L10n.tr("debug.panel.options", options.joined(separator: " | "))
             optionsLabel.font = .systemFont(ofSize: 11, weight: .regular)
             optionsLabel.textColor = .tertiaryLabel
             stack.addArrangedSubview(optionsLabel)
@@ -363,15 +375,15 @@ private class HandlerDebugDetailViewController: UIViewController {
 
     @objc private func copyResult() {
         UIPasteboard.general.string = resultTextView.text
-        let alert = UIAlertController(title: "Copied!", message: nil, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: L10n.tr("debug.panel.copied"), message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     @objc private func copyHandlerInfo() {
         UIPasteboard.general.string = meta.jsonDict.jsonString
-        let alert = UIAlertController(title: "Copied!", message: "Handler info copied as JSON", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: L10n.tr("debug.panel.copied"), message: L10n.tr("debug.panel.handler_info_copied"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 }
@@ -422,23 +434,23 @@ private class LogDebugViewController: UIViewController {
         stack.spacing = 8
 
         let allButton = UIButton(type: .system)
-        allButton.setTitle("All", for: .normal)
+        allButton.setTitle(L10n.tr("debug.panel.log_all"), for: .normal)
         allButton.addTarget(self, action: #selector(filterAll), for: .touchUpInside)
         stack.addArrangedSubview(allButton)
 
         let errorButton = UIButton(type: .system)
-        errorButton.setTitle("Errors", for: .normal)
+        errorButton.setTitle(L10n.tr("debug.panel.log_errors"), for: .normal)
         errorButton.tintColor = .systemRed
         errorButton.addTarget(self, action: #selector(filterErrors), for: .touchUpInside)
         stack.addArrangedSubview(errorButton)
 
         let copyButton = UIButton(type: .system)
-        copyButton.setTitle("Copy All", for: .normal)
+        copyButton.setTitle(L10n.tr("debug.panel.log_copy_all"), for: .normal)
         copyButton.addTarget(self, action: #selector(copyLogs), for: .touchUpInside)
         stack.addArrangedSubview(copyButton)
 
         let exportButton = UIButton(type: .system)
-        exportButton.setTitle("Export JSON", for: .normal)
+        exportButton.setTitle(L10n.tr("debug.panel.log_export_json"), for: .normal)
         exportButton.addTarget(self, action: #selector(exportJSON), for: .touchUpInside)
         stack.addArrangedSubview(exportButton)
 
@@ -453,7 +465,7 @@ private class LogDebugViewController: UIViewController {
         }
 
         let text = logs.map { $0.consoleString }.joined(separator: "\n")
-        textView.text = text.isEmpty ? "No logs yet." : text
+        textView.text = text.isEmpty ? L10n.tr("debug.panel.no_logs") : text
     }
 
     @objc private func filterAll() {
@@ -465,22 +477,22 @@ private class LogDebugViewController: UIViewController {
         filterCategory = nil
         logs = StructuredLogger.shared.query(minLevel: .error, limit: 200)
         let text = logs.map { $0.consoleString }.joined(separator: "\n")
-        textView.text = text.isEmpty ? "No errors!" : text
+        textView.text = text.isEmpty ? L10n.tr("debug.panel.no_errors") : text
     }
 
     @objc private func copyLogs() {
         let text = logs.map { $0.debugString }.joined(separator: "\n\n")
         UIPasteboard.general.string = text
-        let alert = UIAlertController(title: "Copied!", message: "\(logs.count) log entries copied", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: L10n.tr("debug.panel.copied"), message: L10n.tr("debug.panel.logs_copied_format", "\(logs.count)"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     @objc private func exportJSON() {
         let json = StructuredLogger.shared.exportJSON()
         UIPasteboard.general.string = json
-        let alert = UIAlertController(title: "Exported!", message: "Logs exported as JSON to clipboard", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: L10n.tr("debug.panel.exported"), message: L10n.tr("debug.panel.logs_exported_json"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 }
@@ -496,7 +508,7 @@ private class EnvironmentDebugViewController: UIViewController {
         view.backgroundColor = ThemeColors.current.background
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Copy",
+            title: L10n.tr("common.copy"),
             style: .plain,
             target: self,
             action: #selector(copyInfo)
@@ -536,8 +548,8 @@ private class EnvironmentDebugViewController: UIViewController {
 
     @objc private func copyInfo() {
         UIPasteboard.general.string = textView.text
-        let alert = UIAlertController(title: "Copied!", message: "Environment info copied", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: L10n.tr("debug.panel.copied"), message: L10n.tr("debug.panel.env_info_copied"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 }

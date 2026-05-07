@@ -59,9 +59,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     private let fabButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold)
         button.setImage(LucideIcon.bell.image(pointSize: 22, weight: .semibold), for: .normal)
-        button.backgroundColor = UIColor.systemBlue
+        button.backgroundColor = ThemeColors.current.fabBackground
         button.tintColor = .white
         button.layer.cornerRadius = 28
         button.layer.shadowColor = UIColor.black.cgColor
@@ -112,7 +111,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
             make.leading.equalToSuperview().offset(16)
             make.trailing.lessThanOrEqualToSuperview().offset(-16)
-            make.height.equalTo(32)
+            make.height.greaterThanOrEqualTo(36)
         }
 
         tableView.snp.makeConstraints { make in
@@ -154,11 +153,18 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         ]
 
         for (title, type) in filters {
-            let button = UIButton(type: .system)
+            var config = UIButton.Configuration.filled()
+            config.baseBackgroundColor = .secondarySystemFill
+            config.baseForegroundColor = .secondaryLabel
+            config.cornerStyle = .capsule
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = .systemFont(ofSize: 13, weight: .medium)
+                return outgoing
+            }
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+            let button = UIButton(configuration: config)
             button.setTitle(title, for: .normal)
-            button.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
-            button.layer.cornerRadius = 14
-            button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 14, bottom: 6, right: 14)
             button.tag = type.rawValue
             button.addTarget(self, action: #selector(filterTapped(_:)), for: .touchUpInside)
             filterStackView.addArrangedSubview(button)
@@ -177,8 +183,17 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private func updateFilterSelection(_ selected: InboxViewModel.FilterType) {
         for button in filterButtons {
             let isSelected = button.tag == selected.rawValue
-            button.backgroundColor = isSelected ? .systemBlue : .secondarySystemFill
-            button.setTitleColor(isSelected ? .white : .secondaryLabel, for: .normal)
+            var config = button.configuration ?? UIButton.Configuration.filled()
+            config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
+            config.baseForegroundColor = isSelected ? .white : .secondaryLabel
+            config.cornerStyle = .capsule
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = .systemFont(ofSize: 13, weight: .medium)
+                return outgoing
+            }
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+            button.configuration = config
         }
     }
 
@@ -330,6 +345,8 @@ class InboxGroupHeaderCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 15, weight: .semibold)
         label.textColor = .secondaryLabel
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -419,12 +436,14 @@ class InboxMessageCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 11)
         label.textColor = .tertiaryLabel
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
     private let unreadDot: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBlue
+        view.backgroundColor = ThemeColors.current.primary
         view.layer.cornerRadius = 5
         view.isHidden = true
         return view
@@ -433,7 +452,9 @@ class InboxMessageCell: UITableViewCell {
     private let sourceLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 10, weight: .medium)
-        label.textColor = .systemBlue
+        label.textColor = ThemeColors.current.primary
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 

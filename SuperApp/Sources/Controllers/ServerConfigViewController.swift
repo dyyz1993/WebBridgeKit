@@ -45,10 +45,10 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
 
         var title: String {
             switch self {
-            case .serverType: return "服务器类型"
-            case .serverAddress: return "服务器地址"
-            case .apiEndpoint: return "API端点"
-            case .actions: return "操作"
+            case .serverType: return L10n.tr("server_config.section.server_type")
+            case .serverAddress: return L10n.tr("server_config.section.server_address")
+            case .apiEndpoint: return L10n.tr("server_config.section.api_endpoint")
+            case .actions: return L10n.tr("server_config.section.actions")
             }
         }
     }
@@ -72,7 +72,7 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "服务器配置"
+        title = L10n.tr("server_config.title")
         setupUI()
     }
 
@@ -224,30 +224,29 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
     // MARK: - Alert Methods
 
     private func showTestResult(success: Bool, error: String?) {
-        let title = success ? "连接成功" : "连接失败"
-        let message = success ? "服务器连接测试通过，配置有效。" : (error ?? "无法连接到服务器，请检查配置是否正确。")
+        let title = success ? L10n.tr("server_config.test_success") : L10n.tr("server_config.test_failure")
+        let message = success ? L10n.tr("server_config.test_success_message") : (error ?? L10n.tr("server_config.test_failure_message"))
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     private func showSaveSuccess() {
-        let alert = UIAlertController(title: "保存成功", message: "服务器配置已成功保存。", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let alert = UIAlertController(title: L10n.tr("server_config.save_success"), message: L10n.tr("server_config.save_success_message"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     private func showResetSuccess() {
-        let alert = UIAlertController(title: "重置成功", message: "已恢复为默认服务器配置。", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let alert = UIAlertController(title: L10n.tr("server_config.reset_success"), message: L10n.tr("server_config.reset_success_message"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 
     private func showResetConfirmation() {
-        let alert = UIAlertController(title: "确认重置", message: "确定要重置为默认服务器配置吗？当前自定义配置将丢失。", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "重置", style: .destructive) { [weak self] _ in
-            // 发送重置动作
+        let alert = UIAlertController(title: L10n.tr("server_config.reset_confirm_title"), message: L10n.tr("server_config.reset_confirm_message"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("server_config.reset"), style: .destructive) { [weak self] _ in
             self?.viewModel.resetConfig()
         })
         present(alert, animated: true)
@@ -282,7 +281,7 @@ extension ServerConfigViewController: UITableViewDataSource {
         case .serverType:
             let cell = tableView.dequeueReusableCell(withIdentifier: SegmentedCell.identifier, for: indexPath) as! SegmentedCell
             let selectedIndex = currentServerType == "default" ? 0 : 1
-            cell.configure(title: "选择服务器类型", selectedIndex: selectedIndex)
+            cell.configure(title: L10n.tr("server_config.select_type"), selectedIndex: selectedIndex)
             cell.onSegmentChange = { [weak self] index in
                 let type = index == 0 ? "default" : "custom"
                 self?.serverTypeChange?.accept(type)
@@ -293,7 +292,7 @@ extension ServerConfigViewController: UITableViewDataSource {
             let cell = tableView.dequeueReusableCell(withIdentifier: TextFieldCell.identifier, for: indexPath) as! TextFieldCell
             cell.configure(
                 title: "Base URL",
-                placeholder: "https://api.example.com",
+                placeholder: L10n.tr("server_config.base_url_placeholder"),
                 text: currentBaseURL,
                 enabled: isCustomServer,
                 error: isCustomServer ? baseURLValidationError : nil
@@ -326,14 +325,14 @@ extension ServerConfigViewController: UITableViewDataSource {
             switch indexPath.row {
             case 0:
                 buttonType = .test
-                title = "测试当前配置"
+                title = L10n.tr("server_config.action_test")
             case 1:
                 buttonType = .save
-                title = "保存配置"
+                title = L10n.tr("server_config.action_save")
                 enabled = isCustomServer || currentServerType == "default"
             case 2:
                 buttonType = .reset
-                title = "重置为默认"
+                title = L10n.tr("server_config.action_reset")
                 enabled = isCustomServer
             default:
                 buttonType = .test

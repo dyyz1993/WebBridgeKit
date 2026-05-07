@@ -52,7 +52,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private let permanentKeyTitle: UILabel = {
         let label = UILabel()
-        label.text = "永久密钥"
+        label.text = L10n.tr("apikey.manage.permanent_key")
         label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         label.textColor = UIColor.label
         return label
@@ -73,7 +73,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
         let image = UIImage(systemName: "doc.on.doc", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.setTitle(" 复制", for: .normal)
+        button.setTitle(" \(L10n.tr("common.copy"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         button.tintColor = UIColor.systemBlue
         return button
@@ -84,7 +84,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
         let image = UIImage(systemName: "arrow.clockwise", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.setTitle(" 刷新", for: .normal)
+        button.setTitle(" \(L10n.tr("apikey.manage.refresh"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         button.tintColor = UIColor.systemOrange
         return button
@@ -95,7 +95,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
         let image = UIImage(systemName: "paperplane", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.setTitle(" 测试", for: .normal)
+        button.setTitle(" \(L10n.tr("apikey.manage.test"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         button.tintColor = UIColor.systemGreen
         return button
@@ -112,7 +112,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
         let image = UIImage(systemName: "doc.text", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.setTitle(" 查看使用示例", for: .normal)
+        button.setTitle(" \(L10n.tr("apikey.manage.view_examples"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         button.tintColor = UIColor.systemBlue
         button.contentHorizontalAlignment = .left
@@ -212,7 +212,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "密钥管理"
+        title = L10n.tr("apikey.manage.title")
         setupUI()
         setupRightBarButton()
     }

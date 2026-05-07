@@ -66,6 +66,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.layer.cornerRadius = 8
+        iv.layer.masksToBounds = true
         return iv
     }()
 

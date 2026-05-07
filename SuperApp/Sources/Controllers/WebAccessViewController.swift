@@ -42,10 +42,16 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private let cacheCountButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("0 个资源", for: .normal)
+        button.setTitle(L10n.tr("web_access.cache_count_zero"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
         button.setTitleColor(.systemBlue, for: .normal)
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+            button.configuration = config
+        } else {
+            button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        }
         return button
     }()
 
@@ -53,11 +59,6 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         let view = UIView()
         view.backgroundColor = .separator
         return view
-    }()
-
-    private let refreshControl: UIRefreshControl = {
-        let refresh = UIRefreshControl()
-        return refresh
     }()
 
     private let loadingView = LoadingView()
@@ -71,56 +72,38 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "网页访问"
+        title = L10n.tr("web_access.title")
         view.backgroundColor = .systemBackground
 
-        // 先添加所有视图（不设置约束）
-        view.addSubview(urlInputView)
-        view.addSubview(webView)
-        view.addSubview(statusBarView)
-        view.addSubview(loadingView)
-        statusBarView.addSubview(cacheCountButton)
-        statusBarView.addSubview(separatorView)
-
+        setupUI()
         setupGestures()
 
-        // MARK: - Accessibility Identifiers
         view.accessibilityIdentifier = "WebAccessViewController"
         webView.accessibilityIdentifier = "webAccess.webView"
         urlInputView.accessibilityIdentifier = "webAccess.urlInputView"
         cacheCountButton.accessibilityIdentifier = "webAccess.cacheCountButton"
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-
-        // 在 viewWillAppear 中设置约束，此时 view hierarchy 已完全建立
-        setupUI()
-    }
-
     // MARK: - Setup UI
 
     private func setupUI() {
-        // 先添加所有视图到视图层次结构
         view.addSubview(urlInputView)
         view.addSubview(webView)
         view.addSubview(statusBarView)
         view.addSubview(loadingView)
-
         statusBarView.addSubview(cacheCountButton)
         statusBarView.addSubview(separatorView)
 
-        // 然后设置所有约束
         urlInputView.snp.makeConstraints { make in
             make.left.right.equalToSuperview()
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
-            make.height.equalTo(52)
+            make.height.greaterThanOrEqualTo(52)
         }
 
         statusBarView.snp.makeConstraints { make in
             make.left.right.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
-            make.height.equalTo(44)
+            make.height.greaterThanOrEqualTo(44)
         }
 
         webView.snp.makeConstraints { make in
@@ -137,6 +120,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
         cacheCountButton.snp.makeConstraints { make in
             make.center.equalToSuperview()
+            make.height.greaterThanOrEqualTo(44)
         }
 
         separatorView.snp.makeConstraints { make in
@@ -144,7 +128,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
             make.height.equalTo(0.5)
         }
 
-        // 下拉刷新
+        let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         webView.scrollView.refreshControl = refreshControl
     }
