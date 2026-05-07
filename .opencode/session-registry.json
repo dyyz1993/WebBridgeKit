@@ -180,5 +180,33 @@
     "parentID": "ses_20182a8bcffezXkEF1Q7rsVOtY",
     "status": "running",
     "createdAt": 1778148767583
+  },
+  "task-utils-tests-1": {
+    "id": "ses_1fdde07c9ffeqDHX4AUkTN6rgX",
+    "name": "task-utils-tests-1",
+    "parentID": "opencode",
+    "status": "running",
+    "createdAt": 1778152241442
+  },
+  "task-utils-tests-2": {
+    "id": "ses_1fdddea9affeYLKdeIoLmimHJd",
+    "name": "task-utils-tests-2",
+    "parentID": "opencode",
+    "status": "running",
+    "createdAt": 1778152248690
+  },
+  "task-services-tests": {
+    "id": "ses_1fdddb796ffe37Cvg06vI2p2MK",
+    "name": "task-services-tests",
+    "parentID": "opencode",
+    "status": "running",
+    "createdAt": 1778152261810
+  },
+  "task-infra-tests": {
+    "id": "ses_1fddd7bf9ffeCZF9qZURq5YCAg",
+    "name": "task-infra-tests",
+    "parentID": "opencode",
+    "status": "running",
+    "createdAt": 1778152277019
   }
 }

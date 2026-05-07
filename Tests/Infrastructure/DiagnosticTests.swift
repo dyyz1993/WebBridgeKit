@@ -98,7 +98,7 @@ final class DiagnosticTests: XCTestCase {
     // MARK: - DiagnosticEngine
 
     func testHealthChecks() {
-        let engine = DiagnosticEngine()
+        let engine = DiagnosticEngine.shared
         let results = engine.checkAll()
 
         XCTAssertFalse(results.isEmpty)
@@ -109,28 +109,28 @@ final class DiagnosticTests: XCTestCase {
     }
 
     func testMemoryCheck() {
-        let engine = DiagnosticEngine()
+        let engine = DiagnosticEngine.shared
         let result = engine.checkMemory()
 
         XCTAssertTrue(result.message.contains("Used"))
     }
 
     func testDiskCheck() {
-        let engine = DiagnosticEngine()
+        let engine = DiagnosticEngine.shared
         let result = engine.checkDisk()
 
         XCTAssertTrue(result.message.contains("Used"))
     }
 
     func testNetworkCheck() {
-        let engine = DiagnosticEngine()
+        let engine = DiagnosticEngine.shared
         let result = engine.checkNetwork()
 
         XCTAssertTrue(result.message.contains("WiFi") || result.message.contains("Cellular") || result.message.contains("Unknown"))
     }
 
     func testDiagnosticReport() {
-        let engine = DiagnosticEngine()
+        let engine = DiagnosticEngine.shared
         let report = engine.generateReport()
 
         XCTAssertTrue(report.contains("Diagnostic Report"))
@@ -139,7 +139,7 @@ final class DiagnosticTests: XCTestCase {
     }
 
     func testDiagnosticReportJSON() {
-        let engine = DiagnosticEngine()
+        let engine = DiagnosticEngine.shared
         let json = engine.generateReportJSON()
 
         XCTAssertNotNil(json["generated_at"])

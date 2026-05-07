@@ -125,8 +125,8 @@ final class ServiceLocatorAdvancedTests: XCTestCase {
 
         locator.registerCustomServices(historyService: nil, favoriteService: nil)
 
-        XCTAssertEqual(type(of: locator.historyService), previousHistoryType)
-        XCTAssertEqual(type(of: locator.favoriteService), previousFavoriteType)
+        XCTAssertTrue(type(of: locator.historyService) == previousHistoryType)
+        XCTAssertTrue(type(of: locator.favoriteService) == previousFavoriteType)
     }
 
     // MARK: - Convenience Access
