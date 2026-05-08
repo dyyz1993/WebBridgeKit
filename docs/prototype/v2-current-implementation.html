@@ -16,7 +16,9 @@
   --card-bg: #FFFFFF;
   --text: #000000;
   --text-secondary: #8E8E93;
+  --text-tertiary: #AEAEB2;
   --separator: #C6C6C8;
+  --surface: #F2F2F7;
   --badge-bg: #F2F2F7;
   --badge-text: #636366;
   --gradient-start: rgba(64,115,242,0.85);
@@ -29,8 +31,8 @@
   --font-button: 500 16px -apple-system, sans-serif;
   --xs: 4px; --sm: 8px; --md: 16px; --lg: 24px; --xl: 32px;
   --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
-  --shadow-card: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-fab: 0 4px 8px rgba(0,0,0,0.30);
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-fab: 0 4px 8px rgba(0,0,0,0.30);
   --font: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, 'Helvetica Neue', sans-serif;
   --tab-bg: rgba(249,249,249,.94);
   --nav-bg: #F2F2F7;
@@ -44,6 +46,7 @@
     --card-bg: #26262B;
     --text: #FFFFFF;
     --text-secondary: #8E8E93;
+    --text-tertiary: #48484A;
     --separator: #38383A;
     --badge-bg: #333340;
     --badge-text: #EBEBF5;
@@ -52,8 +55,9 @@
     --tab-bg: rgba(30,30,30,.94);
     --nav-bg: #000000;
     --overlay: rgba(0,0,0,.6);
-    --shadow-card: 0 4px 12px rgba(0,0,0,0.24);
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.24);
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+    --surface: #1C1C1E;
   }
 }
 
@@ -91,45 +95,51 @@ input, textarea, select { font-family: inherit; }
 .nbar button:active { background: rgba(0,122,255,.08); }
 .ntitle { font: var(--font-large-title); padding: 0 var(--md) 12px; line-height: 1.1; letter-spacing: -.5px; }
 .nbar-right { display: flex; align-items: center; gap: 4px; }
-.nbar-right .storage-label { font-size: 12px; color: var(--text-secondary); }
+.nbar-right .storage-label { font-size: 12px; color: var(--text-secondary); background: var(--surface); padding: 4px 10px; border-radius: 12px; }
 
-.shdr { padding: var(--lg) var(--md) var(--sm); font-size: 20px; font-weight: 700; color: var(--text); }
+.shdr { padding: var(--lg) var(--md) var(--sm); font: 600 13px -apple-system, sans-serif; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .3px; }
 .section-hdr-uppercase { padding: var(--lg) var(--md) var(--sm); font: 600 13px -apple-system, sans-serif; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; }
 
-.token-card { margin: var(--sm) var(--md); border-radius: var(--radius-lg); padding: var(--md); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: #fff; box-shadow: var(--shadow-card); position: relative; overflow: hidden; }
-.token-card::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.08); }
-.token-card::after { content: ''; position: absolute; bottom: -40px; left: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,.05); }
-.token-card .tc-server-label { font-size: 12px; opacity: .8; font-weight: 500; margin-bottom: 2px; }
-.token-card .tc-token { font-size: 14px; font-weight: 600; word-break: break-all; margin-bottom: 6px; line-height: 1.3; font-family: 'SF Mono', ui-monospace, monospace; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.token-card .tc-status { font-size: 11px; opacity: .7; }
-.token-card .tc-copy { position: absolute; top: 12px; right: 12px; padding: 6px 14px; border-radius: var(--radius-full); border: 1.5px solid rgba(255,255,255,.5); background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; gap: 4px; z-index: 1; font-size: 12px; font-weight: 500; color: #fff; backdrop-filter: blur(8px); }
+.token-card { margin: var(--sm) var(--md); border-radius: var(--radius-lg); padding: var(--md); background: var(--card-bg); color: var(--text); box-shadow: var(--shadow-card); position: relative; overflow: hidden; }
+.token-card .tc-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.token-card .tc-row:last-child { margin-bottom: 0; }
+.token-card .tc-server-icon { width: 16px; height: 16px; color: var(--text-tertiary); flex-shrink: 0; }
+.token-card .tc-server-icon .lucide { width: 16px; height: 16px; }
+.token-card .tc-server-label { font-size: 12px; color: var(--text-tertiary); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.token-card .tc-key-icon { width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; }
+.token-card .tc-key-icon .lucide { width: 16px; height: 16px; }
+.token-card .tc-token { font-size: 14px; font-weight: 500; word-break: break-all; font-family: 'SF Mono', ui-monospace, monospace; color: var(--primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.token-card .tc-copy { padding: 6px 12px; border-radius: var(--radius-sm); background: rgba(0,122,255,.1); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--primary); flex-shrink: 0; transition: opacity .2s; }
+.token-card .tc-copy:active { opacity: .6; }
 .token-card .tc-copy .lucide { width: 14px; height: 14px; }
+.token-card .tc-register { padding: 6px 16px; border-radius: var(--radius-sm); background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; flex-shrink: 0; }
 
-.qactions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: var(--xs) var(--md) 12px; }
-.qact { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px; background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-sm); font-size: 12px; color: var(--text-secondary); font-weight: 500; min-height: 72px; cursor: pointer; transition: transform .15s; }
+.qactions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: var(--xs) var(--md) 12px; }
+.qact { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; background: transparent; font-size: 11px; color: var(--text-secondary); font-weight: 500; min-height: 76px; cursor: pointer; transition: transform .15s; border-radius: var(--radius-md); }
 .qact:active { transform: scale(.97); }
-.qact .qi { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; }
-.qact .qi .lucide { width: 24px; height: 24px; }
-.qact .qi.blue { color: var(--primary); background: rgba(0,122,255,.1); }
-.qact .qi.orange { color: var(--warning); background: rgba(255,149,0,.1); }
-.qact .qi.purple { color: #AF52DE; background: rgba(175,82,222,.1); }
-.qact .qi.green { color: var(--success); background: rgba(52,199,89,.1); }
+.qact .qi { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 24px; }
+.qact .qi .lucide { width: 22px; height: 22px; }
+.qact .qi.blue { color: var(--primary); background: rgba(0,122,255,.12); }
+.qact .qi.orange { color: var(--warning); background: rgba(255,149,0,.12); }
+.qact .qi.purple { color: #AF52DE; background: rgba(175,82,222,.12); }
+.qact .qi.green { color: var(--success); background: rgba(52,199,89,.12); }
 
 .hgrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--md); padding: 0 20px; }
-.acard { background: var(--card-bg); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: var(--sm); min-height: 150px; cursor: pointer; transition: transform .15s; }
+.acard { background: var(--card-bg); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: var(--sm); min-height: 140px; cursor: pointer; transition: transform .15s; }
 .acard:active { transform: scale(.97); }
-.acard-i { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
-.ig1 { background: linear-gradient(135deg, #667eea, #764ba2); }
-.ig2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.acard-i { width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 700; }
+.ig1 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.ig2 { background: linear-gradient(135deg, #667eea, #764ba2); }
 .ig3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
 .ig4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+.acard-i .lucide { width: 22px; height: 22px; color: #fff; }
 .acard-n { font-size: 14px; font-weight: 600; line-height: 1.2; }
-.acard-s { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-secondary); }
-.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.acard-s { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .dot-g { background: var(--success); }
 .dot-o { background: var(--warning); }
 .dot-b { background: var(--primary); }
-.acard-t { font-size: 11px; color: var(--text-secondary); opacity: .6; }
+.acard-t { font-size: 11px; color: var(--text-tertiary); }
 
 .banner { margin: var(--sm) var(--md) 0; padding: 12px 40px 12px var(--md); background: rgba(0,122,255,.08); border-radius: var(--radius-full); display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--primary); position: relative; animation: slideDown .3s ease; border: 1px solid rgba(0,122,255,.12); cursor: pointer; }
 .banner-x { position: absolute; right: var(--sm); top: 50%; transform: translateY(-50%); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
@@ -149,10 +159,12 @@ input, textarea, select { font-family: inherit; }
 .mcell { display: flex; align-items: stretch; padding: 12px; background: var(--card-bg); border-radius: 12px; margin-bottom: 4px; cursor: pointer; transition: transform .15s; box-shadow: var(--shadow-sm); position: relative; }
 .mcell:active { transform: scale(.97); }
 .mcell .unread-dot { width: 10px; height: 10px; border-radius: 5px; background: var(--primary); flex-shrink: 0; margin-right: 12px; margin-top: 5px; align-self: flex-start; }
-.mcell .mcontent { flex: 1; min-width: 0; }
-.mcell .mtitle { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mcell .mtitle.read { font-weight: 400; }
-.mcell .msource { font-size: 10px; font-weight: 600; color: var(--primary); text-transform: uppercase; margin-bottom: 6px; letter-spacing: .3px; }
+.mcell .mcontent { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mcell .msource-pill { display: inline-flex; align-self: flex-start; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: .3px; }
+.mcell .msource-pill.apns { background: rgba(0,122,255,.1); color: var(--primary); }
+.mcell .msource-pill.bark { background: rgba(52,199,89,.1); color: var(--success); }
+.mcell .msource-pill.bridge { background: rgba(255,149,0,.1); color: var(--warning); }
+.mcell .msource-pill.system { background: rgba(142,142,147,.1); color: var(--text-secondary); }
 .mcell .mbody { font-size: 14px; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
 .mcell .mtime { font: var(--font-caption2); color: var(--text-secondary); opacity: .6; text-align: right; white-space: nowrap; margin-left: var(--sm); align-self: flex-start; margin-top: 2px; line-height: 1.4; }
 
@@ -166,11 +178,14 @@ input, textarea, select { font-family: inherit; }
 .dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sm); padding: var(--sm); }
 .dcard { background: var(--card-bg); border-radius: var(--radius-lg); padding: var(--md) 12px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; align-items: center; gap: var(--sm); cursor: pointer; transition: transform .15s; }
 .dcard:active { transform: scale(.97); }
-.dcard-icon { width: 44px; height: 44px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
+.dcard-icon { width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; }
 .dcard-icon .lucide { width: 24px; height: 24px; }
-.dcard-icon.blue-bg { background: rgba(0,122,255,.1); color: var(--primary); }
-.dcard-icon.purple-bg { background: rgba(175,82,222,.1); color: #AF52DE; }
-.dcard-icon.orange-bg { background: rgba(255,149,0,.1); color: var(--warning); }
+.dcard-icon.g1 { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.dcard-icon.g2 { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
+.dcard-icon.g3 { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #fff; }
+.dcard-icon.g4 { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #fff; }
+.dcard-icon.g5 { background: linear-gradient(135deg, #fa709a, #fee140); color: #fff; }
+.dcard-icon.g6 { background: linear-gradient(135deg, #a18cd1, #fbc2eb); color: #fff; }
 .dcard-name { font-size: 14px; font-weight: 600; color: var(--text); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 .dcard-badge { padding: 2px 6px; border-radius: var(--radius-sm); font-size: 9px; font-weight: 700; text-align: center; }
 .dcard-badge.persistent { background: rgba(0,122,255,.1); color: var(--primary); }
@@ -193,6 +208,8 @@ input, textarea, select { font-family: inherit; }
 .sitem .si-value { font-size: var(--font-body); color: var(--text-secondary); margin-right: 4px; }
 .sitem .si-arrow { color: var(--text-secondary); opacity: .4; display: flex; }
 .sitem .si-arrow .lucide { width: 16px; height: 16px; }
+
+.version-footer { padding: 20px var(--md) 32px; text-align: center; font-size: 12px; color: var(--text-secondary); font-weight: 400; }
 
 .md-wrap { padding: var(--md); display: flex; flex-direction: column; gap: var(--md); }
 .md-title { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.3; }
@@ -270,33 +287,38 @@ input, textarea, select { font-family: inherit; }
       <div class="ntitle">首页</div>
 
       <div class="banner" id="command-banner" style="display:none;" onclick="hideBanner()">
-        <i data-lucide="link" style="width:16px;height:16px;flex-shrink:0"></i>
+        <i data-lucide="shield" style="width:16px;height:16px;flex-shrink:0"></i>
         <span>检测到口令，点击打开「MyApp」</span>
         <div class="banner-x" onclick="event.stopPropagation();hideBanner()"><i data-lucide="x" style="width:16px;height:16px"></i></div>
       </div>
 
       <div class="token-card" id="token-card">
-        <div class="tc-server-label">https://api.day.app</div>
-        <div class="tc-token">AbCdEfGh</div>
-        <div class="tc-status">设备已注册 · 推送服务正常</div>
-        <div class="tc-copy" onclick="showHud('推送地址已复制到剪贴板')"><i data-lucide="copy" style="width:14px;height:14px"></i> 复制</div>
+        <div class="tc-row">
+          <i data-lucide="server" class="tc-server-icon"></i>
+          <span class="tc-server-label">https://api.day.app</span>
+        </div>
+        <div class="tc-row">
+          <i data-lucide="key-round" class="tc-key-icon"></i>
+          <span class="tc-token">AbCd****EfGh</span>
+          <div class="tc-copy" onclick="showHud('推送地址已复制到剪贴板')"><i data-lucide="copy" style="width:14px;height:14px"></i> 复制</div>
+        </div>
       </div>
 
       <div class="qactions">
         <div class="qact" onclick="showDetail('detail-scanner')">
-          <div class="qi blue"><i data-lucide="scan" style="width:24px;height:24px"></i></div>
+          <div class="qi blue"><i data-lucide="scan" style="width:22px;height:22px"></i></div>
           <span>扫码</span>
         </div>
         <div class="qact" onclick="showHud('已读取剪贴板内容')">
-          <div class="qi orange"><i data-lucide="clipboard-paste" style="width:24px;height:24px"></i></div>
+          <div class="qi orange"><i data-lucide="clipboard-paste" style="width:22px;height:22px"></i></div>
           <span>粘贴口令</span>
         </div>
         <div class="qact" onclick="showDetail('detail-token')">
-          <div class="qi purple"><i data-lucide="key-round" style="width:24px;height:24px"></i></div>
+          <div class="qi purple"><i data-lucide="key-round" style="width:22px;height:22px"></i></div>
           <span>生成Token</span>
         </div>
         <div class="qact" onclick="showDetail('detail-debug')">
-          <div class="qi green"><i data-lucide="bug" style="width:24px;height:24px"></i></div>
+          <div class="qi green"><i data-lucide="bug" style="width:22px;height:22px"></i></div>
           <span>调试</span>
         </div>
       </div>
@@ -304,15 +326,15 @@ input, textarea, select { font-family: inherit; }
       <div class="shdr">常用应用</div>
       <div class="hgrid" style="margin-bottom:var(--sm);">
         <div class="acard" onclick="showHud('打开应用...')">
-          <div class="acard-i ig1"><i data-lucide="globe" style="width:20px;height:20px"></i></div>
+          <div class="acard-i ig1"><i data-lucide="globe" style="width:22px;height:22px"></i></div>
           <div class="acard-n">Dashboard</div>
-          <div class="acard-s"><div class="dot dot-g"></div>已缓存</div>
+          <div class="acard-s"><div class="dot dot-g"></div><span style="color:var(--success)">已缓存</span></div>
           <div class="acard-t">2 小时前</div>
         </div>
         <div class="acard" onclick="showHud('打开应用...')">
-          <div class="acard-i ig2"><i data-lucide="code-2" style="width:20px;height:20px"></i></div>
+          <div class="acard-i ig2"><i data-lucide="code-2" style="width:22px;height:22px"></i></div>
           <div class="acard-n">API Explorer</div>
-          <div class="acard-s"><div class="dot dot-g"></div>已缓存</div>
+          <div class="acard-s"><div class="dot dot-g"></div><span style="color:var(--success)">已缓存</span></div>
           <div class="acard-t">昨天</div>
         </div>
       </div>
@@ -320,15 +342,15 @@ input, textarea, select { font-family: inherit; }
       <div class="shdr">最近访问</div>
       <div class="hgrid">
         <div class="acard" onclick="showHud('打开应用...')">
-          <div class="acard-i ig3"><i data-lucide="file-text" style="width:20px;height:20px"></i></div>
+          <div class="acard-i ig3"><i data-lucide="file-text" style="width:22px;height:22px"></i></div>
           <div class="acard-n">文档中心</div>
-          <div class="acard-s"><div class="dot dot-b"></div>在线</div>
+          <div class="acard-s"><div class="dot dot-b"></div><span style="color:var(--primary)">在线</span></div>
           <div class="acard-t">3 天前</div>
         </div>
         <div class="acard" onclick="showHud('打开应用...')">
-          <div class="acard-i ig4"><i data-lucide="settings-2" style="width:20px;height:20px"></i></div>
+          <div class="acard-i ig4"><i data-lucide="settings-2" style="width:22px;height:22px"></i></div>
           <div class="acard-n">管理面板</div>
-          <div class="acard-s"><div class="dot dot-o"></div>需更新</div>
+          <div class="acard-s"><div class="dot dot-o"></div><span style="color:var(--warning)">需更新</span></div>
           <div class="acard-t">1 周前</div>
         </div>
       </div>
@@ -363,7 +385,7 @@ input, textarea, select { font-family: inherit; }
           <div class="mcell" onclick="showDetail('detail-message')">
             <div class="unread-dot"></div>
             <div class="mcontent">
-              <div class="msource">APNs</div>
+              <div class="msource-pill apns">APNS</div>
               <div class="mtitle">New Deployment Notification</div>
               <div class="mbody">Your app has been deployed to production environment, all health checks passed</div>
             </div>
@@ -372,7 +394,7 @@ input, textarea, select { font-family: inherit; }
           <div class="mcell" onclick="showDetail('detail-message')">
             <div class="unread-dot"></div>
             <div class="mcontent">
-              <div class="msource">BARK</div>
+              <div class="msource-pill bark">BARK</div>
               <div class="mtitle">Server Alert</div>
               <div class="mbody">CPU usage exceeded 90% on production server, please check immediately</div>
             </div>
@@ -381,7 +403,7 @@ input, textarea, select { font-family: inherit; }
           <div class="mcell" onclick="showDetail('detail-message')">
             <div class="unread-dot" style="visibility:hidden"></div>
             <div class="mcontent">
-              <div class="msource">BRIDGE</div>
+              <div class="msource-pill bridge">BRIDGE</div>
               <div class="mtitle read">Build Completed</div>
               <div class="mbody">iOS build #42 completed successfully. Ready for distribution.</div>
             </div>
@@ -398,7 +420,7 @@ input, textarea, select { font-family: inherit; }
           <div class="mcell" onclick="showDetail('detail-message')">
             <div class="unread-dot" style="visibility:hidden"></div>
             <div class="mcontent">
-              <div class="msource">SYSTEM</div>
+              <div class="msource-pill system">SYSTEM</div>
               <div class="mtitle read">Cache Cleanup</div>
               <div class="mbody">Automatic cache cleanup removed 12 expired resources, freed 8.3 MB</div>
             </div>
@@ -407,7 +429,7 @@ input, textarea, select { font-family: inherit; }
           <div class="mcell" onclick="showDetail('detail-message')">
             <div class="unread-dot" style="visibility:hidden"></div>
             <div class="mcontent">
-              <div class="msource">SYSTEM</div>
+              <div class="msource-pill system">SYSTEM</div>
               <div class="mtitle read">App Updated</div>
               <div class="mbody">WebBridgeKit has been updated to version 1.0.1</div>
             </div>
@@ -424,7 +446,7 @@ input, textarea, select { font-family: inherit; }
           <div class="mcell" onclick="showDetail('detail-message')">
             <div class="unread-dot" style="visibility:hidden"></div>
             <div class="mcontent">
-              <div class="msource">BRIDGE</div>
+              <div class="msource-pill bridge">BRIDGE</div>
               <div class="mtitle read">Bridge Connected</div>
               <div class="mbody">WebView bridge connection established with host application</div>
             </div>
@@ -445,25 +467,25 @@ input, textarea, select { font-family: inherit; }
       <div class="shdr">最近使用</div>
       <div class="dgrid">
         <div class="dcard" onclick="showHud('打开应用...')">
-          <div class="dcard-icon blue-bg"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
+          <div class="dcard-icon g1"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
           <div class="dcard-name">Dashboard</div>
           <div class="dcard-badge offline">离线可用</div>
           <div class="dcard-detail">1.2 MB · 05-08</div>
         </div>
         <div class="dcard" onclick="showHud('打开应用...')">
-          <div class="dcard-icon purple-bg"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
+          <div class="dcard-icon g2"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
           <div class="dcard-name">API Explorer</div>
           <div class="dcard-badge offline">离线可用</div>
           <div class="dcard-detail">0.8 MB · 05-07</div>
         </div>
         <div class="dcard" onclick="showHud('打开应用...')">
-          <div class="dcard-icon orange-bg"><i data-lucide="file-text" style="width:24px;height:24px"></i></div>
+          <div class="dcard-icon g3"><i data-lucide="file-text" style="width:24px;height:24px"></i></div>
           <div class="dcard-name">文档中心</div>
           <div class="dcard-badge not-cached">未缓存</div>
           <div class="dcard-detail">05-05</div>
         </div>
         <div class="dcard" onclick="showHud('打开应用...')">
-          <div class="dcard-icon blue-bg"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
+          <div class="dcard-icon g4"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
           <div class="dcard-name">管理面板</div>
           <div class="dcard-badge needs-update">需更新</div>
           <div class="dcard-detail">3.5 MB · 05-01</div>
@@ -473,13 +495,13 @@ input, textarea, select { font-family: inherit; }
       <div class="shdr">已缓存应用</div>
       <div class="dgrid">
         <div class="dcard" onclick="showHud('打开应用...')">
-          <div class="dcard-icon blue-bg"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
+          <div class="dcard-icon g5"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
           <div class="dcard-name">Dashboard Pro</div>
           <div class="dcard-badge persistent">持久化</div>
           <div class="dcard-detail">4.2 MB · 04-28</div>
         </div>
         <div class="dcard" onclick="showHud('打开应用...')">
-          <div class="dcard-icon purple-bg"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
+          <div class="dcard-icon g6"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
           <div class="dcard-name">DevTools</div>
           <div class="dcard-badge persistent">持久化</div>
           <div class="dcard-detail">2.1 MB · 04-20</div>
@@ -559,6 +581,7 @@ input, textarea, select { font-family: inherit; }
           <span class="si-value">v1.0 (1)</span>
         </div>
       </div>
+      <div class="version-footer">WebBridgeKit v1.0 (Build 1)</div>
     </div>
   </div>
 
