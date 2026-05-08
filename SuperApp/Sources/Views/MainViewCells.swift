@@ -2,58 +2,58 @@
 //  MainViewCells.swift
 //  SuperApp
 //
-//  Extracted from MainViewController.swift
-//
 
 import UIKit
 import SnapKit
 import WebBridgeKit
 
-// MARK: - PushTokenCardCell
+// MARK: - PushTokenCardCell (white card, no gradient)
 
 class PushTokenCardCell: UICollectionViewCell {
     static let identifier = "PushTokenCardCell"
 
-    private let gradientLayer: CAGradientLayer = {
-        let layer = CAGradientLayer()
-        layer.colors = [
-            ThemeColors.current.primary.withAlphaComponent(0.8).cgColor,
-            ThemeTokens.Colors.Light.primary.withAlphaComponent(0.6).cgColor
-        ]
-        layer.startPoint = CGPoint(x: 0, y: 0)
-        layer.endPoint = CGPoint(x: 1, y: 1)
-        layer.cornerRadius = ThemeTokens.CornerRadius.lg
-        return layer
-    }()
-
     private let containerView: UIView = {
         let view = UIView()
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
-        view.layer.masksToBounds = true
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 8
+        view.layer.shadowOpacity = 0.06
         return view
     }()
 
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
-        label.textColor = .white.withAlphaComponent(0.9)
-        label.text = "Push Token"
-        return label
+    private let serverIcon: UIImageView = {
+        let iv = UIImageView()
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        iv.image = UIImage(systemName: "server.rack", withConfiguration: config)
+        iv.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iv.contentMode = .scaleAspectFit
+        return iv
     }()
 
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        label.textColor = .white.withAlphaComponent(0.85)
-        label.numberOfLines = 2
+        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
     }()
 
+    private let keyIcon: UIImageView = {
+        let iv = UIImageView()
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        iv.image = UIImage(systemName: "key.fill", withConfiguration: config)
+        iv.tintColor = ThemeColors.current.primary
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
+
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .regular)
-        label.textColor = .white.withAlphaComponent(0.7)
+        label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium)
+        label.textColor = ThemeColors.current.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -61,11 +61,12 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        button.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: config), for: .normal)
-        button.tintColor = .white
-        button.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        button.setTitle(L10n.tr("common.copy"), for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.setTitleColor(ThemeColors.current.primary, for: .normal)
+        button.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
         return button
     }()
 
@@ -73,9 +74,10 @@ class PushTokenCardCell: UICollectionViewCell {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("home.token_card.register"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        button.tintColor = .white
-        button.backgroundColor = UIColor.white.withAlphaComponent(0.25)
-        button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = ThemeColors.current.primary
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         button.isHidden = true
         return button
     }()
@@ -92,11 +94,6 @@ class PushTokenCardCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        gradientLayer.frame = containerView.bounds
-    }
-
     override func prepareForReuse() {
         super.prepareForReuse()
         onCopyTapped = nil
@@ -105,9 +102,9 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private func setupUI() {
         contentView.addSubview(containerView)
-        containerView.layer.insertSublayer(gradientLayer, at: 0)
-        containerView.addSubview(titleLabel)
+        containerView.addSubview(serverIcon)
         containerView.addSubview(urlLabel)
+        containerView.addSubview(keyIcon)
         containerView.addSubview(tokenLabel)
         containerView.addSubview(copyButton)
         containerView.addSubview(registerButton)
@@ -116,35 +113,38 @@ class PushTokenCardCell: UICollectionViewCell {
             make.edges.equalToSuperview().inset(4)
         }
 
-        titleLabel.snp.makeConstraints { make in
+        serverIcon.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(16)
             make.left.equalToSuperview().offset(16)
+            make.width.height.equalTo(16)
         }
 
         urlLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.centerY.equalTo(serverIcon)
+            make.left.equalTo(serverIcon.snp.right).offset(8)
+            make.right.equalToSuperview().offset(-16)
+        }
+
+        keyIcon.snp.makeConstraints { make in
+            make.top.equalTo(serverIcon.snp.bottom).offset(14)
             make.left.equalToSuperview().offset(16)
-            make.right.equalTo(copyButton.snp.left).offset(-12)
+            make.width.height.equalTo(16)
         }
 
         tokenLabel.snp.makeConstraints { make in
-            make.top.equalTo(urlLabel.snp.bottom).offset(4)
-            make.left.equalToSuperview().offset(16)
+            make.centerY.equalTo(keyIcon)
+            make.left.equalTo(keyIcon.snp.right).offset(8)
             make.right.equalTo(copyButton.snp.left).offset(-12)
-            make.bottom.equalToSuperview().offset(-16)
         }
 
         copyButton.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(32)
+            make.centerY.equalTo(keyIcon)
         }
 
         registerButton.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
-            make.centerY.equalToSuperview()
-            make.width.equalTo(56)
-            make.height.equalTo(28)
+            make.centerY.equalTo(keyIcon)
         }
 
         copyButton.addTarget(self, action: #selector(copyTapped), for: .touchUpInside)
@@ -154,12 +154,19 @@ class PushTokenCardCell: UICollectionViewCell {
     func configure(serverURL: String, deviceToken: String, isRegistered: Bool) {
         if isRegistered {
             urlLabel.text = serverURL
-            tokenLabel.text = "Device: \(deviceToken.prefix(16))\(deviceToken.count > 16 ? "..." : "")"
+            if deviceToken.count > 8 {
+                let prefix = deviceToken.prefix(4)
+                let suffix = deviceToken.suffix(4)
+                tokenLabel.text = "\(prefix)****\(suffix)"
+            } else {
+                tokenLabel.text = deviceToken
+            }
             copyButton.isHidden = false
             registerButton.isHidden = true
         } else {
             urlLabel.text = serverURL
             tokenLabel.text = L10n.tr("home.token_card.not_registered")
+            tokenLabel.textColor = ThemeTokens.Colors.Light.textTertiary
             copyButton.isHidden = true
             registerButton.isHidden = false
         }
@@ -174,7 +181,7 @@ class PushTokenCardCell: UICollectionViewCell {
     }
 }
 
-// MARK: - QuickActionCell
+// MARK: - QuickActionCell (colored circle icons)
 
 class QuickActionCell: UICollectionViewCell {
     static let identifier = "QuickActionCell"
@@ -222,33 +229,46 @@ class QuickActionCell: UICollectionViewCell {
 
     private func createActionButton(icon: String, title: String, color: UIColor) -> UIButton {
         let button = UIButton(type: .system)
-        button.backgroundColor = ThemeColors.current.cardBackground
-        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        button.backgroundColor = .clear
+
+        let iconContainer: UIView = {
+            let v = UIView()
+            v.backgroundColor = color.withAlphaComponent(0.12)
+            v.layer.cornerRadius = 24
+            return v
+        }()
 
         let iconView = UIImageView()
-        iconView.image = UIImage(systemName: icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .medium))
+        iconView.image = UIImage(systemName: icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .medium))
         iconView.tintColor = color
         iconView.contentMode = .scaleAspectFit
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = ThemeTokens.Typography.caption2
-        titleLabel.textColor = color
+        titleLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+        titleLabel.textColor = ThemeColors.current.textSecondary
         titleLabel.textAlignment = .center
 
-        let stack = UIStackView(arrangedSubviews: [iconView, titleLabel])
+        let stack = UIStackView(arrangedSubviews: [iconContainer, titleLabel])
         stack.axis = .vertical
         stack.alignment = .center
-        stack.spacing = 4
+        stack.spacing = 6
         stack.isUserInteractionEnabled = false
 
         button.addSubview(stack)
+        iconContainer.addSubview(iconView)
+
         stack.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.top.greaterThanOrEqualToSuperview().offset(8)
-            make.bottom.lessThanOrEqualToSuperview().offset(-8)
-            make.left.greaterThanOrEqualToSuperview().offset(4)
-            make.right.lessThanOrEqualToSuperview().offset(-4)
+        }
+
+        iconContainer.snp.makeConstraints { make in
+            make.width.height.equalTo(48)
+        }
+
+        iconView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(22)
         }
 
         return button
@@ -259,37 +279,24 @@ class QuickActionCell: UICollectionViewCell {
     }
 }
 
-// MARK: - SectionHeaderView
+// MARK: - SectionHeaderView (uppercase gray, no blue bar)
 
 class SectionHeaderView: UICollectionReusableView {
     static let identifier = "SectionHeader"
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.title3
-        label.textColor = ThemeColors.current.text
+        label.font = UIFont.systemFont(ofSize: 13, weight: .bold)
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         return label
-    }()
-
-    private let indicatorView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ThemeColors.current.primary
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
-        return view
     }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        addSubview(indicatorView)
         addSubview(titleLabel)
-        indicatorView.snp.makeConstraints { make in
-            make.left.equalToSuperview().offset(20)
-            make.centerY.equalToSuperview()
-            make.width.equalTo(4)
-            make.height.equalTo(18)
-        }
         titleLabel.snp.makeConstraints { make in
-            make.left.equalTo(indicatorView.snp.right).offset(10)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.lessThanOrEqualToSuperview().offset(-20)
             make.centerY.equalToSuperview()
         }
     }
@@ -310,15 +317,15 @@ class CommandBannerView: UIView {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.tintColor = ThemeColors.current.primary
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        iv.image = UIImage(systemName: "link.badge.plus", withConfiguration: config)
+        let config = UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+        iv.image = UIImage(systemName: "shield", withConfiguration: config)
         return iv
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.subheadline
-        label.textColor = ThemeColors.current.text
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = ThemeColors.current.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -326,8 +333,8 @@ class CommandBannerView: UIView {
 
     private let dismissButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        button.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
+        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .bold)
+        button.setImage(UIImage(systemName: "xmark", withConfiguration: config), for: .normal)
         button.tintColor = ThemeTokens.Colors.Light.textTertiary
         return button
     }()
@@ -342,8 +349,8 @@ class CommandBannerView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
-        layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
+        layer.cornerRadius = ThemeTokens.CornerRadius.md
         clipsToBounds = true
 
         addSubview(iconView)
@@ -351,15 +358,15 @@ class CommandBannerView: UIView {
         addSubview(dismissButton)
 
         iconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(14)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.width.height.equalTo(18)
         }
 
         dismissButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-8)
+            make.trailing.equalToSuperview().offset(-10)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(44)
+            make.width.height.equalTo(36)
         }
 
         titleLabel.snp.makeConstraints { make in

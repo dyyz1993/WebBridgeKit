@@ -41,10 +41,18 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private let storageLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption1
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = ThemeColors.current.textSecondary
-        label.textAlignment = .right
+        label.textAlignment = .center
         return label
+    }()
+
+    private let storagePillView: UIView = {
+        let view = UIView()
+        view.backgroundColor = ThemeTokens.Colors.Light.background
+        view.layer.cornerRadius = 12
+        view.clipsToBounds = true
+        return view
     }()
 
     private let pushTokenCardCellId = "PushTokenCardCell"
@@ -335,8 +343,13 @@ class MainViewController: BaseViewController<MainViewModel> {
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
-        let storageItem = UIBarButtonItem(customView: storageLabel)
+        let storageItem = UIBarButtonItem(customView: storagePillView)
         navigationItem.rightBarButtonItems = [storageItem]
+
+        storagePillView.addSubview(storageLabel)
+        storageLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10))
+        }
 
         emptyStateView.configure(
             icon: "square.grid.2x2.fill",
@@ -361,43 +374,43 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func createPushTokenSection(environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(110))
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(90))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(110))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(90))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        group.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16)
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 0)
         return section
     }
 
     private func createQuickActionsSection(environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .absolute(80))
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.25), heightDimension: .absolute(76))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(80))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(76))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 4)
         group.interItemSpacing = .fixed(8)
-        group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        group.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16)
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 12, trailing: 0)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 0, bottom: 10, trailing: 0)
         return section
     }
 
     private func createAppGridSection(sectionIndex: Int, gridSections: Int, environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
         let itemWidth = (environment.container.contentSize.width - 40 - 16) / 2
-        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(160))
+        let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(140))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(160))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(140))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        let rowSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(160))
+        let rowSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(140))
         let row = NSCollectionLayoutGroup.horizontal(layoutSize: rowSize, subitem: group, count: 2)
         row.interItemSpacing = .fixed(16)
         row.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
         let section = NSCollectionLayoutSection(group: row)
-        section.interGroupSpacing = 20
-        section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 30, trailing: 0)
+        section.interGroupSpacing = 16
+        section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 24, trailing: 0)
 
-        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(50))
+        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(36))
         let header = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
         section.boundarySupplementaryItems = [header]
         return section
