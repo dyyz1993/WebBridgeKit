@@ -19,16 +19,16 @@ class CodeExampleCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        label.textColor = UIColor.label
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -36,16 +36,16 @@ class CodeExampleCell: UITableViewCell {
 
     private let languageBadge: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-        view.layer.cornerRadius = 4
+        view.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.layer.masksToBounds = true
         return view
     }()
 
     private let languageLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = UIColor.systemBlue
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeTokens.Colors.Light.primary
         label.textAlignment = .center
         return label
     }()
@@ -53,9 +53,9 @@ class CodeExampleCell: UITableViewCell {
     private let codeTextView: UITextView = {
         let textView = UITextView()
         textView.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.textColor = UIColor.label
-        textView.backgroundColor = UIColor.systemGray6
-        textView.layer.cornerRadius = 8
+        textView.textColor = ThemeColors.current.text
+        textView.backgroundColor = ThemeColors.current.surface
+        textView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         textView.layer.masksToBounds = true
         textView.isEditable = false
         textView.isScrollEnabled = false
@@ -65,8 +65,8 @@ class CodeExampleCell: UITableViewCell {
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         return label
     }()
@@ -82,7 +82,7 @@ class CodeExampleCell: UITableViewCell {
 
     private let separatorView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.separator
+        view.backgroundColor = ThemeColors.current.divider
         return view
     }()
 

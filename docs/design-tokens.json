@@ -1,0 +1,140 @@
+{
+  "$schema": "design-tokens.schema.json",
+  "version": "2.0.0",
+  "description": "WebBridgeKit Design Tokens — Single Source of Truth. All UI values must come from here.",
+
+  "colors": {
+    "light": {
+      "primary": "#007AFF",
+      "secondary": "#8E8E93",
+      "background": "#F2F2F7",
+      "surface": "#FFFFFF",
+      "cardBackground": "#FFFFFF",
+      "text": "#000000",
+      "textSecondary": "#8E8E93",
+      "textTertiary": "#C7C7CC",
+      "border": "#C6C6C8",
+      "separator": "#C6C6C8",
+      "success": "#34C759",
+      "warning": "#FF9500",
+      "error": "#FF3B30",
+      "info": "#007AFF",
+      "gradientStart": "rgba(64,115,242,0.85)",
+      "gradientEnd": "rgba(153,77,191,0.85)",
+      "badgeBackground": "#F2F2F7",
+      "badgeText": "#636366",
+      "fabBackground": "#007AFF",
+      "unreadDot": "#007AFF",
+      "navigationBarBackground": "#FFFFFF",
+      "tabBarBackground": "#FFFFFF",
+      "overlay": "rgba(0,0,0,0.4)"
+    },
+    "dark": {
+      "primary": "#0A84FF",
+      "secondary": "#8E8E93",
+      "background": "#000000",
+      "surface": "#1C1C1E",
+      "cardBackground": "#26262B",
+      "text": "#FFFFFF",
+      "textSecondary": "#8E8E93",
+      "textTertiary": "#48484A",
+      "border": "#38383A",
+      "separator": "#38383A",
+      "success": "#30D158",
+      "warning": "#FF9F0A",
+      "error": "#FF453A",
+      "info": "#0A84FF",
+      "gradientStart": "rgba(51,77,153,0.90)",
+      "gradientEnd": "rgba(102,51,128,0.90)",
+      "badgeBackground": "#333340",
+      "badgeText": "#EBEBF5",
+      "fabBackground": "#0A84FF",
+      "unreadDot": "#0A84FF",
+      "navigationBarBackground": "#000000",
+      "tabBarBackground": "#000000",
+      "overlay": "rgba(0,0,0,0.6)"
+    }
+  },
+
+  "typography": {
+    "largeTitle": { "size": 28, "weight": "bold", "tracking": 0 },
+    "title1":     { "size": 28, "weight": "bold", "tracking": 0 },
+    "title2":     { "size": 22, "weight": "bold", "tracking": 0 },
+    "title3":     { "size": 20, "weight": "semibold", "tracking": 0 },
+    "headline":   { "size": 17, "weight": "semibold", "tracking": -0.4 },
+    "body":       { "size": 17, "weight": "regular", "tracking": -0.4 },
+    "callout":    { "size": 16, "weight": "regular", "tracking": -0.3 },
+    "subheadline":{ "size": 15, "weight": "regular", "tracking": -0.2 },
+    "footnote":   { "size": 13, "weight": "regular", "tracking": -0.1 },
+    "caption1":   { "size": 12, "weight": "regular", "tracking": 0 },
+    "caption2":   { "size": 11, "weight": "regular", "tracking": 0.1 }
+  },
+
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "xxl": 48
+  },
+
+  "cornerRadius": {
+    "xs": 2,
+    "sm": 4,
+    "md": 8,
+    "lg": 12,
+    "xl": 16,
+    "xxl": 20,
+    "full": 999
+  },
+
+  "shadows": {
+    "card":    { "color": "black", "opacity": 0.08, "offsetX": 0, "offsetY": 4, "radius": 12 },
+    "fab":     { "color": "black", "opacity": 0.30, "offsetX": 0, "offsetY": 4, "radius": 8 },
+    "navBar":  { "color": "black", "opacity": 0.03, "offsetX": 0, "offsetY": 2, "radius": 8 },
+    "modal":   { "color": "black", "opacity": 0.15, "offsetX": 0, "offsetY": 8, "radius": 24 },
+    "tooltip": { "color": "black", "opacity": 0.12, "offsetX": 0, "offsetY": 2, "radius": 4 }
+  },
+
+  "opacity": {
+    "disabled": 0.3,
+    "hover": 0.8,
+    "pressed": 0.6,
+    "placeholder": 0.4,
+    "badge": 0.12,
+    "overlay": 0.4
+  },
+
+  "animation": {
+    "fast":   { "duration": 0.15, "curve": "easeInOut" },
+    "normal": { "duration": 0.25, "curve": "easeInOut" },
+    "slow":   { "duration": 0.35, "curve": "easeInOut" },
+    "spring": { "duration": 0.30, "damping": 0.8, "curve": "spring" },
+    "modal":  { "duration": 0.50, "curve": "easeInOut" }
+  },
+
+  "icons": {
+    "sizes": {
+      "xs": 12,
+      "sm": 16,
+      "md": 20,
+      "lg": 24,
+      "xl": 32,
+      "xxl": 48
+    },
+    "weights": {
+      "light": "light",
+      "regular": "regular",
+      "medium": "medium",
+      "semibold": "semibold",
+      "bold": "bold"
+    }
+  },
+
+  "breakpoints": {
+    "compact": 320,
+    "regular": 375,
+    "large": 428
+  }
+}

@@ -19,8 +19,8 @@ class FavoriteCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
@@ -29,8 +29,8 @@ class FavoriteCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = ThemeColors.current.primary
-        imageView.backgroundColor = .tertiarySystemBackground
-        imageView.layer.cornerRadius = 8
+        imageView.backgroundColor = ThemeColors.current.surface
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
         imageView.clipsToBounds = true
         return imageView
@@ -39,7 +39,7 @@ class FavoriteCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -47,8 +47,8 @@ class FavoriteCell: UITableViewCell {
 
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -66,7 +66,7 @@ class FavoriteCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.image = LucideIcon.star.image(pointSize: 18)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemYellow
+        imageView.tintColor = ThemeTokens.Colors.Light.warning
         return imageView
     }()
 
@@ -80,8 +80,8 @@ class FavoriteCell: UITableViewCell {
 
     private let cacheModeLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeColors.current.textSecondary
         label.text = L10n.tr("favorite.cache_mode")
         return label
     }()
@@ -215,7 +215,7 @@ class FavoriteCell: UITableViewCell {
 
         // 置顶状态
         pinButton.isHidden = false
-        pinButton.tintColor = favorite.isPinned ? ThemeColors.current.warning : .systemGray3
+            pinButton.tintColor = favorite.isPinned ? ThemeColors.current.warning : ThemeTokens.Colors.Light.textTertiary
 
         // 收藏图标
         favoriteIconView.isHidden = false
@@ -250,6 +250,6 @@ class FavoriteCell: UITableViewCell {
         pinButton.isHidden = true
         favoriteIconView.isHidden = true
         cacheModeSwitch.isOn = false
-        faviconImageView.backgroundColor = UIColor.tertiarySystemBackground
+        faviconImageView.backgroundColor = ThemeColors.current.surface
     }
 }

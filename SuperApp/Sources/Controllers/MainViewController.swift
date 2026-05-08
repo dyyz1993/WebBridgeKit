@@ -33,7 +33,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         let image = UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = .label
+        button.tintColor = ThemeColors.current.text
         return button
     }()
 
@@ -41,8 +41,8 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private let storageLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .right
         return label
     }()
@@ -70,10 +70,10 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private let quickActions: [(icon: String, title: String, color: UIColor)] = [
-        ("qrcode.viewfinder", L10n.tr("home.quick_action.scan"), .systemBlue),
-        ("doc.on.clipboard", L10n.tr("home.quick_action.paste"), .systemOrange),
-        ("text.badge.star", L10n.tr("home.quick_action.token"), .systemPurple),
-        ("ladybug", L10n.tr("home.quick_action.debug"), .systemGreen)
+        ("qrcode.viewfinder", L10n.tr("home.quick_action.scan"), ThemeTokens.Colors.Light.primary),
+        ("doc.on.clipboard", L10n.tr("home.quick_action.paste"), ThemeTokens.Colors.Light.warning),
+        ("text.badge.star", L10n.tr("home.quick_action.token"), UIColor.systemPurple),
+        ("ladybug", L10n.tr("home.quick_action.debug"), ThemeTokens.Colors.Light.success)
     ]
 
     private lazy var commandBanner: CommandBannerView = {
@@ -279,7 +279,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func setupUI() {
-        view.backgroundColor = UIColor.systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
 
@@ -296,7 +296,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         collectionView.delegate = self
 
         let topBackground = UIView()
-        topBackground.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.05)
+        topBackground.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.05)
         view.insertSubview(topBackground, at: 0)
         topBackground.snp.makeConstraints { make in
             make.top.left.right.equalToSuperview()

@@ -20,7 +20,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         table.register(InboxGroupHeaderCell.self, forCellReuseIdentifier: InboxGroupHeaderCell.identifier)
         table.rowHeight = UITableView.automaticDimension
         table.estimatedRowHeight = 80
-        table.backgroundColor = .systemGroupedBackground
+        table.backgroundColor = ThemeColors.current.background
         table.separatorStyle = .none
         table.delegate = self
         table.dataSource = self
@@ -84,7 +84,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     }
 
     override func makeUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
         navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
 
@@ -156,21 +156,21 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             let button: UIButton
             if #available(iOS 15.0, *) {
                 var config = UIButton.Configuration.filled()
-                config.baseBackgroundColor = .secondarySystemFill
-                config.baseForegroundColor = .secondaryLabel
+                config.baseBackgroundColor = ThemeColors.current.surface
+                config.baseForegroundColor = ThemeColors.current.textSecondary
                 config.cornerStyle = .capsule
                 config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                     var outgoing = incoming
-                    outgoing.font = .systemFont(ofSize: 13, weight: .medium)
+                    outgoing.font = ThemeTokens.Typography.caption1
                     return outgoing
                 }
                 config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
                 button = UIButton(configuration: config)
             } else {
                 button = UIButton(type: .system)
-                button.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
-                button.backgroundColor = .secondarySystemFill
-                button.layer.cornerRadius = 16
+                button.titleLabel?.font = ThemeTokens.Typography.caption1
+                button.backgroundColor = ThemeColors.current.surface
+                button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
                 button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
             }
             button.setTitle(title, for: .normal)
@@ -194,19 +194,19 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             let isSelected = button.tag == selected.rawValue
             if #available(iOS 15.0, *) {
                 var config = button.configuration ?? UIButton.Configuration.filled()
-                config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
-                config.baseForegroundColor = isSelected ? .white : .secondaryLabel
+                config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : ThemeColors.current.surface
+                config.baseForegroundColor = isSelected ? .white : ThemeColors.current.textSecondary
                 config.cornerStyle = .capsule
                 config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                     var outgoing = incoming
-                    outgoing.font = .systemFont(ofSize: 13, weight: .medium)
+                    outgoing.font = ThemeTokens.Typography.caption1
                     return outgoing
                 }
                 config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
                 button.configuration = config
             } else {
-                button.backgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
-                button.setTitleColor(isSelected ? .white : .secondaryLabel, for: .normal)
+                button.backgroundColor = isSelected ? ThemeColors.current.primary : ThemeColors.current.surface
+                button.setTitleColor(isSelected ? .white : ThemeColors.current.textSecondary, for: .normal)
             }
         }
     }
@@ -357,8 +357,8 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .semibold)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.subheadline
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -367,7 +367,7 @@ class InboxGroupHeaderCell: UITableViewCell {
     private let chevronImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = UIImage(systemName: "chevron.down")
-        iv.tintColor = .tertiaryLabel
+        iv.tintColor = ThemeTokens.Colors.Light.textTertiary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -426,30 +426,30 @@ class InboxMessageCell: UITableViewCell {
     private let cardView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.callout
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         return label
     }()
 
     private let bodyLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 2
         return label
     }()
 
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 11)
-        label.textColor = .tertiaryLabel
+        label.font = ThemeTokens.Typography.caption2
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -458,14 +458,14 @@ class InboxMessageCell: UITableViewCell {
     private let unreadDot: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.primary
-        view.layer.cornerRadius = 5
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.isHidden = true
         return view
     }()
 
     private let sourceLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 10, weight: .medium)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeColors.current.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -534,8 +534,8 @@ class InboxMessageCell: UITableViewCell {
         bodyLabel.text = message.payload.body
         unreadDot.isHidden = message.isRead
         titleLabel.font = message.isRead
-            ? .systemFont(ofSize: 16, weight: .regular)
-            : .systemFont(ofSize: 16, weight: .bold)
+            ? ThemeTokens.Typography.callout
+            : UIFont.systemFont(ofSize: 16, weight: .bold)
 
         sourceLabel.text = message.payload.channel.uppercased()
 

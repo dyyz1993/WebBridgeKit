@@ -19,7 +19,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = 24
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 8)
@@ -50,7 +50,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let faviconContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBackground
+        view.backgroundColor = ThemeColors.current.surface
         view.layer.cornerRadius = ThemeTokens.CornerRadius.xxl
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -70,7 +70,7 @@ class URLGridCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         label.textAlignment = .center
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail // 尾部截断
@@ -80,7 +80,7 @@ class URLGridCell: UICollectionViewCell {
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 10, weight: .regular)
-        label.textColor = UIColor.tertiaryLabel
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.textAlignment = .center
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle // 中间截断（更适合 URL）
@@ -106,7 +106,7 @@ class URLGridCell: UICollectionViewCell {
     private let cachedDotView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
-        view.backgroundColor = .systemGray
+        view.backgroundColor = ThemeColors.current.secondary
         return view
     }()
 
@@ -122,9 +122,9 @@ class URLGridCell: UICollectionViewCell {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
         button.setImage(LucideIcon.star.templateImage(pointSize: 12, weight: .semibold), for: .normal)
-        button.tintColor = UIColor.systemYellow
-        button.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.1)
-        button.layer.cornerRadius = 9
+        button.tintColor = ThemeTokens.Colors.Light.warning
+        button.backgroundColor = ThemeTokens.Colors.Light.warning.withAlphaComponent(ThemeTokens.Opacity.badge)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return button
     }()
 
@@ -154,7 +154,7 @@ class URLGridCell: UICollectionViewCell {
     private let lastVisitedLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 9, weight: .regular)
-        label.textColor = UIColor.quaternaryLabel
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.textAlignment = .center
         return label
     }()
@@ -243,7 +243,7 @@ class URLGridCell: UICollectionViewCell {
         backgroundColor = .clear
         containerView.isHidden = true
         containerView.alpha = 0  // 重置 alpha
-        containerView.backgroundColor = UIColor.secondarySystemBackground  // 重置为默认颜色
+        containerView.backgroundColor = ThemeColors.current.cardBackground
 
         // 重置所有 UI 状态
         titleLabel.text = nil
@@ -251,7 +251,7 @@ class URLGridCell: UICollectionViewCell {
         pinIconView.isHidden = true
         cachedBadgeView.isHidden = true
         favoriteIconView.isHidden = true
-        faviconImageView.backgroundColor = UIColor.tertiarySystemBackground
+        faviconImageView.backgroundColor = ThemeColors.current.surface
     }
 
     // MARK: - Interaction
@@ -265,7 +265,7 @@ class URLGridCell: UICollectionViewCell {
     private func animateSelection(_ highlighted: Bool) {
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
             self.containerView.transform = highlighted ? CGAffineTransform(scaleX: 0.94, y: 0.94) : .identity
-            self.containerView.backgroundColor = highlighted ? UIColor.tertiarySystemGroupedBackground : UIColor.secondarySystemGroupedBackground
+            self.containerView.backgroundColor = highlighted ? ThemeColors.current.surface : ThemeColors.current.cardBackground
             self.containerView.layer.shadowOpacity = highlighted ? 0.05 : 0.1
         }, completion: nil)
     }
@@ -431,10 +431,10 @@ class URLGridCell: UICollectionViewCell {
 
             // 动态背景
             if history.isPinned {
-                self.containerView.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.05)
+                self.containerView.backgroundColor = ThemeTokens.Colors.Light.warning.withAlphaComponent(0.05)
                 self.glassEffectView.isHidden = false
             } else {
-                self.containerView.backgroundColor = .secondarySystemGroupedBackground
+                self.containerView.backgroundColor = ThemeColors.current.cardBackground
                 self.glassEffectView.isHidden = true
             }
 
@@ -486,22 +486,22 @@ class URLGridCell: UICollectionViewCell {
                 self.cachedLabel.textColor = ThemeTokens.Colors.Light.warning
                 self.cachedBadgeView.backgroundColor = ThemeTokens.Colors.Light.warning.withAlphaComponent(ThemeTokens.Opacity.badge)
             } else {
-                self.cachedDotView.backgroundColor = .systemGray
+                self.cachedDotView.backgroundColor = ThemeColors.current.secondary
                 self.cachedLabel.text = "未缓存"
-                self.cachedLabel.textColor = .secondaryLabel
-                self.cachedBadgeView.backgroundColor = UIColor.systemFill
+                self.cachedLabel.textColor = ThemeColors.current.textSecondary
+                self.cachedBadgeView.backgroundColor = ThemeColors.current.surface
             }
 
             // 更新按钮状态
             let pinImage = history.isPinned ? "pin.fill" : "pin"
             self.pinIconView.setImage(UIImage(systemName: pinImage), for: .normal)
-            self.pinIconView.tintColor = history.isPinned ? ThemeTokens.Colors.Light.warning : .systemGray4
+            self.pinIconView.tintColor = history.isPinned ? ThemeTokens.Colors.Light.warning : ThemeTokens.Colors.Light.textTertiary
             self.pinIconView.backgroundColor = history.isPinned ? ThemeTokens.Colors.Light.warning.withAlphaComponent(0.1) : .clear
 
             let favoriteImage = history.isFavorite ? "star.fill" : "star"
             self.favoriteIconView.setImage(UIImage(systemName: favoriteImage), for: .normal)
-            self.favoriteIconView.tintColor = history.isFavorite ? .systemYellow : .systemGray4
-            self.favoriteIconView.backgroundColor = history.isFavorite ? UIColor.systemYellow.withAlphaComponent(0.1) : .clear
+            self.favoriteIconView.tintColor = history.isFavorite ? ThemeTokens.Colors.Light.warning : ThemeTokens.Colors.Light.textTertiary
+            self.favoriteIconView.backgroundColor = history.isFavorite ? ThemeTokens.Colors.Light.warning.withAlphaComponent(ThemeTokens.Opacity.badge) : .clear
         }
     }
 

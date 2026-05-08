@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "design-tokens.schema.json",
+  "title": "WebBridgeKit Design Tokens",
+  "description": "Schema for validating WebBridgeKit design-tokens.json — the single source of truth for all UI values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "description", "colors", "typography", "spacing", "cornerRadius", "shadows", "opacity", "animation", "icons", "breakpoints"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "design-tokens.schema.json"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["light", "dark"],
+      "properties": {
+        "light": { "$ref": "#/$defs/colorPalette" },
+        "dark":  { "$ref": "#/$defs/colorPalette" }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/typographyToken" },
+      "minProperties": 1
+    },
+    "spacing": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 },
+      "minProperties": 1
+    },
+    "cornerRadius": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 },
+      "minProperties": 1
+    },
+    "shadows": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/shadowToken" },
+      "minProperties": 1
+    },
+    "opacity": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 },
+      "minProperties": 1
+    },
+    "animation": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/animationToken" },
+      "minProperties": 1
+    },
+    "icons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sizes", "weights"],
+      "properties": {
+        "sizes": {
+          "type": "object",
+          "additionalProperties": { "type": "number", "minimum": 1 }
+        },
+        "weights": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["light", "regular", "medium", "semibold", "bold"]
+          }
+        }
+      }
+    },
+    "breakpoints": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 },
+      "minProperties": 1
+    }
+  },
+  "$defs": {
+    "colorPalette": {
+      "type": "object",
+      "required": ["primary", "secondary", "background", "surface", "cardBackground", "text", "textSecondary", "border", "success", "warning", "error", "info"],
+      "additionalProperties": { "$ref": "#/$defs/cssColor" }
+    },
+    "cssColor": {
+      "type": "string",
+      "pattern": "^(#[0-9A-Fa-f]{3,8}|rgba?\\([^)]+\\)|hsla?\\([^)]+\\))$"
+    },
+    "typographyToken": {
+      "type": "object",
+      "required": ["size", "weight"],
+      "additionalProperties": false,
+      "properties": {
+        "size":    { "type": "number", "minimum": 1 },
+        "weight":  { "type": "string", "enum": ["regular", "medium", "semibold", "bold", "heavy", "light", "ultralight"] },
+        "tracking": { "type": "number" }
+      }
+    },
+    "shadowToken": {
+      "type": "object",
+      "required": ["color", "opacity", "offsetX", "offsetY", "radius"],
+      "additionalProperties": false,
+      "properties": {
+        "color":   { "type": "string" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "offsetX": { "type": "number" },
+        "offsetY": { "type": "number" },
+        "radius":  { "type": "number", "minimum": 0 }
+      }
+    },
+    "animationToken": {
+      "type": "object",
+      "required": ["duration", "curve"],
+      "additionalProperties": false,
+      "properties": {
+        "duration": { "type": "number", "minimum": 0 },
+        "curve":    { "type": "string", "enum": ["easeInOut", "easeIn", "easeOut", "linear", "spring"] },
+        "damping":  { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

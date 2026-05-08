@@ -19,8 +19,8 @@ class TokenCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
@@ -30,9 +30,9 @@ class TokenCell: UITableViewCell {
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         imageView.image = UIImage(systemName: "key.fill", withConfiguration: config)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemPurple
-        imageView.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.1)
-        imageView.layer.cornerRadius = 8
+        imageView.tintColor = ThemeTokens.Colors.Light.primary
+        imageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
         return imageView
     }()
@@ -40,7 +40,7 @@ class TokenCell: UITableViewCell {
     private let tokenLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -48,8 +48,8 @@ class TokenCell: UITableViewCell {
 
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -57,22 +57,22 @@ class TokenCell: UITableViewCell {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = UIColor.tertiaryLabel
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.numberOfLines = 1
         return label
     }()
 
     private let statusBadge: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.layer.masksToBounds = true
         return view
     }()
 
     private let statusLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = .white
         label.textAlignment = .center
         return label
@@ -80,8 +80,8 @@ class TokenCell: UITableViewCell {
 
     private let accessCountLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 11, weight: .regular)
-        label.textColor = UIColor.tertiaryLabel
+        label.font = ThemeTokens.Typography.caption2
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.textAlignment = .right
         return label
     }()
@@ -202,13 +202,13 @@ class TokenCell: UITableViewCell {
         // 状态标签
         statusBadge.isHidden = false
         if token.isExpired {
-            statusBadge.backgroundColor = UIColor.systemRed
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.error
             statusLabel.text = "已过期"
         } else if token.isPermanent {
-            statusBadge.backgroundColor = UIColor.systemGreen
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.success
             statusLabel.text = "永久"
         } else {
-            statusBadge.backgroundColor = UIColor.systemBlue
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.primary
             statusLabel.text = "剩余 \(token.remainingTimeText)"
         }
     }

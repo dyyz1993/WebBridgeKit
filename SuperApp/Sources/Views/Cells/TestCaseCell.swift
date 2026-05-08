@@ -19,7 +19,7 @@ class TestCaseCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -36,7 +36,7 @@ class TestCaseCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.accessibilityIdentifier = "testCaseCell.titleLabel"
         return label
@@ -44,15 +44,15 @@ class TestCaseCell: UITableViewCell {
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 2
         return label
     }()
 
     private let statusBadge: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGray5
+        view.backgroundColor = ThemeTokens.Colors.Light.textTertiary
         view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.clipsToBounds = true
         return view
@@ -60,8 +60,8 @@ class TestCaseCell: UITableViewCell {
 
     private let statusLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 11, weight: .medium)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.caption2
+        label.textColor = ThemeColors.current.textSecondary
         label.text = "待运行"
         return label
     }()
@@ -168,20 +168,19 @@ class TestCaseCell: UITableViewCell {
             titleLabel.text = ""
             descriptionLabel.text = ""
             statusLabel.text = "待运行"
-            statusBadge.backgroundColor = UIColor.systemGray5
-            statusLabel.textColor = UIColor.secondaryLabel
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+            statusLabel.textColor = ThemeColors.current.textSecondary
             return
         }
 
         titleLabel.text = testCase.name
         descriptionLabel.text = testCase.description
 
-        // 根据状态更新 UI
         switch testCase.status {
         case .pending:
             statusLabel.text = "待运行"
-            statusBadge.backgroundColor = UIColor.systemGray5
-            statusLabel.textColor = UIColor.secondaryLabel
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+            statusLabel.textColor = ThemeColors.current.textSecondary
         case .running:
             statusLabel.text = "运行中..."
             statusBadge.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
@@ -212,8 +211,8 @@ class TestCaseCell: UITableViewCell {
         titleLabel.text = nil
         descriptionLabel.text = nil
         statusLabel.text = "待运行"
-        statusBadge.backgroundColor = UIColor.systemGray5
-        statusLabel.textColor = UIColor.secondaryLabel
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+            statusLabel.textColor = ThemeColors.current.textSecondary
     }
 }
 

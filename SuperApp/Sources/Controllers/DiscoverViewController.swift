@@ -45,7 +45,7 @@ class DiscoverViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
 
@@ -214,10 +214,10 @@ struct DiscoverItem {
 
         var color: UIColor {
             switch self {
-            case .persistent: return .systemBlue
-            case .cached: return .systemGreen
-            case .needsUpdate: return .systemOrange
-            case .notCached: return .systemGray
+            case .persistent: return ThemeTokens.Colors.Light.primary
+            case .cached: return ThemeTokens.Colors.Light.success
+            case .needsUpdate: return ThemeTokens.Colors.Light.warning
+            case .notCached: return ThemeColors.current.secondary
             }
         }
 
@@ -344,7 +344,7 @@ class DiscoverSectionHeader: UICollectionReusableView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.textColor = .label
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -377,28 +377,28 @@ class DiscoverAppCell: UICollectionViewCell {
     private let cardView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         return view
     }()
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-        view.layer.cornerRadius = 20
+        view.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xxl
         return view
     }()
 
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .systemBlue
+        iv.tintColor = ThemeTokens.Colors.Light.primary
         return iv
     }()
 
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = .label
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -406,7 +406,7 @@ class DiscoverAppCell: UICollectionViewCell {
 
     private let badgeView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         return view
     }()
 
@@ -420,7 +420,7 @@ class DiscoverAppCell: UICollectionViewCell {
     private let detailLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 10, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -489,7 +489,7 @@ class DiscoverAppCell: UICollectionViewCell {
         nameLabel.text = item.name
         badgeLabel.text = item.cacheStatus.displayText
         badgeLabel.textColor = item.cacheStatus.color
-        badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(0.1)
+        badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(ThemeTokens.Opacity.badge)
 
         var detailParts: [String] = []
         if !item.cacheSize.isEmpty && item.cacheSize != "0 bytes" {
@@ -504,16 +504,16 @@ class DiscoverAppCell: UICollectionViewCell {
             let iconImage: UIImage
             if host.contains("github") {
                 iconImage = UIImage(systemName: "chevron.left.forwardslash.chevron.right")!
-                iconContainer.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.1)
+                iconContainer.backgroundColor = UIColor.systemPurple.withAlphaComponent(ThemeTokens.Opacity.badge)
                 iconImageView.tintColor = .systemPurple
             } else if host.contains("doc") || host.contains("docs") {
                 iconImage = UIImage(systemName: "doc.text.fill")!
-                iconContainer.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.1)
-                iconImageView.tintColor = .systemOrange
+                iconContainer.backgroundColor = ThemeTokens.Colors.Light.warning.withAlphaComponent(ThemeTokens.Opacity.badge)
+                iconImageView.tintColor = ThemeTokens.Colors.Light.warning
             } else {
                 iconImage = UIImage(systemName: "globe")!
-                iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-                iconImageView.tintColor = .systemBlue
+                iconContainer.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
+                iconImageView.tintColor = ThemeTokens.Colors.Light.primary
             }
             iconImageView.image = iconImage
         }

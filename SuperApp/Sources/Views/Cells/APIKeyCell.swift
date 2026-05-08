@@ -19,7 +19,7 @@ class APIKeyCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -40,7 +40,7 @@ class APIKeyCell: UITableViewCell {
     private let typeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -48,8 +48,8 @@ class APIKeyCell: UITableViewCell {
 
     private let keyLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -57,8 +57,8 @@ class APIKeyCell: UITableViewCell {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = UIColor.tertiaryLabel
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.numberOfLines = 1
         return label
     }()
@@ -72,7 +72,7 @@ class APIKeyCell: UITableViewCell {
 
     private let statusLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = .white
         label.textAlignment = .center
         return label
@@ -89,7 +89,7 @@ class APIKeyCell: UITableViewCell {
 
     private let groupBadge: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.1)
+        view.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
         view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.isHidden = true
         return view
@@ -97,8 +97,8 @@ class APIKeyCell: UITableViewCell {
 
     private let groupLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
-        label.textColor = UIColor.systemPurple
+        label.font = ThemeTokens.Typography.caption2
+        label.textColor = ThemeTokens.Colors.Light.primary
         return label
     }()
 

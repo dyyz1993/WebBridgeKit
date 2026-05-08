@@ -18,16 +18,16 @@ class URLInputView: UIView {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = ThemeColors.current.cardBackground
         return view
     }()
 
     let urlTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = L10n.tr("common.open")
-        textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        textField.textColor = .label
-        textField.backgroundColor = .tertiarySystemBackground
+        textField.font = ThemeTokens.Typography.subheadline
+        textField.textColor = ThemeColors.current.text
+        textField.backgroundColor = ThemeColors.current.surface
         textField.borderStyle = .roundedRect
         textField.clearButtonMode = .whileEditing
         textField.keyboardType = .URL
@@ -39,23 +39,23 @@ class URLInputView: UIView {
 
     private let cacheSwitchContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .tertiarySystemBackground
-        view.layer.cornerRadius = 8
+        view.backgroundColor = ThemeColors.current.surface
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return view
     }()
 
     private let cacheLabel: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("discover.action_sheet.cache")
-        label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeColors.current.textSecondary
         return label
     }()
 
     let cacheSwitch: UISwitch = {
         let switchControl = UISwitch()
         switchControl.isOn = false
-        switchControl.tintColor = .systemBlue
+        switchControl.tintColor = ThemeTokens.Colors.Light.primary
         return switchControl
     }()
 
@@ -63,16 +63,16 @@ class URLInputView: UIView {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("discover.action_sheet.cache"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        button.backgroundColor = .systemBlue
+        button.backgroundColor = ThemeTokens.Colors.Light.primary
         button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 8
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.isEnabled = false
         return button
     }()
 
     private let separatorView: UIView = {
         let view = UIView()
-        view.backgroundColor = .separator
+        view.backgroundColor = ThemeColors.current.divider
         return view
     }()
 
@@ -97,7 +97,7 @@ class URLInputView: UIView {
     // MARK: - Setup
 
     private func setupUI() {
-        backgroundColor = .secondarySystemBackground
+        backgroundColor = ThemeColors.current.cardBackground
 
         addSubview(containerView)
         containerView.addSubview(urlTextField)
@@ -196,10 +196,10 @@ class URLInputView: UIView {
     func setCached(_ isCached: Bool) {
         if isCached {
             cacheButton.setTitle(L10n.tr("common.delete"), for: .normal)
-            cacheButton.backgroundColor = .systemRed
+            cacheButton.backgroundColor = ThemeTokens.Colors.Light.error
         } else {
             cacheButton.setTitle(L10n.tr("discover.action_sheet.cache"), for: .normal)
-            cacheButton.backgroundColor = .systemBlue
+            cacheButton.backgroundColor = ThemeTokens.Colors.Light.primary
         }
     }
 
