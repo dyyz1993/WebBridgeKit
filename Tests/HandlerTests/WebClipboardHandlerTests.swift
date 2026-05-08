@@ -164,6 +164,10 @@ final class WebClipboardHandlerTests: XCTestCase {
     // MARK: - Write Then Read
 
     func testClipboardHandler_WriteThenRead_ReturnsWrittenText() {
+        #if targetEnvironment(simulator)
+        throw XCTSkip("UIPasteboard access restricted in simulator sandbox")
+        #endif
+
         let handler = WebClipboardHandler()
         let writeExp = XCTestExpectation(description: "clipboard write 2")
         let readExp = XCTestExpectation(description: "clipboard read 2")

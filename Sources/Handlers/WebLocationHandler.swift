@@ -17,8 +17,32 @@ import WebKit
 /// 提供当前地理位置坐标（经纬度）和精度
 public class WebLocationHandler: BaseWebNativeHandler {
 
-    private let locationManager = CLLocationManager()
+    /// Location provider protocol for dependency injection (testable)
+    internal protocol LocationProviding: AnyObject {
+        var authorizationStatus: CLAuthorizationStatus { get }
+        var locationServicesEnabled: Bool { get }
+        func requestWhenInUseAuthorization()
+        func requestLocation()
+        func setDelegate(_ delegate: CLLocationManagerDelegate?)
+    }
+
+    /// Default CLLocationManager wrapper
+    internal final class LocationManagerProvider: LocationProviding {
+        private let manager = CLLocationManager()
+        var authorizationStatus: CLAuthorizationStatus { CLLocationManager.authorizationStatus() }
+        var locationServicesEnabled: Bool { CLLocationManager.locationServicesEnabled() }
+        func requestWhenInUseAuthorization() { manager.requestWhenInUseAuthorization() }
+        func requestLocation() { manager.requestLocation() }
+        func setDelegate(_ delegate: CLLocationManagerDelegate?) { manager.delegate = delegate }
+    }
+
+    private let locationProvider: LocationProviding
     private var completionCallback: ((Any) -> Void)?
+
+    init(locationProvider: LocationProviding = LocationManagerProvider()) {
+        self.locationProvider = locationProvider
+        super.init()
+    }
 
     /**
      * 处理获取位置请求
@@ -27,30 +51,26 @@ public class WebLocationHandler: BaseWebNativeHandler {
      *   - completion: 结果回调
      */
     public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
-        guard CLLocationManager.locationServicesEnabled() else {
+        guard locationProvider.locationServicesEnabled else {
             reject(error: "Location services disabled", completion: completion)
             return
         }
 
         self.completionCallback = completion
 
-        let authorizationStatus = CLLocationManager.authorizationStatus()
+        let authorizationStatus = locationProvider.authorizationStatus
 
         switch authorizationStatus {
         case .notDetermined:
-            // 首次请求权限 - 设置代理并请求，等待 didChangeAuthorization 回调
-            locationManager.delegate = self
+            locationProvider.setDelegate(self)
             showLocationPermissionAlert {
-                self.locationManager.requestWhenInUseAuthorization()
+                self.locationProvider.requestWhenInUseAuthorization()
             }
-        // 注意：不在这里返回结果，等待 didChangeAuthorization 回调
 
         case .authorizedWhenInUse, .authorizedAlways:
-            // 已授权，直接获取位置
             getCurrentLocation()
 
         default:
-            // 已明确拒绝或受限，返回权限引导
             rejectPermissionDenied(type: .location, status: .denied, completion: completion)
         }
     }
@@ -87,9 +107,8 @@ public class WebLocationHandler: BaseWebNativeHandler {
      * 开始请求当前位置
      */
     private func getCurrentLocation() {
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-        locationManager.requestLocation()
+        locationProvider.setDelegate(self)
+        locationProvider.requestLocation()
     }
 }
 

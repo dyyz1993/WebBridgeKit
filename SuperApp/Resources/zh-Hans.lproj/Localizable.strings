@@ -17,6 +17,7 @@
 "home.quick_action.paste" = "粘贴";
 "home.quick_action.token" = "口令";
 "home.quick_action.debug" = "调试";
+"home.quick_action.inbox" = "收件";
 "home.empty.title" = "开启您的极速体验";
 "home.empty.description" = "扫描二维码或输入 URL 即可体验离线加载";
 "home.scanner.tip" = "将二维码放入框内即可自动扫描";

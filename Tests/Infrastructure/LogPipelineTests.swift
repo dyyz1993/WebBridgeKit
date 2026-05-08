@@ -97,7 +97,7 @@ final class LogPipelineTests: XCTestCase {
     func testMemoryLogOutputQueryBySince() {
         let output = MemoryLogOutput()
         let oldDate = Date().addingTimeInterval(-3600)
-        output.write(LogEntry(level: .info, category: .general, message: "old"))
+        output.write(LogEntry(level: .info, category: .general, message: "old", timestamp: oldDate))
 
         let since = Date().addingTimeInterval(-60)
         output.write(LogEntry(level: .info, category: .general, message: "recent"))
@@ -151,7 +151,11 @@ final class LogPipelineTests: XCTestCase {
     func testMemoryLogOutputExportEmptyJSON() {
         let output = MemoryLogOutput()
         let json = output.exportJSON()
-        XCTAssertEqual(json, "[]")
+        XCTAssertTrue(json.hasPrefix("[") && json.hasSuffix("]"))
+        let data = json.data(using: .utf8)
+        let arr = try? JSONSerialization.jsonObject(with: data!) as? [Any]
+        XCTAssertNotNil(arr)
+        XCTAssertEqual(arr?.count, 0)
     }
 
     func testMemoryLogOutputFlush() {

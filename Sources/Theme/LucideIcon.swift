@@ -78,7 +78,7 @@ public enum LucideIcon: CaseIterable {
         }
     }
 
-    private var sfSymbolName: String {
+    var sfSymbolName: String {
         switch self {
         case .home: return "house.fill"
         case .inbox: return "tray.fill"

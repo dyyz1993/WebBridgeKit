@@ -551,5 +551,26 @@
     "parentID": "ses_1f87ff39dffeFownNETYfGjJUL",
     "status": "running",
     "createdAt": 1778242521122
+  },
+  "fix-home-navbar": {
+    "id": "ses_1f85123d1ffeBq5Ez8QgPobCVr",
+    "name": "fix-home-navbar",
+    "parentID": "ses_1f863427affePub35mZDuXLWYv",
+    "status": "running",
+    "createdAt": 1778245360711
+  },
+  "fix-discover-layout": {
+    "id": "ses_1f855af8dffeIetuWw5akEuV7u",
+    "name": "fix-discover-layout",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778245063156
+  },
+  "fix-inbox-settings": {
+    "id": "ses_1f851e846ffe8OHbGV3HmS6zG2",
+    "name": "fix-inbox-settings",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778245310398
   }
 }

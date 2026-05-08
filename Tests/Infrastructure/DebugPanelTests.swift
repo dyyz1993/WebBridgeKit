@@ -13,6 +13,7 @@ final class DebugPanelTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        _ = HandlerMetaRegistry.registerAll
         debugPanel = DebugPanel.shared
     }
 

@@ -119,7 +119,8 @@ public class WebMediaHandler: BaseWebNativeHandler {
      * @param completion 返回结果
      */
     private func uploadFile(filePath: String, serverUrl: String, completion: @escaping (Any) -> Void) {
-        guard URL(string: serverUrl) != nil else {
+        let trimmedUrl = serverUrl.trimmingCharacters(in: .whitespaces)
+        guard !trimmedUrl.isEmpty, let url = URL(string: trimmedUrl), let scheme = url.scheme, !scheme.isEmpty else {
             completion(WebBridgeResponse.error(message: "Invalid server URL"))
             return
         }

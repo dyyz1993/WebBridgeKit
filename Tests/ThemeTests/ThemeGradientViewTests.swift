@@ -44,8 +44,8 @@ final class ThemeGradientViewTests: XCTestCase {
         XCTAssertNotNil(gradientLayer.colors)
         XCTAssertEqual(gradientLayer.colors?.count, 2, "Gradient should have exactly 2 colors")
 
-        let color1 = gradientLayer.colors?[0] as? CGColor
-        let color2 = gradientLayer.colors?[1] as? CGColor
+        let color1 = gradientLayer.colors?[0] as! CGColor
+        let color2 = gradientLayer.colors?[1] as! CGColor
 
         XCTAssertNotNil(color1)
         XCTAssertNotNil(color2)
@@ -61,8 +61,8 @@ final class ThemeGradientViewTests: XCTestCase {
         }
 
         XCTAssertEqual(gradientLayer.colors?.count, 2)
-        XCTAssertEqual(gradientLayer.colors?[0] as? CGColor, ThemeColors.current.gradientStart.cgColor)
-        XCTAssertEqual(gradientLayer.colors?[1] as? CGColor, ThemeColors.current.gradientEnd.cgColor)
+        XCTAssertEqual(gradientLayer.colors?[0] as! CGColor, ThemeColors.current.gradientStart.cgColor)
+        XCTAssertEqual(gradientLayer.colors?[1] as! CGColor, ThemeColors.current.gradientEnd.cgColor)
     }
 
     // MARK: - Gradient Direction (Start/End Points)

@@ -17,6 +17,7 @@
 "home.quick_action.paste" = "Paste";
 "home.quick_action.token" = "Token";
 "home.quick_action.debug" = "Debug";
+"home.quick_action.inbox" = "Inbox";
 "home.empty.title" = "Start Your Fast Experience";
 "home.empty.description" = "Scan QR code or enter URL for offline loading";
 "home.scanner.tip" = "Place the QR code in the frame to scan automatically";

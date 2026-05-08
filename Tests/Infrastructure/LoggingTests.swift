@@ -14,8 +14,8 @@ final class LoggingTests: XCTestCase {
     override func setUp() {
         super.setUp()
         logger = StructuredLogger()
-        memoryOutput = MemoryLogOutput(maxCapacity: 100)
-        logger.setOutputs([memoryOutput])
+        logger.minLevel = .verbose
+        memoryOutput = logger.memoryBuffer
     }
 
     override func tearDown() {

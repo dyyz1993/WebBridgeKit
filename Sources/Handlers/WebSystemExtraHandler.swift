@@ -137,7 +137,11 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
      */
     private func setBadge(count: Int, completion: @escaping (Any) -> Void) {
         runOnMainThread { [weak self] in
-            // iOS 13+ 需要申请通知权限才能设置角标
+            guard Bundle.main.bundleIdentifier != nil else {
+                self?.reject(error: "Badge setting unavailable in test runner", completion: completion)
+                return
+            }
+
             let center = UNUserNotificationCenter.current()
             center.requestAuthorization(options: [.badge]) { granted, _ in
                 self?.runOnMainThread {

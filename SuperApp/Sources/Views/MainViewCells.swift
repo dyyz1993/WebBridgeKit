@@ -186,6 +186,7 @@ class QuickActionCell: UICollectionViewCell {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        contentView.clipsToBounds = false
         setupUI()
     }
 
@@ -201,7 +202,7 @@ class QuickActionCell: UICollectionViewCell {
     private func setupUI() {
         contentView.addSubview(stackView)
         stackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
         }
     }
 
@@ -238,31 +239,34 @@ class QuickActionCell: UICollectionViewCell {
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        titleLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         titleLabel.textColor = ThemeTokens.Colors.Light.textSecondary
         titleLabel.textAlignment = .center
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.7
+        titleLabel.numberOfLines = 2
 
-        let innerStack = UIStackView(arrangedSubviews: [circleBg, titleLabel])
-        innerStack.axis = .vertical
-        innerStack.alignment = .center
-        innerStack.spacing = 6
-
-        card.addSubview(innerStack)
+        card.addSubview(circleBg)
+        card.addSubview(titleLabel)
         circleBg.addSubview(iconView)
 
-        innerStack.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.top.greaterThanOrEqualToSuperview().offset(8)
-            make.bottom.lessThanOrEqualToSuperview().offset(-8)
-        }
-
         circleBg.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(10)
+            make.centerX.equalToSuperview()
             make.width.height.equalTo(42)
         }
 
         iconView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.width.height.equalTo(20)
+        }
+
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalTo(circleBg.snp.bottom).offset(6)
+            make.centerX.equalToSuperview()
+            make.bottom.lessThanOrEqualToSuperview().offset(-6)
+            make.leading.greaterThanOrEqualToSuperview().offset(4)
+            make.trailing.lessThanOrEqualToSuperview().offset(-4)
         }
 
         return card

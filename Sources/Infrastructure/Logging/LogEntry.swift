@@ -119,10 +119,11 @@ public struct LogEntry: Codable {
         context: [String: String]? = nil,
         action: String? = nil,
         durationMs: Double? = nil,
-        sessionId: String? = nil
+        sessionId: String? = nil,
+        timestamp: Date = Date()
     ) {
         self.id = UUID()
-        self.timestamp = Date()
+        self.timestamp = timestamp
         self.level = level
         self.category = category
         self.message = message

@@ -331,8 +331,8 @@ final class LucideIconTests: XCTestCase {
 
     func testAllIconsHaveValidSystemNames() {
         for icon in LucideIcon.allCases {
-            let image = UIImage(systemName: icon.rawValue)
-            XCTAssertNotNil(image, "System name '\(icon.rawValue)' should be valid for icon \(icon)")
+            let image = UIImage(systemName: icon.sfSymbolName)
+            XCTAssertNotNil(image, "System name '\(icon.sfSymbolName)' should be valid for icon \(icon)")
         }
     }
 
