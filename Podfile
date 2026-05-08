@@ -1,7 +1,7 @@
 install! 'cocoapods', :warn_for_unused_master_specs_repo => false
 
 platform :ios, '14.0'
-use_frameworks!
+use_frameworks! :linkage => :static
 inhibit_all_warnings!
 
 workspace 'WebBridgeKit.xcworkspace'

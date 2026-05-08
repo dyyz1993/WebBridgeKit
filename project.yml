@@ -132,6 +132,7 @@ targets:
       CURRENT_PROJECT_VERSION: "1"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: Message
+      PRODUCT_MODULE_NAME: WBKMessage
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Message
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES

@@ -18,18 +18,24 @@ public class ServerConfigManager {
 
     private let realmConfiguration: Realm.Configuration
 
-    // 默认服务器配置
     private let defaultBaseURL = "https://api.webbridgekit.com"
     private let defaultAPIEndpoint = "/v1"
 
+    private var hasEnsuredDefault = false
+    private let initLock = NSLock()
+
     public init() {
-        // 使用独立的 Realm 文件
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("serverConfig.realm"),
             schemaVersion: 1
         )
+    }
 
-        // 初始化默认配置
+    private func ensureDefaultOnce() {
+        initLock.lock()
+        defer { initLock.unlock() }
+        guard !hasEnsuredDefault else { return }
+        hasEnsuredDefault = true
         ensureDefaultConfigExists()
     }
 
@@ -62,6 +68,7 @@ public class ServerConfigManager {
 
     /// 获取当前激活的配置
     public func getActiveConfig() -> ServerConfig? {
+        ensureDefaultOnce()
         let realm = getRealm()
         let predicate = NSPredicate(format: "isActive == true")
         return realm?.objects(ServerConfig.self).filter(predicate).first
