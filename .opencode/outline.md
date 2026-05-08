@@ -5,6 +5,70 @@
 - **最后更新**: 2026-05-07 (Phase 1-11 全部完成, WebSocket 模块, CI 修复, ~1700+ 测试, ~75K+ 行)
 - **仓库**: github.com/dyyz1993/WebBridgeKit
 
+## 最近完成（2026-05-08）
+
+### i18n 修复 — 中文文本终于显示正确
+- **根因**: `L10n.tr()` 使用 `Bundle.main` 查找 `Localizable.strings` 文件失败，直接返回 key 本身
+- **修复**: `Sources/Utils/L10n.swift` 重写为多层级 bundle 搜索（main → allBundles → allFrameworks）+ 缓存
+- **影响**: 所有 4 个页面（首页/收信箱/发现/设置）的文本现在正确显示中文
+- **Commit**: `2d814c7`
+
+### 服务管理脚本
+- **新增**: `scripts/services.sh` — 统一管理 3 个后端服务
+  - `bash scripts/services.sh start` — 启动全部
+  - `bash scripts/services.sh status` — 查看运行状态
+  - `bash scripts/services.sh verify` — curl 健康检查
+  - `bash scripts/services.sh stop` — 停止全部
+- **3 个服务**:
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| WebBridgeServer (Swift Hummingbird) | 8080 | 推送/命令/清单 API |
+| Test HTTP (Python) | 8081 | 静态资源缓存测试 |
+| Prototype HTML (Python) | 8083 | 设计原型浏览 |
+
+- **验证结果**: 3/3 health check 通过 (`/health` → 200, `/` → 200, `/index.html` → 200)
+- **PID 日志**: `.services/` 目录（已在 .gitignore 中）
+
+### Visual Polish（4 页面视觉优化）
+- Home: scanner 按钮圆边框修复、图标尺寸统一、字体权重对齐、死代码清理
+- Inbox: 搜索栏样式、消息分组布局
+- Discover: 网格卡片间距、状态标签颜色
+- Settings: section 分组、图标容器尺寸
+- **Commit**: `7638ba0`
+
+### CI Smoke Tests 修复
+- **根因**: 3 个问题叠加 — SIGABRT 崩溃 + 重试时 resultBundlePath 冲突 + 无预清理
+- **修复**:
+  1. Pre-boot cleanup: `simctl shutdown all` + `simctl erase all`
+  2. 设备从 iPhone 16 Pro 改为 iPhone 15（更轻量）
+  3. 模拟器名称改为 `CI-Smoke-${GITHUB_RUN_ID}`（避免并发冲突）
+  4. 重试逻辑: 3 次重试 + 每次独立 resultBundlePath + 模拟器重启
+- **Commit**: `667338c`
+
+### AGENTS.md 项目指引文件
+- **新增**: `AGENTS.md` — 包含服务管理、构建命令、项目结构、i18n、CI 信息
+- 用途: 新 Agent 会话启动时自动读取此文件获取项目上下文
+
+---
+
+## 关键服务依赖图
+
+```
+SuperApp (iOS Simulator)
+  ├── WebBridgeServer :8080 ← 推送通知 / 命令处理 / Manifest 下载
+  ├── Test HTTP :8081      ← 缓存功能测试（静态资源）
+  └── Prototype :8083      ← 设计原型对照（浏览器打开）
+```
+
+**开发流程**:
+1. `bash scripts/services.sh start` — 启动所有服务
+2. 构建 & 安装 SuperApp 到模拟器
+3. 在模拟器中测试（推送、缓存、命令等）
+4. 浏览器打开 http://localhost:8083 对照原型
+
+---
+
 ## 核心架构定位（2026-05-07 用户确认）
 
 ### 三层关系（修正）

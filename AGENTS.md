@@ -57,3 +57,54 @@ xcrun simctl launch booted com.webbridgekit.superapp
 
 - `.github/workflows/ci.yml` - 14 jobs, Smoke Tests may need retry
 - Check: `gh run list --limit 5`
+
+## Design System
+
+- `docs/design-tokens.json` — 95 tokens across 9 categories (colors, typography, spacing, etc.)
+- `Sources/Theme/ThemeTokens.swift` — Auto-generated iOS token constants
+- `docs/prototype/design-tokens.css` — Auto-generated CSS variables
+- `tools/sync-tokens.sh` — Bidirectional sync (JSON → Swift + CSS)
+
+## Icons
+
+- Real Lucide icon library: `Sources/Theme/icons.xcassets` (1703 PDF icons)
+- `Sources/Theme/LucideIcon.swift` — 50+ case enum mapping to Lucide IDs
+- `Sources/Theme/Lucide.swift` — UIImage extension for loading Lucide icons
+
+## Testing
+
+- **Coverage**: ~87% (168 test files / 193 source files)
+- **UITesting**: `--ui-testing --show-component-catalog` launch arguments
+- **Component Catalog**: Settings → 框架展示 OR launch arg `--show-component-catalog`
+- **Visual Regression**: `tools/diff-screenshots.sh` (PIL-based, HTML report)
+
+## Prototypes
+
+| File | Purpose |
+|------|---------|
+| `docs/prototype/index.html` | V1 design prototype (English, 618 lines) |
+| `docs/prototype/v2-current-implementation.html` | V2 current implementation (Chinese, 926 lines) |
+
+## Key Dependencies
+
+- **CocoaPods**: 10 pods (Alamofire, etc.)
+- **SPM** (Server): Hummingbird 2, swift-nio, swift-crypto
+- **XcodeGen**: `project.yml` generates pbxproj
+
+## Development Workflow
+
+1. Start services: `bash scripts/services.sh start`
+2. Build: `xcodebuild build -workspace WebBridgeKit.xcworkspace -scheme SuperApp -sdk iphonesimulator -arch arm64 -derivedDataPath /tmp/wbk-dd`
+3. Install to simulator: `xcrun simctl install booted "$APP" && xcrun simctl launch booted com.webbridgekit.superapp`
+4. Compare with prototype: open http://localhost:8083/index.html in browser
+5. Run tests: `xcodebuild test ...`
+
+## Recent Commits
+
+| Commit | Description |
+|--------|-------------|
+| `7638ba0` | feat(services): add services management script + visual polish |
+| `667338c` | ci(smoke-tests): fix SIGABRT crash |
+| `6df60f4` | docs(screenshots): update with working i18n |
+| `b8ad205` | fix(home): pixel-perfect Home page alignment |
+| `542d9a6` | feat(icons): install real Lucide icon library |
