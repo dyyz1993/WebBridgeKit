@@ -20,7 +20,7 @@ class APIKeyCell: UITableViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
@@ -30,9 +30,9 @@ class APIKeyCell: UITableViewCell {
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         imageView.image = UIImage(systemName: "key.fill", withConfiguration: config)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemBlue
-        imageView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-        imageView.layer.cornerRadius = 8
+        imageView.tintColor = ThemeTokens.Colors.Light.primary
+        imageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
         return imageView
     }()
@@ -65,7 +65,7 @@ class APIKeyCell: UITableViewCell {
 
     private let statusBadge: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.layer.masksToBounds = true
         return view
     }()
@@ -83,14 +83,14 @@ class APIKeyCell: UITableViewCell {
         let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
         let image = UIImage(systemName: "doc.on.doc", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = UIColor.systemBlue
+        button.tintColor = ThemeTokens.Colors.Light.primary
         return button
     }()
 
     private let groupBadge: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.1)
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.isHidden = true
         return view
     }()
@@ -216,12 +216,12 @@ class APIKeyCell: UITableViewCell {
         // 密钥类型
         if key.isPermanent {
             typeLabel.text = "永久密钥"
-            iconImageView.tintColor = UIColor.systemGreen
-            iconImageView.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeTokens.Colors.Light.success
+            iconImageView.backgroundColor = ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
         } else {
             typeLabel.text = "临时密钥"
-            iconImageView.tintColor = UIColor.systemBlue
-            iconImageView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeTokens.Colors.Light.primary
+            iconImageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
         }
 
         // 绑定群组
@@ -257,13 +257,13 @@ class APIKeyCell: UITableViewCell {
         // 状态标签
         statusBadge.isHidden = false
         if key.isExpired {
-            statusBadge.backgroundColor = UIColor.systemRed
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.error
             statusLabel.text = "已过期"
         } else if key.isPermanent {
-            statusBadge.backgroundColor = UIColor.systemGreen
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.success
             statusLabel.text = "永久有效"
         } else {
-            statusBadge.backgroundColor = UIColor.systemOrange
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.warning
             statusLabel.text = key.remainingTimeText ?? "已过期"
         }
     }
@@ -288,7 +288,7 @@ class APIKeyCell: UITableViewCell {
         statusLabel.text = ""
         groupBadge.isHidden = true
         groupLabel.text = ""
-        iconImageView.tintColor = UIColor.systemBlue
-        iconImageView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        iconImageView.tintColor = ThemeTokens.Colors.Light.primary
+        iconImageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
     }
 }

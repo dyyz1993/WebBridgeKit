@@ -33,7 +33,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let permanentKeyCard: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.secondarySystemBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         view.layer.masksToBounds = true
         return view
     }()
@@ -43,9 +43,9 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         imageView.image = UIImage(systemName: "key.fill", withConfiguration: config)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemGreen
-        imageView.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
-        imageView.layer.cornerRadius = 12
+        imageView.tintColor = ThemeTokens.Colors.Light.success
+        imageView.backgroundColor = ThemeTokens.Colors.Light.success.withAlphaComponent(0.15)
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         imageView.layer.masksToBounds = true
         return imageView
     }()
@@ -75,7 +75,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("common.copy"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.tintColor = UIColor.systemBlue
+        button.tintColor = ThemeTokens.Colors.Light.primary
         return button
     }()
 
@@ -86,7 +86,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.refresh"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.tintColor = UIColor.systemOrange
+        button.tintColor = ThemeTokens.Colors.Light.warning
         return button
     }()
 
@@ -97,7 +97,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.test"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.tintColor = UIColor.systemGreen
+        button.tintColor = ThemeTokens.Colors.Light.success
         return button
     }()
 
@@ -114,7 +114,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.view_examples"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        button.tintColor = UIColor.systemBlue
+        button.tintColor = ThemeTokens.Colors.Light.primary
         button.contentHorizontalAlignment = .left
         return button
     }()
@@ -152,7 +152,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let barkConfigCard: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.secondarySystemBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         view.layer.masksToBounds = true
         return view
     }()
@@ -172,7 +172,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         tf.borderStyle = .none
         tf.backgroundColor = UIColor.tertiarySystemBackground
-        tf.layer.cornerRadius = 8
+        tf.layer.cornerRadius = ThemeTokens.CornerRadius.md
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
         tf.leftView = paddingView
         tf.leftViewMode = .always
@@ -185,7 +185,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         tf.borderStyle = .none
         tf.backgroundColor = UIColor.tertiarySystemBackground
-        tf.layer.cornerRadius = 8
+        tf.layer.cornerRadius = ThemeTokens.CornerRadius.md
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
         tf.leftView = paddingView
         tf.leftViewMode = .always
@@ -196,9 +196,9 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("apikey.manage.save_config"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        button.backgroundColor = UIColor.systemBlue
+        button.backgroundColor = ThemeTokens.Colors.Light.primary
         button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 8
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return button
     }()
 
@@ -406,7 +406,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
             target: self,
             action: #selector(addTemporaryKeyTapped)
         )
-        addButton.tintColor = UIColor.systemBlue
+        addButton.tintColor = ThemeTokens.Colors.Light.primary
         navigationItem.rightBarButtonItem = addButton
     }
 
@@ -700,7 +700,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
             self?.viewModel.sendTemporaryKeyTestPush(key: key)
             completion(true)
         }
-        testAction.backgroundColor = UIColor.systemGreen
+        testAction.backgroundColor = ThemeTokens.Colors.Light.success
         testAction.image = UIImage(systemName: "paperplane.fill")
 
         // 编辑操作
@@ -708,7 +708,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
             self?.showEditGroupIdDialog(for: key)
             completion(true)
         }
-        editAction.backgroundColor = UIColor.systemBlue
+        editAction.backgroundColor = ThemeTokens.Colors.Light.primary
         editAction.image = UIImage(systemName: "square.and.pencil")
 
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction, testAction, editAction])

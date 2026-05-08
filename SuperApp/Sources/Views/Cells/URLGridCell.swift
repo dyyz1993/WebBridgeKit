@@ -21,7 +21,6 @@ class URLGridCell: UICollectionViewCell {
         let view = UIView()
         view.backgroundColor = .secondarySystemGroupedBackground
         view.layer.cornerRadius = 24
-        // 添加精致阴影
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 8)
         view.layer.shadowRadius = 16
@@ -52,7 +51,7 @@ class URLGridCell: UICollectionViewCell {
     private let faviconContainer: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemBackground
-        view.layer.cornerRadius = 20
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xxl
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
         view.layer.shadowRadius = 8
@@ -63,7 +62,7 @@ class URLGridCell: UICollectionViewCell {
     private let faviconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 16
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         imageView.layer.masksToBounds = true
         return imageView
     }()
@@ -99,14 +98,14 @@ class URLGridCell: UICollectionViewCell {
 
     private let cachedBadgeView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 8
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.layer.masksToBounds = true
         return view
     }()
 
     private let cachedDotView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.backgroundColor = .systemGray
         return view
     }()
@@ -132,7 +131,7 @@ class URLGridCell: UICollectionViewCell {
     private let modeBadgeView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.clipsToBounds = true
         return view
     }()
@@ -172,7 +171,7 @@ class URLGridCell: UICollectionViewCell {
     private let appIdBadgeView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemIndigo.withAlphaComponent(0.1)
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.isHidden = true
         return view
     }()
@@ -477,15 +476,15 @@ class URLGridCell: UICollectionViewCell {
 
             self.cachedBadgeView.isHidden = false
             if history.isCached && history.cachedSize > 0 {
-                self.cachedDotView.backgroundColor = .systemGreen
+                self.cachedDotView.backgroundColor = ThemeTokens.Colors.Light.success
                 self.cachedLabel.text = "离线可用"
-                self.cachedLabel.textColor = .systemGreen
-                self.cachedBadgeView.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.12)
+                self.cachedLabel.textColor = ThemeTokens.Colors.Light.success
+                self.cachedBadgeView.backgroundColor = ThemeTokens.Colors.Light.success.withAlphaComponent(ThemeTokens.Opacity.badge)
             } else if history.cachedSize > 0 {
-                self.cachedDotView.backgroundColor = .systemOrange
+                self.cachedDotView.backgroundColor = ThemeTokens.Colors.Light.warning
                 self.cachedLabel.text = "需更新"
-                self.cachedLabel.textColor = .systemOrange
-                self.cachedBadgeView.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.12)
+                self.cachedLabel.textColor = ThemeTokens.Colors.Light.warning
+                self.cachedBadgeView.backgroundColor = ThemeTokens.Colors.Light.warning.withAlphaComponent(ThemeTokens.Opacity.badge)
             } else {
                 self.cachedDotView.backgroundColor = .systemGray
                 self.cachedLabel.text = "未缓存"
@@ -496,8 +495,8 @@ class URLGridCell: UICollectionViewCell {
             // 更新按钮状态
             let pinImage = history.isPinned ? "pin.fill" : "pin"
             self.pinIconView.setImage(UIImage(systemName: pinImage), for: .normal)
-            self.pinIconView.tintColor = history.isPinned ? .systemOrange : .systemGray4
-            self.pinIconView.backgroundColor = history.isPinned ? UIColor.systemOrange.withAlphaComponent(0.1) : .clear
+            self.pinIconView.tintColor = history.isPinned ? ThemeTokens.Colors.Light.warning : .systemGray4
+            self.pinIconView.backgroundColor = history.isPinned ? ThemeTokens.Colors.Light.warning.withAlphaComponent(0.1) : .clear
 
             let favoriteImage = history.isFavorite ? "star.fill" : "star"
             self.favoriteIconView.setImage(UIImage(systemName: favoriteImage), for: .normal)
@@ -517,8 +516,8 @@ class URLGridCell: UICollectionViewCell {
                     modeLabel.textColor = UIColor.systemPurple
                 } else {
                     modeLabel.text = "LAZY"
-                    modeBadgeView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-                    modeLabel.textColor = UIColor.systemBlue
+                    modeBadgeView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
+                    modeLabel.textColor = ThemeTokens.Colors.Light.primary
                 }
                 return
             }

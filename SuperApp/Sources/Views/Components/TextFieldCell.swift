@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 文本输入列表项单元格
 class TextFieldCell: UITableViewCell {
@@ -18,14 +19,14 @@ class TextFieldCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = UIColor.label
         return label
     }()
 
     private let textField: UITextField = {
         let field = UITextField()
-        field.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        field.font = ThemeTokens.Typography.subheadline
         field.textColor = UIColor.label
         field.clearButtonMode = .whileEditing
         field.borderStyle = .none
@@ -34,8 +35,8 @@ class TextFieldCell: UITableViewCell {
 
     private let errorLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = UIColor.systemRed
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeTokens.Colors.Light.error
         label.numberOfLines = 0
         label.isHidden = true
         return label
@@ -119,7 +120,7 @@ class TextFieldCell: UITableViewCell {
         if let error = error, !error.isEmpty {
             errorLabel.text = error
             errorLabel.isHidden = false
-            separatorLine.backgroundColor = UIColor.systemRed
+            separatorLine.backgroundColor = ThemeTokens.Colors.Light.error
         } else {
             errorLabel.text = nil
             errorLabel.isHidden = true

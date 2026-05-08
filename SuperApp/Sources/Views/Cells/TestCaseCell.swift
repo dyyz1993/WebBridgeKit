@@ -20,7 +20,7 @@ class TestCaseCell: UITableViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
@@ -53,7 +53,7 @@ class TestCaseCell: UITableViewCell {
     private let statusBadge: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemGray5
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.clipsToBounds = true
         return view
     }()
@@ -72,7 +72,7 @@ class TestCaseCell: UITableViewCell {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         button.tintColor = ThemeColors.current.primary
         button.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
-        button.layer.cornerRadius = 8
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         button.accessibilityIdentifier = "testCaseCell.runButton"
         return button
@@ -184,16 +184,16 @@ class TestCaseCell: UITableViewCell {
             statusLabel.textColor = UIColor.secondaryLabel
         case .running:
             statusLabel.text = "运行中..."
-            statusBadge.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-            statusLabel.textColor = UIColor.systemBlue
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
+            statusLabel.textColor = ThemeTokens.Colors.Light.primary
         case .success:
             statusLabel.text = "成功"
-            statusBadge.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
-            statusLabel.textColor = UIColor.systemGreen
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
+            statusLabel.textColor = ThemeTokens.Colors.Light.success
         case .failure:
             statusLabel.text = "失败"
-            statusBadge.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
-            statusLabel.textColor = UIColor.systemRed
+            statusBadge.backgroundColor = ThemeTokens.Colors.Light.error.withAlphaComponent(0.1)
+            statusLabel.textColor = ThemeTokens.Colors.Light.error
         }
     }
 
