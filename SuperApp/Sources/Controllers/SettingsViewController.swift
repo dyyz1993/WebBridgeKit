@@ -19,7 +19,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         table.backgroundColor = ThemeColors.current.background
         table.register(MenuCell.self, forCellReuseIdentifier: MenuCell.identifier)
         table.separatorStyle = .singleLine
-        table.separatorInset = UIEdgeInsets(top: 0, left: 58, bottom: 0, right: 0)
+        table.separatorInset = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 0)
         table.delegate = self
         table.dataSource = self
         return table
@@ -50,7 +50,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         let footerLabel = UILabel()
         footerLabel.text = "WebBridgeKit v\(version) (Build \(build))"
-        footerLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        footerLabel.font = .systemFont(ofSize: 13, weight: .regular)
         footerLabel.textColor = ThemeColors.current.textSecondary
         footerLabel.textAlignment = .center
         footerLabel.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: 44)
@@ -226,5 +226,9 @@ extension SettingsViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         itemSelectRelay.accept(indexPath)
+    }
+
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 44
     }
 }

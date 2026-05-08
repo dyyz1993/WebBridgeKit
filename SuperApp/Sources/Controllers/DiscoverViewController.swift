@@ -227,9 +227,9 @@ struct DiscoverItem {
 
         var color: UIColor {
             switch self {
-            case .persistent: return ThemeTokens.Colors.Light.primary
-            case .cached: return ThemeTokens.Colors.Light.success
-            case .needsUpdate: return ThemeTokens.Colors.Light.warning
+            case .persistent: return UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)
+            case .cached: return UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)
+            case .needsUpdate: return UIColor(red: 1, green: 0.584, blue: 0, alpha: 1)
             case .notCached: return ThemeColors.current.secondary
             }
         }
@@ -367,7 +367,7 @@ class DiscoverSectionHeader: UICollectionReusableView {
         super.init(frame: frame)
         addSubview(titleLabel)
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(20)
+            make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
         }
     }
@@ -405,16 +405,23 @@ class DiscoverAppCell: UICollectionViewCell {
         return view
     }()
 
+    private let gradientLayer: CAGradientLayer = {
+        let layer = CAGradientLayer()
+        layer.startPoint = CGPoint(x: 0, y: 0)
+        layer.endPoint = CGPoint(x: 1, y: 1)
+        return layer
+    }()
+
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = ThemeColors.current.primary
+        iv.tintColor = .white
         return iv
     }()
 
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -424,20 +431,20 @@ class DiscoverAppCell: UICollectionViewCell {
 
     private let badgeView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = 12
         return view
     }()
 
     private let badgeLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 9, weight: .bold)
+        label.font = .systemFont(ofSize: 10, weight: .bold)
         label.textAlignment = .center
         return label
     }()
 
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 10, weight: .regular)
+        label.font = .systemFont(ofSize: 11, weight: .regular)
         label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -454,10 +461,16 @@ class DiscoverAppCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer.frame = iconContainer.bounds
+    }
+
     private func setupUI() {
         contentView.backgroundColor = .clear
         contentView.addSubview(cardView)
         cardView.addSubview(iconContainer)
+        iconContainer.layer.addSublayer(gradientLayer)
         iconContainer.addSubview(iconImageView)
         cardView.addSubview(nameLabel)
         cardView.addSubview(badgeView)
@@ -469,37 +482,37 @@ class DiscoverAppCell: UICollectionViewCell {
         }
 
         iconContainer.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(14)
+            make.top.equalToSuperview().offset(12)
             make.centerX.equalToSuperview()
             make.width.height.equalTo(44)
         }
 
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(24)
+            make.width.height.equalTo(22)
         }
 
         nameLabel.snp.makeConstraints { make in
-            make.top.equalTo(iconContainer.snp.bottom).offset(10)
+            make.top.equalTo(iconContainer.snp.bottom).offset(8)
             make.leading.equalToSuperview().offset(12)
             make.trailing.equalToSuperview().offset(-12)
         }
 
         badgeView.snp.makeConstraints { make in
-            make.top.equalTo(nameLabel.snp.bottom).offset(8)
+            make.top.equalTo(nameLabel.snp.bottom).offset(6)
             make.centerX.equalToSuperview()
-            make.height.equalTo(16)
+            make.height.equalTo(18)
         }
 
         badgeLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4))
         }
 
         detailLabel.snp.makeConstraints { make in
             make.top.equalTo(badgeView.snp.bottom).offset(4)
             make.leading.equalToSuperview().offset(8)
             make.trailing.equalToSuperview().offset(-8)
-            make.bottom.equalToSuperview().offset(-14)
+            make.bottom.equalToSuperview().offset(-12)
         }
     }
 
@@ -509,10 +522,9 @@ class DiscoverAppCell: UICollectionViewCell {
         badgeLabel.textColor = item.cacheStatus.color
         badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(ThemeTokens.Opacity.badge)
 
-        let colors = Self.gradientColor(for: item.name)
-        iconContainer.backgroundColor = colors.bg
-        iconImageView.tintColor = colors.tint
-        iconImageView.image = LucideIcon.globe.image(pointSize: 20)
+        let gradient = Self.gradientColors(for: item.name)
+        gradientLayer.colors = [gradient.0.cgColor, gradient.1.cgColor]
+        iconImageView.image = Self.icon(for: item.name).image(pointSize: 20)
 
         var detailParts: [String] = []
         if !item.cacheSize.isEmpty && item.cacheSize != "0 bytes" {
@@ -524,16 +536,22 @@ class DiscoverAppCell: UICollectionViewCell {
         detailLabel.text = detailParts.isEmpty ? nil : detailParts.joined(separator: " · ")
     }
 
-    private static func gradientColor(for name: String) -> (bg: UIColor, tint: UIColor) {
-        let hash = abs(name.hashValue)
-        let colors: [(UIColor, UIColor)] = [
-            (UIColor(red: 0, green: 0.478, blue: 1, alpha: 0.1), UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)),
-            (UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 0.1), UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 1)),
-            (UIColor(red: 1, green: 0.584, blue: 0, alpha: 0.1), UIColor(red: 1, green: 0.584, blue: 0, alpha: 1)),
-            (UIColor(red: 0.204, green: 0.78, blue: 0.349, alpha: 0.1), UIColor(red: 0.204, green: 0.78, blue: 0.349, alpha: 1)),
-            (UIColor(red: 1, green: 0.231, blue: 0.188, alpha: 0.1), UIColor(red: 1, green: 0.231, blue: 0.188, alpha: 1)),
-            (UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 0.1), UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 1)),
-        ]
-        return colors[hash % colors.count]
+    private static let gradients: [(UIColor, UIColor)] = [
+        (UIColor(red: 0.4, green: 0.494, blue: 0.918, alpha: 1), UIColor(red: 0.463, green: 0.294, blue: 0.635, alpha: 1)),
+        (UIColor(red: 0.941, green: 0.576, blue: 0.984, alpha: 1), UIColor(red: 0.961, green: 0.341, blue: 0.424, alpha: 1)),
+        (UIColor(red: 0.31, green: 0.673, blue: 0.996, alpha: 1), UIColor(red: 0, green: 0.949, blue: 0.996, alpha: 1)),
+        (UIColor(red: 0.263, green: 0.914, blue: 0.482, alpha: 1), UIColor(red: 0.22, green: 0.976, blue: 0.843, alpha: 1)),
+        (UIColor(red: 0.98, green: 0.439, blue: 0.604, alpha: 1), UIColor(red: 0.996, green: 0.882, blue: 0.251, alpha: 1)),
+        (UIColor(red: 0.631, green: 0.549, blue: 0.82, alpha: 1), UIColor(red: 0.984, green: 0.761, blue: 0.922, alpha: 1)),
+    ]
+
+    private static let icons: [LucideIcon] = [.globe, .appFill, .hardDrive, .doc, .star, .folder]
+
+    private static func gradientColors(for name: String) -> (UIColor, UIColor) {
+        gradients[abs(name.hashValue) % gradients.count]
+    }
+
+    private static func icon(for name: String) -> LucideIcon {
+        icons[abs(name.hashValue) % icons.count]
     }
 }

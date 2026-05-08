@@ -1,8 +1,3 @@
-//
-//  URLGridCell.swift
-//  SuperApp
-//
-
 import UIKit
 import SnapKit
 import WebBridgeKit
@@ -14,7 +9,7 @@ class URLGridCell: UICollectionViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        view.layer.cornerRadius = 16
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 2)
         view.layer.shadowRadius = 8
@@ -44,14 +39,6 @@ class URLGridCell: UICollectionViewCell {
         return iv
     }()
 
-    private let letterLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        label.textColor = .white
-        label.textAlignment = .center
-        return label
-    }()
-
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
@@ -63,7 +50,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let statusDot: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 3.5
+        v.layer.cornerRadius = 3
         v.backgroundColor = ThemeTokens.Colors.Light.success
         return v
     }()
@@ -82,25 +69,20 @@ class URLGridCell: UICollectionViewCell {
         return label
     }()
 
-    private let tokenPreviewLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .regular)
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
-        label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingMiddle
-        return label
-    }()
-
     private var currentHistory: WebPageHistory?
 
     var onPinToggle: (() -> Void)?
     var onFavoriteToggle: (() -> Void)?
 
     private static let gradients: [[UIColor]] = [
-        [UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1), UIColor(red: 0.9, green: 0.3, blue: 0.5, alpha: 1)],
-        [UIColor(red: 0.4, green: 0.5, blue: 1.0, alpha: 1), UIColor(red: 0.25, green: 0.35, blue: 0.95, alpha: 1)],
-        [UIColor(red: 0.35, green: 0.8, blue: 0.5, alpha: 1), UIColor(red: 0.2, green: 0.65, blue: 0.4, alpha: 1)],
-        [UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1), UIColor(red: 0.95, green: 0.45, blue: 0.1, alpha: 1)]
+        [UIColor(red: 0.4, green: 0.494, blue: 0.918, alpha: 1), UIColor(red: 0.463, green: 0.294, blue: 0.635, alpha: 1)],
+        [UIColor(red: 0.941, green: 0.576, blue: 0.984, alpha: 1), UIColor(red: 0.961, green: 0.341, blue: 0.424, alpha: 1)],
+        [UIColor(red: 0.310, green: 0.671, blue: 0.992, alpha: 1), UIColor(red: 0.0, green: 0.949, blue: 0.996, alpha: 1)],
+        [UIColor(red: 0.263, green: 0.914, blue: 0.482, alpha: 1), UIColor(red: 0.220, green: 0.976, blue: 0.843, alpha: 1)]
+    ]
+
+    private static let lucideIcons: [LucideIcon] = [
+        .globe, .appFill, .doc, .settings
     ]
 
     var history: WebPageHistory? {
@@ -128,9 +110,6 @@ class URLGridCell: UICollectionViewCell {
         super.prepareForReuse()
         currentHistory = nil
         faviconImageView.image = nil
-        letterLabel.text = nil
-        tokenPreviewLabel.text = nil
-        tokenPreviewLabel.isHidden = true
     }
 
     private func setupUI() {
@@ -138,25 +117,22 @@ class URLGridCell: UICollectionViewCell {
         backgroundColor = .clear
 
         contentView.addSubview(containerView)
-
         iconContainer.layer.insertSublayer(iconGradientLayer, at: 0)
         iconContainer.addSubview(faviconImageView)
-        iconContainer.addSubview(letterLabel)
 
         containerView.addSubview(iconContainer)
         containerView.addSubview(titleLabel)
         containerView.addSubview(statusDot)
         containerView.addSubview(statusLabel)
         containerView.addSubview(timeLabel)
-        containerView.addSubview(tokenPreviewLabel)
 
         containerView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(4)
+            make.edges.equalToSuperview()
         }
 
         iconContainer.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(14)
-            make.left.equalToSuperview().offset(14)
+            make.top.equalToSuperview().offset(12)
+            make.left.equalToSuperview().offset(12)
             make.width.height.equalTo(44)
         }
 
@@ -165,37 +141,26 @@ class URLGridCell: UICollectionViewCell {
             make.width.height.equalTo(24)
         }
 
-        letterLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(iconContainer.snp.bottom).offset(10)
-            make.left.equalToSuperview().offset(14)
-            make.right.equalToSuperview().offset(-14)
+            make.left.equalToSuperview().offset(12)
+            make.right.equalToSuperview().offset(-12)
         }
 
         statusDot.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.left.equalToSuperview().offset(14)
-            make.width.height.equalTo(7)
+            make.top.equalTo(titleLabel.snp.bottom).offset(6)
+            make.left.equalToSuperview().offset(12)
+            make.width.height.equalTo(6)
         }
 
         statusLabel.snp.makeConstraints { make in
             make.centerY.equalTo(statusDot)
-            make.left.equalTo(statusDot.snp.right).offset(6)
+            make.left.equalTo(statusDot.snp.right).offset(5)
         }
 
         timeLabel.snp.makeConstraints { make in
             make.centerY.equalTo(statusDot)
-            make.right.equalToSuperview().offset(-14)
-        }
-
-        tokenPreviewLabel.snp.makeConstraints { make in
-            make.top.equalTo(statusDot.snp.bottom).offset(6)
-            make.left.equalToSuperview().offset(14)
-            make.right.equalToSuperview().offset(-14)
-            make.bottom.lessThanOrEqualToSuperview().offset(-12)
+            make.right.equalToSuperview().offset(-12)
         }
     }
 
@@ -208,12 +173,11 @@ class URLGridCell: UICollectionViewCell {
         if let favicon = history.favicon, let image = UIImage(data: favicon) {
             faviconImageView.image = image.withRenderingMode(.alwaysTemplate)
             faviconImageView.isHidden = false
-            letterLabel.isHidden = true
         } else {
-            let firstLetter = String(titleText.prefix(1)).uppercased()
-            letterLabel.text = firstLetter
-            letterLabel.isHidden = false
-            faviconImageView.isHidden = true
+            let iconIndex = abs(titleText.hashValue) % Self.lucideIcons.count
+            let icon = Self.lucideIcons[iconIndex]
+            faviconImageView.image = icon.image(pointSize: 24, weight: .medium)
+            faviconImageView.isHidden = false
         }
 
         let colors = Self.gradients[abs(titleText.hashValue) % Self.gradients.count]

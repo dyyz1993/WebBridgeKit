@@ -15,13 +15,26 @@ class TabBarController: UITabBarController {
 
     private let disposeBag = DisposeBag()
 
+    private let separatorView = UIView()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTabs()
         setupAppearance()
+        setupSeparator()
         bindMessages()
 
         self.selectedIndex = 0
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        separatorView.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: tabBar.bounds.width,
+            height: 0.5
+        )
     }
 
     private func bindMessages() {
@@ -102,25 +115,25 @@ class TabBarController: UITabBarController {
         mainVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.home"),
             image: LucideIcon.home.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.home.image(pointSize: 20)
+            selectedImage: LucideIcon.home.templateImage(pointSize: 20)
         )
 
         inboxVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.inbox"),
             image: LucideIcon.inbox.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.inbox.image(pointSize: 20)
+            selectedImage: LucideIcon.inbox.templateImage(pointSize: 20)
         )
 
         discoverVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.discover"),
             image: LucideIcon.compass.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.compass.image(pointSize: 20)
+            selectedImage: LucideIcon.compass.templateImage(pointSize: 20)
         )
 
         settingsVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.settings"),
             image: LucideIcon.settings.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.settings.image(pointSize: 20)
+            selectedImage: LucideIcon.settings.templateImage(pointSize: 20)
         )
 
         viewControllers = [
@@ -134,15 +147,22 @@ class TabBarController: UITabBarController {
     private func setupAppearance() {
         tabBar.isTranslucent = true
         tabBar.unselectedItemTintColor = ThemeColors.current.textSecondary
-        tabBar.tintColor = ThemeColors.current.primary
+        tabBar.tintColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
 
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
             appearance.configureWithTransparentBackground()
             appearance.backgroundEffect = UIBlurEffect(style: .systemChromeMaterial)
+            appearance.shadowColor = nil
+            appearance.shadowImage = nil
             tabBar.standardAppearance = appearance
             tabBar.scrollEdgeAppearance = appearance
         }
+    }
+
+    private func setupSeparator() {
+        separatorView.backgroundColor = ThemeColors.current.border
+        tabBar.addSubview(separatorView)
     }
 
     // MARK: - Create ViewControllers

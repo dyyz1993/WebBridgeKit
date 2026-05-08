@@ -1,11 +1,3 @@
-//
-//  MainViewController.swift
-//  SuperApp
-//
-//  Created on 2025-01-29.
-//  Copyright © 2025年 WebBridgeKit. All rights reserved.
-//
-
 import UIKit
 import SnapKit
 import RxSwift
@@ -28,21 +20,12 @@ class MainViewController: BaseViewController<MainViewModel> {
         return view
     }()
 
-    private let scanButton: UIButton = {
-        let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        let image = UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)
-        button.setImage(image, for: .normal)
-        button.tintColor = ThemeColors.current.text
-        return button
-    }()
-
     private let loadingView = LoadingView()
 
     private let storageLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Colors.Light.textSecondary
         label.textAlignment = .center
         return label
     }()
@@ -78,10 +61,10 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private let quickActions: [(icon: String, title: String, color: UIColor)] = [
-        ("qrcode.viewfinder", L10n.tr("home.quick_action.scan"), ThemeTokens.Colors.Light.primary),
-        ("doc.on.clipboard", L10n.tr("home.quick_action.paste"), ThemeTokens.Colors.Light.warning),
-        ("text.badge.star", L10n.tr("home.quick_action.token"), UIColor.systemPurple),
-        ("ladybug", L10n.tr("home.quick_action.debug"), ThemeTokens.Colors.Light.success)
+        ("qrcode.viewfinder", L10n.tr("home.quick_action.scan"), UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)),
+        ("doc.on.clipboard", L10n.tr("home.quick_action.paste"), UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0)),
+        ("key.fill", L10n.tr("home.quick_action.token"), UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1.0)),
+        ("ladybug", L10n.tr("home.quick_action.debug"), UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: 1.0))
     ]
 
     private lazy var commandBanner: CommandBannerView = {
@@ -264,11 +247,11 @@ class MainViewController: BaseViewController<MainViewModel> {
                         if let urlStr = payload.url, let url = URL(string: urlStr) {
                             WebBrowserManager.shared.openBrowser(url: url)
                         } else {
-                            showAlert(title: L10n.tr("home.command.success_title"), message: L10n.tr("home.command.not_found_message_format", appid))
+                            self.showAlert(title: L10n.tr("home.command.success_title"), message: L10n.tr("home.command.not_found_message_format", appid))
                         }
                     case .url(let urlString):
                         if let url = URL(string: urlString) {
-                            openURL(url)
+                            self.openURL(url)
                         }
                     case .deeplink(let urlString):
                         if let url = URL(string: urlString) {
@@ -303,14 +286,6 @@ class MainViewController: BaseViewController<MainViewModel> {
         collectionView.dataSource = self
         collectionView.delegate = self
 
-        let topBackground = UIView()
-        topBackground.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.05)
-        view.insertSubview(topBackground, at: 0)
-        topBackground.snp.makeConstraints { make in
-            make.top.left.right.equalToSuperview()
-            make.height.equalTo(300)
-        }
-
         view.addSubview(collectionView)
         view.addSubview(emptyStateView)
         view.addSubview(loadingView)
@@ -331,15 +306,15 @@ class MainViewController: BaseViewController<MainViewModel> {
         view.addSubview(commandBanner)
         commandBanner.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
-            make.leading.trailing.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(16)
             make.height.equalTo(44)
         }
         commandBanner.alpha = 0
         commandBanner.transform = CGAffineTransform(translationX: 0, y: -44)
 
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
         let scanImage = LucideIcon.scan.image(pointSize: 18, weight: .semibold)
         let scanItem = UIBarButtonItem(image: scanImage, style: .plain, target: self, action: #selector(openScanner))
+        scanItem.tintColor = ThemeColors.current.text
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
@@ -362,12 +337,12 @@ class MainViewController: BaseViewController<MainViewModel> {
     private func createCompositionalLayout() -> UICollectionViewCompositionalLayout {
         return UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
             guard let self = self else { return nil }
-            let gridSections = self.viewModel.historiesRelayValue.count
             if sectionIndex == MainSection.pushToken.rawValue {
                 return self.createPushTokenSection(environment: environment)
             } else if sectionIndex == MainSection.quickActions.rawValue {
                 return self.createQuickActionsSection(environment: environment)
             } else {
+                let gridSections = self.viewModel.historiesRelayValue.count
                 return self.createAppGridSection(sectionIndex: sectionIndex, gridSections: gridSections, environment: environment)
             }
         }
@@ -378,9 +353,8 @@ class MainViewController: BaseViewController<MainViewModel> {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(90))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16)
+        group.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16)
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 0)
         return section
     }
 
@@ -389,15 +363,15 @@ class MainViewController: BaseViewController<MainViewModel> {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(76))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 4)
-        group.interItemSpacing = .fixed(8)
         group.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16)
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 0, bottom: 10, trailing: 0)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0)
         return section
     }
 
     private func createAppGridSection(sectionIndex: Int, gridSections: Int, environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let itemWidth = (environment.container.contentSize.width - 40 - 16) / 2
+        let containerWidth = environment.container.contentSize.width - 32
+        let itemWidth = (containerWidth - 16) / 2
         let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(140))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let groupSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(140))
@@ -405,7 +379,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         let rowSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(140))
         let row = NSCollectionLayoutGroup.horizontal(layoutSize: rowSize, subitem: group, count: 2)
         row.interItemSpacing = .fixed(16)
-        row.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+        row.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         let section = NSCollectionLayoutSection(group: row)
         section.interGroupSpacing = 16
         section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 24, trailing: 0)
@@ -454,8 +428,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             })
             .asDriver(onErrorDriveWith: .empty())
 
-        let scanButtonTap = scanButton.rx.tap
-            .asDriver(onErrorDriveWith: .empty())
+        let scanButtonTap = Driver<Void>.empty()
 
         let itemLongPressRelay = PublishRelay<IndexPath>()
 
@@ -626,8 +599,6 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 }
 
-// MARK: - UICollectionViewDataSource
-
 extension MainViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 2 + viewModel.historiesRelayValue.count
@@ -693,15 +664,13 @@ extension MainViewController: UICollectionViewDataSource {
             let sections = viewModel.historiesRelayValue
             let gridIndex = indexPath.section - MainSection.appGrid.rawValue
             if gridIndex >= 0 && gridIndex < sections.count {
-                header.titleLabel.text = sections[gridIndex].header
+                header.titleLabel.text = sections[gridIndex].header.uppercased()
             }
             return header
         }
         return UICollectionReusableView()
     }
 }
-
-// MARK: - UICollectionViewDelegate
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {

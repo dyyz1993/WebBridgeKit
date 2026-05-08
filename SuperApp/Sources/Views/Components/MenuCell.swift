@@ -30,7 +30,7 @@ class MenuCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .regular)
+        label.font = .systemFont(ofSize: 16, weight: .regular)
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -39,7 +39,7 @@ class MenuCell: UITableViewCell {
 
     private let valueLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .regular)
+        label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .right
         label.numberOfLines = 1
@@ -89,7 +89,7 @@ class MenuCell: UITableViewCell {
 
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(18)
+            make.width.height.equalTo(16)
         }
 
         titleLabel.snp.makeConstraints { make in

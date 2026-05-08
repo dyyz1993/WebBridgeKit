@@ -135,7 +135,6 @@ class SettingsViewModel: ViewModel {
                     lucideIcon: .trash,
                     title: L10n.tr("settings.cache.clear"),
                     action: .clearCache,
-                    showArrow: false,
                     iconBackgroundColor: eb,
                     iconTintColor: et
                 )
@@ -150,8 +149,8 @@ class SettingsViewModel: ViewModel {
                     iconTintColor: wt
                 ),
                 SettingsItem(
-                    icon: nil,
-                    lucideIcon: .edit,
+                    icon: "paintbrush",
+                    lucideIcon: nil,
                     title: L10n.tr("settings.debug.ui"),
                     action: .uiDebug,
                     iconBackgroundColor: sb,
@@ -170,7 +169,6 @@ class SettingsViewModel: ViewModel {
                     lucideIcon: .search,
                     title: "UI 审查",
                     action: .uiAudit,
-                    showArrow: false,
                     iconBackgroundColor: seb,
                     iconTintColor: set_
                 )
@@ -190,7 +188,6 @@ class SettingsViewModel: ViewModel {
                     title: L10n.tr("settings.version"),
                     action: .versionInfo,
                     value: "v\(version) (\(build))",
-                    showArrow: false,
                     iconBackgroundColor: seb,
                     iconTintColor: set_
                 )
