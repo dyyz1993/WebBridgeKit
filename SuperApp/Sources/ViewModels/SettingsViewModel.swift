@@ -29,6 +29,7 @@ class SettingsViewModel: ViewModel {
         let navigateToShowcase: Driver<Void>
         let openNotificationSettings: Driver<Void>
         let clearCache: Driver<Void>
+        let triggerUIAudit: Driver<Void>
     }
 
     enum SettingsAction: String {
@@ -41,6 +42,7 @@ class SettingsViewModel: ViewModel {
         case debugPanel
         case uiDebug
         case showcase
+        case uiAudit
         case about
         case versionInfo
     }
@@ -78,7 +80,8 @@ class SettingsViewModel: ViewModel {
             SettingsSection(header: L10n.tr("settings.section.developer"), items: [
                 SettingsItem(icon: "ladybug", title: L10n.tr("settings.debug.panel"), action: .debugPanel),
                 SettingsItem(icon: "paintbrush", title: L10n.tr("settings.debug.ui"), action: .uiDebug),
-                SettingsItem(icon: "square.grid.2x2", title: "框架展示", action: .showcase)
+                SettingsItem(icon: "square.grid.2x2", title: "框架展示", action: .showcase),
+                SettingsItem(icon: "magnifyingglass", title: "UI Audit", action: .uiAudit, showArrow: false)
             ]),
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
                 SettingsItem(icon: "info.circle", title: L10n.tr("settings.about"), action: .about),
@@ -97,6 +100,7 @@ class SettingsViewModel: ViewModel {
     private let navigateToShowcaseRelay = PublishRelay<Void>()
     private let openNotificationSettingsRelay = PublishRelay<Void>()
     private let clearCacheRelay = PublishRelay<Void>()
+    private let triggerUIAuditRelay = PublishRelay<Void>()
 
     func transform(input: Input) -> Output {
         input.itemSelect
@@ -113,6 +117,7 @@ class SettingsViewModel: ViewModel {
                 case .debugPanel: self.navigateToDebugPanelRelay.accept(())
                 case .uiDebug: self.navigateToUIDebugRelay.accept(())
                 case .showcase: self.navigateToShowcaseRelay.accept(())
+                case .uiAudit: self.triggerUIAuditRelay.accept(())
                 case .about: self.navigateToAboutRelay.accept(())
                 case .versionInfo: break
                 }
@@ -130,7 +135,8 @@ class SettingsViewModel: ViewModel {
             navigateToUIDebug: navigateToUIDebugRelay.asDriver(onErrorJustReturn: ()),
             navigateToShowcase: navigateToShowcaseRelay.asDriver(onErrorJustReturn: ()),
             openNotificationSettings: openNotificationSettingsRelay.asDriver(onErrorJustReturn: ()),
-            clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ())
+            clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ()),
+            triggerUIAudit: triggerUIAuditRelay.asDriver(onErrorJustReturn: ())
         )
     }
 }

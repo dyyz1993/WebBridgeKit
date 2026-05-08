@@ -628,6 +628,128 @@ SuperApp（已完成）
 - AI 接口通过 localhost:8765 暴露，仅 DEBUG 模式
 - 主题系统在脚手架层定义
 
+## 原型对比分析（Prototype Diff Analysis）
+
+### 原型文件
+
+| 文件 | 行数 | 定位 |
+|------|------|------|
+| `docs/prototype/index.html` | 618 行 | V1 设计原型（英文，功能全面，含完整交互逻辑） |
+| `docs/prototype/v2-current-implementation.html` | 998 行 | V2 当前实现原型（中文，反映实际 iOS 实现状态） |
+
+### V1 (index.html) vs V2 (v2-current-implementation.html) 关键差异
+
+#### 1. 语言与本地化
+| 维度 | V1 (index.html) | V2 (v2-current) |
+|------|-----------------|------------------|
+| UI 语言 | 英文 | 中文 |
+| Tab 标签 | Home / Inbox / Discover / Settings | 首页 / 收信箱 / 发现 / 设置 |
+
+#### 2. 首页（Home）差异
+| 功能 | V1 (index.html) | V2 (v2-current) |
+|------|-----------------|------------------|
+| Push Token 卡片 | 简洁 `srcard` 组件（URL + masked token） | **渐变 token-card**（更华丽，显示完整 URL + 状态） |
+| 应用网格 | 6 个应用（E-Commerce/Dashboard/News/Games/Toolbox/Docs） | 4 个应用（Dashboard/API Explorer/文档中心/管理面板） |
+| 快速操作 | 3 个（Scan QR / Paste Cmd / Inbox） | 4 个（扫码/粘贴/口令/调试），带彩色图标背景 |
+| 口令 Banner | 显示 `wbsk://open?app=shop` | 显示"检测到口令，点击打开「MyApp」" |
+| 应用卡片 Token 标记 | 每张卡片底部显示 `acard-tk`（关联 push token） | 无 token 标记 |
+
+#### 3. 收信箱（Inbox）差异
+| 功能 | V1 (index.html) | V2 (v2-current) |
+|------|-----------------|------------------|
+| 消息数据 | 8 条消息，4 个分组（Today/Yesterday/Earlier/Links） | 4 条消息，2 个分组（今天/昨天） |
+| 消息图标 | 分类图标（app/url/sys/loc）+ 右箭头 | 未读圆点 + 消息源标签（BARK/TEST/GITHUB） |
+| 过滤器 | All / Unread / Apps | 全部 / 未读 / 今天 |
+| 清空功能 | "Clear All" 按钮 | "全部标记已读"按钮 |
+| 搜索 | 支持（filterMsg JS） | 有搜索框但无 JS 逻辑 |
+| FAB | "Send Test" 文字按钮 | 仅铃铛图标 |
+
+#### 4. 发现页（Discover）差异
+| 功能 | V1 (index.html) | V2 (v2-current) |
+|------|-----------------|------------------|
+| 推荐区 | 有 "Recommended" 区（Weather/Notes） | 无推荐区 |
+| 缓存标签 | Pill 形式（Saved/Temp/None） | Badge 形式（离线可用/未缓存/需更新/持久化） |
+| 应用详情 | 点击进入完整详情页（英雄区 + 缓存信息 + 访问统计 + Push 配置） | 仅 `showHud('打开应用...')` 无详情页 |
+
+#### 5. 设置页（Settings）差异
+| 功能 | V1 (index.html) | V2 (v2-current) |
+|------|-----------------|------------------|
+| 结构 | 分组（Server/Security/Storage/Notifications/Preferences/Developer/About） | 分组（服务器/通知/缓存/开发者/关于） |
+| Toggle 开关 | 有（Remember Last App / Appearance） | 无 |
+| Token 管理入口 | Security 分组下 | 通知分组下 |
+| 缓存详情 | 点击进入完整详情页（饼图 + 柱状图 + 明细） | 无详情页，仅入口 |
+| About 页面 | 仅 HUD 提示 | **完整 About 详情页**（图标+简介+功能列表+反馈链接） |
+| API Key 管理 | 有独立入口 | 合并到"密钥管理" |
+
+#### 6. Debug Panel 差异
+| 功能 | V1 (index.html) | V2 (v2-current) |
+|------|-----------------|------------------|
+| 展示形式 | **底部 Sheet 弹出**（Overlay + Sheet） | **全屏详情页**（push 导航） |
+| Tab 数量 | 5 个（Handlers/Notification Test/Cache/Logs/Diagnostics） | 4 个（Handlers/通知测试/日志/环境） |
+| Handler 列表 | JS 动态生成，含 Test 按钮 | 静态 HTML，无 Test 按钮（仅显示） |
+| 通知测试 | **完整表单**（标题/副标题/正文/Level/Volume/Sound/Call/Badge/Icon/Image/URL/Group/Auto-copy/Archive/Encryption/Method/模板/发送历史） | **简化表单**（仅标题/正文/发送按钮） |
+| Cache Tab | 有（Overview + Entries 列表） | 无 |
+| Logs Tab | 动态生成（带颜色标记） | 静态 HTML（带颜色标记） |
+| Diagnostics | 有（Environment + Copy 按钮） | 有（App Info + Handler 统计 + Diagnostic Report） |
+
+#### 7. 详情页差异
+| 页面 | V1 (index.html) | V2 (v2-current) |
+|------|-----------------|------------------|
+| 消息详情 | JS 动态生成（Content card + Link card + Action buttons） | 静态 HTML（标题+正文+Meta+4 个操作按钮） |
+| 应用详情 | 完整（英雄区 + 缓存信息 + 访问统计 + Push 配置 + 操作按钮） | **无应用详情页** |
+| Token 详情 | 完整（QR Code Canvas + Token + Server URL + Statistics） | 完整（Push URL + QR + Device Token + Statistics） |
+| 缓存详情 | 完整（饼图 + 柱状图 + 明细 + 操作） | **无缓存详情页** |
+| 扫码页 | 无 | 有（占位图 + 提示文字） |
+| 服务器配置 | 无 | 有（URL 输入 + Bark Key + 保存按钮） |
+
+### V1 独有功能（V2 缺失）
+1. **完整应用详情页**：英雄区 + 缓存信息 + 访问统计 + Push 配置
+2. **缓存详情页**：饼图 + 柱状图 + 明细列表
+3. **高级通知测试**：Level/Volume/Sound/Call/Badge/Icon/Image/URL/Group/Encryption/模板/发送历史
+4. **Debug Panel Cache Tab**：缓存概览 + 条目列表
+5. **Toggle 开关**：设置页中的 Remember Last App / Appearance
+6. **推荐区**：发现页的 Recommended 应用
+7. **应用卡片 Token 标记**：首页应用卡片显示关联 push token
+8. **消息清空**：Inbox 的 Clear All 功能（V2 改为全部标记已读）
+9. **搜索过滤**：Inbox 的 filterMsg JS 逻辑（V2 仅有 UI）
+
+### V2 独有功能（V1 缺失）
+1. **渐变 Token 卡片**：首页更华丽的 Push Token 展示
+2. **Quick Actions 彩色图标**：4 个操作带独立颜色
+3. **扫码详情页**：独立的扫码页面
+4. **服务器配置详情页**：URL + Bark Key 编辑
+5. **About 详情页**：完整关于页面（图标+简介+功能+反馈）
+6. **未读圆点**：Inbox 消息的未读标识
+7. **消息源标签**：BARK/TEST/GITHUB 等 uppercase 标签
+8. **Group 折叠**：Inbox 分组可折叠（V1 也有但实现不同）
+
+### 原型 vs 实际 iOS 实现差距
+
+| 原型功能 | iOS 实现状态 | 差距说明 |
+|----------|-------------|---------|
+| 首页渐变 Token 卡片 | ✅ TokenManagementVC 实现 | 基本一致 |
+| Quick Actions | ✅ MainVC 实现 | 基本一致 |
+| Inbox 消息分组 | ✅ InboxVC 实现 | 基本一致 |
+| Inbox 搜索/过滤 | ✅ 有搜索栏 | 功能可能简化 |
+| 发现页缓存状态 | ✅ DiscoverVC 实现 | 基本一致 |
+| 设置页分组 | ✅ SettingsVC 实现 | 基本一致 |
+| Debug Panel | ✅ DebugPanelVC 实现 | V2 原型更接近实际（4 tab） |
+| 通知测试表单 | ✅ NotificationDebugVC | 实际可能更简化 |
+| 应用详情页 | ✅ CacheAppDetailVC | 参考 V1 原型的完整信息 |
+| 缓存详情页 | ✅ CacheManagementVC | 有饼图/统计展示 |
+| 口令 Banner | ✅ ClipboardMonitor 实现 | 基本一致 |
+| 扫码功能 | ✅ QRScannerVC 实现 | 基本一致 |
+| About 页面 | ✅ 有实现 | V2 原型更详细 |
+
+### 总结
+
+- **V1 原型 (index.html)**：功能设计最全面，包含所有高级功能（完整通知测试、缓存详情、应用详情），英文 UI，618 行，JS 逻辑丰富（动态生成内容、搜索过滤、通知发送模拟）
+- **V2 原型 (v2-current-implementation.html)**：反映当前 iOS 实现状态，中文 UI，998 行，静态 HTML 为主，Detail Page 导航模式（非 Sheet），4 Tab Debug（非 5 Tab）
+- **主要差距**：V2 在高级通知测试、缓存详情页、应用详情页方面比 V1 简化很多，但新增了扫码页、服务器配置页、About 页等实用功能
+- **建议**：以 V2 为基准对照 iOS 实现，V1 的完整通知测试和缓存详情功能可作为未来迭代参考
+
+---
+
 ## Next Steps
 
 1. **CI 验证**: 确认所有测试通过

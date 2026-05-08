@@ -98,6 +98,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         output.clearCache
             .drive(onNext: { [weak self] in self?.showClearCacheConfirm() })
             .disposed(by: rx)
+
+        output.triggerUIAudit
+            .drive(onNext: { [weak self] in self?.runUIAudit() })
+            .disposed(by: rx)
     }
 
     private func navigateToTokenManage() {
@@ -156,6 +160,13 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         alert.addAction(UIAlertAction(title: L10n.tr("settings.clear_cache.confirm"), style: .destructive) { _ in
             WebCacheManager.shared.clearAll()
         })
+        present(alert, animated: true)
+    }
+
+    private func runUIAudit() {
+        UIAuditTool.auditCurrentScreen()
+        let alert = UIAlertController(title: "UI Audit", message: "Report printed to console. Check Xcode debugger or simctl logs.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
 }

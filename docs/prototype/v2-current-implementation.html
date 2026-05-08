@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>WebBridgeKit SuperApp — Current Implementation Prototype</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root {
+  --primary: #007AFF;
+  --primary-l: rgba(0,122,255,.08);
+  --primary-ll: rgba(0,122,255,.12);
+  --accent: #34C759;
+  --accent-l: rgba(52,199,89,.1);
+  --warning: #FF9500;
+  --warning-l: rgba(255,149,0,.1);
+  --danger: #FF3B30;
+  --danger-l: rgba(255,59,48,.1);
+  --purple: #AF52DE;
+  --purple-l: rgba(175,82,222,.1);
+  --teal: #5AC8FA;
+  --orange: #FF9500;
+  --green: #34C759;
+  --blue: #007AFF;
+  --gray: #8E8E93;
+
+  /* ThemeColors.current equivalents */
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --text: #1C1C1E;
+  --text2: #8E8E93;
+  --text3: #C7C7CC;
+  --sep: #E5E5EA;
+  --tab-bg: rgba(249,249,249,.94);
+  --nav-bg: #F2F2F7;
+  --overlay: rgba(0,0,0,.4);
+  --shadow: 0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
+
+  /* Gradients matching gradientStart/gradientEnd */
+  --grad-start: rgba(64,115,242,.85);
+  --grad-end: rgba(153,78,192,.85);
+  --grad-start-dark: rgba(51,77,153,.9);
+  --grad-end-dark: rgba(102,51,128,.9);
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 16px;
+  --font: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, 'Helvetica Neue', sans-serif;
+}
+
+@media(prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: rgba(28,28,30,1);
+    --text: #FFFFFF;
+    --text2: #8E8E93;
+    --text3: #48484A;
+    --sep: #38383A;
+    --tab-bg: rgba(30,30,30,.94);
+    --nav-bg: #000000;
+    --overlay: rgba(0,0,0,.6);
+    --shadow: 0 2px 12px rgba(0,0,0,.3);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.5);
+    --primary-l: rgba(0,122,255,.15);
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: var(--font); background: #1a1a1a; color: var(--text); overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; -webkit-appearance: none; }
+input, textarea, select { font-family: inherit; }
+.lucide { width: 20px; height: 20px; stroke-width: 1.8; }
+
+/* ========== Phone Frame ========== */
+.phone { width: 375px; height: 812px; background: var(--bg); position: relative; overflow: hidden; display: flex; flex-direction: column; flex-shrink: 0; border-radius: 44px; box-shadow: 0 0 0 8px #222, 0 0 0 10px #444, 0 20px 60px rgba(0,0,0,.5); }
+@media(max-width: 400px) { .phone { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; } }
+
+/* Status bar */
+.sbar { height: 54px; padding: 14px 24px 0; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; flex-shrink: 0; z-index: 10; background: var(--bg); }
+
+/* Pages container */
+.pages { flex: 1; position: relative; overflow: hidden; }
+.page { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; transition: transform .4s cubic-bezier(.25,.1,.25,1), opacity .35s ease; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+.page.off { transform: translateX(100%); opacity: 0; pointer-events: none; }
+.page.left { transform: translateX(-30%); opacity: 0; pointer-events: none; }
+
+/* Detail page (pushed on top) */
+.detail-page { position: absolute; inset: 0; z-index: 150; background: var(--bg); transform: translateX(100%); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.25,.1,.25,1), opacity .3s ease; display: flex; flex-direction: column; }
+.detail-page.on { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.detail-page .dnav { padding: 8px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; border-bottom: .5px solid var(--sep); background: var(--bg); min-height: 44px; }
+.detail-page .dnav button { display: flex; align-items: center; gap: 4px; color: var(--primary); font-size: 17px; }
+.detail-page .dnav .dnav-title { font-size: 17px; font-weight: 600; flex: 1; text-align: center; margin-right: 40px; }
+.detail-page .dbody { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* ========== Tab Bar ========== */
+.tbar { height: 83px; padding-bottom: 34px; display: flex; align-items: center; justify-content: space-around; background: var(--tab-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: .5px solid var(--sep); flex-shrink: 0; z-index: 100; }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text2); font-size: 10px; padding: 6px 12px; min-width: 60px; transition: color .2s; position: relative; }
+.tab .ti { display: flex; align-items: center; justify-content: center; }
+.tab.on { color: var(--primary); }
+.tab .bdg { position: absolute; top: 0; right: 50%; transform: translateX(16px); background: var(--danger); color: #fff; font-size: 10px; font-weight: 600; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+
+/* ========== Navigation Bar ========== */
+.nbar { padding: 0 16px 8px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.nbar button { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); color: var(--text2); transition: background .2s; }
+.nbar button:active { background: var(--primary-l); }
+.ntitle { font-size: 34px; font-weight: 700; padding: 0 16px 12px; line-height: 1.1; letter-spacing: -.5px; }
+.nbar-right { display: flex; align-items: center; gap: 4px; }
+.nbar-right .storage-label { font-size: 12px; color: var(--text2); }
+
+/* ========== Cards ========== */
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform .15s ease; }
+.card:active { transform: scale(.97); }
+
+/* ========== Section Header ========== */
+.shdr { padding: 24px 16px 8px; font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+
+/* ========== Search Bar ========== */
+.sbar-s { margin: 0 16px 12px; background: var(--card); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 16px; box-shadow: var(--shadow); }
+.sbar-s input { flex: 1; border: none; background: none; font-size: 16px; color: var(--text); outline: none; }
+
+/* ========== Buttons ========== */
+.btn { padding: 12px 24px; border-radius: var(--radius); font-size: 16px; font-weight: 600; transition: transform .15s, opacity .15s; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:active { transform: scale(.97); }
+.btn-p { background: var(--primary); color: #fff; }
+.btn-s { padding: 8px 16px; font-size: 14px; border-radius: 8px; }
+.btn-b { width: 100%; }
+.btn-o { border: 1.5px solid var(--primary); color: var(--primary); background: transparent; }
+
+/* ========== Pills ========== */
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.pill-g { background: var(--accent-l); color: var(--accent); }
+.pill-b { background: var(--primary-l); color: var(--primary); }
+.pill-o { background: var(--warning-l); color: var(--warning); }
+.pill-r { background: var(--danger-l); color: var(--danger); }
+.pill-p { background: var(--purple-l); color: var(--purple); }
+.pill-gr { background: rgba(142,142,147,.12); color: var(--text2); }
+
+/* ========== Overlays ========== */
+.ov { position: absolute; inset: 0; z-index: 200; pointer-events: none; }
+.ov.on { pointer-events: auto; }
+.ov-bg { position: absolute; inset: 0; background: var(--overlay); opacity: 0; transition: opacity .3s; }
+.ov.on .ov-bg { opacity: 1; }
+
+/* ========== HUD ========== */
+.hud { position: absolute; top: 60px; left: 50%; transform: translateX(-50%) translateY(-120px); background: var(--card); border-radius: 16px; padding: 12px 20px; box-shadow: var(--shadow-lg); z-index: 300; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: transform .3s cubic-bezier(.34,1.56,.64,1); white-space: nowrap; border: .5px solid var(--sep); }
+.hud.show { transform: translateX(-50%) translateY(0); }
+
+/* ========== Command Banner ========== */
+.banner { margin: 8px 16px 0; padding: 12px 40px 12px 16px; background: var(--primary-l); border-radius: var(--radius); display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--primary); position: relative; animation: slideDown .3s ease; border: 1px solid rgba(0,122,255,.15); cursor: pointer; }
+.banner-x { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ========== Push Token Card (Gradient) ========== */
+.token-card { margin: 8px 16px; border-radius: var(--radius-lg); padding: 16px; background: linear-gradient(135deg, var(--grad-start), var(--grad-end)); color: #fff; box-shadow: var(--shadow-lg); position: relative; overflow: hidden; }
+.token-card::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.08); }
+.token-card::after { content: ''; position: absolute; bottom: -40px; left: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,.05); }
+.token-card .tc-label { font-size: 12px; opacity: .8; font-weight: 500; margin-bottom: 4px; }
+.token-card .tc-url { font-size: 14px; font-weight: 600; word-break: break-all; margin-bottom: 4px; line-height: 1.3; font-family: 'SF Mono', ui-monospace, monospace; }
+.token-card .tc-status { font-size: 11px; opacity: .7; }
+.token-card .tc-copy { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); z-index: 1; }
+.token-card .tc-copy .lucide { width: 18px; height: 18px; color: #fff; }
+
+/* ========== Quick Actions ========== */
+.qactions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 4px 16px 12px; }
+.qact { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); font-size: 12px; color: var(--text2); font-weight: 500; min-height: 72px; cursor: pointer; transition: transform .15s; }
+.qact:active { transform: scale(.97); }
+.qact .qi { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; }
+.qact .qi.blue { color: var(--blue); background: rgba(0,122,255,.1); }
+.qact .qi.orange { color: var(--orange); background: rgba(255,149,0,.1); }
+.qact .qi.purple { color: var(--purple); background: rgba(175,82,222,.1); }
+.qact .qi.green { color: var(--green); background: rgba(52,199,89,.1); }
+
+/* ========== App Grid (Home) ========== */
+.hgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 20px; }
+.section-hdr { padding: 16px 20px 10px; font-size: 18px; font-weight: 700; color: var(--text); }
+.acard { background: var(--card); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; min-height: 150px; cursor: pointer; transition: transform .15s; }
+.acard:active { transform: scale(.97); }
+.acard-i { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
+.ig1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+.ig2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.ig3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.ig4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+.ig5 { background: linear-gradient(135deg, #fa709a, #fee140); }
+.ig6 { background: linear-gradient(135deg, #a18cd1, #fbc2eb); }
+.acard-n { font-size: 14px; font-weight: 600; line-height: 1.2; }
+.acard-s { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text2); }
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-g { background: var(--accent); }
+.dot-o { background: var(--warning); }
+.dot-b { background: var(--primary); }
+.acard-t { font-size: 11px; color: var(--text3); }
+
+/* ========== Inbox ========== */
+.fbar { display: flex; gap: 8px; padding: 8px 16px 12px; }
+.fbtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; background: rgba(142,142,147,.12); color: var(--text2); transition: all .2s; border: none; }
+.fbtn.on { background: var(--primary); color: #fff; }
+
+/* Group header */
+.ghdr { padding: 12px 20px 6px; display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 600; color: var(--text2); cursor: pointer; }
+.ghdr .cnt { font-weight: 400; font-size: 13px; }
+.ghdr .ei { transition: transform .2s; display: flex; align-items: center; }
+.ghdr.col .ei { transform: rotate(-90deg); }
+
+/* Message cells */
+.mlist { padding: 0 16px; }
+.mcell { display: flex; gap: 0; padding: 12px; background: var(--card); border-radius: var(--radius); margin-bottom: 8px; cursor: pointer; transition: transform .15s; box-shadow: var(--shadow); position: relative; }
+.mcell:active { transform: scale(.97); }
+.mcell .unread-dot { width: 10px; height: 10px; border-radius: 5px; background: var(--primary); flex-shrink: 0; margin-top: 4px; margin-right: 8px; }
+.mcell .mcontent { flex: 1; min-width: 0; }
+.mcell .mtitle { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcell .mtitle.read { font-weight: 400; }
+.mcell .msource { font-size: 10px; font-weight: 600; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; }
+.mcell .mbody { font-size: 14px; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mcell .mtime { font-size: 11px; color: var(--text3); text-align: right; white-space: nowrap; margin-left: 8px; align-self: flex-start; margin-top: 2px; }
+
+/* FAB */
+.fab { position: absolute; bottom: 100px; right: 20px; width: 56px; height: 56px; border-radius: 28px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 50; cursor: pointer; transition: transform .15s; }
+.fab:active { transform: scale(.9); }
+.fab .lucide { width: 22px; height: 22px; stroke-width: 2; }
+
+/* ========== Discover ========== */
+.dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
+.dcard { background: var(--card); border-radius: var(--radius-lg); padding: 16px 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: transform .15s; }
+.dcard:active { transform: scale(.97); }
+.dcard-icon { width: 44px; height: 44px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
+.dcard-icon .lucide { width: 24px; height: 24px; }
+.dcard-icon.blue-bg { background: rgba(0,122,255,.1); color: var(--blue); }
+.dcard-icon.purple-bg { background: rgba(175,82,222,.1); color: var(--purple); }
+.dcard-icon.orange-bg { background: rgba(255,149,0,.1); color: var(--orange); }
+.dcard-name { font-size: 14px; font-weight: 600; color: var(--text); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.dcard-badge { padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; text-align: center; }
+.dcard-badge.persistent { background: rgba(0,122,255,.1); color: var(--blue); }
+.dcard-badge.offline { background: rgba(52,199,89,.1); color: var(--green); }
+.dcard-badge.needs-update { background: rgba(255,149,0,.1); color: var(--orange); }
+.dcard-badge.not-cached { background: rgba(142,142,147,.1); color: var(--gray); }
+.dcard-detail { font-size: 10px; color: var(--text2); text-align: center; }
+
+/* ========== Settings ========== */
+.slist { padding: 0 16px; }
+.sgrp-hdr { padding: 24px 16px 8px; font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.sitem { display: flex; align-items: center; padding: 11px 16px; background: var(--card); cursor: pointer; transition: background .15s; min-height: 44px; }
+.sitem:first-of-type { border-radius: var(--radius) var(--radius) 0 0; }
+.sitem:last-of-type { border-radius: 0 0 var(--radius) var(--radius); }
+.sitem:only-of-type { border-radius: var(--radius); }
+.sitem:not(:last-of-type) { border-bottom: .5px solid var(--sep); }
+.sitem:active { background: var(--primary-l); }
+.sitem .si-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; }
+.sitem .si-icon .lucide { width: 18px; height: 18px; }
+.sitem .si-label { flex: 1; font-size: 16px; color: var(--text); }
+.sitem .si-value { font-size: 16px; color: var(--text2); margin-right: 4px; }
+.sitem .si-arrow { color: var(--text3); display: flex; }
+.sitem .si-arrow .lucide { width: 16px; height: 16px; }
+
+/* ========== Message Detail ========== */
+.md-wrap { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.md-title { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.md-body { font-size: 16px; color: var(--text2); line-height: 1.5; }
+.md-meta { background: var(--card); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.md-meta-row { display: flex; align-items: flex-start; }
+.md-meta-label { font-size: 13px; font-weight: 500; color: var(--text3); width: 70px; flex-shrink: 0; }
+.md-meta-value { font-size: 13px; color: var(--text2); flex: 1; }
+.md-action { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--card); border-radius: 10px; font-size: 15px; color: var(--primary); font-weight: 500; cursor: pointer; min-height: 48px; transition: transform .1s; }
+.md-action:active { transform: scale(.98); }
+.md-action.destructive { color: var(--danger); }
+.md-action .lucide { width: 16px; height: 16px; }
+
+/* ========== Debug Panel ========== */
+.debug-wrap { padding: 0; }
+.debug-seg { display: flex; margin: 8px 16px; background: rgba(142,142,147,.12); border-radius: 8px; padding: 2px; }
+.debug-seg-btn { flex: 1; padding: 6px 4px; border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--text2); text-align: center; transition: all .2s; }
+.debug-seg-btn.on { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.debug-container { padding: 16px; }
+.debug-handler-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--card); border-radius: var(--radius); margin-bottom: 6px; }
+.debug-handler-item .dh-name { font-size: 15px; font-weight: 500; }
+.debug-handler-item .dh-action { font-size: 13px; color: var(--text2); font-family: 'SF Mono', monospace; }
+.debug-log-view { background: rgba(142,142,147,.08); border-radius: 8px; padding: 12px; font-family: 'SF Mono', ui-monospace, monospace; font-size: 11px; color: var(--text2); max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+.debug-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+.debug-toolbar button { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; background: var(--card); color: var(--primary); }
+
+/* ========== Token Management ========== */
+.tm-wrap { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.tm-card { background: var(--card); border-radius: var(--radius-lg); padding: 16px; }
+.tm-card-hdr { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+.tm-url { font-size: 13px; font-weight: 500; font-family: 'SF Mono', ui-monospace, monospace; color: var(--text); word-break: break-all; line-height: 1.4; }
+.tm-btns { display: flex; gap: 12px; margin-top: 12px; }
+.tm-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #fff; }
+.tm-btn.primary { background: var(--primary); }
+.tm-btn.gray { background: var(--gray); }
+.tm-qr { width: 200px; height: 200px; margin: 12px auto; background: repeating-conic-gradient(var(--text3) 0% 25%, transparent 0% 50%) 0 0 / 10px 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 14px; }
+.tm-token { font-size: 11px; font-family: 'SF Mono', ui-monospace, monospace; color: var(--text2); word-break: break-all; line-height: 1.5; }
+.tm-stats { font-size: 14px; color: var(--text2); line-height: 1.8; }
+
+/* ========== Empty State ========== */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 40px; text-align: center; }
+.empty-state .es-icon { color: var(--text2); margin-bottom: 16px; display: flex; }
+.empty-state .es-icon .lucide { width: 48px; height: 48px; stroke-width: 1.2; }
+.empty-state .es-title { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.empty-state .es-desc { font-size: 14px; color: var(--text2); line-height: 1.5; }
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+  <!-- Status Bar -->
+  <div class="sbar">
+    <span>9:41</span>
+    <span style="display:flex;gap:4px;align-items:center;">
+      <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="4" width="3" height="8" rx=".5" fill="currentColor"/><rect x="4.5" y="2.5" width="3" height="9.5" rx=".5" fill="currentColor"/><rect x="9" y="1" width="3" height="11" rx=".5" fill="currentColor"/><rect x="13.5" y="0" width="2.5" height="12" rx=".5" fill="currentColor"/></svg>
+      <svg width="16" height="12" viewBox="0 0 24 16"><path d="M1 4 L12 12 L23 4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0" y="1" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="23" y="4" width="2" height="4" rx=".5" fill="currentColor"/><rect x="2" y="3" width="14" height="6" rx="1" fill="currentColor"/></svg>
+    </span>
+  </div>
+
+  <!-- Pages Container -->
+  <div class="pages">
+
+    <!-- ==================== HOME PAGE ==================== -->
+    <div class="page" id="page-home">
+
+      <!-- Nav Bar -->
+      <div class="nbar">
+        <button onclick="showDetail('detail-scanner')"><i data-lucide="scan" style="width:18px;height:18px;stroke-width:2"></i></button>
+        <div class="nbar-right">
+          <span class="storage-label">2.4 MB</span>
+        </div>
+      </div>
+      <div class="ntitle">首页</div>
+
+      <!-- Command Banner (hidden by default, shown via JS) -->
+      <div class="banner" id="command-banner" style="display:none;" onclick="hideBanner()">
+        <span>检测到口令，点击打开「MyApp」</span>
+        <div class="banner-x" onclick="event.stopPropagation();hideBanner()"><i data-lucide="x" style="width:16px;height:16px"></i></div>
+      </div>
+
+      <!-- Push Token Card (gradient) -->
+      <div class="token-card" id="token-card">
+        <div class="tc-label">Push Token</div>
+        <div class="tc-url">https://api.day.app/AbCdEfGh</div>
+        <div class="tc-status">设备已注册 · 推送服务正常</div>
+        <div class="tc-copy" onclick="showHud('已复制')"><i data-lucide="copy"></i></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="qactions">
+        <div class="qact" onclick="showDetail('detail-scanner')">
+          <div class="qi blue"><i data-lucide="scan" style="width:20px;height:20px"></i></div>
+          <span>扫码</span>
+        </div>
+        <div class="qact" onclick="showHud('已读取剪贴板内容')">
+          <div class="qi orange"><i data-lucide="clipboard-paste" style="width:20px;height:20px"></i></div>
+          <span>粘贴</span>
+        </div>
+        <div class="qact" onclick="showDetail('detail-token')">
+          <div class="qi purple"><i data-lucide="star" style="width:20px;height:20px"></i></div>
+          <span>口令</span>
+        </div>
+        <div class="qact" onclick="showDetail('detail-debug')">
+          <div class="qi green"><i data-lucide="bug" style="width:20px;height:20px"></i></div>
+          <span>调试</span>
+        </div>
+      </div>
+
+      <!-- Section: 常用应用 -->
+      <div class="section-hdr">常用应用</div>
+      <div class="hgrid" style="margin-bottom:8px;">
+        <div class="acard" onclick="showHud('打开应用...')">
+          <div class="acard-i ig1"><i data-lucide="globe" style="width:20px;height:20px"></i></div>
+          <div class="acard-n">Dashboard</div>
+          <div class="acard-s"><div class="dot dot-g"></div>已缓存</div>
+          <div class="acard-t">2 小时前</div>
+        </div>
+        <div class="acard" onclick="showHud('打开应用...')">
+          <div class="acard-i ig2"><i data-lucide="code-2" style="width:20px;height:20px"></i></div>
+          <div class="acard-n">API Explorer</div>
+          <div class="acard-s"><div class="dot dot-g"></div>已缓存</div>
+          <div class="acard-t">昨天</div>
+        </div>
+      </div>
+
+      <!-- Section: 最近访问 -->
+      <div class="section-hdr">最近访问</div>
+      <div class="hgrid">
+        <div class="acard" onclick="showHud('打开应用...')">
+          <div class="acard-i ig3"><i data-lucide="file-text" style="width:20px;height:20px"></i></div>
+          <div class="acard-n">文档中心</div>
+          <div class="acard-s"><div class="dot dot-b"></div>在线</div>
+          <div class="acard-t">3 天前</div>
+        </div>
+        <div class="acard" onclick="showHud('打开应用...')">
+          <div class="acard-i ig4"><i data-lucide="settings-2" style="width:20px;height:20px"></i></div>
+          <div class="acard-n">管理面板</div>
+          <div class="acard-s"><div class="dot dot-o"></div>需更新</div>
+          <div class="acard-t">1 周前</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== INBOX PAGE ==================== -->
+    <div class="page off" id="page-inbox">
+      <div class="nbar">
+        <div style="flex:1"></div>
+        <button onclick="showHud('全部标记为已读')"><i data-lucide="check" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="ntitle">收信箱</div>
+
+      <!-- Search Bar -->
+      <div class="sbar-s">
+        <i data-lucide="search" style="width:18px;height:18px"></i>
+        <input type="text" placeholder="搜索消息">
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="fbar">
+        <button class="fbtn on" onclick="filterInbox(this)">全部</button>
+        <button class="fbtn" onclick="filterInbox(this)">未读</button>
+        <button class="fbtn" onclick="filterInbox(this)">今天</button>
+      </div>
+
+      <!-- Messages -->
+      <div class="mlist">
+        <!-- Group Header -->
+        <div class="ghdr" onclick="toggleGroup(this)">
+          <span>今天 <span class="cnt">3未读</span></span>
+          <span class="ei"><i data-lucide="chevron-down" style="width:16px;height:16px"></i></span>
+        </div>
+
+        <!-- Message 1 - Unread -->
+        <div class="mcell" onclick="showDetail('detail-message')">
+          <div class="unread-dot"></div>
+          <div class="mcontent">
+            <div class="msource">BARK</div>
+            <div class="mtitle">服务器部署通知</div>
+            <div class="mbody">v2.3.1 已成功部署到生产环境，所有健康检查通过</div>
+          </div>
+          <div class="mtime">05-08<br>14:32</div>
+        </div>
+
+        <!-- Message 2 - Unread -->
+        <div class="mcell" onclick="showDetail('detail-message')">
+          <div class="unread-dot"></div>
+          <div class="mcontent">
+            <div class="msource">BARK</div>
+            <div class="mtitle">API 错误告警</div>
+            <div class="mbody">用户认证接口连续失败 5 次，请检查服务状态</div>
+          </div>
+          <div class="mtime">05-08<br>11:20</div>
+        </div>
+
+        <!-- Message 3 - Read -->
+        <div class="mcell" onclick="showDetail('detail-message')">
+          <div class="unread-dot" style="visibility:hidden"></div>
+          <div class="mcontent">
+            <div class="msource">TEST</div>
+            <div class="mtitle read">测试通知</div>
+            <div class="mbody">这是一条测试消息，发送于 2026-05-08</div>
+          </div>
+          <div class="mtime">05-08<br>09:15</div>
+        </div>
+
+        <!-- Group Header 2 -->
+        <div class="ghdr col" onclick="toggleGroup(this)">
+          <span>昨天 <span class="cnt">2条</span></span>
+          <span class="ei"><i data-lucide="chevron-down" style="width:16px;height:16px"></i></span>
+        </div>
+
+        <!-- Message 4 - Read -->
+        <div class="mcell" onclick="showDetail('detail-message')" style="display:none;">
+          <div class="unread-dot" style="visibility:hidden"></div>
+          <div class="mcontent">
+            <div class="msource">GITHUB</div>
+            <div class="mtitle read">PR Review 请求</div>
+            <div class="mbody">#142 Feature/cache-manager 需要您的审查</div>
+          </div>
+          <div class="mtime">05-07<br>16:45</div>
+        </div>
+      </div>
+
+      <!-- FAB -->
+      <div class="fab" onclick="showHud('发送测试通知...')">
+        <i data-lucide="bell"></i>
+      </div>
+    </div>
+
+    <!-- ==================== DISCOVER PAGE ==================== -->
+    <div class="page off" id="page-discover">
+      <div class="ntitle" style="padding-top:8px;">发现</div>
+
+      <!-- Section: 最近使用 -->
+      <div class="section-hdr">最近使用</div>
+      <div class="dgrid">
+        <div class="dcard" onclick="showHud('打开应用...')">
+          <div class="dcard-icon blue-bg"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
+          <div class="dcard-name">Dashboard</div>
+          <div class="dcard-badge offline">离线可用</div>
+          <div class="dcard-detail">1.2 MB · 05-08</div>
+        </div>
+        <div class="dcard" onclick="showHud('打开应用...')">
+          <div class="dcard-icon purple-bg"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
+          <div class="dcard-name">API Explorer</div>
+          <div class="dcard-badge offline">离线可用</div>
+          <div class="dcard-detail">0.8 MB · 05-07</div>
+        </div>
+        <div class="dcard" onclick="showHud('打开应用...')">
+          <div class="dcard-icon orange-bg"><i data-lucide="file-text" style="width:24px;height:24px"></i></div>
+          <div class="dcard-name">文档中心</div>
+          <div class="dcard-badge not-cached">未缓存</div>
+          <div class="dcard-detail">05-05</div>
+        </div>
+        <div class="dcard" onclick="showHud('打开应用...')">
+          <div class="dcard-icon blue-bg"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
+          <div class="dcard-name">管理面板</div>
+          <div class="dcard-badge needs-update">需更新</div>
+          <div class="dcard-detail">3.5 MB · 05-01</div>
+        </div>
+      </div>
+
+      <!-- Section: 已缓存应用 -->
+      <div class="section-hdr">已缓存应用</div>
+      <div class="dgrid">
+        <div class="dcard" onclick="showHud('打开应用...')">
+          <div class="dcard-icon blue-bg"><i data-lucide="globe" style="width:24px;height:24px"></i></div>
+          <div class="dcard-name">Dashboard Pro</div>
+          <div class="dcard-badge persistent">持久化</div>
+          <div class="dcard-detail">4.2 MB · 04-28</div>
+        </div>
+        <div class="dcard" onclick="showHud('打开应用...')">
+          <div class="dcard-icon purple-bg"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
+          <div class="dcard-name">DevTools</div>
+          <div class="dcard-badge persistent">持久化</div>
+          <div class="dcard-detail">2.1 MB · 04-20</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SETTINGS PAGE ==================== -->
+    <div class="page off" id="page-settings">
+      <div class="ntitle" style="padding-top:8px;">设置</div>
+      <div class="slist">
+        <!-- Section: 服务器 -->
+        <div class="sgrp-hdr">服务器</div>
+        <div class="sitem" onclick="showDetail('detail-server-config')">
+          <div class="si-icon" style="background:rgba(0,122,255,.1);color:#007AFF;"><i data-lucide="server" style="width:18px;height:18px"></i></div>
+          <span class="si-label">服务器配置</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="sitem" onclick="showDetail('detail-server-config')">
+          <div class="si-icon" style="background:rgba(0,122,255,.1);color:#007AFF;"><i data-lucide="key-round" style="width:18px;height:18px"></i></div>
+          <span class="si-label">密钥管理</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+
+        <!-- Section: 通知 -->
+        <div class="sgrp-hdr">通知</div>
+        <div class="sitem" onclick="showHud('打开系统通知设置')">
+          <div class="si-icon" style="background:rgba(255,59,48,.1);color:#FF3B30;"><i data-lucide="bell" style="width:18px;height:18px"></i></div>
+          <span class="si-label">通知设置</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="sitem" onclick="showDetail('detail-token')">
+          <div class="si-icon" style="background:rgba(175,82,222,.1);color:#AF52DE;"><i data-lucide="terminal" style="width:18px;height:18px"></i></div>
+          <span class="si-label">口令管理</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+
+        <!-- Section: 缓存 -->
+        <div class="sgrp-hdr">缓存</div>
+        <div class="sitem" onclick="showDetail('detail-server-config')">
+          <div class="si-icon" style="background:rgba(52,199,89,.1);color:#34C759;"><i data-lucide="archive" style="width:18px;height:18px"></i></div>
+          <span class="si-label">缓存管理</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="sitem" onclick="showHud('缓存已清除')">
+          <div class="si-icon" style="background:rgba(255,59,48,.1);color:#FF3B30;"><i data-lucide="trash-2" style="width:18px;height:18px"></i></div>
+          <span class="si-label">清除缓存</span>
+        </div>
+
+        <!-- Section: 开发者 -->
+        <div class="sgrp-hdr">开发者</div>
+        <div class="sitem" onclick="showDetail('detail-debug')">
+          <div class="si-icon" style="background:rgba(255,149,0,.1);color:#FF9500;"><i data-lucide="bug" style="width:18px;height:18px"></i></div>
+          <span class="si-label">调试面板</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="sitem" onclick="showDetail('detail-debug')">
+          <div class="si-icon" style="background:rgba(52,199,89,.1);color:#34C759;"><i data-lucide="paintbrush" style="width:18px;height:18px"></i></div>
+          <span class="si-label">界面调试</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="sitem" onclick="showDetail('detail-debug')">
+          <div class="si-icon" style="background:rgba(90,200,250,.1);color:#5AC8FA;"><i data-lucide="layout-grid" style="width:18px;height:18px"></i></div>
+          <span class="si-label">框架展示</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="sitem" onclick="showHud('Audit 报告已输出')">
+          <div class="si-icon" style="background:rgba(142,142,147,.1);color:#8E8E93;"><i data-lucide="search" style="width:18px;height:18px"></i></div>
+          <span class="si-label">UI Audit</span>
+        </div>
+
+        <!-- Section: 关于 -->
+        <div class="sgrp-hdr">关于</div>
+        <div class="sitem" onclick="showDetail('detail-about')">
+          <div class="si-icon" style="background:rgba(0,122,255,.1);color:#007AFF;"><i data-lucide="info" style="width:18px;height:18px"></i></div>
+          <span class="si-label">关于</span>
+          <span class="si-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="sitem">
+          <div class="si-icon" style="background:rgba(142,142,147,.1);color:#8E8E93;"><i data-lucide="hash" style="width:18px;height:18px"></i></div>
+          <span class="si-label">版本信息</span>
+          <span class="si-value">v1.0 (1)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DETAIL PAGES ==================== -->
+
+  <!-- Message Detail -->
+  <div class="detail-page" id="detail-message">
+    <div class="dnav">
+      <button onclick="hideDetail('detail-message')"><i data-lucide="chevron-left" style="width:20px;height:20px"></i> <span style="font-size:17px">返回</span></button>
+      <span class="dnav-title">消息详情</span>
+    </div>
+    <div class="dbody">
+      <div class="md-wrap">
+        <div class="md-title">服务器部署通知</div>
+        <div class="md-body">v2.3.1 已成功部署到生产环境，所有健康检查通过</div>
+        <div class="md-meta">
+          <div class="md-meta-row"><span class="md-meta-label">接收时间</span><span class="md-meta-value">2026-05-08 14:32:00</span></div>
+          <div class="md-meta-row"><span class="md-meta-label">来源</span><span class="md-meta-value">bark</span></div>
+          <div class="md-meta-row"><span class="md-meta-label">分组</span><span class="md-meta-value">测试消息</span></div>
+        </div>
+        <div class="md-action" onclick="showHud('已复制到剪贴板')"><i data-lucide="copy"></i> 复制内容</div>
+        <div class="md-action" onclick="showHud('打开链接...')"><i data-lucide="external-link"></i> 打开链接</div>
+        <div class="md-action" onclick="showHud('打开应用...')"><i data-lucide="app-window"></i> 打开应用</div>
+        <div class="md-action destructive" onclick="hideDetail('detail-message')"><i data-lucide="trash-2"></i> 删除</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Panel (Full Screen) -->
+  <div class="detail-page" id="detail-debug">
+    <div class="dnav">
+      <button onclick="hideDetail('detail-debug')"><span style="font-size:17px;color:var(--primary)">完成</span></button>
+      <span class="dnav-title">调试面板</span>
+    </div>
+    <div class="dbody">
+      <div class="debug-wrap">
+        <div class="debug-seg" id="debug-seg">
+          <div class="debug-seg-btn on" onclick="switchDebugTab(this, 0)">Handlers</div>
+          <div class="debug-seg-btn" onclick="switchDebugTab(this, 1)">通知测试</div>
+          <div class="debug-seg-btn" onclick="switchDebugTab(this, 2)">日志</div>
+          <div class="debug-seg-btn" onclick="switchDebugTab(this, 3)">环境</div>
+        </div>
+
+        <!-- Handlers Tab -->
+        <div class="debug-container" id="debug-tab-0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span style="font-size:13px;font-weight:600;color:var(--text2)">🌐 通用 (3)</span>
+            <button style="font-size:13px;color:var(--primary);font-weight:500" onclick="showHud('选择 Handler...')">执行测试</button>
+          </div>
+          <div class="debug-handler-item">
+            <span class="dh-name">打开链接</span>
+            <span class="dh-action">openURL</span>
+          </div>
+          <div class="debug-handler-item">
+            <span class="dh-name">复制内容</span>
+            <span class="dh-action">copy</span>
+          </div>
+          <div class="debug-handler-item">
+            <span class="dh-name">分享</span>
+            <span class="dh-action">share</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--text2);margin:16px 0 8px">📷 媒体 (2)</div>
+          <div class="debug-handler-item">
+            <span class="dh-name">拍照</span>
+            <span class="dh-action">camera 🔐</span>
+          </div>
+          <div class="debug-handler-item">
+            <span class="dh-name">选择图片</span>
+            <span class="dh-action">photo 🔐</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--text2);margin:16px 0 8px">💾 存储 (2)</div>
+          <div class="debug-handler-item">
+            <span class="dh-name">保存数据</span>
+            <span class="dh-action">store</span>
+          </div>
+          <div class="debug-handler-item">
+            <span class="dh-name">读取数据</span>
+            <span class="dh-action">retrieve</span>
+          </div>
+        </div>
+
+        <!-- Notification Test Tab -->
+        <div class="debug-container" id="debug-tab-1" style="display:none;">
+          <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;">内容</div>
+          <div style="background:var(--card);border-radius:10px;padding:12px;margin-bottom:8px;">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">标题</div>
+            <input type="text" value="测试通知" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--sep);background:var(--bg);color:var(--text);font-size:14px;">
+          </div>
+          <div style="background:var(--card);border-radius:10px;padding:12px;margin-bottom:8px;">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">正文</div>
+            <input type="text" value="这是一条测试通知" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--sep);background:var(--bg);color:var(--text);font-size:14px;">
+          </div>
+          <button class="btn btn-p btn-b" style="margin-top:12px;border-radius:10px;" onclick="showHud('发送测试通知...')">发送</button>
+        </div>
+
+        <!-- Logs Tab -->
+        <div class="debug-container" id="debug-tab-2" style="display:none;">
+          <div class="debug-toolbar">
+            <button onclick="showHud('显示全部日志')">全部</button>
+            <button style="color:var(--danger)" onclick="showHud('仅显示错误')">错误</button>
+            <button onclick="showHud('已复制日志')">复制全部</button>
+            <button onclick="showHud('已导出 JSON')">导出 JSON</button>
+          </div>
+          <div class="debug-log-view">[INFO]  2026-05-08 14:32:00  ui  ViewDidLoad called
+[DEBUG] 2026-05-08 14:32:01  ui  CollectionView reloaded
+[INFO]  2026-05-08 14:32:02  network  Fetching manifest...
+[WARN]  2026-05-08 14:32:03  cache  Cache size exceeds threshold
+[ERROR] 2026-05-08 14:32:05  network  Request timeout: /api/manifest
+[INFO]  2026-05-08 14:32:06  ui  History updated</div>
+        </div>
+
+        <!-- Environment Tab -->
+        <div class="debug-container" id="debug-tab-3" style="display:none;">
+          <div class="debug-log-view">=== App Info ===
+Bundle ID: com.webbridgekit.app
+Version: 1.0 (1)
+Device: iPhone 15 Pro
+iOS: 18.0
+Screen: 393×852 @3x
+
+Handlers Registered: 12
+  🌐 通用: 3
+  📷 媒体: 2
+  💾 存储: 2
+  🔗 导航: 2
+  🔔 通知: 2
+  📍 位置: 1
+
+=== Diagnostic Report ===
+All systems operational ✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token Management -->
+  <div class="detail-page" id="detail-token">
+    <div class="dnav">
+      <button onclick="hideDetail('detail-token')"><i data-lucide="chevron-left" style="width:20px;height:20px"></i> <span style="font-size:17px">返回</span></button>
+      <span class="dnav-title">口令管理</span>
+    </div>
+    <div class="dbody">
+      <div class="tm-wrap">
+        <!-- Push URL Card -->
+        <div class="tm-card">
+          <div class="tm-card-hdr">推送地址</div>
+          <div class="tm-url">https://api.day.app/AbCdEfGh</div>
+          <div class="tm-btns">
+            <button class="tm-btn primary" onclick="showHud('推送地址已复制到剪贴板')"><i data-lucide="copy" style="width:16px;height:16px"></i> 复制</button>
+            <button class="tm-btn gray" onclick="showHud('分享...')"><i data-lucide="share-2" style="width:16px;height:16px"></i> 分享</button>
+          </div>
+        </div>
+
+        <!-- QR Code Card -->
+        <div class="tm-card">
+          <div class="tm-card-hdr">二维码</div>
+          <div class="tm-qr">QR Code</div>
+        </div>
+
+        <!-- Device Token Card -->
+        <div class="tm-card">
+          <div class="tm-card-hdr">设备 Token</div>
+          <div class="tm-token">a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1</div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="tm-card">
+          <div class="tm-card-hdr">统计</div>
+          <div class="tm-stats">总消息数: 42
+已接收: 38
+已发送: 4
+失败: 0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scanner (placeholder) -->
+  <div class="detail-page" id="detail-scanner">
+    <div class="dnav">
+      <button onclick="hideDetail('detail-scanner')"><i data-lucide="chevron-left" style="width:20px;height:20px"></i> <span style="font-size:17px">返回</span></button>
+      <span class="dnav-title">扫码</span>
+    </div>
+    <div class="dbody" style="display:flex;align-items:center;justify-content:center;">
+      <div style="text-align:center;color:var(--text2);">
+        <div style="width:200px;height:200px;border:2px dashed var(--sep);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <i data-lucide="scan" style="width:64px;height:64px;color:var(--text3);stroke-width:1"></i>
+        </div>
+        <div style="font-size:14px;">将二维码放入框内即可自动扫描</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server Config (placeholder) -->
+  <div class="detail-page" id="detail-server-config">
+    <div class="dnav">
+      <button onclick="hideDetail('detail-server-config')"><i data-lucide="chevron-left" style="width:20px;height:20px"></i> <span style="font-size:17px">返回</span></button>
+      <span class="dnav-title">服务器配置</span>
+    </div>
+    <div class="dbody">
+      <div style="padding:16px;">
+        <div class="sgrp-hdr" style="padding-left:0;">服务器地址</div>
+        <div style="background:var(--card);border-radius:var(--radius);padding:12px;">
+          <input type="url" value="https://api.day.app" style="width:100%;border:none;background:none;color:var(--text);font-size:16px;outline:none;">
+        </div>
+        <div class="sgrp-hdr" style="padding-left:0;">Bark Key</div>
+        <div style="background:var(--card);border-radius:var(--radius);padding:12px;">
+          <input type="text" value="AbCdEfGh" style="width:100%;border:none;background:none;color:var(--text);font-size:16px;font-family:monospace;outline:none;">
+        </div>
+        <button class="btn btn-p btn-b" style="margin-top:24px;border-radius:var(--radius);" onclick="showHud('配置已保存')">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Page -->
+  <div class="detail-page" id="detail-about">
+    <div class="dnav">
+      <button onclick="hideDetail('detail-about')"><i data-lucide="chevron-left" style="width:20px;height:20px"></i> <span style="font-size:17px">返回</span></button>
+      <span class="dnav-title">关于</span>
+    </div>
+    <div class="dbody">
+      <div style="padding:16px;">
+        <div style="text-align:center;margin:24px 0;">
+          <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--grad-start),var(--grad-end));margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+            <i data-lucide="globe" style="width:40px;height:40px;color:#fff;stroke-width:1.5"></i>
+          </div>
+          <div style="font-size:22px;font-weight:700;">WebBridgeKit</div>
+          <div style="font-size:14px;color:var(--text2);margin-top:4px;">版本 1.0 (1)</div>
+        </div>
+        <div class="sgrp-hdr" style="padding-left:0;">项目简介</div>
+        <div style="background:var(--card);border-radius:var(--radius);padding:16px;font-size:14px;color:var(--text2);line-height:1.6;">
+          WebBridgeKit 是一个功能强大的 iOS WebView 缓存浏览器框架，为开发者提供完整的 WebView 缓存管理解决方案。
+        </div>
+        <div class="sgrp-hdr" style="padding-left:0;">功能列表</div>
+        <div class="slist" style="padding:0;">
+          <div class="sitem"><div class="si-icon" style="background:rgba(0,122,255,.1);color:#007AFF;"><i data-lucide="hard-drive" style="width:18px;height:18px"></i></div><span class="si-label">URL 缓存管理</span></div>
+          <div class="sitem"><div class="si-icon" style="background:rgba(255,149,0,.1);color:#FF9500;"><i data-lucide="star" style="width:18px;height:18px"></i></div><span class="si-label">收藏夹管理</span></div>
+          <div class="sitem"><div class="si-icon" style="background:rgba(175,82,222,.1);color:#AF52DE;"><i data-lucide="terminal" style="width:18px;height:18px"></i></div><span class="si-label">口令分享功能</span></div>
+          <div class="sitem"><div class="si-icon" style="background:rgba(52,199,89,.1);color:#34C759;"><i data-lucide="key-round" style="width:18px;height:18px"></i></div><span class="si-label">密钥管理</span></div>
+        </div>
+        <div class="sgrp-hdr" style="padding-left:0;">反馈</div>
+        <div class="slist" style="padding:0;margin-bottom:20px;">
+          <div class="sitem" onclick="showHud('打开 GitHub...')"><div class="si-icon" style="background:rgba(142,142,147,.1);color:#8E8E93;"><i data-lucide="github" style="width:18px;height:18px"></i></div><span class="si-label">GitHub Issues</span><span class="si-arrow"><i data-lucide="chevron-right"></i></span></div>
+          <div class="sitem" onclick="showHud('打开邮件...')"><div class="si-icon" style="background:rgba(0,122,255,.1);color:#007AFF;"><i data-lucide="mail" style="width:18px;height:18px"></i></div><span class="si-label">发送邮件</span><span class="si-arrow"><i data-lucide="chevron-right"></i></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Tab Bar ==================== -->
+  <div class="tbar">
+    <div class="tab on" data-tab="home" onclick="switchTab('home')">
+      <span class="ti"><i data-lucide="house" style="width:22px;height:22px"></i></span>
+      <span>首页</span>
+    </div>
+    <div class="tab" data-tab="inbox" onclick="switchTab('inbox')">
+      <span class="ti"><i data-lucide="inbox" style="width:22px;height:22px"></i></span>
+      <span class="bdg">3</span>
+      <span>收信箱</span>
+    </div>
+    <div class="tab" data-tab="discover" onclick="switchTab('discover')">
+      <span class="ti"><i data-lucide="compass" style="width:22px;height:22px"></i></span>
+      <span>发现</span>
+    </div>
+    <div class="tab" data-tab="settings" onclick="switchTab('settings')">
+      <span class="ti"><i data-lucide="settings" style="width:22px;height:22px"></i></span>
+      <span>设置</span>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div class="hud" id="hud">
+    <i data-lucide="check-circle" style="width:20px;height:20px;color:var(--accent)"></i>
+    <span id="hud-text">已复制</span>
+  </div>
+</div>
+
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+
+// ========== Tab Switching ==========
+const pages = ['home', 'inbox', 'discover', 'settings'];
+let currentTab = 'home';
+
+function switchTab(tab) {
+  if (tab === currentTab) return;
+
+  // Close any open detail pages
+  document.querySelectorAll('.detail-page.on').forEach(el => el.classList.remove('on'));
+
+  const oldIndex = pages.indexOf(currentTab);
+  const newIndex = pages.indexOf(tab);
+  const goingRight = newIndex > oldIndex;
+
+  pages.forEach((p, i) => {
+    const pageEl = document.getElementById('page-' + p);
+    if (p === tab) {
+      pageEl.className = 'page';
+      pageEl.scrollTop = 0;
+    } else if (i < newIndex) {
+      pageEl.className = 'page left';
+    } else {
+      pageEl.className = 'page off';
+    }
+  });
+
+  // Update tab bar
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('on', t.dataset.tab === tab);
+  });
+
+  currentTab = tab;
+}
+
+// ========== Detail Page Navigation ==========
+function showDetail(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('on');
+    lucide.createIcons();
+  }
+}
+
+function hideDetail(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('on');
+}
+
+// ========== HUD ==========
+let hudTimer;
+function showHud(text) {
+  const hud = document.getElementById('hud');
+  const hudText = document.getElementById('hud-text');
+  hudText.textContent = text;
+  hud.classList.add('show');
+  clearTimeout(hudTimer);
+  hudTimer = setTimeout(() => hud.classList.remove('show'), 1800);
+}
+
+// ========== Inbox Filter ==========
+function filterInbox(btn) {
+  btn.parentElement.querySelectorAll('.fbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ========== Group Toggle (Inbox) ==========
+function toggleGroup(hdr) {
+  const isCollapsed = hdr.classList.toggle('col');
+  let sibling = hdr.nextElementSibling;
+  while (sibling && !sibling.classList.contains('ghdr')) {
+    if (isCollapsed) {
+      sibling.style.display = 'none';
+    } else {
+      sibling.style.display = '';
+    }
+    sibling = sibling.nextElementSibling;
+  }
+  lucide.createIcons();
+}
+
+// ========== Command Banner ==========
+function hideBanner() {
+  document.getElementById('command-banner').style.display = 'none';
+}
+
+// Show command banner demo after 2s
+setTimeout(() => {
+  document.getElementById('command-banner').style.display = 'flex';
+}, 2000);
+
+// ========== Debug Panel Tabs ==========
+function switchDebugTab(btn, index) {
+  document.querySelectorAll('#debug-seg .debug-seg-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  for (let i = 0; i < 4; i++) {
+    const tab = document.getElementById('debug-tab-' + i);
+    if (tab) tab.style.display = i === index ? '' : 'none';
+  }
+}
+</script>
+</body>
+</html>

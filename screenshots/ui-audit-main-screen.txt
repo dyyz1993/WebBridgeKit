@@ -1,0 +1,149 @@
+======================================================================
+UI AUDIT REPORT
+======================================================================
+<DebugWindow frame="0,0,402,874">
+  <UITransitionView frame="0,0,402,874">
+    <UIDropShadowView frame="0,0,402,874">
+      <UILayoutContainerView frame="0,0,402,874">
+        <UITransitionView frame="0,0,402,874">
+          <UIViewControllerWrapperView frame="0,0,402,874">
+            <UILayoutContainerView frame="0,0,402,874">
+              <UINavigationTransitionView frame="0,0,402,874">
+                <UIViewControllerWrapperView frame="0,0,402,874">
+                  <UIView frame="0,0,402,874">
+                    <UIView frame="0,0,402,300"/>
+                    <LoadingView hidden alpha=0.0 frame="0,0,402,874">
+                      <UIView frame="101,377,200,120">
+                      </UIView>
+                    </LoadingView>
+                    <CommandBannerView hidden alpha=0.0 frame="0,124,402,44">
+                      <UIImageView frame="12,11,21,21"/>
+                      <UILabel frame="40,22,322,0"/>
+                      <UIButton frame="366,8,28,28">
+                      </UIButton>
+                    </CommandBannerView>
+                    <EmptyStateView id="EmptyStateView" hidden frame="0,0,402,874">
+                      <UIView frame="123,356,155,161">
+                      </UIView>
+                    </EmptyStateView>
+                    <UICollectionView id="MainCollectionView" frame="0,0,402,874">
+                      <_UITouchPassthroughView frame="0,-168,402,874">
+                      </_UITouchPassthroughView>
+                      <PushTokenCardCell frame="16,16,370,110">
+                      </PushTokenCardCell>
+                      <QuickActionCell frame="16,122,86,80">
+                      </QuickActionCell>
+                      <URLGridCell frame="20,274,173,160">
+                      </URLGridCell>
+                      <SectionHeaderView frame="0,214,402,50">
+                      </SectionHeaderView>
+                      <_UITouchPassthroughView frame="0,-168,402,874">
+                      </_UITouchPassthroughView>
+                      <UIRefreshControl hidden frame="0,0,402,60">
+                      </UIRefreshControl>
+                      <_UIScrollViewScrollIndicator alpha=0.0 frame="336,617,7,3">
+                      </_UIScrollViewScrollIndicator>
+                    </UICollectionView>
+                  </UIView>
+                </UIViewControllerWrapperView>
+              </UINavigationTransitionView>
+              <UINavigationBar frame="0,62,402,106">
+                <_UIBarBackground frame="0,-62,402,168"/>
+                <NavigationBarLargeTitleView frame="0,54,402,52">
+                  <_UINavigationBarLargeTitleView frame="0,0,402,52">
+                    <UILabel frame="16,3,157,40"/>
+                  </_UINavigationBarLargeTitleView>
+                </NavigationBarLargeTitleView>
+                <NavigationBarContentView frame="0,0,402,54">
+                  <NavigationBarTransitionContainer frame="0,0,402,54">
+                    <HostedViewContainer frame="0,0,402,54">
+                      <HostedViewWrapper alpha=0.0 frame="160,26,80,20">
+                      </HostedViewWrapper>
+                    </HostedViewContainer>
+                    <UIView frame="0,0,402,54"/>
+                    <NavigationBarPlatterContainer frame="0,0,402,54">
+                      <PlatterView frame="16,0,44,44">
+                      </PlatterView>
+                      <PlatterView frame="332,0,53,44">
+                      </PlatterView>
+                    </NavigationBarPlatterContainer>
+                  </NavigationBarTransitionContainer>
+                </NavigationBarContentView>
+                <_UIPointerInteractionAssistantEffectContainerView frame="0,0,0,0"/>
+              </UINavigationBar>
+              <FloatingBarContainerView frame="0,0,402,874">
+                <FloatingBarHostingView<FloatingBarContainer> frame="0,0,402,874"/>
+                <_UIPointerInteractionAssistantEffectContainerView frame="0,0,0,0"/>
+              </FloatingBarContainerView>
+            </UILayoutContainerView>
+          </UIViewControllerWrapperView>
+        </UITransitionView>
+        <_UITabBarContainerWrapperView frame="0,791,402,83">
+          <_UITabBarContainerView frame="0,-791,402,874">
+            <UITabBar frame="0,791,402,83">
+              <_UITabBarPlatterView frame="21,0,360,62">
+                <SelectedContentView frame="0,0,360,62">
+                  <_UITabButton frame="4,4,99,54">
+                    <UIImageView frame="31,4,37,31"/>
+                    <Label frame="24,35,51,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="88,4,99,54">
+                    <UIImageView frame="30,6,36,26"/>
+                    <Label frame="26,35,47,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="172,4,99,54">
+                    <UIImageView frame="49,26,1,1"/>
+                    <Label frame="50,35,0,0"/>
+                  </_UITabButton>
+                  <_UITabButton frame="256,4,99,54">
+                    <UIImageView frame="34,4,31,31"/>
+                    <Label frame="18,35,60,12"/>
+                  </_UITabButton>
+                </SelectedContentView>
+                <_UILiquidLensView frame="4,4,99,54">
+                  <UIView frame="0,0,99,54">
+                    <_UITabSelectionView frame="0,0,99,54"/>
+                    <ClearGlassView frame="0,0,99,54">
+                      <UIView frame="0,0,99,54">
+                      </UIView>
+                      <UIView frame="0,0,99,54"/>
+                    </ClearGlassView>
+                  </UIView>
+                </_UILiquidLensView>
+                <ContentView frame="0,0,360,62">
+                  <_UITabButton frame="4,4,99,54">
+                    <UIImageView frame="33,6,33,28"/>
+                    <Label frame="25,35,50,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="88,4,99,54">
+                    <UIImageView frame="33,8,33,23"/>
+                    <Label frame="27,35,46,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="172,4,99,54">
+                    <UIImageView frame="49,26,1,1"/>
+                    <Label frame="50,35,0,0"/>
+                  </_UITabButton>
+                  <_UITabButton frame="256,4,99,54">
+                    <UIImageView frame="35,5,28,28"/>
+                    <Label frame="20,35,59,12"/>
+                  </_UITabButton>
+                </ContentView>
+                <DestOutView frame="0,0,99,54"/>
+              </_UITabBarPlatterView>
+            </UITabBar>
+          </_UITabBarContainerView>
+        </_UITabBarContainerWrapperView>
+      </UILayoutContainerView>
+    </UIDropShadowView>
+  </UITransitionView>
+</DebugWindow>
+----------------------------------------------------------------------
+ISSUES: 1 errors, 1 warnings
+----------------------------------------------------------------------
+[ERROR] [TAP_TARGET] Window/DebugWindow/UITransitionView/UIDropShadowView/UILayoutContainerView/UITransitionView/UIViewControllerWrapperView/UILayoutContainerView/UINavigationTransitionView/UIViewControllerWrapperView/UIView/CommandBannerView
+   Button height 28pt < 44pt minimum. Title: "(none)"
+[WARN] [MISSING_A11Y_ID] Window/DebugWindow/UITransitionView/UIDropShadowView/UILayoutContainerView/UITransitionView/UIViewControllerWrapperView/UILayoutContainerView/UINavigationTransitionView/UIViewControllerWrapperView/UIView/CommandBannerView
+   Button "" lacks accessibilityIdentifier
+======================================================================
+TOTAL: 1 errors, 1 warnings
+======================================================================

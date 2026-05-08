@@ -1,0 +1,106 @@
+🗑️ [AppDelegate] Triggering global cache clearing...
+ℹ️ [Manifest] Initialized (background loading started)
+✅ [ResourceCache] Initialized with disk cache: /Users/xuyingzhou/Library/Developer/CoreSimulator/Devices/4C414BDE-68C8-4936-9B58-DB3F460A5644/data/Containers/Data/Application/79EAC6A0-E337-46AA-A539-68EA936A1413/Library/Caches/ManifestCache/Resources
+2026-05-08 11:37:44.489 SuperApp[94438:22815711] ✅ [ManifestCache] Initialized with URL scheme: custom://
+2026-05-08 11:37:44.490 SuperApp[94438:22815735] 🗑️ [ManifestCache] Cleared all cache
+ℹ️ [Manifest] Cleared all data from disk
+ℹ️ [Manifest] Loaded from disk: 0 HTMLs, 0 manifests
+✅ [WebResourceCacheManager] Initialized (background loading started)
+ℹ️ [Manifest] Disk data loaded in background [ManifestStore.swift:68 init()]
+ℹ️ [Cache] All caches clearing triggered (WebView data on main, Realm on background) [WebCacheManager.swift:145 clearAll()]
+11:37:44.554 🐛[DBG] [bridge] [camera] Handler registered: camera
+11:37:44.555 🐛[DBG] [bridge] [bluetooth] Handler registered: bluetooth
+11:37:44.555 🐛[DBG] [bridge] [getLocation] Handler registered: getLocation
+11:37:44.555 🐛[DBG] [bridge] [scan] Handler registered: scan
+11:37:44.555 🐛[DBG] [bridge] [haptic] Handler registered: haptic
+11:37:44.555 🐛[DBG] [bridge] [vibrate] Handler registered: vibrate
+11:37:44.555 🐛[DBG] [bridge] [photo] Handler registered: photo
+11:37:44.556 🐛[DBG] [bridge] [media] Handler registered: media
+11:37:44.556 🐛[DBG] [bridge] [share] Handler registered: share
+11:37:44.556 🐛[DBG] [bridge] [audioLevel] Handler registered: audioLevel
+11:37:44.556 🐛[DBG] [bridge] [sensors] Handler registered: sensors
+11:37:44.556 🐛[DBG] [bridge] [speech] Handler registered: speech
+11:37:44.556 🐛[DBG] [bridge] [tts] Handler registered: tts
+11:37:44.556 🐛[DBG] [bridge] [clipboard] Handler registered: clipboard
+11:37:44.556 🐛[DBG] [bridge] [getSystemInfo] Handler registered: getSystemInfo
+11:37:44.556 🐛[DBG] [bridge] [getNetworkInfo] Handler registered: getNetworkInfo
+11:37:44.556 🐛[DBG] [bridge] [systemExtra] Handler registered: systemExtra
+11:37:44.556 🐛[DBG] [bridge] [openSettings] Handler registered: openSettings
+11:37:44.556 🐛[DBG] [bridge] [contacts] Handler registered: contacts
+11:37:44.556 🐛[DBG] [bridge] [layout] Handler registered: layout
+11:37:44.556 🐛[DBG] [bridge] [screen] Handler registered: screen
+11:37:44.556 🐛[DBG] [bridge] [gesture] Handler registered: gesture
+11:37:44.556 🐛[DBG] [bridge] [mirroring] Handler registered: mirroring
+11:37:44.556 🐛[DBG] [bridge] [requestPermission] Handler registered: requestPermission
+11:37:44.556 🐛[DBG] [bridge] [getPermissionStatus] Handler registered: getPermissionStatus
+11:37:44.556 🐛[DBG] [bridge] [openPage] Handler registered: openPage
+11:37:44.556 🐛[DBG] [bridge] [closePage] Handler registered: closePage
+11:37:44.556 🐛[DBG] [bridge] [goBack] Handler registered: goBack
+11:37:44.556 🐛[DBG] [bridge] [getHistory] Handler registered: getHistory
+11:37:44.556 🐛[DBG] [bridge] [getPayload] Handler registered: getPayload
+11:37:44.556 🐛[DBG] [bridge] [setModal] Handler registered: setModal
+11:37:44.556 🐛[DBG] [bridge] [file] Handler registered: file
+11:37:44.556 🐛[DBG] [bridge] [page] Handler registered: page
+11:37:44.557 🐛[DBG] [bridge] [cacheDebug] Handler registered: cacheDebug
+11:37:44.557 ℹ️[INF] [bridge] Registered 34 handlers
+ℹ️ [General] WebBridgeKit v1.0.0 initialized [WebBridgeKit.swift:56 initialize()]
+✅ [WebResourceCacheManager] Loaded cache index: 0 entries
+✅ [WebResourceCacheManager] Initialization tasks completed in background
+🗑️ [WebResourceCacheManager] Cleared all cache spaces (async)
+📊 [WebResourceCacheManager] Total cache size: 181 bytes
+📊 [WebResourceCacheManager] Total cache size: 181 bytes
+ℹ️ [Cache] Cleared Realm statistics [WebCacheManager.swift:141 clearAll()]
+🔍 [UI] viewDidLoad called [MainViewController.swift:95 viewDidLoad()]
+🔍 [EmptyStateView] configured - title: home.empty.title, icon: square.grid.2x2.fill
+ℹ️ [Cache] Starting auto cleanup... [WebCacheManager.swift:101 performAutoCleanup()]
+ℹ️ [Cache] Auto cleanup completed in background [WebCacheManager.swift:114 performAutoCleanup()]
+🔍 [UI] bindViewModel called [MainViewController.swift:439 bindViewModel()]
+🔍 [UI] loadHistories called [MainViewModel.swift:154 loadHistories()]
+🔍 [UI] updateCollectionView called with 0 sections [MainViewController.swift:537 updateCollectionView(sections:)]
+🔍 [UI] viewWillAppear - refreshing data [MainViewController.swift:186 viewWillAppear(_:)]
+🔍 [UI] loadHistories called [MainViewModel.swift:154 loadHistories()]
+2026-05-08 11:37:44.846 SuperApp[94438:22815711] ✅ [SchemeHandler] Registered for scheme: custom://
+🚀 [EngineBootstrap] Starting engine initialization...
+🌉 [JS Bridge] 已注册 35 个 Handler 工厂（懒加载模式）
+🔍 [UI] updateCollectionView called with 1 sections [MainViewController.swift:537 updateCollectionView(sections:)]
+ℹ️ [UI] loadHistories completed, sections: 1 [MainViewModel.swift:293 loadHistories()]
+🔍 [UI] updateCollectionView called with 1 sections [MainViewController.swift:537 updateCollectionView(sections:)]
+ℹ️ [UI] loadHistories completed, sections: 1 [MainViewModel.swift:293 loadHistories()]
+🔍 [UI] viewDidAppear [MainViewController.swift:192 viewDidAppear(_:)]
+ℹ️ [UI] [UIAudit] Triggering UI audit on MainViewController [MainViewController.swift:196 viewDidAppear(_:)]
+🌉 [JS Bridge] 已注册 35 个 Handler 工厂（懒加载模式）
+   工厂列表: ["audioLevel", "bluetooth", "cacheDebug", "camera", "clipboard", "closePage", "contacts", "file", "gesture", "getHistory", "getLocation", "getNetworkInfo", "getPayload", "getPermissionStatus", "getSystemInfo", "goBack", "haptic", "layout", "media", "mirroring", "openPage", "openSettings", "page", "photo", "requestPermission", "scan", "screen", "sensors", "setModal", "share", "speech", "systemExtra", "tts", "vibrate", "videoStream"]
+ℹ️ [General] WebViewPool warmed up [WebBridgeKit.swift:64 initialize()]
+  ✅ Theme Engine: initialized with 'system' theme
+  ✅ Cache Engine: using WebBridgeKit CacheManager
+  ✅ Message Engine: UserDefaults persistent store configured
+  ⚠️ Message Engine: Bark channel skipped (no key configured)
+  ✅ Message Engine: Webhook channel registered
+  ✅ Message Engine: Processor pipeline configured (6 processors)
+  ✅ Message Engine: initialized with 1 channels
+  ✅ AI Engine: HTTP server started on port 8765
+  ✅ Skills: 7 framework capabilities registered (via SkillRegistry)
+  ✅ Skills: 4 categories, 34 tags indexed
+  ✅ CommandParser Engine: initialized (clipboard monitoring active)
+  ✅ Bridge Engine: using WebBridgeKit HandlerRegistry
+🚀 [EngineBootstrap] All engines initialized!
+   工厂列表: ["audioLevel", "bluetooth", "cacheDebug", "camera", "clipboard", "closePage", "contacts", "file", "gesture", "getHistory", "getLocation", "getNetworkInfo", "getPayload", "getPermissionStatus", "getSystemInfo", "goBack", "haptic", "layout", "media", "mirroring", "openPage", "openSettings", "page", "photo", "requestPermission", "scan", "screen", "sensors", "setModal", "share", "speech", "systemExtra", "tts", "vibrate", "videoStream"]
+⚠️ [JS Bridge] Warning: webView is nil when creating handler getSystemInfo. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: getSystemInfo
+⚠️ [JS Bridge] Warning: webView is nil when creating handler share. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: share
+⚠️ [JS Bridge] Warning: webView is nil when creating handler clipboard. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: clipboard
+⚠️ [JS Bridge] Warning: webView is nil when creating handler haptic. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: haptic
+⚠️ [JS Bridge] Warning: webView is nil when creating handler vibrate. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: vibrate
+⚠️ [JS Bridge] Warning: webView is nil when creating handler getNetworkInfo. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: getNetworkInfo
+⚠️ [JS Bridge] Warning: webView is nil when creating handler openPage. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: openPage
+⚠️ [JS Bridge] Warning: webView is nil when creating handler closePage. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: closePage
+ℹ️ [General] WebBridgePool warmed up [WebBridgeKit.swift:67 initialize()]
+ℹ️ [Cache] Cleared all WKWebView website data [WebCacheManager.swift:125 clearAll()]
+com.webbridgekit.superapp: 94438

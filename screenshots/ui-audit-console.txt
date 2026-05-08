@@ -1,0 +1,255 @@
+🗑️ [AppDelegate] Triggering global cache clearing...
+ℹ️ [Manifest] Initialized (background loading started)
+✅ [ResourceCache] Initialized with disk cache: /Users/xuyingzhou/Library/Developer/CoreSimulator/Devices/4C414BDE-68C8-4936-9B58-DB3F460A5644/data/Containers/Data/Application/6BD35777-F133-4EC9-AD1A-4753DE82D9AF/Library/Caches/ManifestCache/Resources
+2026-05-08 11:41:02.376 SuperApp[98704:22832585] ✅ [ManifestCache] Initialized with URL scheme: custom://
+2026-05-08 11:41:02.377 SuperApp[98704:22832636] 🗑️ [ManifestCache] Cleared all cache
+ℹ️ [Manifest] Loaded from disk: 0 HTMLs, 0 manifests
+ℹ️ [Manifest] Disk data loaded in background
+ℹ️ [Manifest] Cleared all data from disk
+✅ [WebResourceCacheManager] Initialized (background loading started)
+ℹ️ [Cache] All caches clearing triggered (WebView data on main, Realm on background) [WebCacheManager.swift:145 clearAll()]
+11:41:02.447 🐛[DBG] [bridge] [camera] Handler registered: camera
+11:41:02.449 🐛[DBG] [bridge] [bluetooth] Handler registered: bluetooth
+11:41:02.449 🐛[DBG] [bridge] [getLocation] Handler registered: getLocation
+11:41:02.449 🐛[DBG] [bridge] [scan] Handler registered: scan
+11:41:02.449 🐛[DBG] [bridge] [haptic] Handler registered: haptic
+11:41:02.449 🐛[DBG] [bridge] [vibrate] Handler registered: vibrate
+11:41:02.449 🐛[DBG] [bridge] [photo] Handler registered: photo
+11:41:02.449 🐛[DBG] [bridge] [media] Handler registered: media
+11:41:02.449 🐛[DBG] [bridge] [share] Handler registered: share
+11:41:02.449 🐛[DBG] [bridge] [audioLevel] Handler registered: audioLevel
+11:41:02.449 🐛[DBG] [bridge] [sensors] Handler registered: sensors
+11:41:02.449 🐛[DBG] [bridge] [speech] Handler registered: speech
+11:41:02.450 🐛[DBG] [bridge] [tts] Handler registered: tts
+11:41:02.450 🐛[DBG] [bridge] [clipboard] Handler registered: clipboard
+11:41:02.450 🐛[DBG] [bridge] [getSystemInfo] Handler registered: getSystemInfo
+11:41:02.451 🐛[DBG] [bridge] [getNetworkInfo] Handler registered: getNetworkInfo
+11:41:02.451 🐛[DBG] [bridge] [systemExtra] Handler registered: systemExtra
+11:41:02.452 🐛[DBG] [bridge] [openSettings] Handler registered: openSettings
+11:41:02.452 🐛[DBG] [bridge] [contacts] Handler registered: contacts
+11:41:02.452 🐛[DBG] [bridge] [layout] Handler registered: layout
+11:41:02.453 🐛[DBG] [bridge] [screen] Handler registered: screen
+11:41:02.453 🐛[DBG] [bridge] [gesture] Handler registered: gesture
+11:41:02.453 🐛[DBG] [bridge] [mirroring] Handler registered: mirroring
+11:41:02.453 🐛[DBG] [bridge] [requestPermission] Handler registered: requestPermission
+11:41:02.453 🐛[DBG] [bridge] [getPermissionStatus] Handler registered: getPermissionStatus
+11:41:02.453 🐛[DBG] [bridge] [openPage] Handler registered: openPage
+11:41:02.453 🐛[DBG] [bridge] [closePage] Handler registered: closePage
+11:41:02.453 🐛[DBG] [bridge] [goBack] Handler registered: goBack
+11:41:02.453 🐛[DBG] [bridge] [getHistory] Handler registered: getHistory
+11:41:02.453 🐛[DBG] [bridge] [getPayload] Handler registered: getPayload
+11:41:02.453 🐛[DBG] [bridge] [setModal] Handler registered: setModal
+11:41:02.453 🐛[DBG] [bridge] [file] Handler registered: file
+11:41:02.453 🐛[DBG] [bridge] [page] Handler registered: page
+11:41:02.453 🐛[DBG] [bridge] [cacheDebug] Handler registered: cacheDebug
+11:41:02.453 ℹ️[INF] [bridge] Registered 34 handlers
+ℹ️ [General] WebBridgeKit v1.0.0 initialized [WebBridgeKit.swift:56 initialize()]
+✅ [WebResourceCacheManager] Loaded cache index: 0 entries
+✅ [WebResourceCacheManager] Initialization tasks completed in background
+🗑️ [WebResourceCacheManager] Cleared all cache spaces (async)
+🔍 [UI] viewDidLoad called [MainViewController.swift:95 viewDidLoad()]
+🔍 [EmptyStateView] configured - title: home.empty.title, icon: square.grid.2x2.fill
+ℹ️ [Cache] Starting auto cleanup... [WebCacheManager.swift:101 performAutoCleanup()]
+🔍 [UI] bindViewModel called [MainViewController.swift:439 bindViewModel()]
+🔍 [UI] loadHistories called [MainViewModel.swift:154 loadHistories()]
+🔍 [UI] updateCollectionView called with 0 sections [MainViewController.swift:537 updateCollectionView(sections:)]
+🔍 [UI] viewWillAppear - refreshing data [MainViewController.swift:186 viewWillAppear(_:)]
+🔍 [UI] loadHistories called [MainViewModel.swift:154 loadHistories()]
+ℹ️ [Cache] Auto cleanup completed in background [WebCacheManager.swift:114 performAutoCleanup()]
+2026-05-08 11:41:02.744 SuperApp[98704:22832585] ✅ [SchemeHandler] Registered for scheme: custom://
+🚀 [EngineBootstrap] Starting engine initialization...
+🔍 [UI] updateCollectionView called with 1 sections [MainViewController.swift:537 updateCollectionView(sections:)]
+ℹ️ [UI] loadHistories completed, sections: 1 [MainViewModel.swift:293 loadHistories()]
+🔍 [UI] updateCollectionView called with 1 sections [MainViewController.swift:537 updateCollectionView(sections:)]
+ℹ️ [UI] loadHistories completed, sections: 1 [MainViewModel.swift:293 loadHistories()]
+🌉 [JS Bridge] 已注册 35 个 Handler 工厂（懒加载模式）
+🔍 [UI] viewDidAppear [MainViewController.swift:192 viewDidAppear(_:)]
+ℹ️ [UI] [UIAudit] Triggering UI audit on MainViewController [MainViewController.swift:196 viewDidAppear(_:)]
+   工厂列表: ["audioLevel", "bluetooth", "cacheDebug", "camera", "clipboard", "closePage", "contacts", "file", "gesture", "getHistory", "getLocation", "getNetworkInfo", "getPayload", "getPermissionStatus", "getSystemInfo", "goBack", "haptic", "layout", "media", "mirroring", "openPage", "openSettings", "page", "photo", "requestPermission", "scan", "screen", "sensors", "setModal", "share", "speech", "systemExtra", "tts", "vibrate", "videoStream"]
+⚠️ [JS Bridge] Warning: webView is nil when creating handler getSystemInfo. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: getSystemInfo
+⚠️ [JS Bridge] Warning: webView is nil when creating handler share. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: share
+⚠️ [JS Bridge] Warning: webView is nil when creating handler clipboard. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: clipboard
+⚠️ [JS Bridge] Warning: webView is nil when creating handler haptic. It will be set later in setWebView().
+ℹ️ [Cache] Cleared Realm statistics [WebCacheManager.swift:141 clearAll()]
+🌉 [JS Bridge] 已注册 35 个 Handler 工厂（懒加载模式）
+   工厂列表: ["audioLevel", "bluetooth", "cacheDebug", "camera", "clipboard", "closePage", "contacts", "file", "gesture", "getHistory", "getLocation", "getNetworkInfo", "getPayload", "getPermissionStatus", "getSystemInfo", "goBack", "haptic", "layout", "media", "mirroring", "openPage", "openSettings", "page", "photo", "requestPermission", "scan", "screen", "sensors", "setModal", "share", "speech", "systemExtra", "tts", "vibrate", "videoStream"]
+ℹ️ [General] WebViewPool warmed up [WebBridgeKit.swift:64 initialize()]
+♻️ [JS Bridge] 懒加载创建 Handler: haptic
+⚠️ [JS Bridge] Warning: webView is nil when creating handler vibrate. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: vibrate
+⚠️ [JS Bridge] Warning: webView is nil when creating handler getNetworkInfo. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: getNetworkInfo
+⚠️ [JS Bridge] Warning: webView is nil when creating handler openPage. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: openPage
+⚠️ [JS Bridge] Warning: webView is nil when creating handler closePage. It will be set later in setWebView().
+♻️ [JS Bridge] 懒加载创建 Handler: closePage
+ℹ️ [General] WebBridgePool warmed up [WebBridgeKit.swift:67 initialize()]
+📊 [WebResourceCacheManager] Total cache size: 181 bytes
+📊 [WebResourceCacheManager] Total cache size: 181 bytes
+  ✅ Theme Engine: initialized with 'system' theme
+  ✅ Cache Engine: using WebBridgeKit CacheManager
+  ✅ Message Engine: UserDefaults persistent store configured
+  ⚠️ Message Engine: Bark channel skipped (no key configured)
+  ✅ Message Engine: Webhook channel registered
+  ✅ Message Engine: Processor pipeline configured (6 processors)
+  ✅ Message Engine: initialized with 1 channels
+  ✅ AI Engine: HTTP server started on port 8765
+  ✅ Skills: 7 framework capabilities registered (via SkillRegistry)
+  ✅ Skills: 4 categories, 34 tags indexed
+  ✅ CommandParser Engine: initialized (clipboard monitoring active)
+  ✅ Bridge Engine: using WebBridgeKit HandlerRegistry
+🚀 [EngineBootstrap] All engines initialized!
+ℹ️ [Cache] Cleared all WKWebView website data [WebCacheManager.swift:125 clearAll()]
+2026-05-08 11:41:08.503 SuperApp[98704:22832585] [UIAudit] ======================================================================
+UI AUDIT REPORT
+======================================================================
+<DebugWindow frame="0,0,402,874">
+  <UITransitionView frame="0,0,402,874">
+    <UIDropShadowView frame="0,0,402,874">
+      <UILayoutContainerView frame="0,0,402,874">
+        <UITransitionView frame="0,0,402,874">
+          <UIViewControllerWrapperView frame="0,0,402,874">
+            <UILayoutContainerView frame="0,0,402,874">
+              <UINavigationTransitionView frame="0,0,402,874">
+                <UIViewControllerWrapperView frame="0,0,402,874">
+                  <UIView frame="0,0,402,874">
+                    <UIView frame="0,0,402,300"/>
+                    <LoadingView hidden alpha=0.0 frame="0,0,402,874">
+                      <UIView frame="101,377,200,120">
+                      </UIView>
+                    </LoadingView>
+                    <CommandBannerView hidden alpha=0.0 frame="0,124,402,44">
+                      <UIImageView frame="12,11,21,21"/>
+                      <UILabel frame="40,22,322,0"/>
+                      <UIButton frame="366,8,28,28">
+                      </UIButton>
+                    </CommandBannerView>
+                    <EmptyStateView id="EmptyStateView" hidden frame="0,0,402,874">
+                      <UIView frame="123,356,155,161">
+                      </UIView>
+                    </EmptyStateView>
+                    <UICollectionView id="MainCollectionView" frame="0,0,402,874">
+                      <_UITouchPassthroughView frame="0,-168,402,874">
+                      </_UITouchPassthroughView>
+                      <PushTokenCardCell frame="16,16,370,110">
+                      </PushTokenCardCell>
+                      <QuickActionCell frame="16,122,86,80">
+                      </QuickActionCell>
+                      <URLGridCell frame="20,274,173,160">
+                      </URLGridCell>
+                      <SectionHeaderView frame="0,214,402,50">
+                      </SectionHeaderView>
+                      <_UITouchPassthroughView frame="0,-168,402,874">
+                      </_UITouchPassthroughView>
+                      <UIRefreshControl hidden frame="0,0,402,60">
+                      </UIRefreshControl>
+                      <_UIScrollViewScrollIndicator alpha=0.0 frame="336,617,7,3">
+                      </_UIScrollViewScrollIndicator>
+                    </UICollectionView>
+                  </UIView>
+                </UIViewControllerWrapperView>
+              </UINavigationTransitionView>
+              <UINavigationBar frame="0,62,402,106">
+                <_UIBarBackground frame="0,-62,402,168"/>
+                <NavigationBarLargeTitleView frame="0,54,402,52">
+                  <_UINavigationBarLargeTitleView frame="0,0,402,52">
+                    <UILabel frame="16,3,157,40"/>
+                  </_UINavigationBarLargeTitleView>
+                </NavigationBarLargeTitleView>
+                <NavigationBarContentView frame="0,0,402,54">
+                  <NavigationBarTransitionContainer frame="0,0,402,54">
+                    <HostedViewContainer frame="0,0,402,54">
+                      <HostedViewWrapper alpha=0.0 frame="160,26,80,20">
+                      </HostedViewWrapper>
+                    </HostedViewContainer>
+                    <UIView frame="0,0,402,54"/>
+                    <NavigationBarPlatterContainer frame="0,0,402,54">
+                      <PlatterView frame="16,0,44,44">
+                      </PlatterView>
+                      <PlatterView frame="332,0,53,44">
+                      </PlatterView>
+                    </NavigationBarPlatterContainer>
+                  </NavigationBarTransitionContainer>
+                </NavigationBarContentView>
+                <_UIPointerInteractionAssistantEffectContainerView frame="0,0,0,0"/>
+              </UINavigationBar>
+              <FloatingBarContainerView frame="0,0,402,874">
+                <FloatingBarHostingView<FloatingBarContainer> frame="0,0,402,874"/>
+                <_UIPointerInteractionAssistantEffectContainerView frame="0,0,0,0"/>
+              </FloatingBarContainerView>
+            </UILayoutContainerView>
+          </UIViewControllerWrapperView>
+        </UITransitionView>
+        <_UITabBarContainerWrapperView frame="0,791,402,83">
+          <_UITabBarContainerView frame="0,-791,402,874">
+            <UITabBar frame="0,791,402,83">
+              <_UITabBarPlatterView frame="21,0,360,62">
+                <SelectedContentView frame="0,0,360,62">
+                  <_UITabButton frame="4,4,99,54">
+                    <UIImageView frame="31,4,37,31"/>
+                    <Label frame="24,35,51,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="88,4,99,54">
+                    <UIImageView frame="30,6,36,26"/>
+                    <Label frame="26,35,47,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="172,4,99,54">
+                    <UIImageView frame="49,26,1,1"/>
+                    <Label frame="50,35,0,0"/>
+                  </_UITabButton>
+                  <_UITabButton frame="256,4,99,54">
+                    <UIImageView frame="34,4,31,31"/>
+                    <Label frame="18,35,60,12"/>
+                  </_UITabButton>
+                </SelectedContentView>
+                <_UILiquidLensView frame="4,4,99,54">
+                  <UIView frame="0,0,99,54">
+                    <_UITabSelectionView frame="0,0,99,54"/>
+                    <ClearGlassView frame="0,0,99,54">
+                      <UIView frame="0,0,99,54">
+                      </UIView>
+                      <UIView frame="0,0,99,54"/>
+                    </ClearGlassView>
+                  </UIView>
+                </_UILiquidLensView>
+                <ContentView frame="0,0,360,62">
+                  <_UITabButton frame="4,4,99,54">
+                    <UIImageView frame="33,6,33,28"/>
+                    <Label frame="25,35,50,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="88,4,99,54">
+                    <UIImageView frame="33,8,33,23"/>
+                    <Label frame="27,35,46,12"/>
+                  </_UITabButton>
+                  <_UITabButton frame="172,4,99,54">
+                    <UIImageView frame="49,26,1,1"/>
+                    <Label frame="50,35,0,0"/>
+                  </_UITabButton>
+                  <_UITabButton frame="256,4,99,54">
+                    <UIImageView frame="35,5,28,28"/>
+                    <Label frame="20,35,59,12"/>
+                  </_UITabButton>
+                </ContentView>
+                <DestOutView frame="0,0,99,54"/>
+              </_UITabBarPlatterView>
+            </UITabBar>
+          </_UITabBarContainerView>
+        </_UITabBarContainerWrapperView>
+      </UILayoutContainerView>
+    </UIDropShadowView>
+  </UITransitionView>
+</DebugWindow>
+----------------------------------------------------------------------
+ISSUES: 1 errors, 1 warnings
+----------------------------------------------------------------------
+[ERROR] [TAP_TARGET] Window/DebugWindow/UITransitionView/UIDropShadowView/UILayoutContainerView/UITransitionView/UIViewControllerWrapperView/UILayoutContainerView/UINavigationTransitionView/UIViewControllerWrapperView/UIView/CommandBannerView
+   Button height 28pt < 44pt minimum. Title: "(none)"
+[WARN] [MISSING_A11Y_ID] Window/DebugWindow/UITransitionView/UIDropShadowView/UILayoutContainerView/UITransitionView/UIViewControllerWrapperView/UILayoutContainerView/UINavigationTransitionView/UIViewControllerWrapperView/UIView/CommandBannerView
+   Button "" lacks accessibilityIdentifier
+======================================================================
+TOTAL: 1 errors, 1 warnings
+======================================================================
+2026-05-08 11:41:08.512 SuperApp[98704:22832585] [UIAudit] Report saved to: /Users/xuyingzhou/Library/Developer/CoreSimulator/Devices/4C414BDE-68C8-4936-9B58-DB3F460A5644/data/Containers/Data/Application/6BD35777-F133-4EC9-AD1A-4753DE82D9AF/tmp/ui-audit-report.txt

@@ -359,7 +359,7 @@ class CommandBannerView: UIView {
         dismissButton.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-8)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(28)
+            make.width.height.equalTo(44)
         }
 
         titleLabel.snp.makeConstraints { make in
