@@ -53,6 +53,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // 注册推送通知
         registerForPushNotifications(application)
 
+        // 🔥 Support UI Fidelity Testing — show Component Catalog
+        if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self else { return }
+                let catalogVC = ComponentCatalogViewController()
+                let nav = UINavigationController(rootViewController: catalogVC)
+                nav.modalPresentationStyle = .fullScreen
+                self.window?.rootViewController?.present(nav, animated: false)
+            }
+        }
+
         // 🔥 Support automated testing via launch arguments
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
             print("🧪 [AppDelegate] Automated testing triggered via launch argument")

@@ -469,3 +469,206 @@ jobs:
             xcrun simctl delete "$DEVICE_ID" 2>/dev/null || true
             echo "Cleaned up simulator: $DEVICE_ID"
            fi
+
+  ui-fidelity:
+    name: 🎨 UI Fidelity Tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: build
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+
+      - name: Setup Simulator
+        id: sim
+        run: |
+          echo "=== SDK Info ==="
+          xcodebuild -version
+          xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || true
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
+          echo "=== Available runtimes ==="
+          xcrun simctl list runtimes
+          SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+runtimes = data.get('runtimes', [])
+ios = [rt for rt in runtimes if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
+if ios:
+    sdk_ver = '${SDK_VER}'
+    preferred = [rt for rt in ios if rt.get('version', '').startswith(sdk_ver + '.')]
+    if preferred:
+        preferred.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
+        print(preferred[0]['identifier'])
+    else:
+        ios.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
+        for rt in ios:
+            v = rt.get('version', '')
+            major = int(v.split('.')[0]) if v else 99
+            if major <= int(sdk_ver):
+                print(rt['identifier'])
+                break
+        else:
+            print(ios[0]['identifier'])
+else:
+    print('', file=sys.stderr)
+    sys.exit(1)
+" 2>/dev/null || echo "")
+          if [ -z "$RUNTIME" ]; then
+            echo "::warning::No iOS runtime found"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          DEVICE_ID=$(xcrun simctl create "CI-UIFidelity" "iPhone 16 Pro" "$RUNTIME" || echo "")
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::warning::Failed to create simulator"
+            echo "use_simulator=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "Waiting for simulator..."
+          for i in $(seq 1 30); do
+            if xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null; then break; fi
+            sleep 2
+          done
+          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
+          echo "use_simulator=true" >> $GITHUB_OUTPUT
+
+      - name: Skip UI Fidelity (no simulator)
+        if: steps.sim.outputs.use_simulator != 'true'
+        run: |
+          echo "::warning::No simulator available — skipping UI fidelity tests"
+          mkdir -p build/test-results
+          echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="UIFidelityTests" tests="1" failures="0"><testcase name="skipped" classname="UIFidelityTests"/></testsuite></testsuites>' > build/test-results/ui-fidelity-junit.xml
+
+      - name: Run UI Fidelity Tests
+        if: steps.sim.outputs.use_simulator == 'true'
+        run: |
+          set -o pipefail
+          mkdir -p build/screenshots/actual
+          mkdir -p build/test-results
+
+          xcodebuild test \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme SuperApp \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
+            -configuration Debug \
+            -resultBundlePath build/test-results/UIFidelityResults.xcresult \
+            -only-testing:SuperAppUITests/UIFidelityTests \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output build/test-results/ui-fidelity-junit.xml
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p build/screenshots/actual
+          if [ -d "build/test-results/UIFidelityResults.xcresult" ]; then
+            find build/test-results/UIFidelityResults.xcresult -name "*.png" -exec cp {} build/screenshots/actual/ \; 2>/dev/null || true
+          fi
+          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
+          [ -n "$DEVICE_ID" ] && xcrun simctl io "$DEVICE_ID" screenshot build/screenshots/actual/final_state.png || true
+
+      - name: Check Reference Images
+        id: references
+        run: |
+          if [ -d "docs/ui-fidelity/references" ] && [ "$(ls -A docs/ui-fidelity/references/*.png 2>/dev/null)" ]; then
+            echo "has_references=true" >> $GITHUB_OUTPUT
+            echo "Found $(ls docs/ui-fidelity/references/*.png 2>/dev/null | wc -l | tr -d ' ') reference images"
+          else
+            echo "has_references=false" >> $GITHUB_OUTPUT
+            echo "No reference images — will save current as baseline"
+          fi
+
+      - name: Save Baseline Screenshots
+        if: steps.references.outputs.has_references == 'false'
+        run: |
+          mkdir -p docs/ui-fidelity/references
+          if ls build/screenshots/actual/*.png 1>/dev/null 2>&1; then
+            cp build/screenshots/actual/*.png docs/ui-fidelity/references/
+            echo "Saved $(ls docs/ui-fidelity/references/*.png 2>/dev/null | wc -l | tr -d ' ') baseline images"
+          fi
+
+      - name: Run Diff Comparison
+        if: steps.references.outputs.has_references == 'true'
+        run: |
+          chmod +x tools/diff-screenshots.sh
+          OUTPUT_DIR=build/ui-fidelity-diff-report ./tools/diff-screenshots.sh \
+            docs/ui-fidelity/references \
+            build/screenshots/actual \
+            build/ui-fidelity-diff-report \
+            5 || true
+          if [ -f "build/ui-fidelity-diff-report/results.json" ]; then
+            cat build/ui-fidelity-diff-report/results.json
+          fi
+
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-fidelity-screenshots
+          path: build/screenshots/actual/
+          retention-days: 14
+
+      - name: Upload Diff Report
+        if: always() && steps.references.outputs.has_references == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-fidelity-diff-report
+          path: build/ui-fidelity-diff-report/
+          retention-days: 14
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-fidelity-test-results
+          path: build/test-results/UIFidelityResults.xcresult
+          retention-days: 14
+
+      - name: Publish Test Report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: build/test-results/ui-fidelity-junit.xml
+          check_name: "UI Fidelity Test Results"
+
+      - name: Fail on Diff Exceeding Threshold
+        if: steps.references.outputs.has_references == 'true'
+        run: |
+          if [ -f "build/ui-fidelity-diff-report/results.json" ]; then
+            python3 -c "
+import json, sys
+with open('build/ui-fidelity-diff-report/results.json') as f:
+    data = json.load(f)
+failures = [r for r in data.get('results', []) if r.get('status') == 'FAIL']
+if failures:
+    print(f'❌ {len(failures)} screenshot(s) exceeded diff threshold:')
+    for f in failures:
+        print(f'   {f[\"name\"]}: {f[\"diff_percent\"]:.2f}%')
+    sys.exit(1)
+else:
+    print('✅ All screenshots within threshold')
+    sys.exit(0)
+"
+          else:
+            echo "No diff results found, skipping threshold check"
+          fi
+
+      - name: Cleanup Simulator
+        if: always()
+        run: |
+          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
+          if [ -n "$DEVICE_ID" ]; then
+            xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
+            xcrun simctl delete "$DEVICE_ID" 2>/dev/null || true
+          fi
