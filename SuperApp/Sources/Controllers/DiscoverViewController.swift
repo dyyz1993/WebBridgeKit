@@ -356,8 +356,8 @@ class DiscoverSectionHeader: UICollectionReusableView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.textColor = ThemeColors.current.text
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -390,17 +390,25 @@ class DiscoverAppCell: UICollectionViewCell {
     private let cardView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
+        view.layer.cornerRadius = 14
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.08
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 8
+        view.layer.shadowOpacity = 0.06
         return view
+    }()
+
+    private let topRowStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.alignment = .center
+        sv.spacing = 10
+        return sv
     }()
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 22
+        view.layer.cornerRadius = 8
         view.clipsToBounds = true
         return view
     }()
@@ -419,19 +427,33 @@ class DiscoverAppCell: UICollectionViewCell {
         return iv
     }()
 
+    private let textStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .vertical
+        sv.spacing = 2
+        return sv
+    }()
+
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
-        label.textAlignment = .center
+        return label
+    }()
+
+    private let sizeLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 11, weight: .regular)
+        label.textColor = ThemeColors.current.textSecondary
+        label.numberOfLines = 1
         return label
     }()
 
     private let badgeView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = 10
         return view
     }()
 
@@ -442,13 +464,25 @@ class DiscoverAppCell: UICollectionViewCell {
         return label
     }()
 
+    private let bottomRowStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.alignment = .center
+        sv.spacing = 4
+        return sv
+    }()
+
+    private let statusDot: UIView = {
+        let v = UIView()
+        v.layer.cornerRadius = 3
+        return v
+    }()
+
     private let detailLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 11, weight: .regular)
         label.textColor = ThemeColors.current.textSecondary
-        label.textAlignment = .center
         label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -469,71 +503,68 @@ class DiscoverAppCell: UICollectionViewCell {
     private func setupUI() {
         contentView.backgroundColor = .clear
         contentView.addSubview(cardView)
-        cardView.addSubview(iconContainer)
+
         iconContainer.layer.addSublayer(gradientLayer)
         iconContainer.addSubview(iconImageView)
-        cardView.addSubview(nameLabel)
-        cardView.addSubview(badgeView)
+        textStack.addArrangedSubview(nameLabel)
+        textStack.addArrangedSubview(sizeLabel)
         badgeView.addSubview(badgeLabel)
-        cardView.addSubview(detailLabel)
+        bottomRowStack.addArrangedSubview(statusDot)
+        bottomRowStack.addArrangedSubview(detailLabel)
+
+        topRowStack.addArrangedSubview(iconContainer)
+        topRowStack.addArrangedSubview(textStack)
+        topRowStack.addArrangedSubview(badgeView)
+
+        let mainStack = UIStackView(arrangedSubviews: [topRowStack, bottomRowStack])
+        mainStack.axis = .vertical
+        mainStack.spacing = 8
+        cardView.addSubview(mainStack)
 
         cardView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(4)
         }
 
         iconContainer.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.centerX.equalToSuperview()
-            make.width.height.equalTo(44)
+            make.width.height.equalTo(36)
         }
 
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(22)
-        }
-
-        nameLabel.snp.makeConstraints { make in
-            make.top.equalTo(iconContainer.snp.bottom).offset(8)
-            make.leading.equalToSuperview().offset(12)
-            make.trailing.equalToSuperview().offset(-12)
+            make.width.height.equalTo(18)
         }
 
         badgeView.snp.makeConstraints { make in
-            make.top.equalTo(nameLabel.snp.bottom).offset(6)
-            make.centerX.equalToSuperview()
             make.height.equalTo(18)
         }
 
         badgeLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 3, left: 6, bottom: 3, right: 6))
         }
 
-        detailLabel.snp.makeConstraints { make in
-            make.top.equalTo(badgeView.snp.bottom).offset(4)
-            make.leading.equalToSuperview().offset(8)
-            make.trailing.equalToSuperview().offset(-8)
-            make.bottom.equalToSuperview().offset(-12)
+        statusDot.snp.makeConstraints { make in
+            make.width.height.equalTo(6)
+        }
+
+        mainStack.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview().inset(14)
+            make.bottom.lessThanOrEqualToSuperview().offset(-14)
         }
     }
 
     func configure(with item: DiscoverItem) {
         nameLabel.text = item.name
+        sizeLabel.text = item.cacheSize
         badgeLabel.text = item.cacheStatus.displayText
         badgeLabel.textColor = item.cacheStatus.color
         badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(ThemeTokens.Opacity.badge)
 
         let gradient = Self.gradientColors(for: item.name)
         gradientLayer.colors = [gradient.0.cgColor, gradient.1.cgColor]
-        iconImageView.image = Self.icon(for: item.name).image(pointSize: 20)
+        iconImageView.image = Self.icon(for: item.name).image(pointSize: 18)
 
-        var detailParts: [String] = []
-        if !item.cacheSize.isEmpty && item.cacheSize != "0 bytes" {
-            detailParts.append(item.cacheSize)
-        }
-        if let accessed = item.lastAccessed {
-            detailParts.append(accessed)
-        }
-        detailLabel.text = detailParts.isEmpty ? nil : detailParts.joined(separator: " · ")
+        statusDot.backgroundColor = item.cacheStatus.color
+        detailLabel.text = item.cacheStatus.displayText
     }
 
     private static let gradients: [(UIColor, UIColor)] = [

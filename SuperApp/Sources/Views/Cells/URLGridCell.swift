@@ -9,24 +9,24 @@ class URLGridCell: UICollectionViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = 14
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 8
-        view.layer.shadowOpacity = 0.06
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.08
         return view
     }()
 
     private let iconContainer: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 22
+        v.layer.cornerRadius = 11
         v.layer.masksToBounds = true
         return v
     }()
 
     private let iconGradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
-        layer.cornerRadius = 22
+        layer.cornerRadius = 11
         layer.startPoint = CGPoint(x: 0, y: 0)
         layer.endPoint = CGPoint(x: 1, y: 1)
         return layer
@@ -131,9 +131,9 @@ class URLGridCell: UICollectionViewCell {
         }
 
         iconContainer.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.left.equalToSuperview().offset(12)
-            make.width.height.equalTo(44)
+            make.top.equalToSuperview().offset(14)
+            make.left.equalToSuperview().offset(14)
+            make.width.height.equalTo(42)
         }
 
         faviconImageView.snp.makeConstraints { make in

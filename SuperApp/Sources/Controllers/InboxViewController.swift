@@ -84,14 +84,18 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     private let fabButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(LucideIcon.bell.image(pointSize: 24, weight: .semibold), for: .normal)
+        button.setImage(LucideIcon.send.image(pointSize: 16, weight: .semibold), for: .normal)
+        button.setTitle("Send Test", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.backgroundColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
         button.tintColor = .white
-        button.layer.cornerRadius = 28
+        button.layer.cornerRadius = 25
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: 4)
         button.layer.shadowRadius = 8
         button.layer.shadowOpacity = 0.30
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
         return button
     }()
 
@@ -113,14 +117,15 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
 
-        let checkmarkBtn = UIBarButtonItem(
-            image: LucideIcon.check.templateImage(pointSize: 18, weight: .medium),
+        let clearAllBtn = UIBarButtonItem(
+            title: "Clear All",
             style: .plain,
             target: nil,
             action: nil
         )
-        checkmarkBtn.tintColor = ThemeColors.current.primary
-        navigationItem.rightBarButtonItem = checkmarkBtn
+        clearAllBtn.tintColor = ThemeTokens.Colors.Light.error
+        clearAllBtn.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 13, weight: .semibold)], for: .normal)
+        navigationItem.rightBarButtonItem = clearAllBtn
 
         setupFilterPills()
 
@@ -173,7 +178,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         fabButton.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-20)
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
-            make.width.height.equalTo(56)
+            make.height.equalTo(50)
         }
 
         emptyStateView.configure(
@@ -499,7 +504,7 @@ class InboxMessageCell: UITableViewCell {
 
     private let unreadDot: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
+        view.backgroundColor = UIColor(red: 1.0, green: 0.231, blue: 0.188, alpha: 1.0)
         view.layer.cornerRadius = 5
         return view
     }()
@@ -549,6 +554,14 @@ class InboxMessageCell: UITableViewCell {
         return label
     }()
 
+    private let chevronImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.chevronRight.image(pointSize: 16, weight: .medium)
+        iv.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
@@ -570,6 +583,7 @@ class InboxMessageCell: UITableViewCell {
         sourceContainer.addSubview(sourceLabel)
         cardView.addSubview(timeLabel)
         cardView.addSubview(bodyLabel)
+        cardView.addSubview(chevronImageView)
 
         cardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(2)
@@ -578,13 +592,13 @@ class InboxMessageCell: UITableViewCell {
         }
 
         unreadDot.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
-            make.centerY.equalTo(titleLabel)
+            make.top.equalToSuperview().offset(12)
+            make.trailing.equalToSuperview().offset(-12)
             make.width.height.equalTo(10)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(30)
+            make.leading.equalToSuperview().offset(12)
             make.top.equalToSuperview().offset(12)
             make.trailing.lessThanOrEqualTo(dateLabel.snp.leading).offset(-8)
         }
@@ -610,10 +624,16 @@ class InboxMessageCell: UITableViewCell {
         }
 
         bodyLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(30)
-            make.trailing.equalToSuperview().offset(-12)
+            make.leading.equalToSuperview().offset(12)
+            make.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
             make.top.equalTo(sourceContainer.snp.bottom).offset(4)
             make.bottom.equalToSuperview().offset(-12)
+        }
+
+        chevronImageView.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-12)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(16)
         }
     }
 

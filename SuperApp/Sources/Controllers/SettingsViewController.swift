@@ -50,8 +50,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         let footerLabel = UILabel()
         footerLabel.text = "WebBridgeKit v\(version) (Build \(build))"
-        footerLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        footerLabel.textColor = ThemeColors.current.textSecondary
+        footerLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        footerLabel.textColor = ThemeTokens.Colors.Light.textTertiary
         footerLabel.textAlignment = .center
         footerLabel.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: 44)
         tableView.tableFooterView = footerLabel

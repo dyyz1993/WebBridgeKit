@@ -6,8 +6,8 @@ import WebBridgeKit
 
 private enum MainSection: Int, CaseIterable {
     case pushToken = 0
-    case quickActions = 1
-    case appGrid = 2
+    case appGrid = 1
+    case quickActions = 2
 }
 
 class MainViewController: BaseViewController<MainViewModel> {
@@ -22,20 +22,12 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private let loadingView = LoadingView()
 
-    private let storageLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = ThemeTokens.Colors.Light.textSecondary
-        label.textAlignment = .center
-        return label
-    }()
-
-    private let storagePillView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ThemeTokens.Colors.Light.background
-        view.layer.cornerRadius = 12
-        view.clipsToBounds = true
-        return view
+    private lazy var trashButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setImage(LucideIcon.trash.image(pointSize: 18, weight: .semibold), for: .normal)
+        btn.tintColor = ThemeTokens.Colors.Light.textSecondary
+        btn.addTarget(self, action: #selector(clearCacheTapped), for: .touchUpInside)
+        return btn
     }()
 
     private let pushTokenCardCellId = "PushTokenCardCell"
@@ -63,8 +55,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     private let quickActions: [(icon: String, title: String, color: UIColor)] = [
         ("qrcode.viewfinder", L10n.tr("home.quick_action.scan"), UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)),
         ("doc.on.clipboard", L10n.tr("home.quick_action.paste"), UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0)),
-        ("key.fill", L10n.tr("home.quick_action.token"), UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1.0)),
-        ("ladybug", L10n.tr("home.quick_action.debug"), UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: 1.0))
+        ("tray", L10n.tr("home.quick_action.inbox"), UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1.0))
     ]
 
     private lazy var commandBanner: CommandBannerView = {
@@ -339,13 +330,8 @@ class MainViewController: BaseViewController<MainViewModel> {
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
-        let storageItem = UIBarButtonItem(customView: storagePillView)
+        let storageItem = UIBarButtonItem(customView: trashButton)
         navigationItem.rightBarButtonItems = [storageItem]
-
-        storagePillView.addSubview(storageLabel)
-        storageLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10))
-        }
 
         emptyStateView.configure(
             icon: "square.grid.2x2.fill",
@@ -527,8 +513,8 @@ class MainViewController: BaseViewController<MainViewModel> {
             .disposed(by: rx)
 
         viewModel.totalStorageSizeRelay
-            .asDriver()
-            .drive(storageLabel.rx.text)
+            .asDriver(onErrorJustReturn: "")
+            .drive()
             .disposed(by: rx)
     }
 
@@ -605,16 +591,19 @@ class MainViewController: BaseViewController<MainViewModel> {
         present(alert, animated: true)
     }
 
+    @objc private func clearCacheTapped() {
+        WebCacheManager.shared.clearAll()
+        viewModel.refreshData()
+    }
+
     private func handleQuickAction(index: Int) {
         switch index {
         case 0: openScanner()
         case 1: CommandHandler.shared.checkClipboardOnForeground()
         case 2:
-            let vc = TokenGenerateViewController(viewModel: TokenGenerateViewModel())
-            navigationController?.pushViewController(vc, animated: true)
-        case 3:
-            let vc = NotificationDebugViewController()
-            navigationController?.pushViewController(vc, animated: true)
+            if let tabBarController = self.tabBarController {
+                tabBarController.selectedIndex = 1
+            }
         default: break
         }
     }

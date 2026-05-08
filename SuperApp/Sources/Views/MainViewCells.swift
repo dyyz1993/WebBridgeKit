@@ -8,11 +8,11 @@ class PushTokenCardCell: UICollectionViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = 14
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 8
-        view.layer.shadowOpacity = 0.06
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.08
         return view
     }()
 
@@ -178,7 +178,7 @@ class QuickActionCell: UICollectionViewCell {
         let sv = UIStackView()
         sv.axis = .horizontal
         sv.distribution = .fillEqually
-        sv.spacing = 0
+        sv.spacing = 12
         return sv
     }()
 
@@ -201,23 +201,34 @@ class QuickActionCell: UICollectionViewCell {
     private func setupUI() {
         contentView.addSubview(stackView)
         stackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16))
         }
     }
 
     func configure(actions: [(icon: String, title: String, color: UIColor)]) {
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         for (index, action) in actions.enumerated() {
-            let btn = createActionButton(icon: action.icon, title: action.title, color: action.color)
-            btn.tag = index
-            btn.addTarget(self, action: #selector(actionTapped(_:)), for: .touchUpInside)
-            stackView.addArrangedSubview(btn)
+            let card = createActionCard(icon: action.icon, title: action.title, color: action.color)
+            card.tag = index
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(cardTapped(_:)))
+            card.addGestureRecognizer(tapGesture)
+            stackView.addArrangedSubview(card)
         }
     }
 
-    private func createActionButton(icon: String, title: String, color: UIColor) -> UIButton {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .clear
+    private func createActionCard(icon: String, title: String, color: UIColor) -> UIView {
+        let card = UIView()
+        card.backgroundColor = ThemeColors.current.cardBackground
+        card.layer.cornerRadius = 14
+        card.layer.shadowColor = UIColor.black.cgColor
+        card.layer.shadowOffset = CGSize(width: 0, height: 2)
+        card.layer.shadowRadius = 8
+        card.layer.shadowOpacity = 0.06
+
+        let circleBg = UIView()
+        circleBg.backgroundColor = color
+        circleBg.layer.cornerRadius = 21
+        circleBg.clipsToBounds = true
 
         let iconView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
@@ -225,43 +236,41 @@ class QuickActionCell: UICollectionViewCell {
         iconView.tintColor = .white
         iconView.contentMode = .scaleAspectFit
 
-        let circleBg = UIView()
-        circleBg.backgroundColor = color
-        circleBg.layer.cornerRadius = 24
-        circleBg.clipsToBounds = true
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        titleLabel.textColor = ThemeTokens.Colors.Light.textSecondary
+        titleLabel.textAlignment = .center
+
+        let innerStack = UIStackView(arrangedSubviews: [circleBg, titleLabel])
+        innerStack.axis = .vertical
+        innerStack.alignment = .center
+        innerStack.spacing = 6
+
+        card.addSubview(innerStack)
         circleBg.addSubview(iconView)
+
+        innerStack.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.top.greaterThanOrEqualToSuperview().offset(8)
+            make.bottom.lessThanOrEqualToSuperview().offset(-8)
+        }
+
+        circleBg.snp.makeConstraints { make in
+            make.width.height.equalTo(42)
+        }
+
         iconView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.width.height.equalTo(20)
         }
 
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 11, weight: .regular)
-        titleLabel.textColor = ThemeTokens.Colors.Light.textSecondary
-        titleLabel.textAlignment = .center
-
-        let stack = UIStackView(arrangedSubviews: [circleBg, titleLabel])
-        stack.axis = .vertical
-        stack.alignment = .center
-        stack.spacing = 6
-        stack.isUserInteractionEnabled = false
-
-        button.addSubview(stack)
-
-        stack.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-
-        circleBg.snp.makeConstraints { make in
-            make.width.height.equalTo(48)
-        }
-
-        return button
+        return card
     }
 
-    @objc private func actionTapped(_ sender: UIButton) {
-        onActionTapped?(sender.tag)
+    @objc private func cardTapped(_ gesture: UITapGestureRecognizer) {
+        guard let card = gesture.view else { return }
+        onActionTapped?(card.tag)
     }
 }
 
@@ -270,8 +279,8 @@ class SectionHeaderView: UICollectionReusableView {
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .bold)
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = ThemeTokens.Colors.Light.textSecondary
         return label
     }()
 
