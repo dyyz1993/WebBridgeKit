@@ -41,7 +41,7 @@ public class WebSystemInfoHandler: BaseWebNativeHandler {
             "screenWidth": Int(screen.bounds.width),
             "screenHeight": Int(screen.bounds.height),
             "scale": screen.scale,
-            "batteryLevel": Int(device.batteryLevel * 100),
+            "batteryLevel": max(0, Int(device.batteryLevel * 100)),
             "batteryState": batteryStateString(device.batteryState),
             "preferredLanguage": Locale.preferredLanguages.first ?? "",
             "locale": Locale.current.identifier,

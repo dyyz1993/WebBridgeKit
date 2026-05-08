@@ -21,16 +21,26 @@ public class WebOpenSettingsHandler: BaseWebNativeHandler {
     ///   - completion: 结果回调
     public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         runOnMainThread {
-            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(settingsUrl) { success in
-                    if success {
-                        self.resolve(["opened": true], completion: completion)
-                    } else {
-                        self.reject(error: "Failed to open settings", completion: completion)
-                    }
-                }
-            } else {
+            guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
                 self.reject(error: "Unable to open settings URL", completion: completion)
+                return
+            }
+
+            var completed = false
+            UIApplication.shared.open(settingsUrl) { success in
+                guard !completed else { return }
+                completed = true
+                if success {
+                    self.resolve(["opened": true], completion: completion)
+                } else {
+                    self.reject(error: "Failed to open settings", completion: completion)
+                }
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                guard !completed else { return }
+                completed = true
+                self.resolve(["opened": true], completion: completion)
             }
         }
     }

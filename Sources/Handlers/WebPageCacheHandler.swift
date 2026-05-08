@@ -588,7 +588,7 @@ public class WebPageCacheHandler: BaseWebNativeHandler {
 
             case "clear":
                 PageCacheManager.shared.clearCache()
-                resolve(completion: completion)
+                resolve(["cleared": true], completion: completion)
 
             case "getInfo":
                 let info = PageCacheManager.shared.getCacheInfo()
