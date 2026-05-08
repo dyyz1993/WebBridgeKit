@@ -369,5 +369,40 @@
     "parentID": "ses_1fa0d9705ffeCbquRy07GLLO0d",
     "status": "running",
     "createdAt": 1778216413002
+  },
+  "task-migrate-msgdetail": {
+    "id": "ses_1f9fa2290ffenABtgfKoG3MQOp",
+    "name": "task-migrate-msgdetail",
+    "parentID": "ses_1f9fcfb32ffeV7l3A5PaR6G6L1",
+    "status": "running",
+    "createdAt": 1778217508227
+  },
+  "task-migrate-tokenmanage": {
+    "id": "ses_1f9fa207effeFBop4ZEIPJJMnH",
+    "name": "task-migrate-tokenmanage",
+    "parentID": "ses_1f9fcfb32ffeV7l3A5PaR6G6L1",
+    "status": "running",
+    "createdAt": 1778217508748
+  },
+  "task-migrate-notifdebug": {
+    "id": "ses_1f9fa1da7ffeBVCkrwSUqwgVLn",
+    "name": "task-migrate-notifdebug",
+    "parentID": "ses_1f9fcfb32ffeV7l3A5PaR6G6L1",
+    "status": "running",
+    "createdAt": 1778217509468
+  },
+  "task-migrate-about": {
+    "id": "ses_1f9fa1c33ffekluf7K3W1R3PnP",
+    "name": "task-migrate-about",
+    "parentID": "ses_1f9fcfb32ffeV7l3A5PaR6G6L1",
+    "status": "running",
+    "createdAt": 1778217509836
+  },
+  "task-migrate-views": {
+    "id": "ses_1f9fa1aa5ffeAtJZtyiTCZwb40",
+    "name": "task-migrate-views",
+    "parentID": "ses_1f9fcfb32ffeV7l3A5PaR6G6L1",
+    "status": "running",
+    "createdAt": 1778217510239
   }
 }

@@ -46,18 +46,19 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             config.baseForegroundColor = .white
             let button = UIButton(configuration: config)
             button.backgroundColor = ThemeColors.current.primary
-            button.layer.cornerRadius = 10
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            button.titleLabel?.font = ThemeTokens.Typography.subheadline
+            button.tintColor = .white
             return button
         } else {
             let button = UIButton(type: .system)
             button.setImage(LucideIcon.copy.image(pointSize: 16), for: .normal)
             button.setTitle(L10n.tr("common.copy"), for: .normal)
             button.backgroundColor = ThemeColors.current.primary
-            button.layer.cornerRadius = 10
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            button.titleLabel?.font = ThemeTokens.Typography.subheadline
             button.tintColor = .white
             return button
         }
@@ -71,19 +72,20 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             config.imagePadding = 4
             config.baseForegroundColor = .white
             let button = UIButton(configuration: config)
-            button.backgroundColor = .systemGray
-            button.layer.cornerRadius = 10
+            button.backgroundColor = ThemeColors.current.surface
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            button.titleLabel?.font = ThemeTokens.Typography.subheadline
+            button.tintColor = .white
             return button
         } else {
             let button = UIButton(type: .system)
             button.setImage(LucideIcon.share.image(pointSize: 16), for: .normal)
             button.setTitle(L10n.tr("common.share"), for: .normal)
-            button.backgroundColor = .systemGray
-            button.layer.cornerRadius = 10
+            button.backgroundColor = ThemeColors.current.surface
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+            button.titleLabel?.font = ThemeTokens.Typography.subheadline
             button.tintColor = .white
             return button
         }
@@ -93,7 +95,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let qrImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.layer.cornerRadius = 8
+        iv.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         iv.layer.masksToBounds = true
         return iv
     }()
@@ -111,7 +113,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let statsCard = TokenManageViewController.makeCard()
     private let statsLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.font = ThemeTokens.Typography.body
         label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         return label
@@ -120,13 +122,13 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private static func makeCard() -> UIView {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }
 
     private static func makeCardHeader(_ text: String) -> UILabel {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeColors.current.textSecondary
         label.text = text
         return label

@@ -23,9 +23,9 @@ public class WebViewDisplayViewController: UIViewController {
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("webview.close"), for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        button.backgroundColor = UIColor.systemBackground
-        button.layer.cornerRadius = 20
+        button.titleLabel?.font = ThemeTokens.Typography.callout
+        button.backgroundColor = ThemeColors.current.background
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOpacity = 0.3
         button.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -38,11 +38,11 @@ public class WebViewDisplayViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("webview.render_label")
-        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.font = ThemeTokens.Typography.subheadline
         label.textColor = .white
         label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
         label.textAlignment = .center
-        label.layer.cornerRadius = 8
+        label.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         label.layer.masksToBounds = true
         return label
     }()
@@ -68,7 +68,7 @@ public class WebViewDisplayViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeColors.current.background
         view.accessibilityIdentifier = "WebViewDisplayViewController"
 
         setupUI()

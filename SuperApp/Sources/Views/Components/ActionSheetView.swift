@@ -25,15 +25,14 @@ class ActionSheetView: UIView {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.background
-        view.layer.cornerRadius = 16
-        view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         return label
@@ -49,7 +48,7 @@ class ActionSheetView: UIView {
 
     private let cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .regular)
+        button.titleLabel?.font = ThemeTokens.Typography.title3
         button.backgroundColor = ThemeColors.current.background
         return button
     }()
@@ -137,7 +136,7 @@ class ActionSheetView: UIView {
         // 添加新的按钮
         for action in actions {
             let button = UIButton(type: .system)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .regular)
+            button.titleLabel?.font = ThemeTokens.Typography.title3
             button.backgroundColor = ThemeColors.current.background
             button.setTitle(action.title, for: .normal)
             button.tag = actions.firstIndex(where: { $0.title == action.title }) ?? 0

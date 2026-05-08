@@ -38,7 +38,7 @@ class FavoriteCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail

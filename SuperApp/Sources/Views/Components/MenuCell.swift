@@ -27,7 +27,7 @@ class MenuCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -38,13 +38,13 @@ class MenuCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.image = LucideIcon.chevronRight.templateImage(pointSize: 12)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.tertiaryLabel
+        imageView.tintColor = ThemeTokens.Colors.Light.textTertiary
         return imageView
     }()
 
     private let valueLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .right
         label.numberOfLines = 1
@@ -76,7 +76,7 @@ class MenuCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .default
-        backgroundColor = UIColor.systemBackground
+        backgroundColor = ThemeColors.current.background
 
         contentView.addSubview(iconImageView)
         contentView.addSubview(titleLabel)

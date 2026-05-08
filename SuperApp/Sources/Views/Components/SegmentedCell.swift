@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 分段控件列表项单元格
 class SegmentedCell: UITableViewCell {
@@ -18,8 +19,8 @@ class SegmentedCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = UIColor.label
+        label.font = ThemeTokens.Typography.callout
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
@@ -50,7 +51,7 @@ class SegmentedCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = UIColor.systemBackground
+        backgroundColor = ThemeColors.current.background
 
         contentView.addSubview(titleLabel)
         contentView.addSubview(segmentedControl)

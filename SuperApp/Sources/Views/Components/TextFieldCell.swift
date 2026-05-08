@@ -20,14 +20,14 @@ class TextFieldCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = UIColor.label
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
     private let textField: UITextField = {
         let field = UITextField()
         field.font = ThemeTokens.Typography.subheadline
-        field.textColor = UIColor.label
+        field.textColor = ThemeColors.current.text
         field.clearButtonMode = .whileEditing
         field.borderStyle = .none
         return field
@@ -67,7 +67,7 @@ class TextFieldCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = UIColor.systemBackground
+        backgroundColor = ThemeColors.current.background
 
         contentView.addSubview(titleLabel)
         contentView.addSubview(textField)
@@ -113,8 +113,8 @@ class TextFieldCell: UITableViewCell {
         textField.isEnabled = enabled
 
         // Update appearance based on enabled state
-        titleLabel.textColor = enabled ? UIColor.label : UIColor.secondaryLabel
-        textField.textColor = enabled ? UIColor.label : UIColor.secondaryLabel
+        titleLabel.textColor = enabled ? ThemeColors.current.text : ThemeColors.current.textSecondary
+        textField.textColor = enabled ? ThemeColors.current.text : ThemeColors.current.textSecondary
 
         // Update error state
         if let error = error, !error.isEmpty {

@@ -62,7 +62,7 @@ class URLInputView: UIView {
     let cacheButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("discover.action_sheet.cache"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        button.titleLabel?.font = ThemeTokens.Typography.callout
         button.backgroundColor = ThemeTokens.Colors.Light.primary
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md

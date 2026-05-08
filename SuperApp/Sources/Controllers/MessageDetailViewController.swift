@@ -29,16 +29,16 @@ class MessageDetailViewController: UIViewController {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 22, weight: .bold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.title2
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 0
         return label
     }()
 
     private let bodyLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         return label
     }()
@@ -46,7 +46,7 @@ class MessageDetailViewController: UIViewController {
     private let metaCard: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return view
     }()
 
@@ -172,14 +172,14 @@ class MessageDetailViewController: UIViewController {
         let container = UIView()
         let labelLabel = UILabel()
         labelLabel.text = label
-        labelLabel.font = .systemFont(ofSize: 13, weight: .medium)
-        labelLabel.textColor = .tertiaryLabel
+        labelLabel.font = ThemeTokens.Typography.footnote
+        labelLabel.textColor = ThemeTokens.Colors.Light.textTertiary
         labelLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         let valueLabel = UILabel()
         valueLabel.text = value
-        valueLabel.font = .systemFont(ofSize: 13)
-        valueLabel.textColor = .secondaryLabel
+        valueLabel.font = ThemeTokens.Typography.footnote
+        valueLabel.textColor = ThemeColors.current.textSecondary
         valueLabel.numberOfLines = 0
 
         container.addSubview(labelLabel)
@@ -220,7 +220,7 @@ class MessageDetailViewController: UIViewController {
             }
         }
         button.contentHorizontalAlignment = .leading
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.clipsToBounds = true
         button.backgroundColor = ThemeColors.current.cardBackground
 

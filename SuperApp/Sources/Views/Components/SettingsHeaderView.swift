@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 设置页面头部视图
 class SettingsHeaderView: UIView {
@@ -17,30 +18,30 @@ class SettingsHeaderView: UIView {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemBlue
+        imageView.tintColor = ThemeColors.current.primary
         return imageView
     }()
 
     private let appNameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
-        label.textColor = UIColor.label
+        label.font = ThemeTokens.Typography.title3
+        label.textColor = ThemeColors.current.text
         label.textAlignment = .center
         return label
     }()
 
     private let versionLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         return label
     }()
 
     private let deviceIDTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        label.textColor = UIColor.tertiaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.text = "设备 ID"
         label.textAlignment = .center
         return label
@@ -49,7 +50,7 @@ class SettingsHeaderView: UIView {
     private let deviceIDLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
         label.adjustsFontSizeToFitWidth = true
@@ -62,7 +63,7 @@ class SettingsHeaderView: UIView {
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let image = UIImage(systemName: "doc.on.doc", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = UIColor.systemBlue
+        button.tintColor = ThemeColors.current.primary
         return button
     }()
 
@@ -91,7 +92,7 @@ class SettingsHeaderView: UIView {
     // MARK: - Setup
 
     private func setupUI() {
-        backgroundColor = UIColor.systemBackground
+        backgroundColor = ThemeColors.current.background
 
         addSubview(iconImageView)
         addSubview(appNameLabel)

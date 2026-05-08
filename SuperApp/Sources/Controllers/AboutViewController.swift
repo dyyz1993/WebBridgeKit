@@ -18,7 +18,7 @@ class AboutViewController: UIViewController {
     /// 顶部容器视图
     private let headerContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeColors.current.background
         return view
     }()
 
@@ -37,8 +37,8 @@ class AboutViewController: UIViewController {
     private let appNameLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.title3
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
@@ -46,15 +46,15 @@ class AboutViewController: UIViewController {
     private let versionLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeColors.current.textSecondary
         return label
     }()
 
     /// TableView
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
-        tableView.backgroundColor = .systemGroupedBackground
+        tableView.backgroundColor = ThemeColors.current.background
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
@@ -66,8 +66,8 @@ class AboutViewController: UIViewController {
     private let footerLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = .tertiaryLabel
+        label.font = ThemeTokens.Typography.caption2
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
         label.numberOfLines = 0
         label.text = "WebBridgeKit © 2025"
         return label
@@ -142,7 +142,7 @@ class AboutViewController: UIViewController {
     // MARK: - Setup UI
 
     private func setupUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         // 添加子视图
         view.addSubview(headerContainerView)
@@ -196,7 +196,7 @@ class AboutViewController: UIViewController {
             // 如果无法获取 App 图标，使用系统图标
             let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
             appIconImageView.image = UIImage(systemName: "app.fill", withConfiguration: config)
-            appIconImageView.tintColor = .systemBlue
+                appIconImageView.tintColor = ThemeColors.current.primary
         }
 
         // 加载 App 名称
@@ -223,9 +223,9 @@ class AboutViewController: UIViewController {
         let attributedString = NSAttributedString(
             string: mitLicenseText,
             attributes: [
-                .font: UIFont.systemFont(ofSize: 11, weight: .regular),
+                .font: ThemeTokens.Typography.caption2,
                 .paragraphStyle: paragraphStyle,
-                .foregroundColor: UIColor.label
+                .foregroundColor: ThemeColors.current.text
             ]
         )
 
@@ -270,25 +270,25 @@ extension AboutViewController: UITableViewDataSource {
 
         var content = cell.defaultContentConfiguration()
         content.text = item
-        content.textProperties.font = UIFont.systemFont(ofSize: 15, weight: .regular)
-        content.textProperties.numberOfLines = 0
+            content.textProperties.font = ThemeTokens.Typography.callout
+            content.textProperties.numberOfLines = 0
 
-        switch section {
+            switch section {
         case .introduction:
-            content.textProperties.color = .secondaryLabel
+            content.textProperties.color = ThemeColors.current.textSecondary
             content.textProperties.alignment = .natural
             cell.selectionStyle = .none
             cell.accessoryType = .none
         case .features:
-            content.textProperties.color = .label
+            content.textProperties.color = ThemeColors.current.text
             cell.selectionStyle = .none
             cell.accessoryType = .none
         case .license:
-            content.textProperties.color = .systemBlue
+            content.textProperties.color = ThemeColors.current.primary
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
         case .feedback:
-            content.textProperties.color = .systemBlue
+            content.textProperties.color = ThemeColors.current.primary
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
         }

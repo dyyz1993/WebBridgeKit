@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebBridgeKit
 
 /// 按钮列表项单元格
 class ButtonCell: UITableViewCell {
@@ -31,17 +32,17 @@ class ButtonCell: UITableViewCell {
 
         var color: UIColor {
             switch self {
-            case .test: return UIColor.systemBlue
-            case .save: return UIColor.systemGreen
-            case .reset: return UIColor.systemRed
+            case .test: return ThemeColors.current.primary
+            case .save: return ThemeTokens.Colors.Light.success
+            case .reset: return ThemeTokens.Colors.Light.error
             }
         }
 
         var backgroundColor: UIColor {
             switch self {
-            case .test: return UIColor.systemBlue.withAlphaComponent(0.1)
-            case .save: return UIColor.systemGreen.withAlphaComponent(0.1)
-            case .reset: return UIColor.systemRed.withAlphaComponent(0.1)
+            case .test: return ThemeColors.current.primary.withAlphaComponent(0.1)
+            case .save: return ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
+            case .reset: return ThemeTokens.Colors.Light.error.withAlphaComponent(0.1)
             }
         }
     }
@@ -50,8 +51,8 @@ class ButtonCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = UIColor.label
+        label.font = ThemeTokens.Typography.callout
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
@@ -65,8 +66,8 @@ class ButtonCell: UITableViewCell {
             button = UIButton(type: .system)
             button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         }
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.layer.cornerRadius = 8
+        button.titleLabel?.font = ThemeTokens.Typography.callout
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.clipsToBounds = true
         return button
     }()
@@ -91,7 +92,7 @@ class ButtonCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = UIColor.systemBackground
+        backgroundColor = ThemeColors.current.background
 
         contentView.addSubview(titleLabel)
         contentView.addSubview(actionButton)
@@ -123,8 +124,8 @@ class ButtonCell: UITableViewCell {
             actionButton.setTitleColor(buttonType.color, for: .normal)
             actionButton.backgroundColor = buttonType.backgroundColor
         } else {
-            actionButton.setTitleColor(UIColor.tertiaryLabel, for: .normal)
-            actionButton.backgroundColor = UIColor.quaternarySystemFill
+            actionButton.setTitleColor(ThemeTokens.Colors.Light.textTertiary, for: .normal)
+            actionButton.backgroundColor = ThemeColors.current.surface
         }
     }
 
@@ -146,8 +147,8 @@ class ButtonCell: UITableViewCell {
             actionButton.setTitleColor(buttonType.color, for: .normal)
             actionButton.backgroundColor = buttonType.backgroundColor
         } else {
-            actionButton.setTitleColor(UIColor.tertiaryLabel, for: .normal)
-            actionButton.backgroundColor = UIColor.quaternarySystemFill
+            actionButton.setTitleColor(ThemeTokens.Colors.Light.textTertiary, for: .normal)
+            actionButton.backgroundColor = ThemeColors.current.surface
         }
     }
 

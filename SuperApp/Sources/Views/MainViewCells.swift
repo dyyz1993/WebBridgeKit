@@ -17,25 +17,25 @@ class PushTokenCardCell: UICollectionViewCell {
     private let gradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
         layer.colors = [
-            UIColor.systemBlue.withAlphaComponent(0.8).cgColor,
-            UIColor.systemPurple.withAlphaComponent(0.8).cgColor
+            ThemeColors.current.primary.withAlphaComponent(0.8).cgColor,
+            ThemeTokens.Colors.Light.primary.withAlphaComponent(0.6).cgColor
         ]
         layer.startPoint = CGPoint(x: 0, y: 0)
         layer.endPoint = CGPoint(x: 1, y: 1)
-        layer.cornerRadius = 16
+        layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return layer
     }()
 
     private let containerView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = .white.withAlphaComponent(0.9)
         label.text = "Push Token"
         return label
@@ -65,7 +65,7 @@ class PushTokenCardCell: UICollectionViewCell {
         button.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: config), for: .normal)
         button.tintColor = .white
         button.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        button.layer.cornerRadius = 16
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return button
     }()
 
@@ -75,7 +75,7 @@ class PushTokenCardCell: UICollectionViewCell {
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.tintColor = .white
         button.backgroundColor = UIColor.white.withAlphaComponent(0.25)
-        button.layer.cornerRadius = 14
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         button.isHidden = true
         return button
     }()
@@ -222,8 +222,8 @@ class QuickActionCell: UICollectionViewCell {
 
     private func createActionButton(icon: String, title: String, color: UIColor) -> UIButton {
         let button = UIButton(type: .system)
-        button.backgroundColor = .secondarySystemGroupedBackground
-        button.layer.cornerRadius = 12
+        button.backgroundColor = ThemeColors.current.cardBackground
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
 
         let iconView = UIImageView()
         iconView.image = UIImage(systemName: icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .medium))
@@ -232,7 +232,7 @@ class QuickActionCell: UICollectionViewCell {
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+        titleLabel.font = ThemeTokens.Typography.caption2
         titleLabel.textColor = color
         titleLabel.textAlignment = .center
 
@@ -266,15 +266,15 @@ class SectionHeaderView: UICollectionReusableView {
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.title3
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
     private let indicatorView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBlue
-        view.layer.cornerRadius = 2
+        view.backgroundColor = ThemeColors.current.primary
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         return view
     }()
 
@@ -309,7 +309,7 @@ class CommandBannerView: UIView {
     private let iconView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .systemBlue
+        iv.tintColor = ThemeColors.current.primary
         let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
         iv.image = UIImage(systemName: "link.badge.plus", withConfiguration: config)
         return iv
@@ -317,8 +317,8 @@ class CommandBannerView: UIView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.subheadline
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -328,7 +328,7 @@ class CommandBannerView: UIView {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
         button.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
-        button.tintColor = .secondaryLabel
+        button.tintColor = ThemeTokens.Colors.Light.textTertiary
         return button
     }()
 
@@ -342,8 +342,8 @@ class CommandBannerView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-        layer.cornerRadius = 10
+        backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+        layer.cornerRadius = ThemeTokens.CornerRadius.sm
         clipsToBounds = true
 
         addSubview(iconView)

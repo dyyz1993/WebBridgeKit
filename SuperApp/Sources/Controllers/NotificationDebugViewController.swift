@@ -42,10 +42,10 @@ class NotificationDebugViewController: UIViewController {
     private let subtitleInput = makeTextField(placeholder: L10n.tr("notif_debug.field.subtitle"))
     private let bodyInput: UITextView = {
         let tv = UITextView()
-        tv.font = UIFont.systemFont(ofSize: 14)
+        tv.font = ThemeTokens.Typography.body
         tv.layer.borderColor = UIColor.separator.cgColor
         tv.layer.borderWidth = 1
-        tv.layer.cornerRadius = 8
+        tv.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         tv.heightAnchor.constraint(equalToConstant: 80).isActive = true
         return tv
     }()
@@ -70,7 +70,7 @@ class NotificationDebugViewController: UIViewController {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.layer.cornerRadius = 8
-        iv.backgroundColor = .tertiarySystemGroupedBackground
+        iv.backgroundColor = ThemeColors.current.surface
         return iv
     }()
 
@@ -85,7 +85,7 @@ class NotificationDebugViewController: UIViewController {
     private let sendButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle(L10n.tr("notif_debug.button.send"), for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        btn.titleLabel?.font = ThemeTokens.Typography.title3
         btn.backgroundColor = ThemeColors.current.primary
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = 12
@@ -98,7 +98,7 @@ class NotificationDebugViewController: UIViewController {
         tv.isEditable = false
         tv.layer.borderColor = UIColor.separator.cgColor
         tv.layer.borderWidth = 1
-        tv.layer.cornerRadius = 8
+        tv.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         tv.heightAnchor.constraint(equalToConstant: 120).isActive = true
         tv.text = L10n.tr("notif_debug.waiting")
         tv.textColor = .secondaryLabel
@@ -111,7 +111,7 @@ class NotificationDebugViewController: UIViewController {
     private static func makeTextField(placeholder: String) -> UITextField {
         let tf = UITextField()
         tf.placeholder = placeholder
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = ThemeTokens.Typography.body
         tf.borderStyle = .roundedRect
         tf.heightAnchor.constraint(equalToConstant: 36).isActive = true
         return tf
@@ -198,11 +198,11 @@ class NotificationDebugViewController: UIViewController {
     private func addSection(title: String, views: [UIView]) {
         let card = UIView()
         card.backgroundColor = ThemeColors.current.cardBackground
-        card.layer.cornerRadius = 16
+        card.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let header = UILabel()
-        header.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        header.textColor = .secondaryLabel
+        header.font = ThemeTokens.Typography.footnote
+        header.textColor = ThemeColors.current.textSecondary
         header.text = title
 
         let stack = UIStackView(arrangedSubviews: views)
@@ -228,8 +228,8 @@ class NotificationDebugViewController: UIViewController {
     private func makeRow(label: String, view: UIView) -> UIStackView {
         let lbl = UILabel()
         lbl.text = label
-        lbl.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        lbl.textColor = .label
+        lbl.font = ThemeTokens.Typography.subheadline
+        lbl.textColor = ThemeColors.current.text
         lbl.setContentHuggingPriority(.required, for: .horizontal)
         lbl.widthAnchor.constraint(equalToConstant: 72).isActive = true
 
@@ -243,8 +243,8 @@ class NotificationDebugViewController: UIViewController {
     private func makeVerticalRow(label: String, view: UIView) -> UIStackView {
         let lbl = UILabel()
         lbl.text = label
-        lbl.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        lbl.textColor = .label
+        lbl.font = ThemeTokens.Typography.subheadline
+        lbl.textColor = ThemeColors.current.text
 
         let row = UIStackView(arrangedSubviews: [lbl, view])
         row.axis = .vertical
@@ -275,8 +275,8 @@ class NotificationDebugViewController: UIViewController {
             for j in i..<min(i + 2, templateDisplayNames.count) {
                 let btn = UIButton(type: .system)
                 btn.setTitle(templateDisplayNames[j], for: .normal)
-                btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
-                btn.layer.cornerRadius = 8
+                btn.titleLabel?.font = ThemeTokens.Typography.footnote
+                btn.layer.cornerRadius = ThemeTokens.CornerRadius.sm
                 btn.layer.borderWidth = 1
                 btn.layer.borderColor = ThemeColors.current.primary.cgColor
                 btn.tag = j
@@ -366,7 +366,7 @@ class NotificationDebugViewController: UIViewController {
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         guard !key.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_key")
-            responseView.textColor = .systemRed
+            responseView.textColor = ThemeTokens.Colors.Light.error
             return
         }
 
@@ -374,7 +374,7 @@ class NotificationDebugViewController: UIViewController {
         let body = bodyInput.text ?? ""
         guard !title.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_title")
-            responseView.textColor = .systemRed
+            responseView.textColor = ThemeTokens.Colors.Light.error
             return
         }
 
@@ -429,7 +429,7 @@ class NotificationDebugViewController: UIViewController {
 
         guard let requestURL = URL(string: path) else {
             responseView.text = L10n.tr("notif_debug.error_url_failed")
-            responseView.textColor = .systemRed
+            responseView.textColor = ThemeTokens.Colors.Light.error
             return
         }
 
@@ -445,7 +445,7 @@ class NotificationDebugViewController: UIViewController {
     private func sendPOST(params: NotificationParams) {
         guard let requestURL = URL(string: "\(params.server)/\(params.key)") else {
             responseView.text = L10n.tr("notif_debug.error_url_failed")
-            responseView.textColor = .systemRed
+            responseView.textColor = ThemeTokens.Colors.Light.error
             return
         }
 
@@ -484,7 +484,7 @@ class NotificationDebugViewController: UIViewController {
     private func handleResponse(data: Data?, response: URLResponse?, error: Error?, elapsed: String) {
         if let error = error {
             responseView.text = L10n.tr("notif_debug.error_request_failed_format", elapsed, error.localizedDescription)
-            responseView.textColor = .systemRed
+            responseView.textColor = ThemeTokens.Colors.Light.error
             return
         }
 
@@ -493,10 +493,10 @@ class NotificationDebugViewController: UIViewController {
 
         if (200...299).contains(statusCode) {
             responseView.text = L10n.tr("notif_debug.success_format", elapsed, "\(statusCode)", bodyStr)
-            responseView.textColor = .systemGreen
+            responseView.textColor = ThemeTokens.Colors.Light.success
         } else {
             responseView.text = L10n.tr("notif_debug.error_request_failed_format", elapsed, "HTTP \(statusCode)\n\n\(bodyStr)")
-            responseView.textColor = .systemRed
+            responseView.textColor = ThemeTokens.Colors.Light.error
         }
     }
 }
