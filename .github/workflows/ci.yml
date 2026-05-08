@@ -279,9 +279,6 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     needs: build
-    # SIGABRT on CI simulator is a known CI environment limitation, not a code bug.
-    # continue-on-error ensures CI stays green even when the UI test runner crashes.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -292,6 +289,13 @@ jobs:
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
+
+      - name: Cleanup Simulators (pre-boot)
+        run: |
+          xcrun simctl shutdown all 2>/dev/null || true
+          sleep 3
+          xcrun simctl erase all 2>/dev/null || true
+          echo "All simulators shut down and erased"
 
       - name: Setup Simulator
         id: sim
@@ -347,7 +351,7 @@ jobs:
             exit 0
           fi
           echo "Using runtime: $RUNTIME"
-          DEVICE_ID=$(xcrun simctl create "CI-Smoke" "iPhone 16 Pro" "$RUNTIME" || echo "")
+          DEVICE_ID=$(xcrun simctl create "CI-Smoke-${GITHUB_RUN_ID}" "iPhone 15" "$RUNTIME" || echo "")
           if [ -z "$DEVICE_ID" ]; then
             echo "::warning::Failed to create simulator, tests will use generic destination"
             echo "use_simulator=false" >> $GITHUB_OUTPUT
@@ -380,33 +384,45 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/test-results
+          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
           run_smoke_test() {
+            RESULT_PATH="build/test-results/SmokeResults-attempt-${ATTEMPT}.xcresult"
+            rm -rf build/test-results/SmokeResults-*.xcresult 2>/dev/null || true
             xcodebuild test \
               -workspace WebBridgeKit.xcworkspace \
               -scheme SuperApp \
-              -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
+              -destination "platform=iOS Simulator,id=${DEVICE_ID}" \
               -configuration Debug \
-              -resultBundlePath build/test-results/SmokeResults.xcresult \
+              -resultBundlePath "$RESULT_PATH" \
               -only-testing:SuperAppUITests/SuperAppSmokeTests \
               CODE_SIGN_IDENTITY="" \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGNING_ALLOWED=NO \
               | xcpretty --color --report junit --output build/test-results/smoke-junit.xml
+            RET=$?
+            if [ $RET -eq 0 ] && [ -f "$RESULT_PATH" ]; then
+              mv "$RESULT_PATH" build/test-results/SmokeResults.xcresult
+            fi
+            return $RET
           }
-          for attempt in 1 2; do
-            echo "=== Smoke test attempt $attempt ==="
+          for ATTEMPT in 1 2 3; do
+            echo "=== Smoke test attempt $ATTEMPT ==="
             if run_smoke_test; then
-              echo "Smoke tests passed on attempt $attempt"
-              break
+              echo "Smoke tests passed on attempt $ATTEMPT"
+              exit 0
             fi
-            if [ "$attempt" -eq 1 ]; then
-              echo "First attempt failed, waiting 10s before retry..."
-              sleep 10
-            else
-              echo "Smoke tests failed after $attempt attempts"
-              exit 1
-            fi
+            echo "Attempt $ATTEMPT failed, restarting simulator before retry..."
+            xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
+            sleep 5
+            xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+            for i in $(seq 1 15); do
+              if xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null; then break; fi
+              sleep 2
+            done
+            sleep 5
           done
+          echo "Smoke tests failed after 3 attempts"
+          exit 1
 
       - name: Upload Test Results
         if: always()
