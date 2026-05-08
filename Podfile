@@ -43,6 +43,14 @@ target 'WebBridgeKit' do
     inherit! :complete
   end
 
+  target 'HandlerTests-Part1' do
+    inherit! :complete
+  end
+
+  target 'HandlerTests-Part2' do
+    inherit! :complete
+  end
+
   target 'BridgeTests' do
     inherit! :complete
   end

@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master, develop]
 
+permissions:
+  contents: read
+  checks: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
@@ -168,6 +172,8 @@ jobs:
             exit 0
           fi
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "Waiting for simulator to be fully ready..."
+          xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null || true
           echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
           echo "use_simulator=true" >> $GITHUB_OUTPUT
           echo "Simulator ready: $DEVICE_ID (runtime: $RUNTIME)"
@@ -348,6 +354,14 @@ jobs:
             exit 0
           fi
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "Waiting for simulator to be fully ready..."
+          for i in $(seq 1 30); do
+            if xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null; then
+              break
+            fi
+            echo "  Attempt $i/30: waiting for boot..."
+            sleep 2
+          done
           echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
           echo "use_simulator=true" >> $GITHUB_OUTPUT
           echo "Simulator ready: $DEVICE_ID (runtime: $RUNTIME)"
@@ -366,17 +380,33 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/test-results
-          xcodebuild test \
-            -workspace WebBridgeKit.xcworkspace \
-            -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
-            -configuration Debug \
-            -resultBundlePath build/test-results/SmokeResults.xcresult \
-            -only-testing:SuperAppUITests/SuperAppSmokeTests \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output build/test-results/smoke-junit.xml
+          run_smoke_test() {
+            xcodebuild test \
+              -workspace WebBridgeKit.xcworkspace \
+              -scheme SuperApp \
+              -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
+              -configuration Debug \
+              -resultBundlePath build/test-results/SmokeResults.xcresult \
+              -only-testing:SuperAppUITests/SuperAppSmokeTests \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              | xcpretty --color --report junit --output build/test-results/smoke-junit.xml
+          }
+          for attempt in 1 2; do
+            echo "=== Smoke test attempt $attempt ==="
+            if run_smoke_test; then
+              echo "Smoke tests passed on attempt $attempt"
+              break
+            fi
+            if [ "$attempt" -eq 1 ]; then
+              echo "First attempt failed, waiting 10s before retry..."
+              sleep 10
+            else
+              echo "Smoke tests failed after $attempt attempts"
+              exit 1
+            fi
+          done
 
       - name: Upload Test Results
         if: always()
