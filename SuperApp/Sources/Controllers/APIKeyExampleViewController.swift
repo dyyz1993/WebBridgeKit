@@ -17,41 +17,41 @@ class APIKeyExampleViewController: UIViewController {
 
     // MARK: - Properties
 
-    private let examples = [
+    private let examples: [CodeExample] = [
         CodeExample(
-            title: L10n.tr("apikey.example.bark_basic"),
+            title: NSLocalizedString("apikey.example.bark_basic", tableName: "Localizable", bundle: .main, value: "Bark 基础推送", comment: ""),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit
             """,
-            description: L10n.tr("apikey.example.bark_basic_desc")
+            description: NSLocalizedString("apikey.example.bark_basic_desc", tableName: "Localizable", bundle: .main, value: "最简单的推送方式，只需拼接 URL 即可发送通知", comment: "")
         ),
         CodeExample(
-            title: L10n.tr("apikey.example.bark_autocopy"),
+            title: NSLocalizedString("apikey.example.bark_autocopy", tableName: "Localizable", bundle: .main, value: "自动复制推送", comment: ""),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/复制测试?copy=测试内容&autoCopy=1
             """,
-            description: L10n.tr("apikey.example.bark_autocopy_desc")
+            description: NSLocalizedString("apikey.example.bark_autocopy_desc", tableName: "Localizable", bundle: .main, value: "推送到达后自动复制指定内容到剪贴板", comment: "")
         ),
         CodeExample(
-            title: L10n.tr("apikey.example.bark_critical"),
+            title: NSLocalizedString("apikey.example.bark_critical", tableName: "Localizable", bundle: .main, value: "严重警告推送", comment: ""),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/严重警告?level=critical&volume=5
             """,
-            description: L10n.tr("apikey.example.bark_critical_desc")
+            description: NSLocalizedString("apikey.example.bark_critical_desc", tableName: "Localizable", bundle: .main, value: "使用时区和重要性级别发送紧急通知", comment: "")
         ),
         CodeExample(
-            title: L10n.tr("apikey.example.bark_icon"),
+            title: NSLocalizedString("apikey.example.bark_icon", tableName: "Localizable", bundle: .main, value: "自定义图标推送", comment: ""),
             language: "URL",
             code: """
             https://api.day.app/YOUR_KEY_HERE/图标测试?icon=https://day.app/assets/images/avatar.jpg&badge=1
             """,
-            description: L10n.tr("apikey.example.bark_icon_desc")
+            description: NSLocalizedString("apikey.example.bark_icon_desc", tableName: "Localizable", bundle: .main, value: "自定义推送图标和角标", comment: "")
         ),
         CodeExample(
-            title: L10n.tr("apikey.example.swift_integration"),
+            title: NSLocalizedString("apikey.example.swift_integration", tableName: "Localizable", bundle: .main, value: "Swift 集成示例", comment: ""),
             language: "Swift",
             code: """
             import Alamofire
@@ -62,16 +62,16 @@ class APIKeyExampleViewController: UIViewController {
                     // 处理响应
                 }
             """,
-            description: L10n.tr("apikey.example.swift_integration_desc")
+            description: NSLocalizedString("apikey.example.swift_integration_desc", tableName: "Localizable", bundle: .main, value: "在 Swift 中使用 API Key 调用接口", comment: "")
         ),
         CodeExample(
-            title: L10n.tr("apikey.example.curl"),
+            title: NSLocalizedString("apikey.example.curl", tableName: "Localizable", bundle: .main, value: "cURL 示例", comment: ""),
             language: "Bash",
             code: """
             curl -H "X-API-Key: YOUR_KEY_HERE" \\
                  https://api.webbridgekit.com/v1/pages
             """,
-            description: L10n.tr("apikey.example.curl_desc")
+            description: NSLocalizedString("apikey.example.curl_desc", tableName: "Localizable", bundle: .main, value: "使用 cURL 命令行调用 API", comment: "")
         )
     ]
 
@@ -86,7 +86,7 @@ class APIKeyExampleViewController: UIViewController {
         label.font = .systemFont(ofSize: 15, weight: .regular)
         label.textColor = .secondaryLabel
         label.numberOfLines = 0
-        label.text = L10n.tr("apikey.example.header")
+        label.text = NSLocalizedString("apikey.example.header", tableName: "Localizable", bundle: .main, value: "以下是使用 API 密钥的各种示例，点击可复制代码", comment: "")
         return label
     }()
 
@@ -96,7 +96,7 @@ class APIKeyExampleViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = L10n.tr("apikey.example.title")
+        title = NSLocalizedString("apikey.example.title", tableName: "Localizable", bundle: .main, value: "API 密钥使用示例", comment: "")
         setupUI()
         bindData()
     }
@@ -115,7 +115,6 @@ class APIKeyExampleViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
 
-        // 设置 header
         let headerSize = headerLabel.sizeThatFits(CGSize(width: view.bounds.width - 32, height: .greatestFiniteMagnitude))
         headerLabel.frame = CGRect(x: 16, y: 16, width: view.bounds.width - 32, height: headerSize.height)
 
@@ -138,12 +137,15 @@ class APIKeyExampleViewController: UIViewController {
         guard index >= 0 && index < examples.count else { return }
         let example = examples[index]
         UIPasteboard.general.string = example.code
-        showAlert(title: L10n.tr("apikey.example.copied_title"), message: L10n.tr("apikey.example.copied_message"))
+        showAlert(
+            title: NSLocalizedString("apikey.example.copied_title", tableName: "Localizable", bundle: .main, value: "已复制", comment: ""),
+            message: NSLocalizedString("apikey.example.copied_message", tableName: "Localizable", bundle: .main, value: "代码已复制到剪贴板", comment: "")
+        )
     }
 
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", tableName: "Localizable", bundle: .main, value: "确定", comment: ""), style: .default))
         present(alert, animated: true)
     }
 }
@@ -166,7 +168,6 @@ extension APIKeyExampleViewController: UITableViewDataSource {
         let example = examples[indexPath.row]
         cell.configure(with: example)
 
-        // 设置复制按钮回调
         cell.onCopyTapped = { [weak self] in
             self?.copyExample(at: indexPath.row)
         }
