@@ -28,7 +28,13 @@ class DiscoverViewController: UIViewController {
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.dateFormat = "MM-dd HH:mm"
+        f.dateFormat = "MM-dd"
+        return f
+    }()
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
         return f
     }()
 
@@ -48,6 +54,13 @@ class DiscoverViewController: UIViewController {
         view.backgroundColor = ThemeColors.current.background
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: LucideIcon.refresh.image(pointSize: 20),
+            style: .plain,
+            target: self,
+            action: #selector(refreshData)
+        )
 
         let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, _ in
             guard let self = self else { return nil }
@@ -90,14 +103,14 @@ class DiscoverViewController: UIViewController {
     private func createSectionLayout(section: Int) -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(0.5),
-            heightDimension: .estimated(140)
+            heightDimension: .estimated(150)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         item.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)
 
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(140)
+            heightDimension: .estimated(150)
         )
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item, item])
 
@@ -354,7 +367,7 @@ class DiscoverSectionHeader: UICollectionReusableView {
         super.init(frame: frame)
         addSubview(titleLabel)
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(8)
+            make.leading.equalToSuperview().offset(20)
             make.centerY.equalToSuperview()
         }
     }
@@ -378,35 +391,40 @@ class DiscoverAppCell: UICollectionViewCell {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.08
         return view
     }()
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.xxl
+        view.layer.cornerRadius = 22
+        view.clipsToBounds = true
         return view
     }()
 
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = ThemeTokens.Colors.Light.primary
+        iv.tintColor = ThemeColors.current.primary
         return iv
     }()
 
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
+        label.font = .systemFont(ofSize: 16, weight: .bold)
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
+        label.textAlignment = .center
         return label
     }()
 
     private let badgeView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        view.layer.cornerRadius = 4
         return view
     }()
 
@@ -451,7 +469,7 @@ class DiscoverAppCell: UICollectionViewCell {
         }
 
         iconContainer.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16)
+            make.top.equalToSuperview().offset(14)
             make.centerX.equalToSuperview()
             make.width.height.equalTo(44)
         }
@@ -474,14 +492,14 @@ class DiscoverAppCell: UICollectionViewCell {
         }
 
         badgeLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 6, bottom: 0, right: 6))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
         }
 
         detailLabel.snp.makeConstraints { make in
             make.top.equalTo(badgeView.snp.bottom).offset(4)
             make.leading.equalToSuperview().offset(8)
             make.trailing.equalToSuperview().offset(-8)
-            make.bottom.equalToSuperview().offset(-8)
+            make.bottom.equalToSuperview().offset(-14)
         }
     }
 
@@ -491,6 +509,11 @@ class DiscoverAppCell: UICollectionViewCell {
         badgeLabel.textColor = item.cacheStatus.color
         badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(ThemeTokens.Opacity.badge)
 
+        let colors = Self.gradientColor(for: item.name)
+        iconContainer.backgroundColor = colors.bg
+        iconImageView.tintColor = colors.tint
+        iconImageView.image = LucideIcon.globe.image(pointSize: 20)
+
         var detailParts: [String] = []
         if !item.cacheSize.isEmpty && item.cacheSize != "0 bytes" {
             detailParts.append(item.cacheSize)
@@ -499,23 +522,18 @@ class DiscoverAppCell: UICollectionViewCell {
             detailParts.append(accessed)
         }
         detailLabel.text = detailParts.isEmpty ? nil : detailParts.joined(separator: " · ")
+    }
 
-        if let url = URL(string: item.url), let host = url.host {
-            let iconImage: UIImage
-            if host.contains("github") {
-                iconImage = UIImage(systemName: "chevron.left.forwardslash.chevron.right")!
-                iconContainer.backgroundColor = UIColor.systemPurple.withAlphaComponent(ThemeTokens.Opacity.badge)
-                iconImageView.tintColor = .systemPurple
-            } else if host.contains("doc") || host.contains("docs") {
-                iconImage = UIImage(systemName: "doc.text.fill")!
-                iconContainer.backgroundColor = ThemeTokens.Colors.Light.warning.withAlphaComponent(ThemeTokens.Opacity.badge)
-                iconImageView.tintColor = ThemeTokens.Colors.Light.warning
-            } else {
-                iconImage = UIImage(systemName: "globe")!
-                iconContainer.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
-                iconImageView.tintColor = ThemeTokens.Colors.Light.primary
-            }
-            iconImageView.image = iconImage
-        }
+    private static func gradientColor(for name: String) -> (bg: UIColor, tint: UIColor) {
+        let hash = abs(name.hashValue)
+        let colors: [(UIColor, UIColor)] = [
+            (UIColor(red: 0, green: 0.478, blue: 1, alpha: 0.1), UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)),
+            (UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 0.1), UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 1)),
+            (UIColor(red: 1, green: 0.584, blue: 0, alpha: 0.1), UIColor(red: 1, green: 0.584, blue: 0, alpha: 1)),
+            (UIColor(red: 0.204, green: 0.78, blue: 0.349, alpha: 0.1), UIColor(red: 0.204, green: 0.78, blue: 0.349, alpha: 1)),
+            (UIColor(red: 1, green: 0.231, blue: 0.188, alpha: 0.1), UIColor(red: 1, green: 0.231, blue: 0.188, alpha: 1)),
+            (UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 0.1), UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 1)),
+        ]
+        return colors[hash % colors.count]
     }
 }

@@ -48,11 +48,14 @@ class SettingsViewModel: ViewModel {
     }
 
     struct SettingsItem {
-        let icon: String
+        let icon: String?
+        let lucideIcon: LucideIcon?
         let title: String
         let action: SettingsAction
         var value: String?
         var showArrow: Bool = true
+        var iconBackgroundColor: UIColor?
+        var iconTintColor: UIColor?
     }
 
     struct SettingsSection {
@@ -60,32 +63,137 @@ class SettingsViewModel: ViewModel {
         let items: [SettingsItem]
     }
 
+    private static func makeColor(_ base: UIColor, alpha: CGFloat = 0.1) -> UIColor { base.withAlphaComponent(alpha) }
+
     let sections: [SettingsSection] = {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
+        let pb = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
+        let pt = ThemeTokens.Colors.Light.primary
+        let eb = ThemeTokens.Colors.Light.error.withAlphaComponent(0.1)
+        let et = ThemeTokens.Colors.Light.error
+        let sb = ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
+        let st = ThemeTokens.Colors.Light.success
+        let wb = ThemeTokens.Colors.Light.warning.withAlphaComponent(0.1)
+        let wt = ThemeTokens.Colors.Light.warning
+        let pubg = UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 0.1)
+        let put = UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 1)
+        let skb = UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 0.1)
+        let skt = UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 1)
+        let seb = ThemeTokens.Colors.Light.secondary.withAlphaComponent(0.1)
+        let set_ = ThemeTokens.Colors.Light.secondary
+
         return [
             SettingsSection(header: L10n.tr("settings.section.server"), items: [
-                SettingsItem(icon: "server.rack", title: L10n.tr("settings.server.config"), action: .serverConfig),
-                SettingsItem(icon: "key", title: L10n.tr("settings.key.manage"), action: .apiKeyManage)
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .server,
+                    title: L10n.tr("settings.server.config"),
+                    action: .serverConfig,
+                    iconBackgroundColor: pb,
+                    iconTintColor: pt
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .key,
+                    title: L10n.tr("settings.key.manage"),
+                    action: .apiKeyManage,
+                    iconBackgroundColor: pb,
+                    iconTintColor: pt
+                )
             ]),
             SettingsSection(header: L10n.tr("settings.section.notification"), items: [
-                SettingsItem(icon: "bell", title: L10n.tr("settings.notification.settings"), action: .notificationSettings),
-                SettingsItem(icon: "text.command", title: L10n.tr("settings.token.manage"), action: .tokenManage)
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .bell,
+                    title: L10n.tr("settings.notification.settings"),
+                    action: .notificationSettings,
+                    iconBackgroundColor: eb,
+                    iconTintColor: et
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .terminal,
+                    title: L10n.tr("settings.token.manage"),
+                    action: .tokenManage,
+                    iconBackgroundColor: pubg,
+                    iconTintColor: put
+                )
             ]),
             SettingsSection(header: L10n.tr("settings.section.cache"), items: [
-                SettingsItem(icon: "archivebox", title: L10n.tr("settings.cache.manage"), action: .management),
-                SettingsItem(icon: "trash", title: L10n.tr("settings.cache.clear"), action: .clearCache, showArrow: false)
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .hardDrive,
+                    title: L10n.tr("settings.cache.manage"),
+                    action: .management,
+                    iconBackgroundColor: sb,
+                    iconTintColor: st
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .trash,
+                    title: L10n.tr("settings.cache.clear"),
+                    action: .clearCache,
+                    showArrow: false,
+                    iconBackgroundColor: eb,
+                    iconTintColor: et
+                )
             ]),
             SettingsSection(header: L10n.tr("settings.section.developer"), items: [
-                SettingsItem(icon: "ladybug", title: L10n.tr("settings.debug.panel"), action: .debugPanel),
-                SettingsItem(icon: "paintbrush", title: L10n.tr("settings.debug.ui"), action: .uiDebug),
-                SettingsItem(icon: "square.grid.2x2", title: "框架展示", action: .showcase),
-                SettingsItem(icon: "magnifyingglass", title: "UI Audit", action: .uiAudit, showArrow: false)
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .bug,
+                    title: L10n.tr("settings.debug.panel"),
+                    action: .debugPanel,
+                    iconBackgroundColor: wb,
+                    iconTintColor: wt
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .edit,
+                    title: L10n.tr("settings.debug.ui"),
+                    action: .uiDebug,
+                    iconBackgroundColor: sb,
+                    iconTintColor: st
+                ),
+                SettingsItem(
+                    icon: "square.grid.2x2",
+                    lucideIcon: nil,
+                    title: "框架展示",
+                    action: .showcase,
+                    iconBackgroundColor: skb,
+                    iconTintColor: skt
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .search,
+                    title: "UI 审查",
+                    action: .uiAudit,
+                    showArrow: false,
+                    iconBackgroundColor: seb,
+                    iconTintColor: set_
+                )
             ]),
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
-                SettingsItem(icon: "info.circle", title: L10n.tr("settings.about"), action: .about),
-                SettingsItem(icon: "number", title: L10n.tr("settings.version"), action: .versionInfo, value: "v\(version) (\(build))", showArrow: false)
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .info,
+                    title: L10n.tr("settings.about"),
+                    action: .about,
+                    iconBackgroundColor: pb,
+                    iconTintColor: pt
+                ),
+                SettingsItem(
+                    icon: "number",
+                    lucideIcon: nil,
+                    title: L10n.tr("settings.version"),
+                    action: .versionInfo,
+                    value: "v\(version) (\(build))",
+                    showArrow: false,
+                    iconBackgroundColor: seb,
+                    iconTintColor: set_
+                )
             ])
         ]
     }()

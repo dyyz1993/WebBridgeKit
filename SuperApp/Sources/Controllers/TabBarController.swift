@@ -101,25 +101,25 @@ class TabBarController: UITabBarController {
 
         mainVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.home"),
-            image: UIImage(systemName: "house"),
+            image: LucideIcon.home.templateImage(pointSize: 20),
             selectedImage: LucideIcon.home.image(pointSize: 20)
         )
 
         inboxVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.inbox"),
-            image: UIImage(systemName: "tray"),
+            image: LucideIcon.inbox.templateImage(pointSize: 20),
             selectedImage: LucideIcon.inbox.image(pointSize: 20)
         )
 
         discoverVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.discover"),
-            image: UIImage(systemName: "compass"),
+            image: LucideIcon.compass.templateImage(pointSize: 20),
             selectedImage: LucideIcon.compass.image(pointSize: 20)
         )
 
         settingsVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.settings"),
-            image: UIImage(systemName: "gearshape"),
+            image: LucideIcon.settings.templateImage(pointSize: 20),
             selectedImage: LucideIcon.settings.image(pointSize: 20)
         )
 
@@ -132,12 +132,14 @@ class TabBarController: UITabBarController {
     }
 
     private func setupAppearance() {
-        tabBar.backgroundColor = ThemeColors.current.tabBarBackground
-        tabBar.barTintColor = ThemeColors.current.tabBarBackground
+        tabBar.isTranslucent = true
+        tabBar.unselectedItemTintColor = ThemeColors.current.textSecondary
+        tabBar.tintColor = ThemeColors.current.primary
 
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
+            appearance.configureWithTransparentBackground()
+            appearance.backgroundEffect = UIBlurEffect(style: .systemChromeMaterial)
             tabBar.standardAppearance = appearance
             tabBar.scrollEdgeAppearance = appearance
         }

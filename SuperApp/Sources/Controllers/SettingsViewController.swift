@@ -19,8 +19,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         table.backgroundColor = ThemeColors.current.background
         table.register(MenuCell.self, forCellReuseIdentifier: MenuCell.identifier)
         table.separatorStyle = .singleLine
-        table.separatorInset = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 0)
-        table.tableFooterView = UIView()
+        table.separatorInset = UIEdgeInsets(top: 0, left: 58, bottom: 0, right: 0)
         table.delegate = self
         table.dataSource = self
         return table
@@ -32,6 +31,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         super.viewDidLoad()
         title = L10n.tr("settings.title")
         setupUI()
+        setupVersionFooter()
     }
 
     private func setupUI() {
@@ -43,6 +43,18 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         view.accessibilityIdentifier = "SettingsViewController"
         tableView.accessibilityIdentifier = "settings.tableView"
         tableView.accessibilityLabel = "Settings Table View"
+    }
+
+    private func setupVersionFooter() {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        let footerLabel = UILabel()
+        footerLabel.text = "WebBridgeKit v\(version) (Build \(build))"
+        footerLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        footerLabel.textColor = ThemeColors.current.textSecondary
+        footerLabel.textAlignment = .center
+        footerLabel.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: 44)
+        tableView.tableFooterView = footerLabel
     }
 
     override func bindViewModel() {
@@ -184,7 +196,15 @@ extension SettingsViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MenuCell.identifier, for: indexPath) as! MenuCell
         let item = viewModel.sections[indexPath.section].items[indexPath.row]
-        cell.configure(icon: item.icon, title: item.title, value: item.value, showArrow: item.showArrow)
+        cell.configure(
+            icon: item.icon,
+            title: item.title,
+            value: item.value,
+            showArrow: item.showArrow,
+            iconBackgroundColor: item.iconBackgroundColor,
+            iconTintColor: item.iconTintColor,
+            lucideIcon: item.lucideIcon
+        )
         cell.accessibilityIdentifier = "settings.cell.\(item.action.rawValue)"
         return cell
     }
@@ -195,6 +215,13 @@ extension SettingsViewController: UITableViewDataSource {
 }
 
 extension SettingsViewController: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+        guard let header = view as? UITableViewHeaderFooterView else { return }
+        header.textLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
+        header.textLabel?.textColor = ThemeColors.current.textSecondary
+        header.textLabel?.text = header.textLabel?.text?.uppercased()
+    }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)

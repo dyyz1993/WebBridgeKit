@@ -33,11 +33,34 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         return rc
     }()
 
-    private let searchController: UISearchController = {
-        let sc = UISearchController(searchResultsController: nil)
-        sc.obscuresBackgroundDuringPresentation = false
-        sc.searchBar.placeholder = L10n.tr("inbox.search.placeholder")
-        return sc
+    private let searchBarContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 8
+        view.layer.shadowOpacity = 0.06
+        return view
+    }()
+
+    private let searchIconImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.search.image(pointSize: 18)
+        iv.tintColor = ThemeColors.current.textSecondary
+        return iv
+    }()
+
+    private let searchTextField: UITextField = {
+        let tf = UITextField()
+        tf.font = .systemFont(ofSize: 16)
+        tf.textColor = ThemeColors.current.text
+        tf.returnKeyType = .search
+        tf.attributedPlaceholder = NSAttributedString(
+            string: L10n.tr("inbox.search.placeholder"),
+            attributes: [.foregroundColor: ThemeColors.current.textSecondary]
+        )
+        return tf
     }()
 
     private let filterStackView: UIStackView = {
@@ -88,27 +111,47 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
 
-        navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = false
-
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: LucideIcon.check.image(pointSize: 20),
+            title: L10n.tr("inbox.clear_all"),
             style: .plain,
             target: nil,
             action: nil
         )
+        navigationItem.rightBarButtonItem?.tintColor = ThemeColors.current.error
 
         setupFilterPills()
 
         tableView.refreshControl = refreshControl
 
+        view.addSubview(searchBarContainer)
+        searchBarContainer.addSubview(searchIconImageView)
+        searchBarContainer.addSubview(searchTextField)
         view.addSubview(filterStackView)
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
         view.addSubview(fabButton)
 
-        filterStackView.snp.makeConstraints { make in
+        searchBarContainer.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+            make.height.equalTo(40)
+        }
+
+        searchIconImageView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(12)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(18)
+        }
+
+        searchTextField.snp.makeConstraints { make in
+            make.leading.equalTo(searchIconImageView.snp.trailing).offset(8)
+            make.trailing.equalToSuperview().offset(-12)
+            make.centerY.equalToSuperview()
+        }
+
+        filterStackView.snp.makeConstraints { make in
+            make.top.equalTo(searchBarContainer.snp.bottom).offset(12)
             make.leading.equalToSuperview().offset(16)
             make.trailing.lessThanOrEqualToSuperview().offset(-16)
             make.height.greaterThanOrEqualTo(36)
@@ -218,7 +261,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             refresh: Driver.merge(
                 rx.methodInvoked(#selector(UIViewController.viewWillAppear(_:))).map { _ in () }.asDriver(onErrorJustReturn: ())
             ),
-            searchTextChanged: searchController.searchBar.rx.text.orEmpty.asDriver(onErrorJustReturn: ""),
+            searchTextChanged: searchTextField.rx.text.orEmpty.asDriver(onErrorJustReturn: ""),
             filterSelected: filterRelay.asDriver(onErrorJustReturn: .all),
             itemSelect: tableView.rx.itemSelected.asDriver(onErrorDriveWith: .empty()),
             deleteItem: PublishRelay<IndexPath>().asDriver(onErrorJustReturn: IndexPath(row: 0, section: 0)),
@@ -301,7 +344,8 @@ extension InboxViewController: UITableViewDataSource {
         ) as! InboxGroupHeaderCell
         header.configure(
             title: viewModel.groupHeaderTitle(section),
-            isExpanded: viewModel.isGroupExpanded(section)
+            isExpanded: viewModel.isGroupExpanded(section),
+            hasUnread: viewModel.groupHasUnread(section)
         )
         header.onTap = { [weak self] in
             guard let self = self else { return }
@@ -357,8 +401,8 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.subheadline
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = .systemFont(ofSize: 15, weight: .semibold)
+        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -366,8 +410,8 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     private let chevronImageView: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(systemName: "chevron.down")
-        iv.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iv.image = LucideIcon.chevronDown.templateImage(pointSize: 16)
+        iv.tintColor = ThemeColors.current.textSecondary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -406,10 +450,12 @@ class InboxGroupHeaderCell: UITableViewCell {
         }
     }
 
-    func configure(title: String, isExpanded: Bool) {
+    func configure(title: String, isExpanded: Bool, hasUnread: Bool = false) {
         titleLabel.text = title
-        let imageName = isExpanded ? "chevron.down" : "chevron.right"
-        chevronImageView.image = UIImage(systemName: imageName)
+        titleLabel.font = hasUnread ? .systemFont(ofSize: 15, weight: .bold) : .systemFont(ofSize: 15, weight: .semibold)
+        chevronImageView.image = isExpanded
+            ? LucideIcon.chevronDown.templateImage(pointSize: 16)
+            : UIImage(systemName: "chevron.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
     }
 
     @objc private func handleTap() {
@@ -427,20 +473,51 @@ class InboxMessageCell: UITableViewCell {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 8
+        view.layer.shadowOpacity = 0.06
         return view
+    }()
+
+    private let unreadDot: UIView = {
+        let view = UIView()
+        view.backgroundColor = ThemeColors.current.primary
+        view.layer.cornerRadius = 5
+        view.isHidden = true
+        return view
+    }()
+
+    private let contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 4
+        return stack
+    }()
+
+    private let sourceBadgeContainer: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 4
+        view.clipsToBounds = true
+        return view
+    }()
+
+    private let sourceLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 10, weight: .bold)
+        label.numberOfLines = 1
+        return label
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         return label
     }()
 
     private let bodyLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
+        label.font = .systemFont(ofSize: 14)
         label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 2
         return label
@@ -448,27 +525,10 @@ class InboxMessageCell: UITableViewCell {
 
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
-        label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
-        return label
-    }()
-
-    private let unreadDot: UIView = {
-        let view = UIView()
-        view.backgroundColor = ThemeColors.current.primary
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
-        view.isHidden = true
-        return view
-    }()
-
-    private let sourceLabel: UILabel = {
-        let label = UILabel()
-        label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeColors.current.primary
-        label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
+        label.font = .systemFont(ofSize: 11)
+        label.textColor = ThemeColors.current.textSecondary.withAlphaComponent(0.6)
+        label.textAlignment = .right
+        label.numberOfLines = 2
         return label
     }()
 
@@ -487,10 +547,13 @@ class InboxMessageCell: UITableViewCell {
 
         contentView.addSubview(cardView)
         cardView.addSubview(unreadDot)
-        cardView.addSubview(titleLabel)
-        cardView.addSubview(bodyLabel)
+        cardView.addSubview(contentStack)
         cardView.addSubview(timeLabel)
-        cardView.addSubview(sourceLabel)
+        
+        contentStack.addArrangedSubview(sourceBadgeContainer)
+        sourceBadgeContainer.addSubview(sourceLabel)
+        contentStack.addArrangedSubview(titleLabel)
+        contentStack.addArrangedSubview(bodyLabel)
 
         cardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(4)
@@ -505,27 +568,21 @@ class InboxMessageCell: UITableViewCell {
             make.width.height.equalTo(10)
         }
 
-        titleLabel.snp.makeConstraints { make in
+        contentStack.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
-            make.leading.equalTo(unreadDot.snp.trailing).offset(8)
-            make.trailing.equalToSuperview().offset(-12)
+            make.leading.equalTo(unreadDot.snp.trailing).offset(12)
+            make.bottom.equalToSuperview().offset(-12)
+            make.trailing.lessThanOrEqualTo(timeLabel.snp.leading).offset(-8)
         }
 
         sourceLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(4)
-            make.leading.equalTo(titleLabel)
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
         }
 
         timeLabel.snp.makeConstraints { make in
-            make.centerY.equalTo(sourceLabel)
+            make.top.equalToSuperview().offset(12)
             make.trailing.equalToSuperview().offset(-12)
-        }
-
-        bodyLabel.snp.makeConstraints { make in
-            make.top.equalTo(sourceLabel.snp.bottom).offset(6)
-            make.leading.equalTo(titleLabel)
-            make.trailing.equalToSuperview().offset(-12)
-            make.bottom.equalToSuperview().offset(-12)
+            make.width.greaterThanOrEqualTo(36)
         }
     }
 
@@ -533,14 +590,33 @@ class InboxMessageCell: UITableViewCell {
         titleLabel.text = message.payload.title
         bodyLabel.text = message.payload.body
         unreadDot.isHidden = message.isRead
+        
         titleLabel.font = message.isRead
-            ? ThemeTokens.Typography.callout
-            : UIFont.systemFont(ofSize: 16, weight: .bold)
+            ? .systemFont(ofSize: 16, weight: .regular)
+            : .systemFont(ofSize: 16, weight: .bold)
 
-        sourceLabel.text = message.payload.channel.uppercased()
+        let channel = message.payload.channel.uppercased()
+        sourceLabel.text = channel
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM-dd HH:mm"
-        timeLabel.text = formatter.string(from: message.receivedAt)
+        switch channel {
+        case "APNS", "APN":
+            sourceBadgeContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeColors.current.primary
+        case "BARK":
+            sourceBadgeContainer.backgroundColor = ThemeColors.current.success.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeColors.current.success
+        case "BRIDGE":
+            sourceBadgeContainer.backgroundColor = ThemeColors.current.warning.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeColors.current.warning
+        default:
+            sourceBadgeContainer.backgroundColor = ThemeColors.current.secondary.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeColors.current.secondary
+        }
+
+        let dateFmt = DateFormatter()
+        dateFmt.dateFormat = "MM-dd"
+        let timeFmt = DateFormatter()
+        timeFmt.dateFormat = "HH:mm"
+        timeLabel.text = "\(dateFmt.string(from: message.receivedAt))\n\(timeFmt.string(from: message.receivedAt))"
     }
 }

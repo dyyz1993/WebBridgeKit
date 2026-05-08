@@ -11,40 +11,35 @@ import SnapKit
 import RxSwift
 import WebBridgeKit
 
-/// 菜单列表项单元格
 class MenuCell: UITableViewCell {
 
     static let identifier = "MenuCell"
 
-    // MARK: - UI Components
+    private let iconContainer: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 7
+        view.clipsToBounds = true
+        return view
+    }()
 
     private let iconImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeColors.current.primary
-        return imageView
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        return iv
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.callout
+        label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
-    private let arrowImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = LucideIcon.chevronRight.templateImage(pointSize: 12)
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeTokens.Colors.Light.textTertiary
-        return imageView
-    }()
-
     private let valueLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.callout
+        label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .right
         label.numberOfLines = 1
@@ -52,11 +47,15 @@ class MenuCell: UITableViewCell {
         return label
     }()
 
-    // MARK: - Properties
+    private let chevronImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(systemName: "chevron.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        iv.tintColor = ThemeColors.current.textSecondary.withAlphaComponent(0.4)
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
 
     public var prepareForReuseBag = DisposeBag()
-
-    // MARK: - Initialization
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -72,57 +71,73 @@ class MenuCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Setup
-
     private func setupUI() {
         selectionStyle = .default
-        backgroundColor = ThemeColors.current.background
+        backgroundColor = ThemeColors.current.cardBackground
 
-        contentView.addSubview(iconImageView)
+        contentView.addSubview(iconContainer)
+        iconContainer.addSubview(iconImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(valueLabel)
-        contentView.addSubview(arrowImageView)
+        contentView.addSubview(chevronImageView)
 
-        iconImageView.snp.makeConstraints { make in
+        iconContainer.snp.makeConstraints { make in
             make.left.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(24)
+            make.width.height.equalTo(30)
+        }
+
+        iconImageView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(18)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.left.equalTo(iconImageView.snp.right).offset(12)
+            make.left.equalTo(iconContainer.snp.right).offset(12)
             make.centerY.equalToSuperview()
         }
 
         valueLabel.snp.makeConstraints { make in
             make.left.equalTo(titleLabel.snp.right).offset(12)
-            make.right.equalTo(arrowImageView.snp.left).offset(-8)
+            make.right.equalTo(chevronImageView.snp.left).offset(-4)
             make.centerY.equalToSuperview()
         }
 
-        arrowImageView.snp.makeConstraints { make in
+        chevronImageView.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(16)
         }
     }
 
-    // MARK: - Configure
+    func configure(icon: String? = nil, title: String, value: String? = nil, showArrow: Bool = true,
+                   iconBackgroundColor: UIColor? = nil, iconTintColor: UIColor? = nil,
+                   lucideIcon: LucideIcon? = nil) {
 
-    func configure(icon: String? = nil, title: String, value: String? = nil, showArrow: Bool = true) {
-        if let icon = icon {
-            iconImageView.image = UIImage(systemName: icon)
-            iconImageView.isHidden = false
-            titleLabel.snp.remakeConstraints { make in
-                make.left.equalTo(iconImageView.snp.right).offset(12)
-                make.centerY.equalToSuperview()
-            }
+        if let bg = iconBackgroundColor {
+            iconContainer.backgroundColor = bg
+            iconContainer.isHidden = false
+        } else if icon != nil || lucideIcon != nil {
+            iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+            iconContainer.isHidden = false
         } else {
-            iconImageView.isHidden = true
-            titleLabel.snp.remakeConstraints { make in
-                make.left.equalToSuperview().offset(16)
-                make.centerY.equalToSuperview()
-            }
+            iconContainer.isHidden = true
+        }
+
+        if let tint = iconTintColor {
+            iconImageView.tintColor = tint
+        } else if iconBackgroundColor != nil {
+            iconImageView.tintColor = ThemeColors.current.primary
+        } else {
+            iconImageView.tintColor = ThemeColors.current.primary
+        }
+
+        if let lucide = lucideIcon {
+            iconImageView.image = lucide.image(pointSize: 18)
+        } else if let iconName = icon {
+            iconImageView.image = UIImage(systemName: iconName)
+        } else {
+            iconImageView.image = nil
         }
 
         titleLabel.text = title
@@ -130,16 +145,34 @@ class MenuCell: UITableViewCell {
         if let value = value {
             valueLabel.text = value
             valueLabel.isHidden = false
-            arrowImageView.isHidden = !showArrow
         } else {
             valueLabel.isHidden = true
-            arrowImageView.isHidden = !showArrow
+        }
+
+        chevronImageView.isHidden = !showArrow
+
+        if !iconContainer.isHidden {
+            titleLabel.snp.remakeConstraints { make in
+                make.left.equalTo(iconContainer.snp.right).offset(12)
+                make.centerY.equalToSuperview()
+            }
+        } else {
+            titleLabel.snp.remakeConstraints { make in
+                make.left.equalToSuperview().offset(16)
+                make.centerY.equalToSuperview()
+            }
         }
 
         if !showArrow {
-            arrowImageView.isHidden = true
+            chevronImageView.isHidden = true
             valueLabel.snp.remakeConstraints { make in
                 make.right.equalToSuperview().offset(-16)
+                make.centerY.equalToSuperview()
+            }
+        } else if !valueLabel.isHidden {
+            valueLabel.snp.remakeConstraints { make in
+                make.left.equalTo(titleLabel.snp.right).offset(12)
+                make.right.equalTo(chevronImageView.snp.left).offset(-4)
                 make.centerY.equalToSuperview()
             }
         }

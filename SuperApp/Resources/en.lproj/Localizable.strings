@@ -57,6 +57,7 @@
 "inbox.empty.title" = "No Messages";
 "inbox.empty.description" = "Push messages will appear here";
 "inbox.swipe.delete" = "Delete";
+"inbox.clear_all" = "Clear All";
 "inbox.group.unread_format" = "%@ unread";
 "inbox.group.ungrouped" = "Ungrouped";
 "inbox.test.title" = "Test Notification";

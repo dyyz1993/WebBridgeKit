@@ -186,6 +186,11 @@ class InboxViewModel: ViewModel {
         return "\(group.name) (\(group.messages.count))" + (unread > 0 ? " · \(unread) \(L10n.tr("inbox.filter.unread").lowercased())" : "")
     }
 
+    func groupHasUnread(_ index: Int) -> Bool {
+        guard index < messageGroupsRelay.value.count else { return false }
+        return messageGroupsRelay.value[index].unreadCount > 0
+    }
+
     func numberOfRowsInGroup(_ index: Int) -> Int {
         guard index < messageGroupsRelay.value.count else { return 0 }
         let group = messageGroupsRelay.value[index]
