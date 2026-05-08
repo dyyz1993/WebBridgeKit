@@ -660,7 +660,7 @@ jobs:
                 print('✅ All screenshots within threshold')
                 sys.exit(0)
             "
-          else:
+          else
             echo "No diff results found, skipping threshold check"
           fi
 
