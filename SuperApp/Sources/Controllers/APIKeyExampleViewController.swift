@@ -77,14 +77,14 @@ class APIKeyExampleViewController: UIViewController {
 
     private let tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .grouped)
-        table.backgroundColor = .systemGroupedBackground
+        table.backgroundColor = ThemeColors.current.background
         return table
     }()
 
     private let headerLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.subheadline
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         label.text = NSLocalizedString("apikey.example.header", tableName: "Localizable", bundle: .main, value: "以下是使用 API 密钥的各种示例，点击可复制代码", comment: "")
         return label
@@ -104,7 +104,7 @@ class APIKeyExampleViewController: UIViewController {
     // MARK: - Setup
 
     private func setupUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         view.addSubview(tableView)
         tableView.snp.makeConstraints { make in

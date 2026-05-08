@@ -404,5 +404,96 @@
     "parentID": "ses_1f9fcfb32ffeV7l3A5PaR6G6L1",
     "status": "running",
     "createdAt": 1778217510239
+  },
+  "migrate-serverconfig": {
+    "id": "ses_1f9e78937ffe8yxC0qw8YrE72I",
+    "name": "migrate-serverconfig",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218727115
+  },
+  "migrate-webaccess": {
+    "id": "ses_1f9e787f4ffelGm1CrtJfQ0eb7",
+    "name": "migrate-webaccess",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218727436
+  },
+  "migrate-favorite": {
+    "id": "ses_1f9e786acffeqa4QYKDp6l4TZq",
+    "name": "migrate-favorite",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218727764
+  },
+  "migrate-manifest-testcases": {
+    "id": "ses_1f9e78526ffeAX4kZmpDqoYfct",
+    "name": "migrate-manifest-testcases",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218728158
+  },
+  "migrate-apikey-example": {
+    "id": "ses_1f9e783abffedmTpdtoFfYvr72",
+    "name": "migrate-apikey-example",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218728534
+  },
+  "migrate-token-generate": {
+    "id": "ses_1f9e78208ffeWvc672SCfLKeJM",
+    "name": "migrate-token-generate",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218728961
+  },
+  "migrate-message-inbox": {
+    "id": "ses_1f9e7809bffei86ZkLKLEJYkFD",
+    "name": "migrate-message-inbox",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218729317
+  },
+  "migrate-manifest-cache-test": {
+    "id": "ses_1f9e77f20ffexsNv1lKiSG4RHK",
+    "name": "migrate-manifest-cache-test",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218729696
+  },
+  "migrate-management": {
+    "id": "ses_1f9e77de0ffePC4SRdF5v23y8w",
+    "name": "migrate-management",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218730025
+  },
+  "migrate-tabbar": {
+    "id": "ses_1f9e77c54ffeHuQXg0AsnCa23A",
+    "name": "migrate-tabbar",
+    "parentID": "ses_1f9ea1342ffe56IGRsyo4LVONp",
+    "status": "running",
+    "createdAt": 1778218730412
+  },
+  "migrate-demo-vc": {
+    "id": "ses_1f9a479f9ffedwF6tTIowLkZ39",
+    "name": "migrate-demo-vc",
+    "parentID": "ses_1f9a9a6d6ffeOKrz1xV1RAzpLv",
+    "status": "running",
+    "createdAt": 1778223121936
+  },
+  "migrate-manifest-cache-demo": {
+    "id": "ses_1f9a52e97ffectm5EkNP3RYTae",
+    "name": "migrate-manifest-cache-demo",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778223075704
+  },
+  "migrate-component-catalog": {
+    "id": "ses_1f9a4c6ddffe4zXhByoKQubR4h",
+    "name": "migrate-component-catalog",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778223102252
   }
 }

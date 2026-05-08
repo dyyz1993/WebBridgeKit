@@ -30,7 +30,7 @@ class ManagementViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeColors.current.background
         navigationItem.titleView = segmentedControl
 
         view.addSubview(containerView)

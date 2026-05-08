@@ -32,7 +32,7 @@ class DemoViewController: UIViewController {
 
     private func setupUI() {
         title = "WebBridgeKit Demo"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         view.addSubview(scrollView)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -61,24 +61,24 @@ class DemoViewController: UIViewController {
 
     private func addHeaderSection() {
         let headerView = UIView()
-        headerView.backgroundColor = .systemBackground
-        headerView.layer.cornerRadius = 16
+        headerView.backgroundColor = ThemeColors.current.cardBackground
+        headerView.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         headerView.layer.masksToBounds = true
 
         let titleLabel = UILabel()
         titleLabel.text = "🌉 WebBridgeKit"
-        titleLabel.font = .systemFont(ofSize: 28, weight: .bold)
-        titleLabel.textColor = .label
+        titleLabel.font = ThemeTokens.Typography.largeTitle
+        titleLabel.textColor = ThemeColors.current.text
 
         let subtitleLabel = UILabel()
         subtitleLabel.text = "Native-Web 桥接框架"
-        subtitleLabel.font = .systemFont(ofSize: 14, weight: .regular)
-        subtitleLabel.textColor = .secondaryLabel
+        subtitleLabel.font = ThemeTokens.Typography.footnote
+        subtitleLabel.textColor = ThemeColors.current.textSecondary
 
         let versionLabel = UILabel()
         versionLabel.text = "支持 32 个 Native Handler"
-        versionLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        versionLabel.textColor = .systemBlue
+        versionLabel.font = ThemeTokens.Typography.caption1
+        versionLabel.textColor = ThemeColors.current.info
         versionLabel.textAlignment = .center
 
         let stackView = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, versionLabel])
@@ -101,8 +101,8 @@ class DemoViewController: UIViewController {
 
     private func addMainActionsSection() {
         let containerView = UIView()
-        containerView.backgroundColor = .systemBackground
-        containerView.layer.cornerRadius = 16
+        containerView.backgroundColor = ThemeColors.current.cardBackground
+        containerView.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         containerView.layer.masksToBounds = true
 
         let sectionLabel = createSectionLabel(title: "快速开始", icon: "🚀")
@@ -172,8 +172,8 @@ class DemoViewController: UIViewController {
 
     private func addAboutSection() {
         let containerView = UIView()
-        containerView.backgroundColor = .systemBackground
-        containerView.layer.cornerRadius = 16
+        containerView.backgroundColor = ThemeColors.current.cardBackground
+        containerView.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         containerView.layer.masksToBounds = true
 
         let sectionLabel = createSectionLabel(title: "关于", icon: "ℹ️")
@@ -189,8 +189,8 @@ class DemoViewController: UIViewController {
         • 内置权限管理
         • 离线缓存支持
         """
-        infoLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        infoLabel.textColor = .secondaryLabel
+        infoLabel.font = ThemeTokens.Typography.footnote
+        infoLabel.textColor = ThemeColors.current.textSecondary
         infoLabel.numberOfLines = 0
 
         let stackView = UIStackView(arrangedSubviews: [sectionLabel, infoLabel])
@@ -215,30 +215,30 @@ class DemoViewController: UIViewController {
     private func createSectionLabel(title: String, icon: String) -> UILabel {
         let label = UILabel()
         label.text = "\(icon) \(title)"
-        label.font = .systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.title3
+        label.textColor = ThemeColors.current.text
         return label
     }
 
     private func createActionButton(title: String, subtitle: String, icon: String, color: UIColor, action: Selector) -> UIView {
         let containerView = UIView()
         containerView.backgroundColor = color.withAlphaComponent(0.1)
-        containerView.layer.cornerRadius = 12
+        containerView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         containerView.isUserInteractionEnabled = true
 
         let iconLabel = UILabel()
         iconLabel.text = icon
-        iconLabel.font = .systemFont(ofSize: 24)
+        iconLabel.font = .systemFont(ofSize: ThemeTokens.Icons.Sizes.lg)
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
-        titleLabel.textColor = .label
+        titleLabel.font = ThemeTokens.Typography.headline
+        titleLabel.textColor = ThemeColors.current.text
 
         let subtitleLabel = UILabel()
         subtitleLabel.text = subtitle
-        subtitleLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        subtitleLabel.textColor = .secondaryLabel
+        subtitleLabel.font = ThemeTokens.Typography.footnote
+        subtitleLabel.textColor = ThemeColors.current.textSecondary
 
         let textStackView = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
         textStackView.axis = .vertical
@@ -270,7 +270,7 @@ class DemoViewController: UIViewController {
 
     private func createSeparator() -> UIView {
         let separator = UIView()
-        separator.backgroundColor = .separator
+        separator.backgroundColor = ThemeColors.current.divider
         separator.translatesAutoresizingMaskIntoConstraints = false
         separator.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
         return separator

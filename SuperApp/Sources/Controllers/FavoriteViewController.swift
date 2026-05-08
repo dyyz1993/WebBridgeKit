@@ -41,7 +41,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         let image = UIImage(systemName: "plus", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = .label
+        button.tintColor = ThemeColors.current.text
         button.snp.makeConstraints { make in
             make.width.height.equalTo(44)
         }
@@ -69,7 +69,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
     // MARK: - Setup UI
 
     private func setupUI() {
-        view.backgroundColor = UIColor.systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         // Set accessibility identifiers
         tableView.accessibilityIdentifier = "favorite.tableView"
@@ -336,7 +336,7 @@ extension FavoriteViewController: UITableViewDelegate {
             completion(true)
         }
 
-        deleteAction.backgroundColor = .systemRed
+        deleteAction.backgroundColor = ThemeColors.current.error
 
         return UISwipeActionsConfiguration(actions: [deleteAction])
     }

@@ -30,23 +30,23 @@ class ManifestCacheTestViewController: UIViewController {
     /// URL 输入容器
     private let urlInputContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }()
 
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.text = "测试 URL"
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         return label
     }()
 
     private let urlTextField: UITextField = {
         let field = UITextField()
         field.placeholder = "输入包含 manifest.json 的 URL"
-        field.font = .systemFont(ofSize: 16)
+        field.font = ThemeTokens.Typography.callout
         field.borderStyle = .none
         field.autocapitalizationType = .none
         field.autocorrectionType = .no
@@ -66,8 +66,8 @@ class ManifestCacheTestViewController: UIViewController {
     private let modeLabel: UILabel = {
         let label = UILabel()
         label.text = "缓存模式"
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         return label
     }()
 
@@ -82,10 +82,10 @@ class ManifestCacheTestViewController: UIViewController {
     private let startButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("开始测试", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        button.backgroundColor = .systemBlue
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
+        button.titleLabel?.font = ThemeTokens.Typography.headline
+        button.backgroundColor = ThemeColors.current.primary
+        button.setTitleColor(ThemeColors.current.surface, for: .normal)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
         button.accessibilityIdentifier = "manifest_test.start_button"
         return button
@@ -94,10 +94,10 @@ class ManifestCacheTestViewController: UIViewController {
     private let clearCacheButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("清除缓存", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
-        button.backgroundColor = .secondarySystemBackground
-        button.setTitleColor(.systemRed, for: .normal)
-        button.layer.cornerRadius = 8
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
+        button.backgroundColor = ThemeColors.current.cardBackground
+        button.setTitleColor(ThemeColors.current.error, for: .normal)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
         button.accessibilityIdentifier = "manifest_test.clear_cache_button"
         return button
@@ -106,16 +106,16 @@ class ManifestCacheTestViewController: UIViewController {
     /// 统计信息
     private let statsContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }()
 
     private let statsTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "缓存统计"
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
@@ -123,7 +123,7 @@ class ManifestCacheTestViewController: UIViewController {
         let label = UILabel()
         label.text = "暂无数据"
         label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 0
         return label
     }()
@@ -131,25 +131,25 @@ class ManifestCacheTestViewController: UIViewController {
     /// 日志输出
     private let logContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
-        view.layer.cornerRadius = 12
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }()
 
     private let logTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "操作日志"
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.text
         return label
     }()
 
     private let logTextView: UITextView = {
         let textView = UITextView()
         textView.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
-        textView.textColor = .label
-        textView.backgroundColor = .tertiarySystemBackground
-        textView.layer.cornerRadius = 8
+        textView.textColor = ThemeColors.current.text
+        textView.backgroundColor = ThemeColors.current.background
+        textView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         textView.isEditable = false
         textView.accessibilityIdentifier = "manifest_test.log_view"
@@ -159,8 +159,8 @@ class ManifestCacheTestViewController: UIViewController {
     private let copyLogButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("📋 复制", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
-        button.setTitleColor(.systemBlue, for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.caption1
+        button.setTitleColor(ThemeColors.current.primary, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
         button.accessibilityIdentifier = "manifest_test.copy_log_button"
         return button
@@ -169,8 +169,8 @@ class ManifestCacheTestViewController: UIViewController {
     private let clearLogButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("🗑️ 清空", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
-        button.setTitleColor(.systemRed, for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.caption1
+        button.setTitleColor(ThemeColors.current.error, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
         button.accessibilityIdentifier = "manifest_test.clear_log_button"
         return button
@@ -192,7 +192,7 @@ class ManifestCacheTestViewController: UIViewController {
         super.viewDidLoad()
 
         title = "Manifest 缓存测试"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         setupUI()
         setupActions()

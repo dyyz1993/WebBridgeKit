@@ -31,23 +31,23 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     // URL选择器
     private let urlSelectorLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeColors.current.text
         label.text = L10n.tr("token.generate.select_url")
         return label
     }()
 
     private lazy var urlPickerView: UIPickerView = {
         let picker = UIPickerView()
-        picker.backgroundColor = .systemBackground
+        picker.backgroundColor = ThemeColors.current.surface
         return picker
     }()
 
     // 时长选择器
     private let durationLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = .label
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeColors.current.text
         label.text = L10n.tr("token.generate.duration")
         return label
     }()
@@ -68,27 +68,27 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     private lazy var generateButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("token.generate.button"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        button.backgroundColor = .systemBlue
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
-        button.setTitleColor(.white.withAlphaComponent(0.5), for: .disabled)
+        button.titleLabel?.font = ThemeTokens.Typography.headline
+        button.backgroundColor = ThemeColors.current.primary
+        button.setTitleColor(ThemeColors.current.surface, for: .normal)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        button.setTitleColor(ThemeColors.current.surface.withAlphaComponent(0.5), for: .disabled)
         return button
     }()
 
     // 结果卡片
     private let resultCardView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
-        view.layer.cornerRadius = 16
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         view.isHidden = true
         return view
     }()
 
     private let resultTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeColors.current.textSecondary
         label.text = L10n.tr("token.generate.result_title")
         label.numberOfLines = 1
         return label
@@ -97,7 +97,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     private let tokenLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 20, weight: .semibold)
-        label.textColor = .label
+        label.textColor = ThemeColors.current.text
         label.textAlignment = .center
         label.numberOfLines = 0
         label.text = ""
@@ -110,20 +110,20 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
             config.image = UIImage(systemName: "doc.on.doc")
             config.title = L10n.tr("common.copy")
             config.imagePadding = 4
-            config.baseForegroundColor = .label
+            config.baseForegroundColor = ThemeColors.current.text
             let button = UIButton(configuration: config)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            button.layer.cornerRadius = 8
-            button.backgroundColor = .systemGray6
+            button.titleLabel?.font = ThemeTokens.Typography.callout
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+            button.backgroundColor = ThemeColors.current.cardBackground
             return button
         } else {
             let button = UIButton(type: .system)
             button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
             button.setTitle(L10n.tr("common.copy"), for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            button.layer.cornerRadius = 8
-            button.backgroundColor = .systemGray6
-            button.tintColor = .label
+            button.titleLabel?.font = ThemeTokens.Typography.callout
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+            button.backgroundColor = ThemeColors.current.cardBackground
+            button.tintColor = ThemeColors.current.text
             return button
         }
     }()
@@ -134,20 +134,20 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
             config.image = UIImage(systemName: "square.and.arrow.up")
             config.title = L10n.tr("common.share")
             config.imagePadding = 4
-            config.baseForegroundColor = .label
+            config.baseForegroundColor = ThemeColors.current.text
             let button = UIButton(configuration: config)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            button.layer.cornerRadius = 8
-            button.backgroundColor = .systemGray6
+            button.titleLabel?.font = ThemeTokens.Typography.callout
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+            button.backgroundColor = ThemeColors.current.cardBackground
             return button
         } else {
             let button = UIButton(type: .system)
             button.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
             button.setTitle(L10n.tr("common.share"), for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            button.layer.cornerRadius = 8
-            button.backgroundColor = .systemGray6
-            button.tintColor = .label
+            button.titleLabel?.font = ThemeTokens.Typography.callout
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+            button.backgroundColor = ThemeColors.current.cardBackground
+            button.tintColor = ThemeColors.current.text
             return button
         }
     }()
@@ -192,7 +192,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     // MARK: - Setup UI
 
     private func setupUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -487,12 +487,12 @@ extension TokenGenerateViewController: UIPickerViewDelegate {
 
     func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = ThemeTokens.Typography.callout
         label.textAlignment = .center
 
         if histories.isEmpty {
             label.text = L10n.tr("token.generate.empty_title")
-            label.textColor = .secondaryLabel
+            label.textColor = ThemeColors.current.textSecondary
         } else {
             let history = histories[row]
             if let title = history.title, !title.isEmpty {
@@ -500,7 +500,7 @@ extension TokenGenerateViewController: UIPickerViewDelegate {
             } else {
                 label.text = history.url
             }
-            label.textColor = .label
+            label.textColor = ThemeColors.current.text
         }
 
         return label

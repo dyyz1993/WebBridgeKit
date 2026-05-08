@@ -77,7 +77,7 @@ class ComponentCatalogViewController: UIViewController {
         let titleLabel: UILabel = {
             let label = UILabel()
             label.text = title
-            label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+            label.font = ThemeTokens.Typography.title3
             label.textColor = ThemeColors.current.text
             return label
         }()
@@ -794,26 +794,25 @@ class ComponentCatalogViewController: UIViewController {
 
             let titleLabel = UILabel()
             titleLabel.text = isUnread ? "New Feature Released" : "Weekly Digest"
-            titleLabel.font = isUnread ? UIFont.systemFont(ofSize: 16, weight: .bold) : UIFont.systemFont(ofSize: 16, weight: .regular)
+            titleLabel.font = isUnread ? ThemeTokens.Typography.headline : ThemeTokens.Typography.callout
             titleLabel.textColor = ThemeColors.current.text
             cell.addSubview(titleLabel)
 
             let sourceLabel = UILabel()
             sourceLabel.text = "APNS"
-            sourceLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+            sourceLabel.font = ThemeTokens.Typography.caption2
             sourceLabel.textColor = ThemeColors.current.info
-            cell.addSubview(sourceLabel)
 
             let timeLabel = UILabel()
             timeLabel.text = "05-08 14:30"
-            timeLabel.font = UIFont.systemFont(ofSize: 11)
+            timeLabel.font = ThemeTokens.Typography.caption2
             timeLabel.textColor = ThemeTokens.Colors.Light.textTertiary
             timeLabel.textAlignment = .right
             cell.addSubview(timeLabel)
 
             let bodyLabel = UILabel()
             bodyLabel.text = "Check out the latest updates and improvements to your app experience..."
-            bodyLabel.font = UIFont.systemFont(ofSize: 14)
+            bodyLabel.font = ThemeTokens.Typography.subheadline
             bodyLabel.textColor = ThemeColors.current.textSecondary
             bodyLabel.numberOfLines = 2
             cell.addSubview(bodyLabel)
@@ -904,10 +903,10 @@ class ComponentCatalogViewController: UIViewController {
         )
 
         let actions: [(icon: String, title: String, color: UIColor)] = [
-            ("qrcode.viewfinder", "Scan", .systemBlue),
-            ("doc.on.clipboard", "Paste", .systemOrange),
-            ("text.badge.star", "Token", .systemPurple),
-            ("ladybug", "Debug", .systemGreen)
+            ("qrcode.viewfinder", "Scan", ThemeColors.current.primary),
+            ("doc.on.clipboard", "Paste", ThemeColors.current.warning),
+            ("text.badge.star", "Token", ThemeTokens.Colors.Light.gradientEnd),
+            ("ladybug", "Debug", ThemeColors.current.success)
         ]
 
         let container = UIView()
@@ -922,8 +921,8 @@ class ComponentCatalogViewController: UIViewController {
 
         for action in actions {
             let btn = UIButton(type: .system)
-            btn.backgroundColor = .secondarySystemGroupedBackground
-            btn.layer.cornerRadius = 12
+            btn.backgroundColor = ThemeColors.current.surface
+            btn.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
             let iconView = UIImageView()
             iconView.image = UIImage(systemName: action.icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .medium))
@@ -932,7 +931,7 @@ class ComponentCatalogViewController: UIViewController {
 
             let titleLabel = UILabel()
             titleLabel.text = action.title
-            titleLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+            titleLabel.font = ThemeTokens.Typography.caption2
             titleLabel.textColor = action.color
             titleLabel.textAlignment = .center
 
@@ -989,14 +988,14 @@ class ComponentCatalogViewController: UIViewController {
                 config.cornerStyle = .capsule
                 config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                     var outgoing = incoming
-                    outgoing.font = .systemFont(ofSize: 13, weight: .medium)
+                    outgoing.font = ThemeTokens.Typography.footnote
                     return outgoing
                 }
                 config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
                 button = UIButton(configuration: config)
             } else {
                 button = UIButton(type: .system)
-                button.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
+                button.titleLabel?.font = ThemeTokens.Typography.footnote
                 button.backgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
                 button.setTitleColor(isSelected ? .white : .secondaryLabel, for: .normal)
                 button.layer.cornerRadius = 16
@@ -1035,9 +1034,9 @@ class ComponentCatalogViewController: UIViewController {
         fab.tintColor = .white
         fab.layer.cornerRadius = 28
         fab.layer.shadowColor = UIColor.black.cgColor
-        fab.layer.shadowOffset = CGSize(width: 0, height: 4)
-        fab.layer.shadowRadius = 8
-        fab.layer.shadowOpacity = 0.3
+        fab.layer.shadowOffset = CGSize(width: 0, height: ThemeTokens.Shadows.Fab.offsetY)
+        fab.layer.shadowRadius = ThemeTokens.Shadows.Fab.radius
+        fab.layer.shadowOpacity = Float(ThemeTokens.Shadows.Fab.opacity)
         fab.snp.makeConstraints { make in
             make.width.height.equalTo(56)
         }
@@ -1081,13 +1080,13 @@ class ComponentCatalogViewController: UIViewController {
 
             let titleLbl = UILabel()
             titleLbl.text = title
-            titleLbl.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+            titleLbl.font = ThemeTokens.Typography.callout
             titleLbl.textColor = ThemeColors.current.text
             row.addSubview(titleLbl)
 
             let valueLbl = UILabel()
             valueLbl.text = value
-            valueLbl.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+            valueLbl.font = ThemeTokens.Typography.subheadline
             valueLbl.textColor = ThemeColors.current.textSecondary
             valueLbl.textAlignment = .right
             valueLbl.isHidden = value == nil
@@ -1199,7 +1198,7 @@ private class TokenCardDemoView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        layer.cornerRadius = 16
+        layer.cornerRadius = ThemeTokens.CornerRadius.xl
         clipsToBounds = true
         gradientLayer.colors = [
             ThemeColors.current.gradientStart.cgColor,
@@ -1207,7 +1206,7 @@ private class TokenCardDemoView: UIView {
         ]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.cornerRadius = 16
+        gradientLayer.cornerRadius = ThemeTokens.CornerRadius.xl
         layer.insertSublayer(gradientLayer, at: 0)
         setupUI()
     }
@@ -1234,7 +1233,7 @@ private class TokenCardDemoView: UIView {
     private func setupUI() {
         let titleLabel = UILabel()
         titleLabel.text = "Push Token"
-        titleLabel.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.font = ThemeTokens.Typography.footnote
         titleLabel.textColor = .white.withAlphaComponent(0.9)
 
         let urlLabel = UILabel()
@@ -1252,7 +1251,7 @@ private class TokenCardDemoView: UIView {
         copyButton.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)), for: .normal)
         copyButton.tintColor = .white
         copyButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        copyButton.layer.cornerRadius = 16
+        copyButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl
 
         addSubview(titleLabel)
         addSubview(urlLabel)

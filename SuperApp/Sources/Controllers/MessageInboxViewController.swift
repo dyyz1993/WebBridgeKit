@@ -36,14 +36,14 @@ class MessageInboxViewController: UIViewController {
         table.rowHeight = UITableView.automaticDimension
         table.estimatedRowHeight = 100
         table.tableFooterView = UIView()
-        table.backgroundColor = .systemGroupedBackground
+        table.backgroundColor = ThemeColors.current.background
         return table
     }()
 
     private lazy var emptyLabel: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("message.inbox.empty")
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeColors.current.textSecondary
         label.isHidden = true
         return label
     }()
@@ -84,7 +84,7 @@ class MessageInboxViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
         title = L10n.tr("message.inbox.title")
 
         navigationItem.titleView = segmentedControl
@@ -210,38 +210,38 @@ class MessageCell: UITableViewCell {
         backgroundColor = .clear
 
         let cardView = UIView()
-        cardView.backgroundColor = .secondarySystemGroupedBackground
-        cardView.layer.cornerRadius = 12
+        cardView.backgroundColor = ThemeColors.current.cardBackground
+        cardView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         contentView.addSubview(cardView)
 
         iconContainer.layer.cornerRadius = 10
-        iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .systemBlue
+        iconImageView.tintColor = ThemeColors.current.primary
 
-        titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.font = ThemeTokens.Typography.headline
         titleLabel.numberOfLines = 2
         titleLabel.lineBreakMode = .byTruncatingTail
-        bodyLabel.font = .systemFont(ofSize: 14)
-        bodyLabel.textColor = .secondaryLabel
+        bodyLabel.font = ThemeTokens.Typography.footnote
+        bodyLabel.textColor = ThemeColors.current.textSecondary
         bodyLabel.numberOfLines = 2
         bodyLabel.lineBreakMode = .byTruncatingTail
 
-        timeLabel.font = .systemFont(ofSize: 11)
-        timeLabel.textColor = .tertiaryLabel
+        timeLabel.font = ThemeTokens.Typography.caption2
+        timeLabel.textColor = ThemeColors.current.textSecondary
         timeLabel.numberOfLines = 1
 
-        sourceBadge.backgroundColor = UIColor.systemGray.withAlphaComponent(0.1)
-        sourceBadge.layer.cornerRadius = 4
-        sourceLabel.font = .systemFont(ofSize: 10, weight: .medium)
-        sourceLabel.textColor = .secondaryLabel
+        sourceBadge.backgroundColor = ThemeColors.current.textSecondary.withAlphaComponent(0.1)
+        sourceBadge.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        sourceLabel.font = ThemeTokens.Typography.caption2
+        sourceLabel.textColor = ThemeColors.current.textSecondary
         sourceLabel.numberOfLines = 1
 
-        unreadDot.backgroundColor = .systemRed
-        unreadDot.layer.cornerRadius = 4
+        unreadDot.backgroundColor = ThemeColors.current.error
+        unreadDot.layer.cornerRadius = ThemeTokens.CornerRadius.sm
 
         actionImageView.image = UIImage(systemName: "chevron.right")
-        actionImageView.tintColor = .tertiaryLabel
+        actionImageView.tintColor = ThemeColors.current.textSecondary
         actionImageView.contentMode = .scaleAspectFit
 
         cardView.addSubview(iconContainer)
@@ -321,8 +321,8 @@ class MessageCell: UITableViewCell {
         sourceLabel.text = nil
         unreadDot.isHidden = true
         iconImageView.image = nil
-        iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-        iconImageView.tintColor = .systemBlue
+        iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+        iconImageView.tintColor = ThemeColors.current.primary
         actionImageView.isHidden = true
     }
 
@@ -342,12 +342,12 @@ class MessageCell: UITableViewCell {
             iconImageView.tintColor = .systemIndigo
         } else if message.payload.targetURL != nil {
             iconImageView.image = UIImage(systemName: "link")
-            iconContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-            iconImageView.tintColor = .systemBlue
+            iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeColors.current.primary
         } else {
             iconImageView.image = UIImage(systemName: "bell.fill")
-            iconContainer.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.1)
-            iconImageView.tintColor = .systemOrange
+            iconContainer.backgroundColor = ThemeColors.current.warning.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeColors.current.warning
         }
 
         actionImageView.isHidden = (message.payload.targetURL == nil && message.payload.targetAppId == nil)

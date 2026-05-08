@@ -19,7 +19,7 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
 
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .grouped)
-        table.backgroundColor = UIColor.systemGroupedBackground
+        table.backgroundColor = ThemeColors.current.background
         table.register(SegmentedCell.self, forCellReuseIdentifier: SegmentedCell.identifier)
         table.register(TextFieldCell.self, forCellReuseIdentifier: TextFieldCell.identifier)
         table.register(ButtonCell.self, forCellReuseIdentifier: ButtonCell.identifier)
@@ -79,7 +79,7 @@ class ServerConfigViewController: BaseViewController<ServerConfigViewModel> {
     // MARK: - Setup UI
 
     private func setupUI() {
-        view.backgroundColor = UIColor.systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         view.addSubview(tableView)
         view.addSubview(loadingView)

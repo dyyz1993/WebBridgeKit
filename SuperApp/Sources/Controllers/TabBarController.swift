@@ -132,8 +132,8 @@ class TabBarController: UITabBarController {
     }
 
     private func setupAppearance() {
-        tabBar.backgroundColor = UIColor.systemBackground
-        tabBar.barTintColor = UIColor.systemBackground
+        tabBar.backgroundColor = ThemeColors.current.tabBarBackground
+        tabBar.barTintColor = ThemeColors.current.tabBarBackground
 
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()

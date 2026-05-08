@@ -28,7 +28,7 @@ class ManifestTestCasesViewController: UIViewController {
 
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .plain)
-        table.backgroundColor = .systemGroupedBackground
+        table.backgroundColor = ThemeColors.current.background
         table.separatorStyle = .none
         table.register(TestCaseCell.self, forCellReuseIdentifier: TestCaseCell.identifier)
         table.rowHeight = UITableView.automaticDimension
@@ -39,7 +39,7 @@ class ManifestTestCasesViewController: UIViewController {
 
     private lazy var refreshControl: UIRefreshControl = {
         let control = UIRefreshControl()
-        control.tintColor = .systemBlue
+        control.tintColor = ThemeColors.current.primary
         return control
     }()
 
@@ -59,8 +59,8 @@ class ManifestTestCasesViewController: UIViewController {
         view.backgroundColor = .clear
 
         let infoLabel = UILabel()
-        infoLabel.font = .systemFont(ofSize: 14, weight: .regular)
-        infoLabel.textColor = .secondaryLabel
+        infoLabel.font = ThemeTokens.Typography.footnote
+        infoLabel.textColor = ThemeColors.current.textSecondary
         infoLabel.text = "点击运行按钮执行测试，测试结果会记录到日志文件"
         infoLabel.textAlignment = .center
         infoLabel.numberOfLines = 0
@@ -96,7 +96,7 @@ class ManifestTestCasesViewController: UIViewController {
 
     private func setupUI() {
         title = "测试用例"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeColors.current.background
 
         // 添加导航栏按钮
         navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -292,18 +292,18 @@ class TestWebViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = ThemeColors.current.surface
 
         webView.accessibilityIdentifier = "TestWebView"
-        webView.backgroundColor = .blue // 设置背景色以便调试
+        webView.backgroundColor = .blue
         webView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(webView)
 
-        debugLabel.textColor = .white
-        debugLabel.backgroundColor = .black.withAlphaComponent(0.7) // 更深背景，对比度更高
+        debugLabel.textColor = ThemeColors.current.surface
+        debugLabel.backgroundColor = ThemeColors.current.text.withAlphaComponent(0.7)
         debugLabel.accessibilityIdentifier = "DebugLabel"
         debugLabel.numberOfLines = 0
-        debugLabel.font = .boldSystemFont(ofSize: 12) // 加粗并稍微变大
+        debugLabel.font = ThemeTokens.Typography.caption1
         debugLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(debugLabel)
 

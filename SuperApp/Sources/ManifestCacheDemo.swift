@@ -28,7 +28,7 @@ class ManifestCacheDemo: UIViewController {
         super.viewDidLoad()
 
         title = "Manifest Cache Demo"
-        view.backgroundColor = .white
+        view.backgroundColor = ThemeColors.current.background
 
         setupWebView()
         setupManifest()

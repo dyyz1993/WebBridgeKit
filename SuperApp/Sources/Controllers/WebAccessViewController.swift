@@ -36,15 +36,15 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private let statusBarView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = ThemeColors.current.surface
         return view
     }()
 
     private let cacheCountButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("web_access.cache_count_zero"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        button.setTitleColor(.systemBlue, for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
+        button.setTitleColor(ThemeColors.current.primary, for: .normal)
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
             config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
@@ -57,7 +57,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private let separatorView: UIView = {
         let view = UIView()
-        view.backgroundColor = .separator
+        view.backgroundColor = ThemeColors.current.divider
         return view
     }()
 
@@ -73,7 +73,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         super.viewDidLoad()
 
         title = L10n.tr("web_access.title")
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeColors.current.background
 
         setupUI()
         setupGestures()
