@@ -7,7 +7,7 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = .white
         view.layer.cornerRadius = 16
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -218,13 +218,6 @@ class QuickActionCell: UICollectionViewCell {
     private func createActionButton(icon: String, title: String, color: UIColor) -> UIButton {
         let button = UIButton(type: .system)
         button.backgroundColor = .clear
-
-        let circleView: UIView = {
-            let v = UIView()
-            v.backgroundColor = color.withAlphaComponent(0.12)
-            v.layer.cornerRadius = 24
-            return v
-        }()
 
         let iconView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)

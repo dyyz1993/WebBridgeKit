@@ -41,7 +41,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -138,7 +138,7 @@ class URLGridCell: UICollectionViewCell {
 
         faviconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(24)
+            make.width.height.equalTo(20)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -176,7 +176,7 @@ class URLGridCell: UICollectionViewCell {
         } else {
             let iconIndex = abs(titleText.hashValue) % Self.lucideIcons.count
             let icon = Self.lucideIcons[iconIndex]
-            faviconImageView.image = icon.image(pointSize: 24, weight: .medium)
+            faviconImageView.image = icon.image(pointSize: 20, weight: .medium)
             faviconImageView.isHidden = false
         }
 

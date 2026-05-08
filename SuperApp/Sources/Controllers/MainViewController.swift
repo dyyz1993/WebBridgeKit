@@ -312,9 +312,30 @@ class MainViewController: BaseViewController<MainViewModel> {
         commandBanner.alpha = 0
         commandBanner.transform = CGAffineTransform(translationX: 0, y: -44)
 
-        let scanImage = LucideIcon.scan.image(pointSize: 18, weight: .semibold)
-        let scanItem = UIBarButtonItem(image: scanImage, style: .plain, target: self, action: #selector(openScanner))
-        scanItem.tintColor = ThemeColors.current.text
+        let scanContainer: UIView = {
+            let v = UIView()
+            v.backgroundColor = .clear
+            v.layer.borderWidth = 1.5
+            v.layer.borderColor = UIColor(red: 0.776, green: 0.776, blue: 0.784, alpha: 1.0).cgColor
+            v.layer.cornerRadius = 16
+            v.clipsToBounds = true
+            return v
+        }()
+        let scanIconView = UIImageView()
+        scanIconView.image = LucideIcon.scan.image(pointSize: 18, weight: .semibold)
+        scanIconView.tintColor = ThemeColors.current.primary
+        scanIconView.contentMode = .scaleAspectFit
+        scanContainer.addSubview(scanIconView)
+        scanIconView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(18)
+        }
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(openScanner))
+        scanContainer.addGestureRecognizer(tapGesture)
+        scanContainer.snp.makeConstraints { make in
+            make.width.height.equalTo(32)
+        }
+        let scanItem = UIBarButtonItem(customView: scanContainer)
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
