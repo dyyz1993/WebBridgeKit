@@ -72,7 +72,7 @@ class URLGridCell: UICollectionViewCell {
     private let tokenBadge: UIView = {
         let v = UIView()
         v.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
-        v.layer.cornerRadius = 4
+        v.layer.cornerRadius = 6
         v.clipsToBounds = true
         v.isHidden = true
         return v
@@ -88,7 +88,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 9, weight: .medium)
+        label.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .medium)
         label.textColor = ThemeColors.current.primary
         label.numberOfLines = 1
         return label
@@ -135,6 +135,7 @@ class URLGridCell: UICollectionViewCell {
         super.prepareForReuse()
         currentHistory = nil
         faviconImageView.image = nil
+        tokenBadge.isHidden = true
     }
 
     private func setupUI() {

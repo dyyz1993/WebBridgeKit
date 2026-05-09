@@ -54,6 +54,50 @@ public class CacheManagementViewController: UIViewController {
         return view
     }()
 
+    private lazy var chartContainerView: UIView = {
+        let container = UIView()
+        container.backgroundColor = .secondarySystemBackground
+        container.layer.cornerRadius = 12
+        container.clipsToBounds = true
+
+        let titleLabel = UILabel()
+        titleLabel.text = "存储分布"
+        titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        titleLabel.tag = 200
+
+        let pieChart = PieChartView()
+        pieChart.tag = 201
+
+        let barTitleLabel = UILabel()
+        barTitleLabel.text = "每周使用量"
+        barTitleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        barTitleLabel.tag = 202
+
+        let barChart = BarChartView()
+        barChart.tag = 203
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, pieChart, barTitleLabel, barChart])
+        stack.axis = .vertical
+        stack.spacing = 12
+        stack.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        stack.isLayoutMarginsRelativeArrangement = true
+
+        container.addSubview(stack)
+        stack.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        pieChart.snp.makeConstraints { make in
+            make.height.equalTo(130)
+        }
+
+        barChart.snp.makeConstraints { make in
+            make.height.equalTo(120)
+        }
+
+        return container
+    }()
+
     private lazy var footerView: UIView = {
         let view = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 80))
         view.backgroundColor = .clear
@@ -137,6 +181,8 @@ public class CacheManagementViewController: UIViewController {
 
         tableView.addSubview(refreshControl)
 
+        setupCharts()
+
         // 布局
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -148,6 +194,33 @@ public class CacheManagementViewController: UIViewController {
         }
 
         tableView.tableFooterView = footerView
+    }
+
+    private func setupCharts() {
+        let pieChart = chartContainerView.viewWithTag(201) as? PieChartView
+        pieChart?.segments = [
+            PieSegment(value: 1.1, color: UIColor.systemBlue, label: "E-Commerce · 1.1 GB"),
+            PieSegment(value: 0.46, color: UIColor.systemGreen, label: "Mini Games · 0.46 GB"),
+            PieSegment(value: 0.32, color: UIColor.systemOrange, label: "Toolbox · 0.32 GB"),
+            PieSegment(value: 0.28, color: UIColor.systemPurple, label: "Dashboard · 0.28 GB"),
+            PieSegment(value: 0.14, color: UIColor.systemGray, label: "Other · 0.14 GB")
+        ]
+        pieChart?.centerText = "2.3G"
+
+        let barChart = chartContainerView.viewWithTag(203) as? BarChartView
+        barChart?.items = [
+            BarItem(value: 12, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Mon"),
+            BarItem(value: 18, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Tue"),
+            BarItem(value: 8, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Wed"),
+            BarItem(value: 22, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Thu"),
+            BarItem(value: 15, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Fri"),
+            BarItem(value: 28, color: UIColor.systemBlue, label: "Sat"),
+            BarItem(value: 10, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Sun")
+        ]
+
+        chartContainerView.frame = CGRect(x: 0, y: 0, width: 0, height: 340)
+        chartContainerView.layoutIfNeeded()
+        tableView.tableHeaderView = chartContainerView
     }
 
     private func bindViewModel() {
