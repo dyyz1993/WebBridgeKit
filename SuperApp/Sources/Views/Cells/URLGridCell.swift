@@ -69,6 +69,31 @@ class URLGridCell: UICollectionViewCell {
         return label
     }()
 
+    private let tokenBadge: UIView = {
+        let v = UIView()
+        v.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
+        v.layer.cornerRadius = 4
+        v.clipsToBounds = true
+        v.isHidden = true
+        return v
+    }()
+
+    private let tokenKeyIcon: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.key.templateImage(pointSize: 10, weight: .medium)
+        iv.tintColor = ThemeColors.current.primary
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
+
+    private let tokenLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.monospacedSystemFont(ofSize: 9, weight: .medium)
+        label.textColor = ThemeColors.current.primary
+        label.numberOfLines = 1
+        return label
+    }()
+
     private var currentHistory: WebPageHistory?
 
     var onPinToggle: (() -> Void)?
@@ -125,6 +150,9 @@ class URLGridCell: UICollectionViewCell {
         containerView.addSubview(statusDot)
         containerView.addSubview(statusLabel)
         containerView.addSubview(timeLabel)
+        containerView.addSubview(tokenBadge)
+        tokenBadge.addSubview(tokenKeyIcon)
+        tokenBadge.addSubview(tokenLabel)
 
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -161,6 +189,24 @@ class URLGridCell: UICollectionViewCell {
         timeLabel.snp.makeConstraints { make in
             make.centerY.equalTo(statusDot)
             make.right.equalToSuperview().offset(-12)
+        }
+
+        tokenBadge.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-10)
+            make.left.equalToSuperview().offset(12)
+            make.height.equalTo(18)
+        }
+
+        tokenKeyIcon.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.left.equalToSuperview().offset(5)
+            make.width.height.equalTo(10)
+        }
+
+        tokenLabel.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.left.equalTo(tokenKeyIcon.snp.right).offset(3)
+            make.right.equalToSuperview().offset(-5)
         }
     }
 
@@ -207,5 +253,20 @@ class URLGridCell: UICollectionViewCell {
         } else {
             timeLabel.text = "\(Int(elapsed / 86400))d ago"
         }
+
+        if let token = getMaskedToken() {
+            tokenLabel.text = token
+            tokenBadge.isHidden = false
+        } else {
+            tokenBadge.isHidden = true
+        }
+    }
+
+    private func getMaskedToken() -> String? {
+        let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
+        guard key.count > 8 else { return nil }
+        let prefix = key.prefix(4)
+        let suffix = key.suffix(4)
+        return "\(prefix)...\(suffix)"
     }
 }

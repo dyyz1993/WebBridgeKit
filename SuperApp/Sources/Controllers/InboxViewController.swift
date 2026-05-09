@@ -102,6 +102,34 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let markAllReadRelay = PublishRelay<Void>()
     private let sendTestRelay = PublishRelay<Void>()
 
+    private let swipeHintLabel: UIView = {
+        let container = UIView()
+        container.backgroundColor = .clear
+        let iconView = UIImageView()
+        iconView.image = LucideIcon.info.templateImage(pointSize: 12)
+        iconView.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iconView.contentMode = .scaleAspectFit
+        let label = UILabel()
+        label.text = L10n.tr("inbox.swipe.hint")
+        label.font = .systemFont(ofSize: 11)
+        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        let stack = UIStackView(arrangedSubviews: [iconView, label])
+        stack.axis = .horizontal
+        stack.spacing = 6
+        stack.alignment = .center
+        container.addSubview(stack)
+        stack.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        iconView.snp.makeConstraints { make in
+            make.width.height.equalTo(12)
+        }
+        container.snp.makeConstraints { make in
+            make.height.equalTo(30)
+        }
+        return container
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("inbox.title")
@@ -138,6 +166,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
         view.addSubview(fabButton)
+        view.addSubview(swipeHintLabel)
 
         searchBarContainer.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
@@ -167,7 +196,13 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
         tableView.snp.makeConstraints { make in
             make.top.equalTo(filterStackView.snp.bottom).offset(8)
-            make.leading.trailing.bottom.equalToSuperview()
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(swipeHintLabel.snp.top)
+        }
+
+        swipeHintLabel.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
         }
 
         emptyStateView.snp.makeConstraints { make in
@@ -199,7 +234,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         let filters: [(String, InboxViewModel.FilterType)] = [
             (L10n.tr("inbox.filter.all"), .all),
             (L10n.tr("inbox.filter.unread"), .unread),
-            (L10n.tr("inbox.filter.today"), .today)
+            (L10n.tr("inbox.filter.apps"), .apps)
         ]
 
         let inactiveBg = UIColor(red: 0.898, green: 0.898, blue: 0.918, alpha: 1.0)
@@ -420,8 +455,8 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .semibold)
-        label.textColor = ThemeColors.current.text
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -472,9 +507,6 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     func configure(title: String, isExpanded: Bool, hasUnread: Bool = false) {
         titleLabel.text = title
-        titleLabel.font = hasUnread
-            ? .systemFont(ofSize: 15, weight: .bold)
-            : .systemFont(ofSize: 15, weight: .semibold)
         chevronImageView.image = isExpanded
             ? LucideIcon.chevronDown.templateImage(pointSize: 14)
             : LucideIcon.chevronRight.templateImage(pointSize: 14)
@@ -502,6 +534,20 @@ class InboxMessageCell: UITableViewCell {
         return view
     }()
 
+    private let typeIconContainer: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 10
+        view.clipsToBounds = true
+        return view
+    }()
+
+    private let typeIconView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.tintColor = .white
+        return iv
+    }()
+
     private let unreadDot: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(red: 1.0, green: 0.231, blue: 0.188, alpha: 1.0)
@@ -513,14 +559,6 @@ class InboxMessageCell: UITableViewCell {
         let label = UILabel()
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
-        return label
-    }()
-
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 11)
-        label.textColor = ThemeColors.current.textSecondary
-        label.textAlignment = .right
         return label
     }()
 
@@ -542,13 +580,12 @@ class InboxMessageCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 11)
         label.textColor = ThemeColors.current.textSecondary
-        label.textAlignment = .right
         return label
     }()
 
     private let bodyLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
+        label.font = .systemFont(ofSize: 13)
         label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 2
         return label
@@ -576,19 +613,31 @@ class InboxMessageCell: UITableViewCell {
         selectionStyle = .none
 
         contentView.addSubview(cardView)
+        cardView.addSubview(typeIconContainer)
+        typeIconContainer.addSubview(typeIconView)
         cardView.addSubview(unreadDot)
         cardView.addSubview(titleLabel)
-        cardView.addSubview(dateLabel)
+        cardView.addSubview(bodyLabel)
         cardView.addSubview(sourceContainer)
         sourceContainer.addSubview(sourceLabel)
         cardView.addSubview(timeLabel)
-        cardView.addSubview(bodyLabel)
         cardView.addSubview(chevronImageView)
 
         cardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(2)
             make.bottom.equalToSuperview().offset(-2)
             make.leading.trailing.equalToSuperview()
+        }
+
+        typeIconContainer.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(12)
+            make.top.equalToSuperview().offset(12)
+            make.width.height.equalTo(40)
+        }
+
+        typeIconView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(20)
         }
 
         unreadDot.snp.makeConstraints { make in
@@ -598,36 +647,30 @@ class InboxMessageCell: UITableViewCell {
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
+            make.leading.equalTo(typeIconContainer.snp.trailing).offset(12)
             make.top.equalToSuperview().offset(12)
-            make.trailing.lessThanOrEqualTo(dateLabel.snp.leading).offset(-8)
+            make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-8)
         }
 
-        dateLabel.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-12)
-            make.top.equalToSuperview().offset(12)
-            make.width.greaterThanOrEqualTo(40)
+        bodyLabel.snp.makeConstraints { make in
+            make.leading.equalTo(titleLabel)
+            make.trailing.equalTo(titleLabel)
+            make.top.equalTo(titleLabel.snp.bottom).offset(2)
         }
 
         sourceContainer.snp.makeConstraints { make in
             make.leading.equalTo(titleLabel)
-            make.top.equalTo(titleLabel.snp.bottom).offset(4)
+            make.top.equalTo(bodyLabel.snp.bottom).offset(4)
+            make.bottom.equalToSuperview().offset(-12)
         }
 
         sourceLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 1, left: 6, bottom: 1, right: 6))
         }
 
         timeLabel.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-12)
+            make.leading.equalTo(sourceContainer.snp.trailing).offset(6)
             make.centerY.equalTo(sourceContainer)
-        }
-
-        bodyLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
-            make.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
-            make.top.equalTo(sourceContainer.snp.bottom).offset(4)
-            make.bottom.equalToSuperview().offset(-12)
         }
 
         chevronImageView.snp.makeConstraints { make in
@@ -643,37 +686,53 @@ class InboxMessageCell: UITableViewCell {
 
         let isUnread = !message.isRead
         titleLabel.font = isUnread
-            ? .systemFont(ofSize: 16, weight: .bold)
-            : .systemFont(ofSize: 16, weight: .regular)
+            ? .systemFont(ofSize: 15, weight: .bold)
+            : .systemFont(ofSize: 15, weight: .regular)
         unreadDot.alpha = isUnread ? 1 : 0
 
         let channel = message.payload.channel.uppercased()
         sourceLabel.text = channel
 
-        let badgeAlpha: CGFloat = 0.12
+        let primaryColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
+        let accentColor = UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: 1.0)
+        let warningColor = UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0)
+        let grayColor = UIColor(red: 0.557, green: 0.557, blue: 0.576, alpha: 1.0)
+
         switch channel {
         case "APNS", "APN":
-            sourceContainer.backgroundColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: badgeAlpha)
-            sourceLabel.textColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
+            typeIconContainer.backgroundColor = primaryColor.withAlphaComponent(0.12)
+            typeIconView.tintColor = primaryColor
+            typeIconView.image = UIImage(lucideId: "package") ?? LucideIcon.appFill.image(pointSize: 20)
+            sourceContainer.backgroundColor = primaryColor.withAlphaComponent(0.12)
+            sourceLabel.textColor = primaryColor
         case "BARK":
-            sourceContainer.backgroundColor = UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: badgeAlpha)
-            sourceLabel.textColor = UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: 1.0)
+            typeIconContainer.backgroundColor = accentColor.withAlphaComponent(0.12)
+            typeIconView.tintColor = accentColor
+            typeIconView.image = LucideIcon.link.templateImage(pointSize: 20)
+            sourceContainer.backgroundColor = accentColor.withAlphaComponent(0.12)
+            sourceLabel.textColor = accentColor
         case "BRIDGE":
-            sourceContainer.backgroundColor = UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: badgeAlpha)
-            sourceLabel.textColor = UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0)
-        case "SYSTEM":
-            sourceContainer.backgroundColor = UIColor(red: 0.557, green: 0.557, blue: 0.576, alpha: badgeAlpha)
-            sourceLabel.textColor = UIColor(red: 0.557, green: 0.557, blue: 0.576, alpha: 1.0)
+            typeIconContainer.backgroundColor = warningColor.withAlphaComponent(0.12)
+            typeIconView.tintColor = warningColor
+            typeIconView.image = LucideIcon.bell.templateImage(pointSize: 20)
+            sourceContainer.backgroundColor = warningColor.withAlphaComponent(0.12)
+            sourceLabel.textColor = warningColor
+        case "SYSTEM", "LOCAL":
+            typeIconContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
+            typeIconView.tintColor = grayColor
+            typeIconView.image = LucideIcon.settings.templateImage(pointSize: 20)
+            sourceContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
+            sourceLabel.textColor = grayColor
         default:
-            sourceContainer.backgroundColor = UIColor(red: 0.557, green: 0.557, blue: 0.576, alpha: badgeAlpha)
-            sourceLabel.textColor = UIColor(red: 0.557, green: 0.557, blue: 0.576, alpha: 1.0)
+            typeIconContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
+            typeIconView.tintColor = grayColor
+            typeIconView.image = LucideIcon.settings.templateImage(pointSize: 20)
+            sourceContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
+            sourceLabel.textColor = grayColor
         }
 
-        let dateFmt = DateFormatter()
-        dateFmt.dateFormat = "MM-dd"
         let timeFmt = DateFormatter()
         timeFmt.dateFormat = "HH:mm"
-        dateLabel.text = dateFmt.string(from: message.receivedAt)
         timeLabel.text = timeFmt.string(from: message.receivedAt)
     }
 }
@@ -726,7 +785,7 @@ class InboxEmptyStateView: UIView {
         iconImageView.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.centerX.equalToSuperview()
-            make.width.height.equalTo(48)
+            make.width.height.equalTo(80)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -742,7 +801,7 @@ class InboxEmptyStateView: UIView {
     }
 
     func configure(iconName: String, title: String, subtitle: String) {
-        let config = UIImage.SymbolConfiguration(pointSize: 48, weight: .light)
+        let config = UIImage.SymbolConfiguration(pointSize: 36, weight: .light)
         iconImageView.image = UIImage(systemName: iconName, withConfiguration: config)
         titleLabel.text = title
         subtitleLabel.text = subtitle

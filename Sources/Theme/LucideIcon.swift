@@ -2,7 +2,7 @@ import UIKit
 
 public enum LucideIcon: CaseIterable {
     case home, inbox, compass, settings
-    case copy, scan, search, send, share, trash, plus, xmark, check, edit, refresh, download, upload
+    case copy, scan, search, send, share, trash, plus, xmark, check, edit, refresh, download, upload, clipboard
     case bell, bellOff, link, image, tag, star, bookmark, clock, pin, shield, key, lock
     case info, warning, error, success
     case chevronRight, chevronLeft, arrowLeft, arrowRight, arrowUp, arrowDown, chevronDown
@@ -18,6 +18,7 @@ public enum LucideIcon: CaseIterable {
         case .compass: return "compass"
         case .settings: return "settings"
         case .copy: return "copy"
+        case .clipboard: return "clipboard"
         case .scan: return "scan-line"
         case .search: return "search"
         case .send: return "send"
@@ -85,6 +86,7 @@ public enum LucideIcon: CaseIterable {
         case .compass: return "compass.fill"
         case .settings: return "gearshape.fill"
         case .copy: return "doc.on.doc"
+        case .clipboard: return "doc.on.clipboard"
         case .scan: return "qrcode.viewfinder"
         case .search: return "magnifyingglass"
         case .send: return "paperplane.fill"

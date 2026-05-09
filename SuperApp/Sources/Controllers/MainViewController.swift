@@ -52,10 +52,10 @@ class MainViewController: BaseViewController<MainViewModel> {
         return PushNotificationManager.shared.deviceToken != nil
     }
 
-    private let quickActions: [(icon: String, title: String, color: UIColor)] = [
-        ("qrcode.viewfinder", L10n.tr("home.quick_action.scan"), UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)),
-        ("doc.on.clipboard", L10n.tr("home.quick_action.paste"), UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0)),
-        ("tray", L10n.tr("home.quick_action.inbox"), UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1.0))
+    private let quickActions: [(icon: LucideIcon, title: String)] = [
+        (.scan, L10n.tr("home.quick_action.scan")),
+        (.clipboard, L10n.tr("home.quick_action.paste")),
+        (.inbox, L10n.tr("home.quick_action.inbox"))
     ]
 
     private lazy var commandBanner: CommandBannerView = {
@@ -303,30 +303,14 @@ class MainViewController: BaseViewController<MainViewModel> {
         commandBanner.alpha = 0
         commandBanner.transform = CGAffineTransform(translationX: 0, y: -44)
 
-        let scanContainer: UIView = {
-            let v = UIView()
-            v.backgroundColor = .clear
-            v.layer.borderWidth = 1.5
-            v.layer.borderColor = UIColor(red: 0.776, green: 0.776, blue: 0.784, alpha: 1.0).cgColor
-            v.layer.cornerRadius = 16
-            v.clipsToBounds = true
-            return v
+        let scanButton: UIButton = {
+            let btn = UIButton(type: .system)
+            btn.setImage(LucideIcon.scan.image(pointSize: 20, weight: .medium), for: .normal)
+            btn.tintColor = ThemeColors.current.primary
+            btn.addTarget(self, action: #selector(openScanner), for: .touchUpInside)
+            return btn
         }()
-        let scanIconView = UIImageView()
-        scanIconView.image = LucideIcon.scan.image(pointSize: 18, weight: .semibold)
-        scanIconView.tintColor = ThemeColors.current.primary
-        scanIconView.contentMode = .scaleAspectFit
-        scanContainer.addSubview(scanIconView)
-        scanIconView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(18)
-        }
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(openScanner))
-        scanContainer.addGestureRecognizer(tapGesture)
-        scanContainer.snp.makeConstraints { make in
-            make.width.height.equalTo(32)
-        }
-        let scanItem = UIBarButtonItem(customView: scanContainer)
+        let scanItem = UIBarButtonItem(customView: scanButton)
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
@@ -379,17 +363,17 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private func createAppGridSection(sectionIndex: Int, gridSections: Int, environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
         let containerWidth = environment.container.contentSize.width - 32
-        let itemWidth = (containerWidth - 16) / 2
+        let itemWidth = (containerWidth - 12) / 2
         let itemSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(140))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let groupSize = NSCollectionLayoutSize(widthDimension: .absolute(itemWidth), heightDimension: .absolute(140))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         let rowSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(140))
         let row = NSCollectionLayoutGroup.horizontal(layoutSize: rowSize, subitem: group, count: 2)
-        row.interItemSpacing = .fixed(16)
+        row.interItemSpacing = .fixed(12)
         row.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         let section = NSCollectionLayoutSection(group: row)
-        section.interGroupSpacing = 16
+        section.interGroupSpacing = 12
         section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 24, trailing: 0)
 
         let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(36))

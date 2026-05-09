@@ -26,6 +26,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }()
 
     private let itemSelectRelay = PublishRelay<IndexPath>()
+    private let copyTokenTapRelay = PublishRelay<Void>()
+    private let rememberToggleRelay = PublishRelay<Bool>()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,7 +68,9 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .disposed(by: rx)
 
         let input = SettingsViewModel.Input(
-            itemSelect: itemSelectRelay.asDriver(onErrorJustReturn: IndexPath(row: 0, section: 0))
+            itemSelect: itemSelectRelay.asDriver(onErrorJustReturn: IndexPath(row: 0, section: 0)),
+            copyTokenTap: copyTokenTapRelay.asDriver(onErrorJustReturn: ()),
+            rememberToggle: rememberToggleRelay.asDriver(onErrorJustReturn: false)
         )
 
         let output = viewModel.transform(input: input)
@@ -81,6 +85,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
 
         output.navigateToTokenManage
             .drive(onNext: { [weak self] in self?.navigateToTokenManage() })
+            .disposed(by: rx)
+
+        output.navigateToFavorites
+            .drive(onNext: { [weak self] in self?.navigateToFavorites() })
             .disposed(by: rx)
 
         output.navigateToManagement
@@ -99,20 +107,20 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .drive(onNext: { [weak self] in self?.openNotificationSettings() })
             .disposed(by: rx)
 
-        output.navigateToUIDebug
-            .drive(onNext: { [weak self] in self?.navigateToUIDebug() })
+        output.exportDiagnostics
+            .drive(onNext: { [weak self] in self?.handleExportDiagnostics() })
             .disposed(by: rx)
 
-        output.navigateToShowcase
-            .drive(onNext: { [weak self] in self?.navigateToShowcase() })
-            .disposed(by: rx)
-
-        output.clearCache
-            .drive(onNext: { [weak self] in self?.showClearCacheConfirm() })
-            .disposed(by: rx)
-
-        output.triggerUIAudit
-            .drive(onNext: { [weak self] in self?.runUIAudit() })
+        output.copyTokenResult
+            .drive(onNext: { [weak self] in
+                let alert = UIAlertController(
+                    title: L10n.tr("settings.hero.copied_title"),
+                    message: L10n.tr("settings.hero.copied_message"),
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
+                self?.present(alert, animated: true)
+            })
             .disposed(by: rx)
     }
 
@@ -128,6 +136,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
 
     private func navigateToAPIKeyManage() {
         let vc = APIKeyManageViewController(viewModel: APIKeyManageViewModel())
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func navigateToFavorites() {
+        let vc = FavoriteViewController(viewModel: FavoriteViewModel())
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -148,37 +161,19 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         present(nav, animated: true)
     }
 
-    private func navigateToUIDebug() {
-        let vc = NotificationDebugViewController()
-        navigationController?.pushViewController(vc, animated: true)
-    }
-
-    private func navigateToShowcase() {
-        let vc = ShowcaseTabBarController()
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
-    }
-
     private func openNotificationSettings() {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
     }
 
-    private func showClearCacheConfirm() {
-        let alert = UIAlertController(title: L10n.tr("settings.clear_cache.title"), message: L10n.tr("settings.clear_cache.message"), preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
-        alert.addAction(UIAlertAction(title: L10n.tr("settings.clear_cache.confirm"), style: .destructive) { _ in
-            WebCacheManager.shared.clearAll()
-        })
-        present(alert, animated: true)
-    }
-
-    private func runUIAudit() {
-        UIAuditTool.auditCurrentScreen()
-        let alert = UIAlertController(title: "UI Audit", message: "Report printed to console. Check Xcode debugger or simctl logs.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+    private func handleExportDiagnostics() {
+        let alert = UIAlertController(
+            title: L10n.tr("settings.hero.copied_title"),
+            message: L10n.tr("settings.export.diagnostics"),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
     }
 }
@@ -196,6 +191,7 @@ extension SettingsViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MenuCell.identifier, for: indexPath) as! MenuCell
         let item = viewModel.sections[indexPath.section].items[indexPath.row]
+
         cell.configure(
             icon: item.icon,
             title: item.title,
@@ -203,14 +199,39 @@ extension SettingsViewController: UITableViewDataSource {
             showArrow: item.showArrow,
             iconBackgroundColor: item.iconBackgroundColor,
             iconTintColor: item.iconTintColor,
-            lucideIcon: item.lucideIcon
+            lucideIcon: item.lucideIcon,
+            hasToggle: item.hasToggle,
+            toggleIsOn: item.toggleIsOn,
+            badge: item.badge,
+            isHero: item.cellKind == .hero
         )
-        cell.accessibilityIdentifier = "settings.cell.\(item.action.rawValue)"
+
+        if item.cellKind == .hero {
+            cell.copyTokenButton.rx.tap
+                .bind(to: copyTokenTapRelay)
+                .disposed(by: cell.prepareForReuseBag)
+        }
+
+        if item.hasToggle {
+            cell.toggleSwitch.rx.isOn
+                .skip(1)
+                .bind(to: rememberToggleRelay)
+                .disposed(by: cell.prepareForReuseBag)
+        }
+
+        cell.accessibilityIdentifier = item.action.map { "settings.cell.\($0.rawValue)" } ?? "settings.cell.hero"
         return cell
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return viewModel.sections[section].header
+    }
+
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if viewModel.sections[section].header == nil {
+            return 0.01
+        }
+        return UITableView.automaticDimension
     }
 }
 
@@ -225,10 +246,14 @@ extension SettingsViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        let item = viewModel.sections[indexPath.section].items[indexPath.row]
+        if item.hasToggle { return }
+        if item.cellKind == .hero { return }
         itemSelectRelay.accept(indexPath)
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 44
+        let item = viewModel.sections[indexPath.section].items[indexPath.row]
+        return item.cellKind == .hero ? 96 : 44
     }
 }

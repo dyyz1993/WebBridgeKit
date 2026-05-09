@@ -9,6 +9,8 @@ class PushTokenCardCell: UICollectionViewCell {
         let view = UIView()
         view.backgroundColor = .white
         view.layer.cornerRadius = 14
+        view.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.1).cgColor
+        view.layer.borderWidth = 1
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
         view.layer.shadowRadius = 12
@@ -34,17 +36,25 @@ class PushTokenCardCell: UICollectionViewCell {
         return label
     }()
 
+    private let tokenPill: UIView = {
+        let v = UIView()
+        v.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
+        v.layer.cornerRadius = 6
+        v.clipsToBounds = true
+        return v
+    }()
+
     private let keyIcon: UIImageView = {
         let iv = UIImageView()
-        iv.image = LucideIcon.key.image(pointSize: 14, weight: .medium)
-        iv.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iv.image = LucideIcon.key.image(pointSize: 12, weight: .medium)
+        iv.tintColor = ThemeColors.current.primary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
 
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium)
+        label.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .medium)
         label.textColor = ThemeColors.current.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
@@ -93,8 +103,9 @@ class PushTokenCardCell: UICollectionViewCell {
         contentView.addSubview(containerView)
         containerView.addSubview(serverIcon)
         containerView.addSubview(urlLabel)
-        containerView.addSubview(keyIcon)
-        containerView.addSubview(tokenLabel)
+        containerView.addSubview(tokenPill)
+        tokenPill.addSubview(keyIcon)
+        tokenPill.addSubview(tokenLabel)
         containerView.addSubview(copyButton)
         containerView.addSubview(registerButton)
 
@@ -114,26 +125,33 @@ class PushTokenCardCell: UICollectionViewCell {
             make.right.equalToSuperview().offset(-16)
         }
 
-        keyIcon.snp.makeConstraints { make in
+        tokenPill.snp.makeConstraints { make in
             make.top.equalTo(serverIcon.snp.bottom).offset(14)
             make.left.equalToSuperview().offset(16)
-            make.width.height.equalTo(16)
+            make.right.equalTo(copyButton.snp.left).offset(-12)
+            make.height.equalTo(28)
+        }
+
+        keyIcon.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.left.equalToSuperview().offset(8)
+            make.width.height.equalTo(12)
         }
 
         tokenLabel.snp.makeConstraints { make in
-            make.centerY.equalTo(keyIcon)
-            make.left.equalTo(keyIcon.snp.right).offset(8)
-            make.right.equalTo(copyButton.snp.left).offset(-12)
+            make.centerY.equalToSuperview()
+            make.left.equalTo(keyIcon.snp.right).offset(4)
+            make.right.equalToSuperview().offset(-8)
         }
 
         copyButton.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
-            make.centerY.equalTo(keyIcon)
+            make.centerY.equalTo(tokenPill)
         }
 
         registerButton.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
-            make.centerY.equalTo(keyIcon)
+            make.centerY.equalTo(tokenPill)
         }
 
         copyButton.addTarget(self, action: #selector(copyTapped), for: .touchUpInside)
@@ -206,10 +224,10 @@ class QuickActionCell: UICollectionViewCell {
         }
     }
 
-    func configure(actions: [(icon: String, title: String, color: UIColor)]) {
+    func configure(actions: [(icon: LucideIcon, title: String)]) {
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         for (index, action) in actions.enumerated() {
-            let card = createActionCard(icon: action.icon, title: action.title, color: action.color)
+            let card = createActionCard(icon: action.icon, title: action.title)
             card.tag = index
             let tapGesture = UITapGestureRecognizer(target: self, action: #selector(cardTapped(_:)))
             card.addGestureRecognizer(tapGesture)
@@ -217,7 +235,7 @@ class QuickActionCell: UICollectionViewCell {
         }
     }
 
-    private func createActionCard(icon: String, title: String, color: UIColor) -> UIView {
+    private func createActionCard(icon: LucideIcon, title: String) -> UIView {
         let card = UIView()
         card.backgroundColor = ThemeColors.current.cardBackground
         card.layer.cornerRadius = 14
@@ -226,15 +244,9 @@ class QuickActionCell: UICollectionViewCell {
         card.layer.shadowRadius = 8
         card.layer.shadowOpacity = 0.06
 
-        let circleBg = UIView()
-        circleBg.backgroundColor = color
-        circleBg.layer.cornerRadius = 21
-        circleBg.clipsToBounds = true
-
         let iconView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        iconView.image = UIImage(systemName: icon, withConfiguration: config)
-        iconView.tintColor = .white
+        iconView.image = icon.templateImage(pointSize: 22, weight: .medium)
+        iconView.tintColor = ThemeColors.current.primary
         iconView.contentMode = .scaleAspectFit
 
         let titleLabel = UILabel()
@@ -246,23 +258,17 @@ class QuickActionCell: UICollectionViewCell {
         titleLabel.minimumScaleFactor = 0.7
         titleLabel.numberOfLines = 2
 
-        card.addSubview(circleBg)
+        card.addSubview(iconView)
         card.addSubview(titleLabel)
-        circleBg.addSubview(iconView)
-
-        circleBg.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(10)
-            make.centerX.equalToSuperview()
-            make.width.height.equalTo(42)
-        }
 
         iconView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.top.equalToSuperview().offset(14)
+            make.centerX.equalToSuperview()
+            make.width.height.equalTo(22)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(circleBg.snp.bottom).offset(6)
+            make.top.equalTo(iconView.snp.bottom).offset(8)
             make.centerX.equalToSuperview()
             make.bottom.lessThanOrEqualToSuperview().offset(-6)
             make.leading.greaterThanOrEqualToSuperview().offset(4)

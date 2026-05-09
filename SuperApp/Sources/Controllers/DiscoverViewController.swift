@@ -149,7 +149,7 @@ class DiscoverViewController: UIViewController {
         let recentItems = histories.prefix(6).map { history -> DiscoverItem in
             let cacheStatus = DiscoverItem.CacheStatus(from: history)
             let cacheSize = ByteCountFormatter.string(fromByteCount: history.cachedSize, countStyle: .file)
-            let lastAccessed = Self.dateFormatter.string(from: history.lastVisitDate)
+            let lastAccessed = Self.relativeTimeString(for: history.lastVisitDate)
             return DiscoverItem(
                 name: history.title ?? history.url,
                 url: history.url,
@@ -171,19 +171,55 @@ class DiscoverViewController: UIViewController {
                     fromByteCount: PersistentManifestLoader.shared.getCacheSize(for: key),
                     countStyle: .file
                 )
-                let lastAccessed = manifest.lastUpdated.map { Self.dateFormatter.string(from: $0) }
+                let lastAccessed = manifest.lastUpdated.map { Self.relativeTimeString(for: $0) }
                 cachedItems.append(DiscoverItem(
                     name: name,
                     url: entryURL,
                     cacheStatus: cacheStatus,
                     cacheSize: cacheSize,
-                    lastAccessed: lastAccessed
+                    lastAccessed: lastAccessed,
+                    bundleID: "com.example.\(key.lowercased())",
+                    version: "v1.0.0",
+                    resourceCount: "\(manifest.resources.count) files",
+                    cachedDate: manifest.lastUpdated.map { Self.dateFormatter.string(from: $0) },
+                    expiresText: manifest.persistent == true ? L10n.tr("discover.detail.never") : L10n.tr("discover.detail.days_format", "7"),
+                    visitCount: "-",
+                    lastVisit: lastAccessed,
+                    sourceText: L10n.tr("discover.detail.source_qr")
                 ))
             }
         }
         newSections.append(DiscoverSection(title: L10n.tr("discover.section.cached"), items: cachedItems))
 
+        let recommendedItems: [DiscoverItem] = [
+            DiscoverItem(
+                name: "Weather",
+                url: "https://weather.example.com",
+                cacheStatus: .cached,
+                cacheSize: "1.8 MB",
+                lastAccessed: nil,
+                descriptionText: L10n.tr("discover.recommended.weather.desc")
+            ),
+            DiscoverItem(
+                name: "Notes",
+                url: "https://notes.example.com",
+                cacheStatus: .cached,
+                cacheSize: "0.9 MB",
+                lastAccessed: nil,
+                descriptionText: L10n.tr("discover.recommended.notes.desc")
+            )
+        ]
+        newSections.append(DiscoverSection(title: L10n.tr("discover.section.recommended"), items: recommendedItems))
+
         sections = newSections
+    }
+
+    private static func relativeTimeString(for date: Date) -> String {
+        let interval = Date().timeIntervalSince(date)
+        if interval < 60 { return L10n.tr("discover.time.just_now") }
+        if interval < 3600 { return L10n.tr("discover.time.min_ago", "\(Int(interval / 60))") }
+        if interval < 86400 { return L10n.tr("discover.time.hour_ago", "\(Int(interval / 3600))") }
+        return dateFormatter.string(from: date)
     }
 
     private func openURL(_ urlString: String) {
@@ -209,6 +245,16 @@ struct DiscoverItem {
     let cacheStatus: CacheStatus
     var cacheSize: String
     var lastAccessed: String?
+    var descriptionText: String?
+    var bundleID: String?
+    var version: String?
+    var resourceCount: String?
+    var cachedDate: String?
+    var expiresText: String?
+    var visitCount: String?
+    var lastVisit: String?
+    var sourceText: String?
+    var pushToken: String?
 
     enum CacheStatus {
         case persistent
@@ -218,19 +264,28 @@ struct DiscoverItem {
 
         var displayText: String {
             switch self {
-            case .persistent: return L10n.tr("discover.badge.persistent")
-            case .cached: return L10n.tr("discover.badge.offline")
-            case .needsUpdate: return L10n.tr("discover.badge.needs_update")
-            case .notCached: return L10n.tr("discover.badge.not_cached")
+            case .persistent: return L10n.tr("discover.badge.saved")
+            case .cached: return L10n.tr("discover.badge.saved")
+            case .needsUpdate: return L10n.tr("discover.badge.temp")
+            case .notCached: return L10n.tr("discover.badge.none")
+            }
+        }
+
+        var statusTypeText: String {
+            switch self {
+            case .persistent: return L10n.tr("discover.status.persistent")
+            case .cached: return L10n.tr("discover.status.persistent")
+            case .needsUpdate: return L10n.tr("discover.status.temporary")
+            case .notCached: return L10n.tr("discover.status.not_cached")
             }
         }
 
         var color: UIColor {
             switch self {
-            case .persistent: return UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)
-            case .cached: return UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)
+            case .persistent: return UIColor(red: 0.204, green: 0.78, blue: 0.349, alpha: 1)
+            case .cached: return UIColor(red: 0.204, green: 0.78, blue: 0.349, alpha: 1)
             case .needsUpdate: return UIColor(red: 1, green: 0.584, blue: 0, alpha: 1)
-            case .notCached: return ThemeColors.current.secondary
+            case .notCached: return UIColor(red: 0.557, green: 0.557, blue: 0.576, alpha: 1)
             }
         }
 
@@ -285,7 +340,8 @@ extension DiscoverViewController: UICollectionViewDataSource {
 extension DiscoverViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = sections[indexPath.section].items[indexPath.item]
-        openURL(item.url)
+        let detailVC = AppDetailViewController(item: item)
+        navigationController?.pushViewController(detailVC, animated: true)
     }
 }
 
@@ -486,6 +542,14 @@ class DiscoverAppCell: UICollectionViewCell {
         return label
     }()
 
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor = ThemeColors.current.textSecondary
+        label.numberOfLines = 2
+        return label
+    }()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -516,7 +580,7 @@ class DiscoverAppCell: UICollectionViewCell {
         topRowStack.addArrangedSubview(textStack)
         topRowStack.addArrangedSubview(badgeView)
 
-        let mainStack = UIStackView(arrangedSubviews: [topRowStack, bottomRowStack])
+        let mainStack = UIStackView(arrangedSubviews: [topRowStack, bottomRowStack, descriptionLabel])
         mainStack.axis = .vertical
         mainStack.spacing = 8
         cardView.addSubview(mainStack)
@@ -564,7 +628,19 @@ class DiscoverAppCell: UICollectionViewCell {
         iconImageView.image = Self.icon(for: item.name).image(pointSize: 18)
 
         statusDot.backgroundColor = item.cacheStatus.color
-        detailLabel.text = item.cacheStatus.displayText
+
+        if let lastAccessed = item.lastAccessed {
+            detailLabel.text = "\(item.cacheStatus.statusTypeText) · \(lastAccessed)"
+        } else {
+            detailLabel.text = item.cacheStatus.statusTypeText
+        }
+
+        if let desc = item.descriptionText, !desc.isEmpty {
+            descriptionLabel.text = desc
+            descriptionLabel.isHidden = false
+        } else {
+            descriptionLabel.isHidden = true
+        }
     }
 
     private static let gradients: [(UIColor, UIColor)] = [

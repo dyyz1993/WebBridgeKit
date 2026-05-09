@@ -34,7 +34,7 @@ class InboxViewModel: ViewModel {
     enum FilterType: Int {
         case all = 0
         case unread
-        case today
+        case apps
     }
 
     struct MessageGroup {
@@ -241,9 +241,11 @@ class InboxViewModel: ViewModel {
             break
         case .unread:
             messages = messages.filter { !$0.isRead }
-        case .today:
-            let calendar = Calendar.current
-            messages = messages.filter { calendar.isDateInToday($0.receivedAt) }
+        case .apps:
+            messages = messages.filter {
+                let ch = $0.payload.channel.uppercased()
+                return ch == "APNS" || ch == "APN" || ch == "BRIDGE"
+            }
         }
 
         if !searchText.isEmpty {

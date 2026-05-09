@@ -16,58 +16,75 @@ class SettingsViewModel: ViewModel {
 
     struct Input {
         let itemSelect: Driver<IndexPath>
+        let copyTokenTap: Driver<Void>
+        let rememberToggle: Driver<Bool>
     }
 
     struct Output {
         let navigateToServerConfig: Driver<Void>
         let navigateToAPIKeyManage: Driver<Void>
         let navigateToTokenManage: Driver<Void>
+        let navigateToFavorites: Driver<Void>
         let navigateToManagement: Driver<Void>
         let navigateToAbout: Driver<Void>
         let navigateToDebugPanel: Driver<Void>
-        let navigateToUIDebug: Driver<Void>
-        let navigateToShowcase: Driver<Void>
+        let navigateToAppearance: Driver<Void>
         let openNotificationSettings: Driver<Void>
         let clearCache: Driver<Void>
-        let triggerUIAudit: Driver<Void>
+        let exportDiagnostics: Driver<Void>
+        let copyTokenResult: Driver<Void>
     }
 
     enum SettingsAction: String {
         case serverConfig
+        case tokenManager
         case apiKeyManage
+        case cacheManager
+        case favorites
         case notificationSettings
-        case tokenManage
-        case management
-        case clearCache
+        case rememberLastApp
+        case appearance
         case debugPanel
-        case uiDebug
-        case showcase
-        case uiAudit
+        case exportDiagnostics
         case about
-        case versionInfo
+    }
+
+    enum CellKind {
+        case hero
+        case menuItem
     }
 
     struct SettingsItem {
         let icon: String?
         let lucideIcon: LucideIcon?
         let title: String
-        let action: SettingsAction
+        let action: SettingsAction?
         var value: String?
         var showArrow: Bool = true
         var iconBackgroundColor: UIColor?
         var iconTintColor: UIColor?
+        var hasToggle: Bool = false
+        var toggleIsOn: Bool = false
+        var badge: String?
+        var cellKind: CellKind = .menuItem
     }
 
     struct SettingsSection {
-        let header: String
+        let header: String?
         let items: [SettingsItem]
+        var isHeroSection: Bool = false
     }
 
     private static func makeColor(_ base: UIColor, alpha: CGFloat = 0.1) -> UIColor { base.withAlphaComponent(alpha) }
 
+    static var rememberLastAppEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: "settings.rememberLastApp") }
+        set { UserDefaults.standard.set(newValue, forKey: "settings.rememberLastApp") }
+    }
+
     let sections: [SettingsSection] = {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        let rememberOn = SettingsViewModel.rememberLastAppEnabled
+        let cacheSize = SettingsViewModel.calculateCacheSize()
 
         let pb = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
         let pt = ThemeTokens.Colors.Light.primary
@@ -79,28 +96,71 @@ class SettingsViewModel: ViewModel {
         let wt = ThemeTokens.Colors.Light.warning
         let pubg = UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 0.1)
         let put = UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 1)
-        let skb = UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 0.1)
-        let skt = UIColor(red: 0.353, green: 0.784, blue: 1, alpha: 1)
-        let seb = ThemeTokens.Colors.Light.secondary.withAlphaComponent(0.1)
-        let set_ = ThemeTokens.Colors.Light.secondary
+        let ob = UIColor(red: 1, green: 0.6, blue: 0.2, alpha: 0.1)
+        let ot = UIColor(red: 1, green: 0.6, blue: 0.2, alpha: 1)
+        let tb = UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 0.1)
+        let tt = UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 1)
+        let gb = UIColor(red: 0.45, green: 0.45, blue: 0.5, alpha: 0.1)
+        let gt = UIColor(red: 0.45, green: 0.45, blue: 0.5, alpha: 1)
+
+        let heroItem = SettingsItem(
+            icon: nil,
+            lucideIcon: .globe,
+            title: L10n.tr("settings.hero.token_masked"),
+            action: nil,
+            iconBackgroundColor: nil,
+            iconTintColor: nil,
+            cellKind: .hero
+        )
 
         return [
+            SettingsSection(header: nil, items: [heroItem], isHeroSection: true),
             SettingsSection(header: L10n.tr("settings.section.server"), items: [
                 SettingsItem(
                     icon: nil,
                     lucideIcon: .server,
                     title: L10n.tr("settings.server.config"),
                     action: .serverConfig,
+                    value: "api.day.app",
                     iconBackgroundColor: pb,
                     iconTintColor: pt
-                ),
+                )
+            ]),
+            SettingsSection(header: L10n.tr("settings.section.security"), items: [
                 SettingsItem(
                     icon: nil,
                     lucideIcon: .key,
-                    title: L10n.tr("settings.key.manage"),
+                    title: L10n.tr("settings.token.manager"),
+                    action: .tokenManager,
+                    iconBackgroundColor: sb,
+                    iconTintColor: st
+                ),
+                SettingsItem(
+                    icon: "key.radiowaves.forward",
+                    lucideIcon: nil,
+                    title: L10n.tr("settings.apikey.manager"),
                     action: .apiKeyManage,
-                    iconBackgroundColor: pb,
-                    iconTintColor: pt
+                    iconBackgroundColor: pubg,
+                    iconTintColor: put
+                )
+            ]),
+            SettingsSection(header: L10n.tr("settings.section.storage"), items: [
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .hardDrive,
+                    title: L10n.tr("settings.cache.manage"),
+                    action: .cacheManager,
+                    value: cacheSize,
+                    iconBackgroundColor: ob,
+                    iconTintColor: ot
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .star,
+                    title: L10n.tr("settings.favorites"),
+                    action: .favorites,
+                    iconBackgroundColor: tb,
+                    iconTintColor: tt
                 )
             ]),
             SettingsSection(header: L10n.tr("settings.section.notification"), items: [
@@ -111,32 +171,28 @@ class SettingsViewModel: ViewModel {
                     action: .notificationSettings,
                     iconBackgroundColor: eb,
                     iconTintColor: et
-                ),
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .terminal,
-                    title: L10n.tr("settings.token.manage"),
-                    action: .tokenManage,
-                    iconBackgroundColor: pubg,
-                    iconTintColor: put
                 )
             ]),
-            SettingsSection(header: L10n.tr("settings.section.cache"), items: [
+            SettingsSection(header: L10n.tr("settings.section.preferences"), items: [
                 SettingsItem(
                     icon: nil,
-                    lucideIcon: .hardDrive,
-                    title: L10n.tr("settings.cache.manage"),
-                    action: .management,
-                    iconBackgroundColor: sb,
-                    iconTintColor: st
+                    lucideIcon: .clock,
+                    title: L10n.tr("settings.remember.last.app"),
+                    action: .rememberLastApp,
+                    showArrow: false,
+                    iconBackgroundColor: pb,
+                    iconTintColor: pt,
+                    hasToggle: true,
+                    toggleIsOn: rememberOn
                 ),
                 SettingsItem(
-                    icon: nil,
-                    lucideIcon: .trash,
-                    title: L10n.tr("settings.cache.clear"),
-                    action: .clearCache,
-                    iconBackgroundColor: eb,
-                    iconTintColor: et
+                    icon: "paintpalette.fill",
+                    lucideIcon: nil,
+                    title: L10n.tr("settings.appearance"),
+                    action: .appearance,
+                    value: L10n.tr("settings.appearance.system"),
+                    iconBackgroundColor: pubg,
+                    iconTintColor: put
                 )
             ]),
             SettingsSection(header: L10n.tr("settings.section.developer"), items: [
@@ -145,32 +201,17 @@ class SettingsViewModel: ViewModel {
                     lucideIcon: .bug,
                     title: L10n.tr("settings.debug.panel"),
                     action: .debugPanel,
-                    iconBackgroundColor: wb,
-                    iconTintColor: wt
-                ),
-                SettingsItem(
-                    icon: "paintbrush",
-                    lucideIcon: nil,
-                    title: L10n.tr("settings.debug.ui"),
-                    action: .uiDebug,
-                    iconBackgroundColor: sb,
-                    iconTintColor: st
-                ),
-                SettingsItem(
-                    icon: "square.grid.2x2",
-                    lucideIcon: nil,
-                    title: "框架展示",
-                    action: .showcase,
-                    iconBackgroundColor: skb,
-                    iconTintColor: skt
+                    iconBackgroundColor: gb,
+                    iconTintColor: gt,
+                    badge: L10n.tr("settings.debug.badge")
                 ),
                 SettingsItem(
                     icon: nil,
-                    lucideIcon: .search,
-                    title: "UI 审查",
-                    action: .uiAudit,
-                    iconBackgroundColor: seb,
-                    iconTintColor: set_
+                    lucideIcon: .download,
+                    title: L10n.tr("settings.export.diagnostics"),
+                    action: .exportDiagnostics,
+                    iconBackgroundColor: tb,
+                    iconTintColor: tt
                 )
             ]),
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
@@ -179,53 +220,76 @@ class SettingsViewModel: ViewModel {
                     lucideIcon: .info,
                     title: L10n.tr("settings.about"),
                     action: .about,
-                    iconBackgroundColor: pb,
-                    iconTintColor: pt
-                ),
-                SettingsItem(
-                    icon: "number",
-                    lucideIcon: nil,
-                    title: L10n.tr("settings.version"),
-                    action: .versionInfo,
-                    value: "v\(version) (\(build))",
-                    iconBackgroundColor: seb,
-                    iconTintColor: set_
+                    iconBackgroundColor: gb,
+                    iconTintColor: gt
                 )
             ])
         ]
     }()
 
+    private static func calculateCacheSize() -> String {
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        guard let dir = cacheDir else { return "0 B" }
+        var totalSize: UInt64 = 0
+        if let enumerator = FileManager.default.enumerator(at: dir, includingPropertiesForKeys: [.fileSizeKey], options: [.skipsHiddenFiles]) {
+            for case let fileURL as URL in enumerator {
+                if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                    totalSize += UInt64(size)
+                }
+            }
+        }
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: Int64(totalSize))
+    }
+
     private let navigateToServerConfigRelay = PublishRelay<Void>()
     private let navigateToAPIKeyManageRelay = PublishRelay<Void>()
     private let navigateToTokenManageRelay = PublishRelay<Void>()
+    private let navigateToFavoritesRelay = PublishRelay<Void>()
     private let navigateToManagementRelay = PublishRelay<Void>()
     private let navigateToAboutRelay = PublishRelay<Void>()
     private let navigateToDebugPanelRelay = PublishRelay<Void>()
-    private let navigateToUIDebugRelay = PublishRelay<Void>()
-    private let navigateToShowcaseRelay = PublishRelay<Void>()
+    private let navigateToAppearanceRelay = PublishRelay<Void>()
     private let openNotificationSettingsRelay = PublishRelay<Void>()
     private let clearCacheRelay = PublishRelay<Void>()
-    private let triggerUIAuditRelay = PublishRelay<Void>()
+    private let exportDiagnosticsRelay = PublishRelay<Void>()
+    private let copyTokenResultRelay = PublishRelay<Void>()
 
     func transform(input: Input) -> Output {
         input.itemSelect
             .do(onNext: { [weak self] indexPath in
                 guard let self = self else { return }
                 let item = self.sections[indexPath.section].items[indexPath.row]
-                switch item.action {
+                guard let action = item.action else { return }
+                switch action {
                 case .serverConfig: self.navigateToServerConfigRelay.accept(())
+                case .tokenManager: self.navigateToTokenManageRelay.accept(())
                 case .apiKeyManage: self.navigateToAPIKeyManageRelay.accept(())
+                case .cacheManager: self.navigateToManagementRelay.accept(())
+                case .favorites: self.navigateToFavoritesRelay.accept(())
                 case .notificationSettings: self.openNotificationSettingsRelay.accept(())
-                case .tokenManage: self.navigateToTokenManageRelay.accept(())
-                case .management: self.navigateToManagementRelay.accept(())
-                case .clearCache: self.clearCacheRelay.accept(())
+                case .rememberLastApp: break
+                case .appearance: self.navigateToAppearanceRelay.accept(())
                 case .debugPanel: self.navigateToDebugPanelRelay.accept(())
-                case .uiDebug: self.navigateToUIDebugRelay.accept(())
-                case .showcase: self.navigateToShowcaseRelay.accept(())
-                case .uiAudit: self.triggerUIAuditRelay.accept(())
+                case .exportDiagnostics: self.exportDiagnosticsRelay.accept(())
                 case .about: self.navigateToAboutRelay.accept(())
-                case .versionInfo: break
                 }
+            })
+            .drive()
+            .disposed(by: rx)
+
+        input.rememberToggle
+            .do(onNext: { isOn in
+                SettingsViewModel.rememberLastAppEnabled = isOn
+            })
+            .drive()
+            .disposed(by: rx)
+
+        input.copyTokenTap
+            .do(onNext: { [weak self] in
+                UIPasteboard.general.string = "abcd1234efgh5678"
+                self?.copyTokenResultRelay.accept(())
             })
             .drive()
             .disposed(by: rx)
@@ -234,14 +298,15 @@ class SettingsViewModel: ViewModel {
             navigateToServerConfig: navigateToServerConfigRelay.asDriver(onErrorJustReturn: ()),
             navigateToAPIKeyManage: navigateToAPIKeyManageRelay.asDriver(onErrorJustReturn: ()),
             navigateToTokenManage: navigateToTokenManageRelay.asDriver(onErrorJustReturn: ()),
+            navigateToFavorites: navigateToFavoritesRelay.asDriver(onErrorJustReturn: ()),
             navigateToManagement: navigateToManagementRelay.asDriver(onErrorJustReturn: ()),
             navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
             navigateToDebugPanel: navigateToDebugPanelRelay.asDriver(onErrorJustReturn: ()),
-            navigateToUIDebug: navigateToUIDebugRelay.asDriver(onErrorJustReturn: ()),
-            navigateToShowcase: navigateToShowcaseRelay.asDriver(onErrorJustReturn: ()),
+            navigateToAppearance: navigateToAppearanceRelay.asDriver(onErrorJustReturn: ()),
             openNotificationSettings: openNotificationSettingsRelay.asDriver(onErrorJustReturn: ()),
             clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ()),
-            triggerUIAudit: triggerUIAuditRelay.asDriver(onErrorJustReturn: ())
+            exportDiagnostics: exportDiagnosticsRelay.asDriver(onErrorJustReturn: ()),
+            copyTokenResult: copyTokenResultRelay.asDriver(onErrorJustReturn: ())
         )
     }
 }
