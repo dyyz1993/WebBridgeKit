@@ -36,6 +36,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             WebBridgeKit.shared.initialize()
         }
 
+        // Delay test data seeding to avoid race with WebCacheManager.clearAll() on background thread
+        DispatchQueue.main.async {
+            TestDataSeeder.populateIfNeeded()
+        }
+
         // 创建窗口（支持摇一摇触发调试面板）
         window = DebugWindow(frame: UIScreen.main.bounds)
 

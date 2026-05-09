@@ -39,20 +39,19 @@ actor FavoriteDatabaseActor {
 
         let realm = try getRealm()
 
-        // Check if already exists
-        let predicate = NSPredicate(format: "url == %@", urlString)
-        if let existing = realm.objects(URLFavorite.self).filter(predicate).first {
+        // Check if already exists by iterating known objects
+        var existingId: String? = nil
+        let allObjects = realm.objects(URLFavorite.self)
+        for obj in allObjects where obj.url == urlString {
+            existingId = obj.id
+            break
+        }
+        if let eid = existingId, let existing = realm.object(ofType: URLFavorite.self, forPrimaryKey: eid) {
             WebBridgeLogger.shared.log(.debug, "⚠️ Favorite already exists: \(urlString)")
-            // Update title and favicon
             try realm.write {
-                if let title = title {
-                    existing.title = title
-                }
-                if let favicon = favicon {
-                    existing.favicon = favicon
-                }
+                if let title = title { existing.title = title }
+                if let favicon = favicon { existing.favicon = favicon }
             }
-            // Return independent copy
             return URLFavorite(value: existing)
         }
 
@@ -63,15 +62,13 @@ actor FavoriteDatabaseActor {
         favorite.createdAt = Date()
 
         // Get current count for sort order
-        let currentCount = realm.objects(URLFavorite.self).count
-        favorite.sortOrder = currentCount
+        favorite.sortOrder = allObjects.count
 
         try realm.write {
             realm.add(favorite)
         }
 
         WebBridgeLogger.shared.log(.info, "➕ Favorite added: \(urlString)")
-        // Return independent copy
         return URLFavorite(value: favorite)
     }
 
@@ -113,25 +110,25 @@ actor FavoriteDatabaseActor {
     /// Get all favorites (sorted by pinned status and sort order)
     func getAllFavorites() async throws -> [URLFavorite] {
         let realm = try getRealm()
-        let results = realm.objects(URLFavorite.self)
+        var result: [URLFavorite] = []
+        let allObjects = realm.objects(URLFavorite.self)
             .sorted(by: [
                 SortDescriptor(keyPath: "isPinned", ascending: false),
                 SortDescriptor(keyPath: "sortOrder", ascending: true)
             ])
-        // Create independent copies to avoid cross-thread access issues
-        return results.map { URLFavorite(value: $0) }
+        for obj in allObjects {
+            result.append(URLFavorite(value: obj))
+        }
+        return result
     }
 
     /// Find favorite by URL
     func findFavorite(url: URL) async throws -> URLFavorite? {
-        guard let urlString = url.absoluteString as String? else {
-            return nil
-        }
+        guard let urlString = url.absoluteString as String? else { return nil }
         let realm = try getRealm()
-        let predicate = NSPredicate(format: "url == %@", urlString)
-        if let favorite = realm.objects(URLFavorite.self).filter(predicate).first {
-            // Return unfrozen (independent) object copy to avoid cross-thread access crashes
-            return URLFavorite(value: favorite)
+        let allObjects = realm.objects(URLFavorite.self)
+        for obj in allObjects where obj.url == urlString {
+            return URLFavorite(value: obj)
         }
         return nil
     }
@@ -140,7 +137,6 @@ actor FavoriteDatabaseActor {
     func findFavorite(id: String) async throws -> URLFavorite? {
         let realm = try getRealm()
         if let favorite = realm.object(ofType: URLFavorite.self, forPrimaryKey: id) {
-            // Return unfrozen (independent) object copy to avoid cross-thread access crashes
             return URLFavorite(value: favorite)
         }
         return nil
@@ -149,14 +145,20 @@ actor FavoriteDatabaseActor {
     /// Search favorites (title or URL contains keyword)
     func searchFavorites(keyword: String) async throws -> [URLFavorite] {
         let realm = try getRealm()
-        let results = realm.objects(URLFavorite.self)
-            .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
-            .sorted(by: [
-                SortDescriptor(keyPath: "isPinned", ascending: false),
-                SortDescriptor(keyPath: "sortOrder", ascending: true)
-            ])
-        // Create independent copies to avoid cross-thread access issues
-        return results.map { URLFavorite(value: $0) }
+        let lowerKeyword = keyword.lowercased()
+        var matched: [URLFavorite] = []
+        let allObjects = realm.objects(URLFavorite.self)
+        for obj in allObjects {
+            if obj.url.lowercased().contains(lowerKeyword) ||
+               (obj.title?.lowercased().contains(lowerKeyword) ?? false) {
+                matched.append(URLFavorite(value: obj))
+            }
+        }
+        matched.sort { a, b in
+            if a.isPinned != b.isPinned { return a.isPinned }
+            return a.sortOrder < b.sortOrder
+        }
+        return matched
     }
 
     /// Get total favorite count
@@ -217,26 +219,20 @@ public class URLFavoriteManager {
 
     public static let shared = URLFavoriteManager()
 
-    private let realmConfiguration: Realm.Configuration
+    public let realmConfiguration: Realm.Configuration
     private let databaseActor: FavoriteDatabaseActor
 
     private init() {
-        // Use independent Realm file
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("urlFavorite.realm"),
-            schemaVersion: 1
+            schemaVersion: 1,
+            objectTypes: [URLFavorite.self]
         )
         self.databaseActor = FavoriteDatabaseActor(realmConfiguration: realmConfiguration)
     }
 
     // MARK: - Add/Update Operations
 
-    /// Add favorite
-    /// - Parameters:
-    ///   - url: Page URL
-    ///   - title: Page title (optional)
-    ///   - favicon: Page icon (optional)
-    /// - Returns: Created favorite object
     @discardableResult
     public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) async throws -> URLFavorite {
         do {
@@ -248,7 +244,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Update favorite
     public func updateFavorite(_ favorite: URLFavorite) async throws {
         do {
             try await databaseActor.updateFavorite(favorite)
@@ -261,7 +256,6 @@ public class URLFavoriteManager {
 
     // MARK: - Delete Operations
 
-    /// Delete favorite by ID
     public func deleteFavorite(id: String) async throws {
         do {
             try await databaseActor.deleteFavorite(id: id)
@@ -272,7 +266,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Delete favorite by URL
     public func deleteFavorite(url: URL) async throws {
         do {
             try await databaseActor.deleteFavorite(url: url)
@@ -285,8 +278,6 @@ public class URLFavoriteManager {
 
     // MARK: - Query Operations
 
-    /// Get all favorites (sorted by pinned status and sort order)
-    /// Returns independent copy array to avoid cross-thread access issues
     public func getAllFavorites() async throws -> [URLFavorite] {
         do {
             return try await databaseActor.getAllFavorites()
@@ -297,7 +288,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Find favorite by URL
     public func findFavorite(url: URL) async throws -> URLFavorite? {
         do {
             return try await databaseActor.findFavorite(url: url)
@@ -308,7 +298,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Find favorite by ID
     public func findFavorite(id: String) async throws -> URLFavorite? {
         do {
             return try await databaseActor.findFavorite(id: id)
@@ -319,8 +308,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Search favorites (title or URL contains keyword)
-    /// Returns independent copy array to avoid cross-thread access issues
     public func searchFavorites(keyword: String) async throws -> [URLFavorite] {
         do {
             return try await databaseActor.searchFavorites(keyword: keyword)
@@ -331,7 +318,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Get total favorite count
     public func getTotalCount() async throws -> Int {
         do {
             return try await databaseActor.getTotalCount()
@@ -344,9 +330,6 @@ public class URLFavoriteManager {
 
     // MARK: - Special Operations
 
-    /// Toggle pin status
-    /// - Parameter id: Favorite ID
-    /// - Returns: New pin status
     @discardableResult
     public func togglePin(id: String) async throws -> Bool {
         do {
@@ -358,7 +341,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Update cache mode
     public func updateCacheMode(id: String, enabled: Bool) async throws {
         do {
             try await databaseActor.updateCacheMode(id: id, enabled: enabled)
@@ -369,7 +351,6 @@ public class URLFavoriteManager {
         }
     }
 
-    /// Update sort order
     public func updateSortOrder(favorites: [URLFavorite]) async throws {
         do {
             try await databaseActor.updateSortOrder(favorites: favorites)
@@ -382,12 +363,9 @@ public class URLFavoriteManager {
 }
 
 // MARK: - Synchronous Compatibility Layer
-// These methods provide backward compatibility with existing code
-// that calls the manager synchronously. They wrap the async methods.
 
 extension URLFavoriteManager {
 
-    /// Synchronous version of addFavorite for backward compatibility
     @discardableResult
     public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) -> URLFavorite? {
         var result: URLFavorite?
@@ -406,7 +384,6 @@ extension URLFavoriteManager {
         return result
     }
 
-    /// Synchronous version of updateFavorite for backward compatibility
     public func updateFavorite(_ favorite: URLFavorite) {
         Task {
             do {
@@ -417,7 +394,6 @@ extension URLFavoriteManager {
         }
     }
 
-    /// Synchronous version of deleteFavorite(id:) for backward compatibility
     public func deleteFavorite(id: String) {
         Task {
             do {
@@ -428,7 +404,6 @@ extension URLFavoriteManager {
         }
     }
 
-    /// Synchronous version of deleteFavorite(url:) for backward compatibility
     public func deleteFavorite(url: URL) {
         Task {
             do {
@@ -439,43 +414,24 @@ extension URLFavoriteManager {
         }
     }
 
-    /// Synchronous version of getAllFavorites for backward compatibility
-    /// Returns Results<URLFavorite> for protocol compatibility
-    public func getAllFavorites() -> Results<URLFavorite> {
-        let realm = try? Realm(configuration: realmConfiguration)
-        guard let realm = realm else {
-            let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
-            let tempRealm = try! Realm(configuration: config)
-            return tempRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
-        }
-        return realm.objects(URLFavorite.self)
+    public func getAllFavorites() -> [URLFavorite] {
+        guard let realm = try? Realm(configuration: realmConfiguration) else { return [] }
+        var result: [URLFavorite] = []
+        let allObjects = realm.objects(URLFavorite.self)
             .sorted(by: [
                 SortDescriptor(keyPath: "isPinned", ascending: false),
                 SortDescriptor(keyPath: "sortOrder", ascending: true)
             ])
-    }
-
-    /// Synchronous version of getAllFavorites returning array
-    /// Returns empty array on error
-    public func getAllFavoritesAsArray() -> [URLFavorite] {
-        var result: [URLFavorite] = []
-        let semaphore = DispatchSemaphore(value: 0)
-
-        Task {
-            do {
-                result = try await getAllFavorites()
-            } catch {
-                WebBridgeLogger.shared.log(.error, "Failed to get all favorites: \(error.localizedDescription)")
-            }
-            semaphore.signal()
+        for obj in allObjects {
+            result.append(URLFavorite(value: obj))
         }
-
-        semaphore.wait()
         return result
     }
 
-    /// Synchronous version of findFavorite(url:) for backward compatibility
-    /// Returns nil on error
+    public func getAllFavoritesAsArray() -> [URLFavorite] {
+        return getAllFavorites()
+    }
+
     public func findFavorite(url: URL) -> URLFavorite? {
         var result: URLFavorite?
         let semaphore = DispatchSemaphore(value: 0)
@@ -493,8 +449,6 @@ extension URLFavoriteManager {
         return result
     }
 
-    /// Synchronous version of findFavorite(id:) for backward compatibility
-    /// Returns nil on error
     public func findFavorite(id: String) -> URLFavorite? {
         var result: URLFavorite?
         let semaphore = DispatchSemaphore(value: 0)
@@ -512,44 +466,28 @@ extension URLFavoriteManager {
         return result
     }
 
-    /// Synchronous version of searchFavorites for backward compatibility
-    /// Returns Results<URLFavorite> for protocol compatibility
-    public func searchFavorites(keyword: String) -> Results<URLFavorite> {
-        let realm = try? Realm(configuration: realmConfiguration)
-        guard let realm = realm else {
-            let config = Realm.Configuration(inMemoryIdentifier: "EmptyResults_\(UUID().uuidString)")
-            let tempRealm = try! Realm(configuration: config)
-            return tempRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
-        }
-        return realm.objects(URLFavorite.self)
-            .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
-            .sorted(by: [
-                SortDescriptor(keyPath: "isPinned", ascending: false),
-                SortDescriptor(keyPath: "sortOrder", ascending: true)
-            ])
-    }
-
-    /// Synchronous version of searchFavorites returning array
-    /// Returns empty array on error
-    public func searchFavoritesAsArray(keyword: String) -> [URLFavorite] {
-        var result: [URLFavorite] = []
-        let semaphore = DispatchSemaphore(value: 0)
-
-        Task {
-            do {
-                result = try await searchFavorites(keyword: keyword)
-            } catch {
-                WebBridgeLogger.shared.log(.error, "Failed to search favorites: \(error.localizedDescription)")
+    public func searchFavorites(keyword: String) -> [URLFavorite] {
+        guard let realm = try? Realm(configuration: realmConfiguration) else { return [] }
+        let lowerKeyword = keyword.lowercased()
+        var matched: [URLFavorite] = []
+        let allObjects = realm.objects(URLFavorite.self)
+        for obj in allObjects {
+            if obj.url.lowercased().contains(lowerKeyword) ||
+               (obj.title?.lowercased().contains(lowerKeyword) ?? false) {
+                matched.append(URLFavorite(value: obj))
             }
-            semaphore.signal()
         }
-
-        semaphore.wait()
-        return result
+        matched.sort { a, b in
+            if a.isPinned != b.isPinned { return a.isPinned }
+            return a.sortOrder < b.sortOrder
+        }
+        return matched
     }
 
-    /// Synchronous version of getTotalCount for backward compatibility
-    /// Returns 0 on error
+    public func searchFavoritesAsArray(keyword: String) -> [URLFavorite] {
+        return searchFavorites(keyword: keyword)
+    }
+
     public func getTotalCount() -> Int {
         var result: Int = 0
         let semaphore = DispatchSemaphore(value: 0)
@@ -567,8 +505,6 @@ extension URLFavoriteManager {
         return result
     }
 
-    /// Synchronous version of togglePin for backward compatibility
-    /// Returns false on error
     @discardableResult
     public func togglePin(id: String) -> Bool {
         var result: Bool = false
@@ -587,7 +523,6 @@ extension URLFavoriteManager {
         return result
     }
 
-    /// Synchronous version of updateCacheMode for backward compatibility
     public func updateCacheMode(id: String, enabled: Bool) {
         Task {
             do {
@@ -598,7 +533,6 @@ extension URLFavoriteManager {
         }
     }
 
-    /// Synchronous version of updateSortOrder for backward compatibility
     public func updateSortOrder(favorites: [URLFavorite]) {
         Task {
             do {

@@ -28,14 +28,14 @@ class PushNotificationManager: NSObject {
 
     /// 请求通知权限并注册 APNs
     func registerForPushNotifications() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, _ in
-            if granted {
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .notDetermined else {
+                if settings.authorizationStatus == .authorized {
+                    DispatchQueue.main.async {
+                        UIApplication.shared.registerForRemoteNotifications()
+                    }
                 }
-                print("[PushManager] Notification permission granted")
-            } else {
-                print("[PushManager] Notification permission denied")
+                return
             }
         }
     }

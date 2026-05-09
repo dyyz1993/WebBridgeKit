@@ -54,7 +54,7 @@ public class WebCompressedCacheStore {
     private let cacheDirectory: URL
 
     /// Realm 配置
-    private let realmConfiguration: Realm.Configuration
+    public let realmConfiguration: Realm.Configuration
 
     /// 文件管理器
     private let fileManager: FileManager
@@ -80,8 +80,8 @@ public class WebCompressedCacheStore {
         self.realmConfiguration = Realm.Configuration(
             schemaVersion: 1,
             migrationBlock: { _, _ in
-                // 未来版本迁移在这里处理
-            }
+            },
+            objectTypes: [CacheEntryRealm.self]
         )
 
         WebBridgeLogger.shared.info("WebCompressedCacheStore initialized at: \(cacheDirectory.path)")

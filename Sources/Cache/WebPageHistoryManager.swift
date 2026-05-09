@@ -261,7 +261,7 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
 
     public static let shared = WebPageHistoryManager()
 
-    private let realmConfiguration: Realm.Configuration
+    public let realmConfiguration: Realm.Configuration
     private let databaseActor: HistoryDatabaseActor
 
     // Allow creating test instances
@@ -269,7 +269,18 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
         // Use independent Realm file to avoid conflicts with other Realm instances
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageHistory.realm"),
-            schemaVersion: 1
+            schemaVersion: 2,
+            migrationBlock: { migration, oldSchemaVersion in
+                if oldSchemaVersion < 2 {
+                    migration.enumerateObjects(ofType: WebPageHistory.className()) { oldObject, newObject in
+                        newObject?["ruleId"] = nil
+                        newObject?["ruleName"] = nil
+                        newObject?["isExcluded"] = false
+                    }
+                }
+            },
+            deleteRealmIfMigrationNeeded: false,
+            objectTypes: [WebPageHistory.self]
         )
         self.databaseActor = HistoryDatabaseActor(realmConfiguration: realmConfiguration)
     }

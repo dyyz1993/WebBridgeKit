@@ -256,12 +256,12 @@ class WebPageHistoryViewModel: ViewModel {
         let now = Date()
 
         if calendar.isDateInToday(date) {
-            return NSLocalizedString("Today", comment: "")
+            return L10n.tr("discover.time.today")
         } else if calendar.isDateInYesterday(date) {
-            return NSLocalizedString("Yesterday", comment: "")
+            return L10n.tr("discover.time.yesterday")
         } else if calendar.dateInterval(of: .weekOfYear, for: now)?.contains(date) ?? false {
             let daysAgo = calendar.dateComponents([.day], from: date, to: now).day ?? 0
-            return String(format: NSLocalizedString("%d days ago", comment: ""), daysAgo)
+            return L10n.tr("discover.time.days_ago", "\(daysAgo)")
         } else {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium

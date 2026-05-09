@@ -162,6 +162,7 @@ class TabBarController: UITabBarController {
 
     private func setupSeparator() {
         separatorView.backgroundColor = ThemeColors.current.border
+        separatorView.isUserInteractionEnabled = false
         tabBar.addSubview(separatorView)
     }
 

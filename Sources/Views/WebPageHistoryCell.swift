@@ -185,18 +185,18 @@ class WebPageHistoryCell: UITableViewCell {
         if calendar.isDateInToday(date) {
             let components = calendar.dateComponents([.hour, .minute], from: date, to: now)
             if let hours = components.hour, hours > 0 {
-                return String(format: NSLocalizedString("%dh ago", comment: ""), hours)
+                return L10n.tr("discover.time.hour_ago", "\(hours)")
             } else if let minutes = components.minute, minutes > 0 {
-                return String(format: NSLocalizedString("%dm ago", comment: ""), minutes)
+                return L10n.tr("discover.time.min_ago", "\(minutes)")
             } else {
-                return NSLocalizedString("Just now", comment: "")
+                return L10n.tr("discover.time.just_now")
             }
         } else if calendar.isDateInYesterday(date) {
-            return NSLocalizedString("Yesterday", comment: "")
+            return L10n.tr("discover.time.yesterday")
         } else {
             let days = calendar.dateComponents([.day], from: date, to: now).day ?? 0
             if days < 7 {
-                return String(format: NSLocalizedString("%dd ago", comment: ""), days)
+                return L10n.tr("discover.time.days_ago", "\(days)")
             } else {
                 let formatter = DateFormatter()
                 formatter.dateStyle = .short

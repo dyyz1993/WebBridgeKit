@@ -124,21 +124,25 @@ public class MockFavoriteService: FavoriteServiceProtocol {
 
     // MARK: - 查询
 
-    public func getAllFavorites() -> Results<URLFavorite> {
+    public func getAllFavorites() -> [URLFavorite] {
         if useInMemoryRealm, let realm = getRealm() {
-            let results = realm.objects(URLFavorite.self)
+            var result: [URLFavorite] = []
+            let allObjects = realm.objects(URLFavorite.self)
                 .sorted(by: [
                     SortDescriptor(keyPath: "isPinned", ascending: false),
                     SortDescriptor(keyPath: "sortOrder", ascending: true)
                 ])
-            print("🔍 [MockFavoriteService] getAllFavorites: useInMemoryRealm=true, count: \(results.count)")
-            return results
+            for obj in allObjects { result.append(obj) }
+            return result
         }
 
-        let config = Realm.Configuration(inMemoryIdentifier: UUID().uuidString)
-        let emptyRealm = try! Realm(configuration: config)
-        print("🔍 [MockFavoriteService] getAllFavorites: useInMemoryRealm=false, returning empty Results")
-        return emptyRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
+        return Array(mockFavorites.values)
+            .sorted { lhs, rhs in
+                if lhs.isPinned != rhs.isPinned {
+                    return lhs.isPinned && !rhs.isPinned
+                }
+                return lhs.sortOrder < rhs.sortOrder
+            }
     }
 
     /// 获取所有收藏的数组形式（用于 Mock 模式）
@@ -164,8 +168,9 @@ public class MockFavoriteService: FavoriteServiceProtocol {
         let urlString = url.absoluteString
 
         if useInMemoryRealm, let realm = getRealm() {
-            let predicate = NSPredicate(format: "url == %@", urlString)
-            return realm.objects(URLFavorite.self).filter(predicate).first
+            let allObjects = realm.objects(URLFavorite.self)
+            for obj in allObjects where obj.url == urlString { return obj }
+            return nil
         }
 
         return mockFavorites.values.first { $0.url == urlString }
@@ -179,19 +184,24 @@ public class MockFavoriteService: FavoriteServiceProtocol {
         return mockFavorites[id]
     }
 
-    public func searchFavorites(keyword: String) -> Results<URLFavorite> {
+    public func searchFavorites(keyword: String) -> [URLFavorite] {
+        let lowerKeyword = keyword.lowercased()
         if useInMemoryRealm, let realm = getRealm() {
-            return realm.objects(URLFavorite.self)
-                .filter("url CONTAINS[c] %@ OR title CONTAINS[c] %@", keyword, keyword)
-                .sorted(by: [
-                    SortDescriptor(keyPath: "isPinned", ascending: false),
-                    SortDescriptor(keyPath: "sortOrder", ascending: true)
-                ])
+            var matched: [URLFavorite] = []
+            let allObjects = realm.objects(URLFavorite.self)
+            for obj in allObjects {
+                if obj.url.lowercased().contains(lowerKeyword) ||
+                   (obj.title?.lowercased().contains(lowerKeyword) ?? false) {
+                    matched.append(obj)
+                }
+            }
+            return matched
         }
 
-        let config = Realm.Configuration(inMemoryIdentifier: UUID().uuidString)
-        let emptyRealm = try! Realm(configuration: config)
-        return emptyRealm.objects(URLFavorite.self).filter("FALSEPREDICATE")
+        return mockFavorites.values.filter { fav in
+            fav.url.lowercased().contains(lowerKeyword) ||
+            (fav.title?.lowercased().contains(lowerKeyword) ?? false)
+        }
     }
 
     public func getTotalCount() -> Int {

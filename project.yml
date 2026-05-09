@@ -54,11 +54,12 @@ targets:
     deploymentTarget: "14.0"
     sources:
       - SuperApp/Sources
+      - SuperApp/Resources
     resources:
-      - SuperApp/Resources/**/*.strings
       - path: SuperApp/Resources
         excludes:
           - "**/*.strings"
+          - "**/*.lproj/**"
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp
       SWIFT_VERSION: "5.0"
@@ -97,6 +98,8 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       TARGETED_DEVICE_FAMILY: "1,2"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
+      ENABLE_PREVIEWS: NO
+      ENABLE_SWIFT_TESTING: NO
     dependencies:
       - target: SuperApp
 
@@ -131,9 +134,9 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       CURRENT_PROJECT_VERSION: "1"
       MARKETING_VERSION: "1.0"
-      PRODUCT_NAME: Message
+      PRODUCT_NAME: WBKMessage
       PRODUCT_MODULE_NAME: WBKMessage
-      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Message
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.WBKMessage
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
       TARGETED_DEVICE_FAMILY: "1,2"

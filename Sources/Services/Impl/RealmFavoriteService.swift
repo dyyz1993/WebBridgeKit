@@ -48,7 +48,7 @@ public class RealmFavoriteService: FavoriteServiceProtocol {
 
     // MARK: - 查询
 
-    public func getAllFavorites() -> Results<URLFavorite> {
+    public func getAllFavorites() -> [URLFavorite] {
         return manager.getAllFavorites()
     }
 
@@ -60,7 +60,7 @@ public class RealmFavoriteService: FavoriteServiceProtocol {
         return manager.findFavorite(id: id)
     }
 
-    public func searchFavorites(keyword: String) -> Results<URLFavorite> {
+    public func searchFavorites(keyword: String) -> [URLFavorite] {
         return manager.searchFavorites(keyword: keyword)
     }
 

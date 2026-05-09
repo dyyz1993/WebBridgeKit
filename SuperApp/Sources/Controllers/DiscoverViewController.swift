@@ -136,16 +136,18 @@ class DiscoverViewController: UIViewController {
     }
 
     private func loadData() {
-        buildSections()
-        collectionView.reloadData()
-        collectionView.refreshControl?.endRefreshing()
-        emptyStateView.isHidden = !sections.allSatisfy { $0.items.isEmpty }
+        Task { @MainActor in
+            await buildSections()
+            collectionView.reloadData()
+            collectionView.refreshControl?.endRefreshing()
+            emptyStateView.isHidden = !sections.allSatisfy { $0.items.isEmpty }
+        }
     }
 
-    private func buildSections() {
+    private func buildSections() async {
         var newSections: [DiscoverSection] = []
 
-        let histories = WebPageHistoryManager.shared.getAllHistories()
+        let histories = (try? await WebPageHistoryManager.shared.getAllHistories()) ?? []
         let recentItems = histories.prefix(6).map { history -> DiscoverItem in
             let cacheStatus = DiscoverItem.CacheStatus(from: history)
             let cacheSize = ByteCountFormatter.string(fromByteCount: history.cachedSize, countStyle: .file)
@@ -219,7 +221,7 @@ class DiscoverViewController: UIViewController {
         if interval < 60 { return L10n.tr("discover.time.just_now") }
         if interval < 3600 { return L10n.tr("discover.time.min_ago", "\(Int(interval / 60))") }
         if interval < 86400 { return L10n.tr("discover.time.hour_ago", "\(Int(interval / 3600))") }
-        return dateFormatter.string(from: date)
+        return L10n.tr("discover.time.days_ago", "\(Int(interval / 86400))")
     }
 
     private func openURL(_ urlString: String) {
@@ -487,6 +489,7 @@ class DiscoverAppCell: UICollectionViewCell {
         let sv = UIStackView()
         sv.axis = .vertical
         sv.spacing = 2
+        sv.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return sv
     }()
 
@@ -494,8 +497,10 @@ class DiscoverAppCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = ThemeColors.current.text
-        label.numberOfLines = 1
+        label.numberOfLines = 2
         label.lineBreakMode = .byTruncatingTail
+        label.setContentHuggingPriority(.required, for: .vertical)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
         return label
     }()
 

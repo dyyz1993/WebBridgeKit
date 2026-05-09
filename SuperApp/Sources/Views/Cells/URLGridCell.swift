@@ -246,13 +246,13 @@ class URLGridCell: UICollectionViewCell {
 
         let elapsed = Date().timeIntervalSince(history.lastVisitDate)
         if elapsed < 60 {
-            timeLabel.text = "just now"
+            timeLabel.text = L10n.tr("discover.time.just_now")
         } else if elapsed < 3600 {
-            timeLabel.text = "\(Int(elapsed / 60)) min ago"
+            timeLabel.text = L10n.tr("discover.time.min_ago", "\(Int(elapsed / 60))")
         } else if elapsed < 86400 {
-            timeLabel.text = "\(Int(elapsed / 3600))h ago"
+            timeLabel.text = L10n.tr("discover.time.hour_ago", "\(Int(elapsed / 3600))")
         } else {
-            timeLabel.text = "\(Int(elapsed / 86400))d ago"
+            timeLabel.text = L10n.tr("discover.time.days_ago", "\(Int(elapsed / 86400))")
         }
 
         if let token = getMaskedToken() {

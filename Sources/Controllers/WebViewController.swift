@@ -322,10 +322,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                     // 使用 WebPageOfflineCacheManager 的 Realm 实例来更新
                     // 因为它可能已经打开了 Realm
                     do {
-                        let realm = try Realm(configuration: Realm.Configuration(
-                            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageHistory.realm"),
-                            schemaVersion: 1
-                        ))
+                        let realm = try Realm(configuration: WebPageHistoryManager.shared.realmConfiguration)
                         try realm.write {
                             if let cachedHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
                                 cachedHistory.thumbnail = thumbnailData

@@ -16,10 +16,9 @@ public class AccessTokenManager {
 
     public static let shared = AccessTokenManager()
 
-    private let realmConfiguration: Realm.Configuration
+    let realmConfiguration: Realm.Configuration
 
     private init() {
-        // 使用独立的 Realm 文件
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("accessToken.realm"),
             schemaVersion: 1

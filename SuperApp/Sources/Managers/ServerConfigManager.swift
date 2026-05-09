@@ -16,18 +16,19 @@ public class ServerConfigManager {
 
     public static let shared = ServerConfigManager()
 
-    private let realmConfiguration: Realm.Configuration
+    let realmConfiguration: Realm.Configuration
 
     private let defaultBaseURL = "https://api.webbridgekit.com"
     private let defaultAPIEndpoint = "/v1"
 
     private var hasEnsuredDefault = false
-    private let initLock = NSLock()
+    private let initLock = NSRecursiveLock()
 
     public init() {
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("serverConfig.realm"),
-            schemaVersion: 1
+            schemaVersion: 1,
+            objectTypes: [ServerConfig.self]
         )
     }
 
@@ -36,18 +37,33 @@ public class ServerConfigManager {
         defer { initLock.unlock() }
         guard !hasEnsuredDefault else { return }
         hasEnsuredDefault = true
-        ensureDefaultConfigExists()
+        do {
+            let realm = try Realm(configuration: realmConfiguration)
+            if realm.object(ofType: ServerConfig.self, forPrimaryKey: "default") == nil {
+                try resetToDefaultSync(in: realm)
+            }
+        } catch {
+            print("⚠️ [ServerConfigManager] Failed to ensure default config: \(error)")
+        }
     }
 
-    /// 获取 Realm 实例
     private func getRealm() -> Realm? {
         return try? Realm(configuration: realmConfiguration)
     }
 
-    /// 确保默认配置存在
-    private func ensureDefaultConfigExists() {
-        if getActiveConfig() == nil {
-            resetToDefault()
+    private func resetToDefaultSync(in realm: Realm) throws {
+        try realm.write {
+            if let existing = realm.object(ofType: ServerConfig.self, forPrimaryKey: "default") {
+                realm.delete(existing)
+            }
+            let defaultConfig = ServerConfig()
+            defaultConfig.id = "default"
+            defaultConfig.serverType = "default"
+            defaultConfig.baseURL = defaultBaseURL
+            defaultConfig.apiEndpoint = defaultAPIEndpoint
+            defaultConfig.isActive = true
+            defaultConfig.updatedAt = Date()
+            realm.add(defaultConfig)
         }
     }
 
@@ -69,27 +85,21 @@ public class ServerConfigManager {
     /// 获取当前激活的配置
     public func getActiveConfig() -> ServerConfig? {
         ensureDefaultOnce()
-        let realm = getRealm()
-        let predicate = NSPredicate(format: "isActive == true")
-        return realm?.objects(ServerConfig.self).filter(predicate).first
+        guard let realm = getRealm() else { return nil }
+        return realm.object(ofType: ServerConfig.self, forPrimaryKey: "default")
     }
 
     /// 激活指定配置
     public func activateConfig(id: String) {
-        let realm = getRealm()
+        guard let realm = getRealm() else { return }
 
-        // 先停用所有配置
-        try? realm?.write {
-            let allConfigs = realm?.objects(ServerConfig.self)
-            allConfigs?.forEach { $0.isActive = false }
-        }
+        let defaultConfig = realm.object(ofType: ServerConfig.self, forPrimaryKey: "default")
+        let targetConfig = realm.object(ofType: ServerConfig.self, forPrimaryKey: id)
 
-        // 激活指定配置
-        guard let config = realm?.object(ofType: ServerConfig.self, forPrimaryKey: id) else { return }
-
-        try? realm?.write {
-            config.isActive = true
-            config.updatedAt = Date()
+        try? realm.write {
+            defaultConfig?.isActive = false
+            targetConfig?.isActive = true
+            targetConfig?.updatedAt = Date()
         }
 
         WebBridgeLogger.shared.log(.info, "✅ Config activated: \(id)")
@@ -97,17 +107,14 @@ public class ServerConfigManager {
 
     /// 重置为默认配置
     public func resetToDefault() {
-        let realm = getRealm()
+        guard let realm = getRealm() else { return }
 
-        // 删除所有现有配置
-        try? realm?.write {
-            let allConfigs = realm?.objects(ServerConfig.self)
-            if let configs = allConfigs, !configs.isEmpty {
-                realm?.delete(configs)
+        try? realm.write {
+            if let existing = realm.object(ofType: ServerConfig.self, forPrimaryKey: "default") {
+                realm.delete(existing)
             }
         }
 
-        // 创建默认配置
         let defaultConfig = ServerConfig()
         defaultConfig.id = "default"
         defaultConfig.serverType = "default"
@@ -116,8 +123,8 @@ public class ServerConfigManager {
         defaultConfig.isActive = true
         defaultConfig.updatedAt = Date()
 
-        try? realm?.write {
-            realm?.add(defaultConfig)
+        try? realm.write {
+            realm.add(defaultConfig)
         }
 
         WebBridgeLogger.shared.log(.info, "🔄 Reset to default server config")
@@ -143,12 +150,13 @@ public class ServerConfigManager {
     }
 
     /// 获取所有配置
-    public func getAllConfigs() -> Results<ServerConfig> {
-        guard let realm = getRealm() else {
-            return try! Realm().objects(ServerConfig.self).filter("FALSEPREDICATE")
+    public func getAllConfigs() -> [ServerConfig] {
+        guard let realm = getRealm() else { return [] }
+        var configs: [ServerConfig] = []
+        if let defaultCfg = realm.object(ofType: ServerConfig.self, forPrimaryKey: "default") {
+            configs.append(defaultCfg)
         }
-        return realm.objects(ServerConfig.self)
-            .sorted(byKeyPath: "updatedAt", ascending: false)
+        return configs
     }
 
     // MARK: - 连接测试

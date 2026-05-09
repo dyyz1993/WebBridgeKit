@@ -59,6 +59,7 @@
 "inbox.empty.description" = "Push messages will appear here";
 "inbox.swipe.delete" = "Delete";
 "inbox.clear_all" = "Clear All";
+"inbox.send_test" = "Send Test";
 "inbox.group.unread_format" = "%@ unread";
 "inbox.group.ungrouped" = "Ungrouped";
 "inbox.test.title" = "Test Notification";
@@ -88,6 +89,9 @@
 "discover.time.just_now" = "Just now";
 "discover.time.min_ago" = "%@ min ago";
 "discover.time.hour_ago" = "%@h ago";
+"discover.time.days_ago" = "%@ days ago";
+"discover.time.today" = "Today";
+"discover.time.yesterday" = "Yesterday";
 "discover.detail.title" = "App Details";
 "discover.detail.cache_info" = "Cache Info";
 "discover.detail.access" = "Access";

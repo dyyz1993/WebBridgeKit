@@ -137,6 +137,10 @@ public class WebResourceCacheManager {
     // MARK: - Properties
 
     private let realmConfiguration: Realm.Configuration
+
+    public var configuration: Realm.Configuration {
+        return realmConfiguration
+    }
     private let cacheBaseDirectory: URL
     private let cacheIndexFile: URL
     private let fileManager = FileManager.default

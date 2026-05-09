@@ -28,11 +28,7 @@ public class WebPageOfflineCacheManager {
     private let realmConfiguration: Realm.Configuration
 
     private init() {
-        // 使用与 WebPageHistoryManager 相同的 Realm 配置，因为它们都操作 WebPageHistory
-        self.realmConfiguration = Realm.Configuration(
-            fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("pageHistory.realm"),
-            schemaVersion: 1
-        )
+        self.realmConfiguration = WebPageHistoryManager.shared.realmConfiguration
 
         // 确保缓存目录存在
         try? FileManager.default.createDirectory(at: cacheBaseDirectory, withIntermediateDirectories: true)

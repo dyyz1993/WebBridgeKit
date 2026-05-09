@@ -85,7 +85,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let fabButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(LucideIcon.send.image(pointSize: 16, weight: .semibold), for: .normal)
-        button.setTitle("Send Test", for: .normal)
+        button.setTitle(L10n.tr("inbox.send_test"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.backgroundColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
         button.tintColor = .white
@@ -146,7 +146,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         navigationController?.navigationBar.prefersLargeTitles = true
 
         let clearAllBtn = UIBarButtonItem(
-            title: "Clear All",
+            title: L10n.tr("inbox.clear_all"),
             style: .plain,
             target: nil,
             action: nil

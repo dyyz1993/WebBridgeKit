@@ -83,10 +83,15 @@ class MainViewModel: ViewModel {
 
         // 点击项目
         input.itemSelect
-            .withLatestFrom(historiesRelay.asDriver()) { indexPath, sections in
+            .withLatestFrom(historiesRelay.asDriver()) { indexPath, sections -> WebPageHistory? in
+                guard indexPath.section < sections.count,
+                      indexPath.item < sections[indexPath.section].items.count else {
+                    return nil
+                }
                 return sections[indexPath.section].items[indexPath.item]
             }
-            .flatMap { history -> Driver<URL> in
+            .compactMap { $0 }
+            .flatMap { (history: WebPageHistory) -> Driver<URL> in
                 let urlString = history.url
                 guard !urlString.isEmpty, let url = URL(string: urlString) else {
                     return Driver.empty()
@@ -103,10 +108,15 @@ class MainViewModel: ViewModel {
 
         // 长按项目
         input.itemLongPress
-            .withLatestFrom(historiesRelay.asDriver()) { indexPath, sections in
+            .withLatestFrom(historiesRelay.asDriver()) { indexPath, sections -> WebPageHistory? in
+                guard indexPath.section < sections.count,
+                      indexPath.item < sections[indexPath.section].items.count else {
+                    return nil
+                }
                 return sections[indexPath.section].items[indexPath.item]
             }
-            .flatMap { history -> Driver<URL> in
+            .compactMap { $0 }
+            .flatMap { (history: WebPageHistory) -> Driver<URL> in
                 guard let url = URL(string: history.url) else {
                     return Driver.empty()
                 }
@@ -172,7 +182,7 @@ class MainViewModel: ViewModel {
             // 3. 一次性获取所有收藏数据，避免在循环中重复查询 Realm
             // 注意：favoriteService 目前还是同步的，保持在主线程执行
             await MainActor.run {
-                let allFavorites = Array(self.favoriteService.getAllFavorites())
+                let allFavorites = self.favoriteService.getAllFavorites()
                 let favoriteURLs = Set(allFavorites.map { $0.url })
 
                 // 2. 获取置顶项目 (从已获取的收藏中筛选 isPinned = true)
