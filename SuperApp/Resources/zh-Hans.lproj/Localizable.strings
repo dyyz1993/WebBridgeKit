@@ -248,6 +248,14 @@
 "web_access.auto_cache_failure_format" = "自动缓存失败: %@";
 
 // Favorite
+"favorite.title" = "收藏夹";
+"favorite.empty_title" = "暂无收藏";
+"favorite.empty_description" = "收藏的链接会显示在这里";
+"favorite.confirm_delete" = "确认删除";
+"favorite.delete_message" = "确定要删除这条收藏吗？";
+"favorite.actions" = "操作";
+"favorite.select_action" = "请选择操作";
+"favorite.section_favorites" = "收藏";
 "favorite.section.pinned" = "置顶收藏";
 "favorite.section.normal" = "收藏";
 
@@ -302,6 +310,10 @@
 "notif_debug.template.encrypted" = "加密通知";
 "notif_debug.template.encrypted_title" = "加密通知";
 
+// Management
+"management.tab_favorites" = "收藏";
+"management.tab_cache" = "缓存";
+
 // Server Config
 "server_config.title" = "服务器配置";
 "server_config.section.server_type" = "服务器类型";
@@ -327,6 +339,65 @@
 "server_config.action_test" = "测试连接";
 "server_config.action_save" = "保存配置";
 "server_config.action_reset" = "恢复默认";
+
+// API Key Management
+"apikey.manage.title" = "密钥管理";
+"apikey.manage.permanent_key" = "永久密钥";
+"apikey.manage.refresh" = "刷新";
+"apikey.manage.test" = "测试";
+"apikey.manage.view_examples" = "查看示例";
+"apikey.manage.temporary_keys" = "临时密钥";
+"apikey.manage.temporary_keys_desc" = "临时密钥有过期时间，过期后自动删除";
+"apikey.manage.bark_config_title" = "Bark 推送配置";
+"apikey.manage.bark_key_placeholder" = "输入 Bark Key";
+"apikey.manage.bark_server_placeholder" = "https://api.day.app";
+"apikey.manage.save_config" = "保存配置";
+"apikey.manage.empty_title" = "暂无密钥";
+"apikey.manage.empty_description" = "点击右上角 + 号创建新密钥";
+"apikey.manage.refresh_confirm_title" = "确认刷新";
+"apikey.manage.refresh_confirm_message" = "确定要重新生成永久密钥吗？旧密钥将立即失效。";
+"apikey.manage.refresh_confirm" = "确认刷新";
+"apikey.manage.save_success" = "保存成功";
+"apikey.manage.bark_save_message" = "Bark 推送配置已保存";
+"apikey.manage.create_title" = "创建临时密钥";
+"apikey.manage.create_message" = "设置临时密钥的名称、分组和有效期";
+"apikey.manage.create_name_placeholder" = "密钥名称";
+"apikey.manage.create_group_placeholder" = "分组名称（可选）";
+"apikey.manage.duration_1h" = "1 小时";
+"apikey.manage.duration_1d" = "1 天";
+"apikey.manage.duration_7d" = "7 天";
+"apikey.manage.duration_30d" = "30 天";
+"apikey.manage.next_step" = "下一步";
+"apikey.manage.select_duration" = "选择有效期";
+"apikey.manage.refresh_success" = "刷新成功";
+"apikey.manage.refresh_success_message" = "永久密钥已重新生成，请及时更新相关配置";
+"apikey.manage.copy_success" = "复制成功";
+"apikey.manage.copy_success_message" = "密钥已复制到剪贴板";
+"apikey.manage.add_success" = "创建成功";
+"apikey.manage.add_success_message" = "临时密钥已创建并复制到剪贴板";
+"apikey.manage.test_success" = "测试成功";
+"apikey.manage.test_failure" = "测试失败";
+"apikey.manage.edit_group_title" = "编辑分组";
+"apikey.manage.edit_group_message" = "为密钥 \"%@\" 设置分组 ID";
+"apikey.manage.group_id" = "分组 ID";
+
+// API Key Examples
+"apikey.example.title" = "API 密钥使用示例";
+"apikey.example.header" = "以下是使用 API 密钥的各种示例，点击可复制代码";
+"apikey.example.bark_basic" = "Bark 基础推送";
+"apikey.example.bark_basic_desc" = "最简单的推送方式，只需拼接 URL 即可发送通知";
+"apikey.example.bark_autocopy" = "自动复制推送";
+"apikey.example.bark_autocopy_desc" = "推送到达后自动复制指定内容到剪贴板";
+"apikey.example.bark_critical" = "严重警告推送";
+"apikey.example.bark_critical_desc" = "使用时区和重要性级别发送紧急通知";
+"apikey.example.bark_icon" = "自定义图标推送";
+"apikey.example.bark_icon_desc" = "自定义推送图标和角标";
+"apikey.example.swift_integration" = "Swift 集成示例";
+"apikey.example.swift_integration_desc" = "在 Swift 中使用 API Key 调用接口";
+"apikey.example.curl" = "cURL 示例";
+"apikey.example.curl_desc" = "使用 cURL 命令行调用 API";
+"apikey.example.copied_title" = "已复制";
+"apikey.example.copied_message" = "代码已复制到剪贴板";
 
 // WebView Display
 "webview.close" = "✕ 关闭";

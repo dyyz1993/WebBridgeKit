@@ -248,6 +248,14 @@
 "web_access.auto_cache_failure_format" = "Auto-cache failed: %@";
 
 // Favorite
+"favorite.title" = "Favorites";
+"favorite.empty_title" = "No Favorites";
+"favorite.empty_description" = "Your favorited links will appear here";
+"favorite.confirm_delete" = "Confirm Delete";
+"favorite.delete_message" = "Are you sure you want to delete this favorite?";
+"favorite.actions" = "Actions";
+"favorite.select_action" = "Please select an action";
+"favorite.section_favorites" = "Favorites";
 "favorite.section.pinned" = "Pinned";
 "favorite.section.normal" = "Favorites";
 
@@ -302,6 +310,10 @@
 "notif_debug.template.encrypted" = "Encrypted Notification";
 "notif_debug.template.encrypted_title" = "Encrypted Notification";
 
+// Management
+"management.tab_favorites" = "Favorites";
+"management.tab_cache" = "Cache";
+
 // Server Config
 "server_config.title" = "Server Configuration";
 "server_config.section.server_type" = "Server Type";
@@ -327,6 +339,65 @@
 "server_config.action_test" = "Test Connection";
 "server_config.action_save" = "Save Configuration";
 "server_config.action_reset" = "Restore Defaults";
+
+// API Key Management
+"apikey.manage.title" = "API Key Manager";
+"apikey.manage.permanent_key" = "Permanent Key";
+"apikey.manage.refresh" = "Refresh";
+"apikey.manage.test" = "Test";
+"apikey.manage.view_examples" = "View Examples";
+"apikey.manage.temporary_keys" = "Temporary Keys";
+"apikey.manage.temporary_keys_desc" = "Temporary keys have an expiration time and will be auto-deleted";
+"apikey.manage.bark_config_title" = "Bark Push Config";
+"apikey.manage.bark_key_placeholder" = "Enter Bark Key";
+"apikey.manage.bark_server_placeholder" = "https://api.day.app";
+"apikey.manage.save_config" = "Save Config";
+"apikey.manage.empty_title" = "No Keys";
+"apikey.manage.empty_description" = "Tap + in the top-right corner to create a new key";
+"apikey.manage.refresh_confirm_title" = "Confirm Refresh";
+"apikey.manage.refresh_confirm_message" = "Are you sure you want to regenerate the permanent key? The old key will be invalidated immediately.";
+"apikey.manage.refresh_confirm" = "Confirm Refresh";
+"apikey.manage.save_success" = "Saved";
+"apikey.manage.bark_save_message" = "Bark push configuration saved";
+"apikey.manage.create_title" = "Create Temporary Key";
+"apikey.manage.create_message" = "Set name, group, and expiration for the temporary key";
+"apikey.manage.create_name_placeholder" = "Key Name";
+"apikey.manage.create_group_placeholder" = "Group Name (optional)";
+"apikey.manage.duration_1h" = "1 Hour";
+"apikey.manage.duration_1d" = "1 Day";
+"apikey.manage.duration_7d" = "7 Days";
+"apikey.manage.duration_30d" = "30 Days";
+"apikey.manage.next_step" = "Next";
+"apikey.manage.select_duration" = "Select Duration";
+"apikey.manage.refresh_success" = "Refresh Success";
+"apikey.manage.refresh_success_message" = "Permanent key has been regenerated, please update related configs";
+"apikey.manage.copy_success" = "Copied";
+"apikey.manage.copy_success_message" = "Key copied to clipboard";
+"apikey.manage.add_success" = "Created";
+"apikey.manage.add_success_message" = "Temporary key created and copied to clipboard";
+"apikey.manage.test_success" = "Test Success";
+"apikey.manage.test_failure" = "Test Failed";
+"apikey.manage.edit_group_title" = "Edit Group";
+"apikey.manage.edit_group_message" = "Set group ID for key \"%@\"";
+"apikey.manage.group_id" = "Group ID";
+
+// API Key Examples
+"apikey.example.title" = "API Key Usage Examples";
+"apikey.example.header" = "Examples of using API keys, tap to copy code";
+"apikey.example.bark_basic" = "Bark Basic Push";
+"apikey.example.bark_basic_desc" = "Simplest push method, just concatenate URL to send notification";
+"apikey.example.bark_autocopy" = "Auto-Copy Push";
+"apikey.example.bark_autocopy_desc" = "Auto-copy specified content to clipboard on push arrival";
+"apikey.example.bark_critical" = "Critical Alert Push";
+"apikey.example.bark_critical_desc" = "Send urgent notifications with timezone and importance level";
+"apikey.example.bark_icon" = "Custom Icon Push";
+"apikey.example.bark_icon_desc" = "Custom push icon and badge";
+"apikey.example.swift_integration" = "Swift Integration";
+"apikey.example.swift_integration_desc" = "Use API Key to call APIs in Swift";
+"apikey.example.curl" = "cURL Example";
+"apikey.example.curl_desc" = "Call API using cURL command line";
+"apikey.example.copied_title" = "Copied";
+"apikey.example.copied_message" = "Code copied to clipboard";
 
 // WebView Display
 "webview.close" = "✕ Close";
