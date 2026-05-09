@@ -123,10 +123,15 @@ struct UIAuditTool {
         if (view is UIButton || view is UITextField || view is UITextView || view is UISwitch)
             && view.accessibilityIdentifier == nil && !view.isHidden {
             let desc: String
-            if let btn = view as? UIButton { desc = "Button \"\(btn.titleLabel?.text ?? "")\"" }
-            else if let tf = view as? UITextField { desc = "TextField placeholder \"\(tf.placeholder ?? "")\"" }
-            else if let sw = view as? UISwitch { desc = "Switch" }
-            else { desc = "Interactive element" }
+            if let btn = view as? UIButton {
+                desc = "Button \"\(btn.titleLabel?.text ?? "")\""
+            } else if let tf = view as? UITextField {
+                desc = "TextField placeholder \"\(tf.placeholder ?? "")\""
+            } else if let sw = view as? UISwitch {
+                desc = "Switch"
+            } else {
+                desc = "Interactive element"
+            }
 
             issues.append(AuditIssue(
                 severity: "WARNING",

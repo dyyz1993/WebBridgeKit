@@ -412,7 +412,14 @@ extension DiscoverViewController {
     }
 
     static func iconForName(_ name: String) -> LucideIcon {
-        let icons: [LucideIcon] = [.globe, .appFill, .hardDrive, .doc, .star, .folder]
+        let icons: [LucideIcon] = [
+            .globe,
+            .appFill,
+            .hardDrive,
+            .doc,
+            .star,
+            .folder,
+        ]
         return icons[abs(name.hashValue) % icons.count]
     }
 }

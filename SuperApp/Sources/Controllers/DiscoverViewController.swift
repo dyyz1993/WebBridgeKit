@@ -652,6 +652,15 @@ class DiscoverAppCell: UICollectionViewCell {
         (UIColor(red: 0.631, green: 0.549, blue: 0.82, alpha: 1), UIColor(red: 0.984, green: 0.761, blue: 0.922, alpha: 1)),
     ]
 
+    private static let icons: [LucideIcon] = [
+        .globe,
+        .appFill,
+        .hardDrive,
+        .doc,
+        .star,
+        .folder,
+    ]
+
     private static let icons: [LucideIcon] = [.globe, .appFill, .hardDrive, .doc, .star, .folder]
 
     private static func gradientColors(for name: String) -> (UIColor, UIColor) {

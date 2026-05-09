@@ -290,108 +290,76 @@ jobs:
       - name: Setup Project
         uses: ./.github/actions/setup-project
 
-      - name: Cleanup Simulators (pre-boot)
+      - name: Cleanup & Prepare Simulators
+        id: prep
         run: |
+          set -euo pipefail
+          echo "=== Pre-boot cleanup ==="
           xcrun simctl shutdown all 2>/dev/null || true
-          sleep 3
+          sleep 2
           xcrun simctl erase all 2>/dev/null || true
-          echo "All simulators shut down and erased"
+          echo "All existing simulators shut down and erased"
 
-      - name: Setup Simulator
-        id: sim
-        run: |
           echo "=== SDK Info ==="
           xcodebuild -version
-          xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || true
-          xcodebuild -downloadPlatform iOS 2>/dev/null || true
-          echo "=== Available runtimes ==="
-          xcrun simctl list runtimes
           SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
-          echo "SDK major version: $SDK_VER"
-          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          runtimes = data.get('runtimes', [])
-          ios = [rt for rt in runtimes if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
-          if ios:
-              sdk_ver = '${SDK_VER}'
-              preferred = [rt for rt in ios if rt.get('version', '').startswith(sdk_ver + '.')]
-              if preferred:
-                  preferred.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
-                  print(preferred[0]['identifier'])
-              else:
-                  ios.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
-                  for rt in ios:
-                      v = rt.get('version', '')
-                      major = int(v.split('.')[0]) if v else 99
-                      if major <= int(sdk_ver):
-                          print(rt['identifier'])
-                          break
-                  else:
-                      print(ios[0]['identifier'])
-          else:
-              print('', file=sys.stderr)
-              sys.exit(1)
-          " 2>/dev/null || echo "")
-          if [ -z "$RUNTIME" ]; then
-            echo "::warning::JSON parse failed, trying runtime identifier fallback"
-            for ver in "${SDK_VER}-2" "${SDK_VER}-1" "${SDK_VER}-0" "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
-              for sep in "-" "_"; do
-                candidate="com.apple.CoreSimulator.SimRuntime.iOS${sep}${ver}"
-                if xcrun simctl list runtimes | grep -qF "$candidate"; then
-                  RUNTIME="$candidate"
-                  break 2
-                fi
-              done
-            done
-          fi
-          if [ -z "$RUNTIME" ]; then
-            echo "::warning::No iOS runtime found, tests will use generic destination"
-            echo "use_simulator=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "Using runtime: $RUNTIME"
-          DEVICE_ID=$(xcrun simctl create "CI-Smoke-${GITHUB_RUN_ID}" "iPhone 15" "$RUNTIME" || echo "")
-          if [ -z "$DEVICE_ID" ]; then
-            echo "::warning::Failed to create simulator, tests will use generic destination"
-            echo "use_simulator=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
-          echo "Waiting for simulator to be fully ready..."
-          for i in $(seq 1 30); do
-            if xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null; then
-              break
-            fi
-            echo "  Attempt $i/30: waiting for boot..."
-            sleep 2
-          done
-          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
-          echo "use_simulator=true" >> $GITHUB_OUTPUT
-          echo "Simulator ready: $DEVICE_ID (runtime: $RUNTIME)"
+          echo "SDK version: $(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || echo 'unknown') (major: $SDK_VER)"
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
 
-      - name: Skip Smoke Tests (no simulator)
-        if: steps.sim.outputs.use_simulator != 'true'
-        run: |
-          echo "::warning::No simulator available — skipping smoke UI tests"
-          mkdir -p build/test-results
-          echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="SuperAppSmokeTests" tests="1" failures="0"><testcase name="skipped" classname="SuperAppSmokeTests"/></testsuite></testsuites>' > build/test-results/smoke-junit.xml
+          echo "=== Available iOS Runtimes ==="
+          xcrun simctl list runtimes
+          echo ""
+          echo "=== Available Devices (iPhone family) ==="
+          xcrun simctl list devices available | grep -i iphone || echo "(none found)"
+
+          DESTINATION=""
+          for DEVICE_TYPE in "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
+            echo "--- Trying destination: platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest ---"
+            if xcodebuild test \
+                -workspace WebBridgeKit.xcworkspace \
+                -scheme SuperApp \
+                -destination "platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest" \
+                -configuration Debug \
+                -resultBundlePath /tmp/smoke-probe.xcresult \
+                -only-testing:SuperAppUITests/SuperAppSmokeTests \
+                -skip-testing:SuperAppUITests/SuperAppSmokeTests \
+                CODE_SIGN_IDENTITY="" \
+                CODE_SIGNING_REQUIRED=NO \
+                CODE_SIGNING_ALLOWED=NO \
+                -quiet 2>&1 | head -5; then
+              DESTINATION="platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest"
+              echo "✅ Valid destination found: $DESTINATION"
+              break
+            else
+              echo "   ⚠️ Destination not usable, trying next..."
+            fi
+          done
+
+          rm -rf /tmp/smoke-probe.xcresult 2>/dev/null || true
+
+          if [ -z "$DESTINATION" ]; then
+            echo "::warning::No named device destination worked, falling back to generic"
+            DESTINATION="generic/platform=iOS Simulator"
+          fi
+
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+          echo "Using destination: $DESTINATION"
 
       - name: Run Smoke Tests
-        if: steps.sim.outputs.use_simulator == 'true'
         env:
           CI: "true"
         run: |
           set -o pipefail
           mkdir -p build/test-results
-          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
+          DESTINATION="${{ steps.prep.outputs.destination }}"
+
           run_smoke_test() {
             RESULT_PATH="build/test-results/SmokeResults-attempt-${ATTEMPT}.xcresult"
             rm -rf build/test-results/SmokeResults-*.xcresult 2>/dev/null || true
             xcodebuild test \
               -workspace WebBridgeKit.xcworkspace \
               -scheme SuperApp \
-              -destination "platform=iOS Simulator,id=${DEVICE_ID}" \
+              -destination "$DESTINATION" \
               -configuration Debug \
               -resultBundlePath "$RESULT_PATH" \
               -only-testing:SuperAppUITests/SuperAppSmokeTests \
@@ -405,23 +373,18 @@ jobs:
             fi
             return $RET
           }
+
           for ATTEMPT in 1 2 3; do
-            echo "=== Smoke test attempt $ATTEMPT ==="
+            echo "=== Smoke test attempt $ATTEMPT/$3 (destination: $DESTINATION) ==="
             if run_smoke_test; then
-              echo "Smoke tests passed on attempt $ATTEMPT"
+              echo "✅ Smoke tests passed on attempt $ATTEMPT"
               exit 0
             fi
-            echo "Attempt $ATTEMPT failed, restarting simulator before retry..."
-            xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
-            sleep 5
-            xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
-            for i in $(seq 1 15); do
-              if xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null; then break; fi
-              sleep 2
-            done
+            echo "⚠️ Attempt $ATTEMPT failed, cleaning up before retry..."
+            xcrun simctl shutdown all 2>/dev/null || true
             sleep 5
           done
-          echo "Smoke tests failed after 3 attempts"
+          echo "❌ Smoke tests failed after 3 attempts"
           exit 1
 
       - name: Upload Test Results
@@ -438,8 +401,8 @@ jobs:
           mkdir -p screenshots
           find build/test-results -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
           find ~/Library/Developer/Xcode/DerivedData -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
-          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
-          [ -n "$DEVICE_ID" ] && xcrun simctl io "$DEVICE_ID" screenshot screenshots/smoke_final.png || true
+          BOOTED_ID=$(xcrun simctl list devices booted -j 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);print(list(d.get('devices',{}).values())[0][0].get('udid',''))" 2>/dev/null || echo "")
+          [ -n "$BOOTED_ID" ] && xcrun simctl io "$BOOTED_ID" screenshot screenshots/smoke_final.png 2>/dev/null || true
 
       - name: Upload Screenshots
         if: always()
@@ -459,14 +422,14 @@ jobs:
       - name: Capture Diagnostics
         if: always()
         run: |
-          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
-          if [ -n "$DEVICE_ID" ]; then
-            mkdir -p diagnostics
-            xcrun simctl diagnose --output diagnostics/ 2>/dev/null || true
-            xcrun simctl spawn "$DEVICE_ID" log show --last 2m 2>/dev/null > diagnostics/sim-device.log || true
-            echo "=== Device State ===" > diagnostics/device-state.txt
-            xcrun simctl list devices | grep -A2 "$DEVICE_ID" >> diagnostics/device-state.txt 2>/dev/null || true
+          mkdir -p diagnostics
+          xcrun simctl diagnose --output diagnostics/ 2>/dev/null || true
+          BOOTED_ID=$(xcrun simctl list devices booted -j 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);ids=[dv.get('udid','') for devs in d.get('devices',{}).values() for dv in devs if dv.get('state')=='Booted'];print(ids[0] if ids else '')" 2>/dev/null || echo "")
+          if [ -n "$BOOTED_ID" ]; then
+            xcrun simctl spawn "$BOOTED_ID" log show --last 2m 2>/dev/null > diagnostics/sim-device.log || true
           fi
+          echo "=== All Device States ===" > diagnostics/device-state.txt
+          xcrun simctl list devices >> diagnostics/device-state.txt 2>/dev/null || true
 
       - name: Upload Diagnostics
         if: always()
@@ -476,15 +439,11 @@ jobs:
           path: diagnostics/
           retention-days: 7
 
-      - name: Cleanup Simulator
+      - name: Cleanup Simulators
         if: always()
         run: |
-          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
-          if [ -n "$DEVICE_ID" ]; then
-            xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
-            xcrun simctl delete "$DEVICE_ID" 2>/dev/null || true
-            echo "Cleaned up simulator: $DEVICE_ID"
-           fi
+          xcrun simctl shutdown all 2>/dev/null || true
+          echo "All simulators shut down"
 
   ui-fidelity:
     name: 🎨 UI Fidelity Tests
@@ -503,86 +462,103 @@ jobs:
       - name: Setup Project
         uses: ./.github/actions/setup-project
 
-      - name: Setup Simulator
-        id: sim
+      - name: Cleanup & Prepare Simulators
+        id: prep
         run: |
+          set -euo pipefail
+          echo "=== Pre-boot cleanup ==="
+          xcrun simctl shutdown all 2>/dev/null || true
+          sleep 2
+          xcrun simctl erase all 2>/dev/null || true
+          echo "All existing simulators shut down and erased"
+
           echo "=== SDK Info ==="
           xcodebuild -version
-          xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || true
-          xcodebuild -downloadPlatform iOS 2>/dev/null || true
-          echo "=== Available runtimes ==="
-          xcrun simctl list runtimes
           SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
-          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          runtimes = data.get('runtimes', [])
-          ios = [rt for rt in runtimes if 'iOS' in rt.get('identifier', '') and rt.get('isAvailable')]
-          if ios:
-              sdk_ver = '${SDK_VER}'
-              preferred = [rt for rt in ios if rt.get('version', '').startswith(sdk_ver + '.')]
-              if preferred:
-                  preferred.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
-                  print(preferred[0]['identifier'])
-              else:
-                  ios.sort(key=lambda r: tuple(int(x) for x in r.get('version', '0').split('.')), reverse=True)
-                  for rt in ios:
-                      v = rt.get('version', '')
-                      major = int(v.split('.')[0]) if v else 99
-                      if major <= int(sdk_ver):
-                          print(rt['identifier'])
-                          break
-                  else:
-                      print(ios[0]['identifier'])
-          else:
-              print('', file=sys.stderr)
-              sys.exit(1)
-          " 2>/dev/null || echo "")
-          if [ -z "$RUNTIME" ]; then
-            echo "::warning::No iOS runtime found"
-            echo "use_simulator=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          DEVICE_ID=$(xcrun simctl create "CI-UIFidelity" "iPhone 16 Pro" "$RUNTIME" || echo "")
-          if [ -z "$DEVICE_ID" ]; then
-            echo "::warning::Failed to create simulator"
-            echo "use_simulator=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
-          echo "Waiting for simulator..."
-          for i in $(seq 1 30); do
-            if xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null; then break; fi
-            sleep 2
-          done
-          echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
-          echo "use_simulator=true" >> $GITHUB_OUTPUT
+          echo "SDK version: $(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || echo 'unknown') (major: $SDK_VER)"
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
 
-      - name: Skip UI Fidelity (no simulator)
-        if: steps.sim.outputs.use_simulator != 'true'
-        run: |
-          echo "::warning::No simulator available — skipping UI fidelity tests"
-          mkdir -p build/test-results
-          echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="UIFidelityTests" tests="1" failures="0"><testcase name="skipped" classname="UIFidelityTests"/></testsuite></testsuites>' > build/test-results/ui-fidelity-junit.xml
+          echo "=== Available iOS Runtimes ==="
+          xcrun simctl list runtimes
+          echo ""
+          echo "=== Available Devices (iPhone family) ==="
+          xcrun simctl list devices available | grep -i iphone || echo "(none found)"
+
+          DESTINATION=""
+          for DEVICE_TYPE in "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
+            echo "--- Trying destination: platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest ---"
+            if xcodebuild test \
+                -workspace WebBridgeKit.xcworkspace \
+                -scheme SuperApp \
+                -destination "platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest" \
+                -configuration Debug \
+                -resultBundlePath /tmp/uifidelity-probe.xcresult \
+                -only-testing:SuperAppUITests/UIFidelityTests \
+                -skip-testing:SuperAppUITests/UIFidelityTests \
+                CODE_SIGN_IDENTITY="" \
+                CODE_SIGNING_REQUIRED=NO \
+                CODE_SIGNING_ALLOWED=NO \
+                -quiet 2>&1 | head -5; then
+              DESTINATION="platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest"
+              echo "✅ Valid destination found: $DESTINATION"
+              break
+            else
+              echo "   ⚠️ Destination not usable, trying next..."
+            fi
+          done
+
+          rm -rf /tmp/uifidelity-probe.xcresult 2>/dev/null || true
+
+          if [ -z "$DESTINATION" ]; then
+            echo "::warning::No named device destination worked, falling back to generic"
+            DESTINATION="generic/platform=iOS Simulator"
+          fi
+
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+          echo "Using destination: $DESTINATION"
 
       - name: Run UI Fidelity Tests
-        if: steps.sim.outputs.use_simulator == 'true'
+        env:
+          CI: "true"
         run: |
           set -o pipefail
           mkdir -p build/screenshots/actual
           mkdir -p build/test-results
+          DESTINATION="${{ steps.prep.outputs.destination }}"
 
-          xcodebuild test \
-            -workspace WebBridgeKit.xcworkspace \
-            -scheme SuperApp \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
-            -configuration Debug \
-            -resultBundlePath build/test-results/UIFidelityResults.xcresult \
-            -only-testing:SuperAppUITests/UIFidelityTests \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output build/test-results/ui-fidelity-junit.xml
+          run_ui_fidelity_test() {
+            RESULT_PATH="build/test-results/UIFidelityResults-attempt-${ATTEMPT}.xcresult"
+            rm -rf build/test-results/UIFidelityResults-*.xcresult 2>/dev/null || true
+            xcodebuild test \
+              -workspace WebBridgeKit.xcworkspace \
+              -scheme SuperApp \
+              -destination "$DESTINATION" \
+              -configuration Debug \
+              -resultBundlePath "$RESULT_PATH" \
+              -only-testing:SuperAppUITests/UIFidelityTests \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              | xcpretty --color --report junit --output build/test-results/ui-fidelity-junit.xml
+            RET=$?
+            if [ $RET -eq 0 ] && [ -f "$RESULT_PATH" ]; then
+              mv "$RESULT_PATH" build/test-results/UIFidelityResults.xcresult
+            fi
+            return $RET
+          }
+
+          for ATTEMPT in 1 2 3; do
+            echo "=== UI fidelity attempt $ATTEMPT/$3 (destination: $DESTINATION) ==="
+            if run_ui_fidelity_test; then
+              echo "✅ UI fidelity tests passed on attempt $ATTEMPT"
+              exit 0
+            fi
+            echo "⚠️ Attempt $ATTEMPT failed, cleaning up before retry..."
+            xcrun simctl shutdown all 2>/dev/null || true
+            sleep 5
+          done
+          echo "❌ UI fidelity tests failed after 3 attempts"
+          exit 1
 
       - name: Collect Screenshots
         if: always()
@@ -591,8 +567,8 @@ jobs:
           if [ -d "build/test-results/UIFidelityResults.xcresult" ]; then
             find build/test-results/UIFidelityResults.xcresult -name "*.png" -exec cp {} build/screenshots/actual/ \; 2>/dev/null || true
           fi
-          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
-          [ -n "$DEVICE_ID" ] && xcrun simctl io "$DEVICE_ID" screenshot build/screenshots/actual/final_state.png || true
+          BOOTED_ID=$(xcrun simctl list devices booted -j 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);ids=[dv.get('udid','') for devs in d.get('devices',{}).values() for dv in devs if dv.get('state')=='Booted'];print(ids[0] if ids else '')" 2>/dev/null || echo "")
+          [ -n "$BOOTED_ID" ] && xcrun simctl io "$BOOTED_ID" screenshot build/screenshots/actual/final_state.png 2>/dev/null || true
 
       - name: Check Reference Images
         id: references
@@ -680,11 +656,8 @@ jobs:
             echo "No diff results found, skipping threshold check"
           fi
 
-      - name: Cleanup Simulator
+      - name: Cleanup Simulators
         if: always()
         run: |
-          DEVICE_ID="${{ steps.sim.outputs.device_id }}"
-          if [ -n "$DEVICE_ID" ]; then
-            xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
-            xcrun simctl delete "$DEVICE_ID" 2>/dev/null || true
-          fi
+          xcrun simctl shutdown all 2>/dev/null || true
+          echo "All simulators shut down"

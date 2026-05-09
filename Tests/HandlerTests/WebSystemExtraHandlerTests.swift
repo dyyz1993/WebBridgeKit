@@ -3,6 +3,11 @@ import XCTest
 
 final class WebSystemExtraHandlerTests: XCTestCase {
 
+    override class func setUp() {
+        super.setUp()
+        XCTSkipIf(Bundle.main.bundleIdentifier == nil, "No bundle identifier — skipping in CI (bundleProxyForCurrentProcess nil)")
+    }
+
     private func assertSuccess(_ result: Any) -> [String: Any] {
         guard let dict = result as? [String: Any] else {
             XCTFail("Result is not a dictionary")
