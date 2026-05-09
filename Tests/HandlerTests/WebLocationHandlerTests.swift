@@ -7,19 +7,17 @@ final class WebLocationHandlerTests: XCTestCase {
     private final class MockLocationProvider: WebLocationHandler.LocationProviding {
         var authorizationStatus: CLAuthorizationStatus = .authorizedWhenInUse
         var locationServicesEnabled: Bool = true
-        private weak var delegate: CLLocationManagerDelegate?
+        private weak var handler: WebLocationHandler?
 
         func requestWhenInUseAuthorization() {}
         func requestLocation() {
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self, let delegate = self.delegate else { return }
-                let location = CLLocation(latitude: 39.9042, longitude: 116.4074)
-                delegate.locationManager?(CLLocationManager() as! CLLocationManager, didUpdateLocations: [location])
-            }
+            guard let handler = handler else { return }
+            let location = CLLocation(latitude: 39.9042, longitude: 116.4074)
+            handler.locationManager(CLLocationManager(), didUpdateLocations: [location])
         }
 
         func setDelegate(_ delegate: CLLocationManagerDelegate?) {
-            self.delegate = delegate
+            self.handler = delegate as? WebLocationHandler
         }
     }
 
@@ -186,9 +184,10 @@ final class WebLocationHandlerTests: XCTestCase {
 
         handler.handle(body: [:]) { result in
             let dict = self.assertSuccess(result)
-            XCTAssertNotNil(dict["latitude"])
-            XCTAssertNotNil(dict["longitude"])
-            XCTAssertNotNil(dict["accuracy"])
+            let data = dict["data"] as? [String: Any] ?? dict
+            XCTAssertNotNil(data["latitude"])
+            XCTAssertNotNil(data["longitude"])
+            XCTAssertNotNil(data["accuracy"])
             expectation.fulfill()
         }
 

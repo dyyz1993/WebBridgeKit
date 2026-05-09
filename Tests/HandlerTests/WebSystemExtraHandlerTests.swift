@@ -3,9 +3,9 @@ import XCTest
 
 final class WebSystemExtraHandlerTests: XCTestCase {
 
-    override class func setUp() {
-        super.setUp()
-        XCTSkipIf(Bundle.main.bundleIdentifier == nil, "No bundle identifier — skipping in CI (bundleProxyForCurrentProcess nil)")
+    override func setUp() throws {
+        try super.setUp()
+        try XCTSkipIf(Bundle.main.bundleIdentifier == nil, "No bundle identifier — skipping in CI (bundleProxyForCurrentProcess nil)")
     }
 
     private func assertSuccess(_ result: Any) -> [String: Any] {

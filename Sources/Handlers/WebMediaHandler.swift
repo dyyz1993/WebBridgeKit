@@ -121,7 +121,7 @@ public class WebMediaHandler: BaseWebNativeHandler {
     private func uploadFile(filePath: String, serverUrl: String, completion: @escaping (Any) -> Void) {
         let trimmedUrl = serverUrl.trimmingCharacters(in: .whitespaces)
         guard !trimmedUrl.isEmpty, let url = URL(string: trimmedUrl), let scheme = url.scheme, !scheme.isEmpty else {
-            completion(WebBridgeResponse.error(message: "Invalid server URL"))
+            self.reject(error: "Invalid server URL", completion: completion)
             return
         }
 
@@ -131,7 +131,7 @@ public class WebMediaHandler: BaseWebNativeHandler {
         // 模拟异步上传过程
         DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
             let response = ["success": true, "fileUrl": "https://cdn.example.com/uploads/remote_file.m4a"]
-            completion(WebBridgeResponse.success(data: response))
+            self.resolve(response, completion: completion)
         }
     }
 

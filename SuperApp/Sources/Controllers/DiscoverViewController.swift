@@ -661,8 +661,6 @@ class DiscoverAppCell: UICollectionViewCell {
         .folder,
     ]
 
-    private static let icons: [LucideIcon] = [.globe, .appFill, .hardDrive, .doc, .star, .folder]
-
     private static func gradientColors(for name: String) -> (UIColor, UIColor) {
         gradients[abs(name.hashValue) % gradients.count]
     }
