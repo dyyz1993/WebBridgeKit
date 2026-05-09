@@ -302,6 +302,32 @@
 "notif_debug.template.encrypted" = "加密通知";
 "notif_debug.template.encrypted_title" = "加密通知";
 
+// Server Config
+"server_config.title" = "服务器配置";
+"server_config.section.server_type" = "服务器类型";
+"server_config.section.server_address" = "服务器地址";
+"server_config.section.api_endpoint" = "API 端点";
+"server_config.section.actions" = "操作";
+"server_config.select_type" = "选择类型";
+"server_config.base_url_placeholder" = "请输入服务器地址";
+"server_config.api_endpoint_placeholder" = "/v1";
+"server_config.base_url_label" = "Base URL";
+"server_config.api_endpoint_label" = "API Endpoint";
+"server_config.test_success" = "连接成功";
+"server_config.test_success_message" = "服务器连接测试通过";
+"server_config.test_failure" = "连接失败";
+"server_config.test_failure_message" = "无法连接到服务器，请检查配置";
+"server_config.save_success" = "保存成功";
+"server_config.save_success_message" = "服务器配置已保存";
+"server_config.reset_success" = "重置成功";
+"server_config.reset_success_message" = "服务器配置已恢复默认";
+"server_config.reset_confirm_title" = "确认重置";
+"server_config.reset_confirm_message" = "确定要恢复默认服务器配置吗？";
+"server_config.reset" = "重置";
+"server_config.action_test" = "测试连接";
+"server_config.action_save" = "保存配置";
+"server_config.action_reset" = "恢复默认";
+
 // WebView Display
 "webview.close" = "✕ 关闭";
 "webview.render_label" = "📱 WebView 实际渲染效果";

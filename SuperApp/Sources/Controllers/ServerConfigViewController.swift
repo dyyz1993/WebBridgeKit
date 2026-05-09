@@ -291,7 +291,7 @@ extension ServerConfigViewController: UITableViewDataSource {
         case .serverAddress:
             let cell = tableView.dequeueReusableCell(withIdentifier: TextFieldCell.identifier, for: indexPath) as! TextFieldCell
             cell.configure(
-                title: "Base URL",
+                title: L10n.tr("server_config.base_url_label"),
                 placeholder: L10n.tr("server_config.base_url_placeholder"),
                 text: currentBaseURL,
                 enabled: isCustomServer,
@@ -305,8 +305,8 @@ extension ServerConfigViewController: UITableViewDataSource {
         case .apiEndpoint:
             let cell = tableView.dequeueReusableCell(withIdentifier: TextFieldCell.identifier, for: indexPath) as! TextFieldCell
             cell.configure(
-                title: "API Endpoint",
-                placeholder: "/v1",
+                title: L10n.tr("server_config.api_endpoint_label"),
+                placeholder: L10n.tr("server_config.api_endpoint_placeholder"),
                 text: currentAPIEndpoint,
                 enabled: isCustomServer,
                 error: isCustomServer ? apiEndpointValidationError : nil

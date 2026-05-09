@@ -360,6 +360,7 @@ extension DiscoverViewController {
         let point = gesture.location(in: collectionView)
         guard let indexPath = collectionView.indexPathForItem(at: point) else { return }
         let item = sections[indexPath.section].items[indexPath.item]
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         showItemActionSheet(item: item)
     }
 
@@ -497,8 +498,8 @@ class DiscoverAppCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = ThemeColors.current.text
-        label.numberOfLines = 2
-        label.lineBreakMode = .byTruncatingTail
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
         label.setContentHuggingPriority(.required, for: .vertical)
         label.setContentCompressionResistancePriority(.required, for: .horizontal)
         return label
@@ -595,12 +596,12 @@ class DiscoverAppCell: UICollectionViewCell {
         }
 
         iconContainer.snp.makeConstraints { make in
-            make.width.height.equalTo(36)
+            make.width.height.equalTo(32)
         }
 
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(18)
+            make.width.height.equalTo(16)
         }
 
         badgeView.snp.makeConstraints { make in

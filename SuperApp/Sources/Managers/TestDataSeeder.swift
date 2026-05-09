@@ -240,7 +240,7 @@ struct TestDataSeeder {
 
     private static func seedMessages() {
         let defaults = UserDefaults.standard
-        let key = "WebBridgeKit_Messages"
+        let key = "SuperCache_Messages"
         if defaults.data(forKey: key) != nil { return }
 
         let now = Date()

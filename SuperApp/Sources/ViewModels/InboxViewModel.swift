@@ -222,11 +222,18 @@ class InboxViewModel: ViewModel {
     private func loadMessages() {
         Task { [weak self] in
             guard let self = self else { return }
-            let messages = await MessageEngine.shared.getMessages()
+            var messages = await MessageEngine.shared.getMessages()
+            if messages.isEmpty {
+                let fallbackKey = "SuperCache_Messages"
+                if let data = UserDefaults.standard.data(forKey: fallbackKey),
+                   let decoded = try? JSONDecoder().decode([StoredMessage].self, from: data) {
+                    messages = decoded
+                }
+            }
             let unreadCount = await MessageEngine.shared.getUnreadCount()
             await MainActor.run {
                 self.messagesRelay.accept(messages)
-                self.unreadCountRelay.accept(unreadCount)
+                self.unreadCountRelay.accept(unreadCount > 0 ? unreadCount : messages.filter { !$0.isRead }.count)
                 self.applyFilters()
                 self.reloadDataRelay.accept(())
             }

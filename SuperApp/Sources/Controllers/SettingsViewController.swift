@@ -42,6 +42,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+        tableView.contentInsetAdjustmentBehavior = .always
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
         view.accessibilityIdentifier = "SettingsViewController"
         tableView.accessibilityIdentifier = "settings.tableView"
         tableView.accessibilityLabel = "Settings Table View"

@@ -302,6 +302,32 @@
 "notif_debug.template.encrypted" = "Encrypted Notification";
 "notif_debug.template.encrypted_title" = "Encrypted Notification";
 
+// Server Config
+"server_config.title" = "Server Configuration";
+"server_config.section.server_type" = "Server Type";
+"server_config.section.server_address" = "Server Address";
+"server_config.section.api_endpoint" = "API Endpoint";
+"server_config.section.actions" = "Actions";
+"server_config.select_type" = "Select Type";
+"server_config.base_url_placeholder" = "Enter server address";
+"server_config.api_endpoint_placeholder" = "/v1";
+"server_config.base_url_label" = "Base URL";
+"server_config.api_endpoint_label" = "API Endpoint";
+"server_config.test_success" = "Connection Successful";
+"server_config.test_success_message" = "Server connection test passed";
+"server_config.test_failure" = "Connection Failed";
+"server_config.test_failure_message" = "Unable to connect to server, please check configuration";
+"server_config.save_success" = "Saved";
+"server_config.save_success_message" = "Server configuration saved";
+"server_config.reset_success" = "Reset Complete";
+"server_config.reset_success_message" = "Server configuration restored to defaults";
+"server_config.reset_confirm_title" = "Confirm Reset";
+"server_config.reset_confirm_message" = "Are you sure you want to restore default server configuration?";
+"server_config.reset" = "Reset";
+"server_config.action_test" = "Test Connection";
+"server_config.action_save" = "Save Configuration";
+"server_config.action_reset" = "Restore Defaults";
+
 // WebView Display
 "webview.close" = "✕ Close";
 "webview.render_label" = "📱 WebView Render Preview";
