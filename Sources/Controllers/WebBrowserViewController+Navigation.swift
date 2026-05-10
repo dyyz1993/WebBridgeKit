@@ -330,7 +330,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
             switch source {
             case "LIVE":
-                self.cacheStatusLabel.backgroundColor = WKColor.grey.base.withAlphaComponent(0.6)
+                self.cacheStatusLabel.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.6)
             case "INTERCEPT":
                 self.cacheStatusLabel.backgroundColor = .systemGreen
             case "MANIFEST", "HTML":

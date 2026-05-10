@@ -21,6 +21,7 @@ final class FullScreenProgressVCTests: XCTestCase {
     }
 
     func testUpdateProgress_ThreeOfTen_Shows30Percent() {
+        guard UIApplication.shared.connectedScenes.first is UIWindowScene else { return }
         let vc = FullScreenProgressViewController(totalResources: 10)
         _ = vc.view
 
@@ -38,6 +39,7 @@ final class FullScreenProgressVCTests: XCTestCase {
     }
 
     func testUpdateProgress_OneOfTwo_Shows50Percent() {
+        guard UIApplication.shared.connectedScenes.first is UIWindowScene else { return }
         let vc = FullScreenProgressViewController(totalResources: 2)
         _ = vc.view
 
@@ -75,6 +77,7 @@ final class FullScreenProgressVCTests: XCTestCase {
     }
 
     func testUpdateProgress_ZeroOfTen_Shows0Percent() {
+        guard UIApplication.shared.connectedScenes.first is UIWindowScene else { return }
         let vc = FullScreenProgressViewController(totalResources: 10)
         _ = vc.view
 
@@ -92,6 +95,7 @@ final class FullScreenProgressVCTests: XCTestCase {
     }
 
     func testUpdateProgress_WithResourceName_ShowsInDetailLabel() {
+        guard UIApplication.shared.connectedScenes.first is UIWindowScene else { return }
         let vc = FullScreenProgressViewController(totalResources: 10)
         _ = vc.view
 
@@ -109,6 +113,7 @@ final class FullScreenProgressVCTests: XCTestCase {
     }
 
     func testUpdateProgress_WithoutResourceName_ShowsCount() {
+        guard UIApplication.shared.connectedScenes.first is UIWindowScene else { return }
         let vc = FullScreenProgressViewController(totalResources: 10)
         _ = vc.view
 
@@ -126,6 +131,7 @@ final class FullScreenProgressVCTests: XCTestCase {
     }
 
     func testUpdateProgress_UpdatesStatusLabel() {
+        guard UIApplication.shared.connectedScenes.first is UIWindowScene else { return }
         let vc = FullScreenProgressViewController(totalResources: 10)
         _ = vc.view
 

@@ -7,6 +7,7 @@ import XCTest
 import UIKit
 @testable import WebBridgeKit
 
+@available(*, deprecated)
 final class WKColorTests: XCTestCase {
 
     func testGreyColorsExist() {

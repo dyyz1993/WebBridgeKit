@@ -17,6 +17,25 @@ globs:
 
 ## 2. 颜色使用规范
 
+### 🚫 强制规则：禁止的颜色写法
+
+以下写法在 Sources/ 和 SuperApp/ 中 **严格禁止**（ThemeTokens.swift 本身除外）：
+
+| ❌ 禁止 | ✅ 替换为 |
+|--------|----------|
+| `UIColor(red:green:blue:alpha:)` | `ThemeTokens.Color.xxx` |
+| `.systemBlue`, `.systemRed`, `.systemGray` 等 | `ThemeTokens.Color.primary/error/textSecondary` |
+| `.label`, `.secondaryLabel`, `.separator` | `ThemeTokens.Color.text/textSecondary/border` |
+| `.white`, `.black`（用于 UI 元素颜色时） | `ThemeTokens.Color.background/text` |
+| `ThemeTokens.Colors.Light.xxx` | `ThemeTokens.Color.xxx`（自动 Dark Mode） |
+| `ThemeTokens.Colors.Dark.xxx` | `ThemeTokens.Color.xxx`（自动 Dark Mode） |
+| `WKColor.*` | `ThemeTokens.Color.xxx` |
+
+**唯一例外**：
+- `UIColor.black.cgColor` 用于 shadow/layer 边框（不是 UI 颜色）
+- `UIColor.white.withAlphaComponent()` 用于 overlay dim 效果
+- ThemeTokens.swift 和 ThemeManager.swift 自身定义
+
 ### 必须使用 ThemeTokens，禁止硬编码颜色
 
 ```swift

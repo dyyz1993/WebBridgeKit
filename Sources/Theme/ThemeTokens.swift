@@ -9,6 +9,7 @@ import UIKit
 
 public enum ThemeTokens {
 
+    // DEPRECATED: Use ThemeTokens.Color instead (auto-adapts to Dark Mode)
     public enum Colors {
         public enum Light {
             public static let background = UIColor(red: 0.9490196078431372, green: 0.9490196078431372, blue: 0.9686274509803922, alpha: 1)
@@ -60,6 +61,45 @@ public enum ThemeTokens {
             public static let textTertiary = UIColor(red: 0.2823529411764706, green: 0.2823529411764706, blue: 0.2901960784313726, alpha: 1)
             public static let unreadDot = UIColor(red: 0.0392156862745098, green: 0.5176470588235295, blue: 1.0, alpha: 1)
             public static let warning = UIColor(red: 1.0, green: 0.6235294117647059, blue: 0.0392156862745098, alpha: 1)
+        }
+    }
+
+    // === Dynamic Color aliases (the ONE way to get colors) ===
+    /// 动态颜色令牌 — 自动适配 Light/Dark Mode
+    /// 所有新代码必须使用 ThemeTokens.Color.* 而非 ThemeTokens.Colors.Light/Dark 或直接硬编码
+    public enum Color {
+        public static var primary: UIColor { ThemeColors.current.primary }
+        public static var secondary: UIColor { ThemeColors.current.secondary }
+        public static var background: UIColor { ThemeColors.current.background }
+        public static var surface: UIColor { ThemeColors.current.surface }
+        public static var text: UIColor { ThemeColors.current.text }
+        public static var textSecondary: UIColor { ThemeColors.current.textSecondary }
+        public static var textTertiary: UIColor { ThemeColors.current.border }
+        public static var border: UIColor { ThemeColors.current.border }
+        public static var separator: UIColor { ThemeColors.current.divider }
+        public static var divider: UIColor { ThemeColors.current.divider }
+        public static var navigationBarBackground: UIColor { ThemeColors.current.navigationBarBackground }
+        public static var navigationBarTitle: UIColor { ThemeColors.current.navigationBarTitle }
+        public static var tabBarBackground: UIColor { ThemeColors.current.tabBarBackground }
+        public static var success: UIColor { ThemeColors.current.success }
+        public static var warning: UIColor { ThemeColors.current.warning }
+        public static var error: UIColor { ThemeColors.current.error }
+        public static var info: UIColor { ThemeColors.current.info }
+        public static var cardBackground: UIColor { ThemeColors.current.cardBackground }
+        public static var gradientStart: UIColor { ThemeColors.current.gradientStart }
+        public static var gradientEnd: UIColor { ThemeColors.current.gradientEnd }
+        public static var badgeBackground: UIColor { ThemeColors.current.badgeBackground }
+        public static var badgeText: UIColor { ThemeColors.current.badgeText }
+        public static var fabBackground: UIColor { ThemeColors.current.fabBackground }
+        public static var overlay: UIColor { ThemeTokens.Color.dimOverlay }
+        public static var unreadDot: UIColor { ThemeTokens.Color.primary }
+
+        public static var iconBackground: UIColor {
+            primary.withAlphaComponent(0.1)
+        }
+
+        public static var dimOverlay: UIColor {
+            UIColor(white: 0, alpha: 0.4)
         }
     }
 

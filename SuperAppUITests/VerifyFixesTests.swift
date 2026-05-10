@@ -86,6 +86,38 @@ final class VerifyFixesTests: XCTestCase {
         add(attachment)
     }
 
+    private func saveScreenshotSafe(_ path: String) {
+        let waitResult = app.waitForExistence(timeout: 5)
+        guard waitResult else {
+            print("[ScreenshotSafe] App does not exist, skipping \(path)")
+            return
+        }
+        if app.state != .runningForeground {
+            print("[ScreenshotSafe] App not in foreground (state: \(app.state.rawValue)), activating")
+            app.activate()
+            sleep(2)
+        }
+        let screenshot: XCUIScreenshot
+        do {
+            screenshot = app.screenshot()
+        } catch {
+            print("[ScreenshotError] Failed to capture screenshot for \(path): \(error)")
+            return
+        }
+        if let data = screenshot.image.pngData() {
+            do {
+                try data.write(to: URL(fileURLWithPath: path))
+                print("[ScreenshotSafe] Saved to \(path) (\(data.count) bytes)")
+            } catch {
+                print("[ScreenshotSafe] Failed to write screenshot to \(path): \(error)")
+            }
+        }
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = URL(fileURLWithPath: path).lastPathComponent
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     private func safeTap(_ element: XCUIElement, fallbackLabel: String? = nil, coordFallback: CGVector? = nil) {
         if element.waitForExistence(timeout: 5) {
             element.tap()
@@ -134,8 +166,20 @@ final class VerifyFixesTests: XCTestCase {
             app.activate()
             sleep(1)
         }
-        sleep(2)
-        saveScreenshot("/tmp/wbk-fix-favorites.png")
+        let favoriteView = app.otherElements["FavoriteViewController"]
+        if favoriteView.waitForExistence(timeout: 10) {
+            print("[testFavorites] FavoriteViewController detected on screen")
+        } else {
+            print("[testFavorites] FavoriteViewController not found via accessibilityIdentifier, checking for favorite content...")
+            let favTable = app.tables["favorite.tableView"]
+            if favTable.waitForExistence(timeout: 5) {
+                print("[testFavorites] favorite.tableView found")
+            } else {
+                print("[testFavorites] Warning: Could not confirm Favorites page is displayed")
+            }
+        }
+        sleep(3)
+        saveScreenshotSafe("/tmp/wbk-fix-favorites.png")
     }
 
     // MARK: - Fix 2: Navigate to Cache tab
@@ -152,10 +196,14 @@ final class VerifyFixesTests: XCTestCase {
 
         let segmentedControl = app.segmentedControls.firstMatch
         if segmentedControl.waitForExistence(timeout: 5) {
+            print("[testCache] Segmented control found")
             let cacheSegment = segmentedControl.buttons["缓存"]
             if cacheSegment.waitForExistence(timeout: 3) {
                 cacheSegment.tap()
                 waitForPageLoad()
+                print("[testCache] Tapped cache segment")
+            } else {
+                print("[testCache] Cache segment button not found in segmented control")
             }
         } else {
             let navBarSegment = app.navigationBars.firstMatch.segmentedControls.firstMatch
@@ -164,11 +212,14 @@ final class VerifyFixesTests: XCTestCase {
                 if cacheSegment.exists {
                     cacheSegment.tap()
                     waitForPageLoad()
+                    print("[testCache] Tapped cache segment from navbar")
                 }
+            } else {
+                print("[testCache] No segmented control found at all")
             }
         }
-        sleep(2)
-        saveScreenshot("/tmp/wbk-fix-cache.png")
+        sleep(3)
+        saveScreenshotSafe("/tmp/wbk-fix-cache.png")
     }
 
     // MARK: - Fix 3: Navigate to Inbox message detail
@@ -189,6 +240,6 @@ final class VerifyFixesTests: XCTestCase {
             sleep(2)
         }
         sleep(3)
-        saveScreenshot("/tmp/wbk-fix-inbox-detail.png")
+        saveScreenshotSafe("/tmp/wbk-fix-inbox-detail.png")
     }
 }

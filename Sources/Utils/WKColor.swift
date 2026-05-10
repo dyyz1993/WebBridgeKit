@@ -5,6 +5,10 @@
 //  Created on 2026-01-16.
 //
 
+// MARK: - DEPRECATED — Use ThemeTokens.Color.* instead
+// This file is deprecated. All colors have been migrated to ThemeTokens.Color.
+// Will be removed in a future version.
+
 import UIKit
 
 /// WebBridgeKit 颜色常量

@@ -23,8 +23,8 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     private let progressView: UIProgressView = {
         let progressView = UIProgressView(progressViewStyle: .default)
-        progressView.tintColor = WKColor.grey.base
-        progressView.trackTintColor = WKColor.grey.lighten2
+        progressView.tintColor = ThemeTokens.Color.textSecondary
+        progressView.trackTintColor = ThemeTokens.Color.textTertiary
         return progressView
     }()
 
@@ -34,7 +34,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         label.font = UIFont.systemFont(ofSize: 10, weight: .bold)
         label.textColor = .white
         label.textAlignment = .center
-        label.backgroundColor = WKColor.grey.base.withAlphaComponent(0.6)
+        label.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.6)
         label.layer.cornerRadius = 4
         label.clipsToBounds = true
         label.text = "LIVE"
@@ -52,7 +52,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = WKColor.grey.base
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
         label.accessibilityIdentifier = "browserManager.titleLabel"
@@ -65,7 +65,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = WKColor.grey.base
+        button.tintColor = ThemeTokens.Color.textSecondary
         button.accessibilityIdentifier = "browserManager.closeButton"
         return button
     }()
@@ -76,7 +76,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         let image = UIImage(systemName: "chevron.left", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = WKColor.grey.base
+        button.tintColor = ThemeTokens.Color.textSecondary
         button.accessibilityIdentifier = "browserManager.backButton"
         return button
     }()
@@ -87,7 +87,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
         let image = UIImage(systemName: "ellipsis.circle", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = WKColor.grey.base
+        button.tintColor = ThemeTokens.Color.textSecondary
         button.accessibilityIdentifier = "browserManager.menuButton"
         return button
     }()
@@ -150,7 +150,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     public override func makeUI() {
         print("🔧 [WebBrowserVC] makeUI called")
-        view.backgroundColor = WKColor.background.primary
+        view.backgroundColor = ThemeTokens.Color.background
 
         configureNavigationBar()
 
@@ -329,7 +329,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             print("✅ [Browser] NavigationBar restored")
         }
 
-        view.backgroundColor = WKColor.background.primary
+        view.backgroundColor = ThemeTokens.Color.background
         hideNavBar = false
 
         print("✅ [Browser] UI state fully restored")
@@ -500,7 +500,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                 self.webView.backgroundColor = .clear
                 self.webView.scrollView.backgroundColor = .clear
             } else {
-                self.view.backgroundColor = WKColor.background.primary
+                self.view.backgroundColor = ThemeTokens.Color.background
                 self.webView.backgroundColor = .clear
                 self.webView.scrollView.backgroundColor = .clear
             }

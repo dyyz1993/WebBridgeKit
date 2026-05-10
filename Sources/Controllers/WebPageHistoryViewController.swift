@@ -24,7 +24,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         let btn = UIButton()
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         btn.setImage(UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)?.withRenderingMode(.alwaysTemplate), for: .normal)
-        btn.imageView?.tintColor = WKColor.black
+        btn.imageView?.tintColor = ThemeTokens.Color.text
         btn.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
         return btn
     }()
@@ -34,7 +34,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         let btn = UIButton()
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         btn.setImage(UIImage(systemName: "square.grid.2x2", withConfiguration: config)?.withRenderingMode(.alwaysTemplate), for: .normal)
-        btn.imageView?.tintColor = WKColor.black
+        btn.imageView?.tintColor = ThemeTokens.Color.text
         btn.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
         return btn
     }()
@@ -43,7 +43,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.separatorStyle = .none
-        tableView.backgroundColor = WKColor.background.primary
+        tableView.backgroundColor = ThemeTokens.Color.background
         tableView.register(WebPageHistoryCell.self,
                            forCellReuseIdentifier: "\(WebPageHistoryCell.self)")
         tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 20))
@@ -70,7 +70,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         layout.itemSize = CGSize(width: itemWidth, height: itemWidth + 50)
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = WKColor.background.primary
+        collectionView.backgroundColor = ThemeTokens.Color.background
         collectionView.register(WebPageHistoryGalleryCell.self,
                                 forCellWithReuseIdentifier: WebPageHistoryGalleryCell.reuseIdentifier)
         collectionView.dataSource = self
@@ -86,23 +86,23 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
     /// 空状态视图
     private lazy var emptyStateView: UIView = {
         let view = UIView()
-        view.backgroundColor = WKColor.background.primary
+        view.backgroundColor = ThemeTokens.Color.background
 
         let imageView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
         imageView.image = UIImage(systemName: "clock.arrow.circlepath", withConfiguration: config)
-        imageView.tintColor = WKColor.grey.lighten2
+        imageView.tintColor = ThemeTokens.Color.textTertiary
         imageView.contentMode = .scaleAspectFit
 
         let label = UILabel()
         label.text = NSLocalizedString("No browsing history yet", comment: "")
-        label.textColor = WKColor.grey.base
+        label.textColor = ThemeTokens.Color.textSecondary
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         label.textAlignment = .center
 
         let detailLabel = UILabel()
         detailLabel.text = NSLocalizedString("Visit a webpage to see it here", comment: "")
-        detailLabel.textColor = WKColor.grey.lighten2
+        detailLabel.textColor = ThemeTokens.Color.textTertiary
         detailLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         detailLabel.textAlignment = .center
 
@@ -543,7 +543,7 @@ extension WebPageHistoryViewController: UITableViewDelegate {
                 self?.cachePage(history)
                 completion(true)
             }
-            cacheAction.backgroundColor = WKColor.lightBlue.darken3
+            cacheAction.backgroundColor = ThemeTokens.Color.info
         }
 
         return UISwipeActionsConfiguration(actions: [deleteAction, cacheAction])

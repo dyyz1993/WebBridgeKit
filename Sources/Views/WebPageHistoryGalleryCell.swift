@@ -23,7 +23,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     /// 缩略图容器
     private let thumbnailContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = WKColor.background.secondary
+        view.backgroundColor = ThemeTokens.Color.surface
         view.layer.cornerRadius = 12
         view.layer.masksToBounds = true
         return view
@@ -34,7 +34,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.backgroundColor = WKColor.background.secondary
+        imageView.backgroundColor = ThemeTokens.Color.surface
         return imageView
     }()
 
@@ -44,7 +44,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
         label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         label.textColor = .white
         label.textAlignment = .center
-        label.backgroundColor = WKColor.lightBlue.darken3
+        label.backgroundColor = ThemeTokens.Color.info
         label.layer.cornerRadius = 12
         label.layer.masksToBounds = true
         return label
@@ -66,7 +66,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        label.textColor = WKColor.grey.darken4
+        label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 2
         label.textAlignment = .center
         return label
@@ -76,7 +76,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 11, weight: .regular)
-        label.textColor = WKColor.grey.base
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.textAlignment = .center
         return label
@@ -195,7 +195,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
 
     private func generateColor(for letter: String) -> UIColor {
         let colors: [UIColor] = [
-            WKColor.lightBlue.darken3,
+            ThemeTokens.Color.info,
             UIColor.systemGreen,
             UIColor.systemOrange,
             UIColor.systemPurple,

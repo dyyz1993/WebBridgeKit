@@ -28,7 +28,7 @@ class WebPageHistoryCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = WKColor.grey.darken4
+        label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 2
         return label
     }()
@@ -37,8 +37,7 @@ class WebPageHistoryCell: UITableViewCell {
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = WKColor.grey.base
-        label.numberOfLines = 1
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
@@ -46,7 +45,7 @@ class WebPageHistoryCell: UITableViewCell {
     private let visitInfoLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 11, weight: .regular)
-        label.textColor = WKColor.grey.lighten2
+        label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
 
@@ -54,8 +53,8 @@ class WebPageHistoryCell: UITableViewCell {
     private let cacheSizeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
-        label.textColor = WKColor.lightBlue.darken3
-        label.layer.borderColor = WKColor.lightBlue.darken3.cgColor
+        label.textColor = ThemeTokens.Color.info
+        label.layer.borderColor = ThemeTokens.Color.info.cgColor
         label.layer.borderWidth = 1
         label.layer.cornerRadius = 3
         label.textAlignment = .center
@@ -89,7 +88,7 @@ class WebPageHistoryCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = WKColor.background.primary
+        backgroundColor = ThemeTokens.Color.background
 
         contentView.addSubview(cacheStatusImageView)
         contentView.addSubview(titleLabel)
@@ -171,7 +170,7 @@ class WebPageHistoryCell: UITableViewCell {
             cacheSizeLabel.isHidden = false
         } else {
             cacheStatusImageView.image = UIImage(systemName: "circle")
-            cacheStatusImageView.tintColor = WKColor.grey.lighten2
+            cacheStatusImageView.tintColor = ThemeTokens.Color.textTertiary
             cacheSizeLabel.isHidden = true
         }
     }

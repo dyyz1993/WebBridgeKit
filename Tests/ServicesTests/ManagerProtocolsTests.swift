@@ -24,8 +24,10 @@ final class ManagerProtocolsTests: XCTestCase {
     }
 
     func testManifestStoreConformsToManifestCacheManaging() {
-        let store: any ManifestCacheManaging = ManifestStore.shared
-        XCTAssertTrue(store is ManifestCacheManaging)
+        let store = ManifestStore.shared
+        store.saveHTMLSync("test", for: "conformance-test")
+        let html = store.getHTML(for: "conformance-test")
+        XCTAssertEqual(html, "test")
     }
 
     func testRealmHistoryServiceConformsToHistoryServiceProtocol() {

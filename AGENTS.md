@@ -60,10 +60,18 @@ xcrun simctl launch booted com.webbridgekit.superapp
 
 ## Design System
 
-- `docs/design-tokens.json` — 95 tokens across 9 categories (colors, typography, spacing, etc.)
-- `Sources/Theme/ThemeTokens.swift` — Auto-generated iOS token constants
+- `docs/design-tokens.json` — Single source of truth for design tokens (95 tokens, 9 categories)
+- `Sources/Theme/ThemeTokens.swift` — iOS token constants (**use `ThemeTokens.Color.*` for ALL colors**)
 - `docs/prototype/design-tokens.css` — Auto-generated CSS variables
 - `tools/sync-tokens.sh` — Bidirectional sync (JSON → Swift + CSS)
+
+### Color Usage Rules (MANDATORY)
+
+1. **Always use `ThemeTokens.Color.*`** — it auto-adapts to Light/Dark mode
+2. **Never hardcode** `UIColor(red:)`, `.systemBlue`, `.label`, etc.
+3. **Never use** `ThemeTokens.Colors.Light/Dark` (static, no dark mode) or `WKColor.*` (deprecated)
+4. For shadows/borders only: `UIColor.black.cgColor` is acceptable
+5. See `.opencode/rules/ios-design-best-practices.mdc` for full spec
 
 ## Icons
 
