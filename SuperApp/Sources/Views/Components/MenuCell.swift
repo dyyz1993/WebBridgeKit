@@ -58,9 +58,9 @@ class MenuCell: UITableViewCell {
     private let badgeLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 10, weight: .bold)
-        label.textColor = .white
+        label.textColor = ThemeTokens.Color.background
         label.textAlignment = .center
-        label.backgroundColor = UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 1)
+        label.backgroundColor = ThemeTokens.Color.success
         label.layer.cornerRadius = 4
         label.clipsToBounds = true
         label.isHidden = true
@@ -91,7 +91,7 @@ class MenuCell: UITableViewCell {
     private let heroIconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .white
+        iv.tintColor = ThemeTokens.Color.background
         return iv
     }()
 
@@ -114,8 +114,8 @@ class MenuCell: UITableViewCell {
         btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
         btn.layer.cornerRadius = 6
         btn.clipsToBounds = true
-        btn.backgroundColor = ThemeTokens.Colors.Light.primary
-        btn.setTitleColor(.white, for: .normal)
+        btn.backgroundColor = ThemeTokens.Color.primary
+        btn.setTitleColor(ThemeTokens.Color.background, for: .normal)
         btn.isHidden = true
         btn.contentEdgeInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
         return btn
@@ -242,7 +242,7 @@ class MenuCell: UITableViewCell {
         }
 
         let gradient = CAGradientLayer()
-        gradient.colors = [UIColor(red: 0, green: 0.478, blue: 1, alpha: 1).cgColor, UIColor(red: 0.345, green: 0.337, blue: 0.839, alpha: 1).cgColor]
+        gradient.colors = [ThemeTokens.Color.gradientStart.cgColor, ThemeTokens.Color.gradientEnd.cgColor]
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint = CGPoint(x: 1, y: 1)
         heroIconContainer.layer.insertSublayer(gradient, at: 0)

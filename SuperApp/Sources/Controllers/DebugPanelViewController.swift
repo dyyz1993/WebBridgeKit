@@ -217,7 +217,7 @@ private class HandlerDebugDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = meta.displayName
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: L10n.tr("common.copy"),
@@ -237,19 +237,19 @@ private class HandlerDebugDetailViewController: UIViewController {
         let descLabel = UILabel()
         descLabel.text = meta.description
         descLabel.numberOfLines = 0
-        descLabel.textColor = .secondaryLabel
+        descLabel.textColor = ThemeTokens.Color.textSecondary
         stack.addArrangedSubview(descLabel)
 
         let infoLabel = UILabel()
         infoLabel.text = "\(meta.category.emoji) \(meta.category.displayName) · action: \(meta.action)"
-        infoLabel.textColor = .tertiaryLabel
+        infoLabel.textColor = ThemeTokens.Color.textTertiary
         infoLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
         stack.addArrangedSubview(infoLabel)
 
         if !meta.requiredPermissions.isEmpty {
             let permLabel = UILabel()
             permLabel.text = "🔐 Required: \(meta.requiredPermissions.joined(separator: ", "))"
-            permLabel.textColor = .systemOrange
+            permLabel.textColor = ThemeTokens.Color.warning
             stack.addArrangedSubview(permLabel)
         }
 
@@ -270,7 +270,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         button.setTitle(L10n.tr("debug.panel.execute"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         button.backgroundColor = ThemeColors.current.primary
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         button.layer.cornerRadius = 10
         button.addTarget(self, action: #selector(execute), for: .touchUpInside)
         button.snp.makeConstraints { make in
@@ -279,13 +279,13 @@ private class HandlerDebugDetailViewController: UIViewController {
         stack.addArrangedSubview(button)
 
         resultTextView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        resultTextView.layer.borderColor = UIColor.separator.cgColor
+        resultTextView.layer.borderColor = ThemeTokens.Color.border.cgColor
         resultTextView.layer.borderWidth = 1
         resultTextView.layer.cornerRadius = 8
         resultTextView.isEditable = false
         resultTextView.isScrollEnabled = false
         resultTextView.text = L10n.tr("debug.panel.tap_execute_hint")
-        resultTextView.textColor = .secondaryLabel
+        resultTextView.textColor = ThemeTokens.Color.textSecondary
         resultTextView.snp.makeConstraints { make in
             make.height.greaterThanOrEqualTo(80)
         }
@@ -337,7 +337,7 @@ private class HandlerDebugDetailViewController: UIViewController {
             let optionsLabel = UILabel()
             optionsLabel.text = L10n.tr("debug.panel.options", options.joined(separator: " | "))
             optionsLabel.font = .systemFont(ofSize: 11, weight: .regular)
-            optionsLabel.textColor = .tertiaryLabel
+            optionsLabel.textColor = ThemeTokens.Color.textTertiary
             stack.addArrangedSubview(optionsLabel)
         }
 
@@ -404,7 +404,7 @@ private class LogDebugViewController: UIViewController {
         let toolbar = makeToolbar()
         textView.isEditable = false
         textView.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
-        textView.backgroundColor = .secondarySystemBackground
+        textView.backgroundColor = ThemeTokens.Color.surface
 
         view.addSubview(toolbar)
         view.addSubview(textView)
@@ -441,7 +441,7 @@ private class LogDebugViewController: UIViewController {
 
         let errorButton = UIButton(type: .system)
         errorButton.setTitle(L10n.tr("debug.panel.log_errors"), for: .normal)
-        errorButton.tintColor = .systemRed
+        errorButton.tintColor = ThemeTokens.Color.error
         errorButton.addTarget(self, action: #selector(filterErrors), for: .touchUpInside)
         stack.addArrangedSubview(errorButton)
 
@@ -517,7 +517,7 @@ private class EnvironmentDebugViewController: UIViewController {
 
         textView.isEditable = false
         textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.backgroundColor = .secondarySystemBackground
+        textView.backgroundColor = ThemeTokens.Color.surface
 
         view.addSubview(textView)
         textView.snp.makeConstraints { make in

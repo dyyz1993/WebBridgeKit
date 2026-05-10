@@ -39,7 +39,7 @@ public class WebViewDisplayViewController: UIViewController {
         let label = UILabel()
         label.text = L10n.tr("webview.render_label")
         label.font = ThemeTokens.Typography.subheadline
-        label.textColor = .white
+        label.textColor = ThemeTokens.Color.background
         label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
         label.textAlignment = .center
         label.layer.cornerRadius = ThemeTokens.CornerRadius.sm

@@ -43,13 +43,13 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             config.image = LucideIcon.copy.image(pointSize: 16)
             config.title = L10n.tr("common.copy")
             config.imagePadding = 4
-            config.baseForegroundColor = .white
+            config.baseForegroundColor = ThemeTokens.Color.background
             let button = UIButton(configuration: config)
             button.backgroundColor = ThemeColors.current.primary
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
-            button.tintColor = .white
+            button.tintColor = ThemeTokens.Color.background
             return button
         } else {
             let button = UIButton(type: .system)
@@ -59,7 +59,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
-            button.tintColor = .white
+            button.tintColor = ThemeTokens.Color.background
             return button
         }
     }()
@@ -70,13 +70,13 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             config.image = LucideIcon.share.image(pointSize: 16)
             config.title = L10n.tr("common.share")
             config.imagePadding = 4
-            config.baseForegroundColor = .white
+            config.baseForegroundColor = ThemeTokens.Color.text
             let button = UIButton(configuration: config)
             button.backgroundColor = ThemeColors.current.surface
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
-            button.tintColor = .white
+            button.tintColor = ThemeTokens.Color.text
             return button
         } else {
             let button = UIButton(type: .system)
@@ -86,7 +86,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
-            button.tintColor = .white
+            button.tintColor = ThemeTokens.Color.text
             return button
         }
     }()

@@ -338,8 +338,8 @@ class MessageCell: UITableViewCell {
 
         if message.payload.targetAppId != nil {
             iconImageView.image = UIImage(systemName: "app.badge.fill")
-            iconContainer.backgroundColor = UIColor.systemIndigo.withAlphaComponent(0.1)
-            iconImageView.tintColor = .systemIndigo
+            iconContainer.backgroundColor = ThemeTokens.Color.info.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeTokens.Color.info
         } else if message.payload.targetURL != nil {
             iconImageView.image = UIImage(systemName: "link")
             iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)

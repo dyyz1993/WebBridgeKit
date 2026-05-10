@@ -146,9 +146,9 @@ class ComponentCatalogViewController: UIViewController {
             ("secondary", ThemeTokens.Colors.Light.secondary),
             ("text", ThemeTokens.Colors.Light.text),
             ("textSecondary", ThemeTokens.Colors.Light.textSecondary),
-            ("textTertiary", ThemeTokens.Colors.Light.textTertiary),
-            ("border", ThemeTokens.Colors.Light.border),
-            ("separator", ThemeTokens.Colors.Light.separator),
+            ("textTertiary", ThemeTokens.Color.textTertiary),
+            ("border", ThemeTokens.Color.border),
+            ("separator", ThemeTokens.Color.separator),
             ("cardBackground", ThemeTokens.Colors.Light.cardBackground),
             ("surface", ThemeTokens.Colors.Light.surface),
             ("error", ThemeTokens.Colors.Light.error),
@@ -157,10 +157,10 @@ class ComponentCatalogViewController: UIViewController {
             ("info", ThemeTokens.Colors.Light.info),
             ("fabBackground", ThemeTokens.Colors.Light.fabBackground),
             ("gradientStart", ThemeTokens.Colors.Light.gradientStart),
-            ("gradientEnd", ThemeTokens.Colors.Light.gradientEnd),
+            ("gradientEnd", ThemeTokens.Color.gradientEnd),
             ("badgeBackground", ThemeTokens.Colors.Light.badgeBackground),
             ("badgeText", ThemeTokens.Colors.Light.badgeText),
-            ("unreadDot", ThemeTokens.Colors.Light.unreadDot),
+            ("unreadDot", ThemeTokens.Color.unreadDot),
             ("overlay", ThemeTokens.Colors.Light.overlay),
             ("navBarBg", ThemeTokens.Colors.Light.navigationBarBackground),
             ("tabBarBg", ThemeTokens.Colors.Light.tabBarBackground)
@@ -179,7 +179,7 @@ class ComponentCatalogViewController: UIViewController {
             circle.backgroundColor = color
             circle.layer.cornerRadius = circleSize / 2
             circle.layer.borderWidth = 1
-            circle.layer.borderColor = ThemeTokens.Colors.Light.border.cgColor
+            circle.layer.borderColor = ThemeTokens.Color.border.cgColor
             circle.accessibilityIdentifier = "ColorSwatch_\(name)"
             gridContainer.addSubview(circle)
 
@@ -204,7 +204,7 @@ class ComponentCatalogViewController: UIViewController {
             let hexLabel = UILabel()
             hexLabel.text = hexString(from: color)
             hexLabel.font = UIFont.monospacedSystemFont(ofSize: 9, weight: .regular)
-            hexLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+            hexLabel.textColor = ThemeTokens.Color.textTertiary
             hexLabel.textAlignment = .center
             gridContainer.addSubview(hexLabel)
             hexLabel.snp.makeConstraints { make in
@@ -471,7 +471,7 @@ class ComponentCatalogViewController: UIViewController {
             let detailLabel = UILabel()
             detailLabel.text = "o:\(shadow.opacity) r:\(shadow.radius)"
             detailLabel.font = UIFont.monospacedSystemFont(ofSize: 9, weight: .regular)
-            detailLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+            detailLabel.textColor = ThemeTokens.Color.textTertiary
 
             itemStack.addArrangedSubview(card)
             itemStack.addArrangedSubview(nameLabel)
@@ -511,7 +511,7 @@ class ComponentCatalogViewController: UIViewController {
         let normalLabel = UILabel()
         normalLabel.text = "Normal State"
         normalLabel.font = ThemeTypography.current.caption2
-        normalLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+        normalLabel.textColor = ThemeTokens.Color.textTertiary
         stack.addArrangedSubview(normalLabel)
 
         for style in [ThemeButtonStyle.primary, ThemeButtonStyle.secondary, ThemeButtonStyle.ghost] {
@@ -526,7 +526,7 @@ class ComponentCatalogViewController: UIViewController {
         let disabledLabel = UILabel()
         disabledLabel.text = "Disabled State (alpha 0.3)"
         disabledLabel.font = ThemeTypography.current.caption2
-        disabledLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+        disabledLabel.textColor = ThemeTokens.Color.textTertiary
         stack.addArrangedSubview(disabledLabel)
 
         for style in [ThemeButtonStyle.primary, ThemeButtonStyle.secondary, ThemeButtonStyle.ghost] {
@@ -787,7 +787,7 @@ class ComponentCatalogViewController: UIViewController {
             cell.layer.cornerRadius = ThemeCornerRadius.default.lg
 
             let unreadDot = UIView()
-            unreadDot.backgroundColor = ThemeTokens.Colors.Light.unreadDot
+            unreadDot.backgroundColor = ThemeTokens.Color.unreadDot
             unreadDot.layer.cornerRadius = 5
             unreadDot.isHidden = !isUnread
             cell.addSubview(unreadDot)
@@ -806,7 +806,7 @@ class ComponentCatalogViewController: UIViewController {
             let timeLabel = UILabel()
             timeLabel.text = "05-08 14:30"
             timeLabel.font = ThemeTokens.Typography.caption2
-            timeLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+            timeLabel.textColor = ThemeTokens.Color.textTertiary
             timeLabel.textAlignment = .right
             cell.addSubview(timeLabel)
 
@@ -905,7 +905,7 @@ class ComponentCatalogViewController: UIViewController {
         let actions: [(icon: String, title: String, color: UIColor)] = [
             ("qrcode.viewfinder", "Scan", ThemeColors.current.primary),
             ("doc.on.clipboard", "Paste", ThemeColors.current.warning),
-            ("text.badge.star", "Token", ThemeTokens.Colors.Light.gradientEnd),
+            ("text.badge.star", "Token", ThemeTokens.Color.gradientEnd),
             ("ladybug", "Debug", ThemeColors.current.success)
         ]
 
@@ -983,8 +983,8 @@ class ComponentCatalogViewController: UIViewController {
             let button: UIButton
             if #available(iOS 15.0, *) {
                 var config = UIButton.Configuration.filled()
-                config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
-                config.baseForegroundColor = isSelected ? .white : .secondaryLabel
+                config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : ThemeTokens.Color.surface
+                config.baseForegroundColor = isSelected ? ThemeTokens.Color.background : ThemeTokens.Color.textSecondary
                 config.cornerStyle = .capsule
                 config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                     var outgoing = incoming
@@ -996,8 +996,8 @@ class ComponentCatalogViewController: UIViewController {
             } else {
                 button = UIButton(type: .system)
                 button.titleLabel?.font = ThemeTokens.Typography.footnote
-                button.backgroundColor = isSelected ? ThemeColors.current.primary : .secondarySystemFill
-                button.setTitleColor(isSelected ? .white : .secondaryLabel, for: .normal)
+                button.backgroundColor = isSelected ? ThemeColors.current.primary : ThemeTokens.Color.surface
+                button.setTitleColor(isSelected ? ThemeTokens.Color.background : ThemeTokens.Color.textSecondary, for: .normal)
                 button.layer.cornerRadius = 16
                 button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
             }
@@ -1031,7 +1031,7 @@ class ComponentCatalogViewController: UIViewController {
         let fab = UIButton(type: .system)
         fab.setImage(LucideIcon.bell.image(pointSize: 22, weight: .semibold), for: .normal)
         fab.backgroundColor = ThemeColors.current.fabBackground
-        fab.tintColor = .white
+        fab.tintColor = ThemeTokens.Color.background
         fab.layer.cornerRadius = 28
         fab.layer.shadowColor = UIColor.black.cgColor
         fab.layer.shadowOffset = CGSize(width: 0, height: ThemeTokens.Shadows.Fab.offsetY)
@@ -1094,7 +1094,7 @@ class ComponentCatalogViewController: UIViewController {
 
             let chevronIV = UIImageView()
             chevronIV.image = UIImage(systemName: "chevron.right")
-            chevronIV.tintColor = ThemeTokens.Colors.Light.textTertiary
+            chevronIV.tintColor = ThemeTokens.Color.textTertiary
             chevronIV.contentMode = .scaleAspectFit
             chevronIV.isHidden = !showChevron
             row.addSubview(chevronIV)
@@ -1146,7 +1146,7 @@ class ComponentCatalogViewController: UIViewController {
             }
 
             let separator = UIView()
-            separator.backgroundColor = ThemeTokens.Colors.Light.separator
+            separator.backgroundColor = ThemeTokens.Color.separator
             row.addSubview(separator)
             separator.snp.makeConstraints { make in
                 make.bottom.equalToSuperview()
@@ -1234,22 +1234,22 @@ private class TokenCardDemoView: UIView {
         let titleLabel = UILabel()
         titleLabel.text = "Push Token"
         titleLabel.font = ThemeTokens.Typography.footnote
-        titleLabel.textColor = .white.withAlphaComponent(0.9)
+        titleLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.9)
 
         let urlLabel = UILabel()
         urlLabel.text = "https://api.day.app"
         urlLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        urlLabel.textColor = .white.withAlphaComponent(0.85)
+        urlLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.85)
         urlLabel.numberOfLines = 1
 
         let tokenLabel = UILabel()
         tokenLabel.text = "Device: a1b2c3d4e5f6..."
         tokenLabel.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .regular)
-        tokenLabel.textColor = .white.withAlphaComponent(0.7)
+        tokenLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.7)
 
         let copyButton = UIButton(type: .system)
         copyButton.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)), for: .normal)
-        copyButton.tintColor = .white
+        copyButton.tintColor = ThemeTokens.Color.background
         copyButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
         copyButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl
 

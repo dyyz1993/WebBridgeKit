@@ -86,22 +86,22 @@ class SettingsViewModel: ViewModel {
         let rememberOn = SettingsViewModel.rememberLastAppEnabled
         let cacheSize = SettingsViewModel.calculateCacheSize()
 
-        let pb = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
-        let pt = ThemeTokens.Colors.Light.primary
-        let eb = ThemeTokens.Colors.Light.error.withAlphaComponent(0.1)
-        let et = ThemeTokens.Colors.Light.error
-        let sb = ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
-        let st = ThemeTokens.Colors.Light.success
-        let wb = ThemeTokens.Colors.Light.warning.withAlphaComponent(0.1)
-        let wt = ThemeTokens.Colors.Light.warning
-        let pubg = UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 0.1)
-        let put = UIColor(red: 0.686, green: 0.322, blue: 0.878, alpha: 1)
-        let ob = UIColor(red: 1, green: 0.6, blue: 0.2, alpha: 0.1)
-        let ot = UIColor(red: 1, green: 0.6, blue: 0.2, alpha: 1)
-        let tb = UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 0.1)
-        let tt = UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 1)
-        let gb = UIColor(red: 0.45, green: 0.45, blue: 0.5, alpha: 0.1)
-        let gt = UIColor(red: 0.45, green: 0.45, blue: 0.5, alpha: 1)
+        let pb = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        let pt = ThemeTokens.Color.primary
+        let eb = ThemeTokens.Color.error.withAlphaComponent(0.1)
+        let et = ThemeTokens.Color.error
+        let sb = ThemeTokens.Color.success.withAlphaComponent(0.1)
+        let st = ThemeTokens.Color.success
+        let wb = ThemeTokens.Color.warning.withAlphaComponent(0.1)
+        let wt = ThemeTokens.Color.warning
+        let pubg = ThemeTokens.Color.info.withAlphaComponent(0.1)
+        let put = ThemeTokens.Color.info
+        let ob = ThemeTokens.Color.gradientStart.withAlphaComponent(0.1)
+        let ot = ThemeTokens.Color.gradientStart
+        let tb = ThemeTokens.Color.gradientEnd.withAlphaComponent(0.1)
+        let tt = ThemeTokens.Color.gradientEnd
+        let gb = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)
+        let gt = ThemeTokens.Color.textSecondary
 
         let heroItem = SettingsItem(
             icon: nil,

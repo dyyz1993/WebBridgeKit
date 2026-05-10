@@ -32,7 +32,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     // 永久密钥卡片
     private let permanentKeyCard: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
+        view.backgroundColor = ThemeTokens.Color.surface
         view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         view.layer.masksToBounds = true
         return view
@@ -43,8 +43,8 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         imageView.image = UIImage(systemName: "key.fill", withConfiguration: config)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeTokens.Colors.Light.success
-        imageView.backgroundColor = ThemeTokens.Colors.Light.success.withAlphaComponent(0.15)
+        imageView.tintColor = ThemeTokens.Color.success
+        imageView.backgroundColor = ThemeTokens.Color.success.withAlphaComponent(0.15)
         imageView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         imageView.layer.masksToBounds = true
         return imageView
@@ -54,14 +54,14 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.permanent_key")
         label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
     private let permanentKeyValue: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.adjustsFontSizeToFitWidth = true
         label.minimumScaleFactor = 0.8
@@ -75,7 +75,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("common.copy"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.tintColor = ThemeTokens.Colors.Light.primary
+        button.tintColor = ThemeTokens.Color.primary
         return button
     }()
 
@@ -86,7 +86,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.refresh"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.tintColor = ThemeTokens.Colors.Light.warning
+        button.tintColor = ThemeTokens.Color.warning
         return button
     }()
 
@@ -97,13 +97,13 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.test"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        button.tintColor = ThemeTokens.Colors.Light.success
+        button.tintColor = ThemeTokens.Color.success
         return button
     }()
 
     private let permanentKeySeparator: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.separator
+        view.backgroundColor = ThemeTokens.Color.divider
         return view
     }()
 
@@ -114,7 +114,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.view_examples"))", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        button.tintColor = ThemeTokens.Colors.Light.primary
+        button.tintColor = ThemeTokens.Color.primary
         button.contentHorizontalAlignment = .left
         return button
     }()
@@ -124,7 +124,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.temporary_keys")
         label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
@@ -132,7 +132,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.temporary_keys_desc")
         label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()
@@ -151,7 +151,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     // Bark 配置卡片
     private let barkConfigCard: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
+        view.backgroundColor = ThemeTokens.Color.surface
         view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         view.layer.masksToBounds = true
         return view
@@ -161,7 +161,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.bark_config_title")
         label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 0
         return label
     }()
@@ -171,7 +171,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         tf.placeholder = L10n.tr("apikey.manage.bark_key_placeholder")
         tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         tf.borderStyle = .none
-        tf.backgroundColor = UIColor.tertiarySystemBackground
+        tf.backgroundColor = ThemeTokens.Color.background
         tf.layer.cornerRadius = ThemeTokens.CornerRadius.md
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
         tf.leftView = paddingView
@@ -184,7 +184,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         tf.placeholder = L10n.tr("apikey.manage.bark_server_placeholder")
         tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         tf.borderStyle = .none
-        tf.backgroundColor = UIColor.tertiarySystemBackground
+        tf.backgroundColor = ThemeTokens.Color.background
         tf.layer.cornerRadius = ThemeTokens.CornerRadius.md
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
         tf.leftView = paddingView
@@ -196,8 +196,8 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("apikey.manage.save_config"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        button.backgroundColor = ThemeTokens.Colors.Light.primary
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.primary
+        button.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return button
     }()
@@ -223,7 +223,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     // MARK: - Setup UI
 
     private func setupUI() {
-        view.backgroundColor = UIColor.systemGroupedBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -406,7 +406,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
             target: self,
             action: #selector(addTemporaryKeyTapped)
         )
-        addButton.tintColor = ThemeTokens.Colors.Light.primary
+        addButton.tintColor = ThemeTokens.Color.primary
         navigationItem.rightBarButtonItem = addButton
     }
 
@@ -700,7 +700,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
             self?.viewModel.sendTemporaryKeyTestPush(key: key)
             completion(true)
         }
-        testAction.backgroundColor = ThemeTokens.Colors.Light.success
+        testAction.backgroundColor = ThemeTokens.Color.success
         testAction.image = UIImage(systemName: "paperplane.fill")
 
         // 编辑操作
@@ -708,7 +708,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
             self?.showEditGroupIdDialog(for: key)
             completion(true)
         }
-        editAction.backgroundColor = ThemeTokens.Colors.Light.primary
+        editAction.backgroundColor = ThemeTokens.Color.primary
         editAction.image = UIImage(systemName: "square.and.pencil")
 
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction, testAction, editAction])

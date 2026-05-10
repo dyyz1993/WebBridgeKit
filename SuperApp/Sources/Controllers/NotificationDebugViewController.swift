@@ -43,7 +43,7 @@ class NotificationDebugViewController: UIViewController {
     private let bodyInput: UITextView = {
         let tv = UITextView()
         tv.font = ThemeTokens.Typography.body
-        tv.layer.borderColor = UIColor.separator.cgColor
+        tv.layer.borderColor = ThemeTokens.Color.border.cgColor
         tv.layer.borderWidth = 1
         tv.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         tv.heightAnchor.constraint(equalToConstant: 80).isActive = true
@@ -87,7 +87,7 @@ class NotificationDebugViewController: UIViewController {
         btn.setTitle(L10n.tr("notif_debug.button.send"), for: .normal)
         btn.titleLabel?.font = ThemeTokens.Typography.title3
         btn.backgroundColor = ThemeColors.current.primary
-        btn.setTitleColor(.white, for: .normal)
+        btn.setTitleColor(ThemeColors.current.surface, for: .normal)
         btn.layer.cornerRadius = 12
         return btn
     }()
@@ -96,12 +96,12 @@ class NotificationDebugViewController: UIViewController {
         let tv = UITextView()
         tv.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         tv.isEditable = false
-        tv.layer.borderColor = UIColor.separator.cgColor
+        tv.layer.borderColor = ThemeTokens.Color.border.cgColor
         tv.layer.borderWidth = 1
         tv.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         tv.heightAnchor.constraint(equalToConstant: 120).isActive = true
         tv.text = L10n.tr("notif_debug.waiting")
-        tv.textColor = .secondaryLabel
+        tv.textColor = ThemeTokens.Color.textSecondary
         return tv
     }()
 
@@ -366,7 +366,7 @@ class NotificationDebugViewController: UIViewController {
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         guard !key.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_key")
-            responseView.textColor = ThemeTokens.Colors.Light.error
+            responseView.textColor = ThemeTokens.Color.error
             return
         }
 
@@ -374,7 +374,7 @@ class NotificationDebugViewController: UIViewController {
         let body = bodyInput.text ?? ""
         guard !title.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_title")
-            responseView.textColor = ThemeTokens.Colors.Light.error
+            responseView.textColor = ThemeTokens.Color.error
             return
         }
 
@@ -389,7 +389,7 @@ class NotificationDebugViewController: UIViewController {
         let notifId = notifIdInput.text ?? ""
 
         responseView.text = L10n.tr("notif_debug.sending")
-        responseView.textColor = .secondaryLabel
+        responseView.textColor = ThemeTokens.Color.textSecondary
 
         let params = NotificationParams(
             server: server, key: key, title: title, body: body,
@@ -429,7 +429,7 @@ class NotificationDebugViewController: UIViewController {
 
         guard let requestURL = URL(string: path) else {
             responseView.text = L10n.tr("notif_debug.error_url_failed")
-            responseView.textColor = ThemeTokens.Colors.Light.error
+            responseView.textColor = ThemeTokens.Color.error
             return
         }
 
@@ -445,7 +445,7 @@ class NotificationDebugViewController: UIViewController {
     private func sendPOST(params: NotificationParams) {
         guard let requestURL = URL(string: "\(params.server)/\(params.key)") else {
             responseView.text = L10n.tr("notif_debug.error_url_failed")
-            responseView.textColor = ThemeTokens.Colors.Light.error
+            responseView.textColor = ThemeTokens.Color.error
             return
         }
 
@@ -484,7 +484,7 @@ class NotificationDebugViewController: UIViewController {
     private func handleResponse(data: Data?, response: URLResponse?, error: Error?, elapsed: String) {
         if let error = error {
             responseView.text = L10n.tr("notif_debug.error_request_failed_format", elapsed, error.localizedDescription)
-            responseView.textColor = ThemeTokens.Colors.Light.error
+            responseView.textColor = ThemeTokens.Color.error
             return
         }
 
@@ -493,10 +493,10 @@ class NotificationDebugViewController: UIViewController {
 
         if (200...299).contains(statusCode) {
             responseView.text = L10n.tr("notif_debug.success_format", elapsed, "\(statusCode)", bodyStr)
-            responseView.textColor = ThemeTokens.Colors.Light.success
+            responseView.textColor = ThemeTokens.Color.success
         } else {
             responseView.text = L10n.tr("notif_debug.error_request_failed_format", elapsed, "HTTP \(statusCode)\n\n\(bodyStr)")
-            responseView.textColor = ThemeTokens.Colors.Light.error
+            responseView.textColor = ThemeTokens.Color.error
         }
     }
 }

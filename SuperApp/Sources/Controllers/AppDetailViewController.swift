@@ -363,17 +363,17 @@ class AppDetailViewController: UIViewController {
         let fgColor: UIColor
         switch style {
         case .primary:
-            bgColor = UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)
-            fgColor = .white
+            bgColor = ThemeTokens.Color.primary
+            fgColor = ThemeTokens.Color.text
         case .danger:
-            bgColor = UIColor(red: 1, green: 0.231, blue: 0.188, alpha: 1)
-            fgColor = .white
+            bgColor = ThemeTokens.Color.error
+            fgColor = ThemeTokens.Color.text
         case .success:
-            bgColor = UIColor(red: 0.204, green: 0.78, blue: 0.349, alpha: 1)
-            fgColor = .white
+            bgColor = ThemeTokens.Color.success
+            fgColor = ThemeTokens.Color.text
         case .outline:
             bgColor = .clear
-            fgColor = UIColor(red: 0, green: 0.478, blue: 1, alpha: 1)
+            fgColor = ThemeTokens.Color.primary
         }
 
         btn.backgroundColor = bgColor
@@ -385,7 +385,7 @@ class AppDetailViewController: UIViewController {
         btn.layer.cornerRadius = 8
         if case .outline = style {
             btn.layer.borderWidth = 1.5
-            btn.layer.borderColor = UIColor(red: 0, green: 0.478, blue: 1, alpha: 1).cgColor
+            btn.layer.borderColor = ThemeTokens.Color.primary.cgColor
         }
         btn.imageView?.contentMode = .scaleAspectFit
         btn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
@@ -401,12 +401,12 @@ class AppDetailViewController: UIViewController {
 extension DiscoverViewController {
     static func gradientColorsForName(_ name: String) -> (UIColor, UIColor) {
         let gradients: [(UIColor, UIColor)] = [
-            (UIColor(red: 0.4, green: 0.494, blue: 0.918, alpha: 1), UIColor(red: 0.463, green: 0.294, blue: 0.635, alpha: 1)),
-            (UIColor(red: 0.941, green: 0.576, blue: 0.984, alpha: 1), UIColor(red: 0.961, green: 0.341, blue: 0.424, alpha: 1)),
-            (UIColor(red: 0.31, green: 0.673, blue: 0.996, alpha: 1), UIColor(red: 0, green: 0.949, blue: 0.996, alpha: 1)),
-            (UIColor(red: 0.263, green: 0.914, blue: 0.482, alpha: 1), UIColor(red: 0.22, green: 0.976, blue: 0.843, alpha: 1)),
-            (UIColor(red: 0.98, green: 0.439, blue: 0.604, alpha: 1), UIColor(red: 0.996, green: 0.882, blue: 0.251, alpha: 1)),
-            (UIColor(red: 0.631, green: 0.549, blue: 0.82, alpha: 1), UIColor(red: 0.984, green: 0.761, blue: 0.922, alpha: 1)),
+            (ThemeTokens.Color.gradientStart, ThemeTokens.Color.gradientEnd),
+            (ThemeTokens.Color.primary, ThemeTokens.Color.gradientEnd),
+            (ThemeTokens.Color.primary, ThemeTokens.Color.info),
+            (ThemeTokens.Color.success, ThemeTokens.Color.primary),
+            (ThemeTokens.Color.error, ThemeTokens.Color.warning),
+            (ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientStart),
         ]
         return gradients[abs(name.hashValue) % gradients.count]
     }

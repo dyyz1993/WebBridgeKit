@@ -7,9 +7,9 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .white
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = 14
-        view.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.1).cgColor
+        view.layer.borderColor = ThemeTokens.Color.primary.withAlphaComponent(0.1).cgColor
         view.layer.borderWidth = 1
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -22,7 +22,7 @@ class PushTokenCardCell: UICollectionViewCell {
         let iv = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         iv.image = LucideIcon.server.image(pointSize: 14, weight: .medium)
-        iv.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iv.tintColor = ThemeTokens.Color.textTertiary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -30,7 +30,7 @@ class PushTokenCardCell: UICollectionViewCell {
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -73,7 +73,7 @@ class PushTokenCardCell: UICollectionViewCell {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("home.token_card.register"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.background, for: .normal)
         button.backgroundColor = ThemeColors.current.primary
         button.layer.cornerRadius = 6
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
@@ -174,7 +174,7 @@ class PushTokenCardCell: UICollectionViewCell {
         } else {
             urlLabel.text = serverURL
             tokenLabel.text = L10n.tr("home.token_card.not_registered")
-            tokenLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+            tokenLabel.textColor = ThemeTokens.Color.textTertiary
             copyButton.isHidden = true
             registerButton.isHidden = false
         }
@@ -252,7 +252,7 @@ class QuickActionCell: UICollectionViewCell {
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
-        titleLabel.textColor = ThemeTokens.Colors.Light.textSecondary
+        titleLabel.textColor = ThemeTokens.Color.textSecondary
         titleLabel.textAlignment = .center
         titleLabel.adjustsFontSizeToFitWidth = true
         titleLabel.minimumScaleFactor = 0.7
@@ -290,7 +290,7 @@ class SectionHeaderView: UICollectionReusableView {
     let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        label.textColor = ThemeTokens.Colors.Light.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
@@ -334,7 +334,7 @@ class CommandBannerView: UIView {
     private let dismissButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(LucideIcon.xmark.image(pointSize: 14, weight: .bold), for: .normal)
-        button.tintColor = ThemeTokens.Colors.Light.textTertiary
+        button.tintColor = ThemeTokens.Color.textTertiary
         return button
     }()
 

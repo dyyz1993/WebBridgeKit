@@ -147,7 +147,7 @@ class TabBarController: UITabBarController {
     private func setupAppearance() {
         tabBar.isTranslucent = true
         tabBar.unselectedItemTintColor = ThemeColors.current.textSecondary
-        tabBar.tintColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
+        tabBar.tintColor = ThemeTokens.Color.primary
 
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()

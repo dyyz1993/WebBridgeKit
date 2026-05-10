@@ -44,7 +44,7 @@ class TextFieldCell: UITableViewCell {
 
     private let separatorLine: UIView = {
         let line = UIView()
-        line.backgroundColor = UIColor.separator
+        line.backgroundColor = ThemeTokens.Color.separator
         return line
     }()
 
@@ -124,7 +124,7 @@ class TextFieldCell: UITableViewCell {
         } else {
             errorLabel.text = nil
             errorLabel.isHidden = true
-            separatorLine.backgroundColor = UIColor.separator
+            separatorLine.backgroundColor = ThemeTokens.Color.separator
         }
     }
 
@@ -159,7 +159,7 @@ class TextFieldCell: UITableViewCell {
         textField.placeholder = ""
         errorLabel.text = ""
         errorLabel.isHidden = true
-        separatorLine.backgroundColor = UIColor.separator
+        separatorLine.backgroundColor = ThemeTokens.Color.separator
         onTextChange = nil
     }
 }

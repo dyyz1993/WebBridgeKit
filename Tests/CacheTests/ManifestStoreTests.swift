@@ -167,6 +167,9 @@ final class ManifestStoreTests: XCTestCase {
 
     func testConformsToManifestCacheManaging() {
         let s: any ManifestCacheManaging = store
-        XCTAssertTrue(s is ManifestCacheManaging)
+        let key = "protocol-test-\(UUID().uuidString)"
+        s.saveHTMLSync("protocol-html", for: key)
+        let html = s.getHTML(for: key)
+        XCTAssertEqual(html, "protocol-html")
     }
 }

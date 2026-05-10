@@ -69,7 +69,7 @@ class SettingsHeaderView: UIView {
 
     private let separatorLine: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.separator
+        view.backgroundColor = ThemeTokens.Color.separator
         return view
     }()
 

@@ -115,7 +115,7 @@ class DemoViewController: UIViewController {
             title: "打开测试页面",
             subtitle: "测试所有 32 个 Native Handler",
             icon: "🧪",
-            color: UIColor(red: 0.4, green: 0.5, blue: 0.9, alpha: 1.0),
+            color: ThemeTokens.Color.primary,
             action: #selector(openTestPage)
         )
 
@@ -123,7 +123,7 @@ class DemoViewController: UIViewController {
             title: "打开远程网页",
             subtitle: "浏览任意网站",
             icon: "🌐",
-            color: UIColor(red: 0.3, green: 0.8, blue: 0.6, alpha: 1.0),
+            color: ThemeTokens.Color.success,
             action: #selector(openRemotePage)
         )
 
@@ -131,7 +131,7 @@ class DemoViewController: UIViewController {
             title: "系统信息",
             subtitle: "查看设备和应用信息",
             icon: "📱",
-            color: UIColor(red: 0.9, green: 0.5, blue: 0.4, alpha: 1.0),
+            color: ThemeTokens.Color.error,
             action: #selector(showSystemInfo)
         )
 
@@ -139,7 +139,7 @@ class DemoViewController: UIViewController {
             title: "缓存调试",
             subtitle: "查看和管理压缩缓存",
             icon: "🗂️",
-            color: UIColor(red: 0.6, green: 0.4, blue: 0.8, alpha: 1.0),
+            color: ThemeTokens.Color.info,
             action: #selector(openCacheDebug)
         )
 

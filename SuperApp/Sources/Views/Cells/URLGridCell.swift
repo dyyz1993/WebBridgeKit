@@ -51,21 +51,21 @@ class URLGridCell: UICollectionViewCell {
     private let statusDot: UIView = {
         let v = UIView()
         v.layer.cornerRadius = 3
-        v.backgroundColor = ThemeTokens.Colors.Light.success
+        v.backgroundColor = ThemeTokens.Color.success
         return v
     }()
 
     private let statusLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
 
     private let timeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 11, weight: .regular)
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
 
@@ -100,14 +100,14 @@ class URLGridCell: UICollectionViewCell {
     var onFavoriteToggle: (() -> Void)?
 
     private static let gradients: [[UIColor]] = [
-        [UIColor(red: 0.4, green: 0.494, blue: 0.918, alpha: 1), UIColor(red: 0.463, green: 0.294, blue: 0.635, alpha: 1)],
+        [ThemeTokens.Color.gradientStart, ThemeTokens.Color.gradientEnd],
         [UIColor(red: 0.941, green: 0.576, blue: 0.984, alpha: 1), UIColor(red: 0.961, green: 0.341, blue: 0.424, alpha: 1)],
         [UIColor(red: 0.310, green: 0.671, blue: 0.992, alpha: 1), UIColor(red: 0.0, green: 0.949, blue: 0.996, alpha: 1)],
-        [UIColor(red: 0.263, green: 0.914, blue: 0.482, alpha: 1), UIColor(red: 0.220, green: 0.976, blue: 0.843, alpha: 1)],
-        [UIColor(red: 0.98, green: 0.439, blue: 0.604, alpha: 1), UIColor(red: 0.996, green: 0.882, blue: 0.251, alpha: 1)],
+        [ThemeTokens.Color.success, UIColor(red: 0.220, green: 0.976, blue: 0.843, alpha: 1)],
+        [UIColor(red: 0.98, green: 0.439, blue: 0.604, alpha: 1), ThemeTokens.Color.warning],
         [UIColor(red: 0.631, green: 0.549, blue: 0.82, alpha: 1), UIColor(red: 0.984, green: 0.761, blue: 0.922, alpha: 1)],
-        [UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1), UIColor(red: 0.98, green: 0.8, blue: 0.2, alpha: 1)],
-        [UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 1), UIColor(red: 0.4, green: 0.92, blue: 0.6, alpha: 1)],
+        [ThemeTokens.Color.warning, UIColor(red: 0.98, green: 0.8, blue: 0.2, alpha: 1)],
+        [ThemeTokens.Color.success, UIColor(red: 0.4, green: 0.92, blue: 0.6, alpha: 1)],
     ]
 
     private static let lucideIcons: [LucideIcon] = [
@@ -235,17 +235,17 @@ class URLGridCell: UICollectionViewCell {
         iconGradientLayer.colors = colors.map { $0.cgColor }
 
         if history.isCached && history.cachedSize > 0 {
-            statusDot.backgroundColor = ThemeTokens.Colors.Light.success
+            statusDot.backgroundColor = ThemeTokens.Color.success
             statusLabel.text = L10n.tr("discover.badge.offline")
-            statusLabel.textColor = ThemeTokens.Colors.Light.success
+            statusLabel.textColor = ThemeTokens.Color.success
         } else if history.cachedSize > 0 {
-            statusDot.backgroundColor = ThemeTokens.Colors.Light.warning
+            statusDot.backgroundColor = ThemeTokens.Color.warning
             statusLabel.text = L10n.tr("discover.badge.needs_update")
-            statusLabel.textColor = ThemeTokens.Colors.Light.warning
+            statusLabel.textColor = ThemeTokens.Color.warning
         } else {
-            statusDot.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+            statusDot.backgroundColor = ThemeTokens.Color.textTertiary
             statusLabel.text = L10n.tr("discover.badge.not_cached")
-            statusLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+            statusLabel.textColor = ThemeTokens.Color.textTertiary
         }
 
         let elapsed = Date().timeIntervalSince(history.lastVisitDate)

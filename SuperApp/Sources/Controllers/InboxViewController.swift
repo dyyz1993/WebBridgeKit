@@ -87,8 +87,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         button.setImage(LucideIcon.send.image(pointSize: 16, weight: .semibold), for: .normal)
         button.setTitle(L10n.tr("inbox.send_test"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        button.backgroundColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
-        button.tintColor = .white
+        button.backgroundColor = ThemeTokens.Color.primary
+        button.tintColor = ThemeTokens.Color.text
         button.layer.cornerRadius = 25
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -107,12 +107,12 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         container.backgroundColor = .clear
         let iconView = UIImageView()
         iconView.image = LucideIcon.info.templateImage(pointSize: 12)
-        iconView.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iconView.tintColor = ThemeTokens.Color.textTertiary
         iconView.contentMode = .scaleAspectFit
         let label = UILabel()
         label.text = L10n.tr("inbox.swipe.hint")
         label.font = .systemFont(ofSize: 11)
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         let stack = UIStackView(arrangedSubviews: [iconView, label])
         stack.axis = .horizontal
         stack.spacing = 6
@@ -150,7 +150,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             target: nil,
             action: nil
         )
-        clearAllBtn.tintColor = ThemeTokens.Colors.Light.error
+        clearAllBtn.tintColor = ThemeTokens.Color.error
         clearAllBtn.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 13, weight: .semibold)], for: .normal)
         navigationItem.rightBarButtonItem = clearAllBtn
 
@@ -236,10 +236,10 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             (L10n.tr("inbox.filter.apps"), .apps)
         ]
 
-        let inactiveBg = UIColor(red: 0.898, green: 0.898, blue: 0.918, alpha: 1.0)
+        let inactiveBg = ThemeTokens.Color.surface
         let inactiveFg = ThemeColors.current.textSecondary
-        let activeBg = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
-        let activeFg = UIColor.white
+        let activeBg = ThemeTokens.Color.primary
+        let activeFg = ThemeTokens.Color.text
 
         for (title, type) in filters {
             let button: UIButton
@@ -281,10 +281,10 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     }
 
     private func updateFilterSelection(_ selected: InboxViewModel.FilterType) {
-        let inactiveBg = UIColor(red: 0.898, green: 0.898, blue: 0.918, alpha: 1.0)
+        let inactiveBg = ThemeTokens.Color.surface
         let inactiveFg = ThemeColors.current.textSecondary
-        let activeBg = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
-        let activeFg = UIColor.white
+        let activeBg = ThemeTokens.Color.primary
+        let activeFg = ThemeTokens.Color.text
 
         for button in filterButtons {
             let isSelected = button.tag == selected.rawValue
@@ -534,7 +534,7 @@ class InboxMessageCell: UITableViewCell {
 
     private let unreadDot: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 1.0, green: 0.231, blue: 0.188, alpha: 1.0)
+        view.backgroundColor = ThemeTokens.Color.error
         view.layer.cornerRadius = 5
         return view
     }()
@@ -578,7 +578,7 @@ class InboxMessageCell: UITableViewCell {
     private let chevronImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = LucideIcon.chevronRight.image(pointSize: 16, weight: .medium)
-        iv.tintColor = ThemeTokens.Colors.Light.textTertiary
+        iv.tintColor = ThemeTokens.Color.textTertiary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -677,10 +677,10 @@ class InboxMessageCell: UITableViewCell {
         let channel = message.payload.channel.uppercased()
         sourceLabel.text = channel
 
-        let primaryColor = UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
-        let accentColor = UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: 1.0)
-        let warningColor = UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0)
-        let grayColor = UIColor(red: 0.557, green: 0.557, blue: 0.576, alpha: 1.0)
+        let primaryColor = ThemeTokens.Color.primary
+        let accentColor = ThemeTokens.Color.success
+        let warningColor = ThemeTokens.Color.warning
+        let grayColor = ThemeTokens.Color.textSecondary
 
         switch channel {
         case "APNS", "APN":
@@ -728,7 +728,7 @@ class InboxEmptyStateView: UIView {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = UIColor(red: 0.780, green: 0.780, blue: 0.800, alpha: 1.0)
+        iv.tintColor = ThemeTokens.Color.textTertiary
         return iv
     }()
 

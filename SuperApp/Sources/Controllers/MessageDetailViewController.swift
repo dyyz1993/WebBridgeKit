@@ -173,7 +173,7 @@ class MessageDetailViewController: UIViewController {
         let labelLabel = UILabel()
         labelLabel.text = label
         labelLabel.font = ThemeTokens.Typography.footnote
-        labelLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+        labelLabel.textColor = ThemeTokens.Color.textTertiary
         labelLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         let valueLabel = UILabel()
@@ -208,7 +208,7 @@ class MessageDetailViewController: UIViewController {
             config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
             config.baseBackgroundColor = ThemeColors.current.cardBackground
             if isDestructive {
-                config.baseForegroundColor = .systemRed
+                config.baseForegroundColor = ThemeTokens.Color.error
             }
             button = UIButton(configuration: config)
         } else {
@@ -216,7 +216,7 @@ class MessageDetailViewController: UIViewController {
             button.setTitle("  \(title)", for: .normal)
             button.setImage(icon.templateImage(pointSize: 16), for: .normal)
             if isDestructive {
-                button.tintColor = .systemRed
+                button.tintColor = ThemeTokens.Color.error
             }
         }
         button.contentHorizontalAlignment = .leading
