@@ -103,11 +103,15 @@ class URLGridCell: UICollectionViewCell {
         [UIColor(red: 0.4, green: 0.494, blue: 0.918, alpha: 1), UIColor(red: 0.463, green: 0.294, blue: 0.635, alpha: 1)],
         [UIColor(red: 0.941, green: 0.576, blue: 0.984, alpha: 1), UIColor(red: 0.961, green: 0.341, blue: 0.424, alpha: 1)],
         [UIColor(red: 0.310, green: 0.671, blue: 0.992, alpha: 1), UIColor(red: 0.0, green: 0.949, blue: 0.996, alpha: 1)],
-        [UIColor(red: 0.263, green: 0.914, blue: 0.482, alpha: 1), UIColor(red: 0.220, green: 0.976, blue: 0.843, alpha: 1)]
+        [UIColor(red: 0.263, green: 0.914, blue: 0.482, alpha: 1), UIColor(red: 0.220, green: 0.976, blue: 0.843, alpha: 1)],
+        [UIColor(red: 0.98, green: 0.439, blue: 0.604, alpha: 1), UIColor(red: 0.996, green: 0.882, blue: 0.251, alpha: 1)],
+        [UIColor(red: 0.631, green: 0.549, blue: 0.82, alpha: 1), UIColor(red: 0.984, green: 0.761, blue: 0.922, alpha: 1)],
+        [UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1), UIColor(red: 0.98, green: 0.8, blue: 0.2, alpha: 1)],
+        [UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 1), UIColor(red: 0.4, green: 0.92, blue: 0.6, alpha: 1)],
     ]
 
     private static let lucideIcons: [LucideIcon] = [
-        .globe, .appFill, .doc, .settings
+        .globe, .appFill, .doc, .settings, .star, .folder, .bell, .hardDrive
     ]
 
     var history: WebPageHistory? {

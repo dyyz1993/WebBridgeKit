@@ -669,14 +669,5 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard indexPath.section >= MainSection.appGrid.rawValue else { return }
-        let sections = viewModel.historiesRelayValue
-        let gridIndex = indexPath.section - MainSection.appGrid.rawValue
-        guard gridIndex >= 0 && gridIndex < sections.count else { return }
-        let history = sections[gridIndex].items[indexPath.item]
-        if let url = URL(string: history.url) {
-            openURL(url)
-            viewModel.refreshData()
-        }
     }
 }

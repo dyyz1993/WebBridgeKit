@@ -478,18 +478,18 @@ struct TestDataSeeder {
         do {
             let config = URLFavoriteManager.shared.realmConfiguration
             let realm = try Realm(configuration: config)
-            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-github-001") != nil { return }
+            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-weather-001") != nil { return }
 
             try realm.write {
                 let favs: [(id: String, url: String, title: String, pinned: Bool, order: Int, cache: Bool, date: String)] = [
-                    ("fav-github-001", "https://github.com", "GitHub", true, 0, false, "2026-01-15T08:00:00Z"),
-                    ("fav-docs-002", "https://developer.apple.com/documentation", "Apple Developer", true, 1, true, "2026-02-01T10:00:00Z"),
-                    ("fav-google-004", "https://www.google.com", "Google", true, 2, false, "2026-01-20T09:00:00Z"),
-                    ("fav-news-003", "https://news.ycombinator.com", "Hacker News", false, 10, false, "2026-03-01T12:00:00Z"),
-                    ("fav-tool-005", "https://www.jsonlint.com", "JSONLint", false, 11, false, "2026-03-15T14:00:00Z"),
-                    ("fav-local-006", "http://localhost:8080/health", "本地服务", false, 12, false, "2026-04-01T08:00:00Z"),
-                    ("fav-stackoverflow", "https://stackoverflow.com", "Stack Overflow", true, 3, false, "2026-02-10T08:00:00Z"),
-                    ("fav-swiftorg", "https://www.swift.org", "Swift.org", false, 13, true, "2026-02-20T08:00:00Z"),
+                    ("fav-weather-001", "https://weather.com/beijing", "北京天气", true, 0, true, "2026-05-08T08:00:00Z"),
+                    ("fav-shop-002", "https://m.shop.example.com", "优购商城", true, 1, true, "2026-05-06T10:00:00Z"),
+                    ("fav-notes-003", "https://notes.md/editor", "轻笔记", true, 2, true, "2026-05-05T09:00:00Z"),
+                    ("fav-admin-004", "https://admin.example.com/dashboard", "管理后台", true, 3, true, "2026-05-04T12:00:00Z"),
+                    ("fav-news-005", "https://news.daily/feed", "每日新闻", false, 10, false, "2026-05-07T14:00:00Z"),
+                    ("fav-dashboard-006", "https://dashboard.example.com", "数据面板", false, 11, true, "2026-05-03T08:00:00Z"),
+                    ("fav-docs-007", "https://docs.swift.org/getting-started", "Swift 入门", false, 12, true, "2026-04-28T10:00:00Z"),
+                    ("fav-local-008", "http://localhost:8080/health", "本地服务", false, 13, false, "2026-05-09T08:00:00Z"),
                 ]
 
                 for f in favs {
@@ -522,22 +522,14 @@ struct TestDataSeeder {
 
             try realm.write {
                 let histories: [(id: String, url: String, title: String, cached: Bool, size: Int64, pinned: Bool, favorite: Bool, visits: Int, ruleId: String?, ruleName: String?, excluded: Bool, agoSeconds: TimeInterval)] = [
-                    ("hist-weather-001", "https://weather.com/beijing", "北京天气 - 实时预报", true, 184320, false, true, 35, "preset-baidu", "百度", false, 3600),
-                    ("hist-uncached-002", "https://www.wikipedia.org/wiki/Swift_(programming_language)", "Swift (programming language) - Wikipedia", false, 0, false, false, 2, nil, nil, false, 86400),
-                    ("hist-excluded-003", "https://passport.baidu.com/v2/login", "百度登录", false, 0, false, false, 1, "preset-baidu", "百度", true, 7200),
-                    ("hist-pinned-004", "https://stackoverflow.com", "Stack Overflow", true, 524288, true, true, 500, nil, nil, false, 1800),
-                    ("hist-shop-005", "https://m.shop.example.com/product/12345", "iPhone 16 Pro Max - 优购商城", true, 327680, false, false, 8, nil, nil, false, 5400),
-                    ("hist-game-006", "https://play.casual.games/tetris", "俄罗斯方块 - 在线小游戏", true, 1228800, false, false, 12, nil, nil, false, 7200),
-                    ("hist-news-007", "https://news.daily/feed", "每日新闻 - 首页", false, 0, false, false, 30, nil, nil, false, 86400 * 2),
-                    ("hist-docs-008", "https://docs.swift.org/getting-started", "Swift 入门指南", true, 204800, false, true, 45, nil, nil, false, 10800),
-                    ("hist-admin-009", "https://admin.example.com/dashboard", "管理后台 - 首页", true, 163840, false, true, 15, nil, nil, false, 14400),
-                    ("hist-github-010", "https://github.com/webbridgekit/app/pull/42", "feat: add dark mode support by developer", true, 409600, false, false, 3, "preset-github", "GitHub", false, 21600),
-                    ("hist-baidu-011", "https://www.baidu.com/s?wd=swift", "swift_百度搜索", true, 245760, false, false, 10, "preset-baidu", "百度", false, 28800),
-                    ("hist-baidu-baike-012", "https://baike.baidu.com/item/Swift", "Swift（苹果编程语言）_百度百科", true, 184320, false, false, 5, "preset-baidu", "百度", false, 43200),
-                    ("hist-dashboard-013", "https://dashboard.example.com", "数据面板 - 实时监控", true, 2179072, false, false, 22, nil, nil, false, 36000),
-                    ("hist-jsonlint-014", "https://www.jsonlint.com", "JSONLint - The Validator", false, 0, false, false, 4, nil, nil, false, 50400),
-                    ("hist-local-015", "http://localhost:8081/test_resources/sample.html", "本地测试页面", false, 0, false, false, 1, nil, nil, false, 64800),
-                    ("hist-apple-016", "https://developer.apple.com/documentation/swiftui", "SwiftUI | Apple Developer Documentation", true, 327680, false, true, 67, nil, nil, false, 79200),
+                    ("hist-weather-001", "https://weather.com/beijing", "北京天气", true, 184320, true, true, 35, nil, nil, false, 3600),
+                    ("hist-shop-002", "https://m.shop.example.com", "优购商城", true, 1155072, true, true, 28, nil, nil, false, 5400),
+                    ("hist-notes-003", "https://notes.md/editor", "轻笔记", true, 92160, false, true, 42, nil, nil, false, 7200),
+                    ("hist-admin-004", "https://admin.example.com/dashboard", "管理后台", true, 163840, true, true, 15, nil, nil, false, 10800),
+                    ("hist-news-005", "https://news.daily/feed", "每日新闻", true, 40960, false, false, 30, nil, nil, false, 86400),
+                    ("hist-dashboard-006", "https://dashboard.example.com", "数据面板", true, 2179072, false, true, 22, nil, nil, false, 14400),
+                    ("hist-docs-007", "https://docs.swift.org/getting-started", "Swift 入门", true, 204800, false, true, 45, nil, nil, false, 21600),
+                    ("hist-local-008", "http://localhost:8080/health", "本地服务", false, 0, false, false, 1, nil, nil, false, 28800),
                 ]
 
                 for h in histories {

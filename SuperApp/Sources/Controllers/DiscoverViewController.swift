@@ -498,8 +498,8 @@ class DiscoverAppCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = ThemeColors.current.text
-        label.numberOfLines = 0
-        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingTail
         label.setContentHuggingPriority(.required, for: .vertical)
         label.setContentCompressionResistancePriority(.required, for: .horizontal)
         return label
@@ -665,6 +665,8 @@ class DiscoverAppCell: UICollectionViewCell {
         .doc,
         .star,
         .folder,
+        .bell,
+        .settings,
     ]
 
     private static func gradientColors(for name: String) -> (UIColor, UIColor) {

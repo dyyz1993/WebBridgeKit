@@ -81,14 +81,17 @@ class MainViewModel: ViewModel {
             .drive()
             .disposed(by: rx)
 
-        // 点击项目
+        let appGridOffset = 2
+
         input.itemSelect
+            .filter { $0.section >= appGridOffset }
             .withLatestFrom(historiesRelay.asDriver()) { indexPath, sections -> WebPageHistory? in
-                guard indexPath.section < sections.count,
-                      indexPath.item < sections[indexPath.section].items.count else {
+                let gridIndex = indexPath.section - appGridOffset
+                guard gridIndex >= 0 && gridIndex < sections.count,
+                      indexPath.item < sections[gridIndex].items.count else {
                     return nil
                 }
-                return sections[indexPath.section].items[indexPath.item]
+                return sections[gridIndex].items[indexPath.item]
             }
             .compactMap { $0 }
             .flatMap { (history: WebPageHistory) -> Driver<URL> in
@@ -100,7 +103,6 @@ class MainViewModel: ViewModel {
             }
             .do(onNext: { [weak self] url in
                 self?.openURLRelay.accept(url)
-                // 增加访问计数
                 self?.historyService.addOrUpdateHistory(url: url, title: nil, favicon: nil)
             })
             .drive()
@@ -108,12 +110,14 @@ class MainViewModel: ViewModel {
 
         // 长按项目
         input.itemLongPress
+            .filter { $0.section >= appGridOffset }
             .withLatestFrom(historiesRelay.asDriver()) { indexPath, sections -> WebPageHistory? in
-                guard indexPath.section < sections.count,
-                      indexPath.item < sections[indexPath.section].items.count else {
+                let gridIndex = indexPath.section - appGridOffset
+                guard gridIndex >= 0 && gridIndex < sections.count,
+                      indexPath.item < sections[gridIndex].items.count else {
                     return nil
                 }
-                return sections[indexPath.section].items[indexPath.item]
+                return sections[gridIndex].items[indexPath.item]
             }
             .compactMap { $0 }
             .flatMap { (history: WebPageHistory) -> Driver<URL> in
