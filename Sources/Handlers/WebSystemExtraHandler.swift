@@ -137,7 +137,10 @@ public class WebSystemExtraHandler: BaseWebNativeHandler {
      */
     private func setBadge(count: Int, completion: @escaping (Any) -> Void) {
         runOnMainThread { [weak self] in
-            guard Bundle.main.bundleIdentifier != nil else {
+            let isTestEnv = Bundle.main.bundlePath.hasSuffix("Xcode/Agents/")
+                || Bundle.main.bundlePath.contains("xctest")
+                || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            guard !isTestEnv else {
                 self?.reject(error: "Badge setting unavailable in test runner", completion: completion)
                 return
             }

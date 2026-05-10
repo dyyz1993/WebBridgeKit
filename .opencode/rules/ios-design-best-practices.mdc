@@ -1,0 +1,221 @@
+---
+description: iOS HIG + UIKit 设计最佳实践，基于 Apple Human Interface Guidelines 精华提取
+globs:
+  - "Sources/**/*.swift"
+  - "SuperApp/**/*.swift"
+---
+
+# iOS 设计最佳实践 (UIKit + WebBridgeKit)
+
+## 1. Apple HIG 三大原则
+
+| 原则 | 含义 | 本项目实践 |
+|------|------|-----------|
+| **Clarity** | 内容清晰可读，装饰克制 | ThemeTokens 提供语义化颜色（primary/secondary/surface） |
+| **Deference** | UI 服务于内容，不抢视觉焦点 | 卡片使用 cardBackground，导航栏使用 navigationBarBackground |
+| **Depth** | 层次与动效传达层级关系 | 使用 shadow、overlay 分离视觉层级 |
+
+## 2. 颜色使用规范
+
+### 必须使用 ThemeTokens，禁止硬编码颜色
+
+```swift
+// ✅ 正确：使用语义化 Token
+label.textColor = theme.colors.primary
+view.backgroundColor = theme.colors.background
+imageView.tintColor = theme.colors.success
+
+// ❌ 错误：硬编码 RGB
+label.textColor = UIColor(red: 0, green: 0.48, blue: 1, alpha: 1)
+
+// ❌ 错误：直接用系统色
+label.textColor = .systemBlue
+```
+
+### Dark Mode 自适应
+
+ThemeTokens 的 Light/Dark 两套色值已覆盖全场景。使用 `theme.colors` 自动适配：
+- `background` / `surface` / `cardBackground` — 背景层级
+- `text` / `textSecondary` / `textTertiary` — 文字层级
+- `primary` / `secondary` — 强调色
+- `border` / `separator` / `divider` — 分隔线
+
+### 动态颜色（UIColor { trait in }）
+
+需要根据 userInterfaceStyle 动态切换时：
+```swift
+let dynamicColor = UIColor { trait in
+    trait.userInterfaceStyle == .dark
+        ? UIColor(red: 0.15, green: 0.15, blue: 0.17, alpha: 1)
+        : UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1)
+}
+```
+
+## 3. 字体排版
+
+### 使用系统语义字体，支持 Dynamic Type
+
+```swift
+// ✅ 语义字体（自动跟随用户字号设置）
+label.font = UIFont.preferredFont(forTextStyle: .headline)
+label.font = UIFont.preferredFont(forTextStyle: .body)
+label.font = UIFont.preferredFont(forTextStyle: .caption1)
+label.font = UIFont.preferredFont(forTextStyle: .footnote)
+
+// ✅ 自定义字号但保留 Dynamic Type 缩放
+let metrics = UIFontMetrics(forTextStyle: .body)
+label.font = metrics.scaledFont(for: UIFont.systemFont(ofSize: 15, weight: .medium))
+
+// ✅ 需要固定字号时（仅限数字/图标）
+label.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .regular)
+```
+
+### 项目 Typography Token 映射
+
+| Token | UIFontTextStyle | 用途 |
+|-------|----------------|------|
+| `heading` | `.headline` | 页面标题 |
+| `subheading` | `.subheadline` | 副标题 |
+| `body` | `.body` | 正文内容 |
+| `caption` | `.caption1` | 辅助说明 |
+| `mono` | monospaced | 代码/数字 |
+
+## 4. 间距与布局
+
+### 使用 4pt 基准网格
+
+```swift
+// ✅ 间距使用 4 的倍数
+// 4, 8, 12, 16, 20, 24, 32, 40, 48, 64
+stackView.spacing = 12  // 3x4
+constraint.constant = 16 // 4x4
+
+// ✅ 内边距标准
+contentView.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+```
+
+### Safe Area
+
+```swift
+// ✅ 使用 safeAreaInsets / directionalLayoutMargins
+// ❌ 不要硬编码 top: 44/64 等状态栏高度
+```
+
+## 5. SF Symbols 使用
+
+```swift
+// ✅ 基础用法
+let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
+let image = UIImage(systemName: "star.fill", withConfiguration: config)
+
+// ✅ 渲染模式
+imageView.contentMode = .scaleAspectFit
+
+// ✅ 颜色
+imageView.tintColor = theme.colors.primary
+
+// ✅ 本项目使用 Lucide 图标库（1703 PDF icons）
+// 通过 LucideIcon enum 访问：LucideIcon.star, LucideIcon.settings 等
+// 通过 UIImage extension 加载：UIImage(lucide: .star)
+```
+
+## 6. 卡片与阴影
+
+```swift
+// ✅ 标准卡片
+cardView.backgroundColor = theme.colors.cardBackground
+cardView.layer.cornerRadius = 12
+cardView.layer.shadowColor = UIColor.black.cgColor
+cardView.layer.shadowOpacity = 0.05
+cardView.layer.shadowRadius = 4
+cardView.layer.shadowOffset = CGSize(width: 0, height: 2)
+
+// ✅ 悬浮按钮 (FAB)
+fabView.backgroundColor = theme.colors.fabBackground
+fabView.layer.cornerRadius = fabView.bounds.width / 2
+fabView.layer.shadowOpacity = 0.15
+fabView.layer.shadowRadius = 8
+fabView.layer.shadowOffset = CGSize(width: 0, height: 4)
+```
+
+## 7. Material / 模糊效果
+
+```swift
+// ✅ 导航栏模糊
+let blurEffect = UIBlurEffect(style: .systemUltraThinMaterial)
+let blurView = UIVisualEffectView(effect: blurEffect)
+
+// ✅ 工具栏/底部栏
+let toolbarBlur = UIBlurEffect(style: .systemThinMaterial)
+
+// 适配 Dark Mode
+// .systemUltraThinMaterial — 最通透（导航栏/overlay）
+// .systemThinMaterial — 中等（工具栏）
+// .systemThickMaterial — 最不透明（底部 TabBar）
+```
+
+## 8. 动效与交互
+
+### 标准触感反馈
+
+```swift
+// ✅ 按钮点击
+let generator = UIImpactFeedbackGenerator(style: .light)
+generator.impactOccurred()
+
+// ✅ 成功/失败
+let notification = UINotificationFeedbackGenerator()
+notification.notificationOccurred(.success)  // .warning, .error
+
+// ✅ 切换选择
+let selection = UISelectionFeedbackGenerator()
+selection.selectionChanged()
+```
+
+### 按钮/控件最小点击区域
+
+```swift
+// Apple HIG: 最小点击区域 44x44 pt
+// ✅ 即使视觉小，也要保证点击区域
+button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+// 或使用 hitTest 扩大点击区域
+override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+    let expanded = bounds.insetBy(dx: -8, dy: -8)
+    return expanded.contains(point) ? self : nil
+}
+```
+
+## 9. 无障碍 (Accessibility)
+
+```swift
+// ✅ 必须设置
+button.accessibilityLabel = "关闭"
+button.accessibilityHint = "双击关闭此页面"
+imageView.accessibilityLabel = "用户头像"
+
+// ✅ 动态字号适配（使用 Auto Layout 自动换行）
+label.numberOfLines = 0
+label.lineBreakMode = .byWordWrapping
+
+// ✅ 对比度：WCAG AA 标准至少 4.5:1
+// ThemeTokens 已预置符合标准的色值组合
+```
+
+## 10. 常见陷阱
+
+| 问题 | 解决方案 |
+|------|---------|
+| Dark Mode 下文字看不见 | 检查是否用了固定颜色而非 ThemeTokens |
+| 布局在小屏 iPhone SE 上挤压 | 用 Auto Layout 优先级 + ScrollView |
+| 列表性能差 | 用 UITableViewCell 复用 + 异步图片加载 |
+| 圆角被裁切 | 检查 `clipsToBounds` 和 `masksToBounds` |
+| 阴影被裁切 | 阴影视图和圆角视图分开，或用 `shadowPath` |
+| Dynamic Type 下布局崩 | 用 `UIFontMetrics` + Auto Layout，禁用固定高度约束 |
+
+## 11. 图标规范
+
+本项目使用 **Lucide** 图标库（非 SF Symbols），1703 个 PDF 矢量图标：
+- 枚举：`Sources/Theme/LucideIcon.swift` — 50+ case
+- 加载：`UIImage(lucide: .iconName)` 
+- 资源：`Sources/Theme/icons.xcassets`
+- 统一使用 Lucide 图标保持视觉一致性，避免混用 SF Symbols

@@ -3,9 +3,11 @@ import XCTest
 
 final class WebSystemExtraHandlerTests: XCTestCase {
 
-    override func setUp() throws {
-        try super.setUp()
-        try XCTSkipIf(Bundle.main.bundleIdentifier == nil, "No bundle identifier — skipping in CI (bundleProxyForCurrentProcess nil)")
+    override func setUp() {
+        super.setUp()
+        guard Bundle.main.bundleIdentifier != nil else {
+            return
+        }
     }
 
     private func assertSuccess(_ result: Any) -> [String: Any] {
@@ -76,7 +78,8 @@ final class WebSystemExtraHandlerTests: XCTestCase {
 
     // MARK: - SetBadge Action (requires notification permission - test in simulator)
 
-    func testSystemExtraHandler_SetBadge_DoesNotCrash() {
+    func testSystemExtraHandler_SetBadge_DoesNotCrash() throws {
+        try XCTSkipIf(Bundle.main.bundleIdentifier == nil, "Badge requires proper app bundle")
         let handler = WebSystemExtraHandler()
         let expectation = XCTestExpectation(description: "systemExtra setBadge")
 
@@ -92,7 +95,8 @@ final class WebSystemExtraHandlerTests: XCTestCase {
         wait(for: [expectation], timeout: 10.0)
     }
 
-    func testSystemExtraHandler_SetBadge_Zero() {
+    func testSystemExtraHandler_SetBadge_Zero() throws {
+        try XCTSkipIf(Bundle.main.bundleIdentifier == nil, "Badge requires proper app bundle")
         let handler = WebSystemExtraHandler()
         let expectation = XCTestExpectation(description: "systemExtra setBadge zero")
 
@@ -188,7 +192,8 @@ final class WebSystemExtraHandlerTests: XCTestCase {
         wait(for: [expectation], timeout: 5.0)
     }
 
-    func testSystemExtraHandler_SetBadge_DefaultCount() {
+    func testSystemExtraHandler_SetBadge_DefaultCount() throws {
+        try XCTSkipIf(Bundle.main.bundleIdentifier == nil, "Badge requires proper app bundle")
         let handler = WebSystemExtraHandler()
         let expectation = XCTestExpectation(description: "systemExtra badge default")
 

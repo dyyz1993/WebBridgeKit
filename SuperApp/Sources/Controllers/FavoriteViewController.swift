@@ -59,11 +59,16 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         super.viewDidLoad()
         title = L10n.tr("favorite.title")
 
-        // Set accessibility identifier for the view
         view.accessibilityIdentifier = "FavoriteViewController"
 
         setupUI()
         setupGestures()
+        bindViewModel()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.loadFavoritesData()
     }
 
     // MARK: - Setup UI
@@ -105,10 +110,11 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         )
 
         // 配置表格视图
-        tableView.delegate = self
         tableView.dragDelegate = self
         tableView.dropDelegate = self
         tableView.dragInteractionEnabled = true
+
+        tableView.rx.setDelegate(self).disposed(by: rx)
     }
 
     private func setupGestures() {
@@ -151,12 +157,24 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
         let output = viewModel.transform(input: input)
 
-        // 绑定数据
+        // 绑定数据（直接 reactive binding，避免每次 reload 重建 rx.items 导致 DelegateProxy 冲突）
         output.favorites
             .drive(onNext: { [weak self] sections in
                 self?.currentSections = sections
-                self?.updateTableView(sections: sections)
             })
+            .disposed(by: rx)
+
+        output.favorites
+            .map { $0.flatMap { $0.items } }
+            .drive(tableView.rx.items(cellIdentifier: FavoriteCell.identifier, cellType: FavoriteCell.self)) { [weak self] _, favorite, cell in
+                cell.favorite = favorite
+                cell.onPinToggle = { id in
+                    self?.handlePinToggle(id: id)
+                }
+                cell.onCacheModeToggle = { id, enabled in
+                    self?.handleCacheModeToggle(id: id, enabled: enabled)
+                }
+            }
             .disposed(by: rx)
 
         output.isEmpty
@@ -195,23 +213,6 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
     }
 
     // MARK: - Private Methods
-
-    private func updateTableView(sections: [URLFavoriteSection]) {
-        // Flatten sections into a single array of favorites
-        let allFavorites = sections.flatMap { $0.items }
-
-        Observable.just(allFavorites)
-            .bind(to: tableView.rx.items(cellIdentifier: FavoriteCell.identifier, cellType: FavoriteCell.self)) { [weak self] _, favorite, cell in
-                cell.favorite = favorite
-                cell.onPinToggle = { id in
-                    self?.handlePinToggle(id: id)
-                }
-                cell.onCacheModeToggle = { id, enabled in
-                    self?.handleCacheModeToggle(id: id, enabled: enabled)
-                }
-            }
-            .disposed(by: rx)
-    }
 
     @objc private func refreshData() {
         // 刷新会通过 RxSwift 自动触发

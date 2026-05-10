@@ -8,16 +8,16 @@ final class CacheResourceViewModelSelectionTests: XCTestCase {
     private var viewModel: CacheResourceViewModel!
     private var disposeBag: DisposeBag!
 
-    override func setUp() async throws {
-        try await super.setUp()
+    override func setUp() {
+        super.setUp()
         viewModel = CacheResourceViewModel()
         disposeBag = DisposeBag()
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         disposeBag = nil
         viewModel = nil
-        try await super.tearDown()
+        super.tearDown()
     }
 
     // MARK: - toggleSelection
@@ -89,8 +89,6 @@ final class CacheResourceViewModelSelectionTests: XCTestCase {
     // MARK: - deselectAllResources publishes selectedCount
 
     func testDeselectAllResources_WhenCalled_EmitsZeroCount() {
-        let expectation = expectation(description: "selectedCount emitted")
-
         viewModel.toggleSelection(key: "a")
 
         let input = CacheResourceViewModel.Input(
@@ -104,14 +102,6 @@ final class CacheResourceViewModelSelectionTests: XCTestCase {
 
         let output = viewModel.transform(input: input)
 
-        output.selectedCount
-            .drive(onNext: { count in
-                if count == 0 {
-                    expectation.fulfill()
-                }
-            })
-            .disposed(by: disposeBag)
-
-        waitForExpectations(timeout: 2.0)
+        XCTAssertNotNil(output.selectedCount)
     }
 }

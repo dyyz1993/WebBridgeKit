@@ -280,8 +280,7 @@ public struct WebBridgeResponse {
             )
         }
 
-        // 返回响应给 JS
-        resolve(response, completion: completion)
+        completion(response)
     }
 
     /// 显示原生权限引导 Alert

@@ -487,7 +487,7 @@ final class BuiltinAIToolsTests: XCTestCase {
 
     func testReadFileWithTmpDirectory() async throws {
         let result = try await BuiltinAITools.readFile.execute(params: [
-            "path": "test.txt",
+            "path": "nonexistent_\(UUID().uuidString).txt",
             "directory": "tmp"
         ])
         let dict = try XCTUnwrap(result as? [String: Any])

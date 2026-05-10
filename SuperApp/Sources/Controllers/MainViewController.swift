@@ -75,7 +75,6 @@ class MainViewController: BaseViewController<MainViewModel> {
     override func viewDidLoad() {
         super.viewDidLoad()
         Log.debug("viewDidLoad called", category: .ui)
-        title = L10n.tr("home.title")
         setupUI()
         setupGestures()
         setupNotifications()
@@ -262,8 +261,8 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private func setupUI() {
         view.backgroundColor = ThemeColors.current.background
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.largeTitleDisplayMode = .always
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationItem.largeTitleDisplayMode = .never
 
         let layout = createCompositionalLayout()
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -669,5 +668,18 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if indexPath.section == MainSection.pushToken.rawValue { return }
+        if indexPath.section == MainSection.quickActions.rawValue {
+            handleQuickAction(index: indexPath.item)
+            return
+        }
+
+        let sections = viewModel.historiesRelayValue
+        let gridIndex = indexPath.section - MainSection.appGrid.rawValue
+        guard gridIndex >= 0 && gridIndex < sections.count,
+              indexPath.item < sections[gridIndex].items.count else { return }
+        let history = sections[gridIndex].items[indexPath.item]
+        guard !history.url.isEmpty, let url = URL(string: history.url) else { return }
+        openURL(url)
     }
 }

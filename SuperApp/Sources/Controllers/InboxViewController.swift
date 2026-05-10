@@ -132,7 +132,6 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = L10n.tr("inbox.title")
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -142,8 +141,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     override func makeUI() {
         view.backgroundColor = ThemeColors.current.background
-        navigationItem.largeTitleDisplayMode = .always
-        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.largeTitleDisplayMode = .never
+        navigationController?.navigationBar.prefersLargeTitles = false
 
         let clearAllBtn = UIBarButtonItem(
             title: L10n.tr("inbox.clear_all"),
@@ -350,21 +349,6 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     }
 
     private func navigateToDetail(_ message: StoredMessage) {
-        if message.payload.hasRoute {
-            if let urlString = message.payload.targetURL, let url = URL(string: urlString) {
-                let params = WebBrowserParams(payload: message.payload.userInfo)
-                WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
-                return
-            }
-            if let appId = message.payload.targetAppId {
-                if let result = ManifestStore.shared.getManifestByAppId(appId),
-                   let url = URL(string: result.key) {
-                    let params = WebBrowserParams(payload: message.payload.userInfo)
-                    WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
-                    return
-                }
-            }
-        }
         let detailVC = MessageDetailViewController(message: message)
         navigationController?.pushViewController(detailVC, animated: true)
     }

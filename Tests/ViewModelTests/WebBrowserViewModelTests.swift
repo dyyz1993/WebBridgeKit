@@ -7,14 +7,14 @@ final class WebBrowserViewModelTests: XCTestCase {
 
     private var disposeBag: DisposeBag!
 
-    override func setUp() async throws {
-        try await super.setUp()
+    override func setUp() {
+        super.setUp()
         disposeBag = DisposeBag()
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         disposeBag = nil
-        try await super.tearDown()
+        super.tearDown()
     }
 
     // MARK: - Initialization

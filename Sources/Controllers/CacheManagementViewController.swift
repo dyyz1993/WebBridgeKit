@@ -157,7 +157,6 @@ public class CacheManagementViewController: UIViewController {
 
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 每次进入页面时刷新数据
         manualRefreshSubject.accept(())
     }
 

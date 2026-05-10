@@ -31,7 +31,6 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = L10n.tr("settings.title")
         setupUI()
         setupVersionFooter()
     }

@@ -22,9 +22,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 print("🗑️ [AppDelegate] Triggering global cache clearing...")
                 WebCacheManager.shared.clearAll()
+                TestDataSeeder.populateIfNeeded()
             }
         } else {
             print("🧪 [AppDelegate] Skipping clearAll during UI testing")
+            TestDataSeeder.populateIfNeeded()
         }
 
         // 初始化 WebBridgeKit
@@ -36,8 +38,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         } else {
             WebBridgeKit.shared.initialize()
         }
-
-        TestDataSeeder.populateIfNeeded()
 
         let messageStore = UserDefaultsMessageStore(key: "SuperCache_Messages")
         Task {

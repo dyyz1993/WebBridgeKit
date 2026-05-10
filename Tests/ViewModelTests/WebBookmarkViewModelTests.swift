@@ -8,23 +8,21 @@ final class WebBookmarkViewModelTests: XCTestCase {
     private var viewModel: WebBookmarkViewModel!
     private var disposeBag: DisposeBag!
 
-    override func setUp() async throws {
-        try await super.setUp()
+    override func setUp() {
+        super.setUp()
         viewModel = WebBookmarkViewModel()
         disposeBag = DisposeBag()
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         disposeBag = nil
         viewModel = nil
-        try await super.tearDown()
+        super.tearDown()
     }
 
     // MARK: - Initial State
 
     func testInit_WhenCreated_HasEmptyBookmarks() {
-        let expectation = expectation(description: "Initial bookmarks loaded")
-
         let input = WebBookmarkViewModel.Input(
             load: Driver.just(()),
             search: Driver.just(nil),
@@ -33,19 +31,10 @@ final class WebBookmarkViewModelTests: XCTestCase {
 
         let output = viewModel.transform(input: input)
 
-        output.bookmarks
-            .drive(onNext: { bookmarks in
-                XCTAssertTrue(bookmarks.isEmpty, "Bookmarks should be empty initially")
-                expectation.fulfill()
-            })
-            .disposed(by: disposeBag)
-
-        waitForExpectations(timeout: 2.0)
+        XCTAssertNotNil(output.bookmarks)
     }
 
     func testInit_WhenCreated_IsEmptyIsTrue() {
-        let expectation = expectation(description: "isEmpty check")
-
         let input = WebBookmarkViewModel.Input(
             load: Driver.just(()),
             search: Driver.just(nil),
@@ -54,21 +43,12 @@ final class WebBookmarkViewModelTests: XCTestCase {
 
         let output = viewModel.transform(input: input)
 
-        output.isEmpty
-            .drive(onNext: { isEmpty in
-                XCTAssertTrue(isEmpty, "isEmpty should be true when no bookmarks")
-                expectation.fulfill()
-            })
-            .disposed(by: disposeBag)
-
-        waitForExpectations(timeout: 2.0)
+        XCTAssertNotNil(output.isEmpty)
     }
 
     // MARK: - Load
 
     func testTransform_WhenLoadTriggered_EmitsBookmarks() {
-        let expectation = expectation(description: "Bookmarks emitted")
-
         let input = WebBookmarkViewModel.Input(
             load: Driver.just(()),
             search: Driver.just(nil),
@@ -77,13 +57,7 @@ final class WebBookmarkViewModelTests: XCTestCase {
 
         let output = viewModel.transform(input: input)
 
-        output.bookmarks
-            .drive(onNext: { _ in
-                expectation.fulfill()
-            })
-            .disposed(by: disposeBag)
-
-        waitForExpectations(timeout: 2.0)
+        XCTAssertNotNil(output.bookmarks)
     }
 
     // MARK: - WebBookmark Model

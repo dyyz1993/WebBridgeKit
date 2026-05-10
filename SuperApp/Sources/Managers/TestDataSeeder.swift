@@ -17,24 +17,27 @@ struct TestDataSeeder {
     }
 
     static func populateIfNeeded() {
-        guard !UserDefaults.standard.bool(forKey: seededKey) else {
+        let needsSeed = !UserDefaults.standard.bool(forKey: seededKey)
+
+        if needsSeed {
+            print("[TestDataSeeder] 开始填充测试数据...")
+
+            seedServerConfigs()
+            seedAccessTokens()
+            seedMessages()
+            seedFavorites()
+            seedHistory()
+            seedAPIKeys()
+            seedCacheRules()
+
+            UserDefaults.standard.set(true, forKey: seededKey)
+
+            print("[TestDataSeeder] 测试数据填充完成")
+        } else {
             print("[TestDataSeeder] 已填充过，跳过")
-            return
         }
 
-        print("[TestDataSeeder] 开始填充测试数据...")
-
-        seedServerConfigs()
-        seedAccessTokens()
-        seedMessages()
-        seedFavorites()
-        seedHistory()
-        seedAPIKeys()
-        seedCacheRules()
-
-        UserDefaults.standard.set(true, forKey: seededKey)
-
-        print("[TestDataSeeder] 测试数据填充完成")
+        seedManifestCaches()
     }
 
     // MARK: - Server Configs
@@ -681,5 +684,97 @@ struct TestDataSeeder {
             rules.addRule(rule)
         }
         print("[TestDataSeeder] 缓存规则: \(cacheRules.count) 条")
+    }
+
+    static func seedManifestCaches() {
+        _seedManifestCachesImpl()
+        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                _seedManifestCachesImpl()
+            }
+        }
+    }
+
+    private static func _seedManifestCachesImpl() {
+        let store = ManifestStore.shared
+        let allKeys = store.getAllPageKeys()
+        guard allKeys.isEmpty else { return }
+
+        let entries: [(key: String, manifest: Manifest)] = [
+            ("weather-beijing", Manifest(
+                resources: ["index.html": "https://cdn.weather.com/app/index.html"],
+                version: "2.1.0",
+                appid: "weather-app",
+                name: "北京天气",
+                icon: "https://cdn.weather.com/app/icon.png",
+                isPinned: true,
+                lastAccessed: Date()
+            )),
+            ("notes-editor", Manifest(
+                resources: ["index.html": "https://notes.md/editor/index.html"],
+                version: "1.5.3",
+                appid: "markdown-notes",
+                name: "Markdown 笔记",
+                icon: nil,
+                lastAccessed: Date().addingTimeInterval(-3600)
+            )),
+            ("shop-mall", Manifest(
+                resources: ["index.html": "https://m.shop.example.com/index.html"],
+                version: "3.8.1",
+                appid: "shop-mall-app",
+                name: "优购商城",
+                icon: "https://m.shop.example.com/static/logo.png",
+                lastAccessed: Date().addingTimeInterval(-7200)
+            )),
+            ("game-tetris", Manifest(
+                resources: ["index.html": "https://play.casual.games/tetris/"],
+                version: "1.2.0",
+                appid: "game-tetris",
+                name: "俄罗斯方块",
+                icon: nil,
+                lastAccessed: Date().addingTimeInterval(-86400)
+            )),
+            ("news-daily", Manifest(
+                resources: ["index.html": "https://news.daily/feed/"],
+                version: "4.0.0",
+                appid: "news-daily",
+                name: "每日新闻",
+                icon: nil,
+                lastAccessed: Date().addingTimeInterval(-172800)
+            )),
+            ("docs-swift", Manifest(
+                resources: ["index.html": "https://docs.swift.org/getting-started/"],
+                version: "5.10",
+                appid: "swift-docs",
+                name: "Swift 文档",
+                icon: nil,
+                lastAccessed: Date().addingTimeInterval(-259200)
+            )),
+            ("admin-dashboard", Manifest(
+                resources: ["index.html": "https://admin.example.com/dashboard/"],
+                version: "2.0.1",
+                appid: "admin-panel",
+                name: "管理后台",
+                icon: nil,
+                lastAccessed: Date().addingTimeInterval(-432000)
+            )),
+            ("analytics-dashboard", Manifest(
+                resources: ["index.html": "https://dashboard.example.com/"],
+                version: "1.3.7",
+                appid: "analytics-app",
+                name: "数据分析",
+                icon: "https://dashboard.example.com/logo.png",
+                lastAccessed: Date().addingTimeInterval(-604800)
+            ))
+        ]
+
+        for entry in entries {
+            store.saveManifestSync(entry.manifest, for: entry.key)
+            store.saveHTMLSync("<!DOCTYPE html><html><head><title>\(entry.manifest.name ?? entry.key)</title></head><body></body></html>", for: entry.key)
+        }
+
+        store.saveToDiskSync()
+
+        print("[TestDataSeeder] Manifest 缓存: \(entries.count) 条")
     }
 }

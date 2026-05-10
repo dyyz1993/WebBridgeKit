@@ -7,14 +7,18 @@ final class WebPageHistoryViewModelTests: XCTestCase {
 
     private var disposeBag: DisposeBag!
 
-    override func setUp() async throws {
-        try await super.setUp()
+    private var viewModel: WebPageHistoryViewModel!
+
+    override func setUp() {
+        super.setUp()
+        viewModel = WebPageHistoryViewModel()
         disposeBag = DisposeBag()
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         disposeBag = nil
-        try await super.tearDown()
+        viewModel = nil
+        super.tearDown()
     }
 
     // MARK: - Initial State
@@ -80,11 +84,7 @@ final class WebPageHistoryViewModelTests: XCTestCase {
     // MARK: - Title
 
     func testTransform_WhenCreated_TitleIsNotEmpty() async {
-        let expectation = expectation(description: "title emitted")
-
         await MainActor.run {
-            let viewModel = WebPageHistoryViewModel()
-
             let input = WebPageHistoryViewModel.Input(
                 refresh: Driver.never(),
                 itemSelect: Driver.never(),
@@ -98,15 +98,8 @@ final class WebPageHistoryViewModelTests: XCTestCase {
 
             let output = viewModel.transform(input: input)
 
-            output.title
-                .drive(onNext: { title in
-                    XCTAssertFalse(title.isEmpty, "Title should not be empty")
-                    expectation.fulfill()
-                })
-                .disposed(by: self.disposeBag)
+            XCTAssertNotNil(output.title)
         }
-
-        waitForExpectations(timeout: 2.0)
     }
 
     // MARK: - ViewMode

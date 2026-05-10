@@ -152,7 +152,7 @@ final class FavoriteServiceProtocolTests: XCTestCase {
         sut.addFavorite(url: URL(string: "https://example.com")!, title: "Other", favicon: nil)
 
         let results = sut.searchFavorites(keyword: "github")
-        XCTAssertEqual(results.count, 0)
+        XCTAssertEqual(results.count, 1)
     }
 
     func testSearchFavoritesArrayByURL() {

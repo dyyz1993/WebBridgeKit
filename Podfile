@@ -84,7 +84,7 @@ target 'WebBridgeKit' do
   end
 
   target 'ViewModelTests' do
-    inherit! :complete
+    inherit! :search_paths
   end
 
   target 'WebSocketTests' do

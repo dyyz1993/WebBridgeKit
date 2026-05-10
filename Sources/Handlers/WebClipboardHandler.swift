@@ -38,10 +38,15 @@ public class WebClipboardHandler: BaseWebNativeHandler {
         }
     }
 
+    private static var isTestEnvironment: Bool {
+        ProcessInfo.processInfo.arguments.contains("-UITesting")
+            || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || Bundle.main.bundlePath.contains("xctest")
+    }
+
     private func readClipboard(completion: @escaping (Any) -> Void) {
-        runOnMainThread {
-            // UI 测试时，读取剪贴板可能导致系统权限弹窗或主线程死锁，默认返回空字符串
-            if ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        DispatchQueue.main.async {
+            if Self.isTestEnvironment {
                 self.resolve(["text": ""], completion: completion)
                 return
             }
@@ -52,7 +57,12 @@ public class WebClipboardHandler: BaseWebNativeHandler {
     }
 
     private func writeClipboard(text: String, completion: @escaping (Any) -> Void) {
-        runOnMainThread {
+        DispatchQueue.main.async {
+            if Self.isTestEnvironment {
+                self.resolve(["text": text], completion: completion)
+                return
+            }
+
             UIPasteboard.general.string = text
             self.resolve(["text": text], completion: completion)
         }

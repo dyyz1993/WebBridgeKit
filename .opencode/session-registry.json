@@ -593,5 +593,103 @@
     "parentID": "ses_2018366e0ffey31kMz0kla7d9B",
     "status": "running",
     "createdAt": 1778356761574
+  },
+  "test-gesture-config": {
+    "id": "ses_1eddd39b0ffeJoFQ1hDKVf9kZr",
+    "name": "test-gesture-config",
+    "parentID": "ses_1ede07c2fffe4IrZoKX7XUNnHh",
+    "status": "running",
+    "createdAt": 1778420729426
+  },
+  "test-gesture-handler": {
+    "id": "ses_1edde7a63ffevZ6WdZdhD89rEM",
+    "name": "test-gesture-handler",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778420647326
+  },
+  "test-permission-manager": {
+    "id": "ses_1edde4ab2ffeiiHOSMGTs1topo",
+    "name": "test-permission-manager",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778420659536
+  },
+  "write-test-1-protocols": {
+    "id": "ses_1eddc2476ffemqpkGOL6OKwJil",
+    "name": "write-test-1-protocols",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420800395
+  },
+  "test-vibrate-handler": {
+    "id": "ses_1edde1aeeffeLQBWzjSWxhGcBQ",
+    "name": "test-vibrate-handler",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778420671763
+  },
+  "write-test-2-realm-history": {
+    "id": "ses_1eddc22c7ffevKeBIq0mvXfGhA",
+    "name": "write-test-2-realm-history",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420800825
+  },
+  "test-cache-debug-handler": {
+    "id": "ses_1eddde047ffeI41UAUbnNoq0pm",
+    "name": "test-cache-debug-handler",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778420686778
+  },
+  "write-test-3-manifest-store": {
+    "id": "ses_1eddc214bffebvvSunAt6py4uh",
+    "name": "write-test-3-manifest-store",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420801205
+  },
+  "test-fullscreen-progress-vc": {
+    "id": "ses_1eddd5a03ffehn9m6ypqG3ldbD",
+    "name": "test-fullscreen-progress-vc",
+    "parentID": "ses_20184812bffej1nqxoXEbOoWjN",
+    "status": "running",
+    "createdAt": 1778420721150
+  },
+  "write-test-4-resource-cache": {
+    "id": "ses_1eddc1fd9ffeNy0pQPnKndgMZ4",
+    "name": "write-test-4-resource-cache",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420801575
+  },
+  "write-test-5-rule-manager": {
+    "id": "ses_1eddc1e91ffeCEKLXnEKTHDa3H",
+    "name": "write-test-5-rule-manager",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420801904
+  },
+  "write-test-6-cache-statistics": {
+    "id": "ses_1eddc1d90ffehuaUJYVb7zvKPv",
+    "name": "write-test-6-cache-statistics",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420802160
+  },
+  "write-test-7-environment-info": {
+    "id": "ses_1eddc1c48ffesUjHpierkroFIx",
+    "name": "write-test-7-environment-info",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420802488
+  },
+  "write-test-8-structured-logger": {
+    "id": "ses_1eddc1afcffe7VYZpuhNVy2DiJ",
+    "name": "write-test-8-structured-logger",
+    "parentID": "ses_1eddf8d50ffex8Hze414Q5RhVe",
+    "status": "running",
+    "createdAt": 1778420802821
   }
 }

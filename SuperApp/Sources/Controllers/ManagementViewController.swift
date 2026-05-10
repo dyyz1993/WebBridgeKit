@@ -42,6 +42,9 @@ class ManagementViewController: UIViewController {
     }
 
     @objc private func segmentChanged() {
+        if segmentedControl.selectedSegmentIndex == 1 {
+            TestDataSeeder.seedManifestCaches()
+        }
         updateChildController()
     }
 

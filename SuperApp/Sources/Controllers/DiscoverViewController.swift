@@ -40,7 +40,6 @@ class DiscoverViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = L10n.tr("discover.title")
         setupUI()
         loadData()
     }
@@ -52,8 +51,8 @@ class DiscoverViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = ThemeColors.current.background
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.largeTitleDisplayMode = .always
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationItem.largeTitleDisplayMode = .never
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: LucideIcon.refresh.image(pointSize: 20),

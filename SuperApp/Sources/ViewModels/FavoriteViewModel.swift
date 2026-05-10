@@ -118,6 +118,10 @@ class FavoriteViewModel: ViewModel {
 
     // MARK: - Private Methods
 
+    func loadFavoritesData() {
+        loadFavorites()
+    }
+
     private func loadFavorites() {
         let results = favoriteService.getAllFavorites()
         currentFavorites = Array(results)

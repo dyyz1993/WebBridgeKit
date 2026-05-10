@@ -56,19 +56,14 @@ public class ManifestStore: ManifestCacheManaging {
         let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
         let cacheDir = paths[0].appendingPathComponent("ManifestCache")
 
-        // 创建缓存目录
         try? FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
 
         self.htmlFilePath = cacheDir.appendingPathComponent("html_cache.plist")
         self.manifestFilePath = cacheDir.appendingPathComponent("manifest_cache.plist")
 
-        // 异步加载已保存的数据，减少主线程压力
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            self?.loadFromDisk()
-            Log.info("Disk data loaded in background", category: .manifest)
-        }
+        loadFromDiskSync()
 
-        Log.info("Initialized (background loading started)", category: .manifest)
+        Log.info("Initialized with \(manifestCache.count) manifests, \(htmlCache.count) htmls", category: .manifest)
     }
 
     // MARK: - HTML Storage
@@ -123,6 +118,53 @@ public class ManifestStore: ManifestCacheManaging {
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .manifestCacheDidUpdate, object: nil)
             }
+        }
+    }
+
+    public func saveManifestSync(_ manifest: Manifest, for key: String) {
+        var updatedManifest = manifest
+        updatedManifest.version = updatedManifest.version ?? UUID().uuidString
+        updatedManifest.lastUpdated = Date()
+        manifestCache[key] = ManifestCacheEntry(manifest: updatedManifest, timestamp: Date())
+    }
+
+    public func saveHTMLSync(_ html: String, for key: String) {
+        htmlCache[key] = CacheEntry(html: html, timestamp: Date())
+    }
+
+    public func saveToDiskSync() {
+        let htmlCopy = htmlCache.mapValues { $0.html }
+
+        if let htmlData = try? PropertyListSerialization.data(fromPropertyList: htmlCopy, format: .xml, options: 0) {
+            try? htmlData.write(to: htmlFilePath)
+        }
+
+        var dict: [String: [String: Any]] = [:]
+        for (key, entry) in manifestCache {
+            let manifest = entry.manifest
+            var manifestDict: [String: Any] = [
+                "resources": manifest.resources,
+                "appid": manifest.appid ?? "",
+                "name": manifest.name ?? "",
+                "icon": manifest.icon ?? "",
+                "isPinned": manifest.isPinned ?? false,
+                "isFavorite": manifest.isFavorite ?? false,
+                "accessCount": manifest.accessCount ?? 0
+            ]
+            if let version = manifest.version {
+                manifestDict["version"] = version
+            }
+            if let lastUpdated = manifest.lastUpdated {
+                manifestDict["lastUpdated"] = lastUpdated.timeIntervalSince1970
+            }
+            if let lastAccessed = manifest.lastAccessed {
+                manifestDict["lastAccessed"] = lastAccessed.timeIntervalSince1970
+            }
+            dict[key] = manifestDict
+        }
+
+        if let manifestData = try? PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0) {
+            try? manifestData.write(to: manifestFilePath)
         }
     }
 
@@ -191,6 +233,57 @@ public class ManifestStore: ManifestCacheManaging {
     }
 
     // MARK: - Persistence
+
+    private func loadFromDiskSync() {
+        if let htmlData = try? Data(contentsOf: htmlFilePath),
+           let htmlDict = try? PropertyListSerialization.propertyList(from: htmlData, options: [], format: nil) as? [String: String] {
+            htmlCache = htmlDict.mapValues { CacheEntry(html: $0, timestamp: Date()) }
+        }
+
+        if let manifestData = try? Data(contentsOf: manifestFilePath),
+           let manifestDict = try? PropertyListSerialization.propertyList(from: manifestData, options: [], format: nil) as? [String: [String: Any]] {
+            var loaded: [String: ManifestCacheEntry] = [:]
+
+            for (key, value) in manifestDict {
+                if let resources = value["resources"] as? [String: String] {
+                    var manifest = Manifest(resources: resources)
+
+                    if let version = value["version"] as? String {
+                        manifest.version = version
+                    }
+                    if let timestamp = value["lastUpdated"] as? TimeInterval {
+                        manifest.lastUpdated = Date(timeIntervalSince1970: timestamp)
+                    }
+                    if let appid = value["appid"] as? String, !appid.isEmpty {
+                        manifest.appid = appid
+                    }
+                    if let name = value["name"] as? String, !name.isEmpty {
+                        manifest.name = name
+                    }
+                    if let icon = value["icon"] as? String, !icon.isEmpty {
+                        manifest.icon = icon
+                    }
+                    if let isPinned = value["isPinned"] as? Bool {
+                        manifest.isPinned = isPinned
+                    }
+                    if let isFavorite = value["isFavorite"] as? Bool {
+                        manifest.isFavorite = isFavorite
+                    }
+                    if let lastAccessedTimestamp = value["lastAccessed"] as? TimeInterval {
+                        manifest.lastAccessed = Date(timeIntervalSince1970: lastAccessedTimestamp)
+                    }
+                    if let accessCount = value["accessCount"] as? Int {
+                        manifest.accessCount = accessCount
+                    }
+
+                    let cacheTimestamp = manifest.lastUpdated ?? Date()
+                    loaded[key] = ManifestCacheEntry(manifest: manifest, timestamp: cacheTimestamp)
+                }
+            }
+
+            manifestCache = loaded
+        }
+    }
 
     private func loadFromDisk() {
         // 加载 HTML 缓存
