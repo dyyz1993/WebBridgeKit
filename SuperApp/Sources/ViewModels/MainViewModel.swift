@@ -201,11 +201,11 @@ class MainViewModel: ViewModel {
                         history.isPinned = true
                         history.isFavorite = true
 
-                        // 异步计算缓存大小，避免阻塞主线程
                         let itemURL = favorite.url
                         if let url = URL(string: itemURL) {
                             let cacheID = url.host ?? url.lastPathComponent
-                            history.cachedSize = 0
+                            history.cachedSize = favorite.enableCacheMode ? 1 : 0
+                            history.isCached = favorite.enableCacheMode
 
                             Task.detached {
                                 let size = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
@@ -230,7 +230,8 @@ class MainViewModel: ViewModel {
                         history.favicon = favorite.favicon
                         history.isPinned = false
                         history.isFavorite = true
-                        history.cachedSize = 0
+                        history.cachedSize = favorite.enableCacheMode ? 1 : 0
+                        history.isCached = favorite.enableCacheMode
                         return history
                     }
 
@@ -252,8 +253,8 @@ class MainViewModel: ViewModel {
 
                         if let url = URL(string: history.url) {
                             let cacheID = url.host ?? url.lastPathComponent
-                            displayHistory.cachedSize = 0
-                            displayHistory.isCached = false
+                            displayHistory.cachedSize = history.cachedSize
+                            displayHistory.isCached = history.isCached
 
                             Task.detached {
                                 let size = PersistentManifestLoader.shared.getCacheSize(for: cacheID)

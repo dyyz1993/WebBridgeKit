@@ -17,9 +17,6 @@ struct TestDataSeeder {
     }
 
     static func populateIfNeeded() {
-        let args = CommandLine.arguments
-        guard args.contains("--populate-test-data") else { return }
-
         guard !UserDefaults.standard.bool(forKey: seededKey) else {
             print("[TestDataSeeder] 已填充过，跳过")
             return
@@ -29,7 +26,6 @@ struct TestDataSeeder {
 
         seedServerConfigs()
         seedAccessTokens()
-        seedCacheEntries()
         seedMessages()
         seedFavorites()
         seedHistory()
