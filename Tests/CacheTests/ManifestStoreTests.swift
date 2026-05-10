@@ -166,10 +166,9 @@ final class ManifestStoreTests: XCTestCase {
     }
 
     func testConformsToManifestCacheManaging() {
-        let s = store
-        let key = "protocol-test-\(UUID().uuidString)"
-        s.saveHTMLSync("protocol-html", for: key)
-        let html = s.getHTML(for: key)
+        let key = "protocol-conformance-test-\(UUID().uuidString)"
+        ManifestStore.shared.saveHTMLSync("protocol-html", for: key)
+        let html = ManifestStore.shared.getHTML(for: key)
         XCTAssertEqual(html, "protocol-html")
     }
 }
