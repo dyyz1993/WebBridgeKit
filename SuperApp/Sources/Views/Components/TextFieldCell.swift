@@ -36,7 +36,7 @@ class TextFieldCell: UITableViewCell {
     private let errorLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Colors.Light.error
+        label.textColor = ThemeTokens.Color.error
         label.numberOfLines = 0
         label.isHidden = true
         return label
@@ -120,7 +120,7 @@ class TextFieldCell: UITableViewCell {
         if let error = error, !error.isEmpty {
             errorLabel.text = error
             errorLabel.isHidden = false
-            separatorLine.backgroundColor = ThemeTokens.Colors.Light.error
+            separatorLine.backgroundColor = ThemeTokens.Color.error
         } else {
             errorLabel.text = nil
             errorLabel.isHidden = true

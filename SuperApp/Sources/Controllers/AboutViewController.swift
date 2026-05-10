@@ -29,7 +29,7 @@ class AboutViewController: UIViewController {
         imageView.layer.cornerRadius = 22
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 1
-        imageView.layer.borderColor = UIColor.separator.cgColor
+        imageView.layer.borderColor = ThemeTokens.Color.separator.cgColor
         return imageView
     }()
 
@@ -67,7 +67,7 @@ class AboutViewController: UIViewController {
         let label = UILabel()
         label.textAlignment = .center
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 0
         label.text = "WebBridgeKit © 2025"
         return label

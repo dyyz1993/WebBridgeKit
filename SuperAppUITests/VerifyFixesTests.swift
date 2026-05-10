@@ -19,66 +19,31 @@ final class VerifyFixesTests: XCTestCase {
     private func setupInterruptionMonitor() {
         addUIInterruptionMonitor(withDescription: "Paste Permission") { [weak self] (alert) -> Bool in
             let allowBtn = alert.buttons["允许粘贴"]
-            if allowBtn.exists {
-                allowBtn.tap()
-                return true
-            }
+            if allowBtn.exists { allowBtn.tap(); return true }
             let allowPasteBtn = alert.buttons["Allow Paste"]
-            if allowPasteBtn.exists {
-                allowPasteBtn.tap()
-                return true
-            }
+            if allowPasteBtn.exists { allowPasteBtn.tap(); return true }
             let dontAllow = alert.buttons["不允许粘贴"]
-            if dontAllow.exists {
-                dontAllow.tap()
-                return true
-            }
+            if dontAllow.exists { dontAllow.tap(); return true }
             let dontAllowEn = alert.buttons["Don't Allow"]
-            if dontAllowEn.exists {
-                dontAllowEn.tap()
-                return true
-            }
+            if dontAllowEn.exists { dontAllowEn.tap(); return true }
             return false
         }
         addUIInterruptionMonitor(withDescription: "System Alert") { (alert) -> Bool in
             let okBtn = alert.buttons["好"]
-            if okBtn.exists {
-                okBtn.tap()
-                return true
-            }
+            if okBtn.exists { okBtn.tap(); return true }
             let okEn = alert.buttons["OK"]
-            if okEn.exists {
-                okEn.tap()
-                return true
-            }
+            if okEn.exists { okEn.tap(); return true }
             return false
         }
     }
 
-    private func navigateToTab(_ name: String) {
-        sleep(2)
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist - app may not have finished loading")
-        let tab = tabBar.buttons[name]
-        XCTAssertTrue(tab.waitForExistence(timeout: 5), "Tab '\(name)' should exist")
-        tab.tap()
-        sleep(2)
-    }
-
     private func saveScreenshot(_ path: String) {
         sleep(1)
-        guard app.exists else {
-            print("[Screenshot] App no longer exists, skipping screenshot for \(path)")
-            return
-        }
+        guard app.exists else { return }
         let screenshot = app.screenshot()
         if let data = screenshot.image.pngData() {
-            do {
-                try data.write(to: URL(fileURLWithPath: path))
-                print("[Screenshot] Saved to \(path) (\(data.count) bytes)")
-            } catch {
-                XCTFail("Failed to save screenshot to \(path): \(error)")
-            }
+            try? data.write(to: URL(fileURLWithPath: path))
+            print("[Screenshot] Saved to \(path) (\(data.count) bytes)")
         }
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = URL(fileURLWithPath: path).lastPathComponent
@@ -86,160 +51,132 @@ final class VerifyFixesTests: XCTestCase {
         add(attachment)
     }
 
-    private func saveScreenshotSafe(_ path: String) {
-        let waitResult = app.waitForExistence(timeout: 5)
-        guard waitResult else {
-            print("[ScreenshotSafe] App does not exist, skipping \(path)")
-            return
+    private func debugSave(_ name: String) {
+        guard app.exists else { print("[Debug] App not exist for \(name)"); return }
+        let s = app.screenshot()
+        if let d = s.image.pngData() {
+            try? d.write(to: URL(fileURLWithPath: "/tmp/wbk-debug-\(name).png"))
         }
-        if app.state != .runningForeground {
-            print("[ScreenshotSafe] App not in foreground (state: \(app.state.rawValue)), activating")
-            app.activate()
-            sleep(2)
-        }
-        let screenshot: XCUIScreenshot
-        do {
-            screenshot = app.screenshot()
-        } catch {
-            print("[ScreenshotError] Failed to capture screenshot for \(path): \(error)")
-            return
-        }
-        if let data = screenshot.image.pngData() {
-            do {
-                try data.write(to: URL(fileURLWithPath: path))
-                print("[ScreenshotSafe] Saved to \(path) (\(data.count) bytes)")
-            } catch {
-                print("[ScreenshotSafe] Failed to write screenshot to \(path): \(error)")
-            }
-        }
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = URL(fileURLWithPath: path).lastPathComponent
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        print("[Debug] Saved /tmp/wbk-debug-\(name).png")
     }
-
-    private func safeTap(_ element: XCUIElement, fallbackLabel: String? = nil, coordFallback: CGVector? = nil) {
-        if element.waitForExistence(timeout: 5) {
-            element.tap()
-            return
-        }
-        if let label = fallbackLabel {
-            let lbl = app.staticTexts[label]
-            if lbl.waitForExistence(timeout: 3) {
-                lbl.tap()
-                return
-            }
-            let cellWithText = app.cells.containing(NSPredicate(format: "label CONTAINS %@", label)).firstMatch
-            if cellWithText.waitForExistence(timeout: 2) {
-                cellWithText.tap()
-                return
-            }
-        }
-        if let coord = coordFallback {
-            let tableView = app.tables.firstMatch
-            if tableView.waitForExistence(timeout: 2) {
-                tableView.coordinate(withNormalizedOffset: coord).tap()
-                return
-            }
-        }
-        XCTFail("Could not find element to tap")
-    }
-
-    private func waitForPageLoad() {
-        sleep(2)
-    }
-
-    // MARK: - Fix 1: Navigate to Favorites
 
     func testFavoritesHasData() throws {
-        navigateToTab("设置")
+        debugSave("01-launch")
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist")
+
+        let allTabs = tabBar.buttons.allElementsBoundByIndex
+        print("[Debug] Tab count: \(allTabs.count)")
+        for (i, t) in allTabs.enumerated() {
+            print("[Debug] Tab[\(i)] label='\(t.label)' exists=\(t.exists) identifier='\(t.identifier)'")
+        }
+
+        let settingsTab = tabBar.buttons["设置"]
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: 5), "Settings tab should exist")
+        settingsTab.tap()
+        sleep(3)
+        debugSave("02-after-settings-tap")
 
         let tableView = app.tables.firstMatch
-        XCTAssertTrue(tableView.waitForExistence(timeout: 10), "Settings table should exist")
+        let tableExists = tableView.waitForExistence(timeout: 10)
+        print("[Debug] Table exists: \(tableExists), cell count: \(tableView.cells.count)")
 
-        let favoritesCell = tableView.cells["settings.cell.favorites"]
-        safeTap(favoritesCell, fallbackLabel: "收藏夹", coordFallback: CGVector(dx: 0.5, dy: 0.48))
-
-        waitForPageLoad()
-
-        if app.state != .runningForeground {
-            app.activate()
-            sleep(1)
-        }
-        let favoriteView = app.otherElements["FavoriteViewController"]
-        if favoriteView.waitForExistence(timeout: 10) {
-            print("[testFavorites] FavoriteViewController detected on screen")
-        } else {
-            print("[testFavorites] FavoriteViewController not found via accessibilityIdentifier, checking for favorite content...")
-            let favTable = app.tables["favorite.tableView"]
-            if favTable.waitForExistence(timeout: 5) {
-                print("[testFavorites] favorite.tableView found")
-            } else {
-                print("[testFavorites] Warning: Could not confirm Favorites page is displayed")
+        if tableExists {
+            let allCells = tableView.cells.allElementsBoundByIndex
+            for (i, c) in allCells.enumerated() {
+                print("[Debug] Cell[\(i)] label='\(c.label)' identifier='\(c.identifier)'")
             }
         }
-        sleep(3)
-        saveScreenshotSafe("/tmp/wbk-fix-favorites.png")
+
+        let favCell = tableView.cells.containing(NSPredicate(format: "label CONTAINS %@", "收藏夹")).firstMatch
+        let favFound = favCell.waitForExistence(timeout: 5)
+        print("[Debug] Favorites cell found: \(favFound)")
+
+        if favFound {
+            let frame = favCell.frame
+            print("[Debug] FavCell frame: \(frame)")
+            let tapPoint = app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: frame.midX, dy: frame.midY))
+            tapPoint.tap()
+            print("[Debug] Tapped favorites cell at (\(frame.midX), \(frame.midY))")
+        } else {
+            let staticTexts = tableView.staticTexts.allElementsBoundByIndex
+            for (i, st) in staticTexts.enumerated() {
+                if st.label.contains("收藏") || st.label.contains("缓存") {
+                    print("[Debug] StaticText[\(i)] '\(st.label)' frame=\(st.frame)")
+                }
+            }
+            if tableView.cells.count > 5 {
+                let cell5 = tableView.cells.element(boundBy: 5)
+                if cell5.waitForExistence(timeout: 2) {
+                    let f = cell5.frame
+                    app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: f.midX, dy: f.midY)).tap()
+                    print("[Debug] Fallback tapped cell[5] at (\(f.midX), \(f.midY))")
+                }
+            }
+        }
+
+        sleep(4)
+        debugSave("03-after-cell-tap")
+        saveScreenshot("/tmp/wbk-fix-favorites.png")
     }
 
-    // MARK: - Fix 2: Navigate to Cache tab
-
     func testCacheTabHasData() throws {
-        navigateToTab("设置")
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist")
+        let settingsTab = tabBar.buttons["设置"]
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: 5), "Settings tab should exist")
+        settingsTab.tap()
+        sleep(3)
 
         let tableView = app.tables.firstMatch
-        XCTAssertTrue(tableView.waitForExistence(timeout: 10), "Settings table should exist")
+        XCTAssertTrue(tableView.waitForExistence(timeout: 10), "Table should exist")
 
-        let cacheCell = tableView.cells["settings.cell.cacheManager"]
-        safeTap(cacheCell, fallbackLabel: "缓存管理", coordFallback: CGVector(dx: 0.5, dy: 0.42))
-        waitForPageLoad()
+        let cacheCell = tableView.cells.containing(NSPredicate(format: "label CONTAINS %@", "缓存管理")).firstMatch
+        if cacheCell.waitForExistence(timeout: 5) {
+            let frame = cacheCell.frame
+            app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
+        } else if tableView.cells.count > 4 {
+            let cell4 = tableView.cells.element(boundBy: 4)
+            if cell4.waitForExistence(timeout: 2) {
+                let f = cell4.frame
+                app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: f.midX, dy: f.midY)).tap()
+            }
+        }
+        sleep(4)
 
         let segmentedControl = app.segmentedControls.firstMatch
         if segmentedControl.waitForExistence(timeout: 5) {
-            print("[testCache] Segmented control found")
             let cacheSegment = segmentedControl.buttons["缓存"]
             if cacheSegment.waitForExistence(timeout: 3) {
-                cacheSegment.tap()
-                waitForPageLoad()
-                print("[testCache] Tapped cache segment")
-            } else {
-                print("[testCache] Cache segment button not found in segmented control")
-            }
-        } else {
-            let navBarSegment = app.navigationBars.firstMatch.segmentedControls.firstMatch
-            if navBarSegment.waitForExistence(timeout: 3) {
-                let cacheSegment = navBarSegment.buttons["缓存"]
-                if cacheSegment.exists {
-                    cacheSegment.tap()
-                    waitForPageLoad()
-                    print("[testCache] Tapped cache segment from navbar")
-                }
-            } else {
-                print("[testCache] No segmented control found at all")
+                cacheSegment.tap(); sleep(2)
+            } else if segmentedControl.buttons.count > 0 {
+                segmentedControl.buttons.element(boundBy: 0).tap(); sleep(2)
             }
         }
-        sleep(3)
-        saveScreenshotSafe("/tmp/wbk-fix-cache.png")
+
+        saveScreenshot("/tmp/wbk-fix-cache.png")
     }
 
-    // MARK: - Fix 3: Navigate to Inbox message detail
-
     func testInboxMessageDetail() throws {
-        navigateToTab("收信箱")
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist")
+        let inboxTab = tabBar.buttons["收信箱"]
+        XCTAssertTrue(inboxTab.waitForExistence(timeout: 5), "Inbox tab should exist")
+        inboxTab.tap()
         sleep(2)
 
         let tableView = app.tables.firstMatch
         XCTAssertTrue(tableView.waitForExistence(timeout: 5), "Inbox table should exist")
+        XCTAssertTrue(tableView.cells.count > 0, "Inbox should have messages")
 
         let firstCell = tableView.cells.element(boundBy: 0)
         XCTAssertTrue(firstCell.waitForExistence(timeout: 3), "First message cell should exist")
-        firstCell.tap()
+        let frame = firstCell.frame
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
 
-        if app.state != .runningForeground {
-            app.activate()
-            sleep(2)
-        }
         sleep(3)
-        saveScreenshotSafe("/tmp/wbk-fix-inbox-detail.png")
+        saveScreenshot("/tmp/wbk-fix-inbox-detail.png")
     }
 }

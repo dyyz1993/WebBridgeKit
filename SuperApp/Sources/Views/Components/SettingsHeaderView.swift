@@ -41,7 +41,7 @@ class SettingsHeaderView: UIView {
     private let deviceIDTitleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         label.text = "设备 ID"
         label.textAlignment = .center
         return label

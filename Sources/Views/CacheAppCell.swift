@@ -20,7 +20,7 @@ public class CacheAppCell: UITableViewCell {
     /// 卡片容器
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
+        view.backgroundColor = ThemeTokens.Color.surface
         view.layer.cornerRadius = 16
         view.layer.masksToBounds = false
         view.layer.shadowColor = UIColor.black.cgColor
@@ -34,8 +34,8 @@ public class CacheAppCell: UITableViewCell {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemBlue
-        imageView.backgroundColor = UIColor.tertiarySystemBackground
+        imageView.tintColor = ThemeTokens.Color.primary
+        imageView.backgroundColor = ThemeTokens.Color.surface
         imageView.layer.cornerRadius = 12
         imageView.layer.masksToBounds = true
         imageView.clipsToBounds = true
@@ -46,7 +46,7 @@ public class CacheAppCell: UITableViewCell {
     private let appIDLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 17, weight: .semibold)
-        label.textColor = UIColor.label
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         return label
     }()
@@ -55,7 +55,7 @@ public class CacheAppCell: UITableViewCell {
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         return label
     }()
@@ -64,7 +64,7 @@ public class CacheAppCell: UITableViewCell {
     private let versionLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = UIColor.systemBlue
+        label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         return label
     }()
@@ -73,7 +73,7 @@ public class CacheAppCell: UITableViewCell {
     private let pageCountLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = UIColor.systemPurple
+        label.textColor = ThemeTokens.Color.gradientEnd
         label.numberOfLines = 1
         return label
     }()
@@ -82,7 +82,7 @@ public class CacheAppCell: UITableViewCell {
     private let cacheSizeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        label.textColor = UIColor.systemOrange
+        label.textColor = ThemeTokens.Color.warning
         label.numberOfLines = 1
         return label
     }()
@@ -96,13 +96,13 @@ public class CacheAppCell: UITableViewCell {
             config.imagePlacement = .leading
             config.imagePadding = 4
             config.title = "复制"
-            config.baseForegroundColor = .systemBlue
+            config.baseForegroundColor = ThemeTokens.Color.primary
             button.configuration = config
         } else {
             button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
             button.setTitle("复制", for: .normal)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-            button.tintColor = .systemBlue
+            button.tintColor = ThemeTokens.Color.primary
             button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
             button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
         }
@@ -116,8 +116,8 @@ public class CacheAppCell: UITableViewCell {
             var config = UIButton.Configuration.plain()
             config.image = UIImage(systemName: "trash.fill")
             config.imagePlacement = .all
-            config.baseForegroundColor = .systemRed
-            config.baseBackgroundColor = .systemRed.withAlphaComponent(0.1)
+            config.baseForegroundColor = ThemeTokens.Color.error
+            config.baseBackgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
             config.cornerStyle = .capsule
             button.configuration = config
             button.configurationUpdateHandler = { btn in
@@ -127,8 +127,8 @@ public class CacheAppCell: UITableViewCell {
             }
         } else {
             button.setImage(UIImage(systemName: "trash.fill"), for: .normal)
-            button.tintColor = .systemRed
-            button.backgroundColor = .systemRed.withAlphaComponent(0.1)
+            button.tintColor = ThemeTokens.Color.error
+            button.backgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
             button.layer.cornerRadius = 22
             button.layer.masksToBounds = true
             button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
@@ -139,7 +139,7 @@ public class CacheAppCell: UITableViewCell {
     /// AppID 背景高亮（更容易识别）
     private let appIDBackgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.08)
+        view.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
         view.layer.cornerRadius = 8
         view.layer.masksToBounds = true
         return view
@@ -337,17 +337,17 @@ public class CacheAppCell: UITableViewCell {
                 iconImageView.backgroundColor = .clear
             } else {
                 iconImageView.image = nil
-                iconImageView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+                iconImageView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
             }
         }
 
         // 根据页面数量调整 AppID 背景颜色
         if pageCount > 5 {
-            appIDBackgroundView.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.1)
+            appIDBackgroundView.backgroundColor = ThemeTokens.Color.gradientEnd.withAlphaComponent(0.1)
         } else if pageCount > 1 {
-            appIDBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.08)
+            appIDBackgroundView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
         } else {
-            appIDBackgroundView.backgroundColor = UIColor.systemGray6.withAlphaComponent(0.5)
+            appIDBackgroundView.backgroundColor = ThemeTokens.Color.surface.withAlphaComponent(0.5)
         }
     }
 
@@ -389,7 +389,7 @@ public class CacheAppCell: UITableViewCell {
             let originalConfig = copyButton.configuration
             var newConfig = originalConfig
             newConfig?.title = "已复制"
-            newConfig?.baseForegroundColor = .systemGreen
+            newConfig?.baseForegroundColor = ThemeTokens.Color.success
             copyButton.configuration = newConfig
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
@@ -412,8 +412,8 @@ public class CacheAppCell: UITableViewCell {
         versionLabel.text = nil
         pageCountLabel.text = nil
         cacheSizeLabel.text = nil
-        iconImageView.backgroundColor = UIColor.tertiarySystemBackground
-        appIDBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.08)
+        iconImageView.backgroundColor = ThemeTokens.Color.surface
+        appIDBackgroundView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
     }
 }
 
