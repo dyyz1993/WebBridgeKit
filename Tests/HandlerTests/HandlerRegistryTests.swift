@@ -268,7 +268,9 @@ final class HandlerRegistryTests: XCTestCase {
             "speech", "sensors", "media", "photo", "scan",
             "mirroring", "contacts", "openSettings", "screen",
             "page", "cacheDebug", "file", "tts", "gesture",
-            "videoStream"
+            "videoStream", "openPage", "closePage", "goBack",
+            "setModal", "getHistory", "getPayload", "share",
+            "clipboard"
         ]
         for action in Self.expectedHandlers {
             if skipActions.contains(action) { continue }

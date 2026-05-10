@@ -1,7 +1,20 @@
 import XCTest
+import RxSwift
 @testable import WebBridgeKit
 
 final class WebCacheManagerTests: XCTestCase {
+
+    private var disposeBag: DisposeBag!
+
+    override func setUp() {
+        super.setUp()
+        disposeBag = DisposeBag()
+    }
+
+    override func tearDown() {
+        disposeBag = nil
+        super.tearDown()
+    }
 
     func testSharedInstance() {
         let manager = WebCacheManager.shared
@@ -87,6 +100,7 @@ final class WebCacheManagerTests: XCTestCase {
             }, onError: { _ in
                 expectation.fulfill()
             })
+            .disposed(by: disposeBag)
         wait(for: [expectation], timeout: 2.0)
     }
 
@@ -99,6 +113,7 @@ final class WebCacheManagerTests: XCTestCase {
             }, onError: { _ in
                 expectation.fulfill()
             })
+            .disposed(by: disposeBag)
         wait(for: [expectation], timeout: 2.0)
     }
 
@@ -111,6 +126,7 @@ final class WebCacheManagerTests: XCTestCase {
             }, onError: { _ in
                 expectation.fulfill()
             })
+            .disposed(by: disposeBag)
         wait(for: [expectation], timeout: 2.0)
     }
 
@@ -123,6 +139,7 @@ final class WebCacheManagerTests: XCTestCase {
             }, onError: { _ in
                 expectation.fulfill()
             })
+            .disposed(by: disposeBag)
         wait(for: [expectation], timeout: 2.0)
     }
 
@@ -135,6 +152,7 @@ final class WebCacheManagerTests: XCTestCase {
             }, onError: { _ in
                 expectation.fulfill()
             })
+            .disposed(by: disposeBag)
         wait(for: [expectation], timeout: 2.0)
     }
 
@@ -147,6 +165,7 @@ final class WebCacheManagerTests: XCTestCase {
             }, onError: { _ in
                 expectation.fulfill()
             })
+            .disposed(by: disposeBag)
         wait(for: [expectation], timeout: 2.0)
     }
 }

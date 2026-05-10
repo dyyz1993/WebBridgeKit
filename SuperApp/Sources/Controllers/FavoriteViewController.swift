@@ -63,7 +63,6 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
         setupUI()
         setupGestures()
-        bindViewModel()
     }
 
     override func viewWillAppear(_ animated: Bool) {

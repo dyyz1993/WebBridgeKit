@@ -313,7 +313,7 @@ jobs:
           xcrun simctl list devices available | grep -i iphone || echo "(none found)"
 
           DESTINATION=""
-          for DEVICE_TYPE in "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
+          for DEVICE_TYPE in "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
             echo "--- Trying destination: platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest ---"
             if xcodebuild test \
                 -workspace WebBridgeKit.xcworkspace \
@@ -485,7 +485,7 @@ jobs:
           xcrun simctl list devices available | grep -i iphone || echo "(none found)"
 
           DESTINATION=""
-          for DEVICE_TYPE in "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
+          for DEVICE_TYPE in "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
             echo "--- Trying destination: platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest ---"
             if xcodebuild test \
                 -workspace WebBridgeKit.xcworkspace \
