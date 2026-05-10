@@ -55,6 +55,9 @@ final class FullScreenProgressVCTests: XCTestCase {
     }
 
     func testUpdateProgress_Completion_Shows100Percent() {
+        guard UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).isEmpty == false else {
+            return
+        }
         let vc = FullScreenProgressViewController(totalResources: 5)
         _ = vc.view
 

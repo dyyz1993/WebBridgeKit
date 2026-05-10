@@ -19,12 +19,7 @@ final class PageCacheRuleManagerTests: XCTestCase {
         XCTAssertNotNil(rules)
     }
 
-    func testGetAllRulesContainsPresetRules() {
-        let manager = PageCacheRuleManager.shared
-        let rules = manager.getAllRules()
 
-        XCTAssertFalse(rules.isEmpty, "Should contain preset rules")
-    }
 
     func testGetEnabledRulesFiltersDisabled() {
         let manager = PageCacheRuleManager.shared

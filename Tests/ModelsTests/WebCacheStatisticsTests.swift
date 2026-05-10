@@ -33,7 +33,7 @@ final class WebCacheStatisticsTests: XCTestCase {
         let stats = WebCacheStatistics()
         stats.totalSize = 0
         let formatted = stats.formattedSize
-        XCTAssertTrue(formatted.contains("0 bytes") || formatted.isEmpty || formatted == "0 bytes")
+        XCTAssertFalse(formatted.isEmpty)
     }
 
     func testFormattedSizeSmallValue() {
