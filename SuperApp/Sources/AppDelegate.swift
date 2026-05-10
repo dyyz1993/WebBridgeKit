@@ -19,9 +19,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // 🔥 Clear all cache on startup as requested - Perform on background to avoid blocking main thread
         // For UI Testing, we skip this to avoid race conditions or main thread stalls during early launch
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
-            // 注意：WebCacheManager 内部已经处理了线程安全（WKWebView 在主线程，Realm 在后台线程）
-            print("🗑️ [AppDelegate] Triggering global cache clearing...")
-            WebCacheManager.shared.clearAll()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                print("🗑️ [AppDelegate] Triggering global cache clearing...")
+                WebCacheManager.shared.clearAll()
+            }
         } else {
             print("🧪 [AppDelegate] Skipping clearAll during UI testing")
         }
@@ -58,7 +59,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         // 注册推送通知
+        #if !targetEnvironment(simulator)
         registerForPushNotifications(application)
+        #endif
 
         // 🔥 Support UI Fidelity Testing — show Component Catalog
         if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
@@ -142,7 +145,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // MARK: - Push Notifications
 
     private func registerForPushNotifications(_ application: UIApplication) {
-        // UI 测试时禁用推送注册，避免系统弹窗干扰
         if ProcessInfo.processInfo.arguments.contains("-UITesting") {
             print("🧪 [AppDelegate] Skipping push registration during UI testing")
             return
@@ -150,6 +152,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         UNUserNotificationCenter.current().delegate = self
 
+        #if !targetEnvironment(simulator)
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, _ in
             print("🔔 [AppDelegate] Push authorization granted: \(granted)")
@@ -159,6 +162,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
             }
         }
+        #endif
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {

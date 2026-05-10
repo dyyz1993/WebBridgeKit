@@ -268,20 +268,11 @@ class MainViewModel: ViewModel {
                         return displayHistory
                     }
 
-                // 🧪 添加测试入口
-                let testEntry = WebPageHistory()
-                testEntry.id = "test_cases_entry"
-                testEntry.url = "wb-app://test-cases"
-                testEntry.title = L10n.tr("home.test_cases_entry")
-                testEntry.isPinned = true
-
                 // 构造 Section 数据
                 var sections: [WebPageHistorySection] = []
 
-                if !pinnedItems.isEmpty || true { // 始终显示常用应用区，包含测试入口
-                    var topItems = pinnedItems
-                    topItems.insert(testEntry, at: 0)
-                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.frequently_used"), items: topItems))
+                if !pinnedItems.isEmpty {
+                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.frequently_used"), items: pinnedItems))
                 }
 
                 if !favoriteItems.isEmpty {

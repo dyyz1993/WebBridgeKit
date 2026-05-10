@@ -179,7 +179,8 @@ public class WebResourceCacheManager {
         // 使用独立的 Realm 文件
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("resourceCache.realm"),
-            schemaVersion: 1
+            schemaVersion: 1,
+            objectTypes: [CacheEntryRealm.self, WebCacheStatistics.self]
         )
 
         let paths = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)

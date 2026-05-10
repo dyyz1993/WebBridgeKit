@@ -134,7 +134,7 @@ public class WebCacheManager {
 
         // 3. 清理 Realm 统计数据 (必须在后台线程执行，避免 Realm 跨线程访问)
         DispatchQueue.global(qos: .utility).async {
-            if let realm = try? Realm() {
+            if let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) {
                 try? realm.write {
                     realm.delete(realm.objects(WebCacheStatistics.self))
                 }
@@ -159,7 +159,7 @@ public class WebCacheManager {
                         // 从 Realm 中删除统计 (必须在后台线程执行，避免 Realm 跨线程访问)
                         DispatchQueue.global(qos: .utility).async {
                             // 在后台线程创建新的 Realm 实例
-                            if let realm = try? Realm() {
+                            if let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) {
                                 try? realm.write {
                                     if let stat = realm.object(ofType: WebCacheStatistics.self, forPrimaryKey: domain) {
                                         realm.delete(stat)
@@ -192,7 +192,7 @@ public class WebCacheManager {
                     // 清空 Realm 中的统计 (必须在后台线程执行，避免 Realm 跨线程访问)
                     DispatchQueue.global(qos: .utility).async {
                         // 在后台线程创建新的 Realm 实例
-                        if let realm = try? Realm() {
+                        if let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) {
                             try? realm.write {
                                 realm.delete(realm.objects(WebCacheStatistics.self))
                             }
@@ -236,7 +236,7 @@ public class WebCacheManager {
     // MARK: - Realm 操作
 
     private func deleteSystemCacheStatistics(for domain: String) {
-        guard let realm = try? Realm() else { return }
+        guard let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) else { return }
         try? realm.write {
             if let stat = realm.object(ofType: WebCacheStatistics.self, forPrimaryKey: domain) {
                 realm.delete(stat)
@@ -245,7 +245,7 @@ public class WebCacheManager {
     }
 
     private func clearAllSystemCacheStatistics() {
-        guard let realm = try? Realm() else { return }
+        guard let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) else { return }
         try? realm.write {
             realm.delete(realm.objects(WebCacheStatistics.self))
         }
@@ -256,9 +256,8 @@ public class WebCacheManager {
         var results: [WebCacheStatistics] = []
         let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.global(qos: .userInitiated).async {
-            if let realm = try? Realm() {
+            if let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) {
                 let stats = realm.objects(WebCacheStatistics.self).sorted(byKeyPath: "totalSize", ascending: false)
-                // 必须在当前线程冻结对象或转换为数组，才能跨线程传递
                 results = Array(stats.map { stat -> WebCacheStatistics in
                     let newStat = WebCacheStatistics()
                     newStat.domain = stat.domain
@@ -281,7 +280,7 @@ public class WebCacheManager {
         // 建议在 UI 上显示时使用异步版本，这里保留同步版本供内部调用
         let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.global(qos: .userInitiated).async {
-            if let realm = try? Realm() {
+            if let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) {
                 size = realm.objects(WebCacheStatistics.self).sum(of: \WebCacheStatistics.totalSize)
             }
             semaphore.signal()
@@ -438,7 +437,7 @@ public class WebCacheManager {
     // MARK: - Helper Methods
 
     private func saveSystemCacheStatistics(_ stats: [WebCacheStatistics]) {
-        guard let realm = try? Realm() else { return }
+        guard let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) else { return }
         try? realm.write {
             realm.add(stats, update: .modified)
         }
