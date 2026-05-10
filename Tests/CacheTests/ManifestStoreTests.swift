@@ -7,7 +7,7 @@ final class ManifestStoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        store = ManifestStore()
+        store = ManifestStore.shared
         store.clearAll()
         Thread.sleep(forTimeInterval: 0.1)
     }
