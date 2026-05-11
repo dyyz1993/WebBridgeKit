@@ -27,7 +27,7 @@ public class CacheAppDetailViewController: UIViewController {
 
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .insetGrouped)
-        table.backgroundColor = .systemGroupedBackground
+        table.backgroundColor = ThemeTokens.Color.background
         table.register(CachePageCell.self, forCellReuseIdentifier: CachePageCell.identifier)
         table.rowHeight = UITableView.automaticDimension
         table.estimatedRowHeight = 60
@@ -39,7 +39,7 @@ public class CacheAppDetailViewController: UIViewController {
         view.backgroundColor = .clear
 
         let container = UIView()
-        container.backgroundColor = .secondarySystemBackground
+        container.backgroundColor = ThemeTokens.Color.surface
         container.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         container.layer.masksToBounds = false
         let shadow = ThemeTokens.Shadows.Card
@@ -57,21 +57,21 @@ public class CacheAppDetailViewController: UIViewController {
 
         let appIDLabel = UILabel()
         appIDLabel.font = UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)
-        appIDLabel.textColor = .label
+        appIDLabel.textColor = ThemeTokens.Color.text
         appIDLabel.numberOfLines = 0
         appIDLabel.textAlignment = .center
         appIDLabel.tag = 101
 
         let nameLabel = UILabel()
         nameLabel.font = ThemeTokens.Typography.callout
-        nameLabel.textColor = .secondaryLabel
+        nameLabel.textColor = ThemeTokens.Color.textSecondary
         nameLabel.numberOfLines = 1
         nameLabel.textAlignment = .center
         nameLabel.tag = 102
 
         let infoLabel = UILabel()
         infoLabel.font = ThemeTokens.Typography.footnote
-        infoLabel.textColor = .tertiaryLabel
+        infoLabel.textColor = ThemeTokens.Color.textTertiary
         infoLabel.numberOfLines = 0
         infoLabel.textAlignment = .center
         infoLabel.tag = 103
@@ -128,7 +128,7 @@ public class CacheAppDetailViewController: UIViewController {
 
     private func setupUI() {
         title = "缓存详情"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         // 添加返回按钮
         navigationItem.leftBarButtonItem = UIBarButtonItem(
@@ -176,7 +176,7 @@ public class CacheAppDetailViewController: UIViewController {
         } else if let generatedIcon = AppIconGenerator.generateIcon(from: appInfo.name, size: CGSize(width: 80, height: 80)) {
             iconImageView.image = generatedIcon
         } else {
-            iconImageView.backgroundColor = .systemBlue.withAlphaComponent(0.1)
+            iconImageView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         }
     }
 
@@ -242,7 +242,7 @@ public class CachePageCell: UITableViewCell {
     private let indexLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)
-        label.textColor = .systemBlue
+        label.textColor = ThemeTokens.Color.primary
         label.textAlignment = .center
         label.widthAnchor.constraint(equalToConstant: 40).isActive = true
         return label
@@ -251,7 +251,7 @@ public class CachePageCell: UITableViewCell {
     private let pageKeyLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium)
-        label.textColor = .label
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 2
         return label
     }()
@@ -261,11 +261,11 @@ public class CachePageCell: UITableViewCell {
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
             config.image = LucideIcon.copy.templateImage()
-            config.baseForegroundColor = .systemBlue
+            config.baseForegroundColor = ThemeTokens.Color.primary
             button.configuration = config
         } else {
             button.setImage(LucideIcon.copy.templateImage(), for: .normal)
-            button.tintColor = .systemBlue
+            button.tintColor = ThemeTokens.Color.primary
         }
         button.widthAnchor.constraint(equalToConstant: 44).isActive = true
         return button
@@ -276,11 +276,11 @@ public class CachePageCell: UITableViewCell {
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
             config.image = LucideIcon.trash.templateImage()
-            config.baseForegroundColor = .systemRed
+            config.baseForegroundColor = ThemeTokens.Color.error
             button.configuration = config
         } else {
             button.setImage(LucideIcon.trash.templateImage(), for: .normal)
-            button.tintColor = .systemRed
+            button.tintColor = ThemeTokens.Color.error
         }
         button.widthAnchor.constraint(equalToConstant: 44).isActive = true
         return button

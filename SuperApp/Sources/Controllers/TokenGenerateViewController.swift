@@ -183,10 +183,15 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
         // Add accessibility identifiers for testing
         view.accessibilityIdentifier = "TokenGenerateViewController"
         urlPickerView.accessibilityIdentifier = "tokenGenerate.urlPickerView"
+        urlPickerView.accessibilityLabel = L10n.tr("token.generate.select_url")
         durationSegmentedControl.accessibilityIdentifier = "tokenGenerate.durationSegmentedControl"
+        durationSegmentedControl.accessibilityLabel = L10n.tr("token.generate.duration")
         generateButton.accessibilityIdentifier = "tokenGenerate.generateButton"
+        generateButton.accessibilityLabel = L10n.tr("token.generate.button")
         copyButton.accessibilityIdentifier = "tokenGenerate.copyButton"
+        copyButton.accessibilityLabel = L10n.tr("common.copy")
         shareButton.accessibilityIdentifier = "tokenGenerate.shareButton"
+        shareButton.accessibilityLabel = L10n.tr("common.share")
     }
 
     // MARK: - Setup UI

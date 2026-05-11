@@ -90,7 +90,7 @@ public class ModalWebViewController: UIViewController {
         // 容器视图
         containerView = UIView()
         containerView.accessibilityIdentifier = "modalBrowser.containerView"
-        containerView.backgroundColor = .systemBackground
+        containerView.backgroundColor = ThemeTokens.Color.background
         containerView.layer.cornerRadius = config.cornerRadius
         containerView.layer.shadowColor = UIColor.black.cgColor
         containerView.layer.shadowOpacity = config.shadowOpacity

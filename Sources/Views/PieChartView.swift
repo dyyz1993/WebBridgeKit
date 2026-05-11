@@ -92,7 +92,7 @@ public class PieChartView: UIView {
         if !centerText.isEmpty {
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: ThemeTokens.Typography.subheadline,
-                .foregroundColor: UIColor.label
+                .foregroundColor: ThemeTokens.Color.text
             ]
             let size = centerText.size(withAttributes: attrs)
             let textRect = CGRect(
@@ -129,7 +129,7 @@ public class PieChartView: UIView {
             let label = UILabel()
             label.text = seg.label
             label.font = ThemeTokens.Typography.caption1
-            label.textColor = .secondaryLabel
+            label.textColor = ThemeTokens.Color.textSecondary
 
             item.addArrangedSubview(dot)
             dot.snp.makeConstraints { make in

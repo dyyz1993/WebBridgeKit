@@ -207,6 +207,7 @@ targets:
     deploymentTarget: "14.0"
     sources:
       - Tests/CacheTests
+      - Tests/CacheDashboard
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.CacheTests
       TEST_TARGET_NAME: WebBridgeKit

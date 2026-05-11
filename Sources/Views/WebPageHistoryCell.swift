@@ -20,7 +20,7 @@ class WebPageHistoryCell: UITableViewCell {
     private let cacheStatusImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemGreen
+        imageView.tintColor = ThemeTokens.Color.success
         return imageView
     }()
 
@@ -163,7 +163,7 @@ class WebPageHistoryCell: UITableViewCell {
         // 设置缓存状态
         if history.isCached {
             cacheStatusImageView.image = LucideIcon.success.image()
-            cacheStatusImageView.tintColor = UIColor.systemGreen
+            cacheStatusImageView.tintColor = ThemeTokens.Color.success
 
             // 显示缓存大小
             cacheSizeLabel.text = history.formattedSize

@@ -179,7 +179,7 @@ private class QRScanViewController: UIViewController {
             width: scanFrameSize,
             height: scanFrameSize
         ))
-        scanFrame.layer.borderColor = UIColor.systemGreen.cgColor
+        scanFrame.layer.borderColor = ThemeTokens.Color.success.cgColor
         scanFrame.layer.borderWidth = 2
         scanFrame.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.addSubview(scanFrame)
@@ -191,7 +191,7 @@ private class QRScanViewController: UIViewController {
             width: scanFrameSize,
             height: 2
         ))
-        scanLine.backgroundColor = .systemGreen
+        scanLine.backgroundColor = ThemeTokens.Color.success
         scanFrame.addSubview(scanLine)
         self.scanLine = scanLine
 

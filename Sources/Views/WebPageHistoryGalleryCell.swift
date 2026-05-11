@@ -55,7 +55,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = .white
-        imageView.backgroundColor = UIColor.systemGreen
+        imageView.backgroundColor = ThemeTokens.Color.success
         imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
         imageView.image = LucideIcon.success.image()
@@ -196,11 +196,11 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     private func generateColor(for letter: String) -> UIColor {
         let colors: [UIColor] = [
             ThemeTokens.Color.info,
-            UIColor.systemGreen,
-            UIColor.systemOrange,
-            UIColor.systemPurple,
-            UIColor.systemRed,
-            UIColor.systemTeal
+            ThemeTokens.Color.success,
+            ThemeTokens.Color.warning,
+            ThemeTokens.Color.gradientEnd,
+            ThemeTokens.Color.error,
+            ThemeTokens.Color.info
         ]
 
         let index = abs(letter.hashValue) % colors.count

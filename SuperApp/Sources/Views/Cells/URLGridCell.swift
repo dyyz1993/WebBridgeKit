@@ -102,13 +102,13 @@ class URLGridCell: UICollectionViewCell {
 
     private static let gradients: [[UIColor]] = [
         [ThemeTokens.Color.gradientStart, ThemeTokens.Color.gradientEnd],
-        [UIColor(red: 0.941, green: 0.576, blue: 0.984, alpha: 1), UIColor(red: 0.961, green: 0.341, blue: 0.424, alpha: 1)],
-        [UIColor(red: 0.310, green: 0.671, blue: 0.992, alpha: 1), UIColor(red: 0.0, green: 0.949, blue: 0.996, alpha: 1)],
-        [ThemeTokens.Color.success, UIColor(red: 0.220, green: 0.976, blue: 0.843, alpha: 1)],
-        [UIColor(red: 0.98, green: 0.439, blue: 0.604, alpha: 1), ThemeTokens.Color.warning],
-        [UIColor(red: 0.631, green: 0.549, blue: 0.82, alpha: 1), UIColor(red: 0.984, green: 0.761, blue: 0.922, alpha: 1)],
-        [ThemeTokens.Color.warning, UIColor(red: 0.98, green: 0.8, blue: 0.2, alpha: 1)],
-        [ThemeTokens.Color.success, UIColor(red: 0.4, green: 0.92, blue: 0.6, alpha: 1)],
+        [ThemeTokens.Color.gradientEnd, ThemeTokens.Color.error],
+        [ThemeTokens.Color.info, ThemeTokens.Color.success],
+        [ThemeTokens.Color.success, ThemeTokens.Color.info],
+        [ThemeTokens.Color.error, ThemeTokens.Color.warning],
+        [ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientEnd.withAlphaComponent(0.6)],
+        [ThemeTokens.Color.warning, ThemeTokens.Color.warning.withAlphaComponent(0.7)],
+        [ThemeTokens.Color.success, ThemeTokens.Color.success.withAlphaComponent(0.7)],
     ]
 
     private static let lucideIcons: [LucideIcon] = [

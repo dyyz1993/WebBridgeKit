@@ -213,29 +213,29 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             target: self,
             action: #selector(closeButtonTapped)
         )
-        closeBtn.tintColor = .label
+        closeBtn.tintColor = ThemeTokens.Color.text
         closeBtn.accessibilityIdentifier = "browserManager.closeButton"
         closeBtn.accessibilityLabel = "关闭"
         self.closeBarButton = closeBtn
 
         let menuBtn = UIBarButtonItem(
-            image: UIImage(systemName: "ellipsis"),
+            image: LucideIcon.ellipsis.image(),
             style: .plain,
             target: self,
             action: #selector(menuButtonTapped)
         )
-        menuBtn.tintColor = .label
+        menuBtn.tintColor = ThemeTokens.Color.text
         menuBtn.accessibilityIdentifier = "browserManager.menuButton"
         menuBtn.accessibilityLabel = "更多菜单"
         self.menuBarButton = menuBtn
 
         let backBtn = UIBarButtonItem(
-            image: UIImage(systemName: "chevron.backward"),
+            image: LucideIcon.chevronLeft.image(),
             style: .plain,
             target: self,
             action: #selector(backButtonTapped)
         )
-        backBtn.tintColor = .label
+        backBtn.tintColor = ThemeTokens.Color.text
         backBtn.accessibilityIdentifier = "browserManager.backButton"
         backBtn.accessibilityLabel = "返回"
         self.backBarButton = backBtn
@@ -563,7 +563,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
                 if canGoBack {
                     self.backBarButton?.isEnabled = true
-                    self.backBarButton?.tintColor = .label
+                    self.backBarButton?.tintColor = ThemeTokens.Color.text
                 } else {
                     self.backBarButton?.isEnabled = false
                     self.backBarButton?.tintColor = .clear

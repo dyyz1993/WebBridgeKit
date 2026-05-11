@@ -39,7 +39,7 @@ jobs:
       - name: Run SwiftLint
         run: |
           brew install swiftlint
-          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/ || true
+          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/
 
   build:
     name: Build

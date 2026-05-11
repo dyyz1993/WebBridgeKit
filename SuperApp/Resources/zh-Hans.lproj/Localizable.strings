@@ -402,3 +402,55 @@
 // WebView Display
 "webview.close" = "✕ 关闭";
 "webview.render_label" = "📱 WebView 实际渲染效果";
+
+/* Cache Dashboard */
+"settings.cache.dashboard" = "缓存仪表盘";
+"debug.panel.cache_dashboard" = "缓存统计";
+"cache.dashboard.title" = "缓存仪表盘";
+"cache.dashboard.refresh" = "刷新中...";
+"cache.dashboard.total_size" = "总缓存";
+"cache.dashboard.total_entries" = "总条目";
+"cache.dashboard.pinned_count" = "置顶数";
+"cache.dashboard.active_systems" = "活跃系统";
+"cache.dashboard.distribution" = "存储分布";
+"cache.dashboard.active" = "🟢 活跃";
+"cache.dashboard.idle" = "⚪ 空闲";
+"cache.dashboard.clear_all_title" = "清除所有缓存";
+"cache.dashboard.clear_all_message" = "这将清除所有缓存子系统的数据。置顶的 URL 不会被删除。确定继续？";
+"cache.dashboard.cleared" = "所有缓存已清除";
+
+/* Pinned URL Management */
+"pinned.url.management.title" = "置顶 URL 管理";
+"pinned.url.add.placeholder" = "输入 URL 以添加或检测...";
+"pinned.url.empty.title" = "暂无置顶 URL";
+"pinned.url.empty.desc" = "从预设目录添加，或手动输入 URL\n置顶的 URL 在缓存清理时不会被删除";
+"pinned.url.add_from_preset" = "📚 从预设目录添加";
+"pinned.url.added" = "已添加";
+"pinned.url.added.message" = "%@\n类型: %@\n该 URL 将在缓存清理时被保留";
+"pinned.url.delete.confirm" = "确定删除此置顶 URL？";
+"pinned.url.unpin.confirm" = "取消置顶此 URL？它将不再受保护";
+
+/* Preset URL Catalog */
+"preset.catalog.title" = "预设 URL 目录";
+"preset.catalog.search" = "搜索预设 URL...";
+"preset.catalog.all" = "全部";
+"preset.catalog.recommended_only" = "仅显示推荐";
+"preset.catalog.no_results" = "无匹配结果";
+"preset.catalog.no_results.desc" = "尝试其他关键词或分类";
+"preset.catalog.pinned" = "已置顶";
+"preset.catalog.pin_failed" = "无法添加到置顶列表";
+"preset.catalog.copy_url" = "复制 URL";
+"preset.catalog.open_browser" = "在浏览器中打开";
+"preset.catalog.pin_this" = "置顶此 URL";
+
+/* Subsystem Detail */
+"subsystem.detail.basic" = "基础指标";
+"subsystem.detail.extra" = "详细信息";
+"subsystem.detail.actions" = "快捷操作";
+"subsystem.detail.entries" = "条目数量";
+"subsystem.detail.size" = "占用空间";
+"subsystem.detail.hit_rate" = "命中率";
+"subsystem.detail.status" = "状态";
+"subsystem.detail.refresh" = "刷新";
+"subsystem.detail.clear" = "清除";
+"subsystem.detail.clear_confirm" = "确定要清除该子系统的所有缓存数据吗？\n注意：置顶的 URL 不会受影响。";

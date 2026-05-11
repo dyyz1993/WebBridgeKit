@@ -205,7 +205,7 @@ private final class HUDContainerView: UIView {
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
 
-        progressView.progressTintColor = .systemBlue
+        progressView.progressTintColor = ThemeTokens.Color.primary
         progressView.trackTintColor = UIColor.white.withAlphaComponent(0.3)
         progressView.layer.cornerRadius = ThemeTokens.CornerRadius.xs
         progressView.clipsToBounds = true

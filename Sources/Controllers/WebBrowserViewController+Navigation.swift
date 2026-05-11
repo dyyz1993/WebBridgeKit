@@ -332,13 +332,13 @@ extension WebBrowserViewController: WKNavigationDelegate {
             case "LIVE":
                 self.cacheStatusLabel.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.6)
             case "INTERCEPT":
-                self.cacheStatusLabel.backgroundColor = .systemGreen
+                self.cacheStatusLabel.backgroundColor = ThemeTokens.Color.success
             case "MANIFEST", "HTML":
-                self.cacheStatusLabel.backgroundColor = .systemBlue
+                self.cacheStatusLabel.backgroundColor = ThemeTokens.Color.primary
             case "CHECKING":
-                self.cacheStatusLabel.backgroundColor = .systemOrange
+                self.cacheStatusLabel.backgroundColor = ThemeTokens.Color.warning
             default:
-                self.cacheStatusLabel.backgroundColor = .systemOrange
+                self.cacheStatusLabel.backgroundColor = ThemeTokens.Color.warning
             }
 
             print("📱 [Browser] Cache Status Updated: \(source)")

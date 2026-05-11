@@ -402,3 +402,55 @@
 // WebView Display
 "webview.close" = "✕ Close";
 "webview.render_label" = "📱 WebView Render Preview";
+
+/* Cache Dashboard */
+"settings.cache.dashboard" = "Cache Dashboard";
+"debug.panel.cache_dashboard" = "Cache Stats";
+"cache.dashboard.title" = "Cache Dashboard";
+"cache.dashboard.refresh" = "Refreshing...";
+"cache.dashboard.total_size" = "Total Cache";
+"cache.dashboard.total_entries" = "Total Entries";
+"cache.dashboard.pinned_count" = "Pinned";
+"cache.dashboard.active_systems" = "Active Systems";
+"cache.dashboard.distribution" = "Storage Distribution";
+"cache.dashboard.active" = "🟢 Active";
+"cache.dashboard.idle" = "⚪ Idle";
+"cache.dashboard.clear_all_title" = "Clear All Caches";
+"cache.dashboard.clear_all_message" = "This will clear all cache subsystems. Pinned URLs will NOT be deleted. Continue?";
+"cache.dashboard.cleared" = "All caches cleared";
+
+/* Pinned URL Management */
+"pinned.url.management.title" = "Pinned URL Manager";
+"pinned.url.add.placeholder" = "Enter URL to add or detect...";
+"pinned.url.empty.title" = "No Pinned URLs";
+"pinned.url.empty.desc" = "Add from preset catalog, or enter URL manually\nPinned URLs survive cache clearing";
+"pinned.url.add_from_preset" = "📚 Add from Presets";
+"pinned.url.added" = "Added";
+"pinned.url.added.message" = "%@\nType: %@\nThis URL will be preserved during cache clearing";
+"pinned.url.delete.confirm" = "Delete this pinned URL?";
+"pinned.url.unpin.confirm" = "Unpin this URL? It will no longer be protected";
+
+/* Preset URL Catalog */
+"preset.catalog.title" = "Preset URL Catalog";
+"preset.catalog.search" = "Search presets...";
+"preset.catalog.all" = "All";
+"preset.catalog.recommended_only" = "Recommended Only";
+"preset.catalog.no_results" = "No Results";
+"preset.catalog.no_results.desc" = "Try different keywords or categories";
+"preset.catalog.pinned" = "Pinned";
+"preset.catalog.pin_failed" = "Failed to pin";
+"preset.catalog.copy_url" = "Copy URL";
+"preset.catalog.open_browser" = "Open in Browser";
+"preset.catalog.pin_this" = "Pin This URL";
+
+/* Subsystem Detail */
+"subsystem.detail.basic" = "Basic Metrics";
+"subsystem.detail.extra" = "Details";
+"subsystem.detail.actions" = "Quick Actions";
+"subsystem.detail.entries" = "Entries";
+"subsystem.detail.size" = "Size";
+"subsystem.detail.hit_rate" = "Hit Rate";
+"subsystem.detail.status" = "Status";
+"subsystem.detail.refresh" = "Refresh";
+"subsystem.detail.clear" = "Clear";
+"subsystem.detail.clear_confirm" = "Clear all cache data for this subsystem?\nNote: Pinned URLs will NOT be affected.";

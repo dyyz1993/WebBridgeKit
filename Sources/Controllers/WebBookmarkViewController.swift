@@ -28,7 +28,7 @@ public class WebBookmarkViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
         title = "Bookmarks"
 
         let output = viewModel.transform(input: WebBookmarkViewModel.Input(
@@ -50,7 +50,7 @@ public class WebBookmarkViewController: UIViewController {
         let label = UILabel()
         label.text = "No bookmarks yet"
         label.textAlignment = .center
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         view.addSubview(label)
         label.snp.makeConstraints { make in
             make.center.equalToSuperview()

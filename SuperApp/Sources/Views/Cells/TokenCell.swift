@@ -29,8 +29,8 @@ class TokenCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.image = LucideIcon.key.templateImage(pointSize: 20, weight: .medium)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeTokens.Colors.Light.primary
-        imageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
+        imageView.tintColor = ThemeTokens.Color.primary
+        imageView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
         imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
         return imageView
@@ -57,7 +57,7 @@ class TokenCell: UITableViewCell {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 1
         return label
     }()
@@ -80,7 +80,7 @@ class TokenCell: UITableViewCell {
     private let accessCountLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         label.textAlignment = .right
         return label
     }()
@@ -201,13 +201,13 @@ class TokenCell: UITableViewCell {
         // 状态标签
         statusBadge.isHidden = false
         if token.isExpired {
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.error
+            statusBadge.backgroundColor = ThemeTokens.Color.error
             statusLabel.text = "已过期"
         } else if token.isPermanent {
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.success
+            statusBadge.backgroundColor = ThemeTokens.Color.success
             statusLabel.text = "永久"
         } else {
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.primary
+            statusBadge.backgroundColor = ThemeTokens.Color.primary
             statusLabel.text = "剩余 \(token.remainingTimeText)"
         }
     }

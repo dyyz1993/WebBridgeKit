@@ -152,7 +152,7 @@ class AddRuleCell: UITableViewCell {
     }
 
     private func setupUI() {
-        backgroundColor = .systemBackground
+        backgroundColor = ThemeTokens.Color.background
         contentView.backgroundColor = .clear
         selectionStyle = .none
 
@@ -196,45 +196,45 @@ class RuleHeaderCell: UITableViewCell {
         contentView.backgroundColor = .clear
         selectionStyle = .none
 
-        containerView.backgroundColor = .secondarySystemBackground
+        containerView.backgroundColor = ThemeTokens.Color.surface
         containerView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         containerView.layer.masksToBounds = true
         contentView.addSubview(containerView)
 
         titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
-        titleLabel.textColor = .label
+        titleLabel.textColor = ThemeTokens.Color.text
         containerView.addSubview(titleLabel)
 
         expandButton.setTitle("▼", for: .normal)
-        expandButton.setTitleColor(.systemGray, for: .normal)
+        expandButton.setTitleColor(ThemeTokens.Color.textSecondary, for: .normal)
         expandButton.titleLabel?.font = .systemFont(ofSize: 14)
         expandButton.addTarget(self, action: #selector(expandTapped), for: .touchUpInside)
         containerView.addSubview(expandButton)
 
         patternLabel.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
-        patternLabel.textColor = .secondaryLabel
+        patternLabel.textColor = ThemeTokens.Color.textSecondary
         patternLabel.numberOfLines = 2
         containerView.addSubview(patternLabel)
 
         statsLabel.font = .systemFont(ofSize: 12, weight: .regular)
-        statsLabel.textColor = .secondaryLabel
+        statsLabel.textColor = ThemeTokens.Color.textSecondary
         containerView.addSubview(statsLabel)
 
         excludeLabel.font = .systemFont(ofSize: 11, weight: .medium)
-        excludeLabel.textColor = .systemOrange
+        excludeLabel.textColor = ThemeTokens.Color.warning
         excludeLabel.text = "排除模式..."
         containerView.addSubview(excludeLabel)
 
         deleteButton.setTitle("删除", for: .normal)
         deleteButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
-        deleteButton.setTitleColor(.systemRed, for: .normal)
+        deleteButton.setTitleColor(ThemeTokens.Color.error, for: .normal)
         deleteButton.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
         contentView.addSubview(deleteButton)
 
         let addButton = UIButton(type: .system)
         addButton.setTitle("+ 排除", for: .normal)
         addButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
-        addButton.setTitleColor(.systemOrange, for: .normal)
+        addButton.setTitleColor(ThemeTokens.Color.warning, for: .normal)
         addButton.addTarget(self, action: #selector(addExcludeTapped), for: .touchUpInside)
         containerView.addSubview(addButton)
 
@@ -345,18 +345,18 @@ class ExcludePatternCell: UITableViewCell {
         contentView.backgroundColor = .clear
         selectionStyle = .none
 
-        containerView.backgroundColor = .tertiarySystemBackground
+        containerView.backgroundColor = ThemeTokens.Color.surface
         containerView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         containerView.layer.masksToBounds = true
         contentView.addSubview(containerView)
 
         patternLabel.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
-        patternLabel.textColor = .secondaryLabel
+        patternLabel.textColor = ThemeTokens.Color.textSecondary
         patternLabel.numberOfLines = 1
         containerView.addSubview(patternLabel)
 
         removeButton.setTitle("✗", for: .normal)
-        removeButton.setTitleColor(.systemRed, for: .normal)
+        removeButton.setTitleColor(ThemeTokens.Color.error, for: .normal)
         removeButton.titleLabel?.font = .systemFont(ofSize: 14)
         removeButton.addTarget(self, action: #selector(removeTapped), for: .touchUpInside)
         containerView.addSubview(removeButton)
@@ -419,7 +419,7 @@ class PageCell: UITableViewCell {
         contentView.backgroundColor = .clear
         selectionStyle = .none
 
-        containerView.backgroundColor = .secondarySystemBackground
+        containerView.backgroundColor = ThemeTokens.Color.surface
         containerView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         containerView.layer.masksToBounds = true
         contentView.addSubview(containerView)
@@ -429,16 +429,16 @@ class PageCell: UITableViewCell {
         containerView.addSubview(iconLabel)
 
         titleLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        titleLabel.textColor = .label
+        titleLabel.textColor = ThemeTokens.Color.text
         containerView.addSubview(titleLabel)
 
         urlLabel.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
-        urlLabel.textColor = .secondaryLabel
+        urlLabel.textColor = ThemeTokens.Color.textSecondary
         urlLabel.numberOfLines = 1
         containerView.addSubview(urlLabel)
 
         statsLabel.font = .systemFont(ofSize: 11, weight: .regular)
-        statsLabel.textColor = .secondaryLabel
+        statsLabel.textColor = ThemeTokens.Color.textSecondary
         containerView.addSubview(statsLabel)
 
         let stackView = UIStackView(arrangedSubviews: [openButton, refreshButton, deleteButton])
@@ -449,21 +449,21 @@ class PageCell: UITableViewCell {
 
         openButton.setTitle("打开", for: .normal)
         openButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
-        openButton.backgroundColor = .systemBlue.withAlphaComponent(0.1)
+        openButton.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         openButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         openButton.addTarget(self, action: #selector(openTapped), for: .touchUpInside)
 
         refreshButton.setTitle("刷新", for: .normal)
         refreshButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
-        refreshButton.backgroundColor = .systemGreen.withAlphaComponent(0.1)
-        refreshButton.setTitleColor(.systemGreen, for: .normal)
+        refreshButton.backgroundColor = ThemeTokens.Color.success.withAlphaComponent(0.1)
+        refreshButton.setTitleColor(ThemeTokens.Color.success, for: .normal)
         refreshButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         refreshButton.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
 
         deleteButton.setTitle("删除", for: .normal)
         deleteButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
-        deleteButton.backgroundColor = .systemRed.withAlphaComponent(0.1)
-        deleteButton.setTitleColor(.systemRed, for: .normal)
+        deleteButton.backgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
+        deleteButton.setTitleColor(ThemeTokens.Color.error, for: .normal)
         deleteButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         deleteButton.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
 
@@ -515,11 +515,11 @@ class PageCell: UITableViewCell {
         if pageInfo.isExcluded {
             iconLabel.text = "🚫"
             statsLabel.text = "已排除"
-            statsLabel.textColor = .systemRed
+            statsLabel.textColor = ThemeTokens.Color.error
         } else {
             iconLabel.text = "📄"
             statsLabel.text = "\(pageInfo.resourceCount) 资源 | \(pageInfo.formattedSize) | \(pageInfo.formattedCachedAt)"
-            statsLabel.textColor = .secondaryLabel
+            statsLabel.textColor = ThemeTokens.Color.textSecondary
         }
     }
 

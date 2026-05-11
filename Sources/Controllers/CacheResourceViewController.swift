@@ -33,7 +33,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
 
     private let toolbar: UIToolbar = {
         let tb = UIToolbar()
-        tb.barTintColor = .systemBackground
+        tb.barTintColor = ThemeTokens.Color.background
         tb.isTranslucent = false
         return tb
     }()
@@ -41,10 +41,11 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
     private let selectAllButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("全选", for: .normal)
+        button.accessibilityLabel = "全选缓存资源"
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
-        button.backgroundColor = .systemBlue.withAlphaComponent(0.1)
-        button.setTitleColor(.systemBlue, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         return button
     }()
 
@@ -53,18 +54,19 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
         button.setTitle("取消", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
-        button.backgroundColor = .systemGray.withAlphaComponent(0.1)
-        button.setTitleColor(.systemGray, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)
+        button.setTitleColor(ThemeTokens.Color.textSecondary, for: .normal)
         return button
     }()
 
     private let deleteButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("删除选中", for: .normal)
+        button.accessibilityLabel = "删除选中的缓存资源"
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
-        button.backgroundColor = .systemRed.withAlphaComponent(0.1)
-        button.setTitleColor(.systemRed, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
+        button.setTitleColor(ThemeTokens.Color.error, for: .normal)
         return button
     }()
 
@@ -73,15 +75,15 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
         button.setTitle("清空全部", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
-        button.backgroundColor = .systemRed.withAlphaComponent(0.1)
-        button.setTitleColor(.systemRed, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
+        button.setTitleColor(ThemeTokens.Color.error, for: .normal)
         return button
     }()
 
     private let selectedCountLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         label.text = "已选 0 项"
         return label
     }()
@@ -89,7 +91,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
     private let totalCountLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13, weight: .regular)
-        label.textColor = .tertiaryLabel
+        label.textColor = ThemeTokens.Color.textTertiary
         label.text = "共 0 个资源"
         return label
     }()
@@ -122,7 +124,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
     // MARK: - Setup UI
 
     public override func makeUI() {
-        view.backgroundColor = UIColor.systemGroupedBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
@@ -130,7 +132,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
 
         // 创建工具栏容器
         let toolbarContainer = UIView()
-        toolbarContainer.backgroundColor = .systemBackground
+        toolbarContainer.backgroundColor = ThemeTokens.Color.background
         view.addSubview(toolbarContainer)
 
         toolbarContainer.addSubview(toolbar)
@@ -439,7 +441,7 @@ extension CacheResourceViewController: UITableViewDelegate {
             self.present(alert, animated: true)
         }
 
-        deleteAction.backgroundColor = UIColor.systemRed
+        deleteAction.backgroundColor = ThemeTokens.Color.error
 
         return UISwipeActionsConfiguration(actions: [deleteAction])
     }

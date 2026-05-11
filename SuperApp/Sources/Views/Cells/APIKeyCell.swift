@@ -29,8 +29,8 @@ class APIKeyCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.image = LucideIcon.key.templateImage(pointSize: 20, weight: .medium)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeTokens.Colors.Light.primary
-        imageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
+        imageView.tintColor = ThemeTokens.Color.primary
+        imageView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
         return imageView
@@ -57,7 +57,7 @@ class APIKeyCell: UITableViewCell {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Colors.Light.textTertiary
+        label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 1
         return label
     }()
@@ -81,13 +81,13 @@ class APIKeyCell: UITableViewCell {
         let button = UIButton(type: .system)
         let image = LucideIcon.copy.templateImage(pointSize: 16, weight: .medium)
         button.setImage(image, for: .normal)
-        button.tintColor = ThemeTokens.Colors.Light.primary
+        button.tintColor = ThemeTokens.Color.primary
         return button
     }()
 
     private let groupBadge: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
+        view.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
         view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.isHidden = true
         return view
@@ -96,7 +96,7 @@ class APIKeyCell: UITableViewCell {
     private let groupLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Colors.Light.primary
+        label.textColor = ThemeTokens.Color.primary
         return label
     }()
 
@@ -214,12 +214,12 @@ class APIKeyCell: UITableViewCell {
         // 密钥类型
         if key.isPermanent {
             typeLabel.text = "永久密钥"
-            iconImageView.tintColor = ThemeTokens.Colors.Light.success
-            iconImageView.backgroundColor = ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeTokens.Color.success
+            iconImageView.backgroundColor = ThemeTokens.Color.success.withAlphaComponent(0.1)
         } else {
             typeLabel.text = "临时密钥"
-            iconImageView.tintColor = ThemeTokens.Colors.Light.primary
-            iconImageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeTokens.Color.primary
+            iconImageView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         }
 
         // 绑定群组
@@ -255,13 +255,13 @@ class APIKeyCell: UITableViewCell {
         // 状态标签
         statusBadge.isHidden = false
         if key.isExpired {
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.error
+            statusBadge.backgroundColor = ThemeTokens.Color.error
             statusLabel.text = "已过期"
         } else if key.isPermanent {
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.success
+            statusBadge.backgroundColor = ThemeTokens.Color.success
             statusLabel.text = "永久有效"
         } else {
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.warning
+            statusBadge.backgroundColor = ThemeTokens.Color.warning
             statusLabel.text = key.remainingTimeText ?? "已过期"
         }
     }
@@ -286,7 +286,7 @@ class APIKeyCell: UITableViewCell {
         statusLabel.text = ""
         groupBadge.isHidden = true
         groupLabel.text = ""
-        iconImageView.tintColor = ThemeTokens.Colors.Light.primary
-        iconImageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
+        iconImageView.tintColor = ThemeTokens.Color.primary
+        iconImageView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
     }
 }

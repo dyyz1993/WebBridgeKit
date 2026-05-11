@@ -428,7 +428,7 @@ extension URLFavoriteManager {
         for obj in allObjects {
             result.append(URLFavorite(value: obj))
         }
-        if result.isEmpty && allObjects.count > 0 {
+        if result.isEmpty && !allObjects.isEmpty {
             WebBridgeLogger.shared.log(.warning, "[URLFavoriteManager] Realm has \(allObjects.count) objects but getAllFavorites returned empty (detached copy issue?)")
         }
         return result

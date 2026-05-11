@@ -33,16 +33,16 @@ class ButtonCell: UITableViewCell {
         var color: UIColor {
             switch self {
             case .test: return ThemeColors.current.primary
-            case .save: return ThemeTokens.Colors.Light.success
-            case .reset: return ThemeTokens.Colors.Light.error
+            case .save: return ThemeTokens.Color.success
+            case .reset: return ThemeTokens.Color.error
             }
         }
 
         var backgroundColor: UIColor {
             switch self {
             case .test: return ThemeColors.current.primary.withAlphaComponent(0.1)
-            case .save: return ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
-            case .reset: return ThemeTokens.Colors.Light.error.withAlphaComponent(0.1)
+            case .save: return ThemeTokens.Color.success.withAlphaComponent(0.1)
+            case .reset: return ThemeTokens.Color.error.withAlphaComponent(0.1)
             }
         }
     }
@@ -124,7 +124,7 @@ class ButtonCell: UITableViewCell {
             actionButton.setTitleColor(buttonType.color, for: .normal)
             actionButton.backgroundColor = buttonType.backgroundColor
         } else {
-            actionButton.setTitleColor(ThemeTokens.Colors.Light.textTertiary, for: .normal)
+            actionButton.setTitleColor(ThemeTokens.Color.textTertiary, for: .normal)
             actionButton.backgroundColor = ThemeColors.current.surface
         }
     }
@@ -147,7 +147,7 @@ class ButtonCell: UITableViewCell {
             actionButton.setTitleColor(buttonType.color, for: .normal)
             actionButton.backgroundColor = buttonType.backgroundColor
         } else {
-            actionButton.setTitleColor(ThemeTokens.Colors.Light.textTertiary, for: .normal)
+            actionButton.setTitleColor(ThemeTokens.Color.textTertiary, for: .normal)
             actionButton.backgroundColor = ThemeColors.current.surface
         }
     }

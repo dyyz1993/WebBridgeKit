@@ -189,7 +189,7 @@ public class WebPageOfflineCacheManager {
     }
 
     /// 清理所有缓存
-    func clearAllCache() {
+    public func clearAllCache() {
         let realm = getRealm()
         let cachedHistories = realm?.objects(WebPageHistory.self).filter("isCached == true")
 

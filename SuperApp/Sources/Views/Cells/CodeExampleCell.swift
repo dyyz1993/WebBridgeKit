@@ -36,7 +36,7 @@ class CodeExampleCell: UITableViewCell {
 
     private let languageBadge: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
+        view.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
         view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.layer.masksToBounds = true
         return view
@@ -45,7 +45,7 @@ class CodeExampleCell: UITableViewCell {
     private let languageLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Colors.Light.primary
+        label.textColor = ThemeTokens.Color.primary
         label.textAlignment = .center
         return label
     }()

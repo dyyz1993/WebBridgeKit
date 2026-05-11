@@ -32,7 +32,7 @@ public class WebCacheDebugPanelViewController: UIViewController {
         let tv = UITableView(frame: .zero, style: .grouped)
         tv.delegate = self
         tv.dataSource = self
-        tv.backgroundColor = .systemBackground
+        tv.backgroundColor = ThemeTokens.Color.background
         tv.separatorStyle = .singleLine
         tv.register(SectionHeaderCell.self, forCellReuseIdentifier: "SectionHeaderCell")
         tv.register(RuleHeaderCell.self, forCellReuseIdentifier: "RuleHeaderCell")
@@ -44,7 +44,7 @@ public class WebCacheDebugPanelViewController: UIViewController {
 
     lazy var toolbar: UIToolbar = {
         let tb = UIToolbar()
-        tb.barTintColor = .systemBackground
+        tb.barTintColor = ThemeTokens.Color.background
         tb.isTranslucent = false
 
         let resetRulesItem = UIBarButtonItem(
@@ -107,7 +107,7 @@ public class WebCacheDebugPanelViewController: UIViewController {
 
     private func setupUI() {
         title = "页面缓存"
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .done,

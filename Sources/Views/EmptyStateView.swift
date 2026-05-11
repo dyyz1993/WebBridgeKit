@@ -24,14 +24,14 @@ public class EmptyStateView: UIView {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = UIColor.systemGray3
+        imageView.tintColor = ThemeTokens.Color.textTertiary
         return imageView
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.headline
-        label.textColor = UIColor.label
+        label.textColor = ThemeTokens.Color.text
         label.textAlignment = .center
         label.accessibilityIdentifier = "EmptyStateView.titleLabel"
         return label
@@ -40,7 +40,7 @@ public class EmptyStateView: UIView {
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -50,7 +50,7 @@ public class EmptyStateView: UIView {
         let button = UIButton(type: .system)
         button.titleLabel?.font = ThemeTokens.Typography.callout
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
-        button.backgroundColor = UIColor.systemBlue
+        button.backgroundColor = ThemeTokens.Color.primary
         button.setTitleColor(.white, for: .normal)
         return button
     }()

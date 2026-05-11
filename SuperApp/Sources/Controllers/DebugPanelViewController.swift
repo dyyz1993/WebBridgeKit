@@ -12,7 +12,7 @@ import WebBridgeKit
 
 class DebugPanelViewController: UIViewController {
 
-    private let segmentedControl = UISegmentedControl(items: [L10n.tr("debug.panel.handlers"), L10n.tr("debug.panel.notification_test"), L10n.tr("debug.panel.logs"), L10n.tr("debug.panel.environment")])
+    private let segmentedControl = UISegmentedControl(items: [L10n.tr("debug.panel.handlers"), L10n.tr("debug.panel.notification_test"), L10n.tr("debug.panel.logs"), L10n.tr("debug.panel.environment"), L10n.tr("debug.panel.cache_stats")])
     private let containerView = UIView()
 
     private var currentViewController: UIViewController?
@@ -21,6 +21,7 @@ class DebugPanelViewController: UIViewController {
     private lazy var notificationVC = NotificationDebugViewController()
     private lazy var logViewerVC = LogDebugViewController()
     private lazy var environmentVC = EnvironmentDebugViewController()
+    private lazy var cacheDashboardVC = CacheDashboardViewController(viewModel: CacheDashboardViewModel())
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,7 +44,7 @@ class DebugPanelViewController: UIViewController {
         view.addSubview(containerView)
 
         segmentedControl.selectedSegmentIndex = 0
-        segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
+        segmentedControl.addTarget(self, action: #selector(segmentChanged), for: UIControl.Event.valueChanged)
 
         segmentedControl.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
@@ -71,6 +72,7 @@ class DebugPanelViewController: UIViewController {
         case 1: vc = notificationVC
         case 2: vc = logViewerVC
         case 3: vc = environmentVC
+        case 4: vc = cacheDashboardVC
         default: vc = handlerListVC
         }
 
@@ -273,6 +275,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         button.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.addTarget(self, action: #selector(execute), for: .touchUpInside)
+        button.accessibilityLabel = L10n.tr("debug.panel.execute")
         button.snp.makeConstraints { make in
             make.height.equalTo(48)
         }
@@ -294,6 +297,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         let copyButton = UIButton(type: .system)
         copyButton.setTitle(L10n.tr("debug.panel.copy_result"), for: .normal)
         copyButton.addTarget(self, action: #selector(copyResult), for: .touchUpInside)
+        copyButton.accessibilityLabel = L10n.tr("debug.panel.copy_result")
         stack.addArrangedSubview(copyButton)
 
         view.addSubview(scrollView)
@@ -437,22 +441,26 @@ private class LogDebugViewController: UIViewController {
         let allButton = UIButton(type: .system)
         allButton.setTitle(L10n.tr("debug.panel.log_all"), for: .normal)
         allButton.addTarget(self, action: #selector(filterAll), for: .touchUpInside)
+        allButton.accessibilityLabel = L10n.tr("debug.panel.log_all")
         stack.addArrangedSubview(allButton)
 
         let errorButton = UIButton(type: .system)
         errorButton.setTitle(L10n.tr("debug.panel.log_errors"), for: .normal)
         errorButton.tintColor = ThemeTokens.Color.error
         errorButton.addTarget(self, action: #selector(filterErrors), for: .touchUpInside)
+        errorButton.accessibilityLabel = L10n.tr("debug.panel.log_errors")
         stack.addArrangedSubview(errorButton)
 
         let copyButton = UIButton(type: .system)
         copyButton.setTitle(L10n.tr("debug.panel.log_copy_all"), for: .normal)
         copyButton.addTarget(self, action: #selector(copyLogs), for: .touchUpInside)
+        copyButton.accessibilityLabel = L10n.tr("debug.panel.log_copy_all")
         stack.addArrangedSubview(copyButton)
 
         let exportButton = UIButton(type: .system)
         exportButton.setTitle(L10n.tr("debug.panel.log_export_json"), for: .normal)
         exportButton.addTarget(self, action: #selector(exportJSON), for: .touchUpInside)
+        exportButton.accessibilityLabel = L10n.tr("debug.panel.log_export_json")
         stack.addArrangedSubview(exportButton)
 
         return stack

@@ -24,7 +24,7 @@ extension QRScannerViewController {
         public init(
             showScanRegionOverlay: Bool = false,
             scanRegionSize: CGFloat = 250,
-            scanRegionBorderColor: UIColor = .systemBlue,
+            scanRegionBorderColor: UIColor = ThemeTokens.Color.primary,
             showCloseButton: Bool = false,
             tipText: String? = nil,
             enableBase64Decoding: Bool = false,
@@ -79,7 +79,7 @@ public class QRScannerViewController: UIViewController {
         let label = UILabel()
         label.text = configuration.tipText
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = ThemeTokens.Typography.footnote
         label.textAlignment = .center
         return label
     }()

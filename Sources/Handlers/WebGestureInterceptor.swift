@@ -353,23 +353,23 @@ private class PullIndicatorView: UIView {
     }
 
     private func setup() {
-        backgroundColor = .systemBackground
+        backgroundColor = ThemeTokens.Color.background
 
         // 图标
         iconView.image = LucideIcon.arrowDown.templateImage()
-        iconView.tintColor = .systemGray
+        iconView.tintColor = ThemeTokens.Color.textSecondary
         iconView.contentMode = .scaleAspectFit
         addSubview(iconView)
 
         // 加载指示器
         activityIndicator.hidesWhenStopped = true
-        activityIndicator.color = .systemGray
+        activityIndicator.color = ThemeTokens.Color.textSecondary
         addSubview(activityIndicator)
 
         // 标签
         label.text = "下拉刷新"
         label.font = .systemFont(ofSize: 12)
-        label.textColor = .systemGray
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         addSubview(label)
 

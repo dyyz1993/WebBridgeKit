@@ -17,7 +17,7 @@ public class LoadingView: UIView {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -31,15 +31,15 @@ public class LoadingView: UIView {
 
     private let progressView: UIProgressView = {
         let progress = UIProgressView(progressViewStyle: .default)
-        progress.trackTintColor = UIColor.systemGray5
-        progress.progressTintColor = UIColor.systemBlue
+        progress.trackTintColor = ThemeTokens.Color.border
+        progress.progressTintColor = ThemeTokens.Color.primary
         return progress
     }()
 
     private let messageLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -48,7 +48,7 @@ public class LoadingView: UIView {
     private let detailLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = UIColor.tertiaryLabel
+        label.textColor = ThemeTokens.Color.textTertiary
         label.textAlignment = .center
         label.numberOfLines = 0
         return label

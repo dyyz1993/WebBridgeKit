@@ -55,7 +55,7 @@ class URLInputView: UIView {
     let cacheSwitch: UISwitch = {
         let switchControl = UISwitch()
         switchControl.isOn = false
-        switchControl.tintColor = ThemeTokens.Colors.Light.primary
+        switchControl.tintColor = ThemeTokens.Color.primary
         return switchControl
     }()
 
@@ -63,7 +63,7 @@ class URLInputView: UIView {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("discover.action_sheet.cache"), for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.callout
-        button.backgroundColor = ThemeTokens.Colors.Light.primary
+        button.backgroundColor = ThemeTokens.Color.primary
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.isEnabled = false
@@ -196,10 +196,10 @@ class URLInputView: UIView {
     func setCached(_ isCached: Bool) {
         if isCached {
             cacheButton.setTitle(L10n.tr("common.delete"), for: .normal)
-            cacheButton.backgroundColor = ThemeTokens.Colors.Light.error
+            cacheButton.backgroundColor = ThemeTokens.Color.error
         } else {
             cacheButton.setTitle(L10n.tr("discover.action_sheet.cache"), for: .normal)
-            cacheButton.backgroundColor = ThemeTokens.Colors.Light.primary
+            cacheButton.backgroundColor = ThemeTokens.Color.primary
         }
     }
 

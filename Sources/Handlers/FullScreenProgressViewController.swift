@@ -19,23 +19,23 @@ public class FullScreenProgressViewController: UIViewController {
     private let verificationLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .regular)
-        label.textColor = .systemGreen
+        label.textColor = ThemeTokens.Color.success
         label.textAlignment = .center
         label.text = "✅ 已修改 2025-02-04 Sources/Handlers/FullScreenProgressViewController.swift"
-        label.backgroundColor = .systemBackground
+        label.backgroundColor = ThemeTokens.Color.background
         return label
     }()
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
         return view
     }()
 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .systemBlue
+        imageView.tintColor = ThemeTokens.Color.primary
         imageView.image = LucideIcon.download.templateImage(pointSize: 60, weight: .light)
         imageView.accessibilityLabel = "下载图标"
         return imageView
@@ -43,15 +43,15 @@ public class FullScreenProgressViewController: UIViewController {
 
     private let progressView: UIProgressView = {
         let progress = UIProgressView(progressViewStyle: .default)
-        progress.trackTintColor = .systemGray5
-        progress.progressTintColor = .systemBlue
+        progress.trackTintColor = ThemeTokens.Color.border
+        progress.progressTintColor = ThemeTokens.Color.primary
         return progress
     }()
 
     private let statusLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .label
+        label.textColor = ThemeTokens.Color.text
         label.textAlignment = .center
         label.numberOfLines = 2
         label.text = "正在准备..."
@@ -61,7 +61,7 @@ public class FullScreenProgressViewController: UIViewController {
     private let percentageLabel: UILabel = {
         let label = UILabel()
         label.font = .monospacedDigitSystemFont(ofSize: 24, weight: .bold)
-        label.textColor = .systemBlue
+        label.textColor = ThemeTokens.Color.primary
         label.textAlignment = .center
         label.text = "0%"
         return label
@@ -70,7 +70,7 @@ public class FullScreenProgressViewController: UIViewController {
     private let detailLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .regular)
-        label.textColor = .secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
         label.text = "等待开始..."
@@ -80,7 +80,7 @@ public class FullScreenProgressViewController: UIViewController {
     private let completeIconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .systemGreen
+        imageView.tintColor = ThemeTokens.Color.success
         imageView.image = LucideIcon.success.templateImage(pointSize: 60, weight: .light)
         imageView.isHidden = true
         imageView.accessibilityLabel = "完成图标"
@@ -109,7 +109,7 @@ public class FullScreenProgressViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
         view.accessibilityIdentifier = "FullScreenProgressViewController"
 
         setupUI()

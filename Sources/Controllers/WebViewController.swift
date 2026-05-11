@@ -463,7 +463,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     }
 
     private func setupUI() {
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         let config = WKWebViewConfiguration()
         // 允许内联播放视频

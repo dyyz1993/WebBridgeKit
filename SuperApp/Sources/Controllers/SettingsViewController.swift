@@ -54,7 +54,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         let footerLabel = UILabel()
         footerLabel.text = "WebBridgeKit v\(version) (Build \(build))"
         footerLabel.font = .systemFont(ofSize: 12, weight: .regular)
-        footerLabel.textColor = ThemeTokens.Colors.Light.textTertiary
+        footerLabel.textColor = ThemeTokens.Color.textTertiary
         footerLabel.textAlignment = .center
         footerLabel.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: 44)
         tableView.tableFooterView = footerLabel
@@ -102,6 +102,12 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
 
         output.navigateToDebugPanel
             .drive(onNext: { [weak self] in self?.navigateToDebugPanel() })
+            .disposed(by: rx)
+
+        output.navigateToCacheDashboard
+            .drive(onNext: { [weak self] in
+                self?.navigateToCacheDashboard()
+            })
             .disposed(by: rx)
 
         output.openNotificationSettings
@@ -160,6 +166,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         let nav = UINavigationController(rootViewController: debugPanel)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
+    }
+
+    private func navigateToCacheDashboard() {
+        let vc = CacheDashboardViewController(viewModel: CacheDashboardViewModel())
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func openNotificationSettings() {

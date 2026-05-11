@@ -66,7 +66,7 @@ class FavoriteCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.image = LucideIcon.star.image(pointSize: 18)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeTokens.Colors.Light.warning
+        imageView.tintColor = ThemeTokens.Color.warning
         return imageView
     }()
 
@@ -215,7 +215,7 @@ class FavoriteCell: UITableViewCell {
 
         // 置顶状态
         pinButton.isHidden = false
-            pinButton.tintColor = favorite.isPinned ? ThemeColors.current.warning : ThemeTokens.Colors.Light.textTertiary
+            pinButton.tintColor = favorite.isPinned ? ThemeColors.current.warning : ThemeTokens.Color.textTertiary
 
         // 收藏图标
         favoriteIconView.isHidden = false

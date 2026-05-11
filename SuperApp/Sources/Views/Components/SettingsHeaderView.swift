@@ -156,7 +156,7 @@ class SettingsHeaderView: UIView {
         } else {
             // 使用默认图标
             let config = UIImage.SymbolConfiguration(pointSize: 40, weight: .regular)
-            iconImageView.image = UIImage(systemName: "app.dashed", withConfiguration: config)
+            iconImageView.image = LucideIcon.appBadge.image(pointSize: 40, weight: .regular)
         }
 
         // App 名称

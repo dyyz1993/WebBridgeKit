@@ -19,7 +19,7 @@ class WebPermissionsViewController: UIViewController {
         super.viewDidLoad()
 
         title = "权限管理"
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         // 创建 WebView 配置
         let webConfiguration = WKWebViewConfiguration()

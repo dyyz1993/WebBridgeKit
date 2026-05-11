@@ -1,0 +1,22 @@
+#!/bin/bash
+# commit-msg hook: Enforce conventional commit format
+# Format: <type>(<scope>): <subject>
+# Example: feat(bridge): add new handler for camera access
+
+MSG_FILE="$1"
+MSG=$(cat "$MSG_FILE")
+
+# Conventional commit pattern
+PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|bump)(\([a-zA-Z0-9_-]+\))?:\s.{1,100}'
+
+if ! echo "$MSG" | grep -qE "$PATTERN"; then
+    echo "❌ Commit message does not follow conventional commit format!"
+    echo ""
+    echo "Expected: <type>(<scope>): <subject>"
+    echo "Example:  feat(bridge): add new handler for camera access"
+    echo ""
+    echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert, bump"
+    echo ""
+    echo "Your message: $MSG"
+    exit 1
+fi

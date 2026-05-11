@@ -52,7 +52,7 @@ class TestCaseCell: UITableViewCell {
 
     private let statusBadge: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+        view.backgroundColor = ThemeTokens.Color.textTertiary
         view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.clipsToBounds = true
         return view
@@ -168,7 +168,7 @@ class TestCaseCell: UITableViewCell {
             titleLabel.text = ""
             descriptionLabel.text = ""
             statusLabel.text = "待运行"
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+            statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
             statusLabel.textColor = ThemeColors.current.textSecondary
             return
         }
@@ -179,20 +179,20 @@ class TestCaseCell: UITableViewCell {
         switch testCase.status {
         case .pending:
             statusLabel.text = "待运行"
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+            statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
             statusLabel.textColor = ThemeColors.current.textSecondary
         case .running:
             statusLabel.text = "运行中..."
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
-            statusLabel.textColor = ThemeTokens.Colors.Light.primary
+            statusBadge.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+            statusLabel.textColor = ThemeTokens.Color.primary
         case .success:
             statusLabel.text = "成功"
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.success.withAlphaComponent(0.1)
-            statusLabel.textColor = ThemeTokens.Colors.Light.success
+            statusBadge.backgroundColor = ThemeTokens.Color.success.withAlphaComponent(0.1)
+            statusLabel.textColor = ThemeTokens.Color.success
         case .failure:
             statusLabel.text = "失败"
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.error.withAlphaComponent(0.1)
-            statusLabel.textColor = ThemeTokens.Colors.Light.error
+            statusBadge.backgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
+            statusLabel.textColor = ThemeTokens.Color.error
         }
     }
 
@@ -211,7 +211,7 @@ class TestCaseCell: UITableViewCell {
         titleLabel.text = nil
         descriptionLabel.text = nil
         statusLabel.text = "待运行"
-            statusBadge.backgroundColor = ThemeTokens.Colors.Light.textTertiary
+            statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
             statusLabel.textColor = ThemeColors.current.textSecondary
     }
 }

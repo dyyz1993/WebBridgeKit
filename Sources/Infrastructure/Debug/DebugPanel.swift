@@ -82,73 +82,79 @@ public class DebugPanelViewController: UIViewController {
     // MARK: - UI Components
     private lazy var scrollView: UIScrollView = {
         let sv = UIScrollView()
-        sv.backgroundColor = .systemBackground
+        sv.backgroundColor = ThemeTokens.Color.background
         return sv
     }()
 
     private lazy var contentView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
         return view
     }()
 
     private lazy var mainButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("主页", for: .normal)
-        btn.backgroundColor = .systemBlue
+        btn.backgroundColor = ThemeTokens.Color.primary
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showMain), for: .touchUpInside)
+        btn.accessibilityLabel = "调试主页"
         return btn
     }()
 
     private lazy var logsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("日志", for: .normal)
-        btn.backgroundColor = .systemGreen
+        btn.backgroundColor = ThemeTokens.Color.success
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showLogs), for: .touchUpInside)
+        btn.accessibilityLabel = "调试日志"
         return btn
     }()
 
     private lazy var diagnosticsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("诊断", for: .normal)
-        btn.backgroundColor = .systemOrange
+        btn.backgroundColor = ThemeTokens.Color.warning
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showDiagnostics), for: .touchUpInside)
+        btn.accessibilityLabel = "调试诊断"
         return btn
     }()
 
     private lazy var settingsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("设置", for: .normal)
-        btn.backgroundColor = .systemPurple
+        btn.backgroundColor = ThemeTokens.Color.gradientEnd
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showSettings), for: .touchUpInside)
+        btn.accessibilityLabel = "调试设置"
         return btn
     }()
 
     private lazy var infoButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("环境", for: .normal)
-        btn.backgroundColor = .systemGray
+        btn.backgroundColor = ThemeTokens.Color.textSecondary
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showInfo), for: .touchUpInside)
+        btn.accessibilityLabel = "调试环境信息"
         return btn
     }()
 
     private lazy var cacheButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("缓存管理", for: .normal)
-        btn.backgroundColor = .systemTeal
+        btn.backgroundColor = ThemeTokens.Color.info
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showCacheManagement), for: .touchUpInside)
+        btn.accessibilityLabel = "调试缓存管理"
         return btn
     }()
 
@@ -165,7 +171,7 @@ public class DebugPanelViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         title = "🧩 Debug Panel"
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         setupUI()
     }

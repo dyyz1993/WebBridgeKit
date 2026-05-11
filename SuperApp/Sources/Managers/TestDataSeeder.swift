@@ -40,6 +40,8 @@ struct TestDataSeeder {
         }
 
         seedManifestCaches()
+
+        seedPinnedURLs()
     }
 
     // MARK: - Server Configs
@@ -515,7 +517,7 @@ struct TestDataSeeder {
                 UserDefaults.standard.set(true, forKey: fk)
                 return
             }
-            if UserDefaults.standard.bool(forKey: fk) && realm.objects(URLFavorite.self).count > 0 { return }
+            if UserDefaults.standard.bool(forKey: fk) && !realm.objects(URLFavorite.self).isEmpty { return }
 
             try realm.write {
                 let favs: [(id: String, url: String, title: String, pinned: Bool, order: Int, cache: Bool, date: String)] = [
@@ -938,5 +940,17 @@ struct TestDataSeeder {
         store.saveToDiskSync()
 
         print("[TestDataSeeder] Manifest 缓存: \(entries.count) 条")
+    }
+
+    // MARK: - Pinned URLs
+
+    private static func seedPinnedURLs() {
+        let key = "TestDataSeeder_PinnedURLs_Sealed"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+
+        let recommended = PresetURLCatalog.recommendedItems
+        WebBridgeLogger.shared.log(.info, "Found \(recommended.count) preset pinned URLs for seeding")
+
+        UserDefaults.standard.set(true, forKey: key)
     }
 }

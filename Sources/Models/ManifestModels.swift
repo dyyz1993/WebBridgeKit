@@ -371,7 +371,7 @@ public class AppIconGenerator {
     public static func generateCircularIcon(
         text: String,
         size: CGSize = CGSize(width: 64, height: 64),
-        backgroundColor: UIColor = .systemBlue,
+        backgroundColor: UIColor = ThemeTokens.Color.primary,
         textColor: UIColor = .white
     ) throws -> UIImage {
         // 验证文本
@@ -456,8 +456,8 @@ public class AppIconGenerator {
     private static func colorForCharacter(_ char: Character) -> UIColor {
         // 预定义的一组鲜艳颜色（iOS 14.0+ 兼容）
         let colors: [UIColor] = [
-            .systemBlue, .systemPurple, .systemPink, .systemRed,
-            .systemOrange, .systemYellow, .systemGreen, .systemTeal
+            ThemeTokens.Color.primary, ThemeTokens.Color.gradientEnd, ThemeTokens.Color.error.withAlphaComponent(0.7), ThemeTokens.Color.error,
+            ThemeTokens.Color.warning, ThemeTokens.Color.warning, ThemeTokens.Color.success, ThemeTokens.Color.info
         ]
 
         // 使用字符的 ASCII 码值选择颜色
@@ -472,7 +472,7 @@ public class AppIconGenerator {
         return try! generateCircularIcon(
             text: "?",
             size: size,
-            backgroundColor: .systemGray
+            backgroundColor: ThemeTokens.Color.textSecondary
         )
     }
 

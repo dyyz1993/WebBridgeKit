@@ -25,7 +25,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     private lazy var trashButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setImage(LucideIcon.trash.image(pointSize: 18, weight: .semibold), for: .normal)
-        btn.tintColor = ThemeTokens.Colors.Light.textSecondary
+        btn.tintColor = ThemeTokens.Color.textSecondary
         btn.addTarget(self, action: #selector(clearCacheTapped), for: .touchUpInside)
         btn.accessibilityLabel = "清理缓存"
         return btn

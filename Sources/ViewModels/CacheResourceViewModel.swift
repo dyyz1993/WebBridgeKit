@@ -329,12 +329,12 @@ public enum CacheFileResourceType {
 
     var iconColor: UIColor {
         switch self {
-        case .html: return .systemBlue
-        case .script: return .systemYellow
-        case .stylesheet: return .systemPink
-        case .image: return .systemPurple
-        case .font: return .systemOrange
-        case .other: return .systemGray
+        case .html: return ThemeTokens.Color.primary
+        case .script: return ThemeTokens.Color.warning
+        case .stylesheet: return ThemeTokens.Color.error.withAlphaComponent(0.7)
+        case .image: return ThemeTokens.Color.gradientEnd
+        case .font: return ThemeTokens.Color.warning
+        case .other: return ThemeTokens.Color.textSecondary
         }
     }
 }

@@ -28,6 +28,7 @@ class SettingsViewModel: ViewModel {
         let navigateToManagement: Driver<Void>
         let navigateToAbout: Driver<Void>
         let navigateToDebugPanel: Driver<Void>
+        let navigateToCacheDashboard: Driver<Void>
         let navigateToAppearance: Driver<Void>
         let openNotificationSettings: Driver<Void>
         let clearCache: Driver<Void>
@@ -45,6 +46,7 @@ class SettingsViewModel: ViewModel {
         case rememberLastApp
         case appearance
         case debugPanel
+        case cacheDashboard
         case exportDiagnostics
         case about
     }
@@ -212,6 +214,15 @@ class SettingsViewModel: ViewModel {
                     action: .exportDiagnostics,
                     iconBackgroundColor: tb,
                     iconTintColor: tt
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .chartBar,
+                    title: L10n.tr("settings.cache.dashboard"),
+                    action: .cacheDashboard,
+                    value: nil,
+                    showArrow: true,
+                    hasToggle: false
                 )
             ]),
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
@@ -250,6 +261,7 @@ class SettingsViewModel: ViewModel {
     private let navigateToManagementRelay = PublishRelay<Void>()
     private let navigateToAboutRelay = PublishRelay<Void>()
     private let navigateToDebugPanelRelay = PublishRelay<Void>()
+    private let navigateToCacheDashboardRelay = PublishRelay<Void>()
     private let navigateToAppearanceRelay = PublishRelay<Void>()
     private let openNotificationSettingsRelay = PublishRelay<Void>()
     private let clearCacheRelay = PublishRelay<Void>()
@@ -272,6 +284,7 @@ class SettingsViewModel: ViewModel {
                 case .rememberLastApp: break
                 case .appearance: self.navigateToAppearanceRelay.accept(())
                 case .debugPanel: self.navigateToDebugPanelRelay.accept(())
+                case .cacheDashboard: self.navigateToCacheDashboardRelay.accept(())
                 case .exportDiagnostics: self.exportDiagnosticsRelay.accept(())
                 case .about: self.navigateToAboutRelay.accept(())
                 }
@@ -302,6 +315,7 @@ class SettingsViewModel: ViewModel {
             navigateToManagement: navigateToManagementRelay.asDriver(onErrorJustReturn: ()),
             navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
             navigateToDebugPanel: navigateToDebugPanelRelay.asDriver(onErrorJustReturn: ()),
+            navigateToCacheDashboard: navigateToCacheDashboardRelay.asDriver(onErrorJustReturn: ()),
             navigateToAppearance: navigateToAppearanceRelay.asDriver(onErrorJustReturn: ()),
             openNotificationSettings: openNotificationSettingsRelay.asDriver(onErrorJustReturn: ()),
             clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ()),

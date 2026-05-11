@@ -89,7 +89,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
 
         let imageView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
-        imageView.image = UIImage(systemName: "clock.arrow.circlepath", withConfiguration: config)
+        imageView.image = LucideIcon.clock.image(pointSize: 60, weight: .medium)
         imageView.tintColor = ThemeTokens.Color.textTertiary
         imageView.contentMode = .scaleAspectFit
         imageView.accessibilityLabel = "无历史记录"
@@ -527,7 +527,7 @@ extension WebPageHistoryViewController: UITableViewDelegate {
                 completion(true)
             }
         }
-        deleteAction.backgroundColor = UIColor.red
+        deleteAction.backgroundColor = ThemeTokens.Color.error
 
         let cacheAction: UIContextualAction
         if history.isCached {
@@ -536,7 +536,7 @@ extension WebPageHistoryViewController: UITableViewDelegate {
                 HUDService.shared.showInfo(withStatus: NSLocalizedString("Cache deleted", comment: ""))
                 completion(true)
             }
-            cacheAction.backgroundColor = UIColor.systemOrange
+            cacheAction.backgroundColor = ThemeTokens.Color.warning
         } else {
             cacheAction = UIContextualAction(style: .normal, title: NSLocalizedString("Cache", comment: "Cache")) { [weak self] _, _, completion in
                 self?.cachePage(history)

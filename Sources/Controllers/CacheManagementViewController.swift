@@ -28,7 +28,7 @@ public class CacheManagementViewController: UIViewController {
 
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .plain)
-        table.backgroundColor = .systemGroupedBackground
+        table.backgroundColor = ThemeTokens.Color.background
         table.separatorStyle = .none
         table.register(CacheAppCell.self, forCellReuseIdentifier: CacheAppCell.identifier)
         table.rowHeight = UITableView.automaticDimension
@@ -39,7 +39,7 @@ public class CacheManagementViewController: UIViewController {
 
     private lazy var refreshControl: UIRefreshControl = {
         let control = UIRefreshControl()
-        control.tintColor = .systemBlue
+        control.tintColor = ThemeTokens.Color.primary
         return control
     }()
 
@@ -56,7 +56,7 @@ public class CacheManagementViewController: UIViewController {
 
     private lazy var chartContainerView: UIView = {
         let container = UIView()
-        container.backgroundColor = .secondarySystemBackground
+        container.backgroundColor = ThemeTokens.Color.surface
         container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         container.clipsToBounds = true
 
@@ -109,13 +109,13 @@ public class CacheManagementViewController: UIViewController {
 
         let totalSizeLabel = UILabel()
         totalSizeLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        totalSizeLabel.textColor = .secondaryLabel
+        totalSizeLabel.textColor = ThemeTokens.Color.textSecondary
         totalSizeLabel.text = "总缓存: 0 B"
         totalSizeLabel.tag = 100
 
         let appCountLabel = UILabel()
         appCountLabel.font = .systemFont(ofSize: 12, weight: .regular)
-        appCountLabel.textColor = .tertiaryLabel
+        appCountLabel.textColor = ThemeTokens.Color.textTertiary
         appCountLabel.text = "0 个应用"
         appCountLabel.tag = 101
 
@@ -164,7 +164,7 @@ public class CacheManagementViewController: UIViewController {
 
     private func setupUI() {
         title = "缓存管理"
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         // 添加导航栏按钮
         navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -198,23 +198,23 @@ public class CacheManagementViewController: UIViewController {
     private func setupCharts() {
         let pieChart = chartContainerView.viewWithTag(201) as? PieChartView
         pieChart?.segments = [
-            PieSegment(value: 1.1, color: UIColor.systemBlue, label: "E-Commerce · 1.1 GB"),
-            PieSegment(value: 0.46, color: UIColor.systemGreen, label: "Mini Games · 0.46 GB"),
-            PieSegment(value: 0.32, color: UIColor.systemOrange, label: "Toolbox · 0.32 GB"),
-            PieSegment(value: 0.28, color: UIColor.systemPurple, label: "Dashboard · 0.28 GB"),
-            PieSegment(value: 0.14, color: UIColor.systemGray, label: "Other · 0.14 GB")
+            PieSegment(value: 1.1, color: ThemeTokens.Color.primary, label: "E-Commerce · 1.1 GB"),
+            PieSegment(value: 0.46, color: ThemeTokens.Color.success, label: "Mini Games · 0.46 GB"),
+            PieSegment(value: 0.32, color: ThemeTokens.Color.warning, label: "Toolbox · 0.32 GB"),
+            PieSegment(value: 0.28, color: ThemeTokens.Color.gradientEnd, label: "Dashboard · 0.28 GB"),
+            PieSegment(value: 0.14, color: ThemeTokens.Color.textSecondary, label: "Other · 0.14 GB")
         ]
         pieChart?.centerText = "2.3G"
 
         let barChart = chartContainerView.viewWithTag(203) as? BarChartView
         barChart?.items = [
-            BarItem(value: 12, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Mon"),
-            BarItem(value: 18, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Tue"),
-            BarItem(value: 8, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Wed"),
-            BarItem(value: 22, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Thu"),
-            BarItem(value: 15, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Fri"),
-            BarItem(value: 28, color: UIColor.systemBlue, label: "Sat"),
-            BarItem(value: 10, color: UIColor.systemBlue.withAlphaComponent(0.4), label: "Sun")
+            BarItem(value: 12, color: ThemeTokens.Color.primary.withAlphaComponent(0.4), label: "Mon"),
+            BarItem(value: 18, color: ThemeTokens.Color.primary.withAlphaComponent(0.4), label: "Tue"),
+            BarItem(value: 8, color: ThemeTokens.Color.primary.withAlphaComponent(0.4), label: "Wed"),
+            BarItem(value: 22, color: ThemeTokens.Color.primary.withAlphaComponent(0.4), label: "Thu"),
+            BarItem(value: 15, color: ThemeTokens.Color.primary.withAlphaComponent(0.4), label: "Fri"),
+            BarItem(value: 28, color: ThemeTokens.Color.primary, label: "Sat"),
+            BarItem(value: 10, color: ThemeTokens.Color.primary.withAlphaComponent(0.4), label: "Sun")
         ]
 
         chartContainerView.frame = CGRect(x: 0, y: 0, width: 0, height: 340)
@@ -452,7 +452,7 @@ extension CacheManagementViewController: UITableViewDelegate {
             completionHandler(true)
         }
 
-        detailAction.backgroundColor = .systemBlue
+        detailAction.backgroundColor = ThemeTokens.Color.primary
         detailAction.image = LucideIcon.info.image()
 
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction, detailAction])

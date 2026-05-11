@@ -10,6 +10,7 @@ public enum LucideIcon: CaseIterable {
     case docText, docTextFill, appFill, appBadge, pinOutline, starOutline, squarePencil, xmarkCircle, linkBadgePlus, paperplane
     case volume, mic, camera
     case server, hardDrive, network, globe, doc, folder
+    case ellipsis, circle, qrCode
 
     var lucideId: String {
         switch self {
@@ -76,6 +77,9 @@ public enum LucideIcon: CaseIterable {
         case .globe: return "globe"
         case .doc: return "file-text"
         case .folder: return "folder"
+        case .ellipsis: return "more-horizontal"
+        case .circle: return "circle"
+        case .qrCode: return "qr-code"
         }
     }
 
@@ -144,6 +148,9 @@ public enum LucideIcon: CaseIterable {
         case .globe: return "globe"
         case .doc: return "doc.fill"
         case .folder: return "folder.fill"
+        case .ellipsis: return "ellipsis"
+        case .circle: return "circle"
+        case .qrCode: return "qrcode.viewfinder"
         }
     }
 

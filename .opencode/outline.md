@@ -814,6 +814,58 @@ SuperApp（已完成）
 
 ---
 
+## 执行记录
+
+### 缓存与资源管理器 (Cache Dashboard) 功能实现 (2026-05-11)
+
+#### 新增文件（20 个）
+| 文件 | 类型 | 说明 |
+|------|------|------|
+| `Sources/Models/PinnedURLRealm.swift` | 数据模型 | PinnedURL Realm 模型 + URLType 枚举（8种自动识别） |
+| `Sources/Cache/DashboardModels.swift` | 数据模型 | DashboardData/SubsystemStats/SubsystemID（11个子系统）/SubsystemStatus |
+| `Sources/Cache/PresetURLCatalog.swift` | 数据层 | 25 条预设 URL 目录（HTML/WebApp/API/静态/WS/MCP/测试/性能） |
+| `Sources/Managers/PinnedURLManager.swift` | Manager | Actor 三层架构 CRUD Manager（独立 pinnedUrls.realm） |
+| `Sources/Cache/CacheStatsAggregator.swift` | 聚合器 | 从 11 个缓存子系统采集统计的统一聚合器 |
+| `SuperApp/Sources/ViewModels/CacheDashboardViewModel.swift` | ViewModel | 仪表盘 VM（Input/Output/transform 模式） |
+| `SuperApp/Sources/ViewModels/PinnedURLViewModel.swift` | ViewModel | 置顶 URL 管理 VM（搜索/筛选/CRUD） |
+| `SuperApp/Sources/ViewModels/PresetURLCatalogViewModel.swift` | ViewModel | 预设目录 VM（分类Tab/搜索/Pin操作） |
+| `SuperApp/Sources/Views/Cells/SummaryCardView.swift` | View | 总览卡片（4 指标 + 进度条） |
+| `SuperApp/Sources/Views/Cells/SubsystemStatCell.swift` | Cell | 子系统统计行 Cell |
+| `SuperApp/Sources/Views/Cells/PinnedURLCell.swift` | Cell | 置顶 URL 列表 Cell |
+| `SuperApp/Sources/Views/Cells/PresetURLCell.swift` | Cell | 预设 URL 条目 Cell（含 Pin 按钮） |
+| `SuperApp/Sources/Views/Cells/DistributionChartView.swift` | View | 存储分布水平条形图 |
+| `SuperApp/Sources/Views/Cells/URLInputHeaderView.swift` | View | URL 输入头视图（自动类型识别） |
+| `SuperApp/Sources/Controllers/CacheDashboardViewController.swift` | VC | 主面板（Summary + Chart + 子系统列表 + 操作按钮） |
+| `SuperApp/Sources/Controllers/PinnedURLManagementViewController.swift` | VC | 置顶管理页（输入+列表+搜索+滑动删除） |
+| `SuperApp/Sources/Controllers/PresetURLCatalogViewController.swift` | VC | 预设目录页（CollectionView + 分类筛选 + 推荐） |
+| `SuperApp/Sources/Controllers/CacheSubsystemDetailViewController.swift` | VC | 子系统详情基类（11 个子类工厂方法 + 3 个辅助 View） |
+| `Tests/CacheDashboard/PinnedURLModelTests.swift` | 测试 | 单元测试（URLType检测/模型校验/Dashboard计算/预设搜索） |
+| `Tests/CacheDashboard/CacheStatsAggregatorTests.swift` | 测试 | 聚合器测试（全子系统采集/性能基准） |
+
+#### 修改文件（6 个）
+| 文件 | 修改内容 |
+|------|---------|
+| `SettingsViewModel.swift` | 新增 `.cacheDashboard` action + DEVELOPER section 第3行入口 |
+| `SettingsViewController.swift` | 新增 navigateToCacheDashboard() 导航方法 + bind |
+| `DebugPanelViewController.swift` | SegmentedControl 4→5 Tab，新增"缓存统计" Tab |
+| `TestDataSeeder.swift` | 新增 seedPinnedURLs() 方法（导入 5 个推荐预设） |
+| `zh-Hans Localizable.strings` | 新增 ~50 个 i18n key（中英双语） |
+| `en Localizable.strings` | 同上英文版本 |
+
+#### 关键决策
+- **双入口设计**: SettingsVC 开发者选项 + DebugPanel 第5 Tab
+- **Realm 持久化**: PinnedURL 使用独立 pinnedUrls.realm，App 重启/缓存清理后仍在
+- **Actor 三层架构**: PinnedURLManager 遵循项目第二代 Manager 模式
+- **11 子系统全覆盖**: ManifestCache/WebResource/Compressed/WKWebView/SystemURL/OfflinePage/PageRule/Generic/MemoryRule/MessageStore/ResourceLRU
+- **25 条预设 URL**: 覆盖 HTML(5)/WebApp(4)/API(5)/静态(5)/WS(2)/MCP(1)/测试(2)/性能(1)，5 个推荐项
+
+#### 构建结果
+- ✅ 0 编译错误
+- ✅ 0 代码警告
+- ✅ 构建成功
+
+---
+
 ## Next Steps
 
 1. **CI 验证**: 确认所有测试通过

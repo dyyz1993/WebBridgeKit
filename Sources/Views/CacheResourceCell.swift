@@ -18,7 +18,7 @@ public class CacheResourceCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.secondarySystemBackground
+        view.backgroundColor = ThemeTokens.Color.surface
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -27,13 +27,13 @@ public class CacheResourceCell: UITableViewCell {
     private let typeIconView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .systemBlue
+        imageView.tintColor = ThemeTokens.Color.primary
         return imageView
     }()
 
     private let typeIconContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .tertiarySystemBackground
+        view.backgroundColor = ThemeTokens.Color.surface
         view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.layer.masksToBounds = true
         return view
@@ -42,7 +42,7 @@ public class CacheResourceCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.subheadline
-        label.textColor = UIColor.label
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 2
         return label
     }()
@@ -50,20 +50,20 @@ public class CacheResourceCell: UITableViewCell {
     private let sizeLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = UIColor.secondaryLabel
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = UIColor.tertiaryLabel
+        label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
 
     private let typeBadgeView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        view.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.layer.masksToBounds = true
         return view
@@ -72,7 +72,7 @@ public class CacheResourceCell: UITableViewCell {
     private let typeBadgeLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = UIColor.systemBlue
+        label.textColor = ThemeTokens.Color.primary
         return label
     }()
 
@@ -83,7 +83,7 @@ public class CacheResourceCell: UITableViewCell {
         let selectedImage = LucideIcon.success.templateImage(pointSize: 18, weight: .medium)
         button.setImage(unselectedImage, for: .normal)
         button.setImage(selectedImage, for: .selected)
-        button.tintColor = .systemBlue
+        button.tintColor = ThemeTokens.Color.primary
         return button
     }()
 

@@ -16,8 +16,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        // 🔥 Seed test data synchronously so all ViewModels have data on first load
-        TestDataSeeder.populateIfNeeded()
+        // Seed test data off main thread to avoid blocking launch
+        DispatchQueue.global(qos: .userInitiated).async {
+            TestDataSeeder.populateIfNeeded()
+        }
 
         // 🔥 Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
