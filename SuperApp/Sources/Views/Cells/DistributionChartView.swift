@@ -157,7 +157,7 @@ class DistributionChartView: UIView {
                 ThemeTokens.Color.gradientEnd,
                 ThemeTokens.Color.info,
                 ThemeTokens.Color.error,
-                ThemeTokens.Color.info,
+                ThemeTokens.Color.info
             ]
             let hash = abs(name.hashValue)
             return colors[hash % colors.count]

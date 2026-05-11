@@ -49,7 +49,7 @@ class MenuCell: UITableViewCell {
 
     private let chevronImageView: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(systemName: "chevron.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        iv.image = LucideIcon.chevronRight.templateImage(pointSize: 16, weight: .medium)
         iv.tintColor = ThemeColors.current.textSecondary.withAlphaComponent(0.4)
         iv.contentMode = .scaleAspectFit
         iv.accessibilityLabel = "更多"

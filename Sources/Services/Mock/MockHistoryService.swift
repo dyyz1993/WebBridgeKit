@@ -52,8 +52,7 @@ public class MockHistoryService: HistoryServiceProtocol {
 
         if useInMemoryRealm, let realm = getRealm() {
             // 使用 Realm 内存数据库
-            let predicate = NSPredicate(format: "url == %@", urlString)
-            let existing = realm.objects(WebPageHistory.self).filter(predicate).first
+            let existing = realm.objects(WebPageHistory.self).first(where: { $0.url == urlString })
 
             try? realm.write {
                 if let existing = existing {
@@ -165,8 +164,7 @@ public class MockHistoryService: HistoryServiceProtocol {
         let urlString = url.absoluteString
 
         if useInMemoryRealm, let realm = getRealm() {
-            let predicate = NSPredicate(format: "url == %@", urlString)
-            return realm.objects(WebPageHistory.self).filter(predicate).first
+            return realm.objects(WebPageHistory.self).first(where: { $0.url == urlString })
         }
 
         return mockHistories[urlString]

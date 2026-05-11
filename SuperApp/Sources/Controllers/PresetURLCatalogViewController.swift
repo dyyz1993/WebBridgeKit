@@ -166,7 +166,7 @@ class PresetURLCatalogViewController: BaseViewController<PresetURLCatalogViewMod
 
         let iconLabel = UILabel()
         iconLabel.text = "📚"
-        iconLabel.font = UIFont.systemFont(ofSize: 48)
+        iconLabel.font = UIFont.preferredFont(forTextStyle: .largeTitle)
         iconLabel.textAlignment = .center
 
         let titleLabel = UILabel()
@@ -202,7 +202,7 @@ class PresetURLCatalogViewController: BaseViewController<PresetURLCatalogViewMod
 
     // MARK: - Layout Factory
     private static func createLayout() -> UICollectionViewCompositionalLayout {
-        UICollectionViewCompositionalLayout { sectionIndex, _ in
+        UICollectionViewCompositionalLayout { _, _ in
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(120))
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
 

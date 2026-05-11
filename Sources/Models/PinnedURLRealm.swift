@@ -12,14 +12,14 @@ import RealmSwift
 // MARK: - URL 类型自动识别枚举
 
 public enum URLType: String, Codable, CaseIterable {
-    case htmlPage = "htmlPage"
-    case webApp = "webApp"
-    case apiEndpoint = "apiEndpoint"
-    case staticResource = "staticResource"
-    case websocket = "websocket"
-    case mcpServer = "mcpServer"
-    case manifest = "manifest"
-    case other = "other"
+    case htmlPage
+    case webApp
+    case apiEndpoint
+    case staticResource
+    case websocket
+    case mcpServer
+    case manifest
+    case other
 
     public var displayName: String {
         switch self {
@@ -57,9 +57,7 @@ public enum URLType: String, Codable, CaseIterable {
 
         let staticExts = [".js", ".css", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico",
                           ".woff", ".woff2", ".ttf", ".eot", ".mp4", ".webp", ".avif"]
-        for ext in staticExts {
-            if lower.hasSuffix(ext) { return .staticResource }
-        }
+        for ext in staticExts where lower.hasSuffix(ext) { return .staticResource }
 
         if lower.contains("/cdn.") || lower.contains("/static.") ||
            lower.contains("/assets/") || lower.contains("/resources/") ||
@@ -69,9 +67,7 @@ public enum URLType: String, Codable, CaseIterable {
 
         let apiPatterns = ["/api/", "/v1/", "/v2/", "/v3/", "/rest/",
                            "/graphql", "/query", "/rpc/", "_api/"]
-        for pattern in apiPatterns {
-            if lower.contains(pattern) { return .apiEndpoint }
-        }
+        for pattern in apiPatterns where lower.contains(pattern) { return .apiEndpoint }
 
         if lower.contains("mcp") || lower.contains("modelcontextprotocol") { return .mcpServer }
 

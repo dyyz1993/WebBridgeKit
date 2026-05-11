@@ -99,7 +99,7 @@ class PresetURLCatalogViewModel: ViewModel {
             .map { [weak self] model -> (PresetURLItem, Bool) in
                 guard let self else { return (PresetURLItem(id: "", url: "", title: "", description: "", category: .htmlPages, tags: [], isRecommended: false), false) }
                 let item = PresetURLItem(id: model.id, url: model.url, title: model.title, description: model.description, category: PresetCategory.htmlPages, tags: model.tags, isRecommended: model.isRecommended)
-                if let _ = PinnedURLManager.shared.addSync(url: item.url, title: item.title, notes: item.description) {
+                if PinnedURLManager.shared.addSync(url: item.url, title: item.title, notes: item.description) != nil {
                     self.existingPinnedURLs.insert(item.url)
                     return (item, true)
                 }

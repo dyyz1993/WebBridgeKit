@@ -40,7 +40,7 @@ actor FavoriteDatabaseActor {
         let realm = try getRealm()
 
         // Check if already exists by iterating known objects
-        var existingId: String? = nil
+        var existingId: String?
         let allObjects = realm.objects(URLFavorite.self)
         for obj in allObjects where obj.url == urlString {
             existingId = obj.id

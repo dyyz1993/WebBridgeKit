@@ -108,7 +108,7 @@ class URLGridCell: UICollectionViewCell {
         [ThemeTokens.Color.error, ThemeTokens.Color.warning],
         [ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientEnd.withAlphaComponent(0.6)],
         [ThemeTokens.Color.warning, ThemeTokens.Color.warning.withAlphaComponent(0.7)],
-        [ThemeTokens.Color.success, ThemeTokens.Color.success.withAlphaComponent(0.7)],
+        [ThemeTokens.Color.success, ThemeTokens.Color.success.withAlphaComponent(0.7)]
     ]
 
     private static let lucideIcons: [LucideIcon] = [

@@ -2,14 +2,14 @@ import Foundation
 
 // MARK: - 预设 URL 分类
 public enum PresetCategory: String, CaseIterable, Codable {
-    case htmlPages = "htmlPages"
-    case webApps = "webApps"
-    case apiEndpoints = "apiEndpoints"
-    case staticResources = "staticResources"
-    case websockets = "websockets"
-    case mcpServers = "mcpServers"
-    case testing = "testing"
-    case performance = "performance"
+    case htmlPages
+    case webApps
+    case apiEndpoints
+    case staticResources
+    case websockets
+    case mcpServers
+    case testing
+    case performance
 
     public var displayName: String {
         switch self {
@@ -287,7 +287,7 @@ public enum PresetURLCatalog {
             description: "Google PageSpeed Insights 性能分析工具。提供 Core Web Vitals 评分和优化建议。",
             category: .performance,
             tags: ["性能", "Core Web Vitals", "Google", "优化建议"]
-        ),
+        )
     ]
 
     public static var itemsByCategory: [PresetCategory: [PresetURLItem]] {

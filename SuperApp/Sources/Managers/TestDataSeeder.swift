@@ -228,7 +228,7 @@ struct TestDataSeeder {
                     ("dashboard_index_html", "https://dashboard.example.com/index.html", "text/html", 28672, 8192, "/cache/dashboard/index.html"),
                     ("dashboard_app_js", "https://dashboard.example.com/app.js", "application/javascript", 184320, 61440, "/cache/dashboard/app.js"),
                     ("dashboard_chart_js", "https://dashboard.example.com/chart.js", "application/javascript", 102400, 30720, "/cache/dashboard/chart.js"),
-                    ("dashboard_data_css", "https://dashboard.example.com/data.css", "text/css", 24576, 6144, "/cache/dashboard/data.css"),
+                    ("dashboard_data_css", "https://dashboard.example.com/data.css", "text/css", 24576, 6144, "/cache/dashboard/data.css")
                 ]
 
                 let now = Date()
@@ -492,7 +492,7 @@ struct TestDataSeeder {
                 ),
                 isRead: false,
                 receivedAt: day3Ago.addingTimeInterval(-3600)
-            ),
+            )
         ]
 
         do {
@@ -528,7 +528,7 @@ struct TestDataSeeder {
                     ("fav-news-005", "https://news.daily/feed", "每日新闻", false, 10, false, "2026-05-07T14:00:00Z"),
                     ("fav-dashboard-006", "https://dashboard.example.com", "数据面板", false, 11, true, "2026-05-03T08:00:00Z"),
                     ("fav-docs-007", "https://docs.swift.org/getting-started", "Swift 入门", false, 12, true, "2026-04-28T10:00:00Z"),
-                    ("fav-local-008", "http://localhost:8080/health", "本地服务", false, 13, false, "2026-05-09T08:00:00Z"),
+                    ("fav-local-008", "http://localhost:8080/health", "本地服务", false, 13, false, "2026-05-09T08:00:00Z")
                 ]
 
                 for f in favs {
@@ -569,7 +569,7 @@ struct TestDataSeeder {
                     ("hist-news-005", "https://news.daily/feed", "每日新闻", true, 40960, false, false, 30, nil, nil, false, 86400),
                     ("hist-dashboard-006", "https://dashboard.example.com", "数据面板", true, 2179072, false, true, 22, nil, nil, false, 14400),
                     ("hist-docs-007", "https://docs.swift.org/getting-started", "Swift 入门", true, 204800, false, true, 45, nil, nil, false, 21600),
-                    ("hist-local-008", "http://localhost:8080/health", "本地服务", false, 0, false, false, 1, nil, nil, false, 28800),
+                    ("hist-local-008", "http://localhost:8080/health", "本地服务", false, 0, false, false, 1, nil, nil, false, 28800)
                 ]
 
                 for h in histories {
@@ -656,7 +656,7 @@ struct TestDataSeeder {
                 description: "用于验证 GitHub Webhook 签名",
                 isEnabled: true,
                 boundGroupId: nil
-            ),
+            )
         ]
 
         do {
@@ -718,7 +718,7 @@ struct TestDataSeeder {
                 resourceType: .staticResource,
                 isEnabled: false,
                 priority: 0
-            ),
+            )
         ]
 
         for rule in cacheRules {
@@ -745,7 +745,7 @@ struct TestDataSeeder {
                 "signature": "sig_url_a1b2c3d4e5f6",
                 "createdAt": now,
                 "expiresAt": "",
-                "label": "URL Scheme 令牌",
+                "label": "URL Scheme 令牌"
             ],
             [
                 "id": "cmd-b64-002",
@@ -755,7 +755,7 @@ struct TestDataSeeder {
                 "signature": "sig_b64_x7y8z9w0v1u",
                 "createdAt": now,
                 "expiresAt": ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400)),
-                "label": "Base64 编码令牌",
+                "label": "Base64 编码令牌"
             ],
             [
                 "id": "cmd-text-003",
@@ -765,7 +765,7 @@ struct TestDataSeeder {
                 "signature": "sig_txt_m2n3o4p5q6r",
                 "createdAt": now,
                 "expiresAt": "",
-                "label": "纯文本令牌",
+                "label": "纯文本令牌"
             ],
             [
                 "id": "cmd-json-004",
@@ -775,8 +775,8 @@ struct TestDataSeeder {
                 "signature": "sig_json_s7t8u9v0w1x",
                 "createdAt": now,
                 "expiresAt": ISO8601DateFormatter().string(from: Date().addingTimeInterval(172800)),
-                "label": "JSON 格式令牌",
-            ],
+                "label": "JSON 格式令牌"
+            ]
         ]
 
         do {
@@ -839,13 +839,11 @@ struct TestDataSeeder {
                 excludePatterns: [],
                 isEnabled: false,
                 createdAt: date("2026-04-15T08:00:00Z")
-            ),
+            )
         ]
 
         var addedCount = 0
-        for rule in rules {
-            if manager.addRule(rule) { addedCount += 1 }
-        }
+        for rule in rules where manager.addRule(rule) { addedCount += 1 }
 
         print("[TestDataSeeder] Page Cache Rule: \(addedCount) 条")
     }

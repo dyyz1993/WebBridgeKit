@@ -41,7 +41,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
     private let emptyIconLabel: UILabel = {
         let l = UILabel()
         l.text = "📌"
-        l.font = UIFont.systemFont(ofSize: 48)
+        l.font = UIFont.preferredFont(forTextStyle: .largeTitle)
         return l
     }()
 
@@ -171,7 +171,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
 
             addFromPresetButton.topAnchor.constraint(equalTo: emptyDescLabel.bottomAnchor, constant: 20),
             addFromPresetButton.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
-            addFromPresetButton.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor),
+            addFromPresetButton.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor)
         ])
 
         // URL Input Header as table header

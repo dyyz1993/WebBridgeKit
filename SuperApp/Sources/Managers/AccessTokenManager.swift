@@ -76,8 +76,7 @@ public class AccessTokenManager {
     /// 获取口令信息
     public func getTokenInfo(token: String) -> AccessToken? {
         let realm = getRealm()
-        let predicate = NSPredicate(format: "token == %@", token)
-        return realm?.objects(AccessToken.self).filter(predicate).first
+        return realm?.objects(AccessToken.self).first(where: { $0.token == token })
     }
 
     /// 增加口令访问次数

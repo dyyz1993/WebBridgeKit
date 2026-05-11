@@ -40,8 +40,7 @@ actor HistoryDatabaseActor {
             let realm = try getRealm()
 
             // Check if already exists
-            let predicate = NSPredicate(format: "url == %@", urlString)
-            guard let existing = realm.objects(WebPageHistory.self).filter(predicate).first else {
+            guard let existing = realm.objects(WebPageHistory.self).first(where: { $0.url == urlString }) else {
                 // Create new record
                 let history = WebPageHistory()
                 history.url = urlString
@@ -172,8 +171,7 @@ actor HistoryDatabaseActor {
             return nil
         }
         let realm = try getRealm()
-        let predicate = NSPredicate(format: "url == %@", urlString)
-        if let history = realm.objects(WebPageHistory.self).filter(predicate).first {
+        if let history = realm.objects(WebPageHistory.self).first(where: { $0.url == urlString }) {
             // Return unfrozen (independent) object copy to avoid cross-thread access crashes
             return WebPageHistory(value: history)
         }
@@ -272,7 +270,7 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
             schemaVersion: 2,
             migrationBlock: { migration, oldSchemaVersion in
                 if oldSchemaVersion < 2 {
-                    migration.enumerateObjects(ofType: WebPageHistory.className()) { oldObject, newObject in
+                    migration.enumerateObjects(ofType: WebPageHistory.className()) { _, newObject in
                         newObject?["ruleId"] = nil
                         newObject?["ruleName"] = nil
                         newObject?["isExcluded"] = false

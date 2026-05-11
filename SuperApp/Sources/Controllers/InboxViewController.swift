@@ -134,10 +134,6 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         return container
     }()
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewModel.refreshData()

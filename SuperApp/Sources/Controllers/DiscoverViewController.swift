@@ -658,7 +658,7 @@ class DiscoverAppCell: UICollectionViewCell {
         (ThemeTokens.Color.primary, ThemeTokens.Color.info),
         (ThemeTokens.Color.success, ThemeTokens.Color.primary),
         (ThemeTokens.Color.error, ThemeTokens.Color.warning),
-        (ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientStart),
+        (ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientStart)
     ]
 
     private static let icons: [LucideIcon] = [
@@ -669,7 +669,7 @@ class DiscoverAppCell: UICollectionViewCell {
         .star,
         .folder,
         .bell,
-        .settings,
+        .settings
     ]
 
     private static func gradientColors(for name: String) -> (UIColor, UIColor) {

@@ -155,7 +155,7 @@ class CacheDashboardViewModel: ViewModel {
             summaryText: summaryDriver,
             error: errorRelay.asDriver(onErrorJustReturn: ""),
             navigateToDetail: navigateDetailRelay.compactMap { $0 }.asDriver(onErrorJustReturn: .manifestCache),
-            showClearAllConfirm: showClearConfirmRelay.asDriver(onErrorJustReturn:()),
+            showClearAllConfirm: showClearConfirmRelay.asDriver(onErrorJustReturn: ()),
             clearResult: clearResultRelay.asDriver()
         )
     }

@@ -416,7 +416,7 @@ extension DiscoverViewController {
             (ThemeTokens.Color.primary, ThemeTokens.Color.info),
             (ThemeTokens.Color.success, ThemeTokens.Color.primary),
             (ThemeTokens.Color.error, ThemeTokens.Color.warning),
-            (ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientStart),
+            (ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientStart)
         ]
         return gradients[abs(name.hashValue) % gradients.count]
     }
@@ -428,7 +428,7 @@ extension DiscoverViewController {
             .hardDrive,
             .doc,
             .star,
-            .folder,
+            .folder
         ]
         return icons[abs(name.hashValue) % icons.count]
     }

@@ -97,7 +97,7 @@ public class CacheStatsAggregator {
                 hitRate: stats.hitRate,
                 extraMetrics: [
                     "cacheHits": "\(stats.cacheHits)",
-                    "cacheMisses": "\(stats.cacheMisses)",
+                    "cacheMisses": "\(stats.cacheMisses)"
                 ],
                 status: stats.totalRequests > 0 ? .active : .empty
             )
@@ -115,7 +115,7 @@ public class CacheStatsAggregator {
                 totalEntries: global.totalFiles,
                 totalSize: global.totalSize,
                 extraMetrics: [
-                    "cacheSpaces": "\(allStats.count)",
+                    "cacheSpaces": "\(allStats.count)"
                 ],
                 status: global.totalFiles > 0 ? .active : .empty
             )
@@ -135,7 +135,7 @@ public class CacheStatsAggregator {
                 extraMetrics: [
                     "compressedSize": "\(memInfo.totalCompressedSize)",
                     "compressionRatio": String(format: "%.2f", memInfo.compressionRatio),
-                    "savedSpace": "\(memInfo.savedSpace)",
+                    "savedSpace": "\(memInfo.savedSpace)"
                 ],
                 status: memInfo.totalEntries > 0 ? .active : .empty
             )
@@ -154,7 +154,7 @@ public class CacheStatsAggregator {
             totalSize: 0,
             extraMetrics: [
                 "type": "WKWebView WebsiteDataStore",
-                "note": "Use WebCacheManager async API for real-time data",
+                "note": "Use WebCacheManager async API for real-time data"
             ],
             status: .active
         )
@@ -172,7 +172,7 @@ public class CacheStatsAggregator {
                     "cacheHits": "\(stats.cacheHits)",
                     "cacheMisses": "\(stats.cacheMisses)",
                     "memoryCapacity": "50MB",
-                    "diskCapacity": "500MB",
+                    "diskCapacity": "500MB"
                 ],
                 status: stats.totalRequests > 0 ? .active : .empty
             )
@@ -190,7 +190,7 @@ public class CacheStatsAggregator {
                 totalEntries: count,
                 totalSize: size,
                 extraMetrics: [
-                    "cachedPages": "\(count)",
+                    "cachedPages": "\(count)"
                 ],
                 status: count > 0 ? .active : .empty
             )
@@ -209,7 +209,7 @@ public class CacheStatsAggregator {
                 totalSize: 0,
                 extraMetrics: [
                     "enabledRules": "\(enabled.count)",
-                    "disabledRules": "\(rules.count - enabled.count)",
+                    "disabledRules": "\(rules.count - enabled.count)"
                 ],
                 status: !rules.isEmpty ? .active : .empty
             )
@@ -226,7 +226,7 @@ public class CacheStatsAggregator {
             hitRate: nil,
             extraMetrics: [
                 "type": "Actor-based Memory+Disk Cache",
-                "note": "Use async getGlobalStatistics() for accurate data",
+                "note": "Use async getGlobalStatistics() for accurate data"
             ],
             status: .active
         )
@@ -239,7 +239,7 @@ public class CacheStatsAggregator {
             totalEntries: rules.count,
             totalSize: 0,
             extraMetrics: [
-                "type": "In-memory only",
+                "type": "In-memory only"
             ],
             status: !rules.isEmpty ? .active : .empty
         )
@@ -253,7 +253,7 @@ public class CacheStatsAggregator {
             extraMetrics: [
                 "storage": "UserDefaults (JSON)",
                 "maxMessages": "200",
-                "note": "Async store - use MessageEngine for real counts",
+                "note": "Async store - use MessageEngine for real counts"
             ],
             status: .active
         )
@@ -269,7 +269,7 @@ public class CacheStatsAggregator {
                 totalSize: size,
                 extraMetrics: [
                     "type": "LRU (100MB memory limit)",
-                    "storage": "Filesystem + Memory",
+                    "storage": "Filesystem + Memory"
                 ],
                 status: size > 0 ? .active : .empty
             )

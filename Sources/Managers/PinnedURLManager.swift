@@ -296,8 +296,7 @@ public class PinnedURLManager {
         var result: PinnedURLRealm?
         let semaphore = DispatchSemaphore(value: 0)
         Task {
-            do { result = try await add(url: url, title: title, notes: notes) }
-            catch { WebBridgeLogger.shared.log(.error, "addSync failed: \(error)") }
+            do { result = try await add(url: url, title: title, notes: notes) } catch { WebBridgeLogger.shared.log(.error, "addSync failed: \(error)") }
             semaphore.signal()
         }
         semaphore.wait()
@@ -308,8 +307,7 @@ public class PinnedURLManager {
         var result: [PinnedURLRealm]?
         let semaphore = DispatchSemaphore(value: 0)
         Task {
-            do { result = try await getAllPinned() }
-            catch { WebBridgeLogger.shared.log(.error, "getAllPinnedSync failed: \(error)") }
+            do { result = try await getAllPinned() } catch { WebBridgeLogger.shared.log(.error, "getAllPinnedSync failed: \(error)") }
             semaphore.signal()
         }
         semaphore.wait()
@@ -320,8 +318,7 @@ public class PinnedURLManager {
         var caughtError: Error?
         let semaphore = DispatchSemaphore(value: 0)
         Task {
-            do { try await delete(id: id) }
-            catch { caughtError = error }
+            do { try await delete(id: id) } catch { caughtError = error }
             semaphore.signal()
         }
         semaphore.wait()
@@ -332,8 +329,7 @@ public class PinnedURLManager {
         var caughtError: Error?
         let semaphore = DispatchSemaphore(value: 0)
         Task {
-            do { try await unpin(id: id) }
-            catch { caughtError = error }
+            do { try await unpin(id: id) } catch { caughtError = error }
             semaphore.signal()
         }
         semaphore.wait()

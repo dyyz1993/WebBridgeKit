@@ -34,7 +34,7 @@ class CacheSubsystemDetailViewController: UIViewController {
     var customActions: [(title: String, iconName: String, action: () -> Void)] {
         return [
             (title: "刷新", iconName: "refresh", action: { [weak self] in self?.refreshStats() }),
-            (title: "清除", iconName: "trash", action: { [weak self] in self?.clearSubsystem() }),
+            (title: "清除", iconName: "trash", action: { [weak self] in self?.clearSubsystem() })
         ]
     }
 
@@ -330,13 +330,13 @@ class DetailHeaderView: UIView {
 
             statusBadge.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             statusBadge.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
-            statusBadge.heightAnchor.constraint(equalToConstant: 24),
+            statusBadge.heightAnchor.constraint(equalToConstant: 24)
         ])
 
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             statusLabel.centerXAnchor.constraint(equalTo: statusBadge.centerXAnchor),
-            statusLabel.centerYAnchor.constraint(equalTo: statusBadge.centerYAnchor),
+            statusLabel.centerYAnchor.constraint(equalTo: statusBadge.centerYAnchor)
         ])
     }
 
@@ -386,7 +386,7 @@ class DetailMetricCell: UITableViewCell {
             labelLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             labelLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
             valueLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            valueLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            valueLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
 
@@ -430,7 +430,7 @@ class DetailActionCell: UITableViewCell {
             iconView.heightAnchor.constraint(equalToConstant: 22),
 
             titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
-            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
 

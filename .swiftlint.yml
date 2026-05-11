@@ -43,6 +43,7 @@ custom_rules:
   no_hardcoded_rgb_color:
     name: "No Hardcoded RGB Colors"
     regex: 'UIColor\(red:\s*[\d.]+'
+    excluded: ".*Theme/(ThemeTokens|ThemeManager)\\.swift|.*WKColor\\.swift"
     message: "使用 ThemeTokens.Color.* 替代硬编码 RGB 颜色"
     severity: warning
 
