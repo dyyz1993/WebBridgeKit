@@ -271,7 +271,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         button.backgroundColor = ThemeColors.current.primary
         button.setTitleColor(ThemeTokens.Color.surface, for: .normal)
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.addTarget(self, action: #selector(execute), for: .touchUpInside)
         button.snp.makeConstraints { make in
             make.height.equalTo(48)
@@ -281,7 +281,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         resultTextView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         resultTextView.layer.borderColor = ThemeTokens.Color.border.cgColor
         resultTextView.layer.borderWidth = 1
-        resultTextView.layer.cornerRadius = 8
+        resultTextView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         resultTextView.isEditable = false
         resultTextView.isScrollEnabled = false
         resultTextView.text = L10n.tr("debug.panel.tap_execute_hint")

@@ -60,6 +60,7 @@ class DiscoverViewController: UIViewController {
             target: self,
             action: #selector(refreshData)
         )
+        navigationItem.rightBarButtonItem?.accessibilityLabel = "刷新"
 
         let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, _ in
             guard let self = self else { return nil }
@@ -448,11 +449,12 @@ class DiscoverAppCell: UICollectionViewCell {
     private let cardView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 14
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 8
-        view.layer.shadowOpacity = 0.06
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
         return view
     }()
 
@@ -460,13 +462,13 @@ class DiscoverAppCell: UICollectionViewCell {
         let sv = UIStackView()
         sv.axis = .horizontal
         sv.alignment = .center
-        sv.spacing = 10
+        sv.spacing = ThemeTokens.Spacing.sm
         return sv
     }()
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 8
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.clipsToBounds = true
         return view
     }()
@@ -482,13 +484,14 @@ class DiscoverAppCell: UICollectionViewCell {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.tintColor = .white
+        iv.accessibilityLabel = "应用图标"
         return iv
     }()
 
     private let textStack: UIStackView = {
         let sv = UIStackView()
         sv.axis = .vertical
-        sv.spacing = 2
+        sv.spacing = ThemeTokens.Spacing.xs
         sv.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return sv
     }()
@@ -514,7 +517,7 @@ class DiscoverAppCell: UICollectionViewCell {
 
     private let badgeView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 10
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return view
     }()
 
@@ -529,14 +532,8 @@ class DiscoverAppCell: UICollectionViewCell {
         let sv = UIStackView()
         sv.axis = .horizontal
         sv.alignment = .center
-        sv.spacing = 4
+        sv.spacing = ThemeTokens.Spacing.xs
         return sv
-    }()
-
-    private let statusDot: UIView = {
-        let v = UIView()
-        v.layer.cornerRadius = 3
-        return v
     }()
 
     private let detailLabel: UILabel = {
@@ -553,6 +550,13 @@ class DiscoverAppCell: UICollectionViewCell {
         label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 2
         return label
+    }()
+
+    private let statusDot: UIView = {
+        let v = UIView()
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
+        v.clipsToBounds = true
+        return v
     }()
 
     override init(frame: CGRect) {
@@ -587,7 +591,7 @@ class DiscoverAppCell: UICollectionViewCell {
 
         let mainStack = UIStackView(arrangedSubviews: [topRowStack, bottomRowStack, descriptionLabel])
         mainStack.axis = .vertical
-        mainStack.spacing = 8
+        mainStack.spacing = ThemeTokens.Spacing.sm
         cardView.addSubview(mainStack)
 
         cardView.snp.makeConstraints { make in

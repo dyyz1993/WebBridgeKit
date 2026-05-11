@@ -42,7 +42,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
         let button = UIButton(type: .system)
         button.setTitle("全选", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
-        button.layer.cornerRadius = 6
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.backgroundColor = .systemBlue.withAlphaComponent(0.1)
         button.setTitleColor(.systemBlue, for: .normal)
         return button
@@ -52,7 +52,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
         let button = UIButton(type: .system)
         button.setTitle("取消", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
-        button.layer.cornerRadius = 6
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.backgroundColor = .systemGray.withAlphaComponent(0.1)
         button.setTitleColor(.systemGray, for: .normal)
         return button
@@ -62,7 +62,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
         let button = UIButton(type: .system)
         button.setTitle("删除选中", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
-        button.layer.cornerRadius = 6
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.backgroundColor = .systemRed.withAlphaComponent(0.1)
         button.setTitleColor(.systemRed, for: .normal)
         return button
@@ -72,7 +72,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
         let button = UIButton(type: .system)
         button.setTitle("清空全部", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
-        button.layer.cornerRadius = 6
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.backgroundColor = .systemRed.withAlphaComponent(0.1)
         button.setTitleColor(.systemRed, for: .normal)
         return button
@@ -145,7 +145,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
             clearAllButton
         ])
         buttonStackView.axis = .horizontal
-        buttonStackView.spacing = 8
+        buttonStackView.spacing = ThemeTokens.Spacing.sm
         buttonStackView.distribution = .fillEqually
         toolbarContainer.addSubview(buttonStackView)
 

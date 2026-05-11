@@ -27,6 +27,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         btn.setImage(LucideIcon.trash.image(pointSize: 18, weight: .semibold), for: .normal)
         btn.tintColor = ThemeTokens.Colors.Light.textSecondary
         btn.addTarget(self, action: #selector(clearCacheTapped), for: .touchUpInside)
+        btn.accessibilityLabel = "清理缓存"
         return btn
     }()
 
@@ -202,7 +203,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     private func showCommandBanner(title: String) {
         commandBanner.configure(title: title)
         commandBanner.isHidden = false
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
             self.commandBanner.alpha = 1
             self.commandBanner.transform = .identity
         }
@@ -211,7 +212,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     private func hideCommandBanner() {
         pendingCommandTitle = nil
         guard !commandBanner.isHidden else { return }
-        UIView.animate(withDuration: 0.25, animations: {
+        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
             self.commandBanner.alpha = 0
             self.commandBanner.transform = CGAffineTransform(translationX: 0, y: -self.commandBanner.bounds.height)
         }, completion: { _ in
@@ -307,6 +308,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             btn.setImage(LucideIcon.scan.image(pointSize: 20, weight: .medium), for: .normal)
             btn.tintColor = ThemeColors.current.primary
             btn.addTarget(self, action: #selector(openScanner), for: .touchUpInside)
+            btn.accessibilityLabel = "扫描二维码"
             return btn
         }()
         let scanItem = UIBarButtonItem(customView: scanButton)

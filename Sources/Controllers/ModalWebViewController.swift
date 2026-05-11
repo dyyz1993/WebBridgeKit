@@ -57,7 +57,7 @@ public class ModalWebViewController: UIViewController {
         super.viewDidAppear(animated)
 
         // 入场动画
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration, delay: 0, options: .curveEaseOut) {
             self.containerView.transform = .identity
             self.maskView?.alpha = 1
         }
@@ -144,10 +144,11 @@ public class ModalWebViewController: UIViewController {
     private func setupCloseButton() {
         let closeButton = UIButton(type: .system)
         closeButton.accessibilityIdentifier = "modalBrowser.closeButton"
-        closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        closeButton.setImage(LucideIcon.xmarkCircle.templateImage(), for: .normal)
         closeButton.tintColor = .gray
         closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)
-        closeButton.layer.cornerRadius = 16
+        closeButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl
+        closeButton.accessibilityLabel = "关闭弹窗"
         closeButton.addTarget(self, action: #selector(handleCloseButtonTap), for: .touchUpInside)
 
         containerView.addSubview(closeButton)
@@ -189,7 +190,7 @@ public class ModalWebViewController: UIViewController {
             if translation.y > 100 || velocity.y > 1000 {
                 closeWithAnimation()
             } else {
-                UIView.animate(withDuration: 0.3) {
+                UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
                     self.containerView.transform = .identity
                     self.maskView?.alpha = 1
                 }
@@ -218,7 +219,7 @@ public class ModalWebViewController: UIViewController {
         let width = UIScreen.main.bounds.width * CGFloat(percent / 100)
 
         guard let containerView = containerView else { return }
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
             containerView.snp.updateConstraints { make in
                 make.width.equalTo(width)
             }
@@ -231,7 +232,7 @@ public class ModalWebViewController: UIViewController {
         let height = UIScreen.main.bounds.height * CGFloat(percent / 100)
 
         guard let containerView = containerView else { return }
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
             containerView.snp.updateConstraints { make in
                 make.height.equalTo(height)
             }
@@ -258,7 +259,7 @@ public class ModalWebViewController: UIViewController {
     }
 
     private func closeWithAnimation() {
-        UIView.animate(withDuration: 0.25, animations: {
+        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
             self.containerView.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
             self.maskView?.alpha = 0
         }, completion: { _ in

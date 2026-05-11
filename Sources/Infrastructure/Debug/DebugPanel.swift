@@ -97,7 +97,7 @@ public class DebugPanelViewController: UIViewController {
         btn.setTitle("主页", for: .normal)
         btn.backgroundColor = .systemBlue
         btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 8
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showMain), for: .touchUpInside)
         return btn
     }()
@@ -107,7 +107,7 @@ public class DebugPanelViewController: UIViewController {
         btn.setTitle("日志", for: .normal)
         btn.backgroundColor = .systemGreen
         btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 8
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showLogs), for: .touchUpInside)
         return btn
     }()
@@ -117,7 +117,7 @@ public class DebugPanelViewController: UIViewController {
         btn.setTitle("诊断", for: .normal)
         btn.backgroundColor = .systemOrange
         btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 8
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showDiagnostics), for: .touchUpInside)
         return btn
     }()
@@ -127,7 +127,7 @@ public class DebugPanelViewController: UIViewController {
         btn.setTitle("设置", for: .normal)
         btn.backgroundColor = .systemPurple
         btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 8
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showSettings), for: .touchUpInside)
         return btn
     }()
@@ -137,7 +137,7 @@ public class DebugPanelViewController: UIViewController {
         btn.setTitle("环境", for: .normal)
         btn.backgroundColor = .systemGray
         btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 8
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showInfo), for: .touchUpInside)
         return btn
     }()
@@ -147,7 +147,7 @@ public class DebugPanelViewController: UIViewController {
         btn.setTitle("缓存管理", for: .normal)
         btn.backgroundColor = .systemTeal
         btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 8
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showCacheManagement), for: .touchUpInside)
         return btn
     }()
@@ -185,7 +185,7 @@ public class DebugPanelViewController: UIViewController {
             cacheButton
         ])
         stackView.axis = .vertical
-        stackView.spacing = 16
+        stackView.spacing = ThemeTokens.Spacing.md
         stackView.distribution = .fillEqually
 
         contentView.addSubview(stackView)

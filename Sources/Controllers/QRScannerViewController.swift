@@ -70,8 +70,7 @@ public class QRScannerViewController: UIViewController {
 
     private lazy var closeButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
-        button.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
+        button.setImage(LucideIcon.xmarkCircle.templateImage(pointSize: 24, weight: .medium), for: .normal)
         button.tintColor = .white
         return button
     }()

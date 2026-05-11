@@ -24,7 +24,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     private let thumbnailContainerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.surface
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
@@ -41,11 +41,11 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     /// 网站首字母图标
     private let fallbackIconLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
+        label.font = ThemeTokens.Typography.largeTitle
         label.textColor = .white
         label.textAlignment = .center
         label.backgroundColor = ThemeTokens.Color.info
-        label.layer.cornerRadius = 12
+        label.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         label.layer.masksToBounds = true
         return label
     }()
@@ -56,16 +56,16 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = .white
         imageView.backgroundColor = UIColor.systemGreen
-        imageView.layer.cornerRadius = 10
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
-        imageView.image = UIImage(systemName: "checkmark.circle.fill")
+        imageView.image = LucideIcon.success.image()
         return imageView
     }()
 
     /// 标题标签
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 2
         label.textAlignment = .center
@@ -75,7 +75,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     /// URL 标签
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 11, weight: .regular)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.textAlignment = .center

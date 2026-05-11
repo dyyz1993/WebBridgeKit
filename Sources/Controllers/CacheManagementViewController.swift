@@ -57,7 +57,7 @@ public class CacheManagementViewController: UIViewController {
     private lazy var chartContainerView: UIView = {
         let container = UIView()
         container.backgroundColor = .secondarySystemBackground
-        container.layer.cornerRadius = 12
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         container.clipsToBounds = true
 
         let titleLabel = UILabel()
@@ -78,7 +78,7 @@ public class CacheManagementViewController: UIViewController {
 
         let stack = UIStackView(arrangedSubviews: [titleLabel, pieChart, barTitleLabel, barChart])
         stack.axis = .vertical
-        stack.spacing = 12
+        stack.spacing = ThemeTokens.Spacing.md
         stack.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         stack.isLayoutMarginsRelativeArrangement = true
 
@@ -104,7 +104,7 @@ public class CacheManagementViewController: UIViewController {
 
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 8
+        stackView.spacing = ThemeTokens.Spacing.sm
         stackView.alignment = .center
 
         let totalSizeLabel = UILabel()
@@ -444,7 +444,7 @@ extension CacheManagementViewController: UITableViewDelegate {
             completionHandler(true)
         }
 
-        deleteAction.image = UIImage(systemName: "trash.fill")
+        deleteAction.image = LucideIcon.trash.image()
 
         // 详情操作
         let detailAction = UIContextualAction(style: .normal, title: "详情") { [weak self] (_, _, completionHandler) in
@@ -453,7 +453,7 @@ extension CacheManagementViewController: UITableViewDelegate {
         }
 
         detailAction.backgroundColor = .systemBlue
-        detailAction.image = UIImage(systemName: "info.circle.fill")
+        detailAction.image = LucideIcon.info.image()
 
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction, detailAction])
         configuration.performsFirstActionWithFullSwipe = false
@@ -466,18 +466,18 @@ extension CacheManagementViewController: UITableViewDelegate {
 
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
             // 复制 AppID
-            let copyAction = UIAction(title: "复制 AppID", image: UIImage(systemName: "doc.on.doc")) { [weak self] _ in
+            let copyAction = UIAction(title: "复制 AppID", image: LucideIcon.copy.image()) { [weak self] _ in
                 UIPasteboard.general.string = appInfo.appID
                 self?.showCopyFeedback(appID: appInfo.appID)
             }
 
             // 查看详情
-            let detailAction = UIAction(title: "查看详情", image: UIImage(systemName: "info.circle")) { [weak self] _ in
+            let detailAction = UIAction(title: "查看详情", image: LucideIcon.info.image()) { [weak self] _ in
                 self?.showAppDetails(appInfo: appInfo)
             }
 
             // 删除
-            let deleteAction = UIAction(title: "删除缓存", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] _ in
+            let deleteAction = UIAction(title: "删除缓存", image: LucideIcon.trash.image(), attributes: .destructive) { [weak self] _ in
                 self?.confirmDelete(appID: appInfo.appID)
             }
 

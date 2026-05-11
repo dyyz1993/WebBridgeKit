@@ -22,20 +22,19 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
     /// 扫码按钮
     private lazy var qrScanButton: UIButton = {
         let btn = UIButton()
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        btn.setImage(UIImage(systemName: "qrcode.viewfinder", withConfiguration: config)?.withRenderingMode(.alwaysTemplate), for: .normal)
+        btn.setImage(LucideIcon.scan.templateImage(pointSize: 20, weight: .medium), for: .normal)
         btn.imageView?.tintColor = ThemeTokens.Color.text
-        btn.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+        btn.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        btn.accessibilityLabel = "扫描二维码"
         return btn
     }()
 
-    /// 视图模式切换按钮
     private lazy var viewModeButton: UIButton = {
         let btn = UIButton()
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        btn.setImage(UIImage(systemName: "square.grid.2x2", withConfiguration: config)?.withRenderingMode(.alwaysTemplate), for: .normal)
+        btn.setImage(LucideIcon.appFill.templateImage(pointSize: 20, weight: .medium), for: .normal)
         btn.imageView?.tintColor = ThemeTokens.Color.text
-        btn.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+        btn.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        btn.accessibilityLabel = "切换视图模式"
         return btn
     }()
 
@@ -93,17 +92,18 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         imageView.image = UIImage(systemName: "clock.arrow.circlepath", withConfiguration: config)
         imageView.tintColor = ThemeTokens.Color.textTertiary
         imageView.contentMode = .scaleAspectFit
+        imageView.accessibilityLabel = "无历史记录"
 
         let label = UILabel()
         label.text = NSLocalizedString("No browsing history yet", comment: "")
         label.textColor = ThemeTokens.Color.textSecondary
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        label.font = ThemeTokens.Typography.callout
         label.textAlignment = .center
 
         let detailLabel = UILabel()
         detailLabel.text = NSLocalizedString("Visit a webpage to see it here", comment: "")
         detailLabel.textColor = ThemeTokens.Color.textTertiary
-        detailLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        detailLabel.font = ThemeTokens.Typography.footnote
         detailLabel.textAlignment = .center
 
         view.addSubview(imageView)
@@ -316,13 +316,12 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
     private func toggleViewMode() {
         currentViewMode = currentViewMode == .list ? .gallery : .list
 
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
         if currentViewMode == .list {
-            viewModeButton.setImage(UIImage(systemName: "square.grid.2x2", withConfiguration: config), for: .normal)
+            viewModeButton.setImage(LucideIcon.appFill.templateImage(pointSize: 20, weight: .medium), for: .normal)
             tableView.isHidden = allHistories.isEmpty
             collectionView.isHidden = true
         } else {
-            viewModeButton.setImage(UIImage(systemName: "list.bullet", withConfiguration: config), for: .normal)
+            viewModeButton.setImage(LucideIcon.docText.templateImage(pointSize: 20, weight: .medium), for: .normal)
             tableView.isHidden = true
             collectionView.isHidden = allHistories.isEmpty
             collectionView.reloadData()

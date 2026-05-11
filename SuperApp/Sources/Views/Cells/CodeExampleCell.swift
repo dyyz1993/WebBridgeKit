@@ -73,10 +73,9 @@ class CodeExampleCell: UITableViewCell {
 
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        button.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: config), for: .normal)
+        button.setImage(LucideIcon.copy.templateImage(pointSize: 14, weight: .medium), for: .normal)
         button.setTitle(" \(L10n.tr("common.copy"))", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
         return button
     }()
 

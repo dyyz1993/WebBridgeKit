@@ -23,6 +23,7 @@ class TabBarController: UITabBarController {
         setupAppearance()
         setupSeparator()
         bindMessages()
+        delegate = self
 
         self.selectedIndex = 0
     }
@@ -185,5 +186,11 @@ class TabBarController: UITabBarController {
     private func createSettingsViewController() -> SettingsViewController {
         let viewModel = SettingsViewModel()
         return SettingsViewController(viewModel: viewModel)
+    }
+}
+
+extension TabBarController: UITabBarControllerDelegate {
+    func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
+        UISelectionFeedbackGenerator().selectionChanged()
     }
 }

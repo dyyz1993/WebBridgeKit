@@ -41,7 +41,7 @@ class ActionSheetView: UIView {
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 1
+        stack.spacing = ThemeTokens.Spacing.xs
         stack.backgroundColor = ThemeColors.current.border
         return stack
     }()
@@ -174,14 +174,14 @@ class ActionSheetView: UIView {
         backgroundView.alpha = 0
         containerView.transform = CGAffineTransform(translationX: 0, y: containerView.bounds.height)
 
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration, delay: 0, options: .curveEaseOut) {
             self.backgroundView.alpha = 1
             self.containerView.transform = .identity
         }
     }
 
     func dismiss() {
-        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseIn) {
+        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, delay: 0, options: .curveEaseIn) {
             self.backgroundView.alpha = 0
             self.containerView.transform = CGAffineTransform(translationX: 0, y: self.containerView.bounds.height)
         } completion: { _ in

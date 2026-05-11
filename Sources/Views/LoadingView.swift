@@ -18,7 +18,7 @@ public class LoadingView: UIView {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemBackground
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
     }()
@@ -38,7 +38,7 @@ public class LoadingView: UIView {
 
     private let messageLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = UIColor.secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -47,7 +47,7 @@ public class LoadingView: UIView {
 
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.font = ThemeTokens.Typography.caption1
         label.textColor = UIColor.tertiaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -139,7 +139,7 @@ public class LoadingView: UIView {
 
         isHidden = false
         alpha = 0
-        UIView.animate(withDuration: 0.2) {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
             self.alpha = 1
         }
     }
@@ -165,7 +165,7 @@ public class LoadingView: UIView {
 
         isHidden = false
         alpha = 0
-        UIView.animate(withDuration: 0.2) {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
             self.alpha = 1
         }
     }
@@ -186,7 +186,7 @@ public class LoadingView: UIView {
     public func stopLoading() {
         activityIndicator.stopAnimating()
 
-        UIView.animate(withDuration: 0.2, animations: {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: {
             self.alpha = 0
         }, completion: { _ in
             self.isHidden = true

@@ -8,13 +8,14 @@ class PushTokenCardCell: UICollectionViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.cardBackground
-        view.layer.cornerRadius = 14
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.borderColor = ThemeTokens.Color.primary.withAlphaComponent(0.1).cgColor
         view.layer.borderWidth = 1
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.08
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
         return view
     }()
 
@@ -29,7 +30,7 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.font = ThemeTokens.Typography.caption1
         label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
@@ -39,7 +40,7 @@ class PushTokenCardCell: UICollectionViewCell {
     private let tokenPill: UIView = {
         let v = UIView()
         v.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
-        v.layer.cornerRadius = 6
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         v.clipsToBounds = true
         return v
     }()
@@ -64,7 +65,7 @@ class PushTokenCardCell: UICollectionViewCell {
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("common.copy"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
         button.setTitleColor(ThemeColors.current.primary, for: .normal)
         return button
     }()
@@ -72,10 +73,10 @@ class PushTokenCardCell: UICollectionViewCell {
     private let registerButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("home.token_card.register"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
         button.setTitleColor(ThemeTokens.Color.background, for: .normal)
         button.backgroundColor = ThemeColors.current.primary
-        button.layer.cornerRadius = 6
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         button.isHidden = true
         return button
@@ -196,7 +197,7 @@ class QuickActionCell: UICollectionViewCell {
         let sv = UIStackView()
         sv.axis = .horizontal
         sv.distribution = .fillEqually
-        sv.spacing = 12
+        sv.spacing = ThemeTokens.Spacing.md
         return sv
     }()
 
@@ -238,11 +239,12 @@ class QuickActionCell: UICollectionViewCell {
     private func createActionCard(icon: LucideIcon, title: String) -> UIView {
         let card = UIView()
         card.backgroundColor = ThemeColors.current.cardBackground
-        card.layer.cornerRadius = 14
+        card.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        let shadow = ThemeTokens.Shadows.Card
         card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.shadowRadius = 8
-        card.layer.shadowOpacity = 0.06
+        card.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        card.layer.shadowRadius = shadow.radius
+        card.layer.shadowOpacity = Float(shadow.opacity)
 
         let iconView = UIImageView()
         iconView.image = icon.templateImage(pointSize: 22, weight: .medium)
@@ -251,7 +253,7 @@ class QuickActionCell: UICollectionViewCell {
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+        titleLabel.font = ThemeTokens.Typography.caption2
         titleLabel.textColor = ThemeTokens.Color.textSecondary
         titleLabel.textAlignment = .center
         titleLabel.adjustsFontSizeToFitWidth = true
@@ -289,7 +291,7 @@ class SectionHeaderView: UICollectionReusableView {
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
@@ -324,7 +326,7 @@ class CommandBannerView: UIView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeColors.current.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail

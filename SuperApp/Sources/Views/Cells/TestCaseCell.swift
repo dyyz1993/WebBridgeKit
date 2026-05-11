@@ -35,7 +35,7 @@ class TestCaseCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.accessibilityIdentifier = "testCaseCell.titleLabel"
@@ -69,7 +69,7 @@ class TestCaseCell: UITableViewCell {
     private let runButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("运行", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
         button.tintColor = ThemeColors.current.primary
         button.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md

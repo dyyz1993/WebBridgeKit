@@ -33,11 +33,11 @@ public class FullScreenProgressViewController: UIViewController {
     }()
 
     private let iconImageView: UIImageView = {
-        let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = .systemBlue
-        imageView.image = UIImage(systemName: "icloud.and.arrow.down", withConfiguration: config)
+        imageView.image = LucideIcon.download.templateImage(pointSize: 60, weight: .light)
+        imageView.accessibilityLabel = "下载图标"
         return imageView
     }()
 
@@ -78,12 +78,12 @@ public class FullScreenProgressViewController: UIViewController {
     }()
 
     private let completeIconImageView: UIImageView = {
-        let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = .systemGreen
-        imageView.image = UIImage(systemName: "checkmark.circle.fill", withConfiguration: config)
+        imageView.image = LucideIcon.success.templateImage(pointSize: 60, weight: .light)
         imageView.isHidden = true
+        imageView.accessibilityLabel = "完成图标"
         return imageView
     }()
 
@@ -242,7 +242,7 @@ public class FullScreenProgressViewController: UIViewController {
             let progress = Float(current) / Float(total)
 
             // 更新进度条
-            UIView.animate(withDuration: 0.2) {
+            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
                 self.progressView.setProgress(progress, animated: true)
             }
 

@@ -31,11 +31,11 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 缓存状态标签
     let cacheStatusLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 10, weight: .bold)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = .white
         label.textAlignment = .center
         label.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.6)
-        label.layer.cornerRadius = 4
+        label.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         label.clipsToBounds = true
         label.text = "LIVE"
         label.isHidden = false
@@ -51,7 +51,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 标题标签
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -62,33 +62,33 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 关闭/后退按钮
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        let image = UIImage(systemName: "xmark", withConfiguration: config)
+        let image = LucideIcon.xmark.templateImage(pointSize: 20, weight: .medium)
         button.setImage(image, for: .normal)
         button.tintColor = ThemeTokens.Color.textSecondary
         button.accessibilityIdentifier = "browserManager.closeButton"
+        button.accessibilityLabel = "关闭"
         return button
     }()
 
     /// 后退按钮（当有历史时显示）
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        let image = UIImage(systemName: "chevron.left", withConfiguration: config)
+        let image = LucideIcon.chevronLeft.templateImage(pointSize: 20, weight: .medium)
         button.setImage(image, for: .normal)
         button.tintColor = ThemeTokens.Color.textSecondary
         button.accessibilityIdentifier = "browserManager.backButton"
+        button.accessibilityLabel = "返回"
         return button
     }()
 
     /// 更多菜单按钮
     private let menuButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-        let image = UIImage(systemName: "ellipsis.circle", withConfiguration: config)
+        let image = LucideIcon.chevronDown.templateImage(pointSize: 20, weight: .regular)
         button.setImage(image, for: .normal)
         button.tintColor = ThemeTokens.Color.textSecondary
         button.accessibilityIdentifier = "browserManager.menuButton"
+        button.accessibilityLabel = "更多菜单"
         return button
     }()
 
@@ -208,13 +208,14 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         navigationItem.titleView = titleContainerView
 
         let closeBtn = UIBarButtonItem(
-            image: UIImage(systemName: "xmark"),
+            image: LucideIcon.xmark.image(),
             style: .plain,
             target: self,
             action: #selector(closeButtonTapped)
         )
         closeBtn.tintColor = .label
         closeBtn.accessibilityIdentifier = "browserManager.closeButton"
+        closeBtn.accessibilityLabel = "关闭"
         self.closeBarButton = closeBtn
 
         let menuBtn = UIBarButtonItem(
@@ -225,6 +226,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         )
         menuBtn.tintColor = .label
         menuBtn.accessibilityIdentifier = "browserManager.menuButton"
+        menuBtn.accessibilityLabel = "更多菜单"
         self.menuBarButton = menuBtn
 
         let backBtn = UIBarButtonItem(
@@ -235,6 +237,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         )
         backBtn.tintColor = .label
         backBtn.accessibilityIdentifier = "browserManager.backButton"
+        backBtn.accessibilityLabel = "返回"
         self.backBarButton = backBtn
 
         navigationItem.leftBarButtonItems = [closeBtn]

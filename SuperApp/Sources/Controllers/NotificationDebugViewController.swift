@@ -34,7 +34,7 @@ class NotificationDebugViewController: UIViewController {
     private let mainStack: UIStackView = {
         let sv = UIStackView()
         sv.axis = .vertical
-        sv.spacing = 16
+        sv.spacing = ThemeTokens.Spacing.md
         return sv
     }()
 
@@ -69,7 +69,7 @@ class NotificationDebugViewController: UIViewController {
     private let imagePreview: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.layer.cornerRadius = 8
+        iv.layer.cornerRadius = ThemeTokens.CornerRadius.md
         iv.backgroundColor = ThemeColors.current.surface
         return iv
     }()
@@ -88,7 +88,7 @@ class NotificationDebugViewController: UIViewController {
         btn.titleLabel?.font = ThemeTokens.Typography.title3
         btn.backgroundColor = ThemeColors.current.primary
         btn.setTitleColor(ThemeColors.current.surface, for: .normal)
-        btn.layer.cornerRadius = 12
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return btn
     }()
 
@@ -207,9 +207,7 @@ class NotificationDebugViewController: UIViewController {
 
         let stack = UIStackView(arrangedSubviews: views)
         stack.axis = .vertical
-        stack.spacing = 10
-
-        card.addSubview(header)
+        stack.spacing = ThemeTokens.Spacing.sm
         card.addSubview(stack)
 
         header.snp.makeConstraints { make in
@@ -235,7 +233,7 @@ class NotificationDebugViewController: UIViewController {
 
         let row = UIStackView(arrangedSubviews: [lbl, view])
         row.axis = .horizontal
-        row.spacing = 12
+        row.spacing = ThemeTokens.Spacing.md
         row.alignment = .center
         return row
     }
@@ -248,7 +246,7 @@ class NotificationDebugViewController: UIViewController {
 
         let row = UIStackView(arrangedSubviews: [lbl, view])
         row.axis = .vertical
-        row.spacing = 6
+        row.spacing = ThemeTokens.Spacing.sm
         return row
     }
 
@@ -264,12 +262,12 @@ class NotificationDebugViewController: UIViewController {
 
         let outerStack = UIStackView()
         outerStack.axis = .vertical
-        outerStack.spacing = 8
+        outerStack.spacing = ThemeTokens.Spacing.sm
 
         for i in stride(from: 0, to: templateDisplayNames.count, by: 2) {
             let row = UIStackView()
             row.axis = .horizontal
-            row.spacing = 8
+            row.spacing = ThemeTokens.Spacing.sm
             row.distribution = .fillEqually
 
             for j in i..<min(i + 2, templateDisplayNames.count) {

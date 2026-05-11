@@ -27,8 +27,7 @@ class TokenCell: UITableViewCell {
 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        imageView.image = UIImage(systemName: "key.fill", withConfiguration: config)
+        imageView.image = LucideIcon.key.templateImage(pointSize: 20, weight: .medium)
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = ThemeTokens.Colors.Light.primary
         imageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(ThemeTokens.Opacity.badge)
@@ -39,7 +38,7 @@ class TokenCell: UITableViewCell {
 
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle

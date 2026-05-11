@@ -43,7 +43,7 @@ public class PieChartView: UIView {
 
     private func setupLegend() {
         legendStack.axis = .vertical
-        legendStack.spacing = 6
+        legendStack.spacing = ThemeTokens.Spacing.sm
         addSubview(legendStack)
     }
 
@@ -91,7 +91,7 @@ public class PieChartView: UIView {
 
         if !centerText.isEmpty {
             let attrs: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 15, weight: .bold),
+                .font: ThemeTokens.Typography.subheadline,
                 .foregroundColor: UIColor.label
             ]
             let size = centerText.size(withAttributes: attrs)
@@ -119,16 +119,16 @@ public class PieChartView: UIView {
         for seg in segments {
             let item = UIStackView()
             item.axis = .horizontal
-            item.spacing = 6
+            item.spacing = ThemeTokens.Spacing.sm
             item.alignment = .center
 
             let dot = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 10))
             dot.backgroundColor = seg.color
-            dot.layer.cornerRadius = 3
+            dot.layer.cornerRadius = ThemeTokens.CornerRadius.xs
 
             let label = UILabel()
             label.text = seg.label
-            label.font = .systemFont(ofSize: 12)
+            label.font = ThemeTokens.Typography.caption1
             label.textColor = .secondaryLabel
 
             item.addArrangedSubview(dot)

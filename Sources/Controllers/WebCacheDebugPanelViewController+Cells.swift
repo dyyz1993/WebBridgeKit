@@ -197,7 +197,7 @@ class RuleHeaderCell: UITableViewCell {
         selectionStyle = .none
 
         containerView.backgroundColor = .secondarySystemBackground
-        containerView.layer.cornerRadius = 12
+        containerView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         containerView.layer.masksToBounds = true
         contentView.addSubview(containerView)
 
@@ -346,7 +346,7 @@ class ExcludePatternCell: UITableViewCell {
         selectionStyle = .none
 
         containerView.backgroundColor = .tertiarySystemBackground
-        containerView.layer.cornerRadius = 8
+        containerView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         containerView.layer.masksToBounds = true
         contentView.addSubview(containerView)
 
@@ -420,7 +420,7 @@ class PageCell: UITableViewCell {
         selectionStyle = .none
 
         containerView.backgroundColor = .secondarySystemBackground
-        containerView.layer.cornerRadius = 8
+        containerView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         containerView.layer.masksToBounds = true
         contentView.addSubview(containerView)
 
@@ -443,28 +443,28 @@ class PageCell: UITableViewCell {
 
         let stackView = UIStackView(arrangedSubviews: [openButton, refreshButton, deleteButton])
         stackView.axis = .horizontal
-        stackView.spacing = 8
+        stackView.spacing = ThemeTokens.Spacing.sm
         stackView.distribution = .fillEqually
         contentView.addSubview(stackView)
 
         openButton.setTitle("打开", for: .normal)
         openButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
         openButton.backgroundColor = .systemBlue.withAlphaComponent(0.1)
-        openButton.layer.cornerRadius = 4
+        openButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         openButton.addTarget(self, action: #selector(openTapped), for: .touchUpInside)
 
         refreshButton.setTitle("刷新", for: .normal)
         refreshButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
         refreshButton.backgroundColor = .systemGreen.withAlphaComponent(0.1)
         refreshButton.setTitleColor(.systemGreen, for: .normal)
-        refreshButton.layer.cornerRadius = 4
+        refreshButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         refreshButton.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
 
         deleteButton.setTitle("删除", for: .normal)
         deleteButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
         deleteButton.backgroundColor = .systemRed.withAlphaComponent(0.1)
         deleteButton.setTitleColor(.systemRed, for: .normal)
-        deleteButton.layer.cornerRadius = 4
+        deleteButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         deleteButton.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
 
         containerView.snp.makeConstraints { make in

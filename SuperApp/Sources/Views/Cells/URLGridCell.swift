@@ -9,24 +9,25 @@ class URLGridCell: UICollectionViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 14
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.08
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
         return view
     }()
 
     private let iconContainer: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 11
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         v.layer.masksToBounds = true
         return v
     }()
 
     private let iconGradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
-        layer.cornerRadius = 11
+        layer.cornerRadius = ThemeTokens.CornerRadius.lg
         layer.startPoint = CGPoint(x: 0, y: 0)
         layer.endPoint = CGPoint(x: 1, y: 1)
         return layer
@@ -41,7 +42,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -50,21 +51,21 @@ class URLGridCell: UICollectionViewCell {
 
     private let statusDot: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 3
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
         v.backgroundColor = ThemeTokens.Color.success
         return v
     }()
 
     private let statusLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.font = ThemeTokens.Typography.caption1
         label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
 
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 11, weight: .regular)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
@@ -72,7 +73,7 @@ class URLGridCell: UICollectionViewCell {
     private let tokenBadge: UIView = {
         let v = UIView()
         v.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
-        v.layer.cornerRadius = 6
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         v.clipsToBounds = true
         v.isHidden = true
         return v

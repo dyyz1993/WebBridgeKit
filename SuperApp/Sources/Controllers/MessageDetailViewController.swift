@@ -23,7 +23,7 @@ class MessageDetailViewController: UIViewController {
     private let contentStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 16
+        stack.spacing = ThemeTokens.Spacing.md
         return stack
     }()
 
@@ -53,14 +53,14 @@ class MessageDetailViewController: UIViewController {
     private let metaStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
         return stack
     }()
 
     private let actionStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 10
+        stack.spacing = ThemeTokens.Spacing.sm
         return stack
     }()
 

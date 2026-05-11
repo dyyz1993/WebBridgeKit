@@ -27,8 +27,7 @@ class APIKeyCell: UITableViewCell {
 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        imageView.image = UIImage(systemName: "key.fill", withConfiguration: config)
+        imageView.image = LucideIcon.key.templateImage(pointSize: 20, weight: .medium)
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = ThemeTokens.Colors.Light.primary
         imageView.backgroundColor = ThemeTokens.Colors.Light.primary.withAlphaComponent(0.1)
@@ -39,7 +38,7 @@ class APIKeyCell: UITableViewCell {
 
     private let typeLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -80,8 +79,7 @@ class APIKeyCell: UITableViewCell {
 
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        let image = UIImage(systemName: "doc.on.doc", withConfiguration: config)
+        let image = LucideIcon.copy.templateImage(pointSize: 16, weight: .medium)
         button.setImage(image, for: .normal)
         button.tintColor = ThemeTokens.Colors.Light.primary
         return button

@@ -38,8 +38,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
     private lazy var addButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
-        let image = UIImage(systemName: "plus", withConfiguration: config)
+        let image = LucideIcon.plus.templateImage(pointSize: 20, weight: .medium)
         button.setImage(image, for: .normal)
         button.tintColor = ThemeColors.current.text
         button.snp.makeConstraints { make in

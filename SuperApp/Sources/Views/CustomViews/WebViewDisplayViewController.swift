@@ -26,10 +26,11 @@ public class WebViewDisplayViewController: UIViewController {
         button.titleLabel?.font = ThemeTokens.Typography.callout
         button.backgroundColor = ThemeColors.current.background
         button.layer.cornerRadius = ThemeTokens.CornerRadius.xl
+        let shadow = ThemeTokens.Shadows.Fab
         button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.3
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = Float(shadow.opacity)
+        button.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        button.layer.shadowRadius = shadow.radius
         button.accessibilityIdentifier = "webview_display.close_button"
         button.accessibilityLabel = "关闭 WebView"
         return button

@@ -296,7 +296,7 @@ class ManifestCacheTestViewController: UIViewController {
         // 操作按钮
         let buttonStack = UIStackView(arrangedSubviews: [startButton, clearCacheButton])
         buttonStack.axis = .horizontal
-        buttonStack.spacing = 12
+        buttonStack.spacing = ThemeTokens.Spacing.md
         buttonStack.distribution = .fillEqually
         // ✅ 关键修复：StackView 必须允许触摸事件传递到子视图
         // 删除 isUserInteractionEnabled = true，让 StackView 不拦截触摸事件
@@ -355,7 +355,7 @@ class ManifestCacheTestViewController: UIViewController {
 
         let logButtonStack = UIStackView(arrangedSubviews: [copyLogButton, clearLogButton])
         logButtonStack.axis = .horizontal
-        logButtonStack.spacing = 8
+        logButtonStack.spacing = ThemeTokens.Spacing.sm
         logButtonStack.distribution = .fillEqually
         // ✅ 关键修复：StackView 必须允许触摸事件传递到子视图
         // 删除 isUserInteractionEnabled = true，让 StackView 不拦截触摸事件

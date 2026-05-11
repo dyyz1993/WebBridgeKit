@@ -37,11 +37,12 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let searchBarContainer: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 1)
-        view.layer.shadowRadius = 4
-        view.layer.shadowOpacity = 0.06
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
         return view
     }()
 
@@ -50,12 +51,13 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         iv.image = LucideIcon.search.image(pointSize: 16)
         iv.tintColor = ThemeColors.current.textSecondary
         iv.contentMode = .scaleAspectFit
+        iv.accessibilityLabel = "搜索"
         return iv
     }()
 
     private let searchTextField: UITextField = {
         let tf = UITextField()
-        tf.font = .systemFont(ofSize: 14)
+        tf.font = ThemeTokens.Typography.footnote
         tf.textColor = ThemeColors.current.text
         tf.returnKeyType = .search
         tf.attributedPlaceholder = NSAttributedString(
@@ -68,8 +70,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let filterStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
-        stack.distribution = .fill
+        stack.spacing = ThemeTokens.Spacing.sm
         return stack
     }()
 
@@ -86,16 +87,18 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         let button = UIButton(type: .system)
         button.setImage(LucideIcon.send.image(pointSize: 16, weight: .semibold), for: .normal)
         button.setTitle(L10n.tr("inbox.send_test"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
         button.backgroundColor = ThemeTokens.Color.primary
         button.tintColor = ThemeTokens.Color.text
-        button.layer.cornerRadius = 25
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.full
+        let shadow = ThemeTokens.Shadows.Fab
         button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 4)
-        button.layer.shadowRadius = 8
-        button.layer.shadowOpacity = 0.30
+        button.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        button.layer.shadowRadius = shadow.radius
+        button.layer.shadowOpacity = Float(shadow.opacity)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
+        button.accessibilityLabel = "发送测试通知"
         return button
     }()
 
@@ -109,13 +112,14 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         iconView.image = LucideIcon.info.templateImage(pointSize: 12)
         iconView.tintColor = ThemeTokens.Color.textTertiary
         iconView.contentMode = .scaleAspectFit
+        iconView.accessibilityLabel = "提示信息"
         let label = UILabel()
         label.text = L10n.tr("inbox.swipe.hint")
-        label.font = .systemFont(ofSize: 11)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeTokens.Color.textTertiary
         let stack = UIStackView(arrangedSubviews: [iconView, label])
         stack.axis = .horizontal
-        stack.spacing = 6
+        stack.spacing = ThemeTokens.Spacing.sm
         stack.alignment = .center
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
@@ -151,7 +155,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             action: nil
         )
         clearAllBtn.tintColor = ThemeTokens.Color.error
-        clearAllBtn.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 13, weight: .semibold)], for: .normal)
+        clearAllBtn.setTitleTextAttributes([.font: ThemeTokens.Typography.footnote], for: .normal)
         navigationItem.rightBarButtonItem = clearAllBtn
 
         setupFilterPills()
@@ -220,6 +224,12 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             title: L10n.tr("inbox.empty.title"),
             subtitle: L10n.tr("inbox.empty.description")
         )
+
+        fabButton.addTarget(self, action: #selector(fabHaptic), for: .touchUpInside)
+    }
+
+    @objc private func fabHaptic() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 
     @objc private func handleRefresh() {
@@ -250,17 +260,17 @@ class InboxViewController: BaseViewController<InboxViewModel> {
                 config.cornerStyle = .capsule
                 config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                     var outgoing = incoming
-                    outgoing.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+                    outgoing.font = ThemeTokens.Typography.footnote
                     return outgoing
                 }
                 config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)
                 button = UIButton(configuration: config)
             } else {
                 button = UIButton(type: .system)
-                button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+                button.titleLabel?.font = ThemeTokens.Typography.footnote
                 button.backgroundColor = inactiveBg
                 button.setTitleColor(inactiveFg, for: .normal)
-                button.layer.cornerRadius = 14
+                button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
                 button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
             }
             button.setTitle(title, for: .normal)
@@ -275,6 +285,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     @objc private func filterTapped(_ sender: UIButton) {
         guard let filter = InboxViewModel.FilterType(rawValue: sender.tag) else { return }
+        UISelectionFeedbackGenerator().selectionChanged()
         filterRelay.accept(filter)
         updateFilterSelection(filter)
         viewModel.refreshData()
@@ -295,7 +306,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
                 config.cornerStyle = .capsule
                 config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                     var outgoing = incoming
-                    outgoing.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+                    outgoing.font = ThemeTokens.Typography.footnote
                     return outgoing
                 }
                 config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)
@@ -439,7 +450,7 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -451,6 +462,7 @@ class InboxGroupHeaderCell: UITableViewCell {
         iv.image = LucideIcon.chevronDown.templateImage(pointSize: 14)
         iv.tintColor = ThemeColors.current.textSecondary
         iv.contentMode = .scaleAspectFit
+        iv.accessibilityLabel = "展开收起"
         return iv
     }()
 
@@ -510,17 +522,18 @@ class InboxMessageCell: UITableViewCell {
     private let cardView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 12
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 8
-        view.layer.shadowOpacity = 0.06
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
         return view
     }()
 
     private let typeIconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 10
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.clipsToBounds = true
         return view
     }()
@@ -529,13 +542,14 @@ class InboxMessageCell: UITableViewCell {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.tintColor = .white
+        iv.accessibilityLabel = "消息类型图标"
         return iv
     }()
 
     private let unreadDot: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.error
-        view.layer.cornerRadius = 5
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         return view
     }()
 
@@ -548,7 +562,7 @@ class InboxMessageCell: UITableViewCell {
 
     private let sourceContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 4
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.clipsToBounds = true
         return view
     }()
@@ -562,7 +576,7 @@ class InboxMessageCell: UITableViewCell {
 
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 11)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeColors.current.textSecondary
         return label
     }()
@@ -580,6 +594,7 @@ class InboxMessageCell: UITableViewCell {
         iv.image = LucideIcon.chevronRight.image(pointSize: 16, weight: .medium)
         iv.tintColor = ThemeTokens.Color.textTertiary
         iv.contentMode = .scaleAspectFit
+        iv.accessibilityLabel = "查看详情"
         return iv
     }()
 
@@ -670,8 +685,8 @@ class InboxMessageCell: UITableViewCell {
 
         let isUnread = !message.isRead
         titleLabel.font = isUnread
-            ? .systemFont(ofSize: 15, weight: .bold)
-            : .systemFont(ofSize: 15, weight: .regular)
+            ? ThemeTokens.Typography.subheadline
+            : ThemeTokens.Typography.subheadline
         unreadDot.alpha = isUnread ? 1 : 0
 
         let channel = message.payload.channel.uppercased()
@@ -729,12 +744,13 @@ class InboxEmptyStateView: UIView {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.tintColor = ThemeTokens.Color.textTertiary
+        iv.accessibilityLabel = "空收件箱"
         return iv
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 20, weight: .bold)
+        label.font = ThemeTokens.Typography.title3
         label.textColor = ThemeColors.current.text
         label.textAlignment = .center
         return label
@@ -742,7 +758,7 @@ class InboxEmptyStateView: UIView {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .regular)
+        label.font = ThemeTokens.Typography.subheadline
         label.textColor = ThemeColors.current.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0

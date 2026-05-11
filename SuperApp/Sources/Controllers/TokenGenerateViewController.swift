@@ -107,7 +107,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     private lazy var copyButton: UIButton = {
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
-            config.image = UIImage(systemName: "doc.on.doc")
+            config.image = LucideIcon.copy.templateImage()
             config.title = L10n.tr("common.copy")
             config.imagePadding = 4
             config.baseForegroundColor = ThemeColors.current.text
@@ -118,7 +118,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
             return button
         } else {
             let button = UIButton(type: .system)
-            button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
+            button.setImage(LucideIcon.copy.templateImage(), for: .normal)
             button.setTitle(L10n.tr("common.copy"), for: .normal)
             button.titleLabel?.font = ThemeTokens.Typography.callout
             button.layer.cornerRadius = ThemeTokens.CornerRadius.md
@@ -131,7 +131,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     private lazy var shareButton: UIButton = {
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
-            config.image = UIImage(systemName: "square.and.arrow.up")
+            config.image = LucideIcon.share.templateImage()
             config.title = L10n.tr("common.share")
             config.imagePadding = 4
             config.baseForegroundColor = ThemeColors.current.text
@@ -142,7 +142,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
             return button
         } else {
             let button = UIButton(type: .system)
-            button.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
+            button.setImage(LucideIcon.share.templateImage(), for: .normal)
             button.setTitle(L10n.tr("common.share"), for: .normal)
             button.titleLabel?.font = ThemeTokens.Typography.callout
             button.layer.cornerRadius = ThemeTokens.CornerRadius.md
@@ -155,7 +155,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
     private let buttonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.spacing = 12
+        stackView.spacing = ThemeTokens.Spacing.md
         stackView.distribution = .fillEqually
         return stackView
     }()
@@ -362,7 +362,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
                 guard let self = self, let token = token else { return }
                 self.tokenLabel.text = token
                 self.resultCardView.isHidden = false
-                UIView.animate(withDuration: 0.3) {
+                UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
                     self.scrollView.layoutIfNeeded()
                 }
             })

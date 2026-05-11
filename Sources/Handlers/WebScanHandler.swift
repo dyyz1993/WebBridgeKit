@@ -181,7 +181,7 @@ private class QRScanViewController: UIViewController {
         ))
         scanFrame.layer.borderColor = UIColor.systemGreen.cgColor
         scanFrame.layer.borderWidth = 2
-        scanFrame.layer.cornerRadius = 8
+        scanFrame.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.addSubview(scanFrame)
 
         // 创建扫描线动画

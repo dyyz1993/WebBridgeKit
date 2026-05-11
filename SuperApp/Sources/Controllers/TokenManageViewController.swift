@@ -23,7 +23,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let stackView: UIStackView = {
         let sv = UIStackView()
         sv.axis = .vertical
-        sv.spacing = 16
+        sv.spacing = ThemeTokens.Spacing.md
         return sv
     }()
 
@@ -50,6 +50,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
             button.tintColor = ThemeTokens.Color.background
+            button.accessibilityLabel = "复制推送地址"
             return button
         } else {
             let button = UIButton(type: .system)
@@ -60,6 +61,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
             button.tintColor = ThemeTokens.Color.background
+            button.accessibilityLabel = "复制推送地址"
             return button
         }
     }()
@@ -77,6 +79,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
             button.tintColor = ThemeTokens.Color.text
+            button.accessibilityLabel = "分享推送地址"
             return button
         } else {
             let button = UIButton(type: .system)
@@ -87,6 +90,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
             button.tintColor = ThemeTokens.Color.text
+            button.accessibilityLabel = "分享推送地址"
             return button
         }
     }()
@@ -97,6 +101,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
         iv.contentMode = .scaleAspectFit
         iv.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         iv.layer.masksToBounds = true
+        iv.accessibilityLabel = "推送地址二维码"
         return iv
     }()
 
@@ -168,7 +173,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
         let header = TokenManageViewController.makeCardHeader(L10n.tr("token.manage.push_url"))
         let buttonStack = UIStackView(arrangedSubviews: [copyButton, shareButton])
         buttonStack.axis = .horizontal
-        buttonStack.spacing = 12
+        buttonStack.spacing = ThemeTokens.Spacing.md
         buttonStack.distribution = .fillEqually
 
         pushURLCard.addSubview(header)
@@ -284,6 +289,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     @objc private func copyPushURL() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
         let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         let pushURL = key.isEmpty ? server : "\(server)/\(key)"

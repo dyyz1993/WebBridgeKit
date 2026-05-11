@@ -40,16 +40,17 @@ public class CacheAppDetailViewController: UIViewController {
 
         let container = UIView()
         container.backgroundColor = .secondarySystemBackground
-        container.layer.cornerRadius = 16
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         container.layer.masksToBounds = false
+        let shadow = ThemeTokens.Shadows.Card
         container.layer.shadowColor = UIColor.black.cgColor
-        container.layer.shadowOpacity = 0.1
-        container.layer.shadowOffset = CGSize(width: 0, height: 2)
-        container.layer.shadowRadius = 8
+        container.layer.shadowOpacity = Float(shadow.opacity)
+        container.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        container.layer.shadowRadius = shadow.radius
 
         let iconImageView = UIImageView()
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.layer.cornerRadius = 12
+        iconImageView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         iconImageView.layer.masksToBounds = true
         iconImageView.clipsToBounds = true
         iconImageView.tag = 100
@@ -62,14 +63,14 @@ public class CacheAppDetailViewController: UIViewController {
         appIDLabel.tag = 101
 
         let nameLabel = UILabel()
-        nameLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        nameLabel.font = ThemeTokens.Typography.callout
         nameLabel.textColor = .secondaryLabel
         nameLabel.numberOfLines = 1
         nameLabel.textAlignment = .center
         nameLabel.tag = 102
 
         let infoLabel = UILabel()
-        infoLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        infoLabel.font = ThemeTokens.Typography.footnote
         infoLabel.textColor = .tertiaryLabel
         infoLabel.numberOfLines = 0
         infoLabel.textAlignment = .center
@@ -259,11 +260,11 @@ public class CachePageCell: UITableViewCell {
         let button = UIButton(type: .system)
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
-            config.image = UIImage(systemName: "doc.on.doc")
+            config.image = LucideIcon.copy.templateImage()
             config.baseForegroundColor = .systemBlue
             button.configuration = config
         } else {
-            button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
+            button.setImage(LucideIcon.copy.templateImage(), for: .normal)
             button.tintColor = .systemBlue
         }
         button.widthAnchor.constraint(equalToConstant: 44).isActive = true
@@ -274,11 +275,11 @@ public class CachePageCell: UITableViewCell {
         let button = UIButton(type: .system)
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
-            config.image = UIImage(systemName: "trash")
+            config.image = LucideIcon.trash.templateImage()
             config.baseForegroundColor = .systemRed
             button.configuration = config
         } else {
-            button.setImage(UIImage(systemName: "trash"), for: .normal)
+            button.setImage(LucideIcon.trash.templateImage(), for: .normal)
             button.tintColor = .systemRed
         }
         button.widthAnchor.constraint(equalToConstant: 44).isActive = true
@@ -288,7 +289,7 @@ public class CachePageCell: UITableViewCell {
     private let buttonStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
         return stack
     }()
 
@@ -335,7 +336,7 @@ public class CachePageCell: UITableViewCell {
 
         let stackView = UIStackView(arrangedSubviews: [indexLabel, pageKeyLabel, buttonStackView])
         stackView.axis = .horizontal
-        stackView.spacing = 12
+        stackView.spacing = ThemeTokens.Spacing.md
         stackView.alignment = .center
 
         contentView.addSubview(stackView)

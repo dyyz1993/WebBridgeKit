@@ -60,8 +60,7 @@ class SettingsHeaderView: UIView {
 
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        let image = UIImage(systemName: "doc.on.doc", withConfiguration: config)
+        let image = LucideIcon.copy.templateImage(pointSize: 14, weight: .medium)
         button.setImage(image, for: .normal)
         button.tintColor = ThemeColors.current.primary
         return button

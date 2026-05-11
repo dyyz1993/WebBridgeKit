@@ -17,14 +17,14 @@ class MenuCell: UITableViewCell {
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 8
-        view.clipsToBounds = true
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return view
     }()
 
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
+        iv.accessibilityLabel = "菜单图标"
         return iv
     }()
 
@@ -52,6 +52,7 @@ class MenuCell: UITableViewCell {
         iv.image = UIImage(systemName: "chevron.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         iv.tintColor = ThemeColors.current.textSecondary.withAlphaComponent(0.4)
         iv.contentMode = .scaleAspectFit
+        iv.accessibilityLabel = "更多"
         return iv
     }()
 
@@ -61,7 +62,7 @@ class MenuCell: UITableViewCell {
         label.textColor = ThemeTokens.Color.background
         label.textAlignment = .center
         label.backgroundColor = ThemeTokens.Color.success
-        label.layer.cornerRadius = 4
+        label.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         label.clipsToBounds = true
         label.isHidden = true
         return label
@@ -83,7 +84,7 @@ class MenuCell: UITableViewCell {
 
     private let heroIconContainer: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 14
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         v.clipsToBounds = true
         return v
     }()
@@ -92,6 +93,7 @@ class MenuCell: UITableViewCell {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.tintColor = ThemeTokens.Color.background
+        iv.accessibilityLabel = "应用图标"
         return iv
     }()
 
@@ -112,12 +114,13 @@ class MenuCell: UITableViewCell {
     let copyTokenButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
-        btn.layer.cornerRadius = 6
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         btn.clipsToBounds = true
         btn.backgroundColor = ThemeTokens.Color.primary
         btn.setTitleColor(ThemeTokens.Color.background, for: .normal)
         btn.isHidden = true
-        btn.contentEdgeInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
+        btn.accessibilityLabel = "复制令牌"
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 10, bottom: 12, right: 10)
         return btn
     }()
 

@@ -26,7 +26,7 @@ class AboutViewController: UIViewController {
     private let appIconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.layer.cornerRadius = 22
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.xxl
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 1
         imageView.layer.borderColor = ThemeTokens.Color.separator.cgColor
@@ -194,8 +194,7 @@ class AboutViewController: UIViewController {
             appIconImageView.image = appIcon
         } else {
             // 如果无法获取 App 图标，使用系统图标
-            let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
-            appIconImageView.image = UIImage(systemName: "app.fill", withConfiguration: config)
+            appIconImageView.image = LucideIcon.appFill.templateImage(pointSize: 60, weight: .light)
                 appIconImageView.tintColor = ThemeColors.current.primary
         }
 

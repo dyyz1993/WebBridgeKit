@@ -192,7 +192,7 @@ private final class HUDContainerView: UIView {
 
     private func setupViews() {
         backgroundView.backgroundColor = UIColor(white: 0, alpha: 0.8)
-        backgroundView.layer.cornerRadius = 14
+        backgroundView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         backgroundView.layer.masksToBounds = true
 
         contentView.backgroundColor = .clear
@@ -207,13 +207,13 @@ private final class HUDContainerView: UIView {
 
         progressView.progressTintColor = .systemBlue
         progressView.trackTintColor = UIColor.white.withAlphaComponent(0.3)
-        progressView.layer.cornerRadius = 2
+        progressView.layer.cornerRadius = ThemeTokens.CornerRadius.xs
         progressView.clipsToBounds = true
 
         let stack = UIStackView(arrangedSubviews: [iconView, progressView, statusLabel])
         stack.axis = .vertical
         stack.alignment = .center
-        stack.spacing = 10
+        stack.spacing = ThemeTokens.Spacing.sm
 
         backgroundView.addSubview(stack)
         addSubview(backgroundView)
@@ -255,15 +255,15 @@ private final class HUDContainerView: UIView {
             progressView.isHidden = false
             progressView.setProgress(progress, animated: true)
         case .success:
-            iconView.image = UIImage(systemName: "checkmark.circle.fill")
+            iconView.image = LucideIcon.success.image()
             removeActivityIndicator()
             progressView.isHidden = true
         case .error:
-            iconView.image = UIImage(systemName: "xmark.circle.fill")
+            iconView.image = LucideIcon.error.image()
             removeActivityIndicator()
             progressView.isHidden = true
         case .info:
-            iconView.image = UIImage(systemName: "info.circle.fill")
+            iconView.image = LucideIcon.info.image()
             removeActivityIndicator()
             progressView.isHidden = true
         }

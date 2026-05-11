@@ -21,12 +21,13 @@ public class CacheAppCell: UITableViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.surface
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         view.layer.masksToBounds = false
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.08
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 8
+        view.layer.shadowOpacity = Float(shadow.opacity)
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
         return view
     }()
 
@@ -36,7 +37,7 @@ public class CacheAppCell: UITableViewCell {
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = ThemeTokens.Color.primary
         imageView.backgroundColor = ThemeTokens.Color.surface
-        imageView.layer.cornerRadius = 12
+        imageView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         imageView.layer.masksToBounds = true
         imageView.clipsToBounds = true
         return imageView
@@ -54,7 +55,7 @@ public class CacheAppCell: UITableViewCell {
     /// 应用名称（次要信息）
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         return label
@@ -63,7 +64,7 @@ public class CacheAppCell: UITableViewCell {
     /// 版本标签
     private let versionLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.font = ThemeTokens.Typography.caption1
         label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         return label
@@ -72,7 +73,7 @@ public class CacheAppCell: UITableViewCell {
     /// 页面数量标签
     private let pageCountLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.font = ThemeTokens.Typography.caption1
         label.textColor = ThemeTokens.Color.gradientEnd
         label.numberOfLines = 1
         return label
@@ -81,7 +82,7 @@ public class CacheAppCell: UITableViewCell {
     /// 缓存大小标签
     private let cacheSizeLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        label.font = ThemeTokens.Typography.subheadline
         label.textColor = ThemeTokens.Color.warning
         label.numberOfLines = 1
         return label
@@ -92,16 +93,16 @@ public class CacheAppCell: UITableViewCell {
         let button = UIButton(type: .system)
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
-            config.image = UIImage(systemName: "doc.on.doc")
+            config.image = LucideIcon.copy.templateImage()
             config.imagePlacement = .leading
             config.imagePadding = 4
             config.title = "复制"
             config.baseForegroundColor = ThemeTokens.Color.primary
             button.configuration = config
         } else {
-            button.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
+            button.setImage(LucideIcon.copy.templateImage(), for: .normal)
             button.setTitle("复制", for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+            button.titleLabel?.font = ThemeTokens.Typography.footnote
             button.tintColor = ThemeTokens.Color.primary
             button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
             button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
@@ -114,7 +115,7 @@ public class CacheAppCell: UITableViewCell {
         let button = UIButton(type: .system)
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
-            config.image = UIImage(systemName: "trash.fill")
+            config.image = LucideIcon.trash.templateImage()
             config.imagePlacement = .all
             config.baseForegroundColor = ThemeTokens.Color.error
             config.baseBackgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
@@ -126,10 +127,10 @@ public class CacheAppCell: UITableViewCell {
                 btn.configuration = config
             }
         } else {
-            button.setImage(UIImage(systemName: "trash.fill"), for: .normal)
+            button.setImage(LucideIcon.trash.templateImage(), for: .normal)
             button.tintColor = ThemeTokens.Color.error
             button.backgroundColor = ThemeTokens.Color.error.withAlphaComponent(0.1)
-            button.layer.cornerRadius = 22
+            button.layer.cornerRadius = ThemeTokens.CornerRadius.xxl
             button.layer.masksToBounds = true
             button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         }
@@ -140,7 +141,7 @@ public class CacheAppCell: UITableViewCell {
     private let appIDBackgroundView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
-        view.layer.cornerRadius = 8
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         view.layer.masksToBounds = true
         return view
     }()
@@ -149,7 +150,7 @@ public class CacheAppCell: UITableViewCell {
     private let topInfoStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
         stack.alignment = .center
         return stack
     }()
@@ -158,7 +159,7 @@ public class CacheAppCell: UITableViewCell {
     private let bottomInfoStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 12
+        stack.spacing = ThemeTokens.Spacing.md
         stack.alignment = .center
         return stack
     }()
@@ -167,7 +168,7 @@ public class CacheAppCell: UITableViewCell {
     private let rightButtonStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
         stack.alignment = .center
         stack.distribution = .fill
         return stack
@@ -376,10 +377,10 @@ public class CacheAppCell: UITableViewCell {
 
     private func showCopyFeedback() {
         // 复制按钮动画反馈
-        UIView.animate(withDuration: 0.1, animations: {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: {
             self.copyButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
         }, completion: { _ in
-            UIView.animate(withDuration: 0.1) {
+            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
                 self.copyButton.transform = .identity
             }
         })

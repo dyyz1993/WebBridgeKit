@@ -30,7 +30,7 @@ public class EmptyStateView: UIView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        label.font = ThemeTokens.Typography.headline
         label.textColor = UIColor.label
         label.textAlignment = .center
         label.accessibilityIdentifier = "EmptyStateView.titleLabel"
@@ -39,7 +39,7 @@ public class EmptyStateView: UIView {
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = UIColor.secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -48,8 +48,8 @@ public class EmptyStateView: UIView {
 
     private let actionButton: UIButton = {
         let button = UIButton(type: .system)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
+        button.titleLabel?.font = ThemeTokens.Typography.callout
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.backgroundColor = UIColor.systemBlue
         button.setTitleColor(.white, for: .normal)
         return button

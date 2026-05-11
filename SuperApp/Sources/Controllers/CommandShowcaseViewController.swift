@@ -77,7 +77,7 @@ class CommandShowcaseViewController: UIViewController {
 
         let isCommandStack = UIStackView()
         isCommandStack.axis = .horizontal
-        isCommandStack.spacing = 8
+        isCommandStack.spacing = ThemeTokens.Spacing.sm
         let looksLikeLabel = UILabel()
         looksLikeLabel.font = ThemeTypography.current.caption1
         looksLikeLabel.textColor = ThemeColors.current.textSecondary

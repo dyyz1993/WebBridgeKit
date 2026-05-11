@@ -227,7 +227,7 @@ public class WebGestureInterceptor: NSObject {
         let progress = min(distance / threshold, 1.0)
 
         // 根据进度更新指示器
-        UIView.animate(withDuration: 0.1) {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
             indicator.alpha = progress
             indicator.transform = CGAffineTransform(scaleX: progress, y: progress)
             indicator.setProgress(progress, triggered: distance >= threshold)
@@ -238,7 +238,7 @@ public class WebGestureInterceptor: NSObject {
         guard let indicator = pullIndicatorView else { return }
 
         indicator.startLoading()
-        UIView.animate(withDuration: 0.2) {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
             indicator.alpha = 1
         }
     }
@@ -247,7 +247,7 @@ public class WebGestureInterceptor: NSObject {
         guard let indicator = pullIndicatorView else { return }
 
         indicator.stopLoading()
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration, delay: 0, options: .curveEaseOut) {
             indicator.alpha = 0
             indicator.transform = .identity
         }
@@ -356,7 +356,7 @@ private class PullIndicatorView: UIView {
         backgroundColor = .systemBackground
 
         // 图标
-        iconView.image = UIImage(systemName: "arrow.down")
+        iconView.image = LucideIcon.arrowDown.templateImage()
         iconView.tintColor = .systemGray
         iconView.contentMode = .scaleAspectFit
         addSubview(iconView)
@@ -398,10 +398,10 @@ private class PullIndicatorView: UIView {
         iconView.transform = CGAffineTransform(rotationAngle: rotation)
 
         if triggered {
-            iconView.image = UIImage(systemName: "arrow.up")
+            iconView.image = LucideIcon.arrowUp.templateImage()
             label.text = "释放刷新"
         } else {
-            iconView.image = UIImage(systemName: "arrow.down")
+            iconView.image = LucideIcon.arrowDown.templateImage()
             label.text = "下拉刷新"
         }
 
@@ -422,8 +422,7 @@ private class PullIndicatorView: UIView {
         activityIndicator.stopAnimating()
         label.text = "下拉刷新"
 
-        // 重置图标
-        UIView.animate(withDuration: 0.2) {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
             self.iconView.transform = .identity
             self.iconView.alpha = 0
             self.label.alpha = 0

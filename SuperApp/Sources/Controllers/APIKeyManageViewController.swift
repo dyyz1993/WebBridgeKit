@@ -40,20 +40,20 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private let permanentKeyIcon: UIImageView = {
         let imageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
-        imageView.image = UIImage(systemName: "key.fill", withConfiguration: config)
+        imageView.image = LucideIcon.key.templateImage(pointSize: 24, weight: .semibold)
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = ThemeTokens.Color.success
         imageView.backgroundColor = ThemeTokens.Color.success.withAlphaComponent(0.15)
         imageView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         imageView.layer.masksToBounds = true
+        imageView.accessibilityLabel = "密钥图标"
         return imageView
     }()
 
     private let permanentKeyTitle: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.permanent_key")
-        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        label.font = ThemeTokens.Typography.headline
         label.textColor = ThemeTokens.Color.text
         return label
     }()
@@ -70,34 +70,34 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private let copyPermanentKeyButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        let image = UIImage(systemName: "doc.on.doc", withConfiguration: config)
+        let image = LucideIcon.copy.templateImage(pointSize: 18, weight: .medium)
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("common.copy"))", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        button.titleLabel?.font = ThemeTokens.Typography.subheadline
         button.tintColor = ThemeTokens.Color.primary
+        button.accessibilityLabel = "复制密钥"
         return button
     }()
 
     private let refreshKeyButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        let image = UIImage(systemName: "arrow.clockwise", withConfiguration: config)
+        let image = LucideIcon.refresh.templateImage(pointSize: 18, weight: .medium)
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.refresh"))", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        button.titleLabel?.font = ThemeTokens.Typography.subheadline
         button.tintColor = ThemeTokens.Color.warning
+        button.accessibilityLabel = "刷新密钥"
         return button
     }()
 
     private let testPermanentKeyButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        let image = UIImage(systemName: "paperplane", withConfiguration: config)
+        let image = LucideIcon.paperplane.templateImage(pointSize: 18, weight: .medium)
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.test"))", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        button.titleLabel?.font = ThemeTokens.Typography.subheadline
         button.tintColor = ThemeTokens.Color.success
+        button.accessibilityLabel = "测试推送"
         return button
     }()
 
@@ -109,13 +109,13 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private let examplesButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        let image = UIImage(systemName: "doc.text", withConfiguration: config)
+        let image = LucideIcon.docText.templateImage(pointSize: 16, weight: .medium)
         button.setImage(image, for: .normal)
         button.setTitle(" \(L10n.tr("apikey.manage.view_examples"))", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        button.titleLabel?.font = ThemeTokens.Typography.footnote
         button.tintColor = ThemeTokens.Color.primary
         button.contentHorizontalAlignment = .left
+        button.accessibilityLabel = "查看示例"
         return button
     }()
 
@@ -123,7 +123,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let temporaryKeysHeader: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.temporary_keys")
-        label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        label.font = ThemeTokens.Typography.title3
         label.textColor = ThemeTokens.Color.text
         return label
     }()
@@ -131,7 +131,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let temporaryKeysDescription: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.temporary_keys_desc")
-        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        label.font = ThemeTokens.Typography.footnote
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
@@ -160,7 +160,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let barkConfigTitle: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("apikey.manage.bark_config_title")
-        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 0
         return label
@@ -195,10 +195,11 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let saveBarkConfigButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("apikey.manage.save_config"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        button.titleLabel?.font = ThemeTokens.Typography.subheadline
         button.backgroundColor = ThemeTokens.Color.primary
         button.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        button.accessibilityLabel = "保存配置"
         return button
     }()
 
@@ -401,12 +402,13 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private func setupRightBarButton() {
         let addButton = UIBarButtonItem(
-            image: UIImage(systemName: "plus"),
+            image: LucideIcon.plus.image(),
             style: .plain,
             target: self,
             action: #selector(addTemporaryKeyTapped)
         )
         addButton.tintColor = ThemeTokens.Color.primary
+        addButton.accessibilityLabel = "添加临时密钥"
         navigationItem.rightBarButtonItem = addButton
     }
 
@@ -490,7 +492,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     // MARK: - Actions
 
     @objc private func copyPermanentKeyTapped() {
-        // 已经通过 RxSwift 绑定处理
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     @objc private func refreshKeyTapped() {
@@ -517,6 +519,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     }
 
     @objc private func saveBarkConfigTapped() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
         let key = barkKeyTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let server = barkServerTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -693,7 +696,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
             self?.deleteKeySubject.onNext(key.id)
             completion(true)
         }
-        deleteAction.image = UIImage(systemName: "trash")
+        deleteAction.image = LucideIcon.trash.image()
 
         // 测试操作
         let testAction = UIContextualAction(style: .normal, title: L10n.tr("apikey.manage.test")) { [weak self] _, _, completion in
@@ -701,7 +704,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
             completion(true)
         }
         testAction.backgroundColor = ThemeTokens.Color.success
-        testAction.image = UIImage(systemName: "paperplane.fill")
+        testAction.image = LucideIcon.send.image()
 
         // 编辑操作
         let editAction = UIContextualAction(style: .normal, title: L10n.tr("common.edit")) { [weak self] _, _, completion in
@@ -709,7 +712,7 @@ extension APIKeyManageViewController: UITableViewDelegate {
             completion(true)
         }
         editAction.backgroundColor = ThemeTokens.Color.primary
-        editAction.image = UIImage(systemName: "square.and.pencil")
+        editAction.image = LucideIcon.squarePencil.image()
 
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction, testAction, editAction])
         configuration.performsFirstActionWithFullSwipe = false
@@ -735,6 +738,7 @@ extension APIKeyManageViewController {
 
         alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
         alert.addAction(UIAlertAction(title: L10n.tr("common.save"), style: .default) { [weak self] _ in
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             let newGroupId = alert.textFields?.first?.text
             self?.viewModel.updateKeyGroupId(id: key.id, groupId: newGroupId)
         })

@@ -313,7 +313,7 @@ class ComponentCatalogViewController: UIViewController {
 
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
 
         for (name, value) in spacings {
             let row = UIStackView()
@@ -332,7 +332,7 @@ class ComponentCatalogViewController: UIViewController {
 
             let bar = UIView()
             bar.backgroundColor = ThemeColors.current.primary
-            bar.layer.cornerRadius = 2
+            bar.layer.cornerRadius = ThemeTokens.CornerRadius.xs
             bar.snp.makeConstraints { make in
                 make.height.equalTo(value)
                 make.width.equalTo(80)
@@ -391,7 +391,7 @@ class ComponentCatalogViewController: UIViewController {
             let itemStack = UIStackView()
             itemStack.axis = .vertical
             itemStack.alignment = .center
-            itemStack.spacing = 6
+            itemStack.spacing = ThemeTokens.Spacing.sm
 
             let box = UIView()
             box.backgroundColor = ThemeColors.current.primary
@@ -443,13 +443,13 @@ class ComponentCatalogViewController: UIViewController {
         let row = UIStackView()
         row.axis = .horizontal
         row.distribution = .fillEqually
-        row.spacing = 12
+        row.spacing = ThemeTokens.Spacing.md
 
         for (name, shadow) in shadows {
             let itemStack = UIStackView()
             itemStack.axis = .vertical
             itemStack.alignment = .center
-            itemStack.spacing = 8
+            itemStack.spacing = ThemeTokens.Spacing.sm
 
             let card = UIView()
             card.backgroundColor = ThemeColors.current.cardBackground
@@ -633,9 +633,11 @@ class ComponentCatalogViewController: UIViewController {
         stack.addArrangedSubview(contentCard)
 
         let shadowCard = ThemeCard()
-        shadowCard.innerContentView.layer.shadowOpacity = 0.15
-        shadowCard.innerContentView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        shadowCard.innerContentView.layer.shadowRadius = 12
+        let shadow = ThemeTokens.Shadows.Card
+        shadowCard.innerContentView.layer.shadowColor = UIColor.black.cgColor
+        shadowCard.innerContentView.layer.shadowOpacity = Float(shadow.opacity)
+        shadowCard.innerContentView.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        shadowCard.innerContentView.layer.shadowRadius = shadow.radius
         let shadowLabel = UILabel()
         shadowLabel.text = "Card with enhanced shadow"
         shadowLabel.font = ThemeTypography.current.body
@@ -788,7 +790,7 @@ class ComponentCatalogViewController: UIViewController {
 
             let unreadDot = UIView()
             unreadDot.backgroundColor = ThemeTokens.Color.unreadDot
-            unreadDot.layer.cornerRadius = 5
+            unreadDot.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             unreadDot.isHidden = !isUnread
             cell.addSubview(unreadDot)
 
@@ -917,7 +919,7 @@ class ComponentCatalogViewController: UIViewController {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.distribution = .fillEqually
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
 
         for action in actions {
             let btn = UIButton(type: .system)
@@ -938,7 +940,7 @@ class ComponentCatalogViewController: UIViewController {
             let innerStack = UIStackView(arrangedSubviews: [iconView, titleLabel])
             innerStack.axis = .vertical
             innerStack.alignment = .center
-            innerStack.spacing = 4
+            innerStack.spacing = ThemeTokens.Spacing.xs
             innerStack.isUserInteractionEnabled = false
 
             btn.addSubview(innerStack)
@@ -976,7 +978,7 @@ class ComponentCatalogViewController: UIViewController {
 
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
         stack.alignment = .center
 
         for (title, isSelected) in filters {
@@ -998,7 +1000,7 @@ class ComponentCatalogViewController: UIViewController {
                 button.titleLabel?.font = ThemeTokens.Typography.footnote
                 button.backgroundColor = isSelected ? ThemeColors.current.primary : ThemeTokens.Color.surface
                 button.setTitleColor(isSelected ? ThemeTokens.Color.background : ThemeTokens.Color.textSecondary, for: .normal)
-                button.layer.cornerRadius = 16
+                button.layer.cornerRadius = ThemeTokens.CornerRadius.xl
                 button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
             }
             button.setTitle(title, for: .normal)
@@ -1032,7 +1034,7 @@ class ComponentCatalogViewController: UIViewController {
         fab.setImage(LucideIcon.bell.image(pointSize: 22, weight: .semibold), for: .normal)
         fab.backgroundColor = ThemeColors.current.fabBackground
         fab.tintColor = ThemeTokens.Color.background
-        fab.layer.cornerRadius = 28
+        fab.layer.cornerRadius = ThemeTokens.CornerRadius.full
         fab.layer.shadowColor = UIColor.black.cgColor
         fab.layer.shadowOffset = CGSize(width: 0, height: ThemeTokens.Shadows.Fab.offsetY)
         fab.layer.shadowRadius = ThemeTokens.Shadows.Fab.radius
@@ -1093,7 +1095,7 @@ class ComponentCatalogViewController: UIViewController {
             row.addSubview(valueLbl)
 
             let chevronIV = UIImageView()
-            chevronIV.image = UIImage(systemName: "chevron.right")
+            chevronIV.image = LucideIcon.chevronRight.templateImage()
             chevronIV.tintColor = ThemeTokens.Color.textTertiary
             chevronIV.contentMode = .scaleAspectFit
             chevronIV.isHidden = !showChevron
@@ -1248,7 +1250,7 @@ private class TokenCardDemoView: UIView {
         tokenLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.7)
 
         let copyButton = UIButton(type: .system)
-        copyButton.setImage(UIImage(systemName: "doc.on.doc", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)), for: .normal)
+        copyButton.setImage(LucideIcon.copy.templateImage(pointSize: 16, weight: .semibold), for: .normal)
         copyButton.tintColor = ThemeTokens.Color.background
         copyButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
         copyButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl

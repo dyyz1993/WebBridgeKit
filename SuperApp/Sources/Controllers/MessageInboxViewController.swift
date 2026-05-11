@@ -214,7 +214,7 @@ class MessageCell: UITableViewCell {
         cardView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         contentView.addSubview(cardView)
 
-        iconContainer.layer.cornerRadius = 10
+        iconContainer.layer.cornerRadius = ThemeTokens.CornerRadius.md
         iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.tintColor = ThemeColors.current.primary
@@ -240,7 +240,7 @@ class MessageCell: UITableViewCell {
         unreadDot.backgroundColor = ThemeColors.current.error
         unreadDot.layer.cornerRadius = ThemeTokens.CornerRadius.sm
 
-        actionImageView.image = UIImage(systemName: "chevron.right")
+        actionImageView.image = LucideIcon.chevronRight.templateImage()
         actionImageView.tintColor = ThemeColors.current.textSecondary
         actionImageView.contentMode = .scaleAspectFit
 
@@ -337,15 +337,15 @@ class MessageCell: UITableViewCell {
         timeLabel.text = formatter.string(from: message.receivedAt)
 
         if message.payload.targetAppId != nil {
-            iconImageView.image = UIImage(systemName: "app.badge.fill")
+            iconImageView.image = LucideIcon.appBadge.templateImage()
             iconContainer.backgroundColor = ThemeTokens.Color.info.withAlphaComponent(0.1)
             iconImageView.tintColor = ThemeTokens.Color.info
         } else if message.payload.targetURL != nil {
-            iconImageView.image = UIImage(systemName: "link")
+            iconImageView.image = LucideIcon.link.templateImage()
             iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
             iconImageView.tintColor = ThemeColors.current.primary
         } else {
-            iconImageView.image = UIImage(systemName: "bell.fill")
+            iconImageView.image = LucideIcon.bell.templateImage()
             iconContainer.backgroundColor = ThemeColors.current.warning.withAlphaComponent(0.1)
             iconImageView.tintColor = ThemeColors.current.warning
         }

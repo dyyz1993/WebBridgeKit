@@ -27,7 +27,7 @@ class WebPageHistoryCell: UITableViewCell {
     /// 标题标签
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.font = ThemeTokens.Typography.callout
         label.textColor = ThemeTokens.Color.textTertiary
         label.numberOfLines = 2
         return label
@@ -36,7 +36,7 @@ class WebPageHistoryCell: UITableViewCell {
     /// URL 标签
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        label.font = ThemeTokens.Typography.caption1
         label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
@@ -44,7 +44,7 @@ class WebPageHistoryCell: UITableViewCell {
     /// 访问信息标签
     private let visitInfoLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 11, weight: .regular)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
@@ -52,11 +52,11 @@ class WebPageHistoryCell: UITableViewCell {
     /// 缓存大小标签
     private let cacheSizeLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 10, weight: .medium)
+        label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeTokens.Color.info
         label.layer.borderColor = ThemeTokens.Color.info.cgColor
         label.layer.borderWidth = 1
-        label.layer.cornerRadius = 3
+        label.layer.cornerRadius = ThemeTokens.CornerRadius.xs
         label.textAlignment = .center
         return label
     }()
@@ -162,7 +162,7 @@ class WebPageHistoryCell: UITableViewCell {
 
         // 设置缓存状态
         if history.isCached {
-            cacheStatusImageView.image = UIImage(systemName: "checkmark.circle.fill")
+            cacheStatusImageView.image = LucideIcon.success.image()
             cacheStatusImageView.tintColor = UIColor.systemGreen
 
             // 显示缓存大小

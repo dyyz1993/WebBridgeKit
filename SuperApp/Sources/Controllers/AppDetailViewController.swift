@@ -23,7 +23,7 @@ class AppDetailViewController: UIViewController {
     private let contentStack: UIStackView = {
         let sv = UIStackView()
         sv.axis = .vertical
-        sv.spacing = 12
+        sv.spacing = ThemeTokens.Spacing.md
         return sv
     }()
 
@@ -73,7 +73,7 @@ class AppDetailViewController: UIViewController {
         let card = makeCardView()
 
         let iconContainer = UIView()
-        iconContainer.layer.cornerRadius = 14
+        iconContainer.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         iconContainer.clipsToBounds = true
         let gradLayer = CAGradientLayer()
         gradLayer.startPoint = CGPoint(x: 0, y: 0)
@@ -86,6 +86,7 @@ class AppDetailViewController: UIViewController {
         icon.contentMode = .scaleAspectFit
         icon.tintColor = .white
         icon.image = DiscoverViewController.iconForName(item.name).image(pointSize: 28)
+        icon.accessibilityLabel = "应用图标"
         iconContainer.addSubview(icon)
 
         iconContainer.snp.makeConstraints { make in
@@ -99,7 +100,7 @@ class AppDetailViewController: UIViewController {
 
         let textStack = UIStackView()
         textStack.axis = .vertical
-        textStack.spacing = 4
+        textStack.spacing = ThemeTokens.Spacing.xs
 
         let nameLabel = UILabel()
         nameLabel.font = .systemFont(ofSize: 20, weight: .bold)
@@ -117,7 +118,7 @@ class AppDetailViewController: UIViewController {
         let hStack = UIStackView(arrangedSubviews: [iconContainer, textStack])
         hStack.axis = .horizontal
         hStack.alignment = .center
-        hStack.spacing = 16
+        hStack.spacing = ThemeTokens.Spacing.md
 
         card.addSubview(hStack)
         hStack.snp.makeConstraints { make in
@@ -197,22 +198,24 @@ class AppDetailViewController: UIViewController {
         addRow(to: rows, label: L10n.tr("discover.detail.token"), value: maskedToken, isLast: true, mono: true)
 
         let btnStack = UIStackView()
-        btnStack.spacing = 8
+        btnStack.spacing = ThemeTokens.Spacing.sm
         btnStack.snp.makeConstraints { make in
             make.height.equalTo(36)
         }
 
         let copyBtn = makeSmallButton(title: L10n.tr("discover.detail.copy"), icon: .copy, style: .primary)
+        copyBtn.accessibilityLabel = "复制令牌"
         copyBtn.addTarget(self, action: #selector(copyToken(_:)), for: .touchUpInside)
         btnStack.addArrangedSubview(copyBtn)
 
         let urlBtn = makeSmallButton(title: L10n.tr("discover.detail.url"), icon: .link, style: .outline)
+        urlBtn.accessibilityLabel = "复制推送地址"
         urlBtn.addTarget(self, action: #selector(copyPushURL(_:)), for: .touchUpInside)
         btnStack.addArrangedSubview(urlBtn)
 
         let stack = UIStackView(arrangedSubviews: [titleLabel, rows, btnStack])
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
 
         card.addSubview(stack)
         stack.snp.makeConstraints { make in
@@ -224,16 +227,19 @@ class AppDetailViewController: UIViewController {
 
     private func makeActionButtons() -> UIView {
         let stack = UIStackView()
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
         stack.distribution = .fillEqually
 
         let refreshBtn = makeSmallButton(title: L10n.tr("discover.detail.refresh"), icon: .refresh, style: .primary)
+        refreshBtn.accessibilityLabel = "刷新缓存"
         refreshBtn.addTarget(self, action: #selector(refreshAction(_:)), for: .touchUpInside)
 
         let clearBtn = makeSmallButton(title: L10n.tr("discover.detail.clear"), icon: .trash, style: .danger)
+        clearBtn.accessibilityLabel = "清除缓存"
         clearBtn.addTarget(self, action: #selector(clearAction(_:)), for: .touchUpInside)
 
         let openBtn = makeSmallButton(title: L10n.tr("discover.detail.open"), icon: .arrowRight, style: .success)
+        openBtn.accessibilityLabel = "打开应用"
         openBtn.addTarget(self, action: #selector(openAction(_:)), for: .touchUpInside)
 
         stack.addArrangedSubview(refreshBtn)
@@ -252,6 +258,7 @@ class AppDetailViewController: UIViewController {
     @objc private func copyToken(_ sender: UIButton) {
         if let token = item.pushToken {
             UIPasteboard.general.string = token
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             showAlert(title: L10n.tr("common.success"), message: L10n.tr("discover.detail.token_copied"))
         }
     }
@@ -260,6 +267,7 @@ class AppDetailViewController: UIViewController {
         if let token = item.pushToken {
             let urlString = "https://api.day.app/\(token)"
             UIPasteboard.general.string = urlString
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             showAlert(title: L10n.tr("common.success"), message: L10n.tr("discover.detail.url_copied"))
         }
     }
@@ -269,6 +277,7 @@ class AppDetailViewController: UIViewController {
     }
 
     @objc private func clearAction(_ sender: UIButton) {
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
         if let url = URL(string: item.url) {
             PersistentManifestLoader.shared.clearCache(for: url)
         }
@@ -295,11 +304,12 @@ class AppDetailViewController: UIViewController {
     private func makeCardView() -> UIView {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = 14
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 8
-        view.layer.shadowOpacity = 0.06
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
         return view
     }
 
@@ -382,7 +392,7 @@ class AppDetailViewController: UIViewController {
         btn.setTitle(title, for: .normal)
         btn.setImage(icon.image(pointSize: 14), for: .normal)
         btn.tintColor = fgColor
-        btn.layer.cornerRadius = 8
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         if case .outline = style {
             btn.layer.borderWidth = 1.5
             btn.layer.borderColor = ThemeTokens.Color.primary.cgColor

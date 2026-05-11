@@ -82,13 +82,15 @@ public class WebCacheDebugFloatingButton: UIView {
     private let floatingButton: UIButton = {
         let button = UIButton(type: .custom)
         button.backgroundColor = .systemGray
-        button.layer.cornerRadius = 25
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.full
+        let shadow = ThemeTokens.Shadows.Fab
         button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
-        button.layer.shadowOpacity = 0.3
+        button.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        button.layer.shadowRadius = shadow.radius
+        button.layer.shadowOpacity = Float(shadow.opacity)
         button.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
         button.setTitleColor(.white, for: .normal)
+        button.accessibilityLabel = "缓存调试按钮"
         return button
     }()
 
@@ -98,18 +100,20 @@ public class WebCacheDebugFloatingButton: UIView {
         button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        button.accessibilityLabel = "关闭调试面板"
         return button
     }()
 
     private let debugPanel: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
+        let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.2
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
         view.alpha = 0
         view.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
         return view
@@ -118,8 +122,7 @@ public class WebCacheDebugFloatingButton: UIView {
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 12
-        stack.alignment = .fill
+        stack.spacing = ThemeTokens.Spacing.md
         stack.distribution = .fill
         return stack
     }()
@@ -189,7 +192,7 @@ public class WebCacheDebugFloatingButton: UIView {
 
         let eventsStack = UIStackView()
         eventsStack.axis = .vertical
-        eventsStack.spacing = 8
+        eventsStack.spacing = ThemeTokens.Spacing.sm
         eventsStack.tag = 104
 
         // Add all to main stack
@@ -245,7 +248,19 @@ public class WebCacheDebugFloatingButton: UIView {
 
     // MARK: - Actions
 
+    public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        if !closeButton.isHidden {
+            let closeButtonFrame = convert(closeButton.frame, from: closeButton.superview)
+            let expandedCloseFrame = closeButtonFrame.insetBy(dx: -12, dy: -12)
+            if expandedCloseFrame.contains(point) {
+                return closeButton
+            }
+        }
+        return super.hitTest(point, with: event)
+    }
+
     @objc private func buttonTapped() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         if isExpanded {
             collapsePanel()
         } else {
@@ -254,6 +269,7 @@ public class WebCacheDebugFloatingButton: UIView {
     }
 
     @objc private func closeButtonTapped() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         removeFromSuperview()
     }
 
@@ -303,7 +319,7 @@ public class WebCacheDebugFloatingButton: UIView {
 
         updatePanelContent()
 
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseOut) {
+        UIView.animate(withDuration: ThemeTokens.Animation.spring.duration, delay: 0, usingSpringWithDamping: ThemeTokens.Animation.spring.damping, initialSpringVelocity: 0, options: .curveEaseOut) {
             self.debugPanel.alpha = 1
             self.debugPanel.transform = .identity
         }
@@ -312,7 +328,7 @@ public class WebCacheDebugFloatingButton: UIView {
     private func collapsePanel() {
         isExpanded = true
 
-        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseIn) {
+        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, delay: 0, options: .curveEaseIn) {
             self.debugPanel.alpha = 0
             self.debugPanel.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
         } completion: { _ in
@@ -389,7 +405,7 @@ public class WebCacheDebugFloatingButton: UIView {
         self.cacheSize = cacheSize
 
         // Update button appearance
-        UIView.animate(withDuration: 0.2) {
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
             self.floatingButton.backgroundColor = status.color
             self.floatingButton.setTitle(status.icon, for: .normal)
         }
