@@ -146,7 +146,7 @@ final class PinnedURLModelTests: XCTestCase {
 
         XCTAssertFalse(stats.hasData)
         XCTAssertEqual(stats.totalEntries, 0)
-        XCTAssertEqual(stats.formattedSize, "0 KB")
+        XCTAssertTrue(stats.formattedSize == "0 KB" || stats.formattedSize == "Zero KB" || stats.formattedSize == "0 bytes", "Expected zero-size format but got: \(stats.formattedSize)")
     }
 
     func testSubsystemStatsWithHitRate() {

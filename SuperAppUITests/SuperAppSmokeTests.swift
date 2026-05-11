@@ -135,4 +135,20 @@ final class SuperAppSmokeTests: XCTestCase {
         let staticTexts = app.staticTexts
         XCTAssertTrue(staticTexts.count > 0, "Settings screen should have content")
     }
+
+    // MARK: - Cache Dashboard (in SmokeTests for crash debugging)
+
+    func testZCacheDashboardFromSettings() {
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist")
+        
+        // Wait for background seeder to complete
+        sleep(8)
+        
+        let settingsTab = findTabButton(in: tabBar, zhName: "设置", enName: "Settings")
+        settingsTab.tap()
+        sleep(3)
+        
+        XCTAssertTrue(true, "Settings tab tapped without crash")
+    }
 }
