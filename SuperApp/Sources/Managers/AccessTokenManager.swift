@@ -21,7 +21,8 @@ public class AccessTokenManager {
     private init() {
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("accessToken.realm"),
-            schemaVersion: 1
+            schemaVersion: 2,
+            migrationBlock: { _, _ in }
         )
     }
 
@@ -86,6 +87,17 @@ public class AccessTokenManager {
 
         try? realm?.write {
             tokenObj.accessCount += 1
+        }
+    }
+
+    /// 增加口令分享次数
+    func incrementShareCount(token: String) {
+        let realm = getRealm()
+        guard let tokenObj = getTokenInfo(token: token) else { return }
+
+        try? realm?.write {
+            tokenObj.shareCount += 1
+            tokenObj.lastSharedAt = Date()
         }
     }
 

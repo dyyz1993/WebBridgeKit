@@ -312,4 +312,25 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
         }
         present(activityVC, animated: true)
     }
+
+    /// 分享访问口令
+    func shareAccessToken(_ token: AccessToken) {
+        let shareText = "【WebBridgeKit】共享口令: \(token.token)\n有效期至: \(token.formattedExpiresAt)"
+
+        let activityVC = UIActivityViewController(
+            activityItems: [shareText],
+            applicationActivities: nil
+        )
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+
+        activityVC.completionWithItemsHandler = { _, _, _, _ in
+            AccessTokenManager.shared.incrementShareCount(token: token.token)
+        }
+
+        present(activityVC, animated: true)
+    }
 }

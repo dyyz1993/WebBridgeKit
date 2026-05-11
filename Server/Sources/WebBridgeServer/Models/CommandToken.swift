@@ -7,6 +7,8 @@ struct CommandToken: Codable, Sendable {
     let signature: String
     let createdAt: String
     let expiresAt: String?
+    var shareCount: Int
+    var lastSharedAt: String?
 
     struct CommandPayload: Codable, Sendable {
         let type: CommandType
@@ -40,6 +42,13 @@ struct CommandGenerateResponse: ResponseEncodable, Sendable {
     let token: String
     let url: String
     let signature: String
+}
+
+struct CommandShareResponse: ResponseEncodable, Sendable {
+    let id: String
+    let shareCount: Int
+    let shareURL: String
+    let shareText: String
 }
 
 struct CommandResolveResponse: ResponseEncodable, Sendable {

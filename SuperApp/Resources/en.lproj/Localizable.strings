@@ -236,6 +236,10 @@
 "model.access_token.hours_minutes_format" = "%@h %@m";
 "model.access_token.minutes_format" = "%@m";
 
+// Token Share
+"token.share.text" = "【WebBridgeKit】Shared Token: %@\nToken: %@";
+"token.share.title" = "Share Token";
+
 // Token Generate
 "token.generate.select_url_error" = "Please select a URL first";
 "token.generate.failure" = "Token generation failed, please retry";

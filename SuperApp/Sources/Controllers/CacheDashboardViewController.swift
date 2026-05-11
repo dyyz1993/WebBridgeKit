@@ -58,7 +58,7 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
     // MARK: - Relays
 
     private let refreshRelay = PublishRelay<Void>()
-    private let selectSubsystemRelay = PublishRelay<SubsystemStats>()
+    private let selectSubsystemIndexRelay = PublishRelay<Int>()
     private let tapClearAllRelay = PublishRelay<Void>()
     private let tapPinnedManageRelay = PublishRelay<Void>()
     private let tapPresetCatalogRelay = PublishRelay<Void>()
@@ -128,7 +128,7 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
 
         let input = CacheDashboardViewModel.Input(
             refresh: refreshRelay.asObservable(),
-            selectSubsystem: selectSubsystemRelay.asObservable(),
+            selectSubsystemAt: selectSubsystemIndexRelay.asObservable(),
             tapClearAll: tapClearAllRelay.asObservable(),
             tapPinnedManage: tapPinnedManageRelay.asObservable(),
             tapPresetCatalog: tapPresetCatalogRelay.asObservable()
@@ -235,15 +235,14 @@ extension CacheDashboardViewController: UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
 
         let item = sections[indexPath.section].items[indexPath.row]
-
-        // Reconstruct SubsystemStats from the item model for the relay
-        let stats = SubsystemStats(
-            id: item.id,
-            totalEntries: Int(item.entries) ?? 0,
-            totalSize: 0,
-            status: item.hasData ? .active : .empty
-        )
-        selectSubsystemRelay.accept(stats)
+        
+        // Compute global index into the flat subsystem list
+        var globalIndex = indexPath.row
+        for s in 0..<indexPath.section {
+            globalIndex += sections[s].items.count
+        }
+        
+        selectSubsystemIndexRelay.accept(globalIndex)
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

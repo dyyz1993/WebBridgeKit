@@ -5,6 +5,12 @@
 //  Created on 2026-05-11.
 //  Copyright © 2026年 WebBridgeKit. All rights reserved.
 //
+//  ⚠️ CRITICAL: All Rx Observable element types must be built-in Swift types
+//  (Void, Int, Bool, String). Using types from WebBridgeKit framework as Rx
+//  generic parameters causes Swift runtime metadata crash (AnonymousObservableSink,
+//  MapSink, SubscribeOnSink, CatchSink etc.). All WebBridgeKit types are handled
+//  via BehaviorRelay internal storage or manual callbacks, never as Rx element types.
+//
 
 import Foundation
 import RxCocoa
@@ -19,7 +25,8 @@ class CacheDashboardViewModel: ViewModel {
 
     struct Input {
         let refresh: Observable<Void>
-        let selectSubsystem: Observable<SubsystemStats>
+        /// Index into cached subsystem list (Int is safe for Rx generics)
+        let selectSubsystemAt: Observable<Int>
         let tapClearAll: Observable<Void>
         let tapPinnedManage: Observable<Void>
         let tapPresetCatalog: Observable<Void>
@@ -67,7 +74,9 @@ class CacheDashboardViewModel: ViewModel {
         }
     }
 
-    // MARK: - Private
+    // MARK: - Private Relays
+    // NOTE: All relays store WebBridgeKit types internally, but they are NEVER
+    // used as Rx Observable/Driver element types in subscription chains.
 
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = BehaviorRelay<String?>(value: nil)
@@ -76,31 +85,36 @@ class CacheDashboardViewModel: ViewModel {
     private let showClearConfirmRelay = PublishRelay<Void>()
     private let clearResultRelay = BehaviorRelay<Bool>(value: false)
 
+    /// Cached subsystem list for index-based lookup
+    private var cachedSubsystems: [SubsystemStats] = []
+
     // MARK: - Transform
 
     func transform(input: Input) -> Output {
-        // NOTE: We use `Observable<Void>` chains to avoid RxSwift creating
-        // `AnonymousObservableSink<DashboardData>` at subscription time.
-        // Using types from WebBridgeKit framework as Rx generic parameters
-        // causes a Swift runtime metadata crash on iOS 18.3 simulator.
-
-        let initialLoad = Observable<Void>.just(())
-        let refreshTrigger = Observable<Void>.merge(initialLoad, input.refresh.map { _ in () })
-
-        refreshTrigger
+        // Safe: Void is a built-in type
+        input.refresh
             .subscribe(onNext: { [weak self] in
                 self?.loadData()
             })
             .disposed(by: rx)
 
-        input.selectSubsystem
-            .map { $0.id }
-            .bind(to: navigateDetailRelay)
+        // Safe: Int is a built-in type
+        input.selectSubsystemAt
+            .subscribe(onNext: { [weak self] index in
+                guard let self, index >= 0, index < self.cachedSubsystems.count else { return }
+                let stats = self.cachedSubsystems[index]
+                self.navigateDetailRelay.accept(stats.id)
+            })
             .disposed(by: rx)
 
+        // Safe: Void is a built-in type
         input.tapClearAll
-            .bind(to: showClearConfirmRelay)
+            .subscribe(onNext: { [weak self] in
+                self?.showClearConfirmRelay.accept(())
+            })
             .disposed(by: rx)
+
+        // MARK: - Output drivers
 
         let dashboardDriver = dataRelay
             .asDriver(onErrorJustReturn: nil)
@@ -108,6 +122,8 @@ class CacheDashboardViewModel: ViewModel {
         let sectionsDriver = dataRelay
             .compactMap { [weak self] data -> [SectionModel<String, SubsystemStatItemModel>] in
                 guard let data, !data.subsystems.isEmpty else { return [] }
+
+                self?.cachedSubsystems = data.subsystems
 
                 let activeItems = data.subsystems
                     .filter { $0.hasData || $0.status == .active }
@@ -118,14 +134,12 @@ class CacheDashboardViewModel: ViewModel {
                     .map { SubsystemStatItemModel(from: $0) }
 
                 var sections: [SectionModel<String, SubsystemStatItemModel>] = []
-
                 if !activeItems.isEmpty {
                     sections.append(SectionModel(model: "🟢 活跃", items: activeItems))
                 }
                 if !inactiveItems.isEmpty {
                     sections.append(SectionModel(model: "⚪ 空闲", items: inactiveItems))
                 }
-
                 return sections
             }
             .asDriver(onErrorJustReturn: [])
@@ -150,7 +164,7 @@ class CacheDashboardViewModel: ViewModel {
         )
     }
 
-    // MARK: - Data Loading (avoiding Rx generic metadata crash)
+    // MARK: - Data Loading
 
     private func loadData() {
         loadingRelay.accept(true)
@@ -158,11 +172,7 @@ class CacheDashboardViewModel: ViewModel {
 
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
-
-            // Use syncAggregate() directly on background thread
-            // to avoid creating Rx chains with DashboardData as generic parameter
             let data = CacheStatsAggregator.shared.syncAggregate()
-
             DispatchQueue.main.async {
                 self.dataRelay.accept(data)
                 self.loadingRelay.accept(false)

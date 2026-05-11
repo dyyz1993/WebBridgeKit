@@ -236,6 +236,10 @@
 "model.access_token.hours_minutes_format" = "%@小时%@分钟";
 "model.access_token.minutes_format" = "%@分钟";
 
+// Token Share
+"token.share.text" = "【WebBridgeKit】共享口令: %@\n口令: %@";
+"token.share.title" = "分享口令";
+
 // Token Generate
 "token.generate.select_url_error" = "请先选择要生成口令的URL";
 "token.generate.failure" = "生成口令失败，请重试";

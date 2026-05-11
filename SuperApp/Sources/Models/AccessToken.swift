@@ -21,6 +21,8 @@ public class AccessToken: Object {
     @objc public dynamic var createdAt: Date = Date()
     @objc public dynamic var expiresAt: Date = Date()
     @objc public dynamic var accessCount: Int = 0         // 访问次数
+    @objc public dynamic var shareCount: Int = 0           // 分享次数
+    @objc public dynamic var lastSharedAt: Date?
 
     override public class func primaryKey() -> String? {
         return "id"
@@ -72,6 +74,18 @@ public class AccessToken: Object {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         return formatter.string(from: createdAt)
+    }
+
+    /// 格式化过期时间
+    public var formattedExpiresAt: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter.string(from: expiresAt)
+    }
+
+    /// 分享文本
+    public var shareText: String {
+        return "【WebBridgeKit】共享口令: \(url)\n口令: \(token)"
     }
 }
 

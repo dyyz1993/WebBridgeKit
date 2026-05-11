@@ -29,7 +29,7 @@ class TokenGenerateViewModel: ViewModel {
         let histories: Driver<[WebPageHistory]>
         let isEmpty: Driver<Bool>
         let generatedToken: Driver<String?>
-        let showShare: Driver<String?>  // 分享的口令文本
+        let showShare: Driver<AccessToken?>  // 分享的完整口令对象
         let copySuccess: Driver<Void>
         let errorMessage: Driver<String?>
     }
@@ -42,7 +42,8 @@ class TokenGenerateViewModel: ViewModel {
     private let historiesRelay = BehaviorRelay<[WebPageHistory]>(value: [])
     private let isEmptyRelay = BehaviorRelay<Bool>(value: true)
     private let generatedTokenRelay = BehaviorRelay<String?>(value: nil)
-    private let showShareRelay = PublishRelay<String?>()
+    private var lastGeneratedAccessToken: AccessToken?
+    private let showShareRelay = PublishRelay<AccessToken?>()
     private let copySuccessRelay = PublishRelay<Void>()
     private let errorMessageRelay = PublishRelay<String?>()
 
@@ -93,6 +94,7 @@ class TokenGenerateViewModel: ViewModel {
 
                 // 生成口令
                 if let token = self.tokenManager.generateToken(url: url, duration: durationInSeconds) {
+                    self.lastGeneratedAccessToken = token
                     self.generatedTokenRelay.accept(token.token)
                 } else {
                     self.errorMessageRelay.accept(L10n.tr("token.generate.failure"))
@@ -114,8 +116,7 @@ class TokenGenerateViewModel: ViewModel {
 
         // 分享口令
         input.shareTap
-            .withLatestFrom(generatedTokenRelay.asDriver(onErrorJustReturn: nil))
-            .compactMap { $0 }
+            .compactMap { [weak self] in self?.lastGeneratedAccessToken }
             .do(onNext: { [weak self] token in
                 self?.showShareRelay.accept(token)
             })

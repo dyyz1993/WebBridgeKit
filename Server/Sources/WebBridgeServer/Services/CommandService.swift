@@ -32,7 +32,9 @@ actor CommandService {
             payload: payload,
             signature: signature,
             createdAt: formatter.string(from: now),
-            expiresAt: expiresAt
+            expiresAt: expiresAt,
+            shareCount: 0,
+            lastSharedAt: nil
         )
 
         tokens[id] = token
@@ -68,6 +70,38 @@ actor CommandService {
             payload: token.payload,
             format: token.payload.format,
             output: output
+        )
+    }
+
+    func share(id: String) throws -> CommandShareResponse {
+        guard var token = tokens[id] else {
+            throw HTTPError(.notFound, message: "Command token not found: \(id)")
+        }
+
+        if let expiresAt = token.expiresAt {
+            let formatter = ISO8601DateFormatter()
+            if let expiry = formatter.date(from: expiresAt), expiry < Date() {
+                tokens.removeValue(forKey: id)
+                throw HTTPError(.gone, message: "Command token has expired")
+            }
+        }
+
+        let formatter = ISO8601DateFormatter()
+        token.shareCount += 1
+        token.lastSharedAt = formatter.string(from: Date())
+        tokens[id] = token
+
+        let encodedPayload = try JSONEncoder().encode(token.payload)
+        let tokenString = "\(id).\(encodedPayload.base64EncodedString())"
+        let shareURL = "webbridgekit://command/\(tokenString)"
+        let expiresText = token.expiresAt ?? "永不过期"
+        let shareText = "【WebBridgeKit】共享口令: \(id)\n\(shareURL)\n有效期至: \(expiresText)"
+
+        return CommandShareResponse(
+            id: id,
+            shareCount: token.shareCount,
+            shareURL: shareURL,
+            shareText: shareText
         )
     }
 

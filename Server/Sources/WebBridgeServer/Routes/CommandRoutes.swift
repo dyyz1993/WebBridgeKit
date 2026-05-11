@@ -1,8 +1,10 @@
 import Foundation
 import Hummingbird
 
-enum CommandRoutes {
-    static func register(on router: Router<some RequestContext>, services: ServiceRegistry) {
+struct CommandRoutes {
+    let services: ServiceRegistry
+
+    func register(on router: Router<some RequestContext>) {
         let apiGroup = router.group("api/v1/commands")
 
         apiGroup.post { request, context in
@@ -15,6 +17,13 @@ enum CommandRoutes {
                 throw HTTPError(.badRequest, message: "Missing command id")
             }
             return try await services.commandService.resolve(id: id)
+        }
+
+        apiGroup.post("/:id/share") { _, context in
+            guard let id = context.parameters.get("id") else {
+                throw HTTPError(.badRequest, message: "Missing command id")
+            }
+            return try await services.commandService.share(id: id)
         }
     }
 }

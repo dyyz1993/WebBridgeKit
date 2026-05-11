@@ -1,8 +1,10 @@
 import Foundation
 import Hummingbird
 
-enum ManifestRoutes {
-    static func register(on router: Router<some RequestContext>, services: ServiceRegistry) {
+struct ManifestRoutes {
+    let services: ServiceRegistry
+
+    func register(on router: Router<some RequestContext>) {
         let apiGroup = router.group("api/v1/manifests")
 
         apiGroup.get { _, _ in

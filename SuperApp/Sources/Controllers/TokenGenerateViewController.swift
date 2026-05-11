@@ -422,11 +422,11 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
         }
     }
 
-    private func showShareSheet(token: String) {
-        let text = L10n.tr("token.generate.share_text", token)
+    private func showShareSheet(token: AccessToken) {
+        let shareText = L10n.tr("token.share.text", token.url, token.token)
 
         let activityVC = UIActivityViewController(
-            activityItems: [text],
+            activityItems: [shareText],
             applicationActivities: nil
         )
 
@@ -439,6 +439,10 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
                 height: 0
             )
             popoverController.permittedArrowDirections = []
+        }
+
+        activityVC.completionWithItemsHandler = { _, _, _, _ in
+            AccessTokenManager.shared.incrementShareCount(token: token.token)
         }
 
         present(activityVC, animated: true)

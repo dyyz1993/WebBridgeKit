@@ -20,8 +20,8 @@ struct WebBridgeServer {
 
         HealthRoutes.register(on: router)
         PushRoutes.register(on: router, services: services)
-        ManifestRoutes.register(on: router, services: services)
-        CommandRoutes.register(on: router, services: services)
+        ManifestRoutes(services: services).register(on: router)
+        CommandRoutes(services: services).register(on: router)
 
         let app = Application(
             router: router,

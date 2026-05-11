@@ -85,6 +85,14 @@ class TokenCell: UITableViewCell {
         return label
     }()
 
+    private let shareButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(LucideIcon.share.templateImage(pointSize: 16, weight: .medium), for: .normal)
+        button.tintColor = ThemeTokens.Color.primary
+        button.accessibilityLabel = "分享口令"
+        return button
+    }()
+
     // MARK: - Properties
 
     private var currentToken: AccessToken?
@@ -95,6 +103,8 @@ class TokenCell: UITableViewCell {
             updateUI()
         }
     }
+
+    var onShare: ((String) -> Void)?
 
     // MARK: - Initialization
 
@@ -120,6 +130,7 @@ class TokenCell: UITableViewCell {
         containerView.addSubview(dateLabel)
         containerView.addSubview(statusBadge)
         containerView.addSubview(accessCountLabel)
+        containerView.addSubview(shareButton)
 
         statusBadge.addSubview(statusLabel)
 
@@ -156,7 +167,7 @@ class TokenCell: UITableViewCell {
 
         accessCountLabel.snp.makeConstraints { make in
             make.centerY.equalTo(dateLabel)
-            make.right.equalToSuperview().offset(-12)
+            make.right.equalTo(shareButton.snp.left).offset(-4)
         }
 
         statusBadge.snp.makeConstraints { make in
@@ -168,6 +179,21 @@ class TokenCell: UITableViewCell {
         statusLabel.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8))
         }
+
+        shareButton.snp.makeConstraints { make in
+            make.centerY.equalTo(accessCountLabel)
+            make.right.equalToSuperview().offset(-12)
+            make.width.height.equalTo(44)
+        }
+
+        shareButton.addTarget(self, action: #selector(shareButtonTapped), for: .touchUpInside)
+    }
+
+    // MARK: - Actions
+
+    @objc private func shareButtonTapped() {
+        guard let token = currentToken else { return }
+        onShare?(token.token)
     }
 
     // MARK: - Update UI
@@ -217,6 +243,7 @@ class TokenCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         currentToken = nil
+        onShare = nil
         tokenLabel.text = ""
         urlLabel.text = ""
         dateLabel.text = ""
