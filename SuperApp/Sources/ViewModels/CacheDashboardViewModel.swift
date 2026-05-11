@@ -28,7 +28,7 @@ class CacheDashboardViewModel: ViewModel {
     // MARK: - Output
 
     struct Output {
-        let dashboardData: Driver<DashboardData>
+        let dashboardData: Driver<DashboardData?>
         let isLoading: Driver<Bool>
         let subsystemSections: Driver<[SectionModel<String, SubsystemStatItemModel>]>
         let summaryText: Driver<String>
@@ -79,27 +79,18 @@ class CacheDashboardViewModel: ViewModel {
     // MARK: - Transform
 
     func transform(input: Input) -> Output {
-        let initialLoad = Observable.just(())
-        let refreshTrigger = Observable.merge(initialLoad, input.refresh)
+        // NOTE: We use `Observable<Void>` chains to avoid RxSwift creating
+        // `AnonymousObservableSink<DashboardData>` at subscription time.
+        // Using types from WebBridgeKit framework as Rx generic parameters
+        // causes a Swift runtime metadata crash on iOS 18.3 simulator.
+
+        let initialLoad = Observable<Void>.just(())
+        let refreshTrigger = Observable<Void>.merge(initialLoad, input.refresh.map { _ in () })
 
         refreshTrigger
-            .do(onNext: { [weak self] _ in
-                self?.loadingRelay.accept(true)
-                self?.errorRelay.accept(nil)
+            .subscribe(onNext: { [weak self] in
+                self?.loadData()
             })
-            .flatMapLatest { [weak self] () -> Observable<DashboardData> in
-                guard self != nil else { return .empty() }
-                return CacheStatsAggregator.shared.aggregate()
-                    .catch { [weak self] error in
-                        self?.errorRelay.accept(error.localizedDescription)
-                        return Observable.just(DashboardData())
-                    }
-            }
-            .observe(on: MainScheduler.instance)
-            .do(onNext: { [weak self] _ in
-                self?.loadingRelay.accept(false)
-            })
-            .bind(to: dataRelay)
             .disposed(by: rx)
 
         input.selectSubsystem
@@ -112,8 +103,7 @@ class CacheDashboardViewModel: ViewModel {
             .disposed(by: rx)
 
         let dashboardDriver = dataRelay
-            .compactMap { $0 }
-            .asDriver(onErrorJustReturn: DashboardData())
+            .asDriver(onErrorJustReturn: nil)
 
         let sectionsDriver = dataRelay
             .compactMap { [weak self] data -> [SectionModel<String, SubsystemStatItemModel>] in
@@ -158,5 +148,25 @@ class CacheDashboardViewModel: ViewModel {
             showClearAllConfirm: showClearConfirmRelay.asDriver(onErrorJustReturn: ()),
             clearResult: clearResultRelay.asDriver()
         )
+    }
+
+    // MARK: - Data Loading (avoiding Rx generic metadata crash)
+
+    private func loadData() {
+        loadingRelay.accept(true)
+        errorRelay.accept(nil)
+
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self else { return }
+
+            // Use syncAggregate() directly on background thread
+            // to avoid creating Rx chains with DashboardData as generic parameter
+            let data = CacheStatsAggregator.shared.syncAggregate()
+
+            DispatchQueue.main.async {
+                self.dataRelay.accept(data)
+                self.loadingRelay.accept(false)
+            }
+        }
     }
 }

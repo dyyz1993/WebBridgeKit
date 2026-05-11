@@ -29,7 +29,8 @@ public class PageCacheRuleManager {
                     // 从旧版本迁移
                     // 可以选择保留或删除旧的 CacheRule 数据
                 }
-            }
+            },
+            objectTypes: [PageCacheRuleRealm.self]
         )
 
         // 检查并添加预设规则

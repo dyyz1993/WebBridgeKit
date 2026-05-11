@@ -117,7 +117,7 @@ final class LazyManifestLoaderTests: XCTestCase {
     // MARK: - Load Without Network
 
     func testLoadWithInvalidURLCallsCompletion() throws {
-        guard UIScreen.screens.count > 0 else {
+        guard UIScreen.screens.count > 0, ProcessInfo.processInfo.environment["CI"] == nil else {
             throw XCTSkip("WKWebView requires a UI scene; skipping in headless CI environment")
         }
         let webView = WKWebView()

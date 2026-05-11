@@ -46,24 +46,50 @@ final class CacheDashboardTests: XCTestCase {
     // MARK: - 1. 入口 A：Settings → DEVELOPER → 缓存仪表盘
 
     func test01_NavigateToCacheDashboardFromSettings() throws {
-        // IDENTICAL to SmokeTest for debugging
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist")
-        
-        let homeTab = findTabButton(in: tabBar, zhName: "首页", enName: "Home")
-        XCTAssertTrue(homeTab.waitForExistence(timeout: 5), "Home tab should exist")
-        
-        saveScreenshot("01-smoke-check")
-        XCTAssertTrue(true, "Smoke-equivalent test passed")
-    }
-    
-    // Temporarily reuse SmokeTest helper
-    private func findTabButton(in tabBar: XCUIElement, zhName: String, enName: String) -> XCUIElement {
-        let zhButton = tabBar.buttons[zhName]
-        if zhButton.waitForExistence(timeout: 2) {
-            return zhButton
+        print("=== TEST 01: Settings → DEVELOPER → 缓存仪表盘 ===")
+
+        navigateToTab("设置")
+        saveScreenshot("01-settings-tab")
+
+        let settingsTable = app.tables.firstMatch
+        XCTAssertTrue(settingsTable.waitForExistence(timeout: 5), "Settings table should exist")
+
+        // Find cache dashboard entry
+        var found = false
+        let dashboardLabel = app.staticTexts["缓存仪表盘"]
+        if dashboardLabel.waitForExistence(timeout: 3) {
+            dashboardLabel.tap()
+            found = true
+            print("[✅] Found '缓存仪表盘'")
         }
-        return tabBar.buttons[enName]
+
+        if !found {
+            let dashboardEn = app.staticTexts["Cache Dashboard"]
+            if dashboardEn.waitForExistence(timeout: 2) {
+                dashboardEn.tap()
+                found = true
+                print("[✅] Found 'Cache Dashboard'")
+            }
+        }
+
+        if !found {
+            for cell in settingsTable.cells.allElementsBoundByIndex {
+                let labels = cell.staticTexts.allElementsBoundByIndex.map(\.label)
+                let combined = labels.joined(separator: " ").lowercased()
+                if combined.contains("缓存") || combined.contains("cache") || combined.contains("仪表") {
+                    cell.tap()
+                    found = true
+                    print("[✅] Found cache entry by cell scan")
+                    break
+                }
+            }
+        }
+
+        XCTAssertTrue(found, "Should find cache dashboard entry")
+        sleep(2)
+
+        saveScreenshot("02-cache-dashboard")
+        XCTAssertTrue(true, "Cache dashboard opened without crash")
     }
 
     // MARK: - 2. 子系统行可点击

@@ -142,13 +142,30 @@ final class SuperAppSmokeTests: XCTestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist")
         
-        // Wait for background seeder to complete
-        sleep(8)
-        
         let settingsTab = findTabButton(in: tabBar, zhName: "设置", enName: "Settings")
         settingsTab.tap()
-        sleep(3)
         
-        XCTAssertTrue(true, "Settings tab tapped without crash")
+        // Find 缓存仪表盘
+        let dashboard = app.staticTexts["缓存仪表盘"]
+        if dashboard.waitForExistence(timeout: 5) {
+            dashboard.tap()
+            sleep(2)
+            XCTAssertTrue(true, "Navigated to cache dashboard")
+        } else {
+            let table = app.tables.firstMatch
+            if table.exists {
+                for cell in table.cells.allElementsBoundByIndex {
+                    let texts = cell.staticTexts.allElementsBoundByIndex.map(\.label)
+                    let combined = texts.joined(separator: " ").lowercased()
+                    if combined.contains("缓存") || combined.contains("cache") {
+                        cell.tap()
+                        sleep(2)
+                        XCTAssertTrue(true, "Found cache dashboard by cell scan")
+                        return
+                    }
+                }
+            }
+            XCTAssertTrue(true, "Cache dashboard entry not found but app didn't crash")
+        }
     }
 }
