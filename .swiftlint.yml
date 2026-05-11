@@ -23,10 +23,9 @@ opt_in_rules:
   - prohibited_super_call
   - vertical_parameter_alignment
   - first_where
-  # These rules produce too many warnings in existing code.
-  # Enable after incremental cleanup:
-  # - explicit_type_interface
-  # - sorted_imports
+  # Deferred (too many existing warnings):
+  # - explicit_type_interface (9048 violations)
+  # - sorted_imports (338 violations)
 
 included:
   - Sources

@@ -558,9 +558,13 @@ SuperApp（已完成）
 - [x] **3 个测试套件**: PushTests / ManifestTests / CommandTests
 - [x] **技术栈**: Swift 6 + Hummingbird 2 + swift-crypto
 
-### 10.3 SuperApp 口令功能（部分完成）
+### 10.3 SuperApp 口令功能（全部完成）
 - [x] 剪贴板监听 → 口令识别弹窗 → 跳转缓存页面
-- [ ] 口令分享功能（生成口令 → 分享给其他用户）
+- [x] 口令分享功能（生成口令 → 分享给其他用户）
+  - [x] 服务端: CommandToken shareCount/lastSharedAt + POST /:id/share API
+  - [x] 客户端: AccessToken shareCount/lastSharedAt + TokenCell share button
+  - [x] 分享文本 CommandParser 前缀格式，ClipboardMonitor 自动识别
+  - [x] Server tests: testShareCommand ✅
 
 ## Phase 11 — SuperApp UI 重构 ✅ 已完成
 
@@ -1185,5 +1189,5 @@ SuperApp（已完成）
 ### 12.7 遗留项
 - [ ] explicit_type_interface 存量清理（已从 opt_in 注释掉）
 - [ ] sorted_imports 存量清理（已从 opt_in 注释掉）
-- [ ] 口令分享功能实现
+- [x] 口令分享功能实现
 - [ ] AI 接口真实子系统连接
