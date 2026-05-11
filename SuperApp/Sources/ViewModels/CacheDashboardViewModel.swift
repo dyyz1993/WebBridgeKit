@@ -79,9 +79,6 @@ class CacheDashboardViewModel: ViewModel {
     // MARK: - Transform
 
     func transform(input: Input) -> Output {
-        // NOTE: Data aggregation disabled to isolate crash cause.
-        // The aggregate() call should be on background thread, but we need to
-        // confirm the VC itself doesn't crash before re-enabling.
         let initialLoad = Observable.just(())
         let refreshTrigger = Observable.merge(initialLoad, input.refresh)
 
@@ -92,8 +89,11 @@ class CacheDashboardViewModel: ViewModel {
             })
             .flatMapLatest { [weak self] () -> Observable<DashboardData> in
                 guard self != nil else { return .empty() }
-                // Return empty data immediately for crash isolation
-                return Observable.just(DashboardData())
+                return CacheStatsAggregator.shared.aggregate()
+                    .catch { [weak self] error in
+                        self?.errorRelay.accept(error.localizedDescription)
+                        return Observable.just(DashboardData())
+                    }
             }
             .observe(on: MainScheduler.instance)
             .do(onNext: { [weak self] _ in
