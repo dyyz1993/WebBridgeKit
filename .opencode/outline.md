@@ -1137,3 +1137,53 @@ SuperApp（已完成）
 5. **Utils: PerformanceMonitor/HUDService** — 高频使用工具
 6. **Server: APNsService/TokenStore** — 推送服务核心
 7. **AI: AIHTTPServer** — HTTP 服务器完整测试
+
+---
+
+## Phase 12: 设计令牌统一 & 规范体系完善 (2026-05-12)
+
+### 12.1 设计令牌批量迁移
+- [x] 颜色：~500 处硬编码 → `ThemeTokens.Color.*`
+- [x] 字体：~66 处固定字号 → `ThemeTokens.Typography.*`（Dynamic Type）
+- [x] 图标：~63 处 SF Symbols → `LucideIcon.*`
+- [x] 圆角：~88 处 → `ThemeTokens.CornerRadius.*`
+- [x] 阴影：~16 处 → `ThemeTokens.Shadows.*`
+- [x] 间距：~51 处 → `ThemeTokens.Spacing.*`（4pt 网格）
+- [x] 无障碍：71 个 accessibilityLabel
+- [x] 触感反馈：24 处 UIImpactFeedbackGenerator
+
+### 12.2 SwiftLint 自定义规则
+- [x] 7 条 custom_rules 全部生效（no_hardcoded_rgb_color, no_system_colors, no_system_background, no_system_labels, no_static_color_tokens, prefer_lucide_icons, prefer_dynamic_type）
+- [x] match_kinds bug 修复（SwiftLint 0.63 不支持）
+- [x] pre-commit hook 修复（--path → 位置参数）
+- [x] 存量 warning 清理：256 → 4（仅 2 个合理 Lucide 例外）
+- [x] empty_count error 清理：4 处 → 0
+
+### 12.3 CI 规范强制
+- [x] 移除 swiftlint `|| true`，CI 真正阻断
+- [x] pre-commit hook：仅阻断 error
+- [x] commit-msg hook：conventional commits 格式
+- [x] .editorconfig 配置
+
+### 12.4 ThemeManager 完善
+- [x] init 默认参数从系统色改为 UIColor { trait in } 动态颜色
+- [x] 豁免路径：ThemeTokens.swift、ThemeManager.swift、WKColor.swift、ComponentCatalogViewController
+
+### 12.5 知识库沉淀
+- [x] ThemeTokens 统一方案（zgzqcxob2n）
+- [x] SwiftLint 自定义规则模板（pmlbwq95k4）
+- [x] 批量迁移方法论（g5u197gbuc）
+
+### 12.6 验证结果
+- [x] BUILD SUCCEEDED
+- [x] SwiftLint 0 error, 4 warning（2 个合理例外）
+- [x] HandlerTests: 496 tests, 0 failures
+- [x] CacheTests: 87 tests, 0 failures
+- [x] MessageTests: 226 tests, 0 failures
+- [x] WebSocketTests: 140 tests, 0 failures
+
+### 12.7 遗留项
+- [ ] explicit_type_interface 存量清理（已从 opt_in 注释掉）
+- [ ] sorted_imports 存量清理（已从 opt_in 注释掉）
+- [ ] 口令分享功能实现
+- [ ] AI 接口真实子系统连接
