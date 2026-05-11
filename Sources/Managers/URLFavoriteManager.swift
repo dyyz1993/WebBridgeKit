@@ -415,7 +415,10 @@ extension URLFavoriteManager {
     }
 
     public func getAllFavorites() -> [URLFavorite] {
-        guard let realm = try? Realm(configuration: realmConfiguration) else { return [] }
+        guard let realm = try? Realm(configuration: realmConfiguration) else {
+            WebBridgeLogger.shared.log(.error, "[URLFavoriteManager] Failed to open Realm at \(realmConfiguration.fileURL?.path ?? "nil")")
+            return []
+        }
         var result: [URLFavorite] = []
         let allObjects = realm.objects(URLFavorite.self)
             .sorted(by: [
@@ -424,6 +427,9 @@ extension URLFavoriteManager {
             ])
         for obj in allObjects {
             result.append(URLFavorite(value: obj))
+        }
+        if result.isEmpty && allObjects.count > 0 {
+            WebBridgeLogger.shared.log(.warning, "[URLFavoriteManager] Realm has \(allObjects.count) objects but getAllFavorites returned empty (detached copy issue?)")
         }
         return result
     }

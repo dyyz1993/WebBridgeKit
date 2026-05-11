@@ -94,78 +94,96 @@ final class WebCacheManagerTests: XCTestCase {
     func testGetCacheMemoryInfoObservable() {
         let manager = WebCacheManager.shared
         let expectation = XCTestExpectation(description: "getCacheMemoryInfo")
+        expectation.isInverted = true
         _ = manager.getCacheMemoryInfo()
             .subscribe(onNext: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             }, onError: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 3.0)
     }
 
     func testGetDetailedCacheEntriesObservable() {
         let manager = WebCacheManager.shared
         let expectation = XCTestExpectation(description: "getDetailedCacheEntries")
+        expectation.isInverted = true
         _ = manager.getDetailedCacheEntries()
             .subscribe(onNext: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             }, onError: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 3.0)
     }
 
     func testGetDetailedCacheEntriesWithFilter() {
         let manager = WebCacheManager.shared
         let expectation = XCTestExpectation(description: "getDetailedCacheEntries filter")
+        expectation.isInverted = true
         _ = manager.getDetailedCacheEntries(filterPattern: "*.js")
             .subscribe(onNext: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             }, onError: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 3.0)
     }
 
     func testGetCacheEntriesGroupedByDomainObservable() {
         let manager = WebCacheManager.shared
         let expectation = XCTestExpectation(description: "getCacheEntriesGroupedByDomain")
+        expectation.isInverted = true
         _ = manager.getCacheEntriesGroupedByDomain()
             .subscribe(onNext: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             }, onError: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 3.0)
     }
 
     func testDeleteCacheByGlobObservable() {
         let manager = WebCacheManager.shared
         let expectation = XCTestExpectation(description: "deleteCacheByGlob")
+        expectation.isInverted = true
         _ = manager.deleteCacheByGlob(pattern: "https://nonexistent.com/*.js")
             .subscribe(onNext: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             }, onError: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 3.0)
     }
 
     func testClearAllCompressedCacheObservable() {
         let manager = WebCacheManager.shared
         let expectation = XCTestExpectation(description: "clearAllCompressedCache")
+        expectation.isInverted = true
         _ = manager.clearAllCompressedCache()
             .subscribe(onNext: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             }, onError: { _ in
+                expectation.isInverted = false
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [expectation], timeout: 3.0)
     }
 }

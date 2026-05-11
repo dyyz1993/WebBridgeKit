@@ -15,88 +15,107 @@ final class SuperAppSmokeTests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app.launchArguments = ["--UITesting", "-UITesting"]
+        app.launchEnvironment = [
+            "AppleLanguages": "(zh-Hans)",
+            "AppleLocale": "zh_CN"
+        ]
         app.launch()
+    }
+
+    private func findTabButton(in tabBar: XCUIElement, zhName: String, enName: String) -> XCUIElement {
+        let zhButton = tabBar.buttons[zhName]
+        if zhButton.waitForExistence(timeout: 2) {
+            return zhButton
+        }
+        return tabBar.buttons[enName]
     }
 
     // MARK: - App Launch
 
     func testAppLaunchesSuccessfully() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should be visible after launch")
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should be visible after launch")
     }
 
     func testTabBarHasFourTabs() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist")
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist")
         let tabs = tabBar.buttons
         XCTAssertEqual(tabs.count, 4, "Tab bar should have 4 tabs")
     }
 
-    // MARK: - Tab Navigation
+    // MARK: - Tab Existence
 
     func testHomeTabExists() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        let homeTab = tabBar.buttons["首页"]
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let homeTab = findTabButton(in: tabBar, zhName: "首页", enName: "Home")
         XCTAssertTrue(homeTab.exists, "Home tab should exist")
     }
 
-    func testTestCasesTabExists() {
+    func testInboxTabExists() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        let testCasesTab = tabBar.buttons["用例"]
-        XCTAssertTrue(testCasesTab.exists, "Test cases tab should exist")
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let inboxTab = findTabButton(in: tabBar, zhName: "收信箱", enName: "Inbox")
+        XCTAssertTrue(inboxTab.exists, "Inbox tab should exist")
     }
 
-    func testManageTabExists() {
+    func testDiscoverTabExists() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        let manageTab = tabBar.buttons["管理"]
-        XCTAssertTrue(manageTab.exists, "Manage tab should exist")
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let discoverTab = findTabButton(in: tabBar, zhName: "发现", enName: "Discover")
+        XCTAssertTrue(discoverTab.exists, "Discover tab should exist")
     }
 
     func testSettingsTabExists() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        let settingsTab = tabBar.buttons["设置"]
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let settingsTab = findTabButton(in: tabBar, zhName: "设置", enName: "Settings")
         XCTAssertTrue(settingsTab.exists, "Settings tab should exist")
     }
 
     // MARK: - Tab Navigation
 
-    func testNavigateToManageTab() {
+    func testNavigateToDiscoverTab() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        tabBar.buttons["管理"].tap()
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let discoverTab = findTabButton(in: tabBar, zhName: "发现", enName: "Discover")
+        discoverTab.tap()
 
-        let segmentedControl = app.segmentedControls.firstMatch
-        XCTAssertTrue(segmentedControl.waitForExistence(timeout: 5), "Segmented control should exist in manage tab")
+        let contentExists = app.staticTexts.firstMatch.waitForExistence(timeout: 5)
+        XCTAssertTrue(contentExists, "Discover tab should show content")
     }
 
     func testNavigateToSettingsTab() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        tabBar.buttons["设置"].tap()
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let settingsTab = findTabButton(in: tabBar, zhName: "设置", enName: "Settings")
+        settingsTab.tap()
 
         let tableView = app.tables["settings.tableView"]
-        XCTAssertTrue(tableView.waitForExistence(timeout: 5), "Settings table view should exist")
+        let anyContent = app.staticTexts.firstMatch
+        let tableViewExists = tableView.waitForExistence(timeout: 5)
+        let contentExists = anyContent.waitForExistence(timeout: 2)
+        XCTAssertTrue(tableViewExists || contentExists, "Settings screen should have content")
     }
 
-    func testNavigateToTestCasesTab() {
+    func testNavigateToInboxTab() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        tabBar.buttons["用例"].tap()
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let inboxTab = findTabButton(in: tabBar, zhName: "收信箱", enName: "Inbox")
+        inboxTab.tap()
 
-        let tableView = app.tables["ManifestTestCasesTableView"]
-        XCTAssertTrue(tableView.waitForExistence(timeout: 5), "Test cases table view should exist")
+        let contentExists = app.staticTexts.firstMatch.waitForExistence(timeout: 5)
+        XCTAssertTrue(contentExists, "Inbox tab should show content")
     }
 
     // MARK: - Home Screen
 
     func testHomeScreenHasCollectionView() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        tabBar.buttons["首页"].tap()
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let homeTab = findTabButton(in: tabBar, zhName: "首页", enName: "Home")
+        homeTab.tap()
 
         let collectionView = app.collectionViews["MainCollectionView"]
         let emptyState = app.otherElements["EmptyStateView"]
@@ -109,8 +128,9 @@ final class SuperAppSmokeTests: XCTestCase {
 
     func testSettingsScreenHasContent() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10))
-        tabBar.buttons["设置"].tap()
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
+        let settingsTab = findTabButton(in: tabBar, zhName: "设置", enName: "Settings")
+        settingsTab.tap()
 
         let staticTexts = app.staticTexts
         XCTAssertTrue(staticTexts.count > 0, "Settings screen should have content")

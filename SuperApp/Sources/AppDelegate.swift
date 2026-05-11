@@ -16,17 +16,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        // 🔥 Clear all cache on startup as requested - Perform on background to avoid blocking main thread
-        // For UI Testing, we skip this to avoid race conditions or main thread stalls during early launch
+        // 🔥 Seed test data synchronously so all ViewModels have data on first load
+        TestDataSeeder.populateIfNeeded()
+
+        // 🔥 Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 print("🗑️ [AppDelegate] Triggering global cache clearing...")
                 WebCacheManager.shared.clearAll()
-                TestDataSeeder.populateIfNeeded()
             }
         } else {
             print("🧪 [AppDelegate] Skipping clearAll during UI testing")
-            TestDataSeeder.populateIfNeeded()
         }
 
         // 初始化 WebBridgeKit

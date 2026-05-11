@@ -5,6 +5,7 @@ import WebBridgeKit
 struct TestDataSeeder {
 
     private static let seededKey = "TestDataSeeder_Sealed"
+    private static let favoriteSeededKey = "TestDataSeeder_Favorites_Sealed"
 
     private static let dateFormatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
@@ -474,10 +475,24 @@ struct TestDataSeeder {
     // MARK: - Favorites
 
     private static func seedFavorites() {
+        guard !UserDefaults.standard.bool(forKey: favoriteSeededKey) else {
+            let config = URLFavoriteManager.shared.realmConfiguration
+            if let realm = try? Realm(configuration: config),
+               realm.objects(URLFavorite.self).count > 0 {
+                return
+            }
+            UserDefaults.standard.set(false, forKey: favoriteSealedKey)
+        }
+
         do {
             let config = URLFavoriteManager.shared.realmConfiguration
+            print("[TestDataSeeder] Favorites Realm config: \(config.fileURL?.path ?? "nil") schemaVersion=\(config.schemaVersion)")
+
             let realm = try Realm(configuration: config)
-            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-weather-001") != nil { return }
+            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-weather-001") != nil {
+                UserDefaults.standard.set(true, forKey: favoriteSealedKey)
+                return
+            }
 
             try realm.write {
                 let favs: [(id: String, url: String, title: String, pinned: Bool, order: Int, cache: Bool, date: String)] = [
@@ -503,9 +518,10 @@ struct TestDataSeeder {
                     realm.add(fav)
                 }
             }
-            print("[TestDataSeeder] 收藏夹: 8 条")
+            UserDefaults.standard.set(true, forKey: favoriteSealedKey)
+            print("[TestDataSeeder] 收藏夹: 8 条 (total in realm: \(realm.objects(URLFavorite.self).count))")
         } catch {
-            print("[TestDataSeeder] 收藏夹填充失败: \(error)")
+            print("[TestDataSeeder] 收藏夹填充失败: \(error.localizedDescription)")
         }
     }
 
