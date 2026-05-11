@@ -65,8 +65,6 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
     }
 
     override func bindViewModel() {
-        // No-op for crash isolation
-    }
         let input = CacheDashboardViewModel.Input(
             refresh: refreshControl.rx.controlEvent(.valueChanged).asObservable(),
             selectSubsystem: Observable.empty(),
