@@ -24,11 +24,13 @@ struct TestDataSeeder {
 
             seedServerConfigs()
             seedAccessTokens()
+            seedCommandTokens()
             seedMessages()
             seedFavorites()
             seedHistory()
             seedAPIKeys()
             seedCacheRules()
+            seedPageCacheRules()
 
             UserDefaults.standard.set(true, forKey: seededKey)
 
@@ -84,8 +86,26 @@ struct TestDataSeeder {
                 barkConfig.isActive = true
                 barkConfig.updatedAt = date("2026-05-09T12:00:00Z")
                 realm.add(barkConfig)
+
+                let inactiveConfig = ServerConfig()
+                inactiveConfig.id = "inactive-custom-014"
+                inactiveConfig.serverType = "custom"
+                inactiveConfig.baseURL = "https://staging.internal.corp"
+                inactiveConfig.apiEndpoint = "/v1/push"
+                inactiveConfig.isActive = false
+                inactiveConfig.updatedAt = date("2026-04-20T08:00:00Z")
+                realm.add(inactiveConfig)
+
+                let invalidUrlConfig = ServerConfig()
+                invalidUrlConfig.id = "invalid-url-015"
+                invalidUrlConfig.serverType = "custom"
+                invalidUrlConfig.baseURL = "htp://not-a-valid-url"
+                invalidUrlConfig.apiEndpoint = "/push"
+                invalidUrlConfig.isActive = true
+                invalidUrlConfig.updatedAt = date("2026-05-09T15:00:00Z")
+                realm.add(invalidUrlConfig)
             }
-            print("[TestDataSeeder] 服务器配置: 4 条")
+            print("[TestDataSeeder] 服务器配置: 6 条")
         } catch {
             print("[TestDataSeeder] 服务器配置填充失败: \(error)")
         }
@@ -143,8 +163,19 @@ struct TestDataSeeder {
                 week.expiresAt = date("2026-05-15T00:00:00Z")
                 week.accessCount = 0
                 realm.add(week)
+
+                let emptyToken = AccessToken()
+                emptyToken.id = "token-empty-025"
+                emptyToken.url = ""
+                emptyToken.token = ""
+                emptyToken.title = "未注册（空令牌）"
+                emptyToken.validDuration = 0
+                emptyToken.createdAt = date("2026-05-11T00:00:00Z")
+                emptyToken.expiresAt = date("1970-01-01T00:00:00Z")
+                emptyToken.accessCount = 0
+                realm.add(emptyToken)
             }
-            print("[TestDataSeeder] 访问口令: 4 条")
+            print("[TestDataSeeder] 访问口令: 5 条")
         } catch {
             print("[TestDataSeeder] 访问口令填充失败: \(error)")
         }
@@ -692,6 +723,129 @@ struct TestDataSeeder {
             rules.addRule(rule)
         }
         print("[TestDataSeeder] 缓存规则: \(cacheRules.count) 条")
+    }
+
+    // MARK: - Command Tokens
+
+    private static func seedCommandTokens() {
+        let storageKey = "TestDataSeeder_CommandTokens"
+        let defaults = UserDefaults.standard
+        if defaults.data(forKey: storageKey) != nil { return }
+
+        let now = ISO8601DateFormatter().string(from: Date())
+
+        let tokens: [[String: String]] = [
+            [
+                "id": "cmd-url-001",
+                "type": "urlScheme",
+                "data": "wbk://open?url=https%3A%2F%2Fexample.com%2Fpage%26title%3DTest",
+                "format": "urlScheme",
+                "signature": "sig_url_a1b2c3d4e5f6",
+                "createdAt": now,
+                "expiresAt": "",
+                "label": "URL Scheme 令牌",
+            ],
+            [
+                "id": "cmd-b64-002",
+                "type": "base64",
+                "data": "eyJhY3Rpb24iOiJvcGVuIiwidXJlIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9hcGkifQ==",
+                "format": "base64",
+                "signature": "sig_b64_x7y8z9w0v1u",
+                "createdAt": now,
+                "expiresAt": ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400)),
+                "label": "Base64 编码令牌",
+            ],
+            [
+                "id": "cmd-text-003",
+                "type": "plainText",
+                "data": "Hello from WebBridgeKit command!",
+                "format": "plainText",
+                "signature": "sig_txt_m2n3o4p5q6r",
+                "createdAt": now,
+                "expiresAt": "",
+                "label": "纯文本令牌",
+            ],
+            [
+                "id": "cmd-json-004",
+                "type": "json",
+                "data": "{\"action\":\"navigate\",\"url\":\"https://example.com/dashboard\",\"params\":{\"tab\":\"overview\"}}",
+                "format": "plainText",
+                "signature": "sig_json_s7t8u9v0w1x",
+                "createdAt": now,
+                "expiresAt": ISO8601DateFormatter().string(from: Date().addingTimeInterval(172800)),
+                "label": "JSON 格式令牌",
+            ],
+        ]
+
+        do {
+            let data = try JSONEncoder().encode(tokens)
+            defaults.set(data, forKey: storageKey)
+            print("[TestDataSeeder] Command Token: \(tokens.count) 条")
+        } catch {
+            print("[TestDataSeeder] Command Token 填充失败: \(error)")
+        }
+    }
+
+    // MARK: - Page Cache Rules
+
+    private static func seedPageCacheRules() {
+        let manager = PageCacheRuleManager.shared
+        let existing = manager.getAllRules()
+        guard existing.isEmpty else { return }
+
+        let rules: [PageCacheRule] = [
+            PageCacheRule(
+                id: "preset-baidu",
+                name: "百度",
+                includePatterns: ["https://*.baidu.com/**"],
+                excludePatterns: ["https://*.baidu.com/login/**"],
+                isEnabled: true,
+                createdAt: date("2026-05-01T08:00:00Z")
+            ),
+            PageCacheRule(
+                id: "preset-vip-video",
+                name: "VIP 视频",
+                includePatterns: ["https://*.vip.com/video/**", "https://*.vip.com/movie/**"],
+                excludePatterns: ["https://*.vip.com/login*", "https://*.vip.com/register*"],
+                isEnabled: true,
+                createdAt: date("2026-05-02T10:00:00Z")
+            ),
+            PageCacheRule(
+                id: "preset-github",
+                name: "GitHub",
+                includePatterns: ["https://github.com/**"],
+                excludePatterns: [],
+                isEnabled: true,
+                createdAt: date("2026-05-03T12:00:00Z")
+            ),
+            PageCacheRule(
+                id: "custom-multi-004",
+                name: "多模式自定义规则",
+                includePatterns: [
+                    "https://docs.example.com/**/*.{html,css,js}",
+                    "https://api.example.com/v1/static/**"
+                ],
+                excludePatterns: ["**/admin/**", "**/login*"],
+                isEnabled: true,
+                createdAt: date("2026-05-09T08:00:00Z"),
+                lastCachedAt: date("2026-05-10T06:00:00Z")
+            ),
+            PageCacheRule(
+                id: "custom-disabled-005",
+                name: "已禁用的测试规则",
+                includePatterns: ["https://staging.example.com/**"],
+                excludePatterns: [],
+                isEnabled: false,
+                createdAt: date("2026-04-15T08:00:00Z")
+            ),
+        ]
+
+        var addedCount = 0
+        for rule in rules {
+            if manager.addRule(rule) { addedCount += 1 }
+        }
+
+        print("[TestDataSeeder] Page Cache Rule: \(addedCount) 条")
     }
 
     static func seedManifestCaches() {
