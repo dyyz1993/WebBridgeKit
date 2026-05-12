@@ -25,9 +25,6 @@ targets:
       - target: WebBridgeKit
         embed: true
         link: true
-      - target: AI
-        embed: true
-        link: true
 
 schemes:
   SuperApp:

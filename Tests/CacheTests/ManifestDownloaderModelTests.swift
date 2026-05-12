@@ -112,8 +112,8 @@ final class ManifestDownloaderModelTests: XCTestCase {
         XCTAssertEqual(info.type, .other)
     }
 
-    func testWebManifestInit() {
-        let manifest = WebManifest(
+    func testManifestDocumentInit() {
+        let manifest = ManifestDocument(
             version: "1.0.0",
             updatedAt: Date(),
             description: "Test manifest",
@@ -133,8 +133,8 @@ final class ManifestDownloaderModelTests: XCTestCase {
         XCTAssertEqual(manifest.resources.count, 1)
     }
 
-    func testWebManifestPersistent() {
-        let manifest = WebManifest(
+    func testManifestDocumentPersistent() {
+        let manifest = ManifestDocument(
             version: "2.0.0",
             updatedAt: Date(),
             description: "Persistent",
@@ -144,8 +144,8 @@ final class ManifestDownloaderModelTests: XCTestCase {
         XCTAssertTrue(manifest.persistent)
     }
 
-    func testWebManifestCodable() throws {
-        let manifest = WebManifest(
+    func testManifestDocumentCodable() throws {
+        let manifest = ManifestDocument(
             version: "1.0.0",
             updatedAt: Date(),
             description: "Test",
@@ -154,13 +154,13 @@ final class ManifestDownloaderModelTests: XCTestCase {
             ]
         )
         let data = try JSONEncoder().encode(manifest)
-        let decoded = try JSONDecoder().decode(WebManifest.self, from: data)
+        let decoded = try JSONDecoder().decode(ManifestDocument.self, from: data)
         XCTAssertEqual(decoded.version, "1.0.0")
         XCTAssertEqual(decoded.description, "Test")
         XCTAssertEqual(decoded.resources.count, 1)
     }
 
-    func testWebManifestDecodingWithTimestampDate() throws {
+    func testManifestDocumentDecodingWithTimestampDate() throws {
         let timestamp = Date().timeIntervalSince1970
         let json = """
         {
@@ -171,7 +171,7 @@ final class ManifestDownloaderModelTests: XCTestCase {
         }
         """
         let data = json.data(using: .utf8)!
-        let manifest = try JSONDecoder().decode(WebManifest.self, from: data)
+        let manifest = try JSONDecoder().decode(ManifestDocument.self, from: data)
         XCTAssertEqual(manifest.version, "1.0.0")
     }
 

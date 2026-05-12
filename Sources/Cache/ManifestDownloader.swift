@@ -8,10 +8,10 @@
 
 import Foundation
 
-// MARK: - WebManifest
+// MARK: - ManifestDocument
 
 /// Web 资源清单（扩展版本）
-public struct WebManifest: Codable {
+public struct ManifestDocument: Codable {
     /// 版本号
     public let version: String
 
@@ -270,7 +270,7 @@ public class ManifestDownloader {
     public func download(
         from url: URL,
         useCache: Bool = true,
-        completion: @escaping (Result<WebManifest, ManifestDownloaderError>) -> Void
+        completion: @escaping (Result<ManifestDocument, ManifestDownloaderError>) -> Void
     ) {
         // 检查缓存
         let cacheKey = url.absoluteString
@@ -343,9 +343,9 @@ public class ManifestDownloader {
     ///   - newURL: 新 manifest URL
     ///   - completion: 完成回调（是否有更新, 新 manifest）
     public func checkUpdate(
-        current: WebManifest,
+        current: ManifestDocument,
         newURL: URL,
-        completion: @escaping (Bool, WebManifest?) -> Void
+        completion: @escaping (Bool, ManifestDocument?) -> Void
     ) {
         download(from: newURL) { result in
             switch result {
@@ -366,10 +366,10 @@ public class ManifestDownloader {
     ///   - completion: 完成回调
     public func batchDownload(
         urls: [URL],
-        completion: @escaping ([URL: Result<WebManifest, ManifestDownloaderError>]) -> Void
+        completion: @escaping ([URL: Result<ManifestDocument, ManifestDownloaderError>]) -> Void
     ) {
         let group = DispatchGroup()
-        var results: [URL: Result<WebManifest, ManifestDownloaderError>] = [:]
+        var results: [URL: Result<ManifestDocument, ManifestDownloaderError>] = [:]
         let queue = DispatchQueue(label: "com.webbridgekit.manifestdownloader", attributes: .concurrent)
 
         for url in urls {
@@ -407,7 +407,7 @@ public class ManifestDownloader {
     // MARK: - Private Methods
 
     /// 解析并验证 manifest
-    private func parseAndValidate(data: Data) throws -> WebManifest {
+    private func parseAndValidate(data: Data) throws -> ManifestDocument {
         // Validate data is not empty
         guard !data.isEmpty else {
             throw ManifestDownloaderError.invalidJSON(
@@ -419,7 +419,7 @@ public class ManifestDownloader {
 
         do {
             // Attempt to decode the manifest
-            let manifest = try decoder.decode(WebManifest.self, from: data)
+            let manifest = try decoder.decode(ManifestDocument.self, from: data)
 
             // Validate the manifest using proper error handling
             try validate(manifest)
@@ -438,7 +438,7 @@ public class ManifestDownloader {
     }
 
     /// 验证 manifest with detailed error reporting
-    private func validate(_ manifest: WebManifest) throws {
+    private func validate(_ manifest: ManifestDocument) throws {
         var errors: [String] = []
 
         // 验证版本号
@@ -503,7 +503,7 @@ public class ManifestDownloader {
     }
 
     /// 比较版本
-    private func compareVersions(current: WebManifest, new: WebManifest) -> Bool {
+    private func compareVersions(current: ManifestDocument, new: ManifestDocument) -> Bool {
         // 优先比较版本号
         if current.version != new.version {
             return current.version < new.version
@@ -539,7 +539,7 @@ public class ManifestDownloader {
 /// 缓存的 manifest
 private struct CachedManifest {
     /// manifest 数据
-    let manifest: WebManifest
+    let manifest: ManifestDocument
 
     /// 缓存时间戳
     let timestamp: Date
