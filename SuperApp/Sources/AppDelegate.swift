@@ -67,7 +67,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // 🔥 Support UI Fidelity Testing — show Component Catalog
         if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 guard let self = self else { return }
                 let catalogVC = ComponentCatalogViewController()
                 let nav = UINavigationController(rootViewController: catalogVC)

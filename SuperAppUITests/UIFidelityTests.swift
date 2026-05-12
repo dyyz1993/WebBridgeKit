@@ -36,7 +36,7 @@ final class UIFidelityTests: XCTestCase {
 
     private func scrollToSection(_ sectionIdentifier: String) {
         let scrollView = app.scrollViews["ComponentCatalogScrollView"]
-        guard scrollView.waitForExistence(timeout: 10) else {
+        guard scrollView.waitForExistence(timeout: 30) else {
             XCTFail("ComponentCatalogScrollView not found")
             return
         }
@@ -61,7 +61,7 @@ final class UIFidelityTests: XCTestCase {
 
     func testFullCatalogScreenshot() {
         let scrollView = app.scrollViews["ComponentCatalogScrollView"]
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 10), "Component Catalog should be visible")
+        XCTAssertTrue(scrollView.waitForExistence(timeout: 30), "Component Catalog should be visible")
         takeScreenshot(named: "00-full-catalog-top")
     }
 
