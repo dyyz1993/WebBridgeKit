@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import WebBridgeKit
+import AI
 
 @MainActor
 public final class EngineBootstrap {

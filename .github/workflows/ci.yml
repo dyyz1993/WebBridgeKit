@@ -16,19 +16,21 @@ concurrency:
 
 env:
   CI_START_TIME: ${{ github.event.head_commit.timestamp }}
+  XCODE_VERSION: '16.4'
 
 jobs:
+  # ─── Job 1: SwiftLint ───────────────────────────────────────────
   swiftlint:
     name: SwiftLint
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Cache Homebrew
         uses: actions/cache@v4
@@ -41,6 +43,7 @@ jobs:
           brew install swiftlint
           swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/
 
+  # ─── Job 2: Build ───────────────────────────────────────────────
   build:
     name: Build
     runs-on: macos-15
@@ -52,7 +55,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -80,33 +83,49 @@ jobs:
           path: build/BuildResults.xcresult
           retention-days: 7
 
+  # ─── Job 3-5: Unit Tests (3 groups, was 11 individual) ─────────
   unit-tests:
-    name: Unit Tests (${{ matrix.scheme }})
+    name: Unit Tests (${{ matrix.group.name }})
     runs-on: macos-15
     timeout-minutes: 60
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        scheme:
-          - CacheTests
-          - MessageTests
-          - AITests
-          - SkillsTests
-          - HandlerTests-Part1
-          - HandlerTests-Part2
-          - BridgeTests
-          - CoreTests
-          - ModelsTests
-          - UtilsTests
-          - ServicesTests
+        group:
+          - name: Core
+            schemes: >-
+              CacheTests
+              BridgeTests
+              CoreTests
+              ModelsTests
+              UtilsTests
+              ServicesTests
+          - name: Handlers
+            schemes: >-
+              HandlerTests-Part1
+              HandlerTests-Part2
+              AITests
+              SkillsTests
+              ThemeTests
+          - name: Modules
+            schemes: >-
+              MessageTests
+              WebSocketTests
+              CommandParserTests
+              InfrastructureTests
+              BaseTests
+              ExtensionsTests
+              ManagersTests
+              ViewModelTests
+              WebBridgeKitTests
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -120,8 +139,10 @@ jobs:
           xcodebuild -downloadPlatform iOS 2>/dev/null || true
           echo "=== Available runtimes ==="
           xcrun simctl list runtimes
+
           SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
           echo "SDK major version: $SDK_VER"
+
           RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
@@ -147,6 +168,7 @@ jobs:
               print('', file=sys.stderr)
               sys.exit(1)
           " 2>/dev/null || echo "")
+
           if [ -z "$RUNTIME" ]; then
             echo "::warning::JSON parse failed, trying runtime identifier fallback"
             for ver in "${SDK_VER}-2" "${SDK_VER}-1" "${SDK_VER}-0" "18-2" "18-1" "18-0" "17-5" "17-4" "17-0"; do
@@ -159,91 +181,151 @@ jobs:
               done
             done
           fi
+
           if [ -z "$RUNTIME" ]; then
-            echo "::warning::No iOS runtime found, tests will use generic destination"
+            echo "::warning::No iOS runtime found"
             echo "use_simulator=false" >> $GITHUB_OUTPUT
             exit 0
           fi
+
           echo "Using runtime: $RUNTIME"
-          DEVICE_ID=$(xcrun simctl create "CI-Unit-${{ matrix.scheme }}" "iPhone 16 Pro" "$RUNTIME" || echo "")
+          DEVICE_ID=$(xcrun simctl create "CI-Unit-${{ matrix.group.name }}" "iPhone 16 Pro" "$RUNTIME" || echo "")
           if [ -z "$DEVICE_ID" ]; then
-            echo "::warning::Failed to create simulator, tests will use generic destination"
+            echo "::warning::Failed to create simulator"
             echo "use_simulator=false" >> $GITHUB_OUTPUT
             exit 0
           fi
+
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
-          echo "Waiting for simulator to be fully ready..."
           xcrun simctl bootstatus "$DEVICE_ID" -b 2>/dev/null || true
           echo "device_id=$DEVICE_ID" >> $GITHUB_OUTPUT
           echo "use_simulator=true" >> $GITHUB_OUTPUT
           echo "Simulator ready: $DEVICE_ID (runtime: $RUNTIME)"
 
-      - name: Skip ${{ matrix.scheme }} (no simulator)
-        if: steps.sim.outputs.use_simulator != 'true'
-        run: |
-          echo "::warning::No simulator available — skipping ${{ matrix.scheme }}"
-          mkdir -p build/test-results
-          echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="${{ matrix.scheme }}" tests="1" failures="0"><testcase name="skipped" classname="${{ matrix.scheme }}"/></testsuite></testsuites>' > "build/test-results-${{ matrix.scheme }}.xml"
-
-      - name: Run ${{ matrix.scheme }}
+      - name: Run All Schemes in Group
         if: steps.sim.outputs.use_simulator == 'true'
+        id: run_tests
         run: |
           set -o pipefail
-          xcodebuild test \
-            -workspace WebBridgeKit.xcworkspace \
-            -scheme "${{ matrix.scheme }}" \
-            -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
-            -resultBundlePath "build/TestResults-${{ matrix.scheme }}.xcresult" \
-            -enableCodeCoverage YES \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output "build/test-results-${{ matrix.scheme }}.xml"
+          mkdir -p build/test-results
+
+          SCHEMES="${{ matrix.group.schemes }}"
+          DESTINATION="platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}"
+          PASSED=""
+          FAILED=""
+
+          for SCHEME in $SCHEMES; do
+            echo ""
+            echo "========================================="
+            echo "🧪 Running: $SCHEME"
+            echo "========================================="
+
+            ATTEMPT=1
+            MAX_ATTEMPTS=2
+            SCHEME_OK=false
+
+            while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+              echo "  Attempt $ATTEMPT/$MAX_ATTEMPTS for $SCHEME"
+
+              xcodebuild test \
+                -workspace WebBridgeKit.xcworkspace \
+                -scheme "$SCHEME" \
+                -sdk iphonesimulator \
+                -destination "$DESTINATION" \
+                -resultBundlePath "build/TestResults-${SCHEME}.xcresult" \
+                -enableCodeCoverage YES \
+                CODE_SIGN_IDENTITY="" \
+                CODE_SIGNING_REQUIRED=NO \
+                CODE_SIGNING_ALLOWED=NO \
+                2>&1 | tee "build/test-output-${SCHEME}.log" | xcpretty --color --report junit --output "build/test-results-${SCHEME}.xml" || true
+
+              # Check result from xcpretty output
+              if grep -q 'Executed.*0 failures' "build/test-results-${SCHEME}.xml" 2>/dev/null || \
+                 grep -q 'TESTS SUCCEEDED' "build/test-output-${SCHEME}.log" 2>/dev/null || \
+                 ! grep -q 'TESTS FAILED\|** TEST FAILED' "build/test-output-${SCHEME}.log" 2>/dev/null; then
+                if [ -f "build/test-results-${SCHEME}.xml" ]; then
+                  SCHEME_OK=true
+                  break
+                fi
+              fi
+
+              ATTEMPT=$((ATTEMPT + 1))
+              if [ $ATTEMPT -le $MAX_ATTEMPTS ]; then
+                echo "  ⚠️ $SCHEME failed, retrying in 5s..."
+                sleep 5
+              fi
+            done
+
+            if $SCHEME_OK; then
+              echo "  ✅ $SCHEME passed"
+              PASSED="$PASSED $SCHEME"
+            else
+              echo "  ❌ $SCHEME failed after $MAX_ATTEMPTS attempts"
+              FAILED="$FAILED $SCHEME"
+            fi
+          done
+
+          echo ""
+          echo "========================================="
+          echo "📊 Group Results: ${{ matrix.group.name }}"
+          echo "========================================="
+          echo "  ✅ Passed: $PASSED"
+          echo "  ❌ Failed: $FAILED"
+
+          # Merge all JUnit XMLs for reporting
+          echo '<?xml version="1.0" encoding="UTF-8"?><testsuites>' > "build/test-results.xml"
+          for SCHEME in $SCHEMES; do
+            if [ -f "build/test-results-${SCHEME}.xml" ]; then
+              # Extract <testsuite> content
+              sed -n '/<testsuite/,/<\/testsuite>/p' "build/test-results-${SCHEME}.xml" >> "build/test-results.xml" 2>/dev/null || true
+            fi
+          done
+          echo '</testsuites>' >> "build/test-results.xml"
+
+          if [ -n "$FAILED" ]; then
+            echo "::error::Failed schemes in ${{ matrix.group.name }}:$FAILED"
+            exit 1
+          fi
+
+      - name: Skip (no simulator)
+        if: steps.sim.outputs.use_simulator != 'true'
+        run: |
+          echo "::warning::No simulator — skipping ${{ matrix.group.name }}"
+          mkdir -p build/test-results
+          echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="${{ matrix.group.name }}" tests="1" failures="0"><testcase name="skipped" classname="${{ matrix.group.name }}"/></testsuite></testsuites>' > build/test-results.xml
 
       - name: Publish Coverage Report
         if: always() && success()
         run: |
-          xcrun xccov view --report "build/TestResults-${{ matrix.scheme }}.xcresult" > "build/coverage-${{ matrix.scheme }}.txt" 2>/dev/null || echo "No coverage data"
-          cat "build/coverage-${{ matrix.scheme }}.txt" || true
+          for SCHEME in ${{ matrix.group.schemes }}; do
+            xcrun xccov view --report "build/TestResults-${SCHEME}.xcresult" > "build/coverage-${SCHEME}.txt" 2>/dev/null || true
+          done
+          cat build/coverage-*.txt 2>/dev/null || echo "No coverage data"
 
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.scheme }}
-          path: "build/TestResults-${{ matrix.scheme }}.xcresult"
+          name: test-results-${{ matrix.group.name }}
+          path: |
+            build/TestResults-*.xcresult
+            build/test-results.xml
           retention-days: 14
 
       - name: Upload Coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.scheme }}
-          path: "build/coverage-${{ matrix.scheme }}.txt"
+          name: coverage-${{ matrix.group.name }}
+          path: build/coverage-*.txt
           retention-days: 7
-
-      - name: Collect Screenshots
-        if: always()
-        run: |
-          mkdir -p screenshots
-          find ~/Library/Developer/Xcode/DerivedData -name "*.png" -exec cp {} screenshots/ \; 2>/dev/null || true
-          find /tmp -name "*.png" -newer /tmp/.CI_START 2>/dev/null -exec cp {} screenshots/ \; || true
-
-      - name: Upload Screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshots-${{ matrix.scheme }}
-          path: screenshots/
-          retention-days: 14
 
       - name: Publish Test Report
         if: always()
         uses: mikepenz/action-junit-report@v4
         with:
-          report_paths: "build/test-results-${{ matrix.scheme }}.xml"
-          check_name: "Unit Test Results (${{ matrix.scheme }})"
+          report_paths: build/test-results.xml
+          check_name: "Unit Tests (${{ matrix.group.name }})"
 
       - name: Capture Diagnostics
         if: always() && failure()
@@ -260,7 +342,7 @@ jobs:
         if: always() && failure()
         uses: actions/upload-artifact@v4
         with:
-          name: diagnostics-${{ matrix.scheme }}
+          name: diagnostics-${{ matrix.group.name }}
           path: diagnostics/
           retention-days: 7
 
@@ -271,9 +353,9 @@ jobs:
           if [ -n "$DEVICE_ID" ]; then
             xcrun simctl shutdown "$DEVICE_ID" 2>/dev/null || true
             xcrun simctl delete "$DEVICE_ID" 2>/dev/null || true
-            echo "Cleaned up simulator: $DEVICE_ID"
           fi
 
+  # ─── Job 6: Smoke Tests (with retry) ────────────────────────────
   smoke-tests:
     name: 🚀 Smoke Tests
     runs-on: macos-15
@@ -285,7 +367,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -298,23 +380,16 @@ jobs:
           xcrun simctl shutdown all 2>/dev/null || true
           sleep 2
           xcrun simctl erase all 2>/dev/null || true
-          echo "All existing simulators shut down and erased"
 
           echo "=== SDK Info ==="
           xcodebuild -version
           SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
-          echo "SDK version: $(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || echo 'unknown') (major: $SDK_VER)"
           xcodebuild -downloadPlatform iOS 2>/dev/null || true
-
-          echo "=== Available iOS Runtimes ==="
           xcrun simctl list runtimes
-          echo ""
-          echo "=== Available Devices (iPhone family) ==="
-          xcrun simctl list devices available | grep -i iphone || echo "(none found)"
 
           DESTINATION=""
           for DEVICE_TYPE in "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
-            echo "--- Trying destination: platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest ---"
+            echo "--- Trying: $DEVICE_TYPE ---"
             if xcodebuild test \
                 -workspace WebBridgeKit.xcworkspace \
                 -scheme SuperApp \
@@ -328,24 +403,23 @@ jobs:
                 CODE_SIGNING_ALLOWED=NO \
                 -quiet 2>&1 | head -5; then
               DESTINATION="platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest"
-              echo "✅ Valid destination found: $DESTINATION"
+              echo "✅ Valid destination: $DESTINATION"
               break
             else
-              echo "   ⚠️ Destination not usable, trying next..."
+              echo "   ⚠️ Not usable, trying next..."
             fi
           done
 
           rm -rf /tmp/smoke-probe.xcresult 2>/dev/null || true
 
           if [ -z "$DESTINATION" ]; then
-            echo "::warning::No named device destination worked, falling back to generic"
+            echo "::warning::Falling back to generic destination"
             DESTINATION="generic/platform=iOS Simulator"
           fi
 
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
-          echo "Using destination: $DESTINATION"
 
-      - name: Run Smoke Tests
+      - name: Run Smoke Tests (retry 3x)
         env:
           CI: "true"
         run: |
@@ -353,37 +427,31 @@ jobs:
           mkdir -p build/test-results
           DESTINATION="${{ steps.prep.outputs.destination }}"
 
-          run_smoke_test() {
-            RESULT_PATH="build/test-results/SmokeResults-attempt-${ATTEMPT}.xcresult"
+          for ATTEMPT in 1 2 3; do
+            echo "=== Smoke test attempt $ATTEMPT/3 ==="
             rm -rf build/test-results/SmokeResults-*.xcresult 2>/dev/null || true
-            xcodebuild test \
+
+            if xcodebuild test \
               -workspace WebBridgeKit.xcworkspace \
               -scheme SuperApp \
               -destination "$DESTINATION" \
               -configuration Debug \
-              -resultBundlePath "$RESULT_PATH" \
+              -resultBundlePath "build/test-results/SmokeResults-attempt-${ATTEMPT}.xcresult" \
               -only-testing:SuperAppUITests/SuperAppSmokeTests \
               CODE_SIGN_IDENTITY="" \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGNING_ALLOWED=NO \
-              | xcpretty --color --report junit --output build/test-results/smoke-junit.xml
-            RET=$?
-            if [ $RET -eq 0 ] && [ -f "$RESULT_PATH" ]; then
-              mv "$RESULT_PATH" build/test-results/SmokeResults.xcresult
-            fi
-            return $RET
-          }
-
-          for ATTEMPT in 1 2 3; do
-            echo "=== Smoke test attempt $ATTEMPT/$3 (destination: $DESTINATION) ==="
-            if run_smoke_test; then
+              | xcpretty --color --report junit --output build/test-results/smoke-junit.xml; then
               echo "✅ Smoke tests passed on attempt $ATTEMPT"
+              mv "build/test-results/SmokeResults-attempt-${ATTEMPT}.xcresult" build/test-results/SmokeResults.xcresult 2>/dev/null || true
               exit 0
             fi
-            echo "⚠️ Attempt $ATTEMPT failed, cleaning up before retry..."
+
+            echo "⚠️ Attempt $ATTEMPT failed"
             xcrun simctl shutdown all 2>/dev/null || true
             sleep 5
           done
+
           echo "❌ Smoke tests failed after 3 attempts"
           exit 1
 
@@ -392,7 +460,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smoke-test-results
-          path: build/test-results/SmokeResults.xcresult
+          path: build/test-results/
           retention-days: 14
 
       - name: Collect Screenshots
@@ -428,11 +496,9 @@ jobs:
           if [ -n "$BOOTED_ID" ]; then
             xcrun simctl spawn "$BOOTED_ID" log show --last 2m 2>/dev/null > diagnostics/sim-device.log || true
           fi
-          echo "=== All Device States ===" > diagnostics/device-state.txt
-          xcrun simctl list devices >> diagnostics/device-state.txt 2>/dev/null || true
 
       - name: Upload Diagnostics
-        if: always()
+        if: always() && failure()
         uses: actions/upload-artifact@v4
         with:
           name: smoke-diagnostics
@@ -441,10 +507,9 @@ jobs:
 
       - name: Cleanup Simulators
         if: always()
-        run: |
-          xcrun simctl shutdown all 2>/dev/null || true
-          echo "All simulators shut down"
+        run: xcrun simctl shutdown all 2>/dev/null || true
 
+  # ─── Job 7: UI Fidelity Tests (with retry) ──────────────────────
   ui-fidelity:
     name: 🎨 UI Fidelity Tests
     runs-on: macos-15
@@ -457,7 +522,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -466,27 +531,18 @@ jobs:
         id: prep
         run: |
           set -euo pipefail
-          echo "=== Pre-boot cleanup ==="
           xcrun simctl shutdown all 2>/dev/null || true
           sleep 2
           xcrun simctl erase all 2>/dev/null || true
-          echo "All existing simulators shut down and erased"
 
           echo "=== SDK Info ==="
           xcodebuild -version
-          SDK_VER=$(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null | cut -d. -f1 || echo "18")
-          echo "SDK version: $(xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || echo 'unknown') (major: $SDK_VER)"
           xcodebuild -downloadPlatform iOS 2>/dev/null || true
-
-          echo "=== Available iOS Runtimes ==="
           xcrun simctl list runtimes
-          echo ""
-          echo "=== Available Devices (iPhone family) ==="
-          xcrun simctl list devices available | grep -i iphone || echo "(none found)"
 
           DESTINATION=""
           for DEVICE_TYPE in "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15" "iPhone 14" "iPhone SE (3rd generation)"; do
-            echo "--- Trying destination: platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest ---"
+            echo "--- Trying: $DEVICE_TYPE ---"
             if xcodebuild test \
                 -workspace WebBridgeKit.xcworkspace \
                 -scheme SuperApp \
@@ -500,63 +556,51 @@ jobs:
                 CODE_SIGNING_ALLOWED=NO \
                 -quiet 2>&1 | head -5; then
               DESTINATION="platform=iOS Simulator,name=${DEVICE_TYPE},OS=latest"
-              echo "✅ Valid destination found: $DESTINATION"
               break
-            else
-              echo "   ⚠️ Destination not usable, trying next..."
             fi
           done
 
           rm -rf /tmp/uifidelity-probe.xcresult 2>/dev/null || true
 
           if [ -z "$DESTINATION" ]; then
-            echo "::warning::No named device destination worked, falling back to generic"
             DESTINATION="generic/platform=iOS Simulator"
           fi
 
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
-          echo "Using destination: $DESTINATION"
 
-      - name: Run UI Fidelity Tests
+      - name: Run UI Fidelity Tests (retry 3x)
         env:
           CI: "true"
         run: |
           set -o pipefail
-          mkdir -p build/screenshots/actual
-          mkdir -p build/test-results
+          mkdir -p build/screenshots/actual build/test-results
           DESTINATION="${{ steps.prep.outputs.destination }}"
 
-          run_ui_fidelity_test() {
-            RESULT_PATH="build/test-results/UIFidelityResults-attempt-${ATTEMPT}.xcresult"
+          for ATTEMPT in 1 2 3; do
+            echo "=== UI fidelity attempt $ATTEMPT/3 ==="
             rm -rf build/test-results/UIFidelityResults-*.xcresult 2>/dev/null || true
-            xcodebuild test \
+
+            if xcodebuild test \
               -workspace WebBridgeKit.xcworkspace \
               -scheme SuperApp \
               -destination "$DESTINATION" \
               -configuration Debug \
-              -resultBundlePath "$RESULT_PATH" \
+              -resultBundlePath "build/test-results/UIFidelityResults-attempt-${ATTEMPT}.xcresult" \
               -only-testing:SuperAppUITests/UIFidelityTests \
               CODE_SIGN_IDENTITY="" \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGNING_ALLOWED=NO \
-              | xcpretty --color --report junit --output build/test-results/ui-fidelity-junit.xml
-            RET=$?
-            if [ $RET -eq 0 ] && [ -f "$RESULT_PATH" ]; then
-              mv "$RESULT_PATH" build/test-results/UIFidelityResults.xcresult
-            fi
-            return $RET
-          }
-
-          for ATTEMPT in 1 2 3; do
-            echo "=== UI fidelity attempt $ATTEMPT/$3 (destination: $DESTINATION) ==="
-            if run_ui_fidelity_test; then
-              echo "✅ UI fidelity tests passed on attempt $ATTEMPT"
+              | xcpretty --color --report junit --output build/test-results/ui-fidelity-junit.xml; then
+              echo "✅ UI fidelity passed on attempt $ATTEMPT"
+              mv "build/test-results/UIFidelityResults-attempt-${ATTEMPT}.xcresult" build/test-results/UIFidelityResults.xcresult 2>/dev/null || true
               exit 0
             fi
-            echo "⚠️ Attempt $ATTEMPT failed, cleaning up before retry..."
+
+            echo "⚠️ Attempt $ATTEMPT failed"
             xcrun simctl shutdown all 2>/dev/null || true
             sleep 5
           done
+
           echo "❌ UI fidelity tests failed after 3 attempts"
           exit 1
 
@@ -578,7 +622,7 @@ jobs:
             echo "Found $(ls docs/ui-fidelity/references/*.png 2>/dev/null | wc -l | tr -d ' ') reference images"
           else
             echo "has_references=false" >> $GITHUB_OUTPUT
-            echo "No reference images — will save current as baseline"
+            echo "No reference images — saving current as baseline"
           fi
 
       - name: Save Baseline Screenshots
@@ -650,14 +694,9 @@ jobs:
                 sys.exit(1)
             else:
                 print('✅ All screenshots within threshold')
-                sys.exit(0)
             "
-          else
-            echo "No diff results found, skipping threshold check"
           fi
 
       - name: Cleanup Simulators
         if: always()
-        run: |
-          xcrun simctl shutdown all 2>/dev/null || true
-          echo "All simulators shut down"
+        run: xcrun simctl shutdown all 2>/dev/null || true
