@@ -3,6 +3,18 @@ import XCTest
 
 extension AdvancedHandlerTests {
 
+    private func assertSuccess(_ result: Any) -> [String: Any] {
+        let dict = result as? [String: Any] ?? [:]
+        XCTAssertTrue(dict["success"] as? Bool ?? false)
+        return dict
+    }
+
+    private func assertFailure(_ result: Any) -> [String: Any] {
+        let dict = result as? [String: Any] ?? [:]
+        XCTAssertFalse(dict["success"] as? Bool ?? true)
+        return dict
+    }
+
     // MARK: - WebCacheDebugHandler
 
     func testCacheDebugHandler_GetCacheInfo() {
