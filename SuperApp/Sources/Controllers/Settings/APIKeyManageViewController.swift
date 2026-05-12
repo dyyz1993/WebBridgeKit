@@ -208,9 +208,9 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     // MARK: - Properties
 
-    private var currentTemporaryKeys: [APIKey] = []
-    private let deleteKeySubject = PublishSubject<String>()
-    private let refreshKeySubject = PublishSubject<Void>()
+    var currentTemporaryKeys: [APIKey] = []
+    let deleteKeySubject = PublishSubject<String>()
+    let refreshKeySubject = PublishSubject<Void>()
 
     // MARK: - Lifecycle
 
@@ -538,7 +538,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     // MARK: - Private Methods
 
-    private func updateTableView(with keys: [APIKey]) {
+    func updateTableView(with keys: [APIKey]) {
         currentTemporaryKeys = keys
 
         if keys.isEmpty {
@@ -549,7 +549,6 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
             tableView.isHidden = false
             emptyStateView.isHidden = true
 
-            // 更新表格高度
             let rowCount = keys.count
             let rowHeight: CGFloat = 80
             let headerHeight: CGFloat = 0
@@ -561,188 +560,5 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
             tableView.reloadData()
         }
-    }
-
-    private func showKeyCreationDialog() {
-        let alert = UIAlertController(
-            title: L10n.tr("apikey.manage.create_title"),
-            message: L10n.tr("apikey.manage.create_message"),
-            preferredStyle: .alert
-        )
-
-        alert.addTextField { textField in
-            textField.placeholder = L10n.tr("apikey.manage.create_name_placeholder")
-        }
-
-        alert.addTextField { textField in
-            textField.placeholder = L10n.tr("apikey.manage.create_group_placeholder")
-        }
-
-        let durations: [(String, TimeInterval)] = [
-            (L10n.tr("apikey.manage.duration_1h"), 3600),
-            (L10n.tr("apikey.manage.duration_1d"), 86400),
-            (L10n.tr("apikey.manage.duration_7d"), 604800),
-            (L10n.tr("apikey.manage.duration_30d"), 2592000)
-        ]
-
-        alert.addAction(UIAlertAction(title: L10n.tr("apikey.manage.next_step"), style: .default) { [weak self] _ in
-            let name = alert.textFields?[0].text
-            let groupId = alert.textFields?[1].text
-
-            let durationAlert = UIAlertController(title: L10n.tr("apikey.manage.select_duration"), message: nil, preferredStyle: .actionSheet)
-            for (title, duration) in durations {
-                durationAlert.addAction(UIAlertAction(title: title, style: .default) { _ in
-                    self?.viewModel.addTemporaryKey(duration: duration, name: name, groupId: groupId)
-                })
-            }
-            durationAlert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
-
-            if let popoverController = durationAlert.popoverPresentationController {
-                popoverController.barButtonItem = self?.navigationItem.rightBarButtonItem
-            }
-
-            self?.present(durationAlert, animated: true)
-        })
-
-        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
-        present(alert, animated: true)
-    }
-
-    private func showRefreshSuccess() {
-        let alert = UIAlertController(
-            title: L10n.tr("apikey.manage.refresh_success"),
-            message: L10n.tr("apikey.manage.refresh_success_message"),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
-        present(alert, animated: true)
-    }
-
-    private func showCopySuccess() {
-        let alert = UIAlertController(
-            title: L10n.tr("apikey.manage.copy_success"),
-            message: L10n.tr("apikey.manage.copy_success_message"),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
-        present(alert, animated: true)
-    }
-
-    private func showAddSuccess() {
-        let alert = UIAlertController(
-            title: L10n.tr("apikey.manage.add_success"),
-            message: L10n.tr("apikey.manage.add_success_message"),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
-        present(alert, animated: true)
-    }
-
-    private func showTestPushResult(success: Bool, message: String) {
-        let alert = UIAlertController(
-            title: success ? L10n.tr("apikey.manage.test_success") : L10n.tr("apikey.manage.test_failure"),
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
-        present(alert, animated: true)
-    }
-
-    private func showExamples() {
-        let examplesVC = APIKeyExampleViewController()
-        navigationController?.pushViewController(examplesVC, animated: true)
-    }
-}
-
-// MARK: - UITableViewDataSource
-
-extension APIKeyManageViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return currentTemporaryKeys.count
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: APIKeyCell.identifier, for: indexPath) as? APIKeyCell else {
-            return UITableViewCell()
-        }
-
-        let key = currentTemporaryKeys[indexPath.row]
-        cell.configure(with: key, maskKey: false)
-        cell.onCopyTap = { [weak self] keyValue in
-            UIPasteboard.general.string = keyValue
-            self?.showCopySuccess()
-        }
-
-        return cell
-    }
-}
-
-// MARK: - UITableViewDelegate
-
-extension APIKeyManageViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 80
-    }
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-    }
-
-    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let key = currentTemporaryKeys[indexPath.row]
-
-        // 删除操作
-        let deleteAction = UIContextualAction(style: .destructive, title: L10n.tr("common.delete")) { [weak self] _, _, completion in
-            self?.deleteKeySubject.onNext(key.id)
-            completion(true)
-        }
-        deleteAction.image = LucideIcon.trash.image()
-
-        // 测试操作
-        let testAction = UIContextualAction(style: .normal, title: L10n.tr("apikey.manage.test")) { [weak self] _, _, completion in
-            self?.viewModel.sendTemporaryKeyTestPush(key: key)
-            completion(true)
-        }
-        testAction.backgroundColor = ThemeTokens.Color.success
-        testAction.image = LucideIcon.send.image()
-
-        // 编辑操作
-        let editAction = UIContextualAction(style: .normal, title: L10n.tr("common.edit")) { [weak self] _, _, completion in
-            self?.showEditGroupIdDialog(for: key)
-            completion(true)
-        }
-        editAction.backgroundColor = ThemeTokens.Color.primary
-        editAction.image = LucideIcon.squarePencil.image()
-
-        let configuration = UISwipeActionsConfiguration(actions: [deleteAction, testAction, editAction])
-        configuration.performsFirstActionWithFullSwipe = false
-        return configuration
-    }
-}
-
-// MARK: - Actions
-
-extension APIKeyManageViewController {
-
-    private func showEditGroupIdDialog(for key: APIKey) {
-        let alert = UIAlertController(
-            title: L10n.tr("apikey.manage.edit_group_title"),
-            message: L10n.tr("apikey.manage.edit_group_message", key.name),
-            preferredStyle: .alert
-        )
-
-        alert.addTextField { textField in
-            textField.placeholder = L10n.tr("apikey.manage.group_id")
-            textField.text = key.boundGroupId
-        }
-
-        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
-        alert.addAction(UIAlertAction(title: L10n.tr("common.save"), style: .default) { [weak self] _ in
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            let newGroupId = alert.textFields?.first?.text
-            self?.viewModel.updateKeyGroupId(id: key.id, groupId: newGroupId)
-        })
-
-        present(alert, animated: true)
     }
 }
