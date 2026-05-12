@@ -111,7 +111,7 @@ public class WebCompressedCacheStore {
         try queue.sync {
             // 检查文件大小限制
             guard data.count <= config.maxFileSize else {
-                throw CacheError.fileTooLarge
+                throw CompressedCacheError.fileTooLarge
             }
 
             // 生成文件路径
@@ -381,18 +381,18 @@ public class WebCompressedCacheStore {
         // 使用系统 Compression 框架进行 zlib 压缩
         return try data.withUnsafeBytes { rawBufferPointer in
             guard let baseAddress = rawBufferPointer.baseAddress else {
-                throw CacheError.compressionFailed
-            }
-            let bufferPointer = baseAddress.assumingMemoryBound(to: UInt8.self)
-            let count = data.count
+                    throw CompressedCacheError.compressionFailed
+                }
+                let bufferPointer = baseAddress.assumingMemoryBound(to: UInt8.self)
+                let count = data.count
 
-            // 预分配足够空间（压缩后通常不超过原始大小的 1.1 倍 + 12 字节）
-            let dstSize = count + count / 10 + 12
-            var dstBuffer = Data(count: dstSize)
+                // 预分配足够空间（压缩后通常不超过原始大小的 1.1 倍 + 12 字节）
+                let dstSize = count + count / 10 + 12
+                var dstBuffer = Data(count: dstSize)
 
-            return try dstBuffer.withUnsafeMutableBytes { dstBytes in
-                guard let dstBaseAddress = dstBytes.baseAddress else {
-                    throw CacheError.compressionFailed
+                return try dstBuffer.withUnsafeMutableBytes { dstBytes in
+                    guard let dstBaseAddress = dstBytes.baseAddress else {
+                        throw CompressedCacheError.compressionFailed
                 }
                 let dstPointer = dstBaseAddress.assumingMemoryBound(to: UInt8.self)
 
@@ -403,7 +403,7 @@ public class WebCompressedCacheStore {
                 )
 
                 if compressedSize == 0 {
-                    throw CacheError.compressionFailed
+                    throw CompressedCacheError.compressionFailed
                 }
 
                 var result = Data(bytes: dstPointer, count: Int(compressedSize))
@@ -420,13 +420,13 @@ public class WebCompressedCacheStore {
 
         return try dstBuffer.withUnsafeMutableBytes { dstBytes in
             guard let dstBaseAddress = dstBytes.baseAddress else {
-                throw CacheError.decompressionFailed
-            }
-            let dstPointer = dstBaseAddress.assumingMemoryBound(to: UInt8.self)
+                    throw CompressedCacheError.decompressionFailed
+                }
+                let dstPointer = dstBaseAddress.assumingMemoryBound(to: UInt8.self)
 
-            return try data.withUnsafeBytes { rawBufferPointer in
-                guard let srcBaseAddress = rawBufferPointer.baseAddress else {
-                    throw CacheError.decompressionFailed
+                return try data.withUnsafeBytes { rawBufferPointer in
+                    guard let srcBaseAddress = rawBufferPointer.baseAddress else {
+                        throw CompressedCacheError.decompressionFailed
                 }
                 let srcPointer = srcBaseAddress.assumingMemoryBound(to: UInt8.self)
 
@@ -437,7 +437,7 @@ public class WebCompressedCacheStore {
                 )
 
                 if size == 0 {
-                    throw CacheError.decompressionFailed
+                    throw CompressedCacheError.decompressionFailed
                 }
 
                 return Data(bytes: dstPointer, count: Int(size))
@@ -491,7 +491,7 @@ public class WebCompressedCacheStore {
 
 // MARK: - Cache Error
 
-public enum CacheError: Error, LocalizedError {
+public enum CompressedCacheError: Error, LocalizedError {
     case fileTooLarge
     case compressionFailed
     case decompressionFailed

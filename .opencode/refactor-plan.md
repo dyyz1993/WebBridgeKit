@@ -52,12 +52,21 @@
 - Caching already present in setup-project action (verified)
 - Extracted XCODE_VERSION env var for DRY
 
-## Phase 5: Architecture Quality (P3) — 🔲 TODO (low priority)
+## Phase 5: Architecture Quality (P3) — ✅ COMPLETE
 
-- Extract protocol layer for Cache module
-- Unify error handling (WebBridgeError aggregation)
-- Add performance benchmarks
-- Generate API documentation with Swift-DocC
+- Extracted `CacheStatisticsProviding` protocol (11 subsystems)
+- Extracted `CacheManaging` base protocol (clearAll/getSize/getEntryCount)
+- Added `WebBridgeError.wrap`/`wrapSync` utility
+- Replaced 33 catch boilerplate blocks in 3 Managers (-313 lines)
+- Fixed error inconsistencies (SkillError, DownloadError, CompressedCacheError)
+- Fixed AI module missing `import WebBridgeKit`
+- Commit: `2688182`
+
+### Remaining (incremental, during normal dev)
+- Refactor `CacheStatsAggregator` to use `CacheStatisticsProviding` protocol
+- Extract `URLManaging` protocol for PinnedURL/URLFavorite
+- Add `XCTMetric` performance benchmarks
+- Set up Swift-DocC documentation
 
 ## Execution Log
 
@@ -69,8 +78,8 @@
 | 2026-05-12 | Phase 3: Test architecture upgrade | ✅ DONE | `bab526b` |
 | 2026-05-12 | Phase 4.1: Split 5 more files | ✅ DONE | `09d3c79` |
 | 2026-05-12 | Phase 4.2: SwiftLint + split 3 VCs | ✅ DONE | `6843a2b` |
-| 2026-05-12 | Phase 4.3: CI pipeline optimization | ✅ DONE | pending |
-| — | Phase 5: Architecture quality | 🔲 TODO | — |
+| 2026-05-12 | Phase 4.3: CI pipeline optimization | ✅ DONE | `f708ce0` |
+| 2026-05-12 | Phase 5: Architecture quality | ✅ DONE | `2688182` |
 
 ## Final Scorecard
 
@@ -84,3 +93,5 @@
 | CI max runners | 15 | 7 | 53% reduction |
 | CI unit-test groups | 11 individual | 3 grouped | Faster feedback |
 | Build status | ✅ | ✅ | Zero regressions |
+| Error types | 18 inconsistent | Standardized | Unified + wrap utility |
+| Catch boilerplate | 33 blocks | 0 | -313 lines via wrap |

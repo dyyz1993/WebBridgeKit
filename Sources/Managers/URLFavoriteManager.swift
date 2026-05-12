@@ -235,96 +235,60 @@ public class URLFavoriteManager {
 
     @discardableResult
     public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) async throws -> URLFavorite {
-        do {
-            return try await databaseActor.addFavorite(url: url, title: title, favicon: favicon)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.addFavorite(url: url, title: title, favicon: favicon)
         }
     }
 
     public func updateFavorite(_ favorite: URLFavorite) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.updateFavorite(favorite)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
     // MARK: - Delete Operations
 
     public func deleteFavorite(id: String) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.deleteFavorite(id: id)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
     public func deleteFavorite(url: URL) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.deleteFavorite(url: url)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
     // MARK: - Query Operations
 
     public func getAllFavorites() async throws -> [URLFavorite] {
-        do {
-            return try await databaseActor.getAllFavorites()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getAllFavorites()
         }
     }
 
     public func findFavorite(url: URL) async throws -> URLFavorite? {
-        do {
-            return try await databaseActor.findFavorite(url: url)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.findFavorite(url: url)
         }
     }
 
     public func findFavorite(id: String) async throws -> URLFavorite? {
-        do {
-            return try await databaseActor.findFavorite(id: id)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.findFavorite(id: id)
         }
     }
 
     public func searchFavorites(keyword: String) async throws -> [URLFavorite] {
-        do {
-            return try await databaseActor.searchFavorites(keyword: keyword)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.searchFavorites(keyword: keyword)
         }
     }
 
     public func getTotalCount() async throws -> Int {
-        do {
-            return try await databaseActor.getTotalCount()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getTotalCount()
         }
     }
 
@@ -332,32 +296,20 @@ public class URLFavoriteManager {
 
     @discardableResult
     public func togglePin(id: String) async throws -> Bool {
-        do {
-            return try await databaseActor.togglePin(id: id)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.togglePin(id: id)
         }
     }
 
     public func updateCacheMode(id: String, enabled: Bool) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.updateCacheMode(id: id, enabled: enabled)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
     public func updateSortOrder(favorites: [URLFavorite]) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.updateSortOrder(favorites: favorites)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 }

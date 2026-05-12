@@ -108,3 +108,38 @@ public enum WebBridgeError: Error, LocalizedError, CustomStringConvertible {
         return errorDescription ?? "Unknown WebBridge error"
     }
 }
+
+// MARK: - Error Wrapping
+
+extension WebBridgeError {
+
+    /// Wraps an async throwing closure, re-throwing WebBridgeError as-is
+    /// and wrapping other errors as `.databaseOperationFailed`.
+    ///
+    /// Usage:
+    /// ```swift
+    /// return try await WebBridgeError.wrap {
+    ///     try await databaseActor.getAll()
+    /// }
+    /// ```
+    public static func wrap<T>(_ block: () async throws -> T) async throws -> T {
+        do {
+            return try await block()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw Self.databaseOperationFailed(underlying: error)
+        }
+    }
+
+    /// Synchronous version for non-async contexts
+    public static func wrapSync<T>(_ block: () throws -> T) throws -> T {
+        do {
+            return try block()
+        } catch let error as WebBridgeError {
+            throw error
+        } catch {
+            throw Self.databaseOperationFailed(underlying: error)
+        }
+    }
+}

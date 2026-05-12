@@ -78,7 +78,7 @@ public struct APIEndpoint: Codable, Sendable {
 
 // MARK: - Skill Error
 
-public enum SkillError: LocalizedError {
+public enum SkillError: Error, LocalizedError {
     case duplicateSkill(String)
     case skillNotFound(String)
     case invalidRegistration

@@ -183,8 +183,15 @@ public class ResourceDownloader {
         return data
     }
 
-    enum DownloadError: Error {
+    enum DownloadError: Error, LocalizedError {
         case invalidResponse
         case invalidEncoding
+        
+        var errorDescription: String? {
+            switch self {
+            case .invalidResponse: return "Invalid HTTP response"
+            case .invalidEncoding: return "Failed to decode response as UTF-8"
+            }
+        }
     }
 }

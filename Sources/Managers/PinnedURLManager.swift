@@ -192,32 +192,20 @@ public class PinnedURLManager {
     // MARK: - Public Async API
 
     public func add(url: String, title: String? = nil, notes: String? = nil) async throws -> PinnedURLRealm {
-        do {
-            return try await databaseActor.add(url: url, title: title, notes: notes)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.add(url: url, title: title, notes: notes)
         }
     }
 
     public func unpin(id: String) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.unpin(id: id)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
     public func delete(id: String) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.delete(id: id)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
@@ -230,53 +218,33 @@ public class PinnedURLManager {
     }
 
     public func getAllPinned() async throws -> [PinnedURLRealm] {
-        do {
-            return try await databaseActor.getAllPinned()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getAllPinned()
         }
     }
 
     public func getByType(_ type: URLType) async throws -> [PinnedURLRealm] {
-        do {
-            return try await databaseActor.getByType(type)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getByType(type)
         }
     }
 
     public func search(_ query: String) async throws -> [PinnedURLRealm] {
-        do {
-            return try await databaseActor.search(query)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.search(query)
         }
     }
 
     public func getSummary() async throws -> PinnedURLSummary {
-        do {
-            return try await databaseActor.getSummary()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getSummary()
         }
     }
 
     @discardableResult
     public func importPresets(_ items: [PresetURLItem]) async throws -> Int {
-        do {
-            return try await databaseActor.importPresets(items)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.importPresets(items)
         }
     }
 

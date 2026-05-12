@@ -291,12 +291,8 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
     ///   - title: Page title (optional)
     ///   - favicon: Page icon (optional)
     public func addOrUpdateHistory(url: URL, title: String? = nil, favicon: Data? = nil) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.addOrUpdateHistory(url: url, title: title, favicon: favicon)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
@@ -304,35 +300,23 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
 
     /// Delete history record
     public func deleteHistory(id: String) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.deleteHistory(id: id)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
     /// Clear all history (preserves favorites and pinned items)
     public func clearAllHistory() async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.clearAllHistory()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
     /// Clean up low-frequency items (only non-favorite and non-pinned)
     /// When history exceeds limit, delete least visited items
     public func cleanupLowFrequencyItems(limit: Int = 100) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.cleanupLowFrequencyItems(limit: limit)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 
@@ -341,58 +325,38 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
     /// Get all history records (sorted by last visit date descending)
     /// Returns independent copy array to avoid cross-thread access issues
     public func getAllHistories() async throws -> [WebPageHistory] {
-        do {
-            return try await databaseActor.getAllHistories()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getAllHistories()
         }
     }
 
     /// Get cached history records
     /// Returns independent copy array to avoid cross-thread access issues
     public func getCachedHistories() async throws -> [WebPageHistory] {
-        do {
-            return try await databaseActor.getCachedHistories()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getCachedHistories()
         }
     }
 
     /// Find history record by URL
     public func findHistory(url: URL) async throws -> WebPageHistory? {
-        do {
-            return try await databaseActor.findHistory(url: url)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.findHistory(url: url)
         }
     }
 
     /// Find history record by ID
     public func findHistory(id: String) async throws -> WebPageHistory? {
-        do {
-            return try await databaseActor.findHistory(id: id)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.findHistory(id: id)
         }
     }
 
     /// Search history records (title or URL contains keyword)
     /// Returns independent copy array to avoid cross-thread access issues
     public func searchHistories(keyword: String) async throws -> [WebPageHistory] {
-        do {
-            return try await databaseActor.searchHistories(keyword: keyword)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.searchHistories(keyword: keyword)
         }
     }
 
@@ -400,34 +364,22 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
 
     /// Get total history count
     public func getTotalCount() async throws -> Int {
-        do {
-            return try await databaseActor.getTotalCount()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getTotalCount()
         }
     }
 
     /// Get today's visit count
     public func getTodayVisitCount() async throws -> Int {
-        do {
-            return try await databaseActor.getTodayVisitCount()
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getTodayVisitCount()
         }
     }
 
     /// Get most visited pages (top N)
     public func getMostVisited(limit: Int = 10) async throws -> [WebPageHistory] {
-        do {
-            return try await databaseActor.getMostVisited(limit: limit)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getMostVisited(limit: limit)
         }
     }
 
@@ -436,12 +388,8 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
     /// Clean old thumbnails, keep only latest N
     /// - Parameter keepLatest: Number to keep
     func cleanOldThumbnails(keepLatest: Int = 100) async throws {
-        do {
+        try await WebBridgeError.wrap {
             try await databaseActor.cleanOldThumbnails(keepLatest: keepLatest)
-        } catch let error as WebBridgeError {
-            throw error
-        } catch {
-            throw WebBridgeError.databaseOperationFailed(underlying: error)
         }
     }
 }

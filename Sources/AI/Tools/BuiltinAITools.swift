@@ -1,4 +1,5 @@
 import Foundation
+import WebBridgeKit
 
 public enum BuiltinAITools {
 
