@@ -105,7 +105,13 @@ class NotificationDebugViewController: UIViewController {
         return tv
     }()
 
-    private let sounds = ["alarm", "anticipation", "bell", "birdsong", "bloom", "calypso", "chime", "choochoo", "descent", "electronic", "fanfare", "glass", "horn", "lapis", "minuet", "multiway", "newmail", "noire", "paper", "payment", "pop", "pow", "promotion", "rings", "sencha", "sherwood", "silo", "stargate", "synthesis", "telegraph", "tidings", "tumble", "update", "vibra", "whistle"]
+    private let sounds = [
+        "alarm", "anticipation", "bell", "birdsong", "bloom", "calypso", "chime",
+        "choochoo", "descent", "electronic", "fanfare", "glass", "horn", "lapis",
+        "minuet", "multiway", "newmail", "noire", "paper", "payment", "pop", "pow",
+        "promotion", "rings", "sencha", "sherwood", "silo", "stargate", "synthesis",
+        "telegraph", "tidings", "tumble", "update", "vibra", "whistle"
+    ]
     private let soundPicker = UIPickerView()
 
     private static func makeTextField(placeholder: String) -> UITextField {

@@ -229,7 +229,12 @@ extension AgentSchema {
     private static let aiDebugCapability = FrameworkCapability(
         name: "AI Debug",
         category: "debug",
-        description: "AI 调试 HTTP 服务。运行在本地 :8765 端口，提供 RESTful API 供 AI Agent 调用。内置 13 个调试工具（查询类：list_handlers, get_handler_detail, get_cache_stats, get_cache_entries, get_message_stats, get_recent_errors, get_config, get_diagnostic_report, read_file；操作类：execute_handler, clear_cache, send_test_push, reload_config）。支持 MCP 协议端点用于 LLM 集成。通过 AIRouter 路由请求，AIHTTPServer 管理 TCP 连接。",
+        description: "AI 调试 HTTP 服务。运行在本地 :8765 端口，提供 RESTful API 供 AI Agent 调用。" +
+            "内置 13 个调试工具（查询类：list_handlers, get_handler_detail, get_cache_stats, " +
+            "get_cache_entries, get_message_stats, get_recent_errors, get_config, " +
+            "get_diagnostic_report, read_file；操作类：execute_handler, clear_cache, " +
+            "send_test_push, reload_config）。支持 MCP 协议端点用于 LLM 集成。" +
+            "通过 AIRouter 路由请求，AIHTTPServer 管理 TCP 连接。",
         debuggingMethods: [
             "GET /health — 检查 AI HTTP 服务是否运行",
             "GET /tools — 列出所有已注册的调试工具",
