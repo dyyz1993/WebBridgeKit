@@ -200,7 +200,17 @@ public actor AIHTTPServer {
         let bodyString = bodyData.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
 
         let statusMessage = HTTPStatusMessage.forCode(response.statusCode)
-        let httpResponse = "HTTP/1.1 \(response.statusCode) \(statusMessage)\r\nContent-Type: application/json\r\nContent-Length: \(bodyString.utf8.count)\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET, POST, OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type\r\n\r\n\(bodyString)"
+        let headers = [
+            "HTTP/1.1 \(response.statusCode) \(statusMessage)",
+            "Content-Type: application/json",
+            "Content-Length: \(bodyString.utf8.count)",
+            "Access-Control-Allow-Origin: *",
+            "Access-Control-Allow-Methods: GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers: Content-Type",
+            "",
+            bodyString
+        ]
+        let httpResponse = headers.joined(separator: "\r\n")
 
         let responseData = Array(httpResponse.utf8)
         send(socket, responseData, responseData.count, 0)
