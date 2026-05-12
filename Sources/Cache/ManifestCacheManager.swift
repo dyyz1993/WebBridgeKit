@@ -26,14 +26,13 @@ public class ManifestCacheManager: @unchecked Sendable {
     // MARK: - Properties
 
     private let scheme = "custom"
-    private let manifestStore: ManifestStore
-    private let resourceCache: ResourceCache
-    private let queue = DispatchQueue(label: "com.webbridgekit.manifest-cache", qos: .userInitiated)
+    let manifestStore: ManifestStore
+    let resourceCache: ResourceCache
+    let queue = DispatchQueue(label: "com.webbridgekit.manifest-cache", qos: .userInitiated)
 
-    // 缓存统计
-    private var cacheHits: Int64 = 0
-    private var cacheMisses: Int64 = 0
-    private let statsLock = NSLock()
+    var cacheHits: Int64 = 0
+    var cacheMisses: Int64 = 0
+    let statsLock = NSLock()
 
     // MARK: - Initialization
 
@@ -263,143 +262,6 @@ public class ManifestCacheManager: @unchecked Sendable {
         }
     }
 
-    /// 处理资源请求（由 URLSchemeHandler 调用，带错误处理和重试）
-    /// - Parameters:
-    ///   - relativePath: 相对路径（如 "logo.png"）
-    ///   - pageKey: 当前页面标识符
-    ///   - completion: 完成回调，返回资源数据
-    public func fetchResource(relativePath: String, for pageKey: String, completion: @escaping (Result<ResourceData, Error>) -> Void) {
-        queue.async { [weak self] in
-            guard let self = self else {
-                completion(.failure(ManifestCacheError.managerDeallocated))
-                return
-            }
-
-            // 提取文件名用于日志显示
-            let fileName = (relativePath as NSString).lastPathComponent
-
-            // 1. 检查资源缓存
-            NSLog("⬇️ [\(fileName)] 检查缓存...")
-
-            if let cached = self.resourceCache.get(relativePath, for: pageKey) {
-                self.recordCacheHit()
-                NSLog("✅ [\(fileName)] 缓存命中 (大小: \(cached.data.count) bytes)")
-
-                // 发送通知，用于 UI 显示
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(
-                        name: ManifestCacheManager.cacheHitNotification,
-                        object: nil,
-                        userInfo: ["relativePath": relativePath, "source": "INTERCEPT"]
-                    )
-                }
-
-                completion(.success(cached))
-                return
-            }
-
-            self.recordCacheMiss()
-            NSLog("❌ [\(fileName)] 缓存未命中，开始下载...")
-
-            // 2. 从 manifest 查找真实 URL
-            guard let manifest = self.manifestStore.getCurrentManifest(for: pageKey),
-                  let urlString = manifest.resources[relativePath],
-                  let url = URL(string: urlString) else {
-                NSLog("❌ [\(fileName)] Manifest 中未找到该资源")
-                completion(.failure(ManifestCacheError.resourceNotFound(relativePath)))
-                return
-            }
-
-            // 3. 下载资源（带重试机制）
-            NSLog("📥 [\(fileName)] 正在下载...")
-
-            Task {
-                do {
-                    let resource = try await RetryHelper.executeAsync(maxRetries: 3, delay: 1.0) {
-                        try await self.downloadResource(from: url, relativePath: relativePath)
-                    }
-
-                    // 4. 缓存资源
-                    self.resourceCache.set(resource, for: pageKey)
-
-                    NSLog("✅ [\(fileName)] 下载成功 (大小: \(resource.data.count) bytes)")
-                    NSLog("💾 [\(fileName)] 已缓存")
-                    completion(.success(resource))
-                } catch {
-                    NSLog("❌ [\(fileName)] 下载失败: \(error.localizedDescription)")
-                    completion(.failure(WebBridgeError.networkRequestFailed(reason: error.localizedDescription)))
-                }
-            }
-        }
-    }
-
-    /// 下载单个资源（异步）
-    private func downloadResource(from url: URL, relativePath: String) async throws -> ResourceData {
-        return try await PerformanceMonitor.shared.measure(
-            "ManifestCache.downloadResource",
-            metadata: ["relativePath": relativePath, "url": url.absoluteString]
-        ) {
-            // 使用 RequestDeduplicator 防止重复下载
-            let result: Any = try await RequestDeduplicator.shared.executeResourceDownload(
-                urlString: url.absoluteString,
-                relativePath: relativePath
-            ) {
-                // 检查网络状态（快速失败，避免10秒超时等待）
-                try NetworkMonitor.shared.ensureNetworkAvailable()
-
-                // 检查是否为蜂窝网络并发出警告
-                if NetworkMonitor.shared.warnIfCellular() {
-                    let fileName = (relativePath as NSString).lastPathComponent
-                    WebBridgeLogger.shared.log(.warning, "⚠️ [ManifestCache] Downloading '\(fileName)' over cellular network - data charges may apply")
-                }
-
-                return try await self.performDownload(from: url, relativePath: relativePath)
-            }
-
-            guard let resource = result as? ResourceData else {
-                throw WebBridgeError.cacheLoadFailed(
-                    reason: "Type mismatch in resource download result for: \(relativePath)"
-                )
-            }
-
-            return resource
-        }
-    }
-
-    /// 执行实际的下载操作（不包含去重逻辑）
-    private func performDownload(from url: URL, relativePath: String) async throws -> ResourceData {
-        return try await PerformanceMonitor.shared.measure(
-            "ManifestCache.performDownload",
-            metadata: ["relativePath": relativePath, "url": url.absoluteString]
-        ) {
-            try await withCheckedThrowingContinuation { continuation in
-                let task = URLSession.shared.dataTask(with: url) { data, _, error in
-                    if let error = error {
-                        continuation.resume(throwing: error)
-                        return
-                    }
-
-                    guard let data = data, !data.isEmpty else {
-                        Log.error("Downloaded empty data for resource: \(relativePath)", category: .network)
-                        continuation.resume(throwing: ManifestCacheError.emptyData)
-                        return
-                    }
-
-                    let mimeType = self.getMimeType(forPath: relativePath)
-                    let resource = ResourceData(
-                        relativePath: relativePath,
-                        data: data,
-                        mimeType: mimeType
-                    )
-
-                    continuation.resume(returning: resource)
-                }
-
-                task.resume()
-            }
-        }
-    }
-
     /// 更新 manifest 的资源映射
     /// - Parameters:
     ///   - pageKey: 页面标识符
@@ -513,66 +375,6 @@ public class ManifestCacheManager: @unchecked Sendable {
             cacheMisses: Int(cacheMisses),
             totalCacheSize: resourceCache.totalSize()
         )
-    }
-
-    // MARK: - Private Helpers
-
-    private func recordCacheHit() {
-        statsLock.lock()
-        defer { statsLock.unlock() }
-        cacheHits += 1
-    }
-
-    private func recordCacheMiss() {
-        statsLock.lock()
-        defer { statsLock.unlock() }
-        cacheMisses += 1
-    }
-
-    private func resetStats() {
-        statsLock.lock()
-        defer { statsLock.unlock() }
-        cacheHits = 0
-        cacheMisses = 0
-    }
-
-    private func getMimeType(forPath path: String) -> String {
-        let ext = (path as NSString).pathExtension.lowercased()
-
-        switch ext {
-        case "html", "htm":
-            return "text/html; charset=utf-8"
-        case "css":
-            return "text/css; charset=utf-8"
-        case "js":
-            return "application/javascript; charset=utf-8"
-        case "json":
-            return "application/json; charset=utf-8"
-        case "png":
-            return "image/png"
-        case "jpg", "jpeg":
-            return "image/jpeg"
-        case "gif":
-            return "image/gif"
-        case "svg":
-            return "image/svg+xml"
-        case "webp":
-            return "image/webp"
-        case "ico":
-            return "image/x-icon"
-        case "woff", "woff2":
-            return "font/woff2"
-        case "ttf":
-            return "font/ttf"
-        case "mp4":
-            return "video/mp4"
-        case "webm":
-            return "video/webm"
-        case "mp3":
-            return "audio/mpeg"
-        default:
-            return "application/octet-stream"
-        }
     }
 
     // MARK: - Manifest Registration (for ManifestURLSchemeHandler)
