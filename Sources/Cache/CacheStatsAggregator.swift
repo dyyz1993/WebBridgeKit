@@ -9,12 +9,32 @@
 import Foundation
 import RxSwift
 
-/// 缓存统计聚合器 —— 从所有 11 个缓存子系统中采集数据并汇总
+/// 缓存统计聚合器 —— 从所有注册的 CacheStatisticsProviding 子系统中采集数据并汇总
 public class CacheStatsAggregator {
 
     public static let shared = CacheStatsAggregator()
 
-    private init() {}
+    private var providers: [SubsystemID: CacheStatisticsProviding] = [:]
+
+    private init() {
+        registerDefaultProviders()
+    }
+
+    // MARK: - Provider Registration
+
+    public func registerProvider(_ provider: CacheStatisticsProviding) {
+        providers[provider.subsystemID] = provider
+    }
+
+    public func registerProviders(_ providers: [CacheStatisticsProviding]) {
+        for provider in providers {
+            self.providers[provider.subsystemID] = provider
+        }
+    }
+
+    public func unregisterProvider(for id: SubsystemID) {
+        providers.removeValue(forKey: id)
+    }
 
     // MARK: - Public API
 
@@ -27,7 +47,6 @@ public class CacheStatsAggregator {
                 return Disposables.create()
             }
 
-            // 在全局后台队列上执行所有收集器
             let queue = DispatchQueue.global(qos: .utility)
             queue.async {
                 let data = self.syncAggregate()
@@ -58,36 +77,37 @@ public class CacheStatsAggregator {
     }
 
     /// 采集单个子系统的统计数据
+    /// 优先使用注册的 CacheStatisticsProviding provider，否则返回 unknown 状态
     public func collectStats(for subsystemID: SubsystemID) -> SubsystemStats {
-        switch subsystemID {
-        case .manifestCache:
-            return collectManifestCacheStats()
-        case .webResourceCache:
-            return collectWebResourceCacheStats()
-        case .webCompressedCache:
-            return collectCompressedCacheStats()
-        case .webcacheWKWebView:
-            return collectWKWebViewCacheStats()
-        case .systemURLCache:
-            return collectSystemURLCacheStats()
-        case .offlinePageCache:
-            return collectOfflinePageCacheStats()
-        case .pageCacheRule:
-            return collectPageCacheRuleStats()
-        case .genericCacheManager:
-            return collectGenericCacheManagerStats()
-        case .memoryCacheRule:
-            return collectMemoryCacheRuleStats()
-        case .userdefaultsMessageStore:
-            return collectMessageStoreStats()
-        case .resourceCacheLRU:
-            return collectResourceCacheStats()
+        if let provider = providers[subsystemID] {
+            return provider.collectStats()
         }
+        return SubsystemStats(id: subsystemID, status: .unknown)
     }
 
-    // MARK: - Individual Subsystem Collectors
+    // MARK: - Private
 
-    private func collectManifestCacheStats() -> SubsystemStats {
+    private func registerDefaultProviders() {
+        registerProvider(ManifestCacheStatsProvider())
+        registerProvider(WebResourceCacheStatsProvider())
+        registerProvider(CompressedCacheStatsProvider())
+        registerProvider(WKWebViewCacheStatsProvider())
+        registerProvider(SystemURLCacheStatsProvider())
+        registerProvider(OfflinePageCacheStatsProvider())
+        registerProvider(PageCacheRuleStatsProvider())
+        registerProvider(GenericCacheStatsProvider())
+        registerProvider(MemoryCacheRuleStatsProvider())
+        registerProvider(MessageStoreStatsProvider())
+        registerProvider(ResourceCacheLRUStatsProvider())
+    }
+}
+
+// MARK: - Built-in Providers
+
+private final class ManifestCacheStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .manifestCache
+
+    func collectStats() -> SubsystemStats {
         do {
             let stats = ManifestCacheManager.shared.getStats()
             return SubsystemStats(
@@ -105,8 +125,12 @@ public class CacheStatsAggregator {
             return SubsystemStats(id: .manifestCache, status: .error(error.localizedDescription))
         }
     }
+}
 
-    private func collectWebResourceCacheStats() -> SubsystemStats {
+private final class WebResourceCacheStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .webResourceCache
+
+    func collectStats() -> SubsystemStats {
         do {
             let global = WebResourceCacheManager.shared.getGlobalStats()
             let allStats = WebResourceCacheManager.shared.getAllCacheStats()
@@ -123,8 +147,12 @@ public class CacheStatsAggregator {
             return SubsystemStats(id: .webResourceCache, status: .error(error.localizedDescription))
         }
     }
+}
 
-    private func collectCompressedCacheStats() -> SubsystemStats {
+private final class CompressedCacheStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .webCompressedCache
+
+    func collectStats() -> SubsystemStats {
         do {
             let memInfo = WebCompressedCacheStore.shared.getMemoryInfo()
             return SubsystemStats(
@@ -143,11 +171,12 @@ public class CacheStatsAggregator {
             return SubsystemStats(id: .webCompressedCache, status: .error(error.localizedDescription))
         }
     }
+}
 
-    private func collectWKWebViewCacheStats() -> SubsystemStats {
-        // NOTE: WebCacheManager's getTotalCacheSize() and getCachedDomains() use
-        // DispatchSemaphore which can cause deadlocks when called from background threads.
-        // Return a lightweight placeholder to avoid blocking.
+private final class WKWebViewCacheStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .webcacheWKWebView
+
+    func collectStats() -> SubsystemStats {
         return SubsystemStats(
             id: .webcacheWKWebView,
             totalEntries: 0,
@@ -159,8 +188,12 @@ public class CacheStatsAggregator {
             status: .active
         )
     }
+}
 
-    private func collectSystemURLCacheStats() -> SubsystemStats {
+private final class SystemURLCacheStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .systemURLCache
+
+    func collectStats() -> SubsystemStats {
         do {
             let stats = SystemURLCacheManager.shared.getCacheStats()
             return SubsystemStats(
@@ -180,8 +213,12 @@ public class CacheStatsAggregator {
             return SubsystemStats(id: .systemURLCache, status: .error(error.localizedDescription))
         }
     }
+}
 
-    private func collectOfflinePageCacheStats() -> SubsystemStats {
+private final class OfflinePageCacheStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .offlinePageCache
+
+    func collectStats() -> SubsystemStats {
         do {
             let count = WebPageOfflineCacheManager.shared.getCachedCount()
             let size = WebPageOfflineCacheManager.shared.getTotalCacheSize()
@@ -198,8 +235,12 @@ public class CacheStatsAggregator {
             return SubsystemStats(id: .offlinePageCache, status: .error(error.localizedDescription))
         }
     }
+}
 
-    private func collectPageCacheRuleStats() -> SubsystemStats {
+private final class PageCacheRuleStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .pageCacheRule
+
+    func collectStats() -> SubsystemStats {
         do {
             let rules = PageCacheRuleManager.shared.getAllRules()
             let enabled = PageCacheRuleManager.shared.getEnabledRules()
@@ -217,8 +258,12 @@ public class CacheStatsAggregator {
             return SubsystemStats(id: .pageCacheRule, status: .error(error.localizedDescription))
         }
     }
+}
 
-    private func collectGenericCacheManagerStats() -> SubsystemStats {
+private final class GenericCacheStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .genericCacheManager
+
+    func collectStats() -> SubsystemStats {
         return SubsystemStats(
             id: .genericCacheManager,
             totalEntries: 0,
@@ -231,8 +276,12 @@ public class CacheStatsAggregator {
             status: .active
         )
     }
+}
 
-    private func collectMemoryCacheRuleStats() -> SubsystemStats {
+private final class MemoryCacheRuleStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .memoryCacheRule
+
+    func collectStats() -> SubsystemStats {
         let rules = CacheRuleManager.shared.getAllRules()
         return SubsystemStats(
             id: .memoryCacheRule,
@@ -244,8 +293,12 @@ public class CacheStatsAggregator {
             status: !rules.isEmpty ? .active : .empty
         )
     }
+}
 
-    private func collectMessageStoreStats() -> SubsystemStats {
+private final class MessageStoreStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .userdefaultsMessageStore
+
+    func collectStats() -> SubsystemStats {
         return SubsystemStats(
             id: .userdefaultsMessageStore,
             totalEntries: 0,
@@ -258,8 +311,12 @@ public class CacheStatsAggregator {
             status: .active
         )
     }
+}
 
-    private func collectResourceCacheStats() -> SubsystemStats {
+private final class ResourceCacheLRUStatsProvider: CacheStatisticsProviding {
+    let subsystemID: SubsystemID = .resourceCacheLRU
+
+    func collectStats() -> SubsystemStats {
         do {
             let mcmStats = ManifestCacheManager.shared.getStats()
             let size = ManifestCacheManager.shared.calculateTotalCacheSize()

@@ -215,7 +215,7 @@ actor FavoriteDatabaseActor {
 
 /// URL Favorite Manager
 /// Responsible for add, delete, update, query, pin, and cache mode management of favorites
-public class URLFavoriteManager {
+public class URLFavoriteManager: URLManaging {
 
     public static let shared = URLFavoriteManager()
 
@@ -311,6 +311,49 @@ public class URLFavoriteManager {
         try await WebBridgeError.wrap {
             try await databaseActor.updateSortOrder(favorites: favorites)
         }
+    }
+}
+
+// MARK: - URLManaging Conformance
+
+extension URLFavoriteManager {
+
+    public func addURL(_ url: URL, title: String?) throws {
+        let semaphore = DispatchSemaphore(value: 0)
+        var thrownError: Error?
+        Task {
+            do {
+                _ = try await addFavorite(url: url, title: title)
+            } catch {
+                thrownError = error
+            }
+            semaphore.signal()
+        }
+        semaphore.wait()
+        if let error = thrownError { throw error }
+    }
+
+    public func removeURL(_ url: URL) throws {
+        let semaphore = DispatchSemaphore(value: 0)
+        var thrownError: Error?
+        Task {
+            do {
+                try await deleteFavorite(url: url)
+            } catch {
+                thrownError = error
+            }
+            semaphore.signal()
+        }
+        semaphore.wait()
+        if let error = thrownError { throw error }
+    }
+
+    public func getAllURLs() -> [URL] {
+        return getAllFavorites().compactMap { URL(string: $0.url) }
+    }
+
+    public func isFavorite(_ url: URL) -> Bool {
+        return findFavorite(url: url) != nil
     }
 }
 
