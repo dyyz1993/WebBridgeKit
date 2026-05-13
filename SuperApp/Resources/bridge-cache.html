@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; padding: 16px; background: #f5f5f5; margin: 0; }
+        h1 { color: #333; margin: 0 0 16px 0; font-size: 22px; }
+        .status-bar { background: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center; }
+        .status-bar.ok { background: #d4edda; color: #155724; }
+        .status-bar.error { background: #f8d7da; color: #721c24; }
+        .test-section { background: white; padding: 16px; border-radius: 8px; margin-bottom: 12px; }
+        .test-section h3 { margin: 0 0 12px 0; font-size: 16px; }
+        .test-section p { margin: 0 0 8px 0; font-size: 13px; color: #666; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { padding: 12px; border: none; border-radius: 8px; color: white; font-size: 14px; cursor: pointer; width: 100%; font-weight: 500; }
+        button:active { opacity: 0.7; }
+        .btn-primary { background: #667eea; }
+        .btn-success { background: #34C759; }
+        .btn-warning { background: #FF9500; }
+        .btn-danger { background: #FF3B30; }
+        .log-section { background: #1e1e1e; color: #f0f0f0; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; max-height: 250px; overflow-y: auto; margin-top: 12px; }
+        .log-entry { padding: 3px 0; border-bottom: 1px solid #333; }
+        .log-success { color: #4ade80; }
+        .log-error { color: #f87171; }
+        .log-info { color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <h1>💾 缓存调试</h1>
+    <div id="statusBar" class="status-bar">检测中...</div>
+
+    <div class="test-section">
+        <h3>📊 缓存统计</h3>
+        <p>查看缓存总体统计信息</p>
+        <button class="btn-primary" onclick="callNative('cacheDebug', {action:'stats'})">cacheDebug(stats)</button>
+    </div>
+
+    <div class="test-section">
+        <h3>📋 缓存规则</h3>
+        <p>查看当前生效的缓存规则</p>
+        <button class="btn-success" onclick="callNative('cacheDebug', {action:'rules'})">cacheDebug(rules)</button>
+    </div>
+
+    <div class="test-section">
+        <h3>🔗 缓存 URL</h3>
+        <p>查看已缓存的 URL 列表</p>
+        <button class="btn-warning" onclick="callNative('cacheDebug', {action:'URLs'})">cacheDebug(URLs)</button>
+    </div>
+
+    <div class="test-section">
+        <h3>🗑️ 清除缓存</h3>
+        <p>清除所有缓存数据</p>
+        <button class="btn-danger" onclick="callNative('cacheDebug', {action:'clear'})">cacheDebug(clear)</button>
+    </div>
+
+    <div class="log-section">
+        <div id="logContainer"></div>
+    </div>
+
+    <script>
+        function addLog(type, message, data) { var c=document.getElementById('logContainer'); var t=new Date().toLocaleTimeString(); var d=document.createElement('div'); d.className='log-entry'; d.innerHTML='['+t+'] ['+type.toUpperCase()+'] '+message+(data?' '+JSON.stringify(data):''); c.insertBefore(d,c.firstChild); if(c.children.length>100) c.removeChild(c.lastChild); }
+        function checkBridge(){ var h=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.BarkBridge; var s=document.getElementById('statusBar'); if(h){s.className='status-bar ok';s.textContent='✅ JS Bridge 可用';addLog('success','JS Bridge 检测成功');}else if(window.BarkBridge&&window.BarkBridge.callNative){s.className='status-bar ok';s.textContent='✅ BarkBridge 可用';addLog('success','BarkBridge 检测成功');}else{s.className='status-bar error';s.textContent='❌ JS Bridge 不可用';addLog('error','JS Bridge 不可用');} return h||(window.BarkBridge&&typeof window.BarkBridge.callNative==='function');}
+        function callNative(action, params) { addLog('info','调用: '+action,params); try { if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.BarkBridge){ window.webkit.messageHandlers.BarkBridge.postMessage({action:action,params:params||{}}); addLog('info','请求已发送 (webkit)'); } else if(window.BarkBridge&&window.BarkBridge.callNative){ window.BarkBridge.callNative(action,params||{}).then(function(r){addLog('success','成功',r);}).catch(function(e){addLog('error','失败: '+(e.message||e));}); addLog('info','请求已发送 (BarkBridge)'); } else { addLog('error','Bridge 不可用'); } } catch(e){addLog('error','调用失败: '+e.message);} }
+        window.BarkBridge=window.BarkBridge||{}; window.BarkBridge.receiveResult=function(r){if(r.success)addLog('success','成功',r.data);else addLog('error','失败: '+(r.error||'Unknown'));};
+        setTimeout(checkBridge,100);
+    </script>
+</body>
+</html>

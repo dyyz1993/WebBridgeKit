@@ -206,7 +206,8 @@ extension CacheDashboardViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        sections[section].items.count
+        guard section < sections.count else { return 0 }
+        return sections[section].items.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -223,7 +224,8 @@ extension CacheDashboardViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        sections[section].model
+        guard section < sections.count else { return nil }
+        return sections[section].model
     }
 }
 
@@ -250,6 +252,7 @@ extension CacheDashboardViewController: UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard section < sections.count else { return nil }
         let header = UIView()
         header.backgroundColor = ThemeTokens.Color.background
 
