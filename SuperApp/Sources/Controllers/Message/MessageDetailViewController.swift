@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import WebKit
 import WebBridgeKit
 
 class MessageDetailViewController: UIViewController {
@@ -33,6 +34,15 @@ class MessageDetailViewController: UIViewController {
         label.textColor = ThemeColors.current.text
         label.numberOfLines = 0
         return label
+    }()
+
+    private let webView: WKWebView = {
+        let config = WKWebViewConfiguration()
+        let webview = WKWebView(frame: .zero, configuration: config)
+        webview.isOpaque = false
+        webview.scrollView.isScrollEnabled = false
+        webview.contentMode = .scaleToFill
+        return webview
     }()
 
     private let bodyLabel: UILabel = {
@@ -97,7 +107,16 @@ class MessageDetailViewController: UIViewController {
         }
 
         contentStackView.addArrangedSubview(titleLabel)
-        contentStackView.addArrangedSubview(bodyLabel)
+
+        if message.bodyType == "markdown" {
+            contentStackView.addArrangedSubview(webView)
+            webView.snp.makeConstraints { make in
+                make.height.greaterThanOrEqualTo(100)
+            }
+        } else {
+            contentStackView.addArrangedSubview(bodyLabel)
+        }
+
         contentStackView.addArrangedSubview(metaCard)
         contentStackView.addArrangedSubview(actionStackView)
 
@@ -109,7 +128,18 @@ class MessageDetailViewController: UIViewController {
 
     private func configure() {
         titleLabel.text = message.payload.title
-        bodyLabel.text = message.payload.body
+
+        if message.bodyType == "markdown" {
+            let markdownContent = message.payload.markdown ?? message.payload.body
+            let html = MarkdownRenderer.renderHTML(
+                title: message.payload.title,
+                markdown: markdownContent
+            )
+            webView.loadHTMLString(html, baseURL: nil)
+            webView.navigationDelegate = self
+        } else {
+            bodyLabel.text = message.payload.body
+        }
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -123,9 +153,13 @@ class MessageDetailViewController: UIViewController {
             addMetaRow(label: L10n.tr("message.detail.read_time"), value: formatter.string(from: readAt))
         }
 
+        let bodyToCopy = message.bodyType == "markdown"
+            ? (message.payload.markdown ?? message.payload.body)
+            : message.payload.body
+
         addAction(title: L10n.tr("message.detail.copy_content"), icon: .copy) { [weak self] in
             guard let self = self else { return }
-            UIPasteboard.general.string = self.message.payload.body
+            UIPasteboard.general.string = bodyToCopy
             HUDService.shared.showSuccess(withStatus: L10n.tr("message.detail.copied"))
         }
 
@@ -237,5 +271,37 @@ class MessageDetailViewController: UIViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
+    }
+}
+
+extension MessageDetailViewController: WKNavigationDelegate {
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self] result, error in
+            guard let self = self, let height = result as? CGFloat else { return }
+            webView.snp.updateConstraints { make in
+                make.height.equalTo(height + 16)
+            }
+        }
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if navigationAction.navigationType == .linkActivated {
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.allow)
+                return
+            }
+
+            if url.scheme == "http" || url.scheme == "https" {
+                WebBrowserManager.shared.openBrowser(
+                    url: url,
+                    params: WebBrowserParams(payload: self.message.payload.userInfo),
+                    from: self
+                )
+                decisionHandler(.cancel)
+                return
+            }
+        }
+        decisionHandler(.allow)
     }
 }

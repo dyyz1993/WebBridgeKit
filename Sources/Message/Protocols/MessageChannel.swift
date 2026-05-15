@@ -23,6 +23,7 @@ public struct MessagePayload: Codable, Sendable, Equatable {
     public let id: String
     public let title: String
     public let body: String
+    public let markdown: String?
     public let subtitle: String?
     public let channel: String
     public let category: String?
@@ -41,6 +42,7 @@ public struct MessagePayload: Codable, Sendable, Equatable {
         id: String = UUID().uuidString,
         title: String,
         body: String,
+        markdown: String? = nil,
         subtitle: String? = nil,
         channel: String,
         category: String? = nil,
@@ -58,6 +60,7 @@ public struct MessagePayload: Codable, Sendable, Equatable {
         self.id = id
         self.title = title
         self.body = body
+        self.markdown = markdown
         self.subtitle = subtitle
         self.channel = channel
         self.category = category

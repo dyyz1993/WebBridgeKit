@@ -43,19 +43,22 @@ public struct StoredMessage: Codable, Sendable, Identifiable {
     public var isRead: Bool
     public var readAt: Date?
     public var receivedAt: Date
+    public var bodyType: String
 
     public init(
         id: String = UUID().uuidString,
         payload: MessagePayload,
         isRead: Bool = false,
         readAt: Date? = nil,
-        receivedAt: Date = Date()
+        receivedAt: Date = Date(),
+        bodyType: String = "plainText"
     ) {
         self.id = id
         self.payload = payload
         self.isRead = isRead
         self.readAt = readAt
         self.receivedAt = receivedAt
+        self.bodyType = bodyType
     }
 
     /// Mark as read

@@ -114,49 +114,49 @@ public actor MessageEngine {
 
     /// Receive and process an incoming message
     public func receive(_ payload: MessagePayload) async throws {
-        // Store the message
-        let storedMessage = StoredMessage(payload: payload)
+        var bodyType = "plainText"
+        var content = MutableMessageContent(
+            title: payload.title,
+            subtitle: payload.subtitle,
+            body: payload.body,
+            bodyType: payload.markdown != nil ? .markdown : .plainText,
+            sound: payload.sound,
+            badge: payload.badge,
+            group: payload.group,
+            threadId: payload.threadId,
+            targetURL: payload.targetURL,
+            targetAppId: payload.targetAppId,
+            targetMode: payload.targetMode,
+            userInfo: (payload.userInfo as? [String: Any]) ?? [:]
+        )
+        
+        // Process through pipeline if available
+        if let pipeline = pipeline {
+            content = try await pipeline.process(content: content)
+            bodyType = content.bodyType.rawValue
+        }
+        
+        // Store the message with bodyType
+        let storedMessage = StoredMessage(
+            payload: payload,
+            bodyType: bodyType
+        )
         try await store.save(storedMessage)
 
         statistics.recordReceived(channelId: payload.channel)
 
-        // Process through pipeline if available
-        if let pipeline = pipeline {
-            var content = MutableMessageContent(
-                title: payload.title,
-                subtitle: payload.subtitle,
-                body: payload.body,
-                sound: payload.sound,
-                badge: payload.badge,
-                group: payload.group,
-                threadId: payload.threadId,
-                targetURL: payload.targetURL,
-                targetAppId: payload.targetAppId,
-                targetMode: payload.targetMode,
-                userInfo: (payload.userInfo as? [String: Any]) ?? [:]
-            )
-            content = try await pipeline.process(content: content)
-
-            if let category = payload.category, let handler = handlers[category] {
-                handler.handle(storedMessage)
-            }
-
-            if content.targetURL != nil || content.targetAppId != nil {
-                let target = router.route(payload: payload)
-                onRoute?(payload, target)
-            }
-
-            onMessageReceived?(storedMessage)
-        } else {
-            if let category = payload.category, let handler = handlers[category] {
-                handler.handle(storedMessage)
-            }
-            if payload.hasRoute {
-                let target = router.route(payload: payload)
-                onRoute?(payload, target)
-            }
-            onMessageReceived?(storedMessage)
+        // Notify handlers
+        if let category = payload.category, let handler = handlers[category] {
+            handler.handle(storedMessage)
         }
+        
+        // Route if needed
+        if content.targetURL != nil || content.targetAppId != nil {
+            let target = router.route(payload: payload)
+            onRoute?(payload, target)
+        }
+        
+        onMessageReceived?(storedMessage)
     }
 
     // MARK: - Query Operations
