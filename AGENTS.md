@@ -107,6 +107,48 @@ xcrun simctl launch booted com.webbridgekit.superapp
 4. Compare with prototype: open http://localhost:8083/index.html in browser
 5. Run tests: `xcodebuild test ...`
 
+## Crash Log Scanning (定期扫描)
+
+App 内置 `CrashLogManager` 自动捕获崩溃（NSSetUncaughtExceptionHandler + signal handlers），持久化到 `Documents/crash_logs/*.json`。
+
+### 扫描命令
+
+```bash
+# 快速扫描（推荐，定期执行）
+bash scripts/scan-crash-logs.sh
+
+# JSON 输出（用于自动化）
+bash scripts/scan-crash-logs.sh --json
+
+# 扫描 + 清理
+bash scripts/scan-crash-logs.sh --fix
+```
+
+### 扫描范围
+
+| 来源 | 路径 | 内容 |
+|------|------|------|
+| App 崩溃日志 | Simulator Documents/crash_logs/*.json | CrashLogManager 捕获的异常/signal 崩溃 |
+| 系统诊断报告 | ~/Library/Logs/DiagnosticReports/SuperApp*.ips | macOS 系统级崩溃报告 |
+| 系统日志 | simctl log show (最近 1h) | os_log error 级别 + crash/terminated/OOM 关键词 |
+| 内存事件 | simctl log show (最近 1h) | memory/OOM/jetsam 事件 |
+
+### 当用户说"扫一下日志"或"看下崩溃"时
+
+1. 确保 booted simulator 存在且 app 已安装
+2. 运行 `bash scripts/scan-crash-logs.sh`
+3. 如有崩溃，分析崩溃类型/原因/调用栈，定位到对应源码
+4. 将分析结果和修复建议写入 AGENTS.md 的 `## Crash Analysis` 章节下方
+5. 提供修复方案
+
+## Crash Analysis
+
+<!-- 崩溃分析记录（最新在前） -->
+<!-- 格式: | 日期 | 类型 | 原因 | 修复 | -->
+<!-- 示例: | 2026-05-14 | SIGABRT | Realm schema migration | PR #123 | -->
+
+(暂无记录)
+
 ## Recent Commits
 
 | Commit | Description |
