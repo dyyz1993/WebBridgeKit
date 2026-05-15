@@ -225,7 +225,14 @@ public class URLFavoriteManager: URLManaging {
     private init() {
         self.realmConfiguration = Realm.Configuration(
             fileURL: Realm.Configuration.defaultConfiguration.fileURL?.deletingLastPathComponent().appendingPathComponent("urlFavorite.realm"),
-            schemaVersion: 1,
+            schemaVersion: 2,
+            migrationBlock: { migration, oldSchemaVersion in
+                if oldSchemaVersion < 2 {
+                    migration.enumerateObjects(ofType: URLFavorite.className()) { _, newObject in
+                        newObject?["cacheType"] = "live"
+                    }
+                }
+            },
             objectTypes: [URLFavorite.self]
         )
         self.databaseActor = FavoriteDatabaseActor(realmConfiguration: realmConfiguration)

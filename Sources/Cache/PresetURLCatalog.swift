@@ -101,14 +101,16 @@ public enum PresetURLCatalog {
             title: "HTTPBin HTML",
             description: "HTTPBin 提供的 HTML 测试页面，包含图片、链接等元素。常用于测试 WebView 渲染和资源加载。",
             category: .htmlPages,
-            tags: ["测试", "HTTP", "渲染"]
+            tags: ["测试", "HTTP", "渲染"],
+            isRecommended: true
         ),
         PresetURLItem(
             url: "https://www.wikipedia.org",
             title: "Wikipedia",
             description: "维基百科首页。大型复杂 HTML 页面，包含大量 CSS/JS/图片资源，适合测试完整页面缓存。",
             category: .htmlPages,
-            tags: ["百科", "复杂页面", "大量资源"]
+            tags: ["百科", "复杂页面", "大量资源"],
+            isRecommended: true
         ),
         PresetURLItem(
             url: "https://github.com",
@@ -163,8 +165,7 @@ public enum PresetURLCatalog {
             description: "HTTPBin GET 测试端点。返回请求头、参数、Origin 等信息。API 测试的首选工具。",
             category: .apiEndpoints,
             urlType: .apiEndpoint,
-            tags: ["HTTP", "GET", "测试", "调试"],
-            isRecommended: true
+            tags: ["HTTP", "GET", "测试", "调试"]
         ),
         PresetURLItem(
             url: "https://httpbin.org/json",
@@ -244,8 +245,7 @@ public enum PresetURLCatalog {
             title: "WebSocket Echo Server",
             description: "WebSocket.org 提供的 Echo 服务器。发送什么消息就回显什么，WS 连接测试的标准工具。",
             category: .websockets,
-            tags: ["Echo", "回显", "WS", "连接测试"],
-            isRecommended: true
+            tags: ["Echo", "回显", "WS", "连接测试"]
         ),
         PresetURLItem(
             url: "wss://ws.postmanlatest.com/ping",

@@ -95,7 +95,22 @@ class URLGridCell: UICollectionViewCell {
         return label
     }()
 
+    private let cacheTypeDot: UIView = {
+        let v = UIView()
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
+        v.isHidden = true
+        return v
+    }()
+
+    private let cacheTypeLabel: UILabel = {
+        let label = UILabel()
+        label.font = ThemeTokens.Typography.caption2
+        label.isHidden = true
+        return label
+    }()
+
     private var currentHistory: WebPageHistory?
+    private var currentCacheType: String = "live"
 
     var onPinToggle: (() -> Void)?
     var onFavoriteToggle: (() -> Void)?
@@ -122,6 +137,11 @@ class URLGridCell: UICollectionViewCell {
         }
     }
 
+    func configureCacheType(_ type: String) {
+        currentCacheType = type
+        updateCacheTypeBadge()
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -139,8 +159,11 @@ class URLGridCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         currentHistory = nil
+        currentCacheType = "live"
         faviconImageView.image = nil
         tokenBadge.isHidden = true
+        cacheTypeDot.isHidden = true
+        cacheTypeLabel.isHidden = true
     }
 
     private func setupUI() {
@@ -159,6 +182,8 @@ class URLGridCell: UICollectionViewCell {
         containerView.addSubview(tokenBadge)
         tokenBadge.addSubview(tokenKeyIcon)
         tokenBadge.addSubview(tokenLabel)
+        containerView.addSubview(cacheTypeDot)
+        containerView.addSubview(cacheTypeLabel)
 
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -214,6 +239,17 @@ class URLGridCell: UICollectionViewCell {
             make.left.equalTo(tokenKeyIcon.snp.right).offset(3)
             make.right.equalToSuperview().offset(-5)
         }
+
+        cacheTypeDot.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(6)
+            make.left.equalToSuperview().offset(12)
+            make.width.height.equalTo(6)
+        }
+
+        cacheTypeLabel.snp.makeConstraints { make in
+            make.centerY.equalTo(cacheTypeDot)
+            make.left.equalTo(cacheTypeDot.snp.right).offset(4)
+        }
     }
 
     private func updateUI() {
@@ -235,18 +271,35 @@ class URLGridCell: UICollectionViewCell {
         let colors = Self.gradients[abs(titleText.hashValue) % Self.gradients.count]
         iconGradientLayer.colors = colors.map { $0.cgColor }
 
-        if history.isCached && history.cachedSize > 0 {
-            statusDot.backgroundColor = ThemeTokens.Color.success
-            statusLabel.text = L10n.tr("discover.badge.offline")
-            statusLabel.textColor = ThemeTokens.Color.success
-        } else if history.cachedSize > 0 {
-            statusDot.backgroundColor = ThemeTokens.Color.warning
-            statusLabel.text = L10n.tr("discover.badge.needs_update")
-            statusLabel.textColor = ThemeTokens.Color.warning
+        updateCacheTypeBadge()
+
+        if !cacheTypeDot.isHidden {
+            statusDot.isHidden = true
+            statusLabel.isHidden = true
+            timeLabel.snp.remakeConstraints { make in
+                make.centerY.equalTo(cacheTypeDot)
+                make.right.equalToSuperview().offset(-12)
+            }
         } else {
-            statusDot.backgroundColor = ThemeTokens.Color.textTertiary
-            statusLabel.text = L10n.tr("discover.badge.not_cached")
-            statusLabel.textColor = ThemeTokens.Color.textTertiary
+            statusDot.isHidden = false
+            statusLabel.isHidden = false
+            timeLabel.snp.remakeConstraints { make in
+                make.centerY.equalTo(statusDot)
+                make.right.equalToSuperview().offset(-12)
+            }
+            if history.isCached && history.cachedSize > 0 {
+                statusDot.backgroundColor = ThemeTokens.Color.success
+                statusLabel.text = L10n.tr("discover.badge.offline")
+                statusLabel.textColor = ThemeTokens.Color.success
+            } else if history.cachedSize > 0 {
+                statusDot.backgroundColor = ThemeTokens.Color.warning
+                statusLabel.text = L10n.tr("discover.badge.needs_update")
+                statusLabel.textColor = ThemeTokens.Color.warning
+            } else {
+                statusDot.backgroundColor = ThemeTokens.Color.textTertiary
+                statusLabel.text = L10n.tr("discover.badge.not_cached")
+                statusLabel.textColor = ThemeTokens.Color.textTertiary
+            }
         }
 
         let elapsed = Date().timeIntervalSince(history.lastVisitDate)
@@ -274,5 +327,26 @@ class URLGridCell: UICollectionViewCell {
         let prefix = key.prefix(4)
         let suffix = key.suffix(4)
         return "\(prefix)...\(suffix)"
+    }
+
+    private func updateCacheTypeBadge() {
+        let type = currentCacheType.lowercased()
+        switch type {
+        case "offline":
+            cacheTypeDot.backgroundColor = ThemeTokens.Color.success
+            cacheTypeDot.isHidden = false
+            cacheTypeLabel.text = "离线可用"
+            cacheTypeLabel.textColor = ThemeTokens.Color.success
+            cacheTypeLabel.isHidden = false
+        case "smart":
+            cacheTypeDot.backgroundColor = ThemeTokens.Color.warning
+            cacheTypeDot.isHidden = false
+            cacheTypeLabel.text = "智能缓存"
+            cacheTypeLabel.textColor = ThemeTokens.Color.warning
+            cacheTypeLabel.isHidden = false
+        default:
+            cacheTypeDot.isHidden = true
+            cacheTypeLabel.isHidden = true
+        }
     }
 }

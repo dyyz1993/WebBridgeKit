@@ -81,7 +81,7 @@ class MainViewModel: ViewModel {
             .drive()
             .disposed(by: rx)
 
-        let appGridOffset = 2
+        let appGridOffset = MainSection.appGrid.rawValue
 
         input.itemSelect
             .filter { $0.section >= appGridOffset }
@@ -91,7 +91,7 @@ class MainViewModel: ViewModel {
                       indexPath.item < sections[gridIndex].items.count else {
                     return nil
                 }
-                return sections[gridIndex].items[indexPath.item]
+                return sections[gridIndex].items[indexPath.item].history
             }
             .compactMap { $0 }
             .flatMap { (history: WebPageHistory) -> Driver<URL> in
@@ -117,7 +117,7 @@ class MainViewModel: ViewModel {
                       indexPath.item < sections[gridIndex].items.count else {
                     return nil
                 }
-                return sections[gridIndex].items[indexPath.item]
+                return sections[gridIndex].items[indexPath.item].history
             }
             .compactMap { $0 }
             .flatMap { (history: WebPageHistory) -> Driver<URL> in
@@ -143,8 +143,8 @@ class MainViewModel: ViewModel {
         return Output(
             histories: historiesRelay.asDriver(),
             isEmpty: isEmptyRelay.asDriver(),
-            openURL: openURLRelay.asDriver(onErrorJustReturn: URL(string: "https://example.com")!),
-            showActionSheet: showActionSheetRelay.asDriver(onErrorJustReturn: URL(string: "https://example.com")!),
+            openURL: openURLRelay.asDriver(onErrorJustReturn: URL(string: "https://wbk.shanbox.19930810.xyz:8443")!),
+            showActionSheet: showActionSheetRelay.asDriver(onErrorJustReturn: URL(string: "https://wbk.shanbox.19930810.xyz:8443")!),
             showScanner: showScannerRelay.asDriver(onErrorJustReturn: ()),
             loading: loadingRelay.asDriver()
         )
@@ -189,16 +189,21 @@ class MainViewModel: ViewModel {
                 let allFavorites = self.favoriteService.getAllFavorites()
                 let favoriteURLs = Set(allFavorites.map { $0.url })
 
-                // 2. 获取置顶项目 (从已获取的收藏中筛选 isPinned = true)
-                let pinnedItems = allFavorites.filter { $0.isPinned }
-                    .sorted { $0.sortOrder < $1.sortOrder }
-                    .map { favorite -> WebPageHistory in
+                let cacheTypeOrder = ["offline", "smart", "live"]
+                let cacheTypeHeaders: [String: String] = [
+                    "offline": "已收藏 · 离线可用",
+                    "smart": "已收藏 · 智能缓存",
+                    "live": "已收藏"
+                ]
+
+                let allItems = allFavorites.sorted { $0.sortOrder < $1.sortOrder }
+                    .map { favorite -> WebPageHistorySectionItem in
                         let history = WebPageHistory()
                         history.id = favorite.id
                         history.url = favorite.url
                         history.title = favorite.title ?? favorite.domain ?? L10n.tr("common.unknown")
                         history.favicon = favorite.favicon
-                        history.isPinned = true
+                        history.isPinned = favorite.isPinned
                         history.isFavorite = true
 
                         let itemURL = favorite.url
@@ -216,31 +221,26 @@ class MainViewModel: ViewModel {
                                 }
                             }
                         }
-                        return history
+                        return WebPageHistorySectionItem(history: history, cacheType: favorite.cacheType)
                     }
 
-                // 3. 获取收藏项目 (排除已置顶的)
-                let favoriteItems = allFavorites.filter { !$0.isPinned }
-                    .sorted { $0.createdAt > $1.createdAt }
-                    .map { favorite -> WebPageHistory in
-                        let history = WebPageHistory()
-                        history.id = favorite.id
-                        history.url = favorite.url
-                        history.title = favorite.title ?? favorite.domain ?? L10n.tr("common.unknown")
-                        history.favicon = favorite.favicon
-                        history.isPinned = false
-                        history.isFavorite = true
-                        history.cachedSize = favorite.enableCacheMode ? 1 : 0
-                        history.isCached = favorite.enableCacheMode
-                        return history
-                    }
+                var grouped: [String: [WebPageHistorySectionItem]] = [:]
+                for item in allItems {
+                    let type = item.cacheType.isEmpty ? "live" : item.cacheType
+                    grouped[type, default: []].append(item)
+                }
 
-                // 4. 获取最近访问的历史记录 (排除已在收藏中的)
-                // historyResults 已经通过异步获取
-                let histories = historyResults.prefix(100) // 取最近 100 条进行过滤
+                var sections: [WebPageHistorySection] = []
+                for type in cacheTypeOrder {
+                    guard let items = grouped[type], !items.isEmpty else { continue }
+                    let header = cacheTypeHeaders[type] ?? type
+                    sections.append(WebPageHistorySection(header: header, items: items, cacheType: type))
+                }
+
+                let histories = historyResults.prefix(100)
                     .filter { !favoriteURLs.contains($0.url) }
-                    .prefix(20) // 最终显示 20 条
-                    .map { history -> WebPageHistory in
+                    .prefix(20)
+                    .map { history -> WebPageHistorySectionItem in
                         let displayHistory = WebPageHistory()
                         displayHistory.id = history.id
                         displayHistory.url = history.url
@@ -265,25 +265,27 @@ class MainViewModel: ViewModel {
                                 }
                             }
                         }
-                        return displayHistory
+                        return WebPageHistorySectionItem(history: displayHistory, cacheType: "live")
                     }
 
-                // 构造 Section 数据
-                var sections: [WebPageHistorySection] = []
-
-                if !pinnedItems.isEmpty {
-                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.frequently_used"), items: pinnedItems))
-                }
-
-                if !favoriteItems.isEmpty {
-                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.my_favorites"), items: favoriteItems))
-                }
-
                 if !histories.isEmpty {
-                    sections.append(WebPageHistorySection(header: L10n.tr("home.section.recent_visits"), items: Array(histories)))
+                    let recentSection = WebPageHistorySection(
+                        header: L10n.tr("home.section.recent_visits"),
+                        items: Array(histories),
+                        cacheType: "live"
+                    )
+                    let hasLiveSection = sections.contains { $0.cacheType == "live" }
+                    if hasLiveSection, let idx = sections.firstIndex(where: { $0.cacheType == "live" }) {
+                        sections[idx] = WebPageHistorySection(
+                            header: sections[idx].header,
+                            items: sections[idx].items + histories,
+                            cacheType: "live"
+                        )
+                    } else {
+                        sections.append(recentSection)
+                    }
                 }
 
-                // 计算总存储大小 (异步)
                 Task.detached { [weak self] in
                     let totalBytes = PersistentManifestLoader.shared.getCacheSize()
                     let formattedTotalSize = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
@@ -292,7 +294,6 @@ class MainViewModel: ViewModel {
                     }
                 }
 
-                // 更新 UI
                 self.historiesRelay.accept(sections)
                 self.isEmptyRelay.accept(sections.allSatisfy { $0.items.isEmpty })
                 self.loadingRelay.accept(false)
@@ -311,14 +312,15 @@ class MainViewModel: ViewModel {
 
         for (sIndex, section) in currentSections.enumerated() {
             var items = section.items
-            for (iIndex, item) in items.enumerated() where item.url == url {
-                item.cachedSize = size
-                item.isCached = size > 0
-                items[iIndex] = item
+            for (iIndex, item) in items.enumerated() where item.history.url == url {
+                let updatedHistory = item.history
+                updatedHistory.cachedSize = size
+                updatedHistory.isCached = size > 0
+                items[iIndex] = WebPageHistorySectionItem(history: updatedHistory, cacheType: item.cacheType)
                 updated = true
             }
             if updated {
-                currentSections[sIndex] = WebPageHistorySection(header: section.header, items: items)
+                currentSections[sIndex] = WebPageHistorySection(header: section.header, items: items, cacheType: section.cacheType)
                 break
             }
         }
@@ -385,7 +387,13 @@ class MainViewModel: ViewModel {
 
 // MARK: - Section Model
 
+struct WebPageHistorySectionItem {
+    let history: WebPageHistory
+    let cacheType: String
+}
+
 struct WebPageHistorySection {
     let header: String
-    let items: [WebPageHistory]
+    let items: [WebPageHistorySectionItem]
+    let cacheType: String
 }

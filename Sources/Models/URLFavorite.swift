@@ -19,14 +19,15 @@ public class URLFavorite: Object {
     @objc dynamic public var isPinned: Bool = false      // 置顶
     @objc dynamic public var sortOrder: Int = 0         // 排序
     @objc dynamic public var createdAt: Date = Date()
-    @objc dynamic public var enableCacheMode: Bool = false // 开启缓存模式
+    @objc dynamic public var enableCacheMode: Bool = false
+    @objc dynamic public var cacheType: String = "live"
 
     override public class func primaryKey() -> String? {
         return "id"
     }
 
     override public class func indexedProperties() -> [String] {
-        return ["url", "isPinned", "sortOrder"]
+        return ["url", "isPinned", "sortOrder", "cacheType"]
     }
 
     /// 格式化创建时间
