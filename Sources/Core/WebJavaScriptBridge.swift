@@ -205,6 +205,9 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 页面缓存管理
         handlerFactories["page"] = { WebPageCacheHandler() }
 
+        // 本地通知（非 APNs）
+        handlerFactories["showNotification"] = { WebShowNotificationHandler() }
+
         print("🌉 [JS Bridge] 已注册 \(handlerFactories.count) 个 Handler 工厂（懒加载模式）")
         print("   工厂列表: \(Array(handlerFactories.keys).sorted())")
     }

@@ -438,6 +438,25 @@ public class HandlerMetaRegistry {
             ]
         ))
 
+        // MARK: - Notification (Local, not APNs)
+
+        registry.register(HandlerMeta(
+            action: "showNotification",
+            category: .system,
+            displayName: "本地通知",
+            description: "显示本地系统通知弹窗（非 APNs 推送）",
+            parameters: [
+                ParamDef(name: "title", type: .string, required: true, description: "通知标题"),
+                ParamDef(name: "body", type: .string, required: true, description: "通知正文"),
+                ParamDef(name: "image", type: .string, required: false, description: "图片 URL"),
+                ParamDef(name: "url", type: .string, required: false, description: "点击通知跳转 URL")
+            ],
+            returns: [
+                ReturnDef(name: "shown", type: .bool, description: "通知是否显示成功"),
+                ReturnDef(name: "title", type: .string, description: "显示的通知标题")
+            ]
+        ))
+
         StructuredLogger.shared.info(
             "Registered \(registry.count) handlers",
             category: .bridge

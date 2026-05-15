@@ -19,8 +19,7 @@ extension MainViewController {
             } else if sectionIndex == MainSection.quickActions.rawValue {
                 return self.createQuickActionsSection(environment: environment)
             } else {
-                let gridSections = self.viewModel.historiesRelayValue.count
-                return self.createAppGridSection(sectionIndex: sectionIndex, gridSections: gridSections, environment: environment)
+                return self.createAppGridSection(sectionIndex: sectionIndex, gridSections: self.viewModel.historiesRelayValue.count, environment: environment)
             }
         }
     }
@@ -36,14 +35,14 @@ extension MainViewController {
     }
 
     private func createQuickActionsSection(environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.333), heightDimension: .absolute(110))
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.333), heightDimension: .absolute(64))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(110))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(64))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
-        group.interItemSpacing = .fixed(12)
-        group.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16)
+        group.interItemSpacing = .fixed(8)
+        group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 12, bottom: 8, trailing: 12)
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0)
         return section
     }
 
@@ -71,7 +70,7 @@ extension MainViewController {
 
 extension MainViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 2 + viewModel.historiesRelayValue.count
+        return MainSection.appGrid.rawValue + viewModel.historiesRelayValue.count
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -95,8 +94,31 @@ extension MainViewController: UICollectionViewDataSource {
                 self.showAlert(title: L10n.tr("home.token_card.copied_title"), message: L10n.tr("home.token_card.copied_message"))
             }
             cell.onRegisterTapped = { [weak self] in
-                PushNotificationManager.shared.registerForPushNotifications()
-                self?.showAlert(title: L10n.tr("home.token_card.registering_title"), message: L10n.tr("home.token_card.registering_message"))
+                guard let self = self else { return }
+                // 展示注册中弹窗
+                let loadingAlert = UIAlertController(
+                    title: L10n.tr("home.token_card.registering_title"),
+                    message: L10n.tr("home.token_card.registering_message"),
+                    preferredStyle: .alert
+                )
+                self.present(loadingAlert, animated: true)
+
+                PushNotificationManager.shared.registerForPushNotifications { [weak self] success in
+                    guard let self = self else { return }
+                    loadingAlert.dismiss(animated: true) {
+                        if success {
+                            self.showAlert(
+                                title: L10n.tr("common.success"),
+                                message: L10n.tr("home.token_card.register_success")
+                            )
+                        } else {
+                            self.showAlert(
+                                title: L10n.tr("common.error"),
+                                message: L10n.tr("home.token_card.register_failed")
+                            )
+                        }
+                    }
+                }
             }
             return cell
         }
@@ -113,15 +135,16 @@ extension MainViewController: UICollectionViewDataSource {
         let sections = viewModel.historiesRelayValue
         let gridIndex = indexPath.section - MainSection.appGrid.rawValue
         guard gridIndex >= 0 && gridIndex < sections.count else { return cell }
-        let history = sections[gridIndex].items[indexPath.item]
-        cell.history = history
+        let item = sections[gridIndex].items[indexPath.item]
+        cell.history = item.history
+        cell.configureCacheType(item.cacheType)
         cell.onPinToggle = { [weak self] in
-            guard let self = self, let url = URL(string: history.url) else { return }
+            guard let self = self, let url = URL(string: item.history.url) else { return }
             self.viewModel.togglePin(url: url)
             self.viewModel.refreshData()
         }
         cell.onFavoriteToggle = { [weak self] in
-            guard let self = self, let url = URL(string: history.url) else { return }
+            guard let self = self, let url = URL(string: item.history.url) else { return }
             self.viewModel.toggleFavorite(url: url)
             self.viewModel.refreshData()
         }
@@ -134,7 +157,7 @@ extension MainViewController: UICollectionViewDataSource {
             let sections = viewModel.historiesRelayValue
             let gridIndex = indexPath.section - MainSection.appGrid.rawValue
             if gridIndex >= 0 && gridIndex < sections.count {
-                header.titleLabel.text = sections[gridIndex].header.uppercased()
+                header.titleLabel.text = sections[gridIndex].header
             }
             return header
         }
@@ -144,18 +167,16 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        // pushToken section: ignore taps
         if indexPath.section == MainSection.pushToken.rawValue { return }
+
+        // quickActions section: handle shortcut buttons
         if indexPath.section == MainSection.quickActions.rawValue {
             handleQuickAction(index: indexPath.item)
             return
         }
 
-        let sections = viewModel.historiesRelayValue
-        let gridIndex = indexPath.section - MainSection.appGrid.rawValue
-        guard gridIndex >= 0 && gridIndex < sections.count,
-              indexPath.item < sections[gridIndex].items.count else { return }
-        let history = sections[gridIndex].items[indexPath.item]
-        guard !history.url.isEmpty, let url = URL(string: history.url) else { return }
-        openURL(url)
+        // appGrid sections: handled entirely by Rx binding (collectionView.rx.itemSelected)
+        // DO NOT call openURL here — Rx delegate proxy already forwards to the reactive path
     }
 }

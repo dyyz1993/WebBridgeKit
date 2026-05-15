@@ -58,21 +58,8 @@ class TabBarController: UITabBarController {
     }
 
     private func handlePushJump(_ notification: Notification) {
-        guard let url = notification.userInfo?["url"] as? URL else { return }
-
-        let params = notification.userInfo?["params"] as? [String: String]
-
+        guard notification.userInfo?["url"] as? URL != nil else { return }
         self.selectedIndex = 0
-        if let mainNav = viewControllers?.first as? UINavigationController {
-            WebBrowserManager.shared.openBrowser(
-                url: url,
-                params: WebBrowserParams(
-                    displayMode: .normal,
-                    payload: params
-                ),
-                from: mainNav
-            )
-        }
     }
 
     override func viewDidAppear(_ animated: Bool) {

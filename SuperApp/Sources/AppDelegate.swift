@@ -16,9 +16,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        // Seed test data off main thread to avoid blocking launch
+        CrashLogManager.shared.initialize()
+
         DispatchQueue.global(qos: .userInitiated).async {
             TestDataSeeder.populateIfNeeded()
+            Self.cleanupInvalidHistoryURLs()
         }
 
         // 🔥 Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
@@ -90,7 +92,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-
+        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+            PushRelayManager.shared.connect()
+        }
 
         return true
     }
@@ -129,6 +133,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     tabBarController.selectedIndex = index
                     return true
                 }
+            } else if url.host == "command" {
+                // Handle webbridgekit://command/<token> — resolve token from server
+                let tokenString = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                guard !tokenString.isEmpty else { return false }
+                UIPasteboard.general.string = "webbridgekit://command/\(tokenString)"
+                Task { @MainActor in
+                    CommandHandler.shared.checkClipboardOnForeground()
+                }
+                return true
             } else if url.host == "runalltests" {
                 if let tabBarController = window?.rootViewController as? UITabBarController,
                    let nav = tabBarController.viewControllers?[1] as? UINavigationController,
@@ -185,26 +198,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        // 在前台收到通知时，显示通知
-        completionHandler([.banner, .list, .sound, .badge])
+        let mode = notification.request.content.userInfo["mode"] as? String
+        if mode == "silent" || mode == "passive" {
+            completionHandler([])
+        } else {
+            completionHandler([.banner, .list, .sound, .badge])
+        }
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
-        print("🔔 [AppDelegate] Did receive notification response with userInfo: \(userInfo)")
+        print("🔔 [AppDelegate] Did receive notification tap, userInfo: \(userInfo)")
 
-        // 解析推送内容并转发到 MessageEngine
         Task {
             let payload = MessagePayload(
                 title: userInfo["title"] as? String ?? response.notification.request.content.title,
                 body: userInfo["body"] as? String ?? response.notification.request.content.body,
-                channel: "apns",
+                channel: userInfo["channel"] as? String ?? "apns",
                 targetURL: userInfo["url"] as? String,
                 targetAppId: userInfo["appid"] as? String,
                 targetMode: userInfo["mode"] as? String,
-                userInfo: userInfo as? [String: String]
+                userInfo: userInfo as? [String: String] ?? [:]
             )
             try? await MessageEngine.shared.receive(payload)
         }
@@ -216,6 +232,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     /// 注入测试URL到历史记录（仅DEBUG模式）
     private func injectTestURLsForDebugging() {
+    }
+
+    private static func cleanupInvalidHistoryURLs() {
+        let key = "AppDelegate_DidCleanupAllData_v2"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+
+        DispatchQueue.main.async {
+            let favoriteManager = URLFavoriteManager.shared
+            let allFavorites = favoriteManager.getAllFavorites()
+            for fav in allFavorites {
+                if let url = URL(string: fav.url) {
+                    favoriteManager.deleteFavorite(url: url)
+                }
+            }
+
+            let historyManager = WebPageHistoryManager.shared
+            Task {
+                try? await historyManager.clearAllHistory()
+            }
+
+            let recommended = PresetURLCatalog.recommendedItems
+            var seeded = 0
+            for item in recommended {
+                guard let url = URL(string: item.url) else { continue }
+                if favoriteManager.findFavorite(url: url) == nil {
+                    favoriteManager.addFavorite(url: url, title: item.title)
+                    seeded += 1
+                }
+            }
+            WebBridgeLogger.shared.info("Data reset: cleared \(allFavorites.count) favs, seeded \(seeded) recommended")
+
+            UserDefaults.standard.set(true, forKey: key)
+        }
     }
 }
 
