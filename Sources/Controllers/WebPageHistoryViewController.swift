@@ -358,12 +358,12 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         let scannerVC = QRScannerViewController()
         let navController = UINavigationController(rootViewController: scannerVC)
 
-        // 使用RxSwift订阅扫描结果
-        // 注意：QRScannerViewController已经在didSuccess中调用了dismiss
         scannerVC.scannerDidSuccess
             .subscribe(onNext: { [weak self] result in
-                // 不需要再次dismiss，QRScannerViewController已经处理了
-                self?.handleQRScanResult(result)
+                guard let self = self else { return }
+                self.dismiss(animated: true) {
+                    self.handleQRScanResult(result)
+                }
             })
             .disposed(by: rx)
 

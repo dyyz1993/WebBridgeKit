@@ -260,7 +260,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     private func updateData() {
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         let pushURL = key.isEmpty ? server : "\(server)/\(key)"
 
@@ -290,7 +290,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
 
     @objc private func copyPushURL() {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         let pushURL = key.isEmpty ? server : "\(server)/\(key)"
         UIPasteboard.general.string = pushURL
@@ -301,7 +301,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     @objc private func sharePushURL() {
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         let pushURL = key.isEmpty ? server : "\(server)/\(key)"
 

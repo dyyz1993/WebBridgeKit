@@ -247,15 +247,5 @@ extension QRScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
 
         let processedResult = processScannedResult(rawValue)
         scannerDidSuccess.accept(processedResult)
-
-        if configuration.autoDismiss {
-            DispatchQueue.main.async { [weak self] in
-                if let nav = self?.navigationController, nav.viewControllers.count > 1 {
-                    nav.popViewController(animated: true)
-                } else {
-                    self?.dismiss(animated: true)
-                }
-            }
-        }
     }
 }

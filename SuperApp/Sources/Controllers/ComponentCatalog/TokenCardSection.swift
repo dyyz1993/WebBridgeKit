@@ -81,7 +81,7 @@ class TokenCardDemoView: UIView {
         titleLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.9)
 
         let urlLabel = UILabel()
-        urlLabel.text = "https://api.day.app"
+        urlLabel.text = "wbk.shanbox.19930810.xyz:8443"
         urlLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
         urlLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.85)
         urlLabel.numberOfLines = 1

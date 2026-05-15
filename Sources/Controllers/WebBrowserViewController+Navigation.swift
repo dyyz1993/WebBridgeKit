@@ -32,6 +32,31 @@ extension WebBrowserViewController: WKNavigationDelegate {
         decisionHandler(.allow)
     }
 
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        if let response = navigationResponse.response as? HTTPURLResponse,
+           let contentType = response.allHeaderFields["Content-Type"] as? String,
+           contentType.contains("application/json") {
+            decisionHandler(.cancel)
+            DispatchQueue.main.async { [weak self] in
+                self?.handleJSONResponse(response, url: response.url)
+            }
+            return
+        }
+        decisionHandler(.allow)
+    }
+
+    private func handleJSONResponse(_ response: HTTPURLResponse, url: URL?) {
+        guard let url = url else { return }
+        let statusCode = response.statusCode
+        let alert = UIAlertController(
+            title: "API Response",
+            message: "\(url.absoluteString)\n\nHTTP \(statusCode)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
     /// 页面加载完成 - 检查是否需要自动缓存页面
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         guard let url = webView.url else { return }
@@ -161,18 +186,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 case .failure(let error):
                     print("❌ [WebBrowserVC] Failed to load URL: \(error.localizedDescription)")
                     self.updateCacheStatus(source: "LIVE")
-
-                    let isCustomScheme = url.scheme == "custom" || url.scheme == "wb-resource"
-                    if isCustomScheme {
-                        self.loadErrorPage(url: url, error: error)
-                    } else {
-                        if url.isFileURL {
-                            self.webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
-                        } else {
-                            let request = URLRequest(url: url)
-                            self.webView.load(request)
-                        }
-                    }
+                    // smartLoad 已经在 error fallback 里调了 webView.load，不再重复加载
                 }
             }
         }

@@ -123,7 +123,7 @@ class SettingsViewModel: ViewModel {
                     lucideIcon: .server,
                     title: L10n.tr("settings.server.config"),
                     action: .serverConfig,
-                    value: "api.day.app",
+                    value: "wbk.shanbox",
                     iconBackgroundColor: pb,
                     iconTintColor: pt
                 )

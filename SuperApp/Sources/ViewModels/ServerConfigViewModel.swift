@@ -53,7 +53,7 @@ class ServerConfigViewModel: ViewModel {
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
 
     // 默认配置
-    private let defaultBaseURL = "https://api.webbridgekit.com"
+    private let defaultBaseURL = "https://wbk.shanbox.19930810.xyz:8443"
     private let defaultAPIEndpoint = "/v1"
 
     // MARK: - Transform

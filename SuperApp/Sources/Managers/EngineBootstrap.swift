@@ -70,7 +70,7 @@ public final class EngineBootstrap {
         await engine.setStore(persistentStore)
         print("  ✅ Message Engine: UserDefaults persistent store configured")
 
-        let barkServerURL = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
+        let barkServerURL = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
         let barkKey = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
 
         if !barkKey.isEmpty {

@@ -57,7 +57,7 @@ class APIKeyExampleViewController: UIViewController {
             import Alamofire
 
             let headers = ["X-API-Key": "YOUR_KEY_HERE"]
-            AF.request("https://api.webbridgekit.com/v1/pages", headers: headers)
+            AF.request("https://wbk.shanbox.19930810.xyz:8443/v1/pages", headers: headers)
                 .responseJSON { response in
                     // 处理响应
                 }
@@ -69,7 +69,7 @@ class APIKeyExampleViewController: UIViewController {
             language: "Bash",
             code: """
             curl -H "X-API-Key: YOUR_KEY_HERE" \\
-                 https://api.webbridgekit.com/v1/pages
+                 https://wbk.shanbox.19930810.xyz:8443/v1/pages
             """,
             description: NSLocalizedString("apikey.example.curl_desc", tableName: "Localizable", bundle: .main, value: "使用 cURL 命令行调用 API", comment: "")
         )

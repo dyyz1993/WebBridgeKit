@@ -75,7 +75,7 @@ targets:
         - $(inherited)
         - $(BUILT_PRODUCTS_DIR)/Pods
       CODE_SIGN_STYLE: Automatic
-      DEVELOPMENT_TEAM: "-"
+      DEVELOPMENT_TEAM: "B45VZCNYU3"
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
       INFOPLIST_KEY_NSAppTransportSecurity: YES
@@ -117,7 +117,7 @@ targets:
       CURRENT_PROJECT_VERSION: "1"
       MARKETING_VERSION: "1.0"
       CODE_SIGN_STYLE: Automatic
-      DEVELOPMENT_TEAM: "-"
+      DEVELOPMENT_TEAM: "B45VZCNYU3"
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
       INFOPLIST_KEY_NSAppTransportSecurity: YES

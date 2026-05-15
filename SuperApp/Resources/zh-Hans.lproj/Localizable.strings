@@ -13,6 +13,8 @@
 "home.token_card.copied_message" = "推送地址已复制到剪贴板";
 "home.token_card.registering_title" = "注册中";
 "home.token_card.registering_message" = "正在注册推送通知，请稍后...";
+"home.token_card.register_success" = "推送注册成功";
+"home.token_card.register_failed" = "注册失败，请在系统设置中开启通知权限";
 "home.quick_action.scan" = "扫码";
 "home.quick_action.paste" = "粘贴";
 "home.quick_action.token" = "口令";
@@ -276,10 +278,13 @@
 "notif_debug.field.title" = "标题";
 "notif_debug.field.subtitle" = "副标题";
 "notif_debug.field.body" = "正文";
+"notif_debug.field.markdown" = "Markdown";
 "notif_debug.field.interruption_level" = "中断级别";
 "notif_debug.field.volume" = "音量";
 "notif_debug.field.sound" = "声音";
 "notif_debug.field.phone_mode" = "电话模式";
+"notif_debug.field.icon" = "图标";
+"notif_debug.field.icon_url" = "图标 URL";
 "notif_debug.field.badge" = "角标";
 "notif_debug.field.image" = "图片";
 "notif_debug.field.url" = "跳转 URL";

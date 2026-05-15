@@ -184,9 +184,9 @@ class CommandShowcaseViewController: UIViewController {
     private func loadTestJSON() {
         let testPayload: [String: Any] = [
             "appid": "com.example.testapp",
-            "url": "https://example.com/page",
+            "url": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html",
             "title": "Test Page",
-            "icon": "https://example.com/icon.png",
+            "icon": "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
             "token": "test-token-123",
             "ts": Date().timeIntervalSince1970,
             "nonce": UUID().uuidString
@@ -212,7 +212,7 @@ class CommandShowcaseViewController: UIViewController {
     private func testRouter() {
         let payload = CommandPayload(
             appid: "com.test.app",
-            url: "https://example.com",
+            url: "https://wbk.shanbox.19930810.xyz:8443",
             title: "Test"
         )
         let route = CommandRouter.shared.route(payload)

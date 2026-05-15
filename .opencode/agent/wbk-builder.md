@@ -2,17 +2,9 @@
 description: "WebBridgeKit 专属开发智能体：熟知项目架构、服务依赖、模块索引，引导高效开发与方法论沉淀"
 mode: primary
 model: zhipuai-coding-plan/glm-5.1
-steps: 30
 color: "#2E86AB"
 permission:
   "*": allow
-  bash: allow
-  edit: allow
-  task: allow
-  skill: allow
-  knowledge-base_kb_write: allow
-  knowledge-base_kb_read: allow
-  knowledge-base_kb_search: allow
 ---
 
 # WebBridgeKit Builder — 专属开发智能体

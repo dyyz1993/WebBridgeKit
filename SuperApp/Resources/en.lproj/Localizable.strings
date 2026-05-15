@@ -13,6 +13,8 @@
 "home.token_card.copied_message" = "Push URL copied to clipboard";
 "home.token_card.registering_title" = "Registering";
 "home.token_card.registering_message" = "Registering for push notifications...";
+"home.token_card.register_success" = "Push registration successful";
+"home.token_card.register_failed" = "Registration failed. Please enable notifications in System Settings";
 "home.quick_action.scan" = "Scan";
 "home.quick_action.paste" = "Paste";
 "home.quick_action.token" = "Token";
@@ -276,10 +278,13 @@
 "notif_debug.field.title" = "Title";
 "notif_debug.field.subtitle" = "Subtitle";
 "notif_debug.field.body" = "Body";
+"notif_debug.field.markdown" = "Markdown";
 "notif_debug.field.interruption_level" = "Interruption Level";
 "notif_debug.field.volume" = "Volume";
 "notif_debug.field.sound" = "Sound";
 "notif_debug.field.phone_mode" = "Phone Mode";
+"notif_debug.field.icon" = "Icon";
+"notif_debug.field.icon_url" = "Icon URL";
 "notif_debug.field.badge" = "Badge";
 "notif_debug.field.image" = "Image";
 "notif_debug.field.url" = "Jump URL";

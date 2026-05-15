@@ -18,8 +18,8 @@ public class ServerConfigManager {
 
     let realmConfiguration: Realm.Configuration
 
-    private let defaultBaseURL = "https://api.webbridgekit.com"
-    private let defaultAPIEndpoint = "/v1"
+    private let defaultBaseURL = "https://wbk.shanbox.19930810.xyz:8443"
+    private let defaultAPIEndpoint = ""
 
     private var hasEnsuredDefault = false
     private let initLock = NSRecursiveLock()
