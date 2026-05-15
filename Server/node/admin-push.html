@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebBridgeKit 推送控制台</title>
+<style>
+:root{
+  --sidebar-bg:#1d1d1f;--sidebar-text:#f5f5f7;--sidebar-text-dim:#86868b;
+  --sidebar-active:#007aff;--main-bg:#f5f5f7;--card-bg:#ffffff;
+  --text-primary:#1d1d1f;--text-secondary:#6e6e73;--accent:#007aff;
+  --accent-light:rgba(0,122,255,0.08);--success:#30d158;--error:#ff453a;
+  --warning:#ff9f0a;--border:#d2d2d7;--border-light:#e8e8ed;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg:0 4px 16px rgba(0,0,0,0.1),0 2px 6px rgba(0,0,0,0.06);
+  --shadow-xl:0 20px 60px rgba(0,0,0,0.25);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","PingFang SC",sans-serif;
+  --mono:"SF Mono",Menlo,monospace;
+  --radius-xs:6px;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;
+  --transition:all .2s cubic-bezier(.25,.46,.45,.94)
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--main-bg);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column}
+.app{display:flex;min-height:100vh}
+
+.sidebar{width:248px;min-width:248px;background:var(--sidebar-bg);color:var(--sidebar-text);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sidebar-header{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sidebar-header .logo{display:flex;align-items:center;gap:10px}
+.sidebar-header .logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#007aff,#5856d6);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff}
+.sidebar-header h1{font-size:16px;font-weight:600;letter-spacing:-.3px;line-height:1.2}
+.sidebar-header p{font-size:11px;color:var(--sidebar-text-dim);margin-top:2px}
+.sidebar-nav{padding:10px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;font-size:13px;font-weight:400;color:var(--sidebar-text-dim);transition:var(--transition);border:none;background:none;width:100%;text-align:left;border-radius:var(--radius-sm);margin:1px 4px}
+.nav-item:hover{background:rgba(255,255,255,.07);color:var(--sidebar-text)}
+.nav-item.active{background:rgba(0,122,255,.18);color:#fff;font-weight:500}
+.nav-item .icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .count{margin-left:auto;background:rgba(255,255,255,.1);color:var(--sidebar-text-dim);font-size:11px;padding:1px 7px;border-radius:10px;font-weight:500}
+.nav-item.active .count{background:var(--sidebar-active);color:#fff}
+.sidebar-divider{height:1px;background:rgba(255,255,255,.07);margin:6px 14px}
+.sidebar-footer{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07)}
+.sidebar-footer .nav-item{padding:8px 12px;border-radius:var(--radius-xs)}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+
+.status-bar{background:rgba(245,245,247,.78);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:20px;padding:10px 24px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--card-bg);border-radius:100px;box-shadow:var(--shadow-sm);font-size:13px;font-weight:450;white-space:nowrap}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.online{background:var(--success);animation:pulse-dot 2s ease-in-out infinite}
+.status-dot.offline{background:var(--error)}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.stat-label{color:var(--text-secondary);font-size:12px}
+.stat-value{font-weight:600;font-variant-numeric:tabular-nums}
+.status-bar-divider{width:1px;height:20px;background:var(--border);flex-shrink:0}
+
+.topbar{padding:18px 24px 14px;display:flex;align-items:flex-start;justify-content:space-between}
+.topbar-left h2{font-size:22px;font-weight:700;letter-spacing:-.4px;line-height:1.2}
+.topbar-left p{font-size:13px;color:var(--text-secondary);margin-top:4px;max-width:480px;line-height:1.4}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+
+.content{padding:0 24px 32px;flex:1;overflow-y:auto}
+
+.section-header{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;margin-top:4px}
+.section-icon{font-size:18px}
+.section-header h3{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.section-count{font-size:12px;color:var(--text-secondary);font-weight:500;background:var(--main-bg);padding:2px 8px;border-radius:100px}
+
+.templates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px;margin-bottom:28px}
+
+.template-card{background:var(--card-bg);border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow);transition:var(--transition);border:1px solid transparent;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.template-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#5856d6);opacity:0;transition:opacity .2s}
+.template-card:hover{box-shadow:var(--shadow-lg);border-color:rgba(0,122,255,.15);transform:translateY(-2px)}
+.template-card:hover::before{opacity:1}
+.template-card.cache-cat::before{background:linear-gradient(90deg,#ff9f0a,#ff6b00)}
+.template-card.bridge-cat::before{background:linear-gradient(90deg,#30d158,#28a745)}
+.template-card.combo-cat::before{background:linear-gradient(90deg,#af52de,#bf5af2)}
+
+.card-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;margin-bottom:12px;width:fit-content}
+.card-badge.basic{background:rgba(0,122,255,.1);color:var(--accent)}
+.card-badge.cache{background:rgba(255,159,10,.1);color:#c27b00}
+.card-badge.bridge{background:rgba(48,209,88,.1);color:#1a8a34}
+.card-badge.combo{background:rgba(175,82,222,.1);color:#8a3db8}
+
+.card-title{font-size:16px;font-weight:650;line-height:1.3;margin-bottom:6px;letter-spacing:-.2px}
+.card-desc{font-size:13px;color:var(--text-secondary);line-height:1.55;margin-bottom:14px;flex:1}
+
+.feature-info{background:var(--main-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.65}
+.feature-info .info-label{font-weight:600;color:var(--text-primary);margin-bottom:4px}
+.info-row{display:flex;gap:6px;margin-bottom:3px}
+.info-bullet{color:var(--accent);flex-shrink:0}
+.info-text{color:var(--text-secondary)}
+
+.param-preview{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.param-tag{font-size:11px;font-family:var(--mono);background:var(--main-bg);padding:3px 8px;border-radius:var(--radius-xs);color:var(--text-secondary);border:1px solid var(--border-light)}
+.param-tag .key{color:var(--accent);font-weight:600}
+
+.expected-box{font-size:12px;color:var(--text-secondary);padding:10px 14px;background:linear-gradient(135deg,rgba(48,209,88,.05),rgba(0,122,255,.03));border-radius:var(--radius-sm);border:1px solid rgba(48,209,88,.12);margin-bottom:14px;line-height:1.6}
+.exp-label{font-weight:600;color:#1a8a34}
+
+.card-actions{display:flex;gap:8px;margin-top:auto}
+
+.btn{padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:550;border:none;cursor:pointer;transition:var(--transition);font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#0066d6}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#28a745}
+.btn-purple{background:#af52de;color:#fff}.btn-purple:hover{background:#9645c0}
+.btn-orange{background:#ff9f0a;color:#fff}.btn-orange:hover{background:#e08c00}
+.btn-outline{background:transparent;color:var(--text-primary);border:1px solid var(--border)}.btn-outline:hover{background:var(--main-bg);border-color:var(--text-secondary)}
+.btn-ghost{background:transparent;color:var(--text-secondary);padding:6px 12px}.btn-ghost:hover{background:var(--main-bg);color:var(--text-primary)}
+.btn-sm{padding:7px 14px;font-size:12px}.btn-block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+.history-section{margin-top:8px}
+.history-card{background:var(--card-bg);border-radius:var(--radius-md);box-shadow:var(--shadow);overflow:hidden}
+.history-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-light)}
+.history-header h3{font-size:15px;font-weight:600}
+.history-meta{font-size:12px;color:var(--text-secondary);display:flex;gap:12px;align-items:center}
+.history-list{max-height:320px;overflow-y:auto}
+.history-item{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:1px solid var(--border-light);font-size:13px;transition:var(--transition)}
+.history-item:last-child{border-bottom:none}
+.history-item:hover{background:var(--main-bg)}
+.history-time{color:var(--text-secondary);font-family:var(--mono);font-size:12px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.history-title{flex:1;font-weight:450;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-status{font-size:15px;flex-shrink:0}
+.history-empty{padding:44px 20px;text-align:center;color:var(--text-secondary);font-size:14px}
+
+.result-panel{background:var(--card-bg);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);border:1px solid rgba(48,209,88,.2);overflow:hidden;margin-bottom:16px;animation:slideUp .35s cubic-bezier(.25,.46,.45,.94)}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.result-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(135deg,rgba(48,209,88,.06),rgba(0,122,255,.04));border-bottom:1px solid rgba(48,209,88,.12);cursor:pointer}
+.result-header-left{display:flex;align-items:center;gap:10px}
+.result-icon{font-size:18px}
+.result-title{font-size:14px;font-weight:600}
+.result-time{font-size:12px;color:var(--text-secondary);font-family:var(--mono)}
+.result-body{padding:16px 20px;font-size:13px;line-height:1.7}
+.result-row{display:flex;gap:8px;margin-bottom:6px}
+.result-label{font-weight:600;color:var(--text-primary);min-width:72px}
+.result-value{color:var(--text-secondary)}
+.result-actions{display:flex;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--border-light)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-overlay.show{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card-bg);border-radius:var(--radius-xl);width:100%;max-width:540px;box-shadow:var(--shadow-xl);max-height:90vh;overflow-y:auto;animation:modalIn .3s cubic-bezier(.25,.46,.45,.94)}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 18px;border-bottom:1px solid var(--border-light)}
+.modal-header h3{font-size:18px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--main-bg);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:var(--transition)}
+.modal-close:hover{background:var(--border)}
+.modal-body{padding:20px 24px}
+.modal-footer{padding:16px 24px 22px;display:flex;gap:10px;border-top:1px solid var(--border-light)}
+
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;letter-spacing:.2px}
+.label-icon{margin-right:4px}
+.form-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font);transition:var(--transition);background:#fff;outline:none}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.12)}
+.form-input::placeholder{color:#aeaeb2}
+textarea.form-input{resize:vertical;min-height:64px;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.picker-group{margin-bottom:18px}
+.picker-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;letter-spacing:.2px}
+.picker-container{border:1.5px solid var(--border);border-radius:var(--radius-md);overflow:hidden;background:#fff;transition:var(--transition)}
+.picker-container:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.1)}
+.picker-option{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;transition:var(--transition);border-bottom:1px solid var(--border-light);user-select:none}
+.picker-option:last-child{border-bottom:none}
+.picker-option:hover{background:var(--main-bg)}
+.picker-option.selected{background:var(--accent-light);border-left:3px solid var(--accent);padding-left:11px}
+.opt-main{display:flex;flex-direction:column;gap:1px}
+.opt-label{font-size:14px;font-weight:500}
+.opt-selected .opt-label{color:var(--accent);font-weight:600}
+.opt-desc{font-size:11px;color:var(--text-secondary)}
+.opt-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition);font-size:11px;color:#fff}
+.picker-option.selected .opt-check{background:var(--accent);border-color:var(--accent)}
+
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode-option{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);text-align:center}
+.mode-option:hover{border-color:var(--text-secondary);background:var(--main-bg)}
+.mode-option.selected{border-color:var(--accent);background:var(--accent-light)}
+.mode-icon{font-size:20px}
+.mode-name{font-size:13px;font-weight:550}
+.mode-desc{font-size:11px;color:var(--text-secondary)}
+.mode-option.selected .mode-name{color:var(--accent)}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.toggle-switch{position:relative;width:44px;height:26px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:13px;cursor:pointer;transition:var(--transition)}
+.toggle-slider::before{content:'';position:absolute;width:22px;height:22px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:var(--transition);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle-switch input:checked+.toggle-slider{background:var(--accent)}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(18px)}
+.toggle-label{font-size:13px;color:var(--text-primary)}
+
+.toast-container{position:fixed;top:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:500;color:#fff;box-shadow:var(--shadow-lg);animation:toastIn .3s ease,toastOut .3s ease 2.7s forwards;max-width:360px;display:flex;align-items:center;gap:8px}
+.toast.success{background:var(--success)}.toast.error{background:var(--error)}.toast.info{background:var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}
+
+.mobile-nav{display:none}
+@media(max-width:860px){
+  .sidebar{display:none}
+  .mobile-nav{display:flex;overflow-x:auto;background:var(--sidebar-bg);padding:8px 10px;gap:5px;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:0;z-index:99}
+  .mobile-nav::-webkit-scrollbar{display:none}
+  .mob-item{flex-shrink:0;padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;color:var(--sidebar-text-dim);background:rgba(255,255,255,.06);border:none;cursor:pointer;font-family:var(--font);font-weight:500;white-space:nowrap;transition:var(--transition)}
+  .mob-item.active{background:var(--sidebar-active);color:#fff}
+  .app{flex-direction:column}.content{padding:0 14px 24px}.templates-grid{grid-template-columns:1fr}
+  .topbar{padding:14px 14px 10px;flex-direction:column;gap:10px}.status-bar{padding:8px 14px;gap:10px}
+  .form-row{grid-template-columns:1fr}.modal{max-width:100%;border-radius:var(--radius-lg);max-height:95vh}
+}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#c1c1c6;border-radius:3px}::-webkit-scrollbar-thumb:hover{background:#a1a1a6}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toasts"></div>
+
+<div class="modal-overlay" id="customModal">
+<div class="modal">
+<div class="modal-header"><h3><span id="modalIcon">✏️</span> 自定义推送</h3><button class="modal-close" onclick="closeCustomModal()">&times;</button></div>
+<div class="modal-body" id="customModalBody"></div>
+<div class="modal-footer">
+<button class="btn btn-outline btn-block" onclick="closeCustomModal()">取消</button>
+<button class="btn btn-primary btn-block" id="customSendBtn" onclick="submitCustomPush()">✅ 发送推送</button>
+</div></div></div>
+
+<div class="app">
+<nav class="mobile-nav" id="mobileNav"></nav>
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-header"><div class="logo"><div class="logo-icon">W</div><div><h1>WebBridgeKit</h1><p>推送控制台 v2</p></div></div></div>
+<nav class="sidebar-nav" id="sidebarNav"></nav>
+<div class="sidebar-footer">
+<button class="nav-item" onclick="clearHistory()"><span class="icon">🗑</span> 清空历史记录</button>
+<button class="nav-item" onclick="openCustomModal()"><span class="icon">✏️</span> 自定义推送</button>
+</div></aside>
+<main class="main">
+<div class="status-bar" id="statusBar"></div>
+<div class="topbar">
+<div class="topbar-left"><h2 id="pageTitle">推送控制台</h2><p id="pageSubtitle">WebBridgeKit 功能演示控制台 — 每个模板展示一项核心能力</p></div>
+<div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="openCustomModal()">✏️ 自定义推送</button></div>
+</div>
+<div class="content" id="content"></div>
+</main></div>
+
+<script>
+var ORIGIN=location.origin;
+
+var categories=[
+{id:'basic',icon:'📱',name:'基础通知能力',desc:'iOS 通知系统的核心功能演示'},
+{id:'cache',icon:'🔗',name:'缓存行为演示',desc:'离线优先缓存机制（核心价值）'},
+{id:'bridge',icon:'🌐',name:'Bridge Handler 演示',desc:'原生桥接 API 调用测试'},
+{id:'combo',icon:'⚡',name:'组合场景',desc:'端到端完整流程与压力测试'}
+];
+
+var templates=[
+/* ===== Category 1: 基础通知能力 ===== */
+{cat:'basic',badge:'基础',name:'标准通知',desc:'最完整的推送格式：标题 + 正文 + 默认声音 + 角标。这是 iOS 推送的最常用形态。',feature:{label:'演示特性',items:['title + body 双行结构','默认系统提示音 (default)','App 图标角标自动 +1','点击通知打开管理后台']},expected:'手机收到带声音的横幅通知，角标+1，点击可打开页面',params:{title:'📱 标准推送',body:'这是一条完整的标准通知，包含标题、正文、声音和角标更新',sound:'default',badge:1,url:ORIGIN+'/admin-push'}},
+{cat:'basic',badge:'静默',name:'静默通知',desc:'不弹窗、不响铃，仅后台更新数据。适用于内容同步、角标刷新等场景。',feature:{label:'演示特性',items:['无声音 (sound=空)','无横幅提示','仅更新 App 角标为 99','在通知中心可见']},expected:'手机不显示横幅、不播放声音，但角标更新为 99（通知中心可见）',params:{title:'🤫 静默通知',body:'这条不会弹窗也不会响铃',sound:'',badge:99,mode:'silent'}},
+{cat:'basic',badge:'分组',name:'分组通知',desc:'连续发送 3 条同组消息，iOS 自动折叠为一个通知组。用户展开可查看全部消息。',feature:{label:'演示特性',items:['相同 thread-id 的消息自动分组','通知中心显示为折叠卡片','展开后显示 3 条独立消息','适用于聊天/社交类场景']},expected:'发送 3 条后，通知中心显示为 1 个折叠组，展开可看 3 条',params:null,comboType:'grouped'},
+{cat:'basic',badge:'长文本',name:'大文本通知',desc:'超长正文内容的展示。iOS 会自动处理长文本的截断与展开逻辑。',feature:{label:'演示特性',items:['200 字中文正文','iOS 自动截断或展开','3D Touch / 长按展开全文','验证文本渲染完整性']},expected:'通知展开显示完整长文本内容，不被异常截断',params:{title:'📄 大文本通知',body:'这是一段用于测试大文本展示能力的超长通知正文。WebBridgeKit 支持完整的通知内容传输，包括标题、副标题和任意长度的正文内容。这段文字包含了中文标点符号、数字（12345）、英文字母（abcdefg）以及各种特殊字符！@#￥%……&*（）——+。当用户收到这条通知时，iOS 系统会根据屏幕宽度自动决定是否需要截断显示。用户可以通过 3D Touch（在支持的设备上）或者长按通知的方式来展开查看完整的文本内容。这个功能对于新闻类应用、邮件客户端以及需要展示详细摘要的场景非常重要。'}},
+{cat:'basic',badge:'副标题',name:'副标题通知',desc:'三行结构：主标题 > 副标题 > 正文。提供更丰富的信息层次。',feature:{label:'演示特性',items:['三层信息结构：标题 > 副标题 > 正文','副标题用于来源/分类标识','视觉层次更清晰','适合多维度信息展示']},expected:'通知显示 主标题 > 副标题 > 正文 三层结构',params:{title:'📋 副标题通知',subtitle:'来自 WebBridgeKit 推送系统',body:'这是一条带有副标题的三行结构通知，展示了 iOS 通知的完整信息层级。'}},
+
+/* ===== Category 2: 缓存行为演示（核心价值）===== */
+{cat:'cache',badge:'Manifest',name:'首次加载（无缓存）',desc:'演示 Manifest 缓存机制的完整生命周期：首次网络加载 → 后台缓存 → 二次秒开 → 断网可用。',feature:{label:'缓存生命周期',items:['【第1次】网络加载 → 显示 → 后台下载缓存资源','【第2次】直接从本地缓存读取 → 秒开','【断网后】离线可用（已缓存的资源）','Manifest 定义了 JS/CSS/图片等资源的版本']},expected:'第一次从服务器加载并缓存资源文件（JS/CSS/图片），之后每次打开都从本地读取，断网也能用',params:{title:'🔗 Manifest 缓存演示',body:'打开页面体验首次加载与缓存机制',url:ORIGIN+'/test_resources/manifest_demo.html'}},
+{cat:'cache',badge:'引擎',name:'离线包完整性验证',desc:'打开缓存引擎总览页面，查看已缓存的资源列表、命中率统计、存储占用大小。',feature:{label:'验证项目',items:['当前已缓存的资源列表（URL + 大小 + 时间）','缓存命中率统计','总存储占用大小','各资源类型分布（HTML/JS/CSS/图片）']},expected:'打开缓存引擎页面，查看当前已缓存的资源列表、命中率、存储大小，验证离线包是否完整',params:{title:'💾 缓存引擎总览',body:'查看离线包完整性与缓存统计',url:ORIGIN+'/test_resources/cache-showcase.html'}},
+{cat:'cache',badge:'图片',name:'图片缓存对比',desc:'演示图片资源的缓存策略。首次从网络获取，后续直接从磁盘缓存读取，显著提升加载速度。',feature:{label:'图片缓存策略',items:['首次加载：从服务器下载图片','二次加载：从磁盘缓存读取（毫秒级）','支持多种图片格式（PNG/JPG/WebP/SVG）','缓存过期策略与容量管理']},expected:'首次加载从网络获取图片，后续从磁盘缓存读取，第二次打开速度明显提升',params:{title:'🖼️ 图片缓存测试',body:'对比图片首次加载与缓存加载的速度差异',url:ORIGIN+'/test_resources/image_cache_test.html'}},
+
+/* ===== Category 3: Bridge Handler 演示 ===== */
+{cat:'bridge',badge:'Haptic',name:'触觉反馈引擎',desc:'通过 Bridge API 调用 iOS 原生触觉反馈引擎，支持不同强度和类型的振动模式。',feature:{label:'Bridge API',items:['调用: window.WebBridge.haptic.trigger(type)','支持: light / medium / heavy / success / warning / error / selection','预期: 手机产生对应强度的触感反馈','场景: 按钮确认、操作成功/失败提示、列表滚动选择']},expected:'打开页面后点击按钮触发不同类型的触觉反馈，手机产生对应振动',params:{title:'📳 触觉反馈测试',body:'打开页面体验触觉反馈引擎',url:ORIGIN+'/test_resources/engine-dashboard.html#haptic'}},
+{cat:'bridge',badge:'Device',name:'设备信息获取',desc:'通过 Bridge 获取设备硬件信息、系统版本、电池状态等原生数据。',feature:{label:'Bridge API',items:['调用: window.WebBridge.device.getInfo()','返回: 设备型号 / 系统 / UUID / 电量 / 存储空间','预期: JSON 格式的设备详细信息','场景: 设备适配、环境检测、统计分析']},expected:'打开页面后显示设备的型号、系统版本、UUID、电量等完整信息',params:{title:'📲 设备信息',body:'获取设备硬件与系统信息',url:ORIGIN+'/test_resources/bridge-device.html'}},
+{cat:'bridge',badge:'Permission',name:'权限状态检查',desc:'查询相机、麦克风、相册、定位、通知等各项系统权限的授权状态。',feature:{label:'Bridge API',items:['调用: window.WebBridge.permission.check(type)','支持: camera / microphone / photo / location / notification / bluetooth','预期: 返回 granted / denied / notDetermined','场景: 功能前置检查、引导用户开启权限']},expected:'打开页面后列出所有权限的当前状态（已授权/未授权/未确定）',params:{title:'🔐 权限状态检查',body:'查询所有系统权限的授权状态',url:ORIGIN+'/test_resources/bridge-permission.html'}},
+{cat:'bridge',badge:'Clipboard',name:'剪贴板读写',desc:'通过 Bridge 读写系统剪贴板，实现跨应用的数据传递。',feature:{label:'Bridge API',items:['调用: window.WebBridge.clipboard.read() / .write(text)','预期: 读取剪贴板内容 或 写入文本到剪贴板','安全限制: 仅限用户主动触发的操作','场景: 复制链接、分享文本、导入数据']},expected:'打开页面后可以读取当前剪贴板内容，也可以写入文本到剪贴板',params:{title:'📋 剪贴板读写',body:'测试剪贴板的读取与写入',url:ORIGIN+'/test_resources/bridge-interaction.html#clipboard'}},
+{cat:'bridge',badge:'Navigation',name:'导航控制',desc:'通过 Bridge 控制 WebView 的导航栈：前进、后退、刷新、关闭页面。',feature:{label:'Bridge API',items:['调用: window.WebBridge.navigation.back() / .forward() / .reload() / .close()','预期: 对应的导航操作立即生效','场景: 页面内嵌导航、自定义返回按钮、条件跳转']},expected:'打开页面后可以通过按钮控制 WebView 的前进、后退、刷新、关闭操作',params:{title:'🧭 导航控制',body:'测试 WebView 导航栈操作',url:ORIGIN+'/test_resources/bridge-navigation.html'}},
+{cat:'bridge',badge:'Network',name:'网络状态检测',desc:'实时检测网络连接类型（WiFi/蜂窝/无网络），监听网络变化事件。',feature:{label:'Bridge API',items:['调用: window.WebBridge.network.getStatus()','返回: type(wifi/cellular/none) / isExpensive / isConstrained','支持: 监听 networkChange 事件','场景: 离线模式切换、大文件下载前检查、视频流质量控制']},expected:'打开页面后显示当前网络类型（WiFi/蜂窝/断网），切换网络时自动更新',params:{title:'📡 网络状态检测',body:'实时监测网络连接状态与类型',url:ORIGIN+'/test_resources/execute_network_test.html'}},
+
+/* ===== Category 4: 组合场景 ===== */
+{cat:'combo',badge:'E2E',name:'完整推送→打开→交互流程',desc:'端到端全流程演示：发送带 URL 的通知 → 用户点击 → 打开 WebView → 页面通过 Bridge 调用原生功能。',feature:{label:'完整流程',items:['步骤1: 发送带 URL 的推送通知','步骤2: 用户手机收到通知并点击','步骤3: WebView 打开目标页面','步骤4: 页面内自动执行 Bridge API 调用']},expected:'推送通知 → 点击 → 打开综合测试页 → 页面通过 Bridge 调用原生功能（触觉/设备/权限等）',params:{title:'⚡ 完整流程测试',body:'端到端：推送 → 点击 → 打开页 → Bridge 调用',url:ORIGIN+'/test_resources/all-in-one-tester.html',sound:'default',badge:1}},
+{cat:'combo',badge:'Stress',name:'连续推送压力测试',desc:'快速连续发送 5 条不同类型的通知，测试系统的并发处理能力和通知排序。',feature:{label:'压力测试参数',items:['5 条通知间隔 200ms 连续发送','每条使用不同的标题和正文','混合使用有声音/无声音/不同角标','观察通知到达顺序和展示效果']},expected:'5 条通知快速依次到达手机，验证并发处理和通知队列排序',params:null,comboType:'rapid5'},
+{cat:'combo',badge:'Full',name:'全部参数极限测试',desc:'填满所有参数字段，测试极端情况下的通知渲染和数据传递完整性。',feature:{label:'极限参数',items:['title + subtitle + body 三行文本','sound=default + badge=99','group/thread 分组标识','url 跳转 + mode=immersive 全屏模式','icon 远程图标 URL']},expected:'通知应正确显示所有字段，点击后以全屏模式打开目标页面',params:{title:'🎯 极限参数测试',subtitle:'副标题 - 全部字段已填满',body:'这是一条包含所有可能参数的通知：标题、副标题、正文、默认声音、角标99、分组ID、线程ID、目标URL、全屏模式、远程图标。用于验证系统对完整参数集的处理能力。',sound:'default',badge:99,group:'full-test',thread:'full-thread-001',url:ORIGIN+'/test_resources/all-in-one-tester.html',mode:'immersive',icon:ORIGIN+'/test_resources/icon.png'}}
+];
+
+var activeCategory='basic';
+var pushHistory;try{pushHistory=JSON.parse(localStorage.getItem('wbk_push_history'));if(!Array.isArray(pushHistory))pushHistory=[]}catch(e){pushHistory=[]}
+var sessionStats={total:0,lastPush:null};
+var resultPanelData=null;
+
+var SOUNDS=[
+{value:'default',label:'默认提示音',desc:'系统默认三全音'},{value:'',label:'无声音',desc:'静默通知专用'},
+{value:'light',label:'轻快',desc:'短促轻柔反馈'},{value:'medium',label:'中等',desc:'标准强度提示'},
+{value:'heavy',label:'强烈',desc:'明显触感震动'},{value:'success',label:'成功',desc:'上升音调'},
+{value:'warning',label:'警告',desc:'重复提醒音'},{value:'error',label:'错误',desc:'下降音调'}
+];
+var MODES=[
+{value:'normal',label:'普通',desc:'标准浏览器打开',icon:'📄'},{value:'immersive',label:'全屏',desc:'沉浸式全屏模式',icon:'⬛'},
+{value:'modal',label:'弹窗',desc:'85%×70% 浮窗',icon:'🪟'},{value:'silent',label:'静默',desc:'仅更新数据不弹窗',icon:'🤫'}
+];
+var PAGES=[
+{value:'',label:'不跳转',desc:'仅显示通知'},
+{value:ORIGIN+'/test_resources/all-in-one-tester.html',label:'综合测试页',desc:'全部功能集合'},
+{value:ORIGIN+'/test_resources/engine-dashboard.html',label:'引擎总览',desc:'系统运行状态'},
+{value:ORIGIN+'/test_resources/message-showcase.html',label:'消息引擎',desc:'消息收发演示'},
+{value:ORIGIN+'/test_resources/cache-showcase.html',label:'缓存引擎',desc:'离线缓存状态'},
+{value:ORIGIN+'/test_resources/bridge-hub.html',label:'Bridge中心',desc:'API 测试集合'},
+{value:ORIGIN+'/admin-push',label:'管理后台',desc:'本控制台'},
+{value:'http://192.168.0.4:5173',label:'Dev Server',desc:'本地开发地址'},
+{value:'__custom__',label:'自定义URL...',desc:'手动输入地址'}
+];
+
+function escHtml(s){var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+
+function showToast(msg,type){
+type=type||'info';
+var c=document.getElementById('toasts'),t=document.createElement('div');
+t.className='toast '+type;
+var ic=type==='success'?'✅':type==='error'?'❌':'ℹ️';
+t.innerHTML='<span>'+ic+'</span><span>'+escHtml(msg)+'</span>';
+c.appendChild(t);
+setTimeout(function(){t.remove()},3000)
+}
+
+function addHistory(title,ok){
+pushHistory.unshift({time:new Date().toLocaleTimeString('zh-CN',{hour12:false}),title:title,ok:ok});
+if(pushHistory.length>20)pushHistory.length=20;
+localStorage.setItem('wbk_push_history',JSON.stringify(pushHistory));
+renderHistory()
+}
+function clearHistory(){
+pushHistory=[];
+localStorage.removeItem('wbk_push_history');
+renderHistory();
+showToast('历史记录已清空','info')
+}
+
+async function checkStatus(){
+var bar=document.getElementById('statusBar');
+try{
+var res=await fetch('/ws/status'),data=await res.json();
+var n=data.clients??data.connected??0;
+var dc=n>0?'online':'offline';
+var dl=n>0?'在线':'离线';
+var lt=sessionStats.lastPush?formatRelTime(sessionStats.lastPush):'--';
+bar.innerHTML='<div class="status-pill"><span class="status-dot '+dc+'"></span><span class="stat-label">设备</span><span class="stat-value">'+n+' 台'+dl+'</span></div>'+
+'<div class="status-bar-divider"></div><div class="status-pill"><span class="stat-label">本次推送</span><span class="stat-value">'+sessionStats.total+' 次</span></div>'+
+(sessionStats.lastPush?'<div class="status-bar-divider"></div><div class="status-pill"><span class="stat-label">最近发送</span><span class="stat-value">'+lt+'</span></div>':'')
+}catch(e){
+bar.innerHTML='<div class="status-pill"><span class="status-dot offline"></span><span class="stat-label">状态</span><span class="stat-value">无法连接</span></div>'
+}
+}
+function formatRelTime(ds){
+var d=Date.now()-new Date(ds).getTime();
+if(d<60000)return Math.floor(d/1000)+'秒前';
+if(d<3600000)return Math.floor(d/60000)+'分钟前';
+return new Date(ds).toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit'})
+}
+
+async function sendPush(payload){
+try{
+var r=await fetch('/ws/push',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+var d=await r.json(),ok=!!(d.ok||d.success||r.ok);
+sessionStats.total++;sessionStats.lastPush=new Date().toISOString();checkStatus();
+if(ok){showToast('推送成功','success');addHistory(payload.title||'推送',true);showResultPanel(payload,true)}
+else{showToast('推送失败: '+(d.error||'未知错误'),'error');addHistory(payload.title||'推送',false);showResultPanel(payload,false,d.error)}
+return d
+}catch(e){
+showToast('网络错误: '+e.message,'error');addHistory(payload.title||'推送',false);showResultPanel(null,false,e.message)
+}
+}
+
+async function sendCombo(type){
+if(type==='grouped'){
+for(var i=1;i<=3;i++){await sendPush({title:'💬 消息 '+i,body:'分组通知第 '+i+' 条 — 来自「聊天群组」',group:'chat-group',thread:'chat-thread-001'});if(i<3)await new Promise(function(r){setTimeout(r,500)})}
+}else if(type==='rapid5'){
+var ts=[{title:'⚡ 快速 1',body:'压力测试第1条',sound:'default',badge:1},{title:'⚡ 快速 2',body:'压力测试第2条 - 静默',sound:'',badge:2},{title:'⚡ 快速 3',body:'压力测试第3条',sound:'light',badge:3},{title:'⚡ 快速 4',body:'压力测试第4条 - 成功音',sound:'success',badge:4},{title:'⚡ 快速 5',body:'压力测试第5条 - 极限',sound:'heavy',badge:5}];
+for(var j=0;j<ts.length;j++){await push(ts[j]);if(j<ts.length-1)await new Promise(function(r){setTimeout(r,200)})}
+}
+}
+
+function showResultPanel(payload,ok,error){
+resultPanelData={payload:payload,ok:ok,error:error,time:new Date().toLocaleTimeString('zh-CN',{hour12:false})};
+renderResultPanel()
+}
+function renderResultPanel(){
+var ex=document.getElementById('resultPanel');if(ex)ex.remove();
+if(!resultPanelData)return;
+var p=resultPanelData.payload,ok=resultPanelData.ok,err=resultPanelData.error,t=resultPanelData.time,ce=document.getElementById('content');
+var pn=document.createElement('div');pn.id='resultPanel';pn.className='result-panel';
+var bh='';
+if(p){
+bh+='<div class="result-row"><span class="result-label">标题:</span><span class="result-value">'+escHtml(p.title||'(空)')+'</span></div>';
+if(p.subtitle)bh+='<div class="result-row"><span class="result-label">副标题:</span><span class="result-value">'+escHtml(p.subtitle)+'</span></div>';
+bh+='<div class="result-row"><span class="result-label">正文:</span><span class="result-value">'+escHtml((p.body||'').substring(0,80))+((p.body||'').length>80?'...':'')+'</span></div>';
+if(p.sound!==undefined)bh+='<div class="result-row"><span class="result-label">铃声:</span><span class="result-value">'+(p.sound||'(无)')+'</span></div>';
+if(p.badge)bh+='<div class="result-row"><span class="result-label">角标:</span><span class="result-value">'+p.badge+'</span></div>';
+if(p.url)bh+='<div class="result-row"><span class="result-label">打开:</span><span class="result-value" style="word-break:break-all">'+escHtml(p.url)+'</span></div>';
+if(p.mode)bh+='<div class="result-row"><span class="result-label">模式:</span><span class="result-value">'+p.mode+'</span></div>';
+if(p.group)bh+='<div class="result-row"><span class="result-label">分组:</span><span class="result-value">'+escHtml(p.group)+(p.thread?' / '+escHtml(p.thread):'')+'</span></div>';
+}
+var ic=ok?'✅':'❌',tl=ok?'已发送':'发送失败';
+var eh='';
+if(ok&&p){
+var ep=[];ep.push('手机应收到「<strong>'+escHtml(p.title)+'</strong>」通知');
+if(p.url)ep.push('点击后打开目标页面');
+ep.push((p.sound&&p.sound!==''?'播放提示音':'静默')+' · 角标'+(p.badge||'不变'));
+eh='<div style="margin:10px 0;padding-top:10px;border-top:1px solid var(--border-light)"><div style="font-weight:600;margin-bottom:6px;color:var(--text-primary)">预期效果：</div><div style="color:var(--text-secondary)">· '+ep.join('<br>· ')+'</div></div>'
+}
+var erh=!ok?'<div class="result-row"><span class="result-label">错误:</span><span class="result-value" style="color:var(--error)">'+escHtml(err||'未知错误')+'</span></div>':'';
+var ph=bh?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)"><div style="font-weight:600;font-size:12px;color:var(--text-secondary);margin-bottom:6px">发送参数</div>'+bh+'</div>':'';
+pn.innerHTML='<div class="result-header" onclick="toggleResultBody()"><div class="result-header-left"><span class="result-icon">'+ic+'</span><div><span class="result-title">'+tl+'</span><br><span class="result-time">'+t+'</span></div></div><span id="resultChevron" style="color:var(--text-secondary);font-size:12px;transition:transform .2s">▼</span></div><div class="result-body" id="resultBody">'+(ok?'<div class="result-row"><span class="result-label">设备:</span><span class="result-value">等待接收中...</span></div>'+eh:erh)+ph+'</div><div class="result-actions">'+(p?'<button class="btn btn-primary btn-sm" onclick="resendLast()">重新发送</button>':'')+'<button class="btn btn-outline btn-sm" onclick="dismissResult()">关闭</button></div>';
+ce.insertBefore(pn,ce.firstChild)
+}
+function toggleResultBody(){
+var b=document.getElementById('resultBody'),ch=document.getElementById('resultChevron');
+if(b&&ch){var hd=b.style.display==='none';b.style.display=hd?'':'none';ch.style.transform=hd?'':'rotate(-90deg)'}
+}
+function resendLast(){if(resultPanelData&&resultPanelData.payload)sendPush(resultPanelData.payload)}
+function dismissResult(){var el=document.getElementById('resultPanel');if(el)el.remove();resultPanelData=null}
+
+function getFilteredTemplates(){return templates.filter(function(t){return t.cat===activeCategory})}
+function renderParamTags(params){
+if(!params)return'';
+return Object.entries(params).filter(function(kv){return kv[0]!=='body'}).map(function(kv){
+var k=kv[0],v=String(kv[1]);if(v.length>24)v=v.substring(0,22)+'...';
+return '<span class="param-tag"><span class="key">'+k+'</span>: '+escHtml(v)+'</span>'
+}).join('')
+}
+
+function renderTemplates(){
+var list=getFilteredTemplates(),cat=categories.find(function(c){return c.id===activeCategory});
+document.getElementById('pageTitle').textContent=cat?cat.name:'推送控制台';
+document.getElementById('pageSubtitle').textContent=cat?cat.desc:'';
+var html='<div class="section-header"><span class="section-icon">'+(cat?cat.icon:'')+'</span><h3>'+(cat?cat.name:'')+'</h3><span class="section-count">'+list.length+' 个模板</span></div><div class="templates-grid">';
+list.forEach(function(t){
+var gi=templates.indexOf(t)+1,isCombo=!!t.comboType,cc='';
+if(t.cat==='cache')cc='cache-cat';else if(t.cat==='bridge')cc='bridge-cat';else if(t.cat==='combo')cc='combo-cat';
+html+='<div class="template-card '+cc+'"><span class="card-badge '+t.cat+'">#'+gi+' · '+escHtml(t.badge)+'</span><div class="card-title">'+escHtml(t.name)+'</div><div class="card-desc">'+escHtml(t.desc)+'</div>';
+if(t.feature){html+='<div class="feature-info"><div class="info-label">'+escHtml(t.feature.label)+'</div>';t.feature.items.forEach(function(it){html+='<div class="info-row"><span class="info-bullet">▸</span><span class="info-text">'+escHtml(it)+'</span></div>'});html+='</div>'}
+if(t.params)html+='<div class="param-preview">'+renderParamTags(t.params)+'</div>';
+if(t.expected)html+='<div class="expected-box"><span class="exp-label">预期效果：</span>'+escHtml(t.expected)+'</div>';
+html+='<div class="card-actions">';
+if(!isCombo){
+html+='<button class="btn btn-outline btn-sm" onclick=\'openCustomModal('+JSON.stringify(t.params).replace(/'/g,"&#39;")+')\'>✏️ 自定义</button>';
+var bc='btn-primary';if(t.cat==='combo')bc='btn-purple';else if(t.cat==='cache')bc='btn-orange';else if(t.cat==='bridge')bc='btn-success';
+html+='<button class="'+bc+' btn-sm" onclick=\'sendPush('+JSON.stringify(t.params).replace(/'/g,"&#39;")+')\'>📤 发送</button>'
+}else{
+var cb=t.comboType==='rapid5'?'btn-orange':'btn-purple';
+html+='<button class="'+cb+' btn-sm" onclick="sendCombo(\''+t.comboType+'\')">⚡ 执行</button>'
+}
+html+='</div></div>'
+});
+html+='</div><div class="history-section"><div class="history-card"><div class="history-header"><h3>📋 发送历史</h3><div class="history-meta"><span>'+pushHistory.length+'/20</span><button class="btn btn-ghost btn-sm" onclick="clearHistory()" style="padding:2px 8px;font-size:11px">清空</button></div></div><div class="history-list" id="historyList">';
+if(pushHistory.length===0){html+='<div class="history-empty">暂无发送记录，发送一条推送后将在此显示</div>'}
+else{pushHistory.forEach(function(h){html+='<div class="history-item"><span class="history-time">'+escHtml(h.time)+'</span><span class="history-title">'+escHtml(h.title)+'</span><span class="history-status">'+(h.ok?'✅':'❌')+'</span></div>'})}
+html+='</div></div></div>';
+document.getElementById('content').innerHTML=html
+}
+
+function renderHistory(){
+var el=document.getElementById('historyList');if(!el)return;
+var html='';
+if(pushHistory.length===0){html='<div class="history-empty">暂无发送记录</div>'}
+else{pushHistory.forEach(function(h){html+='<div class="history-item"><span class="history-time">'+escHtml(h.time)+'</span><span class="history-title">'+escHtml(h.title)+'</span><span class="history-status">'+(h.ok?'✅':'❌')+'</span></div>'})}
+el.innerHTML=html
+}
+
+function renderSidebar(){
+var nav=document.getElementById('sidebarNav'),mn=document.getElementById('mobileNav'),sh='',mh='';
+categories.forEach(function(c){
+var ct=templates.filter(function(t){return t.cat===c.id}).length,cl=c.id===activeCategory?'active':'';
+sh+='<button class="nav-item '+cl+'" data-cat="'+c.id+'"><span class="icon">'+c.icon+'</span>'+c.name+'<span class="count">'+ct+'</span></button>';
+mh+='<button class="mob-item '+cl+'" data-cat="'+c.id+'">'+c.icon+' '+c.name+'</button>'
+});
+nav.innerHTML=sh;mn.innerHTML=mh;
+nav.querySelectorAll('.nav-item[data-cat]').forEach(function(b){b.addEventListener('click',function(){switchCategory(b.dataset.cat)})});
+mn.querySelectorAll('.mob-item[data-cat]').forEach(function(b){b.addEventListener('click',function(){switchCategory(b.dataset.cat)})})
+}
+function switchCategory(cid){
+activeCategory=cid;dismissResult();renderSidebar();renderTemplates();
+window.scrollTo({top:0,behavior:'smooth'})
+}
+
+var customState={};
+function openCustomModal(defaults){
+defaults=defaults||{};
+customState={
+title:defaults.title||'',body:defaults.body||'',subtitle:defaults.subtitle||'',
+sound:defaults.sound!==undefined?String(defaults.sound):'default',
+mode:defaults.mode||'normal',url:defaults.url||'',
+useIcon:!!defaults.icon,iconUrl:defaults.icon||'',
+badge:defaults.badge!==undefined?String(defaults.badge):'',
+group:defaults.group||'',thread:defaults.thread||''
+};
+renderCustomModal();
+document.getElementById('customModal').classList.add('show')
+}
+function closeCustomModal(){document.getElementById('customModal').classList.remove('show')}
+
+function selectSound(v){customState.sound=v;renderSoundPicker()}
+function renderSoundPicker(){
+var c=document.getElementById('soundPicker');if(!c)return;
+var h='';
+SOUNDS.forEach(function(s){var sl=customState.sound===s.value?' selected':'';
+h+='<div class="picker-option'+sl+'" onclick="selectSound(\''+s.value+'\')"><div class="opt-main'+sl+'"><div class="opt-label">'+s.label+'</div><div class="opt-desc">'+s.desc+'</div></div><div class="opt-check">'+(sl?'●':'')+'</div></div>'});
+c.innerHTML=h
+}
+function selectMode(v){customState.mode=v;renderModePicker()}
+function renderModePicker(){
+var c=document.getElementById('modePicker');if(!c)return;
+var h='';
+MODES.forEach(function(m){var sl=customState.mode===m.value?' selected':'';
+h+='<div class="mode-option'+sl+'" onclick="selectMode(\''+m.value+'\')"><div class="mode-icon">'+m.icon+'</div><div class="mode-name'+sl+'">'+m.label+'</div><div class="mode-desc">'+m.desc+'</div></div>'});
+c.innerHTML=h
+}
+function selectPage(v){
+customState.url=v;renderPagePicker();
+var row=document.getElementById('customUrlRow');if(row)row.style.display=v==='__custom__'?'':'none'
+}
+function renderPagePicker(){
+var c=document.getElementById('pagePicker');if(!c)return;
+var h='';
+PAGES.forEach(function(p){var sl=customState.url===p.value?' selected':'';
+h+='<div class="picker-option'+sl+'" onclick="selectPage(\''+p.value.replace(/'/g,"\\'")+'\')"><div class="opt-main'+sl+'"><div class="opt-label">'+p.label+'</div><div class="opt-desc">'+p.desc+'</div></div><div class="opt-check">'+(sl?'●':'')+'</div></div>'});
+c.innerHTML=h
+}
+function toggleIconInput(){customState.useIcon=!customState.useIcon;var row=document.getElementById('iconInputRow');if(row)row.style.display=customState.useIcon?'':'none'}
+
+function renderCustomModal(){
+var s=customState,b=document.getElementById('customModalBody');
+b.innerHTML=
+'<div class="form-group"><label><span class="label-icon">📝</span> 标题</label><input class="form-input" id="cf_title" placeholder="通知标题" value="'+escHtml(s.title)+'" oninput="customState.title=this.value"></div>'+
+'<div class="form-group"><label><span class="label-icon">📄</span> 正文</label><textarea class="form-input" id="cf_body" placeholder="通知正文内容" rows="2" oninput="customState.body=this.value">'+escHtml(s.body)+'</textarea></div>'+
+'<div class="form-group"><label><span class="label-icon">🏷️</span> 副标题</label><input class="form-input" id="cf_subtitle" placeholder="可选的副标题" value="'+escHtml(s.subtitle)+'" oninput="customState.subtitle=this.value"></div>'+
+'<div class="picker-group"><div class="picker-label"><span class="label-icon">🔊</span> 铃声</div><div class="picker-container" id="soundPicker"></div></div>'+
+'<div class="picker-group"><div class="picker-label"><span class="label-icon">🎯</span> 打开模式</div><div class="mode-grid" id="modePicker"></div></div>'+
+'<div class="picker-group"><div class="picker-label"><span class="label-icon">🔗</span> 目标页面</div><div class="picker-container" id="pagePicker"></div><div id="customUrlRow" style="display:none;margin-top:8px"><input class="form-input" id="cf_custom_url" placeholder="输入自定义 URL" value="" oninput="customState.url=this.value"></div></div>'+
+'<div class="toggle-row"><span class="toggle-label">附带图标 URL</span><label class="toggle-switch"><input type="checkbox" id="cf_use_icon"'+(s.useIcon?' checked':'')+' onchange="toggleIconInput()"><span class="toggle-slider"></span></label></div>'+
+'<div id="iconInputRow" style="display:'+(s.useIcon?'':'none')+';margin-bottom:16px"><input class="form-input" id="cf_icon_url" placeholder="https://example.com/icon.png" value="'+escHtml(s.iconUrl)+'" oninput="customState.iconUrl=this.value"></div>'+
+'<div class="form-row"><div class="form-group"><label><span class="label-icon">🏷️</span> 角标数字</label><input class="form-input" id="cf_badge" placeholder="留空则不更新" value="'+escHtml(s.badge)+'" oninput="customState.badge=this.value"></div><div class="form-group"><label><span class="label-icon">📁</span> 分组 ID</label><input class="form-input" id="cf_group" placeholder="可选分组标识" value="'+escHtml(s.group)+'" oninput="customState.group=this.value"></div></div>'+
+'<div class="form-group"><label><span class="label-icon">🧵</span> 线程 ID</label><input class="form-input" id="cf_thread" placeholder="可选线程标识" value="'+escHtml(s.thread)+'" oninput="customState.thread=this.value"></div>';
+renderSoundPicker();renderModePicker();renderPagePicker()
+}
+
+function submitCustomModal(){
+var payload={};
+var titleV=document.getElementById('cf_title').value.trim();
+if(titleV)payload.title=titleV;
+var bodyV=document.getElementById('cf_body').value.trim();
+if(bodyV)payload.body=bodyV;
+var subV=document.getElementById('cf_subtitle').value.trim();
+if(subV)payload.subtitle=subV;
+if(customState.sound&&customState.sound!=='default')payload.sound=customState.sound;
+else if(customState.sound==='default')payload.sound='default';
+if(customState.mode&&customState.mode!=='normal')payload.mode=customState.mode;
+if(customState.url&&customState.url!=='__custom__')payload.url=customState.url;
+var cu=document.getElementById('cf_custom_url');
+if(cu&&cu.value.trim())payload.url=cu.value.trim();
+if(customState.useIcon){var iv=document.getElementById('cf_icon_url');if(iv&&iv.value.trim())payload.icon=iv.value.trim()}
+var bgV=document.getElementById('cf_badge').value.trim();
+if(bgV)payload.badge=Number(bgV);
+var gpV=document.getElementById('cf_group').value.trim();
+if(gpV)payload.group=gpV;
+var thV=document.getElementById('cf_thread').value.trim();
+if(thV)payload.thread=thV;
+sendPush(payload);
+closeCustomModal()
+}
+
+document.getElementById('customModal').addEventListener('click',function(e){if(e.target===e.currentTarget)closeCustomModal()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeCustomModal()});
+
+renderSidebar();renderTemplates();checkStatus();setInterval(checkStatus,5000);
+</script>
+</body>
+</html>

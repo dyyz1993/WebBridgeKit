@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebBridgeKit 管理后台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--text2:#86868b;--primary:#0071e3;--primary-h:#0077ed;--success:#34c759;--warn:#ff9f0a;--error:#ff3b30;--border:#d2d2d7;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+.header{background:rgba(255,255,255,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100}
+.header-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px}
+.logo{font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px}
+.logo span{color:var(--primary)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block}
+.status-dot.off{background:var(--error)}
+.container{max-width:960px;margin:0 auto;padding:20px}
+.tabs{display:flex;gap:4px;background:var(--card);border-radius:var(--radius);padding:4px;box-shadow:var(--shadow);margin-bottom:20px;overflow-x:auto}
+.tab{flex:1;min-width:0;padding:8px 12px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .2s;white-space:nowrap}
+.tab:hover{background:var(--bg)}
+.tab.active{background:var(--primary);color:#fff}
+.panel{display:none}
+.panel.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card-label{font-size:13px;color:var(--text2);margin-bottom:4px}
+.card-value{font-size:28px;font-weight:700}
+.card-value.green{color:var(--success)}
+.card-value.blue{color:var(--primary)}
+.card-value.orange{color:var(--warn)}
+.section{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.section h3{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:4px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;transition:border .2s;background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)}
+textarea{resize:vertical;min-height:80px}
+.row{display:flex;gap:12px}
+.row>*{flex:1}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-h)}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--error);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px}
+.result-box{background:#f5f5f7;border-radius:8px;padding:14px;margin-top:12px;font-family:'SF Mono',Menlo,monospace;font-size:12px;word-break:break-all;position:relative}
+.result-box .copy-btn{position:absolute;top:8px;right:8px;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer}
+.result-box .copy-btn:hover{background:var(--primary-h)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--bg);color:var(--text2);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+td{padding:10px 12px;border-bottom:1px solid var(--bg)}
+tr:hover td{background:var(--bg)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.tag-blue{background:#e3f2fd;color:#1565c0}
+.tag-green{background:#e8f5e9;color:#2e7d32}
+.tag-orange{background:#fff3e0;color:#e65100}
+.tag-purple{background:#f3e5f5;color:#7b1fa2}
+.empty{text-align:center;padding:40px;color:var(--text2);font-size:14px}
+.api-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bg)}
+.api-item:last-child{border:none}
+.api-method{font-weight:600;font-size:12px;min-width:50px}
+.api-method.get{color:#2e7d32}
+.api-method.post{color:#1565c0}
+.api-path{font-family:'SF Mono',Menlo,monospace;font-size:12px;flex:1;margin:0 12px}
+.api-desc{color:var(--text2);font-size:12px}
+code{background:#f0f0f0;padding:2px 6px;border-radius:4px;font-size:12px;font-family:'SF Mono',Menlo,monospace}
+.toast{position:fixed;top:20px;right:20px;background:#1d1d1f;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transform:translateY(-10px);transition:all .3s}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:600px){
+.tabs{flex-wrap:nowrap;overflow-x:auto}
+.tab{font-size:12px;padding:8px 8px}
+.row{flex-direction:column}
+.cards{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="header"><div class="header-inner"><div class="logo"><span class="status-dot" id="statusDot"></span> WebBridge<span>Kit</span></div><div style="font-size:13px;color:var(--text2)" id="uptimeText">--</div></div></div>
+<div class="container">
+<div class="tabs" id="tabs">
+<button class="tab active" data-tab="dashboard">&#x1F4CA; 仪表盘</button>
+<button class="tab" data-tab="commands">&#x1F517; 口令管理</button>
+<button class="tab" data-tab="push">&#x1F514; 推送管理</button>
+<button class="tab" data-tab="manifests">&#x1F4E6; 应用清单</button>
+<button class="tab" data-tab="settings">&#x2699;&#xFE0F; 设置</button>
+</div>
+
+<div class="panel active" id="panel-dashboard">
+<div class="cards">
+<div class="card"><div class="card-label">已注册设备</div><div class="card-value green" id="statDevices">0</div></div>
+<div class="card"><div class="card-label">已生成口令</div><div class="card-value blue" id="statCommands">0</div></div>
+<div class="card"><div class="card-label">应用清单</div><div class="card-value orange" id="statManifests">0</div></div>
+<div class="card"><div class="card-label">推送记录</div><div class="card-value" id="statPush">0</div></div>
+</div>
+<div class="section">
+<h3>&#x1F4BE; 服务器状态</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px">
+<div><span style="color:var(--text2)">启动时间：</span><span id="serverStart">--</span></div>
+<div><span style="color:var(--text2)">运行时长：</span><span id="serverUptime">--</span></div>
+<div><span style="color:var(--text2)">当前时间：</span><span id="serverNow">--</span></div>
+<div><span style="color:var(--text2)">健康状态：</span><span id="serverHealth" style="color:var(--success)">检查中...</span></div>
+</div>
+</div>
+</div>
+
+<div class="panel" id="panel-commands">
+<div class="section">
+<h3>&#x2728; 生成口令</h3>
+<div class="row">
+<div class="form-group"><label>口令类型</label><select id="cmdType"><option value="urlScheme">URL Scheme</option><option value="base64">Base64</option><option value="plainText">纯文本</option><option value="json">JSON</option></select></div>
+<div class="form-group"><label>TTL (秒, 可选)</label><input type="number" id="cmdTtl" placeholder="留空则永不过期"></div>
+</div>
+<div class="form-group"><label>数据内容</label><textarea id="cmdData" placeholder="输入 URL 或文本内容..."></textarea></div>
+<button class="btn btn-primary" onclick="generateCommand()">&#x1F680; 生成口令</button>
+<div id="cmdResult" style="display:none">
+<div class="result-box"><strong>Token:</strong><br><span id="cmdToken"></span><button class="copy-btn" onclick="copyText('cmdToken')">&#x1F4CB; 复制</button></div>
+<div class="result-box"><strong>URL:</strong><br><span id="cmdUrl"></span><button class="copy-btn" onclick="copyText('cmdUrl')">&#x1F4CB; 复制</button></div>
+<div class="result-box"><strong>签名:</strong><br><span id="cmdSig"></span><button class="copy-btn" onclick="copyText('cmdSig')">&#x1F4CB; 复制</button></div>
+</div>
+</div>
+<div class="section">
+<h3>&#x1F4CB; 已生成的口令</h3>
+<div id="commandsList"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-push">
+<div class="section">
+<h3>&#x1F4E4; 发送推送</h3>
+<div class="row">
+<div class="form-group"><label>设备 Key</label><select id="pushDevice"><option value="">选择设备...</option></select></div>
+<div class="form-group"><label>声音</label><input type="text" id="pushSound" placeholder="例如: alarm"></div>
+</div>
+<div class="row">
+<div class="form-group"><label>标题</label><input type="text" id="pushTitle" placeholder="推送标题"></div>
+<div class="form-group"><label>角标数</label><input type="number" id="pushBadge" placeholder="0"></div>
+</div>
+<div class="form-group"><label>内容</label><textarea id="pushBody" placeholder="推送正文..."></textarea></div>
+<div class="row">
+<div class="form-group"><label>分组</label><input type="text" id="pushGroup" placeholder="可选"></div>
+<div class="form-group"><label>跳转 URL</label><input type="text" id="pushUrl" placeholder="可选"></div>
+</div>
+<button class="btn btn-primary" onclick="sendPush()">&#x1F4E4; 发送推送</button>
+</div>
+<div class="section">
+<h3>&#x1F4DC; 推送历史</h3>
+<div id="pushHistoryList"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-manifests">
+<div class="section">
+<h3>&#x1F4E4; 上传清单</h3>
+<div class="row">
+<div class="form-group"><label>应用 ID</label><input type="text" id="mfAppId" placeholder="com.example.app"></div>
+<div class="form-group"><label>版本</label><input type="text" id="mfVersion" placeholder="1.0.0"></div>
+</div>
+<div class="form-group"><label>资源列表 (JSON)</label><textarea id="mfResources" placeholder='[{"path":"index.html","url":"https://...","hash":"abc","size":1024}]'></textarea></div>
+<button class="btn btn-primary" onclick="uploadManifest()">&#x1F4E4; 上传清单</button>
+</div>
+<div class="section">
+<h3>&#x1F4C1; 清单列表</h3>
+<div id="manifestsList"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-settings">
+<div class="section">
+<h3>&#x1F310; API 端点列表</h3>
+<div id="apiList">
+<div class="api-item"><span class="api-method get">GET</span><span class="api-path">/health</span><span class="api-desc">健康检查</span></div>
+<div class="api-item"><span class="api-method post">POST</span><span class="api-path">/register</span><span class="api-desc">注册设备</span></div>
+<div class="api-item"><span class="api-method post">POST</span><span class="api-path">/push</span><span class="api-desc">发送推送</span></div>
+<div class="api-item"><span class="api-method get">GET</span><span class="api-path">/:key/:title/:body</span><span class="api-desc">Bark 兼容推送</span></div>
+<div class="api-item"><span class="api-method post">POST</span><span class="api-path">/api/v1/commands</span><span class="api-desc">生成口令</span></div>
+<div class="api-item"><span class="api-method get">GET</span><span class="api-path">/api/v1/commands/:id</span><span class="api-desc">查询口令</span></div>
+<div class="api-item"><span class="api-method post">POST</span><span class="api-path">/api/v1/commands/:id/share</span><span class="api-desc">分享口令</span></div>
+<div class="api-item"><span class="api-method get">GET</span><span class="api-path">/api/v1/manifests</span><span class="api-desc">清单列表</span></div>
+<div class="api-item"><span class="api-method get">GET</span><span class="api-path">/api/v1/manifests/:appId</span><span class="api-desc">获取清单</span></div>
+<div class="api-item"><span class="api-method post">POST</span><span class="api-path">/api/v1/manifests</span><span class="api-desc">上传清单</span></div>
+<div class="api-item"><span class="api-method get">GET</span><span class="api-path">/api/v1/manifests/:appId/version</span><span class="api-desc">获取版本</span></div>
+</div>
+</div>
+<div class="section">
+<h3>&#x1F4F1; App 配置指南</h3>
+<p style="color:var(--text2);font-size:14px;line-height:1.8">
+在 WebBridgeKit App 中设置服务器地址为：<br><br>
+<code id="serverAddr">http://&lt;服务器IP&gt;:8765</code><br><br>
+将上方的地址填入 App 的「服务器配置」页面即可。服务器将自动处理推送、口令和清单请求。<br><br>
+<b>Bark 兼容说明：</b>本服务器兼容 Bark 推送协议，可直接将 Bark 客户端的服务器地址指向此服务器。
+</p>
+</div>
+<div class="section">
+<h3>&#x1F4CB; Curl 示例</h3>
+<div class="result-box"><strong>健康检查：</strong><br>curl http://localhost:8765/health</div>
+<div class="result-box"><strong>发送推送：</strong><br>curl -X POST http://localhost:8765/push \<br>&nbsp;&nbsp;-H "Content-Type: application/json" \<br>&nbsp;&nbsp;-d '{"device_key":"YOUR_KEY","title":"测试","body":"Hello"}'</div>
+<div class="result-box"><strong>生成口令：</strong><br>curl -X POST http://localhost:8765/api/v1/commands \<br>&nbsp;&nbsp;-H "Content-Type: application/json" \<br>&nbsp;&nbsp;-d '{"type":"urlScheme","data":"myapp://action"}'</div>
+<div class="result-box"><strong>Bark 兼容：</strong><br>curl "http://localhost:8765/YOUR_KEY/标题/内容"</div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function copyText(elId) {
+  const text = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(text).then(() => toast('已复制到剪贴板'));
+}
+
+async function api(path, opts = {}) {
+  try {
+    const r = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    return await r.json();
+  } catch (e) {
+    toast('请求失败: ' + e.message);
+    return null;
+  }
+}
+
+function formatTime(ts) {
+  if (!ts) return '--';
+  const d = new Date(ts);
+  return d.toLocaleString('zh-CN');
+}
+
+function formatUptime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h > 0 ? `${h}小时${m}分钟` : `${m}分钟`;
+}
+
+function typeTag(t) {
+  const m = { urlScheme: 'blue', base64: 'purple', plainText: 'green', json: 'orange' };
+  return `<span class="tag tag-${m[t] || 'blue'}">${t}</span>`;
+}
+
+async function refreshDashboard() {
+  const [stats, health] = await Promise.all([api('/admin/api/stats'), api('/health')]);
+  if (!stats) return;
+  $('#statDevices').textContent = stats.devices;
+  $('#statCommands').textContent = stats.commands;
+  $('#statManifests').textContent = stats.manifests;
+  $('#statPush').textContent = (stats.commands * 0 + pushCount);
+  $('#serverStart').textContent = formatTime(stats.startTime);
+  $('#serverUptime').textContent = formatUptime(stats.uptime);
+  $('#serverNow').textContent = new Date().toLocaleString('zh-CN');
+  const dot = $('#statusDot');
+  dot.className = health ? 'status-dot' : 'status-dot off';
+  $('#serverHealth').textContent = health ? '正常运行' : '连接失败';
+  $('#serverHealth').style.color = health ? 'var(--success)' : 'var(--error)';
+  $('#uptimeText').textContent = '运行 ' + formatUptime(stats.uptime);
+}
+
+let pushCount = 0;
+
+async function refreshDevices() {
+  const devs = await api('/admin/api/devices');
+  if (!devs) return;
+  const sel = $('#pushDevice');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">选择设备...</option>';
+  devs.forEach(d => {
+    sel.innerHTML += `<option value="${d.key}">${d.key} (${d.platform})</option>`;
+  });
+  sel.value = val;
+}
+
+async function refreshCommands() {
+  const cmds = await api('/admin/api/commands');
+  if (!cmds) return;
+  const el = $('#commandsList');
+  if (!cmds.length) { el.innerHTML = '<div class="empty">暂无口令</div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>类型</th><th>数据</th><th>创建时间</th><th>分享次数</th><th>操作</th></tr></thead><tbody>' +
+    cmds.reverse().map(c => `<tr><td>${typeTag(c.type)}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.data)}</td><td>${formatTime(c.createdAt)}</td><td>${c.shareCount}</td><td><button class="btn btn-sm btn-primary" onclick="shareCommand('${c.id}')">分享</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+async function refreshManifests() {
+  const mfs = await api('/admin/api/manifests');
+  if (!mfs) return;
+  const el = $('#manifestsList');
+  if (!mfs.length) { el.innerHTML = '<div class="empty">暂无清单</div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>应用 ID</th><th>版本</th><th>构建号</th><th>资源数</th><th>更新时间</th><th>操作</th></tr></thead><tbody>' +
+    mfs.map(m => `<tr><td><code>${esc(m.appId)}</code></td><td>${esc(m.version)}</td><td>${m.buildNumber}</td><td>${(m.resources||[]).length}</td><td>${formatTime(m.updatedAt)}</td><td><button class="btn btn-sm btn-danger" onclick="deleteManifest('${esc(m.appId)}')">删除</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+async function refreshPushHistory() {
+  const hist = await api('/admin/api/push-history');
+  if (!hist) return;
+  pushCount = hist.length;
+  const el = $('#pushHistoryList');
+  if (!hist.length) { el.innerHTML = '<div class="empty">暂无推送记录</div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>标题</th><th>内容</th><th>设备</th><th>时间</th><th>状态</th></tr></thead><tbody>' +
+    hist.map(p => `<tr><td>${esc(p.title)}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.body)}</td><td><code>${esc(p.deviceKey)}</code></td><td>${formatTime(p.timestamp)}</td><td>${p.deviceExists ? '<span style="color:var(--success)">已送达</span>' : '<span style="color:var(--warn)">未注册</span>'}</td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+async function generateCommand() {
+  const type = $('#cmdType').value;
+  const data = $('#cmdData').value.trim();
+  const ttl = $('#cmdTtl').value ? parseInt($('#cmdTtl').value) : undefined;
+  if (!data) { toast('请输入数据内容'); return; }
+  const r = await api('/api/v1/commands', { method: 'POST', body: JSON.stringify({ type, data, ttlSeconds: ttl }) });
+  if (!r || r.error) { toast(r?.error || '生成失败'); return; }
+  $('#cmdResult').style.display = 'block';
+  $('#cmdToken').textContent = r.token;
+  $('#cmdUrl').textContent = r.url;
+  $('#cmdSig').textContent = r.signature;
+  toast('口令已生成');
+  refreshCommands();
+}
+
+async function shareCommand(id) {
+  const r = await api(`/api/v1/commands/${id}/share`, { method: 'POST' });
+  if (r && !r.error) { toast('已分享 ' + r.shareCount + ' 次'); refreshCommands(); }
+}
+
+async function sendPush() {
+  const key = $('#pushDevice').value;
+  const title = $('#pushTitle').value.trim();
+  const body = $('#pushBody').value.trim();
+  if (!key || !title) { toast('请选择设备并填写标题'); return; }
+  const r = await api('/push', { method: 'POST', body: JSON.stringify({
+    device_key: key, title, body,
+    sound: $('#pushSound').value, badge: parseInt($('#pushBadge').value) || 0,
+    group: $('#pushGroup').value, url: $('#pushUrl').value
+  }) });
+  if (r && !r.error) { toast('推送已发送'); refreshPushHistory(); }
+  else toast(r?.error || '推送失败');
+}
+
+async function uploadManifest() {
+  const appId = $('#mfAppId').value.trim();
+  const version = $('#mfVersion').value.trim();
+  if (!appId) { toast('请输入应用 ID'); return; }
+  let resources = [];
+  try { resources = JSON.parse($('#mfResources').value || '[]'); } catch { toast('资源 JSON 格式错误'); return; }
+  const r = await api('/api/v1/manifests', { method: 'POST', body: JSON.stringify({ appId, version: version || '1.0.0', resources }) });
+  if (r && !r.error) { toast('清单已上传'); refreshManifests(); }
+  else toast(r?.error || '上传失败');
+}
+
+async function deleteManifest(appId) {
+  if (!confirm('确定删除清单 ' + appId + '？')) return;
+  const r = await api(`/api/v1/manifests/${encodeURIComponent(appId)}`, { method: 'DELETE' });
+  if (r && !r.error) { toast('已删除'); refreshManifests(); }
+}
+
+$$('.tab').forEach(t => t.addEventListener('click', () => {
+  $$('.tab').forEach(x => x.classList.remove('active'));
+  $$('.panel').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  $(`#panel-${t.dataset.tab}`).classList.add('active');
+  const tab = t.dataset.tab;
+  if (tab === 'dashboard') refreshDashboard();
+  if (tab === 'commands') { refreshCommands(); refreshDevices(); }
+  if (tab === 'push') { refreshPushHistory(); refreshDevices(); }
+  if (tab === 'manifests') refreshManifests();
+}));
+
+refreshDashboard();
+setInterval(refreshDashboard, 10000);
+$('#serverAddr').textContent = location.origin;
+</script>
+</body>
+</html>
