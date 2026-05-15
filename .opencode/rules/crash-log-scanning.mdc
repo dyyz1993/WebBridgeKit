@@ -1,0 +1,104 @@
+---
+description: 崩溃日志扫描与诊断流程。当用户说"扫日志"、"看崩溃"、"app闪退了"、"强杀了"时触发。覆盖 CrashLogManager 崩溃捕获 + scan-crash-logs.sh 扫描脚本 + AGENTS.md 崩溃分析记录。
+globs:
+  - "Sources/Infrastructure/Logging/CrashLogManager.swift"
+  - "scripts/scan-crash-logs.sh"
+  - "AGENTS.md"
+---
+
+# 崩溃日志扫描与诊断
+
+## 触发条件
+
+当用户提到以下关键词时，执行崩溃扫描流程：
+- "扫一下日志"、"看下崩溃"、"扫日志"
+- "闪退了"、"强杀了"、"crash了"
+- "内存溢出"、"OOM"、"被系统杀了"
+- "点了xxx就崩了"、"操作xxx会crash"
+
+## 崩溃捕获机制
+
+项目内置 `CrashLogManager`（`Sources/Infrastructure/Logging/CrashLogManager.swift`），在 App 启动时自动初始化：
+- **NSSetUncaughtExceptionHandler** — 捕获 Swift/ObjC 未处理异常
+- **Signal Handlers** (SIGABRT, SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGTRAP) — 捕获致命信号
+- 崩溃信息持久化到 App Sandbox 的 `Documents/crash_logs/*.json`
+- 每条记录包含：类型、时间、名称、原因、调用栈、App版本、设备型号、内存占用、会话ID
+
+## 扫描流程
+
+### Step 1: 确认环境
+
+```bash
+# 确保 simulator 存在且 app 已安装
+xcrun simctl list devices booted | head -3
+xcrun simctl get_app_container booted com.webbridgekit.superapp app 2>/dev/null
+```
+
+### Step 2: 运行扫描脚本
+
+```bash
+bash scripts/scan-crash-logs.sh
+```
+
+脚本扫描 4 个来源：
+
+| 来源 | 路径 | 内容 |
+|------|------|------|
+| App 崩溃日志 | Simulator Documents/crash_logs/*.json | CrashLogManager 捕获的异常/signal 崩溃 |
+| 系统诊断报告 | ~/Library/Logs/DiagnosticReports/SuperApp*.ips | macOS 系统级崩溃报告 |
+| 系统日志 | simctl log show (最近 1h) | os_log error + crash/terminated/OOM 关键词 |
+| 内存事件 | simctl log show (最近 1h) | memory/OOM/jetsam 事件 |
+
+### Step 3: 分析崩溃
+
+根据崩溃类型定位源码：
+
+| 崩溃类型 | 常见原因 | 排查方向 |
+|----------|----------|----------|
+| SIGABRT | Assert 失败、强制解包 nil、Realm 迁移失败 | 查调用栈中的 `fatalError`/`!`/`try!` |
+| SIGSEGV/SIGBUS | 野指针、访问已释放内存 | 查 weak/unowned 引用、delegate 是否正确 |
+| SIGTRAP | Swift runtime trap（越界、nil 解包） | 查 array subscript、force unwrap |
+| exception | 未捕获的 NSException | 查 NSRangeException、KVC 等 |
+| OOM/Jetsam | 内存泄漏、大图片/缓存未释放 | 查 ResourceCache、Image 缓存、WebView 未释放 |
+
+### Step 4: 记录到 AGENTS.md
+
+在 `AGENTS.md` 的 `## Crash Analysis` 章节追加记录，格式：
+
+```markdown
+| 日期 | 类型 | 原因 | 定位 | 修复 |
+|------|------|------|------|------|
+| 2026-05-14 | SIGABRT | Realm schema migration 失败 | CacheEntryRealm.swift:45 | PR #123 |
+```
+
+### Step 5: 清理（可选）
+
+```bash
+bash scripts/scan-crash-logs.sh --fix   # 交互式清理崩溃日志
+```
+
+## 崩溃文件路径速查
+
+需要手动查看崩溃文件时：
+
+```bash
+# App 沙盒崩溃日志
+APP_DATA=$(xcrun simctl get_app_container booted com.webbridgekit.superapp data)
+ls "$APP_DATA/Documents/crash_logs/"
+
+# 查看具体崩溃
+cat "$APP_DATA/Documents/crash_logs/crash_xxxxxxxx.json" | python3 -m json.tool
+
+# 系统诊断报告
+ls ~/Library/Logs/DiagnosticReports/SuperApp*
+
+# 实时查看 app 日志
+xcrun simctl spawn booted log stream --predicate 'subsystem == "com.webbridgekit"' --level debug
+```
+
+## 自动化 JSON 输出
+
+```bash
+bash scripts/scan-crash-logs.sh --json
+# 输出: {"diagnostic_reports": 0, "app_crash_logs": 2, "total": 2}
+```
