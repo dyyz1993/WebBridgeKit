@@ -7,7 +7,7 @@ import Foundation
 import UserNotifications
 import WebBridgeKit
 
-struct PushPayload {
+struct SSEPushPayload {
     let title: String
     let body: String
     let subtitle: String?
@@ -129,14 +129,14 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
                   let type = json["type"] as? String else { continue }
             if type == "connected" { print("[PushRelay] SSE connected"); continue }
             guard type == "push", let pushData = json["data"] as? [String: Any] else { continue }
-            let payload = PushPayload(data: pushData)
+            let payload = SSEPushPayload(data: pushData)
             showLocalNotification(payload)
         }
     }
 
     // MARK: - Notification Delivery
 
-    private func showLocalNotification(_ p: PushPayload) {
+    private func showLocalNotification(_ p: SSEPushPayload) {
         let content = UNMutableNotificationContent()
         content.title = p.title
 
