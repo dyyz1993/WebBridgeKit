@@ -39,7 +39,7 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let tokenPill: UIView = {
         let v = UIView()
-        v.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
+        v.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
         v.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         v.clipsToBounds = true
         return v
@@ -48,7 +48,7 @@ class PushTokenCardCell: UICollectionViewCell {
     private let keyIcon: UIImageView = {
         let iv = UIImageView()
         iv.image = LucideIcon.key.image(pointSize: 12, weight: .medium)
-        iv.tintColor = ThemeColors.current.primary
+        iv.tintColor = ThemeTokens.Color.primary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -56,7 +56,7 @@ class PushTokenCardCell: UICollectionViewCell {
     private let tokenLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .medium)
-        label.textColor = ThemeColors.current.primary
+        label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -66,7 +66,7 @@ class PushTokenCardCell: UICollectionViewCell {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("common.copy"), for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.footnote
-        button.setTitleColor(ThemeColors.current.primary, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         return button
     }()
 
@@ -75,7 +75,7 @@ class PushTokenCardCell: UICollectionViewCell {
         button.setTitle(L10n.tr("home.token_card.register"), for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.footnote
         button.setTitleColor(ThemeTokens.Color.background, for: .normal)
-        button.backgroundColor = ThemeColors.current.primary
+        button.backgroundColor = ThemeTokens.Color.primary
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         button.isHidden = true
@@ -169,7 +169,7 @@ class PushTokenCardCell: UICollectionViewCell {
             } else {
                 tokenLabel.text = deviceToken
             }
-            tokenLabel.textColor = ThemeColors.current.primary
+            tokenLabel.textColor = ThemeTokens.Color.primary
             copyButton.isHidden = false
             registerButton.isHidden = true
         } else {
@@ -221,7 +221,7 @@ class QuickActionCell: UICollectionViewCell {
     private func setupUI() {
         contentView.addSubview(stackView)
         stackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 12, bottom: 2, right: 12))
         }
     }
 
@@ -238,17 +238,16 @@ class QuickActionCell: UICollectionViewCell {
 
     private func createActionCard(icon: LucideIcon, title: String) -> UIView {
         let card = UIView()
-        card.backgroundColor = ThemeColors.current.cardBackground
-        card.layer.cornerRadius = ThemeTokens.CornerRadius.lg
-        let shadow = ThemeTokens.Shadows.Card
-        card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
-        card.layer.shadowRadius = shadow.radius
-        card.layer.shadowOpacity = Float(shadow.opacity)
+        card.backgroundColor = .clear
+
+        let iconContainer = UIView()
+        iconContainer.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        iconContainer.layer.cornerRadius = 24
+        iconContainer.clipsToBounds = true
 
         let iconView = UIImageView()
-        iconView.image = icon.templateImage(pointSize: 22, weight: .medium)
-        iconView.tintColor = ThemeColors.current.primary
+        iconView.image = icon.templateImage(pointSize: 14, weight: .medium)
+        iconView.tintColor = ThemeTokens.Color.primary
         iconView.contentMode = .scaleAspectFit
 
         let titleLabel = UILabel()
@@ -257,24 +256,26 @@ class QuickActionCell: UICollectionViewCell {
         titleLabel.textColor = ThemeTokens.Color.textSecondary
         titleLabel.textAlignment = .center
         titleLabel.adjustsFontSizeToFitWidth = true
-        titleLabel.minimumScaleFactor = 0.7
-        titleLabel.numberOfLines = 2
+        titleLabel.minimumScaleFactor = 0.8
+        titleLabel.numberOfLines = 1
 
-        card.addSubview(iconView)
+        card.addSubview(iconContainer)
+        iconContainer.addSubview(iconView)
         card.addSubview(titleLabel)
 
+        iconContainer.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(40)
+        }
         iconView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(14)
-            make.centerX.equalToSuperview()
-            make.width.height.equalTo(22)
+            make.center.equalToSuperview()
+            make.width.height.equalTo(14)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(iconView.snp.bottom).offset(8)
-            make.centerX.equalToSuperview()
-            make.bottom.lessThanOrEqualToSuperview().offset(-6)
-            make.leading.greaterThanOrEqualToSuperview().offset(4)
-            make.trailing.lessThanOrEqualToSuperview().offset(-4)
+            make.top.equalTo(iconContainer.snp.bottom).offset(4)
+            make.leading.trailing.equalToSuperview().inset(6)
+            make.bottom.lessThanOrEqualToSuperview().offset(-4)
         }
 
         return card
@@ -319,7 +320,7 @@ class CommandBannerView: UIView {
     private let iconView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = ThemeColors.current.primary
+        iv.tintColor = ThemeTokens.Color.primary
         iv.image = LucideIcon.shield.image(pointSize: 15, weight: .semibold)
         return iv
     }()
@@ -327,7 +328,7 @@ class CommandBannerView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.primary
+        label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -350,7 +351,7 @@ class CommandBannerView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
+        backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
         layer.cornerRadius = ThemeTokens.CornerRadius.md
         clipsToBounds = true
 

@@ -73,7 +73,7 @@ struct TestDataSeeder {
                 let prodConfig = ServerConfig()
                 prodConfig.id = "prod-server"
                 prodConfig.serverType = "custom"
-                prodConfig.baseURL = "https://api.webbridgekit.com"
+                prodConfig.baseURL = "https://wbk.shanbox.19930810.xyz:8443"
                 prodConfig.apiEndpoint = "/v1/push"
                 prodConfig.isActive = true
                 prodConfig.updatedAt = date("2026-05-09T12:00:00Z")
@@ -82,7 +82,7 @@ struct TestDataSeeder {
                 let barkConfig = ServerConfig()
                 barkConfig.id = "bark-server"
                 barkConfig.serverType = "custom"
-                barkConfig.baseURL = "https://api.day.app"
+                barkConfig.baseURL = "https://wbk.shanbox.19930810.xyz:8443"
                 barkConfig.apiEndpoint = nil
                 barkConfig.isActive = true
                 barkConfig.updatedAt = date("2026-05-09T12:00:00Z")
@@ -91,7 +91,7 @@ struct TestDataSeeder {
                 let inactiveConfig = ServerConfig()
                 inactiveConfig.id = "inactive-custom-014"
                 inactiveConfig.serverType = "custom"
-                inactiveConfig.baseURL = "https://staging.internal.corp"
+                inactiveConfig.baseURL = "https://wbk.shanbox.19930810.xyz:8443"
                 inactiveConfig.apiEndpoint = "/v1/push"
                 inactiveConfig.isActive = false
                 inactiveConfig.updatedAt = date("2026-04-20T08:00:00Z")
@@ -123,7 +123,7 @@ struct TestDataSeeder {
             try realm.write {
                 let perm = AccessToken()
                 perm.id = "token-perm-001"
-                perm.url = "https://api.webbridgekit.com"
+                perm.url = "https://wbk.shanbox.19930810.xyz:8443"
                 perm.token = "ABC123XYZ"
                 perm.title = "我的永久口令"
                 perm.validDuration = -1
@@ -156,7 +156,7 @@ struct TestDataSeeder {
 
                 let week = AccessToken()
                 week.id = "token-7day-004"
-                week.url = "https://api.webbridgekit.com"
+                week.url = "https://wbk.shanbox.19930810.xyz:8443"
                 week.token = "WeekTokn"
                 week.title = "周卡口令"
                 week.validDuration = 604800
@@ -188,6 +188,8 @@ struct TestDataSeeder {
 
     // MARK: - Favorites
 
+    private static let baseURL = "https://wbk.shanbox.19930810.xyz:8443"
+
     private static func seedFavorites() {
         let fk = "TestDataSeeder_Favorites_Sealed"
         do {
@@ -195,22 +197,24 @@ struct TestDataSeeder {
             print("[TestDataSeeder] Favorites Realm config: \(config.fileURL?.path ?? "nil") schemaVersion=\(config.schemaVersion)")
 
             let realm = try Realm(configuration: config)
-            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-weather-001") != nil {
+            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-e2e-001") != nil {
                 UserDefaults.standard.set(true, forKey: fk)
                 return
             }
             if UserDefaults.standard.bool(forKey: fk) && !realm.objects(URLFavorite.self).isEmpty { return }
 
             try realm.write {
-                let favs: [(id: String, url: String, title: String, pinned: Bool, order: Int, cache: Bool, date: String)] = [
-                    ("fav-weather-001", "https://weather.com/beijing", "北京天气", true, 0, true, "2026-05-08T08:00:00Z"),
-                    ("fav-shop-002", "https://m.shop.example.com", "优购商城", true, 1, true, "2026-05-06T10:00:00Z"),
-                    ("fav-notes-003", "https://notes.md/editor", "轻笔记", true, 2, true, "2026-05-05T09:00:00Z"),
-                    ("fav-admin-004", "https://admin.example.com/dashboard", "管理后台", true, 3, true, "2026-05-04T12:00:00Z"),
-                    ("fav-news-005", "https://news.daily/feed", "每日新闻", false, 10, false, "2026-05-07T14:00:00Z"),
-                    ("fav-dashboard-006", "https://dashboard.example.com", "数据面板", false, 11, true, "2026-05-03T08:00:00Z"),
-                    ("fav-docs-007", "https://docs.swift.org/getting-started", "Swift 入门", false, 12, true, "2026-04-28T10:00:00Z"),
-                    ("fav-local-008", "http://localhost:8080/health", "本地服务", false, 13, false, "2026-05-09T08:00:00Z")
+                let favs: [(id: String, url: String, title: String, pinned: Bool, order: Int, cache: Bool, cacheType: String, date: String)] = [
+                    ("fav-e2e-001", baseURL + "/test_resources/e2e-test.html", "E2E 测试", true, 0, true, "offline", "2026-05-13T08:00:00Z"),
+                    ("fav-dashboard-002", baseURL + "/test_resources/engine-dashboard.html", "引擎总览", true, 1, true, "offline", "2026-05-13T09:00:00Z"),
+                    ("fav-cache-003", baseURL + "/test_resources/cache-showcase.html", "缓存引擎", true, 2, true, "smart", "2026-05-13T10:00:00Z"),
+                    ("fav-msg-004", baseURL + "/test_resources/message-showcase.html", "消息引擎", true, 3, true, "smart", "2026-05-13T11:00:00Z"),
+                    ("fav-ws-005", baseURL + "/test_resources/websocket-showcase.html", "WebSocket", false, 4, true, "smart", "2026-05-13T12:00:00Z"),
+                    ("fav-bridge-006", baseURL + "/test_resources/bridge-hub.html", "Bridge 测试", false, 5, false, "live", "2026-05-13T13:00:00Z"),
+                    ("fav-admin-007", baseURL + "/admin", "管理后台", false, 6, false, "live", "2026-05-13T14:00:00Z"),
+                    ("fav-health-008", baseURL + "/health", "健康检查", false, 7, false, "live", "2026-05-13T15:00:00Z"),
+                    ("fav-dev-009", "http://192.168.0.4:5173", "Dev Server", false, 8, false, "live", "2026-05-14T00:00:00Z"),
+                    ("fav-tester-010", baseURL + "/test_resources/all-in-one-tester.html", "综合测试", true, 9, true, "offline", "2026-05-14T02:00:00Z")
                 ]
 
                 for f in favs {
@@ -221,12 +225,30 @@ struct TestDataSeeder {
                     fav.isPinned = f.pinned
                     fav.sortOrder = f.order
                     fav.enableCacheMode = f.cache
+                    fav.cacheType = f.cacheType
                     fav.createdAt = date(f.date)
                     realm.add(fav)
                 }
             }
             UserDefaults.standard.set(true, forKey: fk)
-            print("[TestDataSeeder] 收藏夹: 8 条 (total in realm: \(realm.objects(URLFavorite.self).count))")
+            print("[TestDataSeeder] 收藏夹: 9 条 (total in realm: \(realm.objects(URLFavorite.self).count))")
+
+            // 增量添加：192.168.0.4:5173 开发服务器(已存在种子数据时单独补充)
+            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-dev-009") == nil {
+                try realm.write {
+                    let fav = URLFavorite()
+                    fav.id = "fav-dev-009"
+                    fav.url = "http://192.168.0.4:5173"
+                    fav.title = "Dev Server"
+                    fav.isPinned = false
+                    fav.sortOrder = 8
+                    fav.enableCacheMode = false
+                    fav.cacheType = "live"
+                    fav.createdAt = date("2026-05-14T00:00:00Z")
+                    realm.add(fav)
+                }
+                print("[TestDataSeeder] 收藏夹: 增量添加 Dev Server (192.168.0.4:5173)")
+            }
         } catch {
             print("[TestDataSeeder] 收藏夹填充失败: \(error.localizedDescription)")
         }
@@ -244,13 +266,13 @@ struct TestDataSeeder {
 
             try realm.write {
                 let histories: [(id: String, url: String, title: String, cached: Bool, size: Int64, pinned: Bool, favorite: Bool, visits: Int, ruleId: String?, ruleName: String?, excluded: Bool, agoSeconds: TimeInterval)] = [
-                    ("hist-weather-001", "https://weather.com/beijing", "北京天气", true, 184320, true, true, 35, nil, nil, false, 3600),
-                    ("hist-shop-002", "https://m.shop.example.com", "优购商城", true, 1155072, true, true, 28, nil, nil, false, 5400),
-                    ("hist-notes-003", "https://notes.md/editor", "轻笔记", true, 92160, false, true, 42, nil, nil, false, 7200),
-                    ("hist-admin-004", "https://admin.example.com/dashboard", "管理后台", true, 163840, true, true, 15, nil, nil, false, 10800),
-                    ("hist-news-005", "https://news.daily/feed", "每日新闻", true, 40960, false, false, 30, nil, nil, false, 86400),
-                    ("hist-dashboard-006", "https://dashboard.example.com", "数据面板", true, 2179072, false, true, 22, nil, nil, false, 14400),
-                    ("hist-docs-007", "https://docs.swift.org/getting-started", "Swift 入门", true, 204800, false, true, 45, nil, nil, false, 21600),
+                    ("hist-weather-001", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html", "Bridge 交互测试", true, 184320, true, true, 35, nil, nil, false, 3600),
+                    ("hist-shop-002", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-media.html", "Bridge 媒体测试", true, 1155072, true, true, 28, nil, nil, false, 5400),
+                    ("hist-notes-003", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html", "Bridge 设备测试", true, 92160, false, true, 42, nil, nil, false, 7200),
+                    ("hist-admin-004", "https://wbk.shanbox.19930810.xyz:8443/admin", "管理后台", true, 163840, true, true, 15, nil, nil, false, 10800),
+                    ("hist-news-005", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-permission.html", "Bridge 权限测试", true, 40960, false, false, 30, nil, nil, false, 86400),
+                    ("hist-dashboard-006", "https://wbk.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "引擎总览", true, 2179072, false, true, 22, nil, nil, false, 14400),
+                    ("hist-docs-007", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "Bridge 缓存测试", true, 204800, false, true, 45, nil, nil, false, 21600),
                     ("hist-local-008", "http://localhost:8080/health", "本地服务", false, 0, false, false, 1, nil, nil, false, 28800)
                 ]
 
@@ -360,7 +382,7 @@ struct TestDataSeeder {
                 id: "rule-domain-001",
                 name: "缓存所有 CDN 资源",
                 type: .domain,
-                pattern: "*.cdn.example.com",
+                pattern: "*.wbk.shanbox.19930810.xyz",
                 resourceType: .staticResource,
                 isEnabled: true,
                 priority: 10
@@ -369,7 +391,7 @@ struct TestDataSeeder {
                 id: "rule-glob-002",
                 name: "缓存所有 JS/CSS",
                 type: .glob,
-                pattern: "https://*.example.com/**/*.{js,css}",
+                pattern: "https://wbk.shanbox.19930810.xyz:8443/**/*.{js,css}",
                 resourceType: .staticResource,
                 isEnabled: true,
                 priority: 20
@@ -378,7 +400,7 @@ struct TestDataSeeder {
                 id: "rule-regex-003",
                 name: "API 数据缓存",
                 type: .regex,
-                pattern: "https://api\\.example\\.com/v[0-9]+/data.*",
+                pattern: "https://wbk\\.shanbox\\.19930810\\.xyz:8443/v[0-9]+/data.*",
                 resourceType: .dynamicResource,
                 isEnabled: true,
                 priority: 5
@@ -387,7 +409,7 @@ struct TestDataSeeder {
                 id: "rule-exact-004",
                 name: "首页精确缓存",
                 type: .exact,
-                pattern: "https://weather.com/index.html",
+                pattern: "https://wbk.shanbox.19930810.xyz:8443/index.html",
                 resourceType: .staticResource,
                 isEnabled: true,
                 priority: 15
@@ -396,7 +418,7 @@ struct TestDataSeeder {
                 id: "rule-disabled-005",
                 name: "旧版缓存规则",
                 type: .domain,
-                pattern: "old.example.com",
+                pattern: "old.wbk.shanbox.19930810.xyz",
                 resourceType: .staticResource,
                 isEnabled: false,
                 priority: 0
@@ -422,7 +444,7 @@ struct TestDataSeeder {
             [
                 "id": "cmd-url-001",
                 "type": "urlScheme",
-                "data": "wbk://open?url=https%3A%2F%2Fexample.com%2Fpage%26title%3DTest",
+                "data": "wbk://open?url=https%3A%2F%2Fwbk.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fbridge-hub.html%26title%3DTest",
                 "format": "urlScheme",
                 "signature": "sig_url_a1b2c3d4e5f6",
                 "createdAt": now,
@@ -432,7 +454,7 @@ struct TestDataSeeder {
             [
                 "id": "cmd-b64-002",
                 "type": "base64",
-                "data": "eyJhY3Rpb24iOiJvcGVuIiwidXJlIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9hcGkifQ==",
+                "data": "eyJhY3Rpb24iOiJvcGVuIiwidXJlIjoiaHR0cHM6Ly93Ymsuc2hhbmJveC4xOTkzMDgxMC54eXo6ODQ0MyJ9",
                 "format": "base64",
                 "signature": "sig_b64_x7y8z9w0v1u",
                 "createdAt": now,
@@ -452,7 +474,7 @@ struct TestDataSeeder {
             [
                 "id": "cmd-json-004",
                 "type": "json",
-                "data": "{\"action\":\"navigate\",\"url\":\"https://example.com/dashboard\",\"params\":{\"tab\":\"overview\"}}",
+                "data": "{\"action\":\"navigate\",\"url\":\"https://wbk.shanbox.19930810.xyz:8443/admin\",\"params\":{\"tab\":\"overview\"}}",
                 "format": "plainText",
                 "signature": "sig_json_s7t8u9v0w1x",
                 "createdAt": now,
@@ -506,8 +528,8 @@ struct TestDataSeeder {
                 id: "custom-multi-004",
                 name: "多模式自定义规则",
                 includePatterns: [
-                    "https://docs.example.com/**/*.{html,css,js}",
-                    "https://api.example.com/v1/static/**"
+                    "https://wbk.shanbox.19930810.xyz:8443/**/*.{html,css,js}",
+                    "https://wbk.shanbox.19930810.xyz:8443/v1/static/**"
                 ],
                 excludePatterns: ["**/admin/**", "**/login*"],
                 isEnabled: true,
@@ -517,7 +539,7 @@ struct TestDataSeeder {
             PageCacheRule(
                 id: "custom-disabled-005",
                 name: "已禁用的测试规则",
-                includePatterns: ["https://staging.example.com/**"],
+                includePatterns: ["https://wbk.shanbox.19930810.xyz:8443/**"],
                 excludePatterns: [],
                 isEnabled: false,
                 createdAt: date("2026-04-15T08:00:00Z")
@@ -535,11 +557,18 @@ struct TestDataSeeder {
     // MARK: - Pinned URLs
 
     private static func seedPinnedURLs() {
-        let key = "TestDataSeeder_PinnedURLs_Sealed"
+        let key = "TestDataSeeder_PinnedURLs_v2"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
 
         let recommended = PresetURLCatalog.recommendedItems
-        WebBridgeLogger.shared.log(.info, "Found \(recommended.count) preset pinned URLs for seeding")
+        let manager = URLFavoriteManager.shared
+        for item in recommended {
+            guard let url = URL(string: item.url) else { continue }
+            if manager.findFavorite(url: url) == nil {
+                manager.addFavorite(url: url, title: item.title)
+            }
+        }
+        WebBridgeLogger.shared.log(.info, "Seeded \(recommended.count) recommended pinned URLs")
 
         UserDefaults.standard.set(true, forKey: key)
     }

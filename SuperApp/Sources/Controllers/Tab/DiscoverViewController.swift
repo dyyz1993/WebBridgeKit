@@ -195,16 +195,16 @@ class DiscoverViewController: UIViewController {
 
         let recommendedItems: [DiscoverItem] = [
             DiscoverItem(
-                name: "Weather",
-                url: "https://weather.example.com",
+                name: "Bridge 交互",
+                url: "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html",
                 cacheStatus: .cached,
                 cacheSize: "1.8 MB",
                 lastAccessed: nil,
                 descriptionText: L10n.tr("discover.recommended.weather.desc")
             ),
             DiscoverItem(
-                name: "Notes",
-                url: "https://notes.example.com",
+                name: "Bridge 设备",
+                url: "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html",
                 cacheStatus: .cached,
                 cacheSize: "0.9 MB",
                 lastAccessed: nil,

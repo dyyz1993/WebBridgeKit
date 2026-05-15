@@ -33,17 +33,29 @@ class CacheDashboardViewModel: ViewModel {
     }
 
     // MARK: - Output
+    // ⚠️ All Rx element types must be built-in Swift types (Void, Int, Bool, String)
+    // Using WebBridgeKit framework types as Rx generics causes Swift runtime crash.
 
     struct Output {
-        let dashboardData: Driver<DashboardData?>
+        /// Signals when dashboard data is updated. Read via `currentDashboardData` property.
+        let didUpdateData: Driver<Void>
         let isLoading: Driver<Bool>
         let subsystemSections: Driver<[SectionModel<String, SubsystemStatItemModel>]>
         let summaryText: Driver<String>
         let error: Driver<String?>
-        let navigateToDetail: Driver<SubsystemID>
+        /// Navigate to detail - emits SubsystemID.rawValue (String is safe for Rx)
+        let navigateToDetail: Driver<String>
         let showClearAllConfirm: Driver<Void>
         let clearResult: Driver<Bool>
     }
+
+    /// Thread-safe access to current dashboard data (WebBridgeKit type stored internally, not via Rx)
+    private var _currentData: DashboardData?
+    var currentDashboardData: DashboardData? {
+        lock.lock(); defer { lock.unlock() }
+        return _currentData
+    }
+    private let lock = NSLock()
 
     // MARK: - Data Model for Cell
 
@@ -74,14 +86,13 @@ class CacheDashboardViewModel: ViewModel {
         }
     }
 
-    // MARK: - Private Relays
-    // NOTE: All relays store WebBridgeKit types internally, but they are NEVER
-    // used as Rx Observable/Driver element types in subscription chains.
+    // MARK: - Private Relays (all use safe built-in types only)
+    // WebBridgeKit types are stored as plain properties, NOT as Rx element types.
 
     private let loadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = BehaviorRelay<String?>(value: nil)
-    private let dataRelay = BehaviorRelay<DashboardData?>(value: nil)
-    private let navigateDetailRelay = BehaviorRelay<SubsystemID?>(value: nil)
+    private let didUpdateRelay = PublishRelay<Void>()
+    private let navigateDetailRelay = BehaviorRelay<String?>(value: nil)
     private let showClearConfirmRelay = PublishRelay<Void>()
     private let clearResultRelay = BehaviorRelay<Bool>(value: false)
 
@@ -103,7 +114,7 @@ class CacheDashboardViewModel: ViewModel {
             .subscribe(onNext: { [weak self] index in
                 guard let self, index >= 0, index < self.cachedSubsystems.count else { return }
                 let stats = self.cachedSubsystems[index]
-                self.navigateDetailRelay.accept(stats.id)
+                self.navigateDetailRelay.accept(stats.id.rawValue)
             })
             .disposed(by: rx)
 
@@ -114,16 +125,12 @@ class CacheDashboardViewModel: ViewModel {
             })
             .disposed(by: rx)
 
-        // MARK: - Output drivers
+        // MARK: - Output drivers (all use built-in types)
 
-        let dashboardDriver = dataRelay
-            .asDriver(onErrorJustReturn: nil)
-
-        let sectionsDriver = dataRelay
-            .compactMap { [weak self] data -> [SectionModel<String, SubsystemStatItemModel>] in
-                guard let data, !data.subsystems.isEmpty else { return [] }
-
-                self?.cachedSubsystems = data.subsystems
+        let sectionsDriver = didUpdateRelay
+            .compactMap { [weak self] _ -> [SectionModel<String, SubsystemStatItemModel>]? in
+                guard let self, let data = self.currentDashboardData, !data.subsystems.isEmpty else { return [] }
+                self.cachedSubsystems = data.subsystems
 
                 let activeItems = data.subsystems
                     .filter { $0.hasData || $0.status == .active }
@@ -144,21 +151,21 @@ class CacheDashboardViewModel: ViewModel {
             }
             .asDriver(onErrorJustReturn: [])
 
-        let summaryDriver = dataRelay
-            .compactMap { data -> String? in
-                guard let data else { return nil }
+        let summaryDriver = didUpdateRelay
+            .compactMap { [weak self] _ -> String? in
+                guard let self, let data = self.currentDashboardData else { return nil }
                 let active = data.activeSubsystemCount
                 return "总计 \(data.formattedTotalSize) | \(data.totalEntries) 条目 | \(active)/\(data.subsystems.count) 子系统活跃"
             }
             .asDriver(onErrorJustReturn: "")
 
         return Output(
-            dashboardData: dashboardDriver,
+            didUpdateData: didUpdateRelay.asDriver(onErrorJustReturn: ()),
             isLoading: loadingRelay.asDriver(),
             subsystemSections: sectionsDriver,
             summaryText: summaryDriver,
             error: errorRelay.asDriver(onErrorJustReturn: ""),
-            navigateToDetail: navigateDetailRelay.compactMap { $0 }.asDriver(onErrorJustReturn: .manifestCache),
+            navigateToDetail: navigateDetailRelay.compactMap { $0 }.asDriver(onErrorJustReturn: ""),
             showClearAllConfirm: showClearConfirmRelay.asDriver(onErrorJustReturn: ()),
             clearResult: clearResultRelay.asDriver()
         )
@@ -174,7 +181,10 @@ class CacheDashboardViewModel: ViewModel {
             guard let self else { return }
             let data = CacheStatsAggregator.shared.syncAggregate()
             DispatchQueue.main.async {
-                self.dataRelay.accept(data)
+                self.lock.lock()
+                self._currentData = data
+                self.lock.unlock()
+                self.didUpdateRelay.accept(())
                 self.loadingRelay.accept(false)
             }
         }

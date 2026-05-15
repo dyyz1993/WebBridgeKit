@@ -23,40 +23,40 @@ extension TestDataSeeder {
 
             try realm.write {
                 let entries: [(key: String, url: String, mime: String, orig: Int64, comp: Int64, filePath: String)] = [
-                    ("weather_index_html", "https://cdn.weather.com/app/index.html", "text/html", 24576, 8192, "/cache/weather/index.html"),
-                    ("weather_main_css", "https://cdn.weather.com/app/styles/main.css", "text/css", 32768, 6144, "/cache/weather/styles/main.css"),
-                    ("weather_js", "https://cdn.weather.com/app/scripts/weather.js", "application/javascript", 102400, 30720, "/cache/weather/scripts/weather.js"),
-                    ("weather_sunny_svg", "https://cdn.weather.com/app/images/sunny.svg", "image/svg+xml", 4096, 2048, "/cache/weather/images/sunny.svg"),
-                    ("weather_cities_json", "https://cdn.weather.com/app/data/cities.json", "application/json", 16384, 4096, "/cache/weather/data/cities.json"),
-                    ("notes_index_html", "https://notes.md/editor/index.html", "text/html", 16384, 5120, "/cache/notes/index.html"),
-                    ("notes_editor_css", "https://notes.md/editor/editor.css", "text/css", 24576, 4096, "/cache/notes/editor.css"),
-                    ("notes_marked_js", "https://notes.md/editor/marked.min.js", "application/javascript", 45056, 16384, "/cache/notes/marked.min.js"),
-                    ("notes_highlight_js", "https://notes.md/editor/highlight.js", "application/javascript", 65536, 24576, "/cache/notes/highlight.js"),
-                    ("notes_editor_js", "https://notes.md/editor/editor.js", "application/javascript", 32768, 10240, "/cache/notes/editor.js"),
-                    ("shop_vendor_js", "https://m.shop.example.com/static/js/vendor.js", "application/javascript", 524288, 153600, "/cache/shop/vendor.js"),
-                    ("shop_app_js", "https://m.shop.example.com/static/js/app.js", "application/javascript", 204800, 61440, "/cache/shop/app.js"),
-                    ("shop_banner1_webp", "https://m.shop.example.com/static/images/banner1.webp", "image/webp", 81920, 77824, "/cache/shop/banner1.webp"),
-                    ("shop_iconfont_woff2", "https://m.shop.example.com/static/fonts/iconfont.woff2", "font/woff2", 45056, 43008, "/cache/shop/iconfont.woff2"),
-                    ("shop_categories_json", "https://m.shop.example.com/static/data/categories.json", "application/json", 32768, 8192, "/cache/shop/categories.json"),
-                    ("game_bgm_mp3", "https://play.casual.games/tetris/sounds/bgm.mp3", "audio/mpeg", 1048576, 1048576, "/cache/game/bgm.mp3"),
-                    ("game_clear_wav", "https://play.casual.games/tetris/sounds/clear.wav", "audio/wav", 20480, 20480, "/cache/game/clear.wav"),
-                    ("game_sprites_png", "https://play.casual.games/tetris/sprites.png", "image/png", 65536, 65536, "/cache/game/sprites.png"),
-                    ("game_js", "https://play.casual.games/tetris/game.js", "application/javascript", 40960, 15360, "/cache/game/game.js"),
-                    ("news_index_html", "https://news.daily/feed/index.html", "text/html", 12288, 4096, "/cache/news/index.html"),
-                    ("news_feed_js", "https://news.daily/feed/feed.js", "application/javascript", 20480, 8192, "/cache/news/feed.js"),
-                    ("news_styles_css", "https://news.daily/feed/styles.css", "text/css", 8192, 2048, "/cache/news/styles.css"),
-                    ("docs_index_html", "https://docs.swift.org/getting-started/index.html", "text/html", 32768, 10240, "/cache/docs/index.html"),
-                    ("docs_theme_css", "https://docs.swift.org/css/theme.css", "text/css", 40960, 12288, "/cache/docs/theme.css"),
-                    ("docs_search_js", "https://docs.swift.org/js/search.js", "application/javascript", 61440, 20480, "/cache/docs/search.js"),
-                    ("docs_nav_js", "https://docs.swift.org/js/navigation.js", "application/javascript", 32768, 10240, "/cache/docs/navigation.js"),
-                    ("admin_index_html", "https://admin.example.com/dashboard/index.html", "text/html", 20480, 6144, "/cache/admin/index.html"),
-                    ("admin_app_css", "https://admin.example.com/static/app.css", "text/css", 40960, 14336, "/cache/admin/app.css"),
-                    ("admin_app_js", "https://admin.example.com/static/app.js", "application/javascript", 81920, 30720, "/cache/admin/app.js"),
-                    ("admin_charts_js", "https://admin.example.com/static/charts.js", "application/javascript", 57344, 20480, "/cache/admin/charts.js"),
-                    ("dashboard_index_html", "https://dashboard.example.com/index.html", "text/html", 28672, 8192, "/cache/dashboard/index.html"),
-                    ("dashboard_app_js", "https://dashboard.example.com/app.js", "application/javascript", 184320, 61440, "/cache/dashboard/app.js"),
-                    ("dashboard_chart_js", "https://dashboard.example.com/chart.js", "application/javascript", 102400, 30720, "/cache/dashboard/chart.js"),
-                    ("dashboard_data_css", "https://dashboard.example.com/data.css", "text/css", 24576, 6144, "/cache/dashboard/data.css")
+                    ("weather_index_html", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html", "text/html", 24576, 8192, "/cache/weather/index.html"),
+                    ("weather_main_css", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html", "text/css", 32768, 6144, "/cache/weather/styles/main.css"),
+                    ("weather_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html", "application/javascript", 102400, 30720, "/cache/weather/scripts/weather.js"),
+                    ("weather_sunny_svg", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html", "image/svg+xml", 4096, 2048, "/cache/weather/images/sunny.svg"),
+                    ("weather_cities_json", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html", "application/json", 16384, 4096, "/cache/weather/data/cities.json"),
+                    ("notes_index_html", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html", "text/html", 16384, 5120, "/cache/notes/index.html"),
+                    ("notes_editor_css", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html", "text/css", 24576, 4096, "/cache/notes/editor.css"),
+                    ("notes_marked_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html", "application/javascript", 45056, 16384, "/cache/notes/marked.min.js"),
+                    ("notes_highlight_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html", "application/javascript", 65536, 24576, "/cache/notes/highlight.js"),
+                    ("notes_editor_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html", "application/javascript", 32768, 10240, "/cache/notes/editor.js"),
+                    ("shop_vendor_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-media.html", "application/javascript", 524288, 153600, "/cache/shop/vendor.js"),
+                    ("shop_app_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-media.html", "application/javascript", 204800, 61440, "/cache/shop/app.js"),
+                    ("shop_banner1_webp", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-media.html", "image/webp", 81920, 77824, "/cache/shop/banner1.webp"),
+                    ("shop_iconfont_woff2", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-media.html", "font/woff2", 45056, 43008, "/cache/shop/iconfont.woff2"),
+                    ("shop_categories_json", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-media.html", "application/json", 32768, 8192, "/cache/shop/categories.json"),
+                    ("game_bgm_mp3", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-navigation.html", "audio/mpeg", 1048576, 1048576, "/cache/game/bgm.mp3"),
+                    ("game_clear_wav", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-navigation.html", "audio/wav", 20480, 20480, "/cache/game/clear.wav"),
+                    ("game_sprites_png", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-navigation.html", "image/png", 65536, 65536, "/cache/game/sprites.png"),
+                    ("game_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-navigation.html", "application/javascript", 40960, 15360, "/cache/game/game.js"),
+                    ("news_index_html", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-permission.html", "text/html", 12288, 4096, "/cache/news/index.html"),
+                    ("news_feed_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-permission.html", "application/javascript", 20480, 8192, "/cache/news/feed.js"),
+                    ("news_styles_css", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-permission.html", "text/css", 8192, 2048, "/cache/news/styles.css"),
+                    ("docs_index_html", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "text/html", 32768, 10240, "/cache/docs/index.html"),
+                    ("docs_theme_css", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "text/css", 40960, 12288, "/cache/docs/theme.css"),
+                    ("docs_search_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "application/javascript", 61440, 20480, "/cache/docs/search.js"),
+                    ("docs_nav_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "application/javascript", 32768, 10240, "/cache/docs/navigation.js"),
+                    ("admin_index_html", "https://wbk.shanbox.19930810.xyz:8443/admin", "text/html", 20480, 6144, "/cache/admin/index.html"),
+                    ("admin_app_css", "https://wbk.shanbox.19930810.xyz:8443/admin", "text/css", 40960, 14336, "/cache/admin/app.css"),
+                    ("admin_app_js", "https://wbk.shanbox.19930810.xyz:8443/admin", "application/javascript", 81920, 30720, "/cache/admin/app.js"),
+                    ("admin_charts_js", "https://wbk.shanbox.19930810.xyz:8443/admin", "application/javascript", 57344, 20480, "/cache/admin/charts.js"),
+                    ("dashboard_index_html", "https://wbk.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "text/html", 28672, 8192, "/cache/dashboard/index.html"),
+                    ("dashboard_app_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "application/javascript", 184320, 61440, "/cache/dashboard/app.js"),
+                    ("dashboard_chart_js", "https://wbk.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "application/javascript", 102400, 30720, "/cache/dashboard/chart.js"),
+                    ("dashboard_data_css", "https://wbk.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "text/css", 24576, 6144, "/cache/dashboard/data.css")
                 ]
 
                 let now = Date()
@@ -127,7 +127,7 @@ extension TestDataSeeder {
                     badge: 3,
                     group: "weather-updates",
                     threadId: "weather-beijing",
-                    targetURL: "https://weather.com/beijing",
+                    targetURL: "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html",
                     createdAt: hour1Ago
                 ),
                 isRead: true,
@@ -147,7 +147,7 @@ extension TestDataSeeder {
                     badge: 1,
                     group: "server-alerts",
                     threadId: "server-prod-01",
-                    targetURL: "https://monitor.example.com/dashboard",
+                    targetURL: "https://wbk.shanbox.19930810.xyz:8443/admin",
                     userInfo: ["server": "prod-01", "metric": "cpu", "threshold": "90"],
                     createdAt: hour2Ago
                 ),
@@ -203,7 +203,7 @@ extension TestDataSeeder {
                     sound: "critical.caf",
                     badge: 1,
                     group: "security-alerts",
-                    targetURL: "https://account.example.com/security",
+                    targetURL: "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html",
                     userInfo: ["alertType": "abnormal_login", "ip": "203.0.113.42", "location": "上海"],
                     createdAt: now.addingTimeInterval(-1800)
                 ),
@@ -223,7 +223,7 @@ extension TestDataSeeder {
                     sound: "default",
                     group: "weather-updates",
                     threadId: "weather-shanghai",
-                    targetURL: "https://weather.com/shanghai",
+                    targetURL: "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html",
                     createdAt: day1Ago
                 ),
                 isRead: true,
@@ -350,16 +350,16 @@ extension TestDataSeeder {
 
         let entries: [(key: String, manifest: Manifest)] = [
             ("weather-beijing", Manifest(
-                resources: ["index.html": "https://cdn.weather.com/app/index.html"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html"],
                 version: "2.1.0",
                 appid: "weather-app",
                 name: "北京天气",
-                icon: "https://cdn.weather.com/app/icon.png",
+                icon: "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
                 isPinned: true,
                 lastAccessed: Date()
             )),
             ("notes-editor", Manifest(
-                resources: ["index.html": "https://notes.md/editor/index.html"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-device.html"],
                 version: "1.5.3",
                 appid: "markdown-notes",
                 name: "Markdown 笔记",
@@ -367,15 +367,15 @@ extension TestDataSeeder {
                 lastAccessed: Date().addingTimeInterval(-3600)
             )),
             ("shop-mall", Manifest(
-                resources: ["index.html": "https://m.shop.example.com/index.html"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-media.html"],
                 version: "3.8.1",
                 appid: "shop-mall-app",
                 name: "优购商城",
-                icon: "https://m.shop.example.com/static/logo.png",
+                icon: "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
                 lastAccessed: Date().addingTimeInterval(-7200)
             )),
             ("game-tetris", Manifest(
-                resources: ["index.html": "https://play.casual.games/tetris/"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-navigation.html"],
                 version: "1.2.0",
                 appid: "game-tetris",
                 name: "俄罗斯方块",
@@ -383,7 +383,7 @@ extension TestDataSeeder {
                 lastAccessed: Date().addingTimeInterval(-86400)
             )),
             ("news-daily", Manifest(
-                resources: ["index.html": "https://news.daily/feed/"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-permission.html"],
                 version: "4.0.0",
                 appid: "news-daily",
                 name: "每日新闻",
@@ -391,7 +391,7 @@ extension TestDataSeeder {
                 lastAccessed: Date().addingTimeInterval(-172800)
             )),
             ("docs-swift", Manifest(
-                resources: ["index.html": "https://docs.swift.org/getting-started/"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html"],
                 version: "5.10",
                 appid: "swift-docs",
                 name: "Swift 文档",
@@ -399,7 +399,7 @@ extension TestDataSeeder {
                 lastAccessed: Date().addingTimeInterval(-259200)
             )),
             ("admin-dashboard", Manifest(
-                resources: ["index.html": "https://admin.example.com/dashboard/"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/admin"],
                 version: "2.0.1",
                 appid: "admin-panel",
                 name: "管理后台",
@@ -407,11 +407,11 @@ extension TestDataSeeder {
                 lastAccessed: Date().addingTimeInterval(-432000)
             )),
             ("analytics-dashboard", Manifest(
-                resources: ["index.html": "https://dashboard.example.com/"],
+                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html"],
                 version: "1.3.7",
                 appid: "analytics-app",
                 name: "数据分析",
-                icon: "https://dashboard.example.com/logo.png",
+                icon: "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
                 lastAccessed: Date().addingTimeInterval(-604800)
             ))
         ]

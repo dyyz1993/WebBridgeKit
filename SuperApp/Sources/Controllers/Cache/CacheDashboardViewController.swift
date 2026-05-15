@@ -145,10 +145,11 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
             })
             .disposed(by: rx)
 
-        // Dashboard data → summary card
-        output.dashboardData
-            .drive(onNext: { [weak self] data in
-                self?.summaryCard.configure(with: data)
+        // Dashboard data → summary card (safe: Void trigger + sync property access)
+        output.didUpdateData
+            .drive(onNext: { [weak self] _ in
+                guard let self else { return }
+                self.summaryCard.configure(with: self.viewModel.currentDashboardData)
             })
             .disposed(by: rx)
 
@@ -181,10 +182,11 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
             })
             .disposed(by: rx)
 
-        // Navigate to subsystem detail
+        // Navigate to subsystem detail (safe: String → SubsystemID at boundary)
         output.navigateToDetail
-            .drive(onNext: { [weak self] subsystemID in
-                self?.navigateToSubsystemDetail(subsystemID)
+            .drive(onNext: { [weak self] idString in
+                guard let self, let subsystemID = SubsystemID(rawValue: idString) else { return }
+                self.navigateToSubsystemDetail(subsystemID)
             })
             .disposed(by: rx)
     }

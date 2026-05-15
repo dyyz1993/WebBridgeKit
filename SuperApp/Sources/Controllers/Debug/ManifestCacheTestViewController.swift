@@ -201,9 +201,9 @@ class ManifestCacheTestViewController: UIViewController {
 
         // 设置默认 URL - 指向本地测试服务器（使用实际 IP）
         #if DEBUG
-        urlTextField.text = "http://192.168.0.4:8080/manifest_cache_demo/"
+        urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
         #else
-        urlTextField.text = "https://example.com/test-page"
+        urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
         #endif
 
         addLog("📱 Manifest 缓存测试页面已加载")
@@ -406,7 +406,7 @@ class ManifestCacheTestViewController: UIViewController {
         switch urlPresetSegment.selectedSegmentIndex {
         case 0:
             // Manifest 测试
-            urlTextField.text = "http://192.168.0.4:8080/manifest_cache_demo/"
+            urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
             addLog("🔄 已选择: Manifest 测试 URL")
         case 1:
             // 百度

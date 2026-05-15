@@ -322,7 +322,7 @@ class NotificationDebugViewController: UIViewController {
             (L10n.tr("notif_debug.template.image"), L10n.tr("notif_debug.template.image_title"), L10n.tr("notif_debug.template.image_body"), "https://via.placeholder.com/300", "active", "", "", false),
             (L10n.tr("notif_debug.template.urgent"), L10n.tr("notif_debug.template.urgent_title"), L10n.tr("notif_debug.template.urgent_body"), "", "timeSensitive", "alarm", "", false),
             ("Markdown", "Markdown", "# Hello\n- Item 1\n- Item 2", "", "active", "", "", true),
-            (L10n.tr("notif_debug.template.link"), L10n.tr("notif_debug.template.link_title"), L10n.tr("notif_debug.template.link_body"), "", "active", "", "https://example.com", false),
+            (L10n.tr("notif_debug.template.link"), L10n.tr("notif_debug.template.link_title"), L10n.tr("notif_debug.template.link_body"), "", "active", "", "https://wbk.shanbox.19930810.xyz:8443", false),
             (L10n.tr("notif_debug.template.encrypted"), L10n.tr("notif_debug.template.encrypted_title"), "encrypted content", "", "active", "", "", false)
         ]
         objc_setAssociatedObject(self, "templates", templates, .OBJC_ASSOCIATION_RETAIN)
@@ -366,7 +366,7 @@ class NotificationDebugViewController: UIViewController {
     }
 
     @objc private func sendNotification() {
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         guard !key.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_key")

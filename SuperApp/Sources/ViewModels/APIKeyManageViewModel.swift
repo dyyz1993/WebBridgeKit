@@ -139,7 +139,7 @@ class APIKeyManageViewModel: ViewModel {
 
     /// 获取当前 Bark 服务器
     func getBarkServer() -> String {
-        return UserDefaults.standard.string(forKey: barkServerKey) ?? "https://api.day.app"
+        return UserDefaults.standard.string(forKey: barkServerKey) ?? "https://wbk.shanbox.19930810.xyz:8443"
     }
 
     /// 发送永久密钥测试推送

@@ -6,8 +6,8 @@ import WebBridgeKit
 
 enum MainSection: Int, CaseIterable {
     case pushToken = 0
-    case appGrid = 1
-    case quickActions = 2
+    case quickActions = 1
+    case appGrid = 2
 }
 
 class MainViewController: BaseViewController<MainViewModel> {
@@ -40,7 +40,7 @@ class MainViewController: BaseViewController<MainViewModel> {
                 ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
             return key.isEmpty ? activeURL : "\(activeURL)/\(key)"
         }
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.day.app"
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         return key.isEmpty ? server : "\(server)/\(key)"
     }
@@ -261,7 +261,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func setupUI() {
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.largeTitleDisplayMode = .never
 
@@ -306,7 +306,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         let scanButton: UIButton = {
             let btn = UIButton(type: .system)
             btn.setImage(LucideIcon.scan.image(pointSize: 20, weight: .medium), for: .normal)
-            btn.tintColor = ThemeColors.current.primary
+            btn.tintColor = ThemeTokens.Color.primary
             btn.addTarget(self, action: #selector(openScanner), for: .touchUpInside)
             btn.accessibilityLabel = "扫描二维码"
             return btn
@@ -332,13 +332,25 @@ class MainViewController: BaseViewController<MainViewModel> {
             showCloseButton: true,
             tipText: L10n.tr("home.scanner.tip"),
             enableBase64Decoding: true,
-            autoDismiss: true
+            autoDismiss: false
         )
         let scannerVC = QRScannerViewController(configuration: config)
         scannerVC.scannerDidSuccess
-            .subscribe(onNext: { [weak self] result in
+            .subscribe(onNext: { [weak self, weak scannerVC] result in
+                guard let self = self else { return }
                 let url = URL(string: result)
-                self?.handleScannedResult(url: url, rawString: result)
+                if let scanner = scannerVC, let nav = self.navigationController, nav.viewControllers.contains(scanner) {
+                    CATransaction.begin()
+                    CATransaction.setCompletionBlock {
+                        self.handleScannedResult(url: url, rawString: result)
+                    }
+                    nav.popViewController(animated: true)
+                    CATransaction.commit()
+                } else {
+                    scannerVC?.dismiss(animated: true) {
+                        self.handleScannedResult(url: url, rawString: result)
+                    }
+                }
             })
             .disposed(by: rx)
         navigationController?.pushViewController(scannerVC, animated: true)
