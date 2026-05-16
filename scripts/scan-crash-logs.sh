@@ -157,16 +157,76 @@ if [[ "$total_crashes" -eq 0 && "$total_warnings" -eq 0 ]]; then
   echo -e "${GREEN}No crashes or warnings found. App looks healthy.${NC}"
 fi
 
+# MARK: - Remote server
+
+if [[ "$JSON_MODE" != true ]]; then
+  remote_count=$(scan_remote_crashes)
+  if [[ "$remote_count" != "0" ]]; then
+    scan_remote_stats
+  fi
+fi
+
 if [[ "$FIX_MODE" == true && "$total_crashes" -gt 0 ]]; then
   echo ""
   read -p "Clear all crash logs? [y/N] " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     for entry in "${CRASHES[@]}"; do
-      local path="${entry#*:}"
+      path="${entry#*:}"
       rm -f "$path"
       echo "  Deleted: $(basename "$path")"
     done
     echo -e "${GREEN}Cleared $total_crashes crash logs.${NC}"
   fi
 fi
+
+scan_remote_crashes() {
+  local server="${WBK_SERVER_URL:-https://wbk.shanbox.19930810.xyz:8443}"
+  local resp
+  resp=$(curl -s --connect-timeout 5 "$server/api/v1/crash-reports?limit=20" 2>/dev/null || echo '{"reports":[],"error":"unreachable"}')
+  local count
+  count=$(python3 -c "
+import json, sys
+try:
+  d = json.loads('''$resp''')
+  reports = d.get('reports', [])
+  print(len(reports))
+except: print(0)
+" 2>/dev/null || echo "0")
+  if [[ "$count" -gt 0 ]]; then
+    echo -e "${CYAN}--- Remote Crash Reports ($count on server) ---${NC}"
+    python3 -c "
+import json, sys
+try:
+  d = json.loads('''$resp''')
+  for r in d.get('reports', []):
+    t = r.get('timestamp','?')[:19]
+    n = r.get('name','?')
+    tp = r.get('type','?')
+    reason = r.get('reason','')[:80]
+    mem = r.get('memoryFootprintMB', 0)
+    sid = r.get('sessionId','?')[:8]
+    print(f'  [{t}] {tp}:{n} — {reason}  (mem={mem:.0f}MB, session={sid})')
+except Exception as e: print(f'  parse error: {e}')
+" 2>/dev/null
+    echo ""
+  fi
+  echo "$count"
+}
+
+scan_remote_stats() {
+  local server="${WBK_SERVER_URL:-https://wbk.shanbox.19930810.xyz:8443}"
+  local resp
+  resp=$(curl -s --connect-timeout 5 "$server/api/v1/crash-reports/stats" 2>/dev/null || echo '{}')
+  python3 -c "
+import json
+try:
+  d = json.loads('''$resp''')
+  total = d.get('total', 0)
+  byName = d.get('byName', {})
+  if total > 0:
+    names = ', '.join(f'{k}:{v}' for k,v in byName.items())
+    print(f'  Remote stats: {total} total crashes ({names})')
+except: pass
+" 2>/dev/null
+}

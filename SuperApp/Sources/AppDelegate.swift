@@ -18,6 +18,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         CrashLogManager.shared.initialize()
 
+        if let serverURL = ServerConfigManager.shared.getActiveBaseURL() {
+            CrashLogManager.shared.serverBaseURL = serverURL
+            CrashLogManager.shared.uploadPendingCrashReports()
+        }
+
         DispatchQueue.global(qos: .userInitiated).async {
             TestDataSeeder.populateIfNeeded()
             Self.cleanupInvalidHistoryURLs()

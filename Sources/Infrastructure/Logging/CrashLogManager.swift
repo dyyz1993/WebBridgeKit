@@ -30,6 +30,8 @@ public class CrashLogManager {
 
     public static let shared = CrashLogManager()
 
+    public var serverBaseURL: String?
+
     private let crashDirectory: URL
     private let fileManager = FileManager.default
     private let isoFormatter: ISO8601DateFormatter = {
@@ -38,6 +40,7 @@ public class CrashLogManager {
         return f
     }()
 
+    private let uploadQueue = DispatchQueue(label: "com.webbridgekit.crash-upload", qos: .utility)
     private var previousExceptionHandler: NSUncaughtExceptionHandler?
     private var savedPreviousSignalHandlers: [Int32: (@convention(c) (Int32) -> Void)] = [:]
 
@@ -66,6 +69,19 @@ public class CrashLogManager {
     public func clearCrashLogs() {
         for url in crashLogFiles() {
             try? fileManager.removeItem(at: url)
+        }
+    }
+
+    public func uploadPendingCrashReports() {
+        let baseURL = serverBaseURL
+        let files = crashLogFiles()
+        guard !files.isEmpty, let baseURL = baseURL else { return }
+
+        uploadQueue.async { [weak self] in
+            guard let self = self else { return }
+            for fileURL in files {
+                self.uploadReport(at: fileURL, serverBaseURL: baseURL)
+            }
         }
     }
 
@@ -189,6 +205,40 @@ public class CrashLogManager {
     private func getCrashLogFilesSorted() -> [URL] {
         return crashLogFiles().sorted { a, b in
             a.lastPathComponent < b.lastPathComponent
+        }
+    }
+
+    // MARK: - Upload
+
+    private func uploadReport(at fileURL: URL, serverBaseURL: String) {
+        guard let data = try? Data(contentsOf: fileURL) else { return }
+
+        let endpoint = serverBaseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            + "/api/v1/crash-reports"
+        guard let url = URL(string: endpoint) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = data
+        request.timeoutInterval = 10
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var success = false
+
+        let task = URLSession.shared.dataTask(with: request) { _, response, _ in
+            if let httpResponse = response as? HTTPURLResponse,
+               (200...299).contains(httpResponse.statusCode) {
+                success = true
+            }
+            semaphore.signal()
+        }
+        task.resume()
+        _ = semaphore.wait(timeout: .now() + 15)
+
+        if success {
+            let uploadedURL = fileURL.deletingPathExtension().appendingPathExtension("uploaded")
+            try? fileManager.moveItem(at: fileURL, to: uploadedURL)
         }
     }
 

@@ -8,6 +8,7 @@ const devices = new Map();
 const commands = new Map();
 const manifests = new Map();
 const pushHistory = [];
+const crashReports = [];
 const wsClients = new Set();
 const sseClients = new Set();
 
@@ -512,6 +513,75 @@ async function handleRequest(req, res) {
         if (!manifests.delete(m.appId)) return json(res, { error: 'Manifest not found' }, 404);
         return json(res, { status: 'ok' });
       }
+    }
+  }
+
+  if (method === 'POST' && pathname === '/api/v1/crash-reports') {
+    const body = await parseBody(req);
+    if (!body.type || !body.name) return json(res, { error: 'type and name required' }, 400);
+    const report = {
+      id: crypto.randomUUID(),
+      type: body.type,
+      timestamp: body.timestamp || new Date().toISOString(),
+      name: body.name,
+      reason: body.reason || '',
+      callStack: Array.isArray(body.callStack) ? body.callStack : [],
+      appVersion: body.appVersion || '',
+      buildNumber: body.buildNumber || '',
+      deviceModel: body.deviceModel || '',
+      systemVersion: body.systemVersion || '',
+      memoryFootprintMB: body.memoryFootprintMB ?? null,
+      sessionId: body.sessionId || '',
+      receivedAt: new Date().toISOString()
+    };
+    crashReports.push(report);
+    console.log(`[CrashReport] Stored ${report.type}/${report.name} id=${report.id}`);
+    return json(res, { status: 'ok', id: report.id });
+  }
+
+  if (method === 'GET' && pathname === '/api/v1/crash-reports/stats') {
+    const byType = {};
+    const byName = {};
+    const sessions = new Set();
+    for (const r of crashReports) {
+      byType[r.type] = (byType[r.type] || 0) + 1;
+      byName[r.name] = (byName[r.name] || 0) + 1;
+      if (r.sessionId) sessions.add(r.sessionId);
+    }
+    return json(res, {
+      total: crashReports.length,
+      byType,
+      byName,
+      lastCrash: crashReports.length > 0 ? crashReports[crashReports.length - 1].timestamp : null,
+      affectedSessions: Array.from(sessions)
+    });
+  }
+
+  if (method === 'GET' && pathname === '/api/v1/crash-reports/latest') {
+    if (crashReports.length === 0) return json(res, { error: 'No crash reports' }, 404);
+    return json(res, crashReports[crashReports.length - 1]);
+  }
+
+  if (method === 'GET' && pathname === '/api/v1/crash-reports') {
+    const params = new URL(url, `http://${req.headers.host}`).searchParams;
+    let result = [...crashReports];
+    const since = params.get('since');
+    if (since) {
+      const sinceTime = new Date(since).getTime();
+      result = result.filter(r => new Date(r.timestamp).getTime() > sinceTime);
+    }
+    const limit = parseInt(params.get('limit') || '50', 10);
+    result = result.slice(-limit);
+    return json(res, { reports: result, count: result.length });
+  }
+
+  {
+    const m = routeMatch(pathname, '/api/v1/crash-reports/:id');
+    if (m && method === 'DELETE') {
+      const idx = crashReports.findIndex(r => r.id === m.id);
+      if (idx === -1) return json(res, { error: 'Not found' }, 404);
+      crashReports.splice(idx, 1);
+      return json(res, { status: 'ok' });
     }
   }
 
