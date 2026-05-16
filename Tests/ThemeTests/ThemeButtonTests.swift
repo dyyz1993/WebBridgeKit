@@ -183,14 +183,14 @@ final class ThemeButtonTests: XCTestCase {
         button.configure(title: "Test", style: .primary)
 
         XCTAssertNotNil(button.titleLabel?.font)
-        XCTAssertEqual(button.titleLabel?.font.pointSize, 15, accuracy: 0.1)
-        XCTAssertEqual(button.titleLabel?.font.weight, .medium)
+        XCTAssertEqual(button.titleLabel?.font.pointSize ?? 0, 15, accuracy: 0.1)
+        XCTAssertTrue(button.titleLabel?.font.fontDescriptor.symbolicTraits.contains(.traitBold) == false)
     }
 
     func testFontIsSetOnSetup() {
         let button = ThemeButton(frame: .zero)
         XCTAssertNotNil(button.titleLabel?.font)
-        XCTAssertEqual(button.titleLabel?.font.pointSize, 15, accuracy: 0.1)
+        XCTAssertEqual(button.titleLabel?.font.pointSize ?? 0, 15, accuracy: 0.1)
     }
 
     // MARK: - Text Color

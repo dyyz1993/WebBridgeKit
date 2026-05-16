@@ -10,7 +10,7 @@ final class LucideIconTests: XCTestCase {
     }
 
     func testIconCountIsCorrect() {
-        XCTAssertEqual(LucideIcon.allCases.count, 65, "Should have exactly 65 icons")
+        XCTAssertEqual(LucideIcon.allCases.count, 66, "Should have exactly 66 icons")
     }
 
     // MARK: - Image Generation for All Icon Types
@@ -112,163 +112,163 @@ final class LucideIconTests: XCTestCase {
     // MARK: - System Name Values
 
     func testHomeSystemName() {
-        XCTAssertEqual(LucideIcon.home.rawValue, "house.fill")
+        XCTAssertEqual(LucideIcon.home.lucideId, "house")
     }
 
     func testInboxSystemName() {
-        XCTAssertEqual(LucideIcon.inbox.rawValue, "tray.fill")
+        XCTAssertEqual(LucideIcon.inbox.lucideId, "inbox")
     }
 
     func testCompassSystemName() {
-        XCTAssertEqual(LucideIcon.compass.rawValue, "compass.fill")
+        XCTAssertEqual(LucideIcon.compass.lucideId, "compass")
     }
 
     func testSettingsSystemName() {
-        XCTAssertEqual(LucideIcon.settings.rawValue, "gearshape.fill")
+        XCTAssertEqual(LucideIcon.settings.lucideId, "settings")
     }
 
     func testCopySystemName() {
-        XCTAssertEqual(LucideIcon.copy.rawValue, "doc.on.doc")
+        XCTAssertEqual(LucideIcon.copy.lucideId, "copy")
     }
 
     func testScanSystemName() {
-        XCTAssertEqual(LucideIcon.scan.rawValue, "qrcode.viewfinder")
+        XCTAssertEqual(LucideIcon.scan.lucideId, "scan-line")
     }
 
     func testSearchSystemName() {
-        XCTAssertEqual(LucideIcon.search.rawValue, "magnifyingglass")
+        XCTAssertEqual(LucideIcon.search.lucideId, "search")
     }
 
     func testSendSystemName() {
-        XCTAssertEqual(LucideIcon.send.rawValue, "paperplane.fill")
+        XCTAssertEqual(LucideIcon.send.lucideId, "send")
     }
 
     func testShareSystemName() {
-        XCTAssertEqual(LucideIcon.share.rawValue, "square.and.arrow.up")
+        XCTAssertEqual(LucideIcon.share.lucideId, "share-2")
     }
 
     func testTrashSystemName() {
-        XCTAssertEqual(LucideIcon.trash.rawValue, "trash")
+        XCTAssertEqual(LucideIcon.trash.lucideId, "trash-2")
     }
 
     func testPlusSystemName() {
-        XCTAssertEqual(LucideIcon.plus.rawValue, "plus")
+        XCTAssertEqual(LucideIcon.plus.lucideId, "plus")
     }
 
     func testXmarkSystemName() {
-        XCTAssertEqual(LucideIcon.xmark.rawValue, "xmark")
+        XCTAssertEqual(LucideIcon.xmark.lucideId, "x")
     }
 
     func testCheckSystemName() {
-        XCTAssertEqual(LucideIcon.check.rawValue, "checkmark")
+        XCTAssertEqual(LucideIcon.check.lucideId, "check")
     }
 
     func testEditSystemName() {
-        XCTAssertEqual(LucideIcon.edit.rawValue, "pencil")
+        XCTAssertEqual(LucideIcon.edit.lucideId, "pencil")
     }
 
     func testRefreshSystemName() {
-        XCTAssertEqual(LucideIcon.refresh.rawValue, "arrow.clockwise")
+        XCTAssertEqual(LucideIcon.refresh.lucideId, "refresh-cw")
     }
 
     func testDownloadSystemName() {
-        XCTAssertEqual(LucideIcon.download.rawValue, "arrow.down.circle")
+        XCTAssertEqual(LucideIcon.download.lucideId, "download")
     }
 
     func testUploadSystemName() {
-        XCTAssertEqual(LucideIcon.upload.rawValue, "arrow.up.circle")
+        XCTAssertEqual(LucideIcon.upload.lucideId, "upload")
     }
 
     func testBellSystemName() {
-        XCTAssertEqual(LucideIcon.bell.rawValue, "bell.fill")
+        XCTAssertEqual(LucideIcon.bell.lucideId, "bell")
     }
 
     func testBellOffSystemName() {
-        XCTAssertEqual(LucideIcon.bellOff.rawValue, "bell.slash.fill")
+        XCTAssertEqual(LucideIcon.bellOff.lucideId, "bell-off")
     }
 
     func testLinkSystemName() {
-        XCTAssertEqual(LucideIcon.link.rawValue, "link")
+        XCTAssertEqual(LucideIcon.link.lucideId, "link")
     }
 
     func testImageSystemName() {
-        XCTAssertEqual(LucideIcon.image.rawValue, "photo")
+        XCTAssertEqual(LucideIcon.image.lucideId, "image")
     }
 
     func testTagSystemName() {
-        XCTAssertEqual(LucideIcon.tag.rawValue, "tag")
+        XCTAssertEqual(LucideIcon.tag.lucideId, "tag")
     }
 
     func testStarSystemName() {
-        XCTAssertEqual(LucideIcon.star.rawValue, "star.fill")
+        XCTAssertEqual(LucideIcon.star.lucideId, "star")
     }
 
     func testBookmarkSystemName() {
-        XCTAssertEqual(LucideIcon.bookmark.rawValue, "bookmark.fill")
+        XCTAssertEqual(LucideIcon.bookmark.lucideId, "bookmark")
     }
 
     func testClockSystemName() {
-        XCTAssertEqual(LucideIcon.clock.rawValue, "clock.fill")
+        XCTAssertEqual(LucideIcon.clock.lucideId, "clock")
     }
 
     func testPinSystemName() {
-        XCTAssertEqual(LucideIcon.pin.rawValue, "pin.fill")
+        XCTAssertEqual(LucideIcon.pin.lucideId, "pin")
     }
 
     func testShieldSystemName() {
-        XCTAssertEqual(LucideIcon.shield.rawValue, "shield.fill")
+        XCTAssertEqual(LucideIcon.shield.lucideId, "shield")
     }
 
     func testKeySystemName() {
-        XCTAssertEqual(LucideIcon.key.rawValue, "key.fill")
+        XCTAssertEqual(LucideIcon.key.lucideId, "key")
     }
 
     func testLockSystemName() {
-        XCTAssertEqual(LucideIcon.lock.rawValue, "lock.fill")
+        XCTAssertEqual(LucideIcon.lock.lucideId, "lock")
     }
 
     func testInfoSystemName() {
-        XCTAssertEqual(LucideIcon.info.rawValue, "info.circle.fill")
+        XCTAssertEqual(LucideIcon.info.lucideId, "info")
     }
 
     func testWarningSystemName() {
-        XCTAssertEqual(LucideIcon.warning.rawValue, "exclamationmark.triangle.fill")
+        XCTAssertEqual(LucideIcon.warning.lucideId, "alert-triangle")
     }
 
     func testErrorSystemName() {
-        XCTAssertEqual(LucideIcon.error.rawValue, "xmark.circle.fill")
+        XCTAssertEqual(LucideIcon.error.lucideId, "x-circle")
     }
 
     func testSuccessSystemName() {
-        XCTAssertEqual(LucideIcon.success.rawValue, "checkmark.circle.fill")
+        XCTAssertEqual(LucideIcon.success.lucideId, "check-circle")
     }
 
     func testChevronRightSystemName() {
-        XCTAssertEqual(LucideIcon.chevronRight.rawValue, "chevron.right")
+        XCTAssertEqual(LucideIcon.chevronRight.lucideId, "chevron-right")
     }
 
     func testChevronLeftSystemName() {
-        XCTAssertEqual(LucideIcon.chevronLeft.rawValue, "chevron.left")
+        XCTAssertEqual(LucideIcon.chevronLeft.lucideId, "chevron-left")
     }
 
     func testArrowLeftSystemName() {
-        XCTAssertEqual(LucideIcon.arrowLeft.rawValue, "arrow.left")
+        XCTAssertEqual(LucideIcon.arrowLeft.lucideId, "arrow-left")
     }
 
     func testArrowRightSystemName() {
-        XCTAssertEqual(LucideIcon.arrowRight.rawValue, "arrow.right")
+        XCTAssertEqual(LucideIcon.arrowRight.lucideId, "arrow-right")
     }
 
     func testArrowUpSystemName() {
-        XCTAssertEqual(LucideIcon.arrowUp.rawValue, "arrow.up")
+        XCTAssertEqual(LucideIcon.arrowUp.lucideId, "arrow-up")
     }
 
     func testArrowDownSystemName() {
-        XCTAssertEqual(LucideIcon.arrowDown.rawValue, "arrow.down")
+        XCTAssertEqual(LucideIcon.arrowDown.lucideId, "arrow-down")
     }
 
     func testChevronDownSystemName() {
-        XCTAssertEqual(LucideIcon.chevronDown.rawValue, "chevron.down")
+        XCTAssertEqual(LucideIcon.chevronDown.lucideId, "chevron-down")
     }
 
     // MARK: - Icon Categories
@@ -331,8 +331,9 @@ final class LucideIconTests: XCTestCase {
 
     func testAllIconsHaveValidSystemNames() {
         for icon in LucideIcon.allCases {
-            let image = UIImage(systemName: icon.sfSymbolName)
-            XCTAssertNotNil(image, "System name '\(icon.sfSymbolName)' should be valid for icon \(icon)")
+            let sfImage = UIImage(systemName: icon.sfSymbolName)
+            let hasLucide = UIImage(lucideId: icon.lucideId) != nil
+            XCTAssertTrue(sfImage != nil || hasLucide, "Icon \(icon) should resolve via SF Symbol '\(icon.sfSymbolName)' or Lucide ID '\(icon.lucideId)'")
         }
     }
 

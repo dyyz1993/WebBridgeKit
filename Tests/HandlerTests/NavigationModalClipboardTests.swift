@@ -10,7 +10,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "get history")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -32,7 +32,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "goBack with steps")
 
         handler.handle(body: ["params": ["steps": 2]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -51,7 +51,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "goBack default steps")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -69,7 +69,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "goBack empty params")
 
         handler.handle(body: ["params": [:]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -88,7 +88,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "closePage no browser")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -103,7 +103,7 @@ extension SimpleHandlerTests {
         WebBrowserManager.shared.currentBrowser = UIViewController()
 
         handler.handle(body: ["params": ["animated": true]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -124,7 +124,7 @@ extension SimpleHandlerTests {
         WebBrowserManager.shared.currentBrowser = UIViewController()
 
         handler.handle(body: ["params": ["animated": false]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -145,7 +145,7 @@ extension SimpleHandlerTests {
         WebBrowserManager.shared.currentBrowser = UIViewController()
 
         handler.handle(body: ["params": [:]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -166,7 +166,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "clipboard read")
 
         handler.handle(body: ["action": "read"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -184,7 +184,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "clipboard write")
 
         handler.handle(body: ["action": "write", "text": "hello world"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -201,7 +201,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "clipboard write via params")
 
         handler.handle(body: ["params": ["action": "write", "text": "test value"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -218,7 +218,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "clipboard write missing text")
 
         handler.handle(body: ["action": "write"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -231,7 +231,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "clipboard invalid action")
 
         handler.handle(body: ["action": "delete"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Unknown action"))
             expectation.fulfill()
@@ -245,7 +245,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "clipboard default read")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -266,7 +266,7 @@ extension SimpleHandlerTests {
         WebBrowserManager.shared.currentModal = nil
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -283,7 +283,7 @@ extension SimpleHandlerTests {
         WebBrowserManager.shared.currentModal = modalVC
 
         handler.handle(body: ["params": ["width": "90%", "height": "70%"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -312,7 +312,7 @@ extension SimpleHandlerTests {
         WebBrowserManager.shared.currentModal = modalVC
 
         handler.handle(body: ["params": ["mask": false]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -340,7 +340,7 @@ extension SimpleHandlerTests {
         WebBrowserManager.shared.currentModal = modalVC
 
         handler.handle(body: ["params": [:]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -366,7 +366,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "permission status")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -384,7 +384,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "permission summary keys")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let summary = data["summary"] as? [String: Any] else {
                 XCTFail("Missing summary")
@@ -405,7 +405,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "permission fields")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let permissions = data["permissions"] as? [[String: Any]] else {
                 XCTFail("Missing permissions")

@@ -27,31 +27,31 @@ final class WebCompressedCacheStoreTests: XCTestCase {
         XCTAssertEqual(config.compressionLevel, 9)
     }
 
-    func testCacheErrorDescriptions() {
-        let errors: [CacheError] = [.fileTooLarge, .compressionFailed, .decompressionFailed, .notFound]
+    func testCompressedCacheErrorDescriptions() {
+        let errors: [CompressedCacheError] = [.fileTooLarge, .compressionFailed, .decompressionFailed, .notFound]
         for error in errors {
             XCTAssertNotNil(error.errorDescription)
             XCTAssertFalse(error.errorDescription!.isEmpty)
         }
     }
 
-    func testCacheErrorFileTooLarge() {
-        let error = CacheError.fileTooLarge
+    func testCompressedCacheErrorFileTooLarge() {
+        let error = CompressedCacheError.fileTooLarge
         XCTAssertEqual(error.errorDescription, "File size exceeds maximum limit")
     }
 
-    func testCacheErrorCompressionFailed() {
-        let error = CacheError.compressionFailed
+    func testCompressedCacheErrorCompressionFailed() {
+        let error = CompressedCacheError.compressionFailed
         XCTAssertEqual(error.errorDescription, "Failed to compress data")
     }
 
-    func testCacheErrorDecompressionFailed() {
-        let error = CacheError.decompressionFailed
+    func testCompressedCacheErrorDecompressionFailed() {
+        let error = CompressedCacheError.decompressionFailed
         XCTAssertEqual(error.errorDescription, "Failed to decompress data")
     }
 
-    func testCacheErrorNotFound() {
-        let error = CacheError.notFound
+    func testCompressedCacheErrorNotFound() {
+        let error = CompressedCacheError.notFound
         XCTAssertEqual(error.errorDescription, "Cache entry not found")
     }
 

@@ -3,24 +3,6 @@ import XCTest
 
 final class WebClipboardHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Read Action
 
     func testClipboardHandler_ReadAction_ReturnsText() {
@@ -28,7 +10,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard read")
 
         handler.handle(body: ["action": "read"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -45,7 +27,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard default read")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -64,7 +46,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard write")
 
         handler.handle(body: ["action": "write", "text": "hello world"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -81,7 +63,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard write via params")
 
         handler.handle(body: ["params": ["action": "write", "text": "test value"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -98,7 +80,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard write empty text")
 
         handler.handle(body: ["action": "write", "text": ""]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -117,7 +99,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard write missing text")
 
         handler.handle(body: ["action": "write"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -132,7 +114,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard invalid action")
 
         handler.handle(body: ["action": "delete"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Unknown action"))
             expectation.fulfill()
@@ -146,7 +128,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clipboard random action")
 
         handler.handle(body: ["action": "clear"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -173,7 +155,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         let readExp = XCTestExpectation(description: "clipboard read 2")
 
         handler.handle(body: ["action": "write", "text": "test_roundtrip"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertEqual((dict["data"] as? [String: Any])?["text"] as? String, "test_roundtrip")
             writeExp.fulfill()
         }
@@ -181,7 +163,7 @@ final class WebClipboardHandlerTests: XCTestCase {
         wait(for: [writeExp], timeout: 2.0)
 
         handler.handle(body: ["action": "read"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return

@@ -3,24 +3,6 @@ import XCTest
 
 final class WebVideoHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testVideoHandler_HandlerName() {
@@ -35,7 +17,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video unknown action")
 
         handler.handle(body: ["params": ["action": "unknownAction"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -50,7 +32,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video toggle face tracking")
 
         handler.handle(body: ["params": ["action": "toggleFaceTracking"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -69,7 +51,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video enable face tracking")
 
         handler.handle(body: ["params": ["action": "toggleFaceTracking", "enabled": true]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -88,7 +70,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video disable face tracking")
 
         handler.handle(body: ["params": ["action": "toggleFaceTracking", "enabled": false]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -107,7 +89,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video toggle hand tracking")
 
         handler.handle(body: ["params": ["action": "toggleHandTracking"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -126,7 +108,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video toggle frame transfer")
 
         handler.handle(body: ["params": ["action": "toggleFrameTransfer"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -145,7 +127,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video enable frame transfer")
 
         handler.handle(body: ["params": ["action": "toggleFrameTransfer", "enabled": true]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -164,7 +146,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video config")
 
         handler.handle(body: ["params": ["action": "config", "faceTracking": true, "handTracking": false, "frameTransfer": true, "transferMode": "base64"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -179,7 +161,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video stop without start")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -198,7 +180,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video check permission")
 
         handler.handle(body: ["params": ["action": "checkPermission"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -219,7 +201,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video start no webview")
 
         handler.handle(body: ["params": ["action": "start"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -235,7 +217,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video startOverlay no webview")
 
         handler.handle(body: ["params": ["action": "startOverlay"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -250,7 +232,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video update overlay not active")
 
         handler.handle(body: ["params": ["action": "updateOverlay", "x": 10, "y": 20]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -265,7 +247,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video switch no session")
 
         handler.handle(body: ["params": ["action": "switch"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -281,7 +263,7 @@ final class WebVideoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "video default action")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

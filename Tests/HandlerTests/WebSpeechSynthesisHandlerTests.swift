@@ -3,24 +3,6 @@ import XCTest
 
 final class WebSpeechSynthesisHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Speak Action
 
     func testSpeechSynthesisHandler_Speak_ReturnsSpeaking() {
@@ -28,7 +10,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "tts speak")
 
         handler.handle(body: ["params": ["action": "speak", "text": "hello", "lang": "en-US", "rate": 0.5]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -45,7 +27,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "tts speak empty")
 
         handler.handle(body: ["params": ["action": "speak"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -62,7 +44,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "tts default lang")
 
         handler.handle(body: ["params": ["action": "speak", "text": "test"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -81,7 +63,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "tts stop")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -98,7 +80,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "tts stop without speak")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -117,7 +99,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "tts pause error")
 
         handler.handle(body: ["params": ["action": "pause"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -130,7 +112,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "tts resume error")
 
         handler.handle(body: ["params": ["action": "resume"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -153,7 +135,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         let stopExp = XCTestExpectation(description: "tts stop after speak")
 
         handler.handle(body: ["params": ["action": "speak", "text": "test"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertEqual((dict["data"] as? [String: Any])?["status"] as? String, "speaking")
             speakExp.fulfill()
         }
@@ -161,7 +143,7 @@ final class WebSpeechSynthesisHandlerTests: XCTestCase {
         wait(for: [speakExp], timeout: 2.0)
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertEqual((dict["data"] as? [String: Any])?["status"] as? String, "stopped")
             stopExp.fulfill()
         }

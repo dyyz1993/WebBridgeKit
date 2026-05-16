@@ -491,7 +491,7 @@ final class ThemeComponentIntegrationTests: XCTestCase {
         container.addSubview(header)
 
         let settings: [(String, LucideIcon)] = [
-            ("Account", .user),
+            ("Account", .settings),
             ("Notifications", .bell),
             ("Privacy", .shield),
             ("Security", .lock),

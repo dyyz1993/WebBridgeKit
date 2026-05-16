@@ -3,24 +3,6 @@ import XCTest
 
 final class WebSetModalHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testSetModalHandler_HandlerName() {
@@ -35,7 +17,7 @@ final class WebSetModalHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "set modal no modal")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -50,7 +32,7 @@ final class WebSetModalHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "set modal error code")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["code"] as? Int, 400)
             expectation.fulfill()
         }
@@ -65,7 +47,7 @@ final class WebSetModalHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "set modal error message")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let errorMsg = dict["error"] as? String ?? ""
             XCTAssertTrue(errorMsg.contains("modal"), "Error should mention modal")
             expectation.fulfill()
@@ -81,7 +63,7 @@ final class WebSetModalHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "set modal width param")
 
         handler.handle(body: ["params": ["width": "80%"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["code"] as? Int, 400)
             expectation.fulfill()
         }
@@ -96,7 +78,7 @@ final class WebSetModalHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "set modal multiple params")
 
         handler.handle(body: ["params": ["width": "90%", "height": "80%", "mask": false]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["code"] as? Int, 400)
             expectation.fulfill()
         }
@@ -111,7 +93,7 @@ final class WebSetModalHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "set modal empty body")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

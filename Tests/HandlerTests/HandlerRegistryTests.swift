@@ -43,6 +43,7 @@ final class HandlerRegistryTests: XCTestCase {
         "file",
         "page",
         "cacheDebug"
+        , "showNotification"
     ]
 
     static let expectedCategories: [String: HandlerCategory] = [
@@ -79,7 +80,8 @@ final class HandlerRegistryTests: XCTestCase {
         "setModal": .navigation,
         "file": .file,
         "page": .cache,
-        "cacheDebug": .debug
+        "cacheDebug": .debug,
+        "showNotification": .system
     ]
 
     static let expectedHandlerTypes: [String: BaseWebNativeHandler.Type] = [
@@ -116,7 +118,8 @@ final class HandlerRegistryTests: XCTestCase {
         "setModal": WebSetModalHandler.self,
         "gesture": WebGestureHandler.self,
         "cacheDebug": WebCacheDebugHandler.self,
-        "page": WebPageCacheHandler.self
+        "page": WebPageCacheHandler.self,
+        "showNotification": WebShowNotificationHandler.self
     ]
 
     override func setUp() {

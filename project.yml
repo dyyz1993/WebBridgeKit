@@ -390,6 +390,7 @@ targets:
     sources:
       - path: Tests/HandlerTests
         includes:
+          - HandlerTestHelpers.swift
           - WebNetworkHandlerTests.swift
           - WebOpenPageHandlerTests.swift
           - WebOpenSettingsHandlerTests.swift

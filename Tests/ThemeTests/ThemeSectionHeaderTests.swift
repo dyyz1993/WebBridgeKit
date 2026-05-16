@@ -249,7 +249,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         header.layoutIfNeeded()
 
         let titleLabel = header.subviews.first as? UILabel
-        XCTAssertEqual(titleLabel?.frame.minX, 0, accuracy: 1, "Title should be at leading edge")
+        XCTAssertEqual(titleLabel?.frame.minX ?? 0, 0, accuracy: 1, "Title should be at leading edge")
     }
 
     func testTitleCenteredVertically() {
@@ -260,7 +260,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         XCTAssertNotNil(titleLabel)
 
         let expectedCenterY = header.bounds.height / 2
-        XCTAssertEqual(titleLabel?.center.y, expectedCenterY, accuracy: 1, "Title should be vertically centered")
+        XCTAssertEqual(titleLabel?.center.y ?? 0, expectedCenterY, accuracy: 1, "Title should be vertically centered")
     }
 
     func testActionButtonTrailingConstraint() {
@@ -272,7 +272,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         XCTAssertNotNil(actionButton)
 
         let expectedMaxX = header.bounds.width
-        XCTAssertEqual(actionButton?.frame.maxX, expectedMaxX, accuracy: 1, "Action button should be at trailing edge")
+        XCTAssertEqual(actionButton?.frame.maxX ?? 0, expectedMaxX, accuracy: 1, "Action button should be at trailing edge")
     }
 
     func testActionButtonCenteredVertically() {
@@ -284,7 +284,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         XCTAssertNotNil(actionButton)
 
         let expectedCenterY = header.bounds.height / 2
-        XCTAssertEqual(actionButton?.center.y, expectedCenterY, accuracy: 1, "Action button should be vertically centered")
+        XCTAssertEqual(actionButton?.center.y ?? 0, expectedCenterY, accuracy: 1, "Action button should be vertically centered")
     }
 
     func testConstraintsMaintainedOnResize() {
@@ -298,8 +298,8 @@ final class ThemeSectionHeaderTests: XCTestCase {
         let titleLabel = header.subviews.first as? UILabel
         let actionButton = header.subviews[1] as? UIButton
 
-        XCTAssertEqual(titleLabel?.frame.minX, 0, accuracy: 1)
-        XCTAssertEqual(actionButton?.frame.maxX, 400, accuracy: 1)
+        XCTAssertEqual(titleLabel?.frame.minX ?? 0, 0, accuracy: 1)
+        XCTAssertEqual(actionButton?.frame.maxX ?? 0, 400, accuracy: 1)
     }
 
     // MARK: - Action Button Target-Action

@@ -70,7 +70,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "system info complete")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -92,7 +92,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "system info \(field)")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -111,7 +111,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "network isConnected")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -128,7 +128,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "network type")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -149,7 +149,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "network isConnected bool")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return

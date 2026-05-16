@@ -3,15 +3,6 @@ import XCTest
 
 final class WebHapticHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
     // MARK: - All Valid Styles
 
     func testHapticHandler_LightStyle() {
@@ -49,7 +40,7 @@ final class WebHapticHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "haptic missing style")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -68,7 +59,7 @@ final class WebHapticHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "haptic invalid style")
 
         handler.handle(body: ["style": "nonexistent"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -87,7 +78,7 @@ final class WebHapticHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "haptic uppercase")
 
         handler.handle(body: ["style": "LIGHT"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -116,7 +107,7 @@ final class WebHapticHandlerTests: XCTestCase {
             let expectation = XCTestExpectation(description: "haptic rapid \(style)")
 
             handler.handle(body: ["style": style]) { result in
-                let dict = self.assertSuccess(result)
+                let dict = assertSuccess(result)
                 guard let data = dict["data"] as? [String: Any] else {
                     XCTFail("Missing data")
                     return
@@ -136,7 +127,7 @@ final class WebHapticHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "haptic \(style)")
 
         handler.handle(body: ["style": style]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return

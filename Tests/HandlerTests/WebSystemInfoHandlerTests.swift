@@ -3,15 +3,6 @@ import XCTest
 
 final class WebSystemInfoHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testSystemInfoHandler_HandlerName() {
@@ -26,7 +17,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info handle")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -41,7 +32,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info keys")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -68,7 +59,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info version")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let systemVersion = data["systemVersion"] as? String else {
                 XCTFail("Missing systemVersion")
@@ -88,7 +79,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info screen dimensions")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -115,7 +106,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info battery state")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let batteryState = data["batteryState"] as? String else {
                 XCTFail("Missing batteryState")
@@ -136,7 +127,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info battery level")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let batteryLevel = data["batteryLevel"] as? Int else {
                 XCTFail("Missing batteryLevel")
@@ -157,7 +148,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info locale timezone")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let locale = data["locale"] as? String,
                   let timezone = data["timezone"] as? String else {
@@ -179,7 +170,7 @@ final class WebSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info ignores body")
 
         handler.handle(body: ["foo": "bar", "detail": true]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }

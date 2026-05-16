@@ -3,24 +3,6 @@ import XCTest
 
 final class WebBluetoothHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Instantiation
 
     func testBluetoothHandler_CanBeInstantiated() {
@@ -35,7 +17,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth status default")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -53,7 +35,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth empty action")
 
         handler.handle(body: ["params": ["action": ""]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -71,7 +53,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth state is string")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -91,7 +73,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth available is bool")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -110,7 +92,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth stopScan")
 
         handler.handle(body: ["params": ["action": "stopScan"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -129,7 +111,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth connect unsupported")
 
         handler.handle(body: ["params": ["action": "connect"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -142,7 +124,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth pair unsupported")
 
         handler.handle(body: ["params": ["action": "pair"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -155,7 +137,7 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "bluetooth write unsupported")
 
         handler.handle(body: ["params": ["action": "write"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Unsupported action"))
             expectation.fulfill()
@@ -181,13 +163,13 @@ final class WebBluetoothHandlerTests: XCTestCase {
         let exp2 = XCTestExpectation(description: "handler2")
 
         handler1.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             exp1.fulfill()
         }
 
         handler2.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             exp2.fulfill()
         }

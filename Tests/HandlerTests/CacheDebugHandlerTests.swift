@@ -3,18 +3,6 @@ import XCTest
 
 extension AdvancedHandlerTests {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        let dict = result as? [String: Any] ?? [:]
-        XCTAssertTrue(dict["success"] as? Bool ?? false)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        let dict = result as? [String: Any] ?? [:]
-        XCTAssertFalse(dict["success"] as? Bool ?? true)
-        return dict
-    }
-
     // MARK: - WebCacheDebugHandler
 
     func testCacheDebugHandler_GetCacheInfo() {
@@ -22,7 +10,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getCacheInfo")
 
         handler.handle(body: ["params": ["action": "getCacheInfo"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -35,7 +23,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getMemoryInfo")
 
         handler.handle(body: ["params": ["action": "getMemoryInfo"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -48,7 +36,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getConfig")
 
         handler.handle(body: ["params": ["action": "getConfig"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -61,7 +49,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug clearAll")
 
         handler.handle(body: ["params": ["action": "clearAll"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -74,7 +62,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getEntries")
 
         handler.handle(body: ["params": ["action": "getEntries"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -87,7 +75,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getEntriesGroupedByDomain")
 
         handler.handle(body: ["params": ["action": "getEntriesGroupedByDomain"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -100,7 +88,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug isCached invalid url")
 
         handler.handle(body: ["params": ["action": "isCached"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -113,7 +101,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug deleteByPattern missing")
 
         handler.handle(body: ["params": ["action": "deleteByPattern"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -126,7 +114,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug deleteByKey missing")
 
         handler.handle(body: ["params": ["action": "deleteByKey"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -139,7 +127,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug setConfig")
 
         handler.handle(body: ["params": ["action": "setConfig", "config": ["enableCompression": true]]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -152,7 +140,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug setConfig missing")
 
         handler.handle(body: ["params": ["action": "setConfig"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -165,7 +153,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getRules")
 
         handler.handle(body: ["params": ["action": "getRules"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -178,7 +166,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getPageRules")
 
         handler.handle(body: ["params": ["action": "getPageRules"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -191,7 +179,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug addPageRule missing")
 
         handler.handle(body: ["params": ["action": "addPageRule"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -231,7 +219,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug deletePageRule missing")
 
         handler.handle(body: ["params": ["action": "deletePageRule"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -244,7 +232,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug clearAllPageRules")
 
         handler.handle(body: ["params": ["action": "clearAllPageRules"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -257,7 +245,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug resetToPresetPageRules")
 
         handler.handle(body: ["params": ["action": "resetToPresetPageRules"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -270,7 +258,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug getCachedPages")
 
         handler.handle(body: ["params": ["action": "getCachedPages"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -283,7 +271,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug cachePage missing")
 
         handler.handle(body: ["params": ["action": "cachePage"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -296,7 +284,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug deleteCachedPage missing")
 
         handler.handle(body: ["params": ["action": "deleteCachedPage"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -309,7 +297,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug refreshCachedPage missing")
 
         handler.handle(body: ["params": ["action": "refreshCachedPage"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -322,7 +310,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug addExcludePattern missing")
 
         handler.handle(body: ["params": ["action": "addExcludePattern"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -335,7 +323,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug clearAllRules")
 
         handler.handle(body: ["params": ["action": "clearAllRules"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -348,7 +336,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug resetToPresetRules")
 
         handler.handle(body: ["params": ["action": "resetToPresetRules"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -361,7 +349,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "cacheDebug unknown action")
 
         handler.handle(body: ["params": ["action": "unknownAction"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

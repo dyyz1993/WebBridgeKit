@@ -25,24 +25,6 @@ final class WebLocationHandlerTests: XCTestCase {
         return WebLocationHandler(locationProvider: provider)
     }
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testLocationHandler_HandlerName() {
@@ -151,7 +133,7 @@ final class WebLocationHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "location disabled")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -168,7 +150,7 @@ final class WebLocationHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "location denied")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -183,7 +165,7 @@ final class WebLocationHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "location coordinates")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             let data = dict["data"] as? [String: Any] ?? dict
             XCTAssertNotNil(data["latitude"])
             XCTAssertNotNil(data["longitude"])

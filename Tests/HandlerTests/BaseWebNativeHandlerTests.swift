@@ -4,24 +4,6 @@ import WebKit
 
 final class BaseWebNativeHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - WebBridgeResponse Tests
 
     func testWebBridgeResponse_Success_NoData() {
@@ -83,7 +65,7 @@ final class BaseWebNativeHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "default handle rejects")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -96,7 +78,7 @@ final class BaseWebNativeHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "resolve returns success")
 
         handler.resolve(["test": true], completion: { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -113,7 +95,7 @@ final class BaseWebNativeHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "resolve nil data")
 
         handler.resolve(completion: { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNil(dict["data"])
             expectation.fulfill()
         })
@@ -126,7 +108,7 @@ final class BaseWebNativeHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "reject with code")
 
         handler.reject(error: "test error", code: 400, completion: { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["error"] as? String, "test error")
             XCTAssertEqual(dict["code"] as? Int, 400)
             expectation.fulfill()
@@ -140,7 +122,7 @@ final class BaseWebNativeHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "reject without code")
 
         handler.reject(error: "no code", completion: { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         })

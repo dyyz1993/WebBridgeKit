@@ -3,24 +3,6 @@ import XCTest
 
 final class WebSpeechHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testSpeechHandler_HandlerName() {
@@ -35,7 +17,7 @@ final class WebSpeechHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "speech permission check")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -55,7 +37,7 @@ final class WebSpeechHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "speech check permission action")
 
         handler.handle(body: ["params": ["action": "checkPermission"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -75,7 +57,7 @@ final class WebSpeechHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "speech unknown action")
 
         handler.handle(body: ["params": ["action": "unknownAction"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -90,7 +72,7 @@ final class WebSpeechHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "speech stop action")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -145,7 +127,7 @@ final class WebSpeechHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "speech direct body params")
 
         handler.handle(body: ["action": "checkPermission"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -164,7 +146,7 @@ final class WebSpeechHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "speech valid status string")
 
         handler.handle(body: ["params": ["action": "checkPermission"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let status = data["status"] as? String else {
                 XCTFail("Missing status")

@@ -10,7 +10,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "layout get status")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -28,7 +28,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "layout setOrientation portrait")
 
         handler.handle(body: ["params": ["action": "setOrientation", "orientation": "portrait"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -45,7 +45,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "layout setOrientation landscape")
 
         handler.handle(body: ["params": ["action": "setOrientation", "orientation": "landscape"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -62,7 +62,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "layout setFullscreen")
 
         handler.handle(body: ["params": ["action": "setFullscreen", "enabled": true]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -79,7 +79,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "layout unsupported action")
 
         handler.handle(body: ["params": ["action": "rotateScreen"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

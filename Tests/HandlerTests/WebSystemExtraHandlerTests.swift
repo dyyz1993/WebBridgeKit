@@ -10,24 +10,6 @@ final class WebSystemExtraHandlerTests: XCTestCase {
         }
     }
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Instantiation
 
     func testSystemExtraHandler_CanBeInstantiated() {
@@ -153,7 +135,7 @@ final class WebSystemExtraHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "systemExtra unsupported")
 
         handler.handle(body: ["params": ["action": "restart"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -166,7 +148,7 @@ final class WebSystemExtraHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "systemExtra empty action")
 
         handler.handle(body: ["params": [:]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

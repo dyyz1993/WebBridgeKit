@@ -3,15 +3,6 @@ import XCTest
 
 final class WebCameraHandlerTests: XCTestCase {
 
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Instantiation
 
     func testCameraHandler_CanBeInstantiated() {
@@ -26,7 +17,7 @@ final class WebCameraHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "camera unknown type")
 
         handler.handle(body: ["params": ["type": "hologram"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Unknown camera type"))
             expectation.fulfill()
@@ -40,7 +31,7 @@ final class WebCameraHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "camera empty type defaults photo")
 
         handler.handle(body: ["params": ["type": ""]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertTrue((dict["error"] as? String ?? "").contains("Unknown camera type"))
             expectation.fulfill()
         }

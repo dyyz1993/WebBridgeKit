@@ -3,24 +3,6 @@ import XCTest
 
 final class WebContactHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Instantiation
 
     func testContactsHandler_CanBeInstantiated() {
@@ -42,7 +24,7 @@ final class WebContactHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "contacts checkPermission")
 
         handler.handle(body: ["params": ["action": "checkPermission"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -82,7 +64,7 @@ final class WebContactHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "contacts unknown action")
 
         handler.handle(body: ["params": ["action": "delete"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Unknown action"))
             expectation.fulfill()
@@ -96,7 +78,7 @@ final class WebContactHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "contacts create action")
 
         handler.handle(body: ["params": ["action": "create"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

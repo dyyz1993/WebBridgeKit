@@ -3,24 +3,6 @@ import XCTest
 
 final class WebShareHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Missing Parameters
 
     func testShareHandler_EmptyBody_ReturnsError() {
@@ -28,7 +10,7 @@ final class WebShareHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "share empty body")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -41,7 +23,7 @@ final class WebShareHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "share missing text")
 
         handler.handle(body: ["params": ["url": "https://example.com"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -54,7 +36,7 @@ final class WebShareHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "share missing url")
 
         handler.handle(body: ["params": ["text": "hello"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -67,7 +49,7 @@ final class WebShareHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "share invalid url")
 
         handler.handle(body: ["params": ["text": "hello", "url": "not_a_url"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -100,7 +82,7 @@ final class WebShareHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "share url with spaces")
 
         handler.handle(body: ["params": ["text": "hello", "url": "not a url"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -113,7 +95,7 @@ final class WebShareHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "share empty text url")
 
         handler.handle(body: ["params": ["text": "", "url": ""]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

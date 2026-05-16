@@ -3,15 +3,6 @@ import XCTest
 
 final class WebNetworkHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
     // MARK: - Response Structure
 
     func testNetworkHandler_ReturnsIsConnected() {
@@ -19,7 +10,7 @@ final class WebNetworkHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "network isConnected")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -37,7 +28,7 @@ final class WebNetworkHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "network type")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -63,7 +54,7 @@ final class WebNetworkHandlerTests: XCTestCase {
             let expectation = XCTestExpectation(description: "network consistent \(i)")
 
             handler.handle(body: [:]) { result in
-                let dict = self.assertSuccess(result)
+                let dict = assertSuccess(result)
                 guard let data = dict["data"] as? [String: Any],
                       let networkType = data["networkType"] as? String else {
                     XCTFail("Missing data")
@@ -87,7 +78,7 @@ final class WebNetworkHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "network ignores body")
 
         handler.handle(body: ["foo": "bar", "action": "unknown"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -114,7 +105,7 @@ final class WebNetworkHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "network data keys")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return

@@ -3,24 +3,6 @@ import XCTest
 
 final class WebOpenPageHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Missing Parameters
 
     func testOpenPageHandler_MissingPageAndURL_ReturnsError() {
@@ -28,7 +10,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage missing params")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -41,7 +23,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage empty params")
 
         handler.handle(body: ["params": [:]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -56,7 +38,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage with page name")
 
         handler.handle(body: ["params": ["page": "sdk_test"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -73,7 +55,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage with mode")
 
         handler.handle(body: ["params": ["page": "test", "mode": "immersive"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -90,7 +72,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage modal params")
 
         handler.handle(body: ["params": ["page": "test", "modal": "present", "width": "50%"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -109,7 +91,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage with url")
 
         handler.handle(body: ["params": ["url": "https://example.com"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -128,7 +110,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage path traversal")
 
         handler.handle(body: ["params": ["page": "../secret"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -141,7 +123,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage double dot")
 
         handler.handle(body: ["params": ["page": "../../etc/passwd"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -163,7 +145,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage immersive")
 
         handler.handle(body: ["params": ["page": "test", "mode": "immersive"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -180,7 +162,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "openPage immersive bool")
 
         handler.handle(body: ["params": ["page": "test", "immersive": true]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -204,7 +186,7 @@ final class WebOpenPageHandlerTests: XCTestCase {
             "disableSwipeBack": true,
             "orientation": "portrait"
         ]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return

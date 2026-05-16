@@ -3,15 +3,6 @@ import XCTest
 
 final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
     // MARK: - WebSystemInfoHandler Fields
 
     func testSystemInfoHandler_AllFields() {
@@ -19,7 +10,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info all fields")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -47,7 +38,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info screen int")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -65,7 +56,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info scale type")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -84,7 +75,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info battery int")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -104,7 +95,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info battery state")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -123,7 +114,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info name")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -141,7 +132,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "system info ignores body")
 
         handler.handle(body: ["action": "getAll", "extra": true]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -161,7 +152,7 @@ final class WebBatteryAndSystemInfoHandlerTests: XCTestCase {
             let expectation = XCTestExpectation(description: "system info consistent \(i)")
 
             handler.handle(body: [:]) { result in
-                let dict = self.assertSuccess(result)
+                let dict = assertSuccess(result)
                 guard let data = dict["data"] as? [String: Any],
                       let version = data["systemVersion"] as? String else {
                     XCTFail("Missing data")

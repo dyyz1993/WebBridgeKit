@@ -3,24 +3,6 @@ import XCTest
 
 final class WebScreenHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Set Keep Screen On
 
     func testScreenHandler_SetKeepScreenOn_True() {
@@ -28,7 +10,7 @@ final class WebScreenHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "screen keepScreenOn true")
 
         handler.handle(body: ["params": ["action": "setKeepScreenOn", "enabled": true]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -45,7 +27,7 @@ final class WebScreenHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "screen keepScreenOn false")
 
         handler.handle(body: ["params": ["action": "setKeepScreenOn", "enabled": false]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -62,7 +44,7 @@ final class WebScreenHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "screen keepScreenOn default")
 
         handler.handle(body: ["params": ["action": "setKeepScreenOn"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -97,7 +79,7 @@ final class WebScreenHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "screen exit stealth without enter")
 
         handler.handle(body: ["params": ["action": "exitStealthMode"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return

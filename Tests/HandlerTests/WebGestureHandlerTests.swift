@@ -15,31 +15,13 @@ final class WebGestureHandlerTests: XCTestCase {
         super.tearDown()
     }
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handle Empty Body / No Action
 
     func testHandle_EmptyBody_NoAction_ReturnsConfigStatus() {
         let expectation = XCTestExpectation(description: "empty body returns config")
 
         handler.handle(body: [:]) { result in
-            let data = self.assertSuccess(result)
+            let data = assertSuccess(result)
             XCTAssertNotNil(data["data"])
             expectation.fulfill()
         }
@@ -51,7 +33,7 @@ final class WebGestureHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "empty action returns config")
 
         handler.handle(body: ["action": ""]) { result in
-            let data = self.assertSuccess(result)
+            let data = assertSuccess(result)
             guard let configData = data["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -69,7 +51,7 @@ final class WebGestureHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "unknown action rejects")
 
         handler.handle(body: ["action": "nonExistent"]) { result in
-            let data = self.assertFailure(result)
+            let data = assertFailure(result)
             XCTAssertNotNil(data["error"])
             XCTAssertEqual(data["code"] as? Int, 404)
             expectation.fulfill()
@@ -91,7 +73,7 @@ final class WebGestureHandlerTests: XCTestCase {
         ]
 
         handler.handle(body: body) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             let config = self.handler.getConfig()
             XCTAssertFalse(config.enabled)
             XCTAssertEqual(config.pullThreshold, 0.3, accuracy: 0.001)
@@ -109,7 +91,7 @@ final class WebGestureHandlerTests: XCTestCase {
         handler.handle(body: ["action": "disable"]) { _ in
             XCTAssertFalse(self.handler.getConfig().enabled)
             self.handler.handle(body: ["action": "enable"]) { result in
-                _ = self.assertSuccess(result)
+                _ = assertSuccess(result)
                 XCTAssertTrue(self.handler.getConfig().enabled)
                 expectation.fulfill()
             }
@@ -127,7 +109,7 @@ final class WebGestureHandlerTests: XCTestCase {
             "action": "enable",
             "gestures": ["swipeLeft", "longPress"]
         ]) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             let config = self.handler.getConfig()
             XCTAssertTrue(config.enabledGestures.contains(.swipeLeft))
             XCTAssertTrue(config.enabledGestures.contains(.longPress))
@@ -143,7 +125,7 @@ final class WebGestureHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "disable without gestures")
 
         handler.handle(body: ["action": "disable"]) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             XCTAssertFalse(self.handler.getConfig().enabled)
             expectation.fulfill()
         }
@@ -160,7 +142,7 @@ final class WebGestureHandlerTests: XCTestCase {
             "action": "disable",
             "gestures": ["pull"]
         ]) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             let config = self.handler.getConfig()
             XCTAssertFalse(config.enabledGestures.contains(.pull))
             expectation.fulfill()
@@ -178,7 +160,7 @@ final class WebGestureHandlerTests: XCTestCase {
             "action": "setPullThreshold",
             "threshold": CGFloat(0.3)
         ]) { result in
-            let data = self.assertSuccess(result)
+            let data = assertSuccess(result)
             guard let responseData = data["data"] as? [String: Any] else {
                 XCTFail("Missing response data")
                 return
@@ -198,7 +180,7 @@ final class WebGestureHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "start pull refresh")
 
         handler.handle(body: ["action": "startPullRefresh"]) { result in
-            let data = self.assertSuccess(result)
+            let data = assertSuccess(result)
             guard let responseData = data["data"] as? [String: Any] else {
                 XCTFail("Missing response data")
                 return
@@ -216,7 +198,7 @@ final class WebGestureHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "stop pull refresh")
 
         handler.handle(body: ["action": "stopPullRefresh"]) { result in
-            let data = self.assertSuccess(result)
+            let data = assertSuccess(result)
             guard let responseData = data["data"] as? [String: Any] else {
                 XCTFail("Missing response data")
                 return
@@ -234,7 +216,7 @@ final class WebGestureHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "cancel pull refresh")
 
         handler.handle(body: ["action": "cancelPullRefresh"]) { result in
-            let data = self.assertSuccess(result)
+            let data = assertSuccess(result)
             guard let responseData = data["data"] as? [String: Any] else {
                 XCTFail("Missing response data")
                 return

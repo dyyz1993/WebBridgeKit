@@ -3,24 +3,6 @@ import XCTest
 
 final class WebClosePageHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testClosePageHandler_HandlerName() {
@@ -35,7 +17,7 @@ final class WebClosePageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "close page no browser")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -50,7 +32,7 @@ final class WebClosePageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "close page error code")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["code"] as? Int, 404)
             expectation.fulfill()
         }
@@ -65,7 +47,7 @@ final class WebClosePageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "close page animated param")
 
         handler.handle(body: ["params": ["animated": false, "reason": "timeout"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["code"] as? Int, 404)
             expectation.fulfill()
         }
@@ -80,7 +62,7 @@ final class WebClosePageHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "close page empty body")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

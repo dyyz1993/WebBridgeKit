@@ -3,24 +3,6 @@ import XCTest
 
 final class WebPermissionHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Missing Type
 
     func testPermissionHandler_MissingType_ReturnsError() {
@@ -28,7 +10,7 @@ final class WebPermissionHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission missing type")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -43,7 +25,7 @@ final class WebPermissionHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission invalid type")
 
         handler.handle(body: ["type": "invalidType"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -56,7 +38,7 @@ final class WebPermissionHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission empty type")
 
         handler.handle(body: ["type": ""]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -69,7 +51,7 @@ final class WebPermissionHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission garbage type")
 
         handler.handle(body: ["type": "###123"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Invalid"))
             expectation.fulfill()
@@ -85,7 +67,7 @@ final class WebPermissionHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission non-string type")
 
         handler.handle(body: ["type": 123]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

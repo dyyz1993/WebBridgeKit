@@ -3,15 +3,6 @@ import XCTest
 
 final class WebGoBackHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testGoBackHandler_HandlerName() {
@@ -26,7 +17,7 @@ final class WebGoBackHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "go back handle")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -41,7 +32,7 @@ final class WebGoBackHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "go back steps")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -61,7 +52,7 @@ final class WebGoBackHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "go back custom steps")
 
         handler.handle(body: ["params": ["steps": 3]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -81,7 +72,7 @@ final class WebGoBackHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "go back default steps")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -101,7 +92,7 @@ final class WebGoBackHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "go back zero steps")
 
         handler.handle(body: ["params": ["steps": 0]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -116,7 +107,7 @@ final class WebGoBackHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "go back negative steps")
 
         handler.handle(body: ["params": ["steps": -1]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -131,7 +122,7 @@ final class WebGoBackHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "go back non-integer steps")
 
         handler.handle(body: ["params": ["steps": "two"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }

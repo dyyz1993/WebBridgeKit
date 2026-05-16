@@ -3,15 +3,6 @@ import XCTest
 
 final class WebPermissionStatusHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testPermissionStatusHandler_HandlerName() {
@@ -26,7 +17,7 @@ final class WebPermissionStatusHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission status handle")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -41,7 +32,7 @@ final class WebPermissionStatusHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission status array")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let permissions = data["permissions"] as? [[String: Any]] else {
                 XCTFail("Missing permissions array")
@@ -61,7 +52,7 @@ final class WebPermissionStatusHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission status summary")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let summary = data["summary"] as? [String: Any] else {
                 XCTFail("Missing summary")
@@ -84,7 +75,7 @@ final class WebPermissionStatusHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission status total matches")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let permissions = data["permissions"] as? [[String: Any]],
                   let summary = data["summary"] as? [String: Any],
@@ -106,7 +97,7 @@ final class WebPermissionStatusHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission status keys")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any],
                   let permissions = data["permissions"] as? [[String: Any]] else {
                 XCTFail("Missing permissions")
@@ -132,7 +123,7 @@ final class WebPermissionStatusHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "permission status ignores body")
 
         handler.handle(body: ["filter": "camera", "detail": true]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }

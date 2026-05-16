@@ -3,24 +3,6 @@ import XCTest
 
 final class WebSensorsHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Get Status (Default)
 
     func testSensorsHandler_Default_ReturnsStatus() {
@@ -28,7 +10,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors default")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -46,7 +28,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors empty action")
 
         handler.handle(body: ["params": ["action": ""]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -64,7 +46,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors active flags")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -86,7 +68,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors stopAccelerometer")
 
         handler.handle(body: ["params": ["action": "stopAccelerometer"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -103,7 +85,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors stopGyroscope")
 
         handler.handle(body: ["params": ["action": "stopGyroscope"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -120,7 +102,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors stop without start")
 
         handler.handle(body: ["params": ["action": "stopAccelerometer"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertEqual((dict["data"] as? [String: Any])?["status"] as? String, "stopped")
             expectation.fulfill()
         }
@@ -135,7 +117,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors unsupported")
 
         handler.handle(body: ["params": ["action": "startMagnetometer"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -148,7 +130,7 @@ final class WebSensorsHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "sensors invalid")
 
         handler.handle(body: ["params": ["action": "calibrate"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

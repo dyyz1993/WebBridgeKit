@@ -141,8 +141,10 @@ final class ThemeBadgeTests: XCTestCase {
 
         let label = badge.subviews.first as? UILabel
         XCTAssertNotNil(label)
-        XCTAssertEqual(label?.font.pointSize, CGFloat(10), accuracy: 0.1)
-        XCTAssertEqual(label?.font.fontDescriptor.weight, .bold)
+        let fontSize = label?.font.pointSize ?? 0
+        XCTAssertEqual(fontSize, CGFloat(10), accuracy: 0.1)
+        let traits = label?.font.fontDescriptor.symbolicTraits ?? []
+        XCTAssertTrue(traits.contains(.traitBold))
     }
 
     func testLabelTextAlignment() {

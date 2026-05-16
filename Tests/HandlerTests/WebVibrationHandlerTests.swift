@@ -3,15 +3,6 @@ import XCTest
 
 final class WebVibrationHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
     // MARK: - Default Duration
 
     func testVibrateHandler_DefaultDuration_Is1000() {
@@ -19,7 +10,7 @@ final class WebVibrationHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "vibrate default duration")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -38,7 +29,7 @@ final class WebVibrationHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "vibrate explicit duration")
 
         handler.handle(body: ["duration": 500]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -57,7 +48,7 @@ final class WebVibrationHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "vibrate long duration")
 
         handler.handle(body: ["duration": 3000]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -76,7 +67,7 @@ final class WebVibrationHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "vibrate zero duration")
 
         handler.handle(body: ["duration": 0]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -104,7 +95,7 @@ final class WebVibrationHandlerTests: XCTestCase {
             let expectation = XCTestExpectation(description: "vibrate rapid \(i)")
 
             handler.handle(body: ["duration": 100]) { result in
-                let dict = self.assertSuccess(result)
+                let dict = assertSuccess(result)
                 XCTAssertNotNil(dict["data"])
                 expectation.fulfill()
             }

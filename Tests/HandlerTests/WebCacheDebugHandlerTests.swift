@@ -15,31 +15,13 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         super.tearDown()
     }
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Empty / Unknown Action
 
     func testHandle_EmptyAction_RejectsUnknown() {
         let expectation = XCTestExpectation(description: "empty action rejects")
 
         handler.handle(body: [:]) { result in
-            _ = self.assertFailure(result)
+            _ = assertFailure(result)
             expectation.fulfill()
         }
 
@@ -50,7 +32,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "unknown action rejects")
 
         handler.handle(body: ["action": "nonExistentAction"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Unknown action"))
@@ -66,7 +48,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "getInfo success")
 
         handler.handle(body: ["action": "getInfo"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let outerData = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -83,7 +65,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "getCacheInfo alias success")
 
         handler.handle(body: ["action": "getCacheInfo"]) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             expectation.fulfill()
         }
 
@@ -96,7 +78,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "getMemoryInfo success")
 
         handler.handle(body: ["action": "getMemoryInfo"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let outerData = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -115,7 +97,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clearAll success")
 
         handler.handle(body: ["action": "clearAll"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -133,7 +115,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "getConfig success")
 
         handler.handle(body: ["action": "getConfig"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -159,7 +141,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "isCached missing url")
 
         handler.handle(body: ["action": "isCached"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Invalid URL"))
             expectation.fulfill()
@@ -174,7 +156,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "deleteByPattern missing pattern")
 
         handler.handle(body: ["action": "deleteByPattern"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Pattern is required"))
             expectation.fulfill()
@@ -187,7 +169,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "deleteByGlob missing pattern")
 
         handler.handle(body: ["action": "deleteByGlob"]) { result in
-            _ = self.assertFailure(result)
+            _ = assertFailure(result)
             expectation.fulfill()
         }
 
@@ -200,7 +182,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "deleteByKey missing key")
 
         handler.handle(body: ["action": "deleteByKey"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Key is required"))
             expectation.fulfill()
@@ -215,7 +197,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "setConfig missing config")
 
         handler.handle(body: ["action": "setConfig"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Config is required"))
             expectation.fulfill()
@@ -230,7 +212,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "addPageRule missing rule")
 
         handler.handle(body: ["action": "addPageRule"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Rule is required"))
             expectation.fulfill()
@@ -245,7 +227,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "getPageRules success")
 
         handler.handle(body: ["action": "getPageRules"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -267,7 +249,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "deletePageRule missing ruleId")
 
         handler.handle(body: ["action": "deletePageRule"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Rule ID is required"))
             expectation.fulfill()
@@ -282,7 +264,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "cachePage missing params")
 
         handler.handle(body: ["action": "cachePage"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("URL and ruleId are required"))
             expectation.fulfill()
@@ -298,7 +280,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
             "action": "cachePage",
             "params": ["url": "https://example.com"]
         ]) { result in
-            _ = self.assertFailure(result)
+            _ = assertFailure(result)
             expectation.fulfill()
         }
 
@@ -311,7 +293,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "getCachedPages success")
 
         handler.handle(body: ["action": "getCachedPages"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -331,7 +313,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "updatePageRule missing rule")
 
         handler.handle(body: ["action": "updatePageRule"]) { result in
-            _ = self.assertFailure(result)
+            _ = assertFailure(result)
             expectation.fulfill()
         }
 
@@ -344,7 +326,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "clearAllPageRules success")
 
         handler.handle(body: ["action": "clearAllPageRules"]) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             expectation.fulfill()
         }
 
@@ -357,7 +339,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "resetToPresetPageRules success")
 
         handler.handle(body: ["action": "resetToPresetPageRules"]) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             expectation.fulfill()
         }
 
@@ -370,7 +352,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "addExcludePattern missing params")
 
         handler.handle(body: ["action": "addExcludePattern"]) { result in
-            _ = self.assertFailure(result)
+            _ = assertFailure(result)
             expectation.fulfill()
         }
 
@@ -383,7 +365,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "removeExcludePattern missing params")
 
         handler.handle(body: ["action": "removeExcludePattern"]) { result in
-            _ = self.assertFailure(result)
+            _ = assertFailure(result)
             expectation.fulfill()
         }
 
@@ -396,7 +378,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "refreshCachedPage missing pageId")
 
         handler.handle(body: ["action": "refreshCachedPage"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Page ID is required"))
             expectation.fulfill()
@@ -411,7 +393,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "deleteCachedPage missing pageId")
 
         handler.handle(body: ["action": "deleteCachedPage"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Page ID is required"))
             expectation.fulfill()
@@ -426,7 +408,7 @@ final class WebCacheDebugHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "getEntries success")
 
         handler.handle(body: ["action": "getEntries"]) { result in
-            _ = self.assertSuccess(result)
+            _ = assertSuccess(result)
             expectation.fulfill()
         }
 

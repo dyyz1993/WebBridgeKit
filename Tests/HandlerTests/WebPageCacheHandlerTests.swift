@@ -3,24 +3,6 @@ import XCTest
 
 final class WebPageCacheHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testPageCacheHandler_HandlerName() {
@@ -35,7 +17,7 @@ final class WebPageCacheHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "page cache missing method")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -50,7 +32,7 @@ final class WebPageCacheHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "page cache unknown method")
 
         handler.handle(body: ["method": "deleteAll"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -65,7 +47,7 @@ final class WebPageCacheHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "page cache clear")
 
         handler.handle(body: ["method": "clear"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -80,7 +62,7 @@ final class WebPageCacheHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "page cache get info")
 
         handler.handle(body: ["method": "getInfo"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             XCTAssertNotNil(dict["data"])
             expectation.fulfill()
         }
@@ -95,7 +77,7 @@ final class WebPageCacheHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "page cache info metrics")
 
         handler.handle(body: ["method": "getInfo"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -116,7 +98,7 @@ final class WebPageCacheHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "page cache preload missing name")
 
         handler.handle(body: ["method": "preload"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -149,7 +131,7 @@ final class WebPageCacheHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "page cache non-string method")
 
         handler.handle(body: ["method": 123]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

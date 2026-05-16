@@ -3,24 +3,6 @@ import XCTest
 
 final class WebMediaHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Handler Name
 
     func testMediaHandler_HandlerName() {
@@ -35,7 +17,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media unknown action")
 
         handler.handle(body: ["params": ["action": "unknownAction"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["code"] as? Int, 404)
             expectation.fulfill()
         }
@@ -50,7 +32,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media empty action")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertEqual(dict["code"] as? Int, 404)
             expectation.fulfill()
         }
@@ -65,7 +47,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media save image invalid data")
 
         handler.handle(body: ["params": ["action": "saveImage", "data": "not-valid-base64"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -80,7 +62,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media save image empty data")
 
         handler.handle(body: ["params": ["action": "saveImage", "data": ""]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -95,7 +77,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media save file invalid base64")
 
         handler.handle(body: ["params": ["action": "saveFile", "data": "!!!invalid!!!", "fileName": "test.txt"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -110,7 +92,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media save file empty data")
 
         handler.handle(body: ["params": ["action": "saveFile", "data": "", "fileName": "test.txt"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -125,7 +107,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media upload invalid url")
 
         handler.handle(body: ["params": ["action": "uploadFile", "path": "/tmp/test.m4a", "url": "not-a-url"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -140,7 +122,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media upload empty url")
 
         handler.handle(body: ["params": ["action": "uploadFile", "path": "/tmp/test.m4a", "url": ""]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -155,7 +137,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media upload missing params")
 
         handler.handle(body: ["params": ["action": "uploadFile"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -170,7 +152,7 @@ final class WebMediaHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "media error contains action")
 
         handler.handle(body: ["params": ["action": "deleteMedia"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let errorMsg = dict["error"] as? String ?? ""
             XCTAssertTrue(errorMsg.contains("deleteMedia"), "Error should contain the action name")
             expectation.fulfill()

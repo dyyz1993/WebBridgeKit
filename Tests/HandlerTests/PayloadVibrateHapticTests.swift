@@ -10,7 +10,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "payload handler completes")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -30,7 +30,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "vibrate with duration")
 
         handler.handle(body: ["duration": 500]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -47,7 +47,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "vibrate default duration")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -94,7 +94,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "haptic invalid style")
 
         handler.handle(body: ["style": "nonexistent"]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -111,7 +111,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "haptic default style")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -128,7 +128,7 @@ extension SimpleHandlerTests {
         let expectation = XCTestExpectation(description: "haptic \(style)")
 
         handler.handle(body: ["style": style]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data for style \(style)")
                 return

@@ -10,7 +10,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "speechSynthesis speak")
 
         handler.handle(body: ["params": ["action": "speak", "text": "hello", "lang": "en-US", "rate": 0.5]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -27,7 +27,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "speechSynthesis stop")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -44,7 +44,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "speechSynthesis unsupported")
 
         handler.handle(body: ["params": ["action": "pause"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -59,7 +59,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "systemExtra unsupported")
 
         handler.handle(body: ["params": ["action": "restart"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -74,7 +74,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "mirroring getStatus")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -92,7 +92,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "mirroring getStatus action")
 
         handler.handle(body: ["params": ["action": "getStatus"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -109,7 +109,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "mirroring startObserve")
 
         handler.handle(body: ["params": ["action": "startObserve"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -126,7 +126,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "mirroring stopObserve")
 
         handler.handle(body: ["params": ["action": "stopObserve"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -143,7 +143,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "mirroring unsupported")
 
         handler.handle(body: ["params": ["action": "mirror"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -158,7 +158,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "sensors getStatus")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -176,7 +176,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "sensors stopAccelerometer")
 
         handler.handle(body: ["params": ["action": "stopAccelerometer"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -193,7 +193,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "sensors stopGyroscope")
 
         handler.handle(body: ["params": ["action": "stopGyroscope"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -210,7 +210,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "sensors unsupported")
 
         handler.handle(body: ["params": ["action": "startMagnetometer"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -230,7 +230,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "bluetooth getStatus")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -248,7 +248,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "bluetooth unsupported")
 
         handler.handle(body: ["params": ["action": "connect"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -263,7 +263,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "permission invalid type")
 
         handler.handle(body: ["type": "invalidType"]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -276,7 +276,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "permission missing type")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -296,7 +296,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "camera unknown type")
 
         handler.handle(body: ["params": ["type": "hologram"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -311,7 +311,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "contacts checkPermission")
 
         handler.handle(body: ["params": ["action": "checkPermission"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -329,7 +329,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "contacts unknown action")
 
         handler.handle(body: ["params": ["action": "delete"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -365,7 +365,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "audioLevel setSensitivity")
 
         handler.handle(body: ["params": ["action": "setSensitivity", "sensitivity": 3.0]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -382,7 +382,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "audioLevel stop without start")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             expectation.fulfill()
         }
 
@@ -394,7 +394,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "audioLevel unknown action")
 
         handler.handle(body: ["params": ["action": "record"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -409,7 +409,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "media unsupported action")
 
         handler.handle(body: ["params": ["action": "compress"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -422,7 +422,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "media saveImage invalid")
 
         handler.handle(body: ["params": ["action": "saveImage", "data": ""]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

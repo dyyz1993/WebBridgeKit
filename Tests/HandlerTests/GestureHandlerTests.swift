@@ -10,7 +10,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "gesture get config")
 
         handler.handle(body: [:]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -29,7 +29,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "gesture enable")
 
         handler.handle(body: ["params": ["action": "enable", "gestures": ["pull", "swipeLeft"]]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -46,7 +46,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "gesture disable")
 
         handler.handle(body: ["params": ["action": "disable", "gestures": ["pull"]]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -63,7 +63,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "gesture set pull threshold")
 
         handler.handle(body: ["params": ["action": "setPullThreshold", "threshold": NSNumber(value: 0.2)]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -80,7 +80,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "gesture startPullRefresh")
 
         handler.handle(body: ["params": ["action": "startPullRefresh"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -97,7 +97,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "gesture stopPullRefresh")
 
         handler.handle(body: ["params": ["action": "stopPullRefresh"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -114,7 +114,7 @@ extension AdvancedHandlerTests {
         let expectation = XCTestExpectation(description: "gesture unsupported action")
 
         handler.handle(body: ["params": ["action": "pinchZoom"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }

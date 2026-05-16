@@ -184,7 +184,19 @@ final class ThemeGradientViewTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(gradientLayer.colors?[0] as? CGColor, ThemeColors.current.gradientStart.cgColor)
+        guard let actualCGColor = gradientLayer.colors?[0] else {
+            XCTFail("Start color not found")
+            return
+        }
+        let actual = UIColor(cgColor: actualCGColor as! CGColor)
+        let expected = ThemeColors.current.gradientStart
+        var r1: CGFloat = 0; var g1: CGFloat = 0; var b1: CGFloat = 0; var a1: CGFloat = 0
+        var r2: CGFloat = 0; var g2: CGFloat = 0; var b2: CGFloat = 0; var a2: CGFloat = 0
+        actual.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        expected.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        XCTAssertEqual(r1, r2, accuracy: 0.01)
+        XCTAssertEqual(g1, g2, accuracy: 0.01)
+        XCTAssertEqual(b1, b2, accuracy: 0.01)
     }
 
     func testGradientEndColorMatchesTheme() {
@@ -196,7 +208,19 @@ final class ThemeGradientViewTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(gradientLayer.colors?[1] as? CGColor, ThemeColors.current.gradientEnd.cgColor)
+        guard let actualCGColor = gradientLayer.colors?[1] else {
+            XCTFail("End color not found")
+            return
+        }
+        let actual = UIColor(cgColor: actualCGColor as! CGColor)
+        let expected = ThemeColors.current.gradientEnd
+        var r1: CGFloat = 0; var g1: CGFloat = 0; var b1: CGFloat = 0; var a1: CGFloat = 0
+        var r2: CGFloat = 0; var g2: CGFloat = 0; var b2: CGFloat = 0; var a2: CGFloat = 0
+        actual.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        expected.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        XCTAssertEqual(r1, r2, accuracy: 0.01)
+        XCTAssertEqual(g1, g2, accuracy: 0.01)
+        XCTAssertEqual(b1, b2, accuracy: 0.01)
     }
 
     func testGradientColorsAreDifferent() {
@@ -208,12 +232,19 @@ final class ThemeGradientViewTests: XCTestCase {
             return
         }
 
-        let color1 = gradientLayer.colors?[0] as? CGColor
-        let color2 = gradientLayer.colors?[1] as? CGColor
+        guard let c1 = gradientLayer.colors?[0], let c2 = gradientLayer.colors?[1] else {
+            XCTFail("Colors not found")
+            return
+        }
+        let color1 = UIColor(cgColor: c1 as! CGColor)
+        let color2 = UIColor(cgColor: c2 as! CGColor)
 
-        XCTAssertNotNil(color1)
-        XCTAssertNotNil(color2)
-        XCTAssertNotEqual(color1, color2, "Gradient start and end colors should be different")
+        var r1: CGFloat = 0; var g1: CGFloat = 0; var b1: CGFloat = 0; var a1: CGFloat = 0
+        var r2: CGFloat = 0; var g2: CGFloat = 0; var b2: CGFloat = 0; var a2: CGFloat = 0
+        color1.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        color2.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        let isDifferent = abs(r1 - r2) > 0.01 || abs(g1 - g2) > 0.01 || abs(b1 - b2) > 0.01
+        XCTAssertTrue(isDifferent, "Gradient start and end colors should be different")
     }
 
     // MARK: - Trait Collection Change Handling

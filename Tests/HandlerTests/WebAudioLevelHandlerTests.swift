@@ -3,24 +3,6 @@ import XCTest
 
 final class WebAudioLevelHandlerTests: XCTestCase {
 
-    private func assertSuccess(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, true)
-        return dict
-    }
-
-    private func assertFailure(_ result: Any) -> [String: Any] {
-        guard let dict = result as? [String: Any] else {
-            XCTFail("Result is not a dictionary")
-            return [:]
-        }
-        XCTAssertEqual(dict["success"] as? Bool, false)
-        return dict
-    }
-
     // MARK: - Set Sensitivity
 
     func testAudioLevelHandler_SetSensitivity() {
@@ -28,7 +10,7 @@ final class WebAudioLevelHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "audioLevel setSensitivity")
 
         handler.handle(body: ["params": ["action": "setSensitivity", "sensitivity": 3.0]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -45,7 +27,7 @@ final class WebAudioLevelHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "audioLevel high sensitivity")
 
         handler.handle(body: ["params": ["action": "setSensitivity", "sensitivity": 10.0]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -62,7 +44,7 @@ final class WebAudioLevelHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "audioLevel zero sensitivity")
 
         handler.handle(body: ["params": ["action": "setSensitivity", "sensitivity": 0.0]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -81,7 +63,7 @@ final class WebAudioLevelHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "audioLevel stop without start")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             expectation.fulfill()
         }
 
@@ -93,7 +75,7 @@ final class WebAudioLevelHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "audioLevel stop")
 
         handler.handle(body: ["params": ["action": "stop"]]) { result in
-            let dict = self.assertSuccess(result)
+            let dict = assertSuccess(result)
             guard let data = dict["data"] as? [String: Any] else {
                 XCTFail("Missing data")
                 return
@@ -112,7 +94,7 @@ final class WebAudioLevelHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "audioLevel unknown action")
 
         handler.handle(body: ["params": ["action": "record"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             XCTAssertNotNil(dict["error"])
             expectation.fulfill()
         }
@@ -125,7 +107,7 @@ final class WebAudioLevelHandlerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "audioLevel analyze action")
 
         handler.handle(body: ["params": ["action": "analyze"]]) { result in
-            let dict = self.assertFailure(result)
+            let dict = assertFailure(result)
             let error = dict["error"] as? String ?? ""
             XCTAssertTrue(error.contains("Unknown action"))
             expectation.fulfill()
