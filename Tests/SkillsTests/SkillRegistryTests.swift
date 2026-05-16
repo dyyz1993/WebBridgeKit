@@ -16,7 +16,7 @@ final class AgentSchemaTests: XCTestCase {
         try await super.tearDown()
     }
 
-    private func makeCapability(
+    func makeCapability(
         name: String = "test",
         category: String = "test",
         description: String = "Test capability",
