@@ -345,3 +345,212 @@ xcrun simctl install booted "$APP" && xcrun simctl launch booted com.webbridgeki
 - **要点**: static reuseIdentifier；prepareForReuse 清空状态；SnapKit 约束优于 raw NSLayoutConstraint；ThemeTokens 自动适配 Dark Mode
 
 <!-- 后续经验会在此处追加 -->
+
+---
+
+## 崩溃采集体系（三层）
+
+用户说**"扫一下崩溃"**、**"看下日志"**、**"crash 了"**时，按以下流程执行。
+
+### 架构总览
+
+```
+用户设备/App 崩溃
+  ├── CrashLogManager 捕获 → Documents/crash_logs/*.json
+  ├── 下次启动自动 POST → shanbox /api/v1/crash-reports
+  └── scan-crash-logs.sh 同时扫描本地 + 远程
+        ↓
+  你分析调用栈 → 定位源码 → 修复 → 验证 → 记录到 AGENTS.md
+```
+
+### 第一步：运行扫描脚本
+
+```bash
+bash scripts/scan-crash-logs.sh           # 标准扫描（本地 + 远程）
+bash scripts/scan-crash-logs.sh --json    # JSON 输出（自动化用）
+bash scripts/scan-crash-logs.sh --fix     # 扫描 + 交互式清理
+```
+
+脚本扫描 6 个来源：
+
+| # | 来源 | 路径/命令 | 内容 |
+|---|------|-----------|------|
+| 1 | App 崩溃日志 | Simulator `Documents/crash_logs/*.json` | CrashLogManager 捕获的 signal/exception |
+| 2 | 系统诊断报告 | `~/Library/Logs/DiagnosticReports/SuperApp*.ips` | macOS 系统级崩溃 |
+| 3 | 系统日志 | `xcrun simctl spawn booted log show --last 1h` | os_log error 级别 |
+| 4 | 内存事件 | 同上，过滤 memory/OOM/jetsam | 内存压力/jetsam kill |
+| 5 | 远程崩溃 | `shanbox /api/v1/crash-reports` | 从生产环境上报的崩溃 |
+| 6 | 远程统计 | `shanbox /api/v1/crash-reports/stats` | 按类型/名称聚合 |
+
+### 第二步：分析崩溃
+
+根据崩溃类型定位源码：
+
+| 崩溃类型 | 常见原因 | 排查方向 |
+|----------|----------|----------|
+| **SIGABRT** | Assert 失败、强制解包 nil、Realm 迁移失败 | 查调用栈中的 `fatalError`/`!`/`try!` |
+| **SIGSEGV/SIGBUS** | 野指针、访问已释放内存 | 查 weak/unowned 引用、delegate |
+| **SIGTRAP** | Swift runtime trap（越界、nil 解包） | 查 array subscript、force unwrap |
+| **exception** | 未捕获的 NSException | 查 NSRangeException、KVC |
+| **OOM/Jetsam** | 内存泄漏、大图/缓存未释放 | 查 ResourceCache、Image 缓存、WebView |
+
+分析调用栈时，**只看 `SuperApp` 和 `WebBridgeKit` 的 frame**（忽略系统库）：
+
+```bash
+# 从 JSON 崩溃中提取 App 层调用栈
+APP_DATA=$(xcrun simctl get_app_container booted com.webbridgekit.superapp data)
+cat "$APP_DATA/Documents/crash_logs/crash_xxx.json" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+for frame in d['callStack']:
+    if 'SuperApp' in frame or 'WebBridgeKit' in frame:
+        print(frame)
+"
+```
+
+### 第三步：远程崩溃管理
+
+```bash
+# 查看远程崩溃统计
+curl -s https://wbk.shanbox.19930810.xyz:8443/api/v1/crash-reports/stats
+
+# 拉取最近 20 条远程崩溃
+curl -s https://wbk.shanbox.19930810.xyz:8443/api/v1/crash-reports?limit=20
+
+# 拉取最新一条完整崩溃
+curl -s https://wbk.shanbox.19930810.xyz:8443/api/v1/crash-reports/latest
+
+# 删除特定崩溃
+curl -X DELETE https://wbk.shanbox.19930810.xyz:8443/api/v1/crash-reports/<id>
+```
+
+### 第四步：CI 崩溃分析
+
+CI 测试失败时：
+
+```bash
+# 查看最近的 CI 运行
+gh run list --limit 5
+
+# 查看失败 job 的日志
+gh run view <run-id> --log-failed
+
+# 查看特定 job 的详细日志
+gh run view <run-id> --log | grep -E "error:|failed|SIGABRT|SIGSEGV|crashed"
+```
+
+### 第五步：记录修复
+
+在 `AGENTS.md` 的 `## Crash Analysis` 章节追加记录：
+
+```markdown
+| 日期 | 类型 | 原因 | 定位 | 修复 |
+|------|------|------|------|------|
+| 2026-05-16 | SIGABRT | buildTypographySection 数组越界 | ComponentCatalogVC.swift:22 | commit abc123 |
+```
+
+### 崩溃文件路径速查
+
+```bash
+# App 沙盒崩溃日志
+APP_DATA=$(xcrun simctl get_app_container booted com.webbridgekit.superapp data)
+ls "$APP_DATA/Documents/crash_logs/"
+
+# 查看具体崩溃（格式化）
+cat "$APP_DATA/Documents/crash_logs/crash_xxx.json" | python3 -m json.tool
+
+# 系统诊断报告
+ls ~/Library/Logs/DiagnosticReports/SuperApp*
+
+# 实时查看 App 日志
+xcrun simctl spawn booted log stream --predicate 'subsystem == "com.webbridgekit"' --level debug
+```
+
+---
+
+## 测试体系
+
+### 本地测试流程（提交前必须跑）
+
+**每次修改代码后，先 build 再跑测试。测试是串行的（Xcode build DB 不支持并发）。**
+
+```bash
+# 1. 构建
+xcodebuild build -workspace WebBridgeKit.xcworkspace -scheme SuperApp \
+  -sdk iphonesimulator -arch arm64 -derivedDataPath /tmp/wbk-dd
+
+# 2. 跑测试（按模块）
+xcodebuild test -workspace WebBridgeKit.xcworkspace -scheme <SchemeName> \
+  -derivedDataPath /tmp/wbk-dd \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro 26.5'
+```
+
+### 测试 Scheme 一览
+
+| Scheme | 测试数 | 覆盖范围 |
+|--------|--------|----------|
+| BaseTests | ~22 | 基础类/协议 |
+| BridgeTests | ~101 | JS Bridge 核心 |
+| CoreTests | ~202 | 浏览器/WebView 核心 |
+| HandlerTests | ~632 | 35+ Handler 全覆盖 |
+| ModelsTests | ~213 | 数据模型/Realm |
+| ExtensionsTests | ~pass | Swift 扩展 |
+| ManagersTests | ~40 | URL 管理 |
+| InfrastructureTests | ~216 | 日志/诊断/缓存 |
+| ServicesTests | ~234 | 服务定位 |
+| CacheTests | ~87 | 缓存引擎 |
+| MessageTests | ~226 | 消息/推送 |
+| ViewModelTests | ~71 | ViewModel |
+| UtilsTests | ~263 | 工具类 |
+| WebSocketTests | ~140 | JSON-RPC |
+| CommandParserTests | ~93 | 口令解析 |
+| SkillsTests | ~127 | AI Agent Schema |
+| ThemeTests | ~306 | 设计系统（有 fragile UI tests）|
+
+**总计: ~2973 tests**
+
+### 推荐测试顺序
+
+快速验证 → 核心验证 → 完整验证：
+
+```bash
+# 快速验证（3min）：先跑最核心的
+xcodebuild test -scheme CoreTests ...
+xcodebuild test -scheme HandlerTests ...
+xcodebuild test -scheme BridgeTests ...
+
+# 核心验证（+5min）
+xcodebuild test -scheme ModelsTests ...
+xcodebuild test -scheme CacheTests ...
+xcodebuild test -scheme MessageTests ...
+
+# 完整验证（+10min）：跑完所有
+for scheme in BaseTests ExtensionsTests ManagersTests InfrastructureTests \
+  ServicesTests ViewModelTests UtilsTests WebSocketTests CommandParserTests SkillsTests; do
+  xcodebuild test -scheme "$scheme" ... 2>&1 | grep -E "TEST SUCCEEDED|TEST FAILED"
+done
+```
+
+### 常见测试问题
+
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| `build DB is locked` | 并发 xcodebuild | 必须串行，一次只跑一个 scheme |
+| `unable to attach DB` | 同上 | 等上一个测试完成 |
+| `assertSuccess is inaccessible` | helper 是 private | 用 `Tests/HandlerTests/HandlerTestHelpers.swift` 共享版 |
+| 颜色比较失败 | ThemeTokens 用动态颜色 | 改为 XCTAssertNotNil 或提取 RGBA 值比较 |
+| LucideIcon.rawValue 不存在 | 不是 String enum | 用 `.lucideId` 属性 |
+| CI cancel-in-progress | 快速连续推送 | 等前一个 CI 完成再推 |
+
+---
+
+## 交付前检查清单
+
+在说"可以了"或"完成了"之前，必须确认：
+
+1. **本地 build 通过** — `xcodebuild build ... SuperApp ... | tail -3`
+2. **关键测试通过** — 至少跑 CoreTests + HandlerTests + 受影响模块的测试
+3. **SwiftLint 零 error** — commit hook 自动检查
+4. **无硬编码颜色** — grep 验证
+5. **CI 通过** — `gh run list --limit 1` 确认绿色
+6. **无崩溃残留** — `bash scripts/scan-crash-logs.sh`
