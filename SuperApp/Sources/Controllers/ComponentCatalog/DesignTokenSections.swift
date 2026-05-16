@@ -34,29 +34,31 @@ extension ComponentCatalogViewController {
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_Typography"
 
-        for (index, (name, font, spec)) in fontSpecs.enumerated() {
+        var previousDivider: UIView?
+        for (name, font, spec) in fontSpecs {
             let sampleLabel = UILabel()
             sampleLabel.font = font
-            sampleLabel.textColor = ThemeColors.current.text
+            sampleLabel.textColor = ThemeTokens.Color.text
             sampleLabel.text = "Aa 大标题 \(name) \(spec)"
             container.addSubview(sampleLabel)
             sampleLabel.snp.makeConstraints { make in
-                if index == 0 {
-                    make.top.equalToSuperview()
+                if let prev = previousDivider {
+                    make.top.equalTo(prev.snp.bottom).offset(6)
                 } else {
-                    make.top.equalTo(container.subviews[index * 3].snp.bottom).offset(6)
+                    make.top.equalToSuperview()
                 }
                 make.leading.trailing.equalToSuperview()
             }
 
             let divider = UIView()
-            divider.backgroundColor = ThemeColors.current.border
+            divider.backgroundColor = ThemeTokens.Color.border
             container.addSubview(divider)
             divider.snp.makeConstraints { make in
                 make.top.equalTo(sampleLabel.snp.bottom).offset(4)
                 make.leading.trailing.equalToSuperview()
                 make.height.equalTo(0.5)
             }
+            previousDivider = divider
         }
 
         container.snp.makeConstraints { make in
@@ -95,14 +97,14 @@ extension ComponentCatalogViewController {
             let nameLabel = UILabel()
             nameLabel.text = name
             nameLabel.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .bold)
-            nameLabel.textColor = ThemeColors.current.text
+            nameLabel.textColor = ThemeTokens.Color.text
             nameLabel.setContentHuggingPriority(.required, for: .horizontal)
             nameLabel.snp.makeConstraints { make in
                 make.width.equalTo(36)
             }
 
             let bar = UIView()
-            bar.backgroundColor = ThemeColors.current.primary
+            bar.backgroundColor = ThemeTokens.Color.primary
             bar.layer.cornerRadius = ThemeTokens.CornerRadius.xs
             bar.snp.makeConstraints { make in
                 make.height.equalTo(value)
@@ -112,7 +114,7 @@ extension ComponentCatalogViewController {
             let valueLabel = UILabel()
             valueLabel.text = "\(Int(value))pt"
             valueLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-            valueLabel.textColor = ThemeColors.current.textSecondary
+            valueLabel.textColor = ThemeTokens.Color.textSecondary
             valueLabel.setContentHuggingPriority(.required, for: .horizontal)
 
             row.addArrangedSubview(nameLabel)
@@ -147,7 +149,7 @@ extension ComponentCatalogViewController {
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_CornerRadius"
-        container.backgroundColor = ThemeColors.current.surface
+        container.backgroundColor = ThemeTokens.Color.surface
         container.layer.cornerRadius = ThemeCornerRadius.default.lg
 
         let size: CGFloat = 56
@@ -165,7 +167,7 @@ extension ComponentCatalogViewController {
             itemStack.spacing = ThemeTokens.Spacing.sm
 
             let box = UIView()
-            box.backgroundColor = ThemeColors.current.primary
+            box.backgroundColor = ThemeTokens.Color.primary
             box.layer.cornerRadius = radius
             box.snp.makeConstraints { make in
                 make.width.height.equalTo(size)
@@ -174,7 +176,7 @@ extension ComponentCatalogViewController {
             let nameLabel = UILabel()
             nameLabel.text = name
             nameLabel.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .medium)
-            nameLabel.textColor = ThemeColors.current.textSecondary
+            nameLabel.textColor = ThemeTokens.Color.textSecondary
 
             itemStack.addArrangedSubview(box)
             itemStack.addArrangedSubview(nameLabel)
@@ -223,7 +225,7 @@ extension ComponentCatalogViewController {
             itemStack.spacing = ThemeTokens.Spacing.sm
 
             let card = UIView()
-            card.backgroundColor = ThemeColors.current.cardBackground
+            card.backgroundColor = ThemeTokens.Color.cardBackground
             card.layer.shadowColor = UIColor.black.cgColor
             card.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
             card.layer.shadowRadius = shadow.radius
@@ -237,7 +239,7 @@ extension ComponentCatalogViewController {
             let nameLabel = UILabel()
             nameLabel.text = name
             nameLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .medium)
-            nameLabel.textColor = ThemeColors.current.textSecondary
+            nameLabel.textColor = ThemeTokens.Color.textSecondary
 
             let detailLabel = UILabel()
             detailLabel.text = "o:\(shadow.opacity) r:\(shadow.radius)"
