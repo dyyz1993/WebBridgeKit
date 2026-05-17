@@ -78,8 +78,7 @@ public class CacheResourceCell: UITableViewCell {
 
     private let selectionButton: UIButton = {
         let button = UIButton(type: .custom)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        let unselectedImage = UIImage(systemName: "circle", withConfiguration: config)
+        let unselectedImage = LucideIcon.circle.templateImage(pointSize: 18, weight: .medium)
         let selectedImage = LucideIcon.success.templateImage(pointSize: 18, weight: .medium)
         button.setImage(unselectedImage, for: .normal)
         button.setImage(selectedImage, for: .selected)

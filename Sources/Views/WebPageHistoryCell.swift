@@ -169,7 +169,7 @@ class WebPageHistoryCell: UITableViewCell {
             cacheSizeLabel.text = history.formattedSize
             cacheSizeLabel.isHidden = false
         } else {
-            cacheStatusImageView.image = UIImage(systemName: "circle")
+            cacheStatusImageView.image = LucideIcon.circle.templateImage()
             cacheStatusImageView.tintColor = ThemeTokens.Color.textTertiary
             cacheSizeLabel.isHidden = true
         }

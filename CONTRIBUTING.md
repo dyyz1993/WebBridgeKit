@@ -10,15 +10,22 @@
 | CocoaPods | Latest | `sudo gem install cocoapods` |
 | XcodeGen | Latest | `brew install xcodegen` |
 | SwiftLint | Latest | `brew install swiftlint` |
+| xcpretty | Latest | `gem install xcpretty --no-document` |
+| XcodeBuildMCP | Latest | `npm install -g xcodebuildmcp@latest` |
 
 ### Setup
 
 ```bash
 git clone https://github.com/dyyz1993/WebBridgeKit.git
 cd WebBridgeKit
-xcodegen generate
-pod install
+bash scripts/bootstrap-dev.sh --no-services
 open WebBridgeKit.xcworkspace
+```
+
+如果你希望把本地测试服务也一起拉起来，直接运行：
+
+```bash
+bash scripts/bootstrap-dev.sh
 ```
 
 ## How to Build

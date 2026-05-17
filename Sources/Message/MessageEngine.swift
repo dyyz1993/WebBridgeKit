@@ -1,7 +1,29 @@
 import Foundation
 
+// MARK: - MessageEngineProtocol
+
+public protocol MessageEngineProtocol: AnyObject {
+    func registerChannel(_ channel: any MessageChannel) async
+    func unregisterChannel(_ channelId: String) async
+    func getRegisteredChannels() async -> [String]
+    func setPipeline(_ pipeline: MessageProcessorPipeline) async
+    func setStore(_ store: any MessageStore) async
+    func registerHandler(_ handler: MessageHandler, forCategory category: String) async
+    func startAll() async
+    func stopAll() async
+    func send(_ payload: MessagePayload, through channelId: String) async throws -> MessageSendResult
+    func receive(_ payload: MessagePayload) async throws
+    func getMessages() async -> [StoredMessage]
+    func getUnreadMessages() async -> [StoredMessage]
+    func getUnreadCount() async -> Int
+    func markAsRead(id: String) async
+    func deleteMessage(id: String) async
+    func clearAllMessages() async
+    func getStatistics() async -> MessageStatistics
+}
+
 /// Central message engine that coordinates channels, routing, and persistence
-public actor MessageEngine {
+public actor MessageEngine: MessageEngineProtocol {
     /// Shared singleton
     public static let shared = MessageEngine()
 

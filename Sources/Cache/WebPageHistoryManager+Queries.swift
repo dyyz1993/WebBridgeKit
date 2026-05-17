@@ -8,42 +8,41 @@
 import Foundation
 import RealmSwift
 
-// MARK: - Synchronous Compatibility Layer
-// These methods provide backward compatibility with existing code
-// that calls the manager synchronously. They wrap the async methods.
+// MARK: - Synchronous Compatibility Layer (DEPRECATED)
+// These methods risk deadlock via DispatchSemaphore on the calling thread.
+// Use the async equivalents on WebPageHistoryManager instead.
 
 extension WebPageHistoryManager {
 
-    /// Synchronous version of addOrUpdateHistory for backward compatibility
+    @available(*, deprecated, message: "Use async addOrUpdateHistory(url:title:favicon:). Sync methods risk deadlock.")
     public func addOrUpdateHistory(url: URL, title: String? = nil, favicon: Data? = nil) {
         Task {
             try? await addOrUpdateHistory(url: url, title: title, favicon: favicon)
         }
     }
 
-    /// Synchronous version of deleteHistory for backward compatibility
+    @available(*, deprecated, message: "Use async deleteHistory(id:). Sync methods risk deadlock.")
     public func deleteHistory(id: String) {
         Task {
             try? await deleteHistory(id: id)
         }
     }
 
-    /// Synchronous version of clearAllHistory for backward compatibility
+    @available(*, deprecated, message: "Use async clearAllHistory(). Sync methods risk deadlock.")
     public func clearAllHistory() {
         Task {
             try? await clearAllHistory()
         }
     }
 
-    /// Synchronous version of cleanupLowFrequencyItems for backward compatibility
+    @available(*, deprecated, message: "Use async cleanupLowFrequencyItems(limit:). Sync methods risk deadlock.")
     public func cleanupLowFrequencyItems(limit: Int = 100) {
         Task {
             try? await cleanupLowFrequencyItems(limit: limit)
         }
     }
 
-    /// Synchronous version of getAllHistories for backward compatibility
-    /// Returns empty array on error
+    @available(*, deprecated, message: "Use async getAllHistories(). Sync methods risk deadlock via DispatchSemaphore.")
     public func getAllHistories() -> [WebPageHistory] {
         var result: [WebPageHistory] = []
         let semaphore = DispatchSemaphore(value: 0)
@@ -61,8 +60,7 @@ extension WebPageHistoryManager {
         return result
     }
 
-    /// Synchronous version of getCachedHistories for backward compatibility
-    /// Returns empty array on error
+    @available(*, deprecated, message: "Use async getCachedHistories(). Sync methods risk deadlock via DispatchSemaphore.")
     public func getCachedHistories() -> [WebPageHistory] {
         var result: [WebPageHistory] = []
         let semaphore = DispatchSemaphore(value: 0)
@@ -80,8 +78,7 @@ extension WebPageHistoryManager {
         return result
     }
 
-    /// Synchronous version of findHistory(url:) for backward compatibility
-    /// Returns nil on error
+    @available(*, deprecated, message: "Use async findHistory(url:). Sync methods risk deadlock via DispatchSemaphore.")
     public func findHistory(url: URL) -> WebPageHistory? {
         var result: WebPageHistory?
         let semaphore = DispatchSemaphore(value: 0)
@@ -99,8 +96,7 @@ extension WebPageHistoryManager {
         return result
     }
 
-    /// Synchronous version of findHistory(id:) for backward compatibility
-    /// Returns nil on error
+    @available(*, deprecated, message: "Use async findHistory(id:). Sync methods risk deadlock via DispatchSemaphore.")
     public func findHistory(id: String) -> WebPageHistory? {
         var result: WebPageHistory?
         let semaphore = DispatchSemaphore(value: 0)
@@ -118,8 +114,7 @@ extension WebPageHistoryManager {
         return result
     }
 
-    /// Synchronous version of searchHistories for backward compatibility
-    /// Returns empty array on error
+    @available(*, deprecated, message: "Use async searchHistories(keyword:). Sync methods risk deadlock via DispatchSemaphore.")
     public func searchHistories(keyword: String) -> [WebPageHistory] {
         var result: [WebPageHistory] = []
         let semaphore = DispatchSemaphore(value: 0)
@@ -137,8 +132,7 @@ extension WebPageHistoryManager {
         return result
     }
 
-    /// Synchronous version of getTotalCount for backward compatibility
-    /// Returns 0 on error
+    @available(*, deprecated, message: "Use async getTotalCount(). Sync methods risk deadlock via DispatchSemaphore.")
     public func getTotalCount() -> Int {
         var result: Int = 0
         let semaphore = DispatchSemaphore(value: 0)
@@ -156,8 +150,7 @@ extension WebPageHistoryManager {
         return result
     }
 
-    /// Synchronous version of getTodayVisitCount for backward compatibility
-    /// Returns 0 on error
+    @available(*, deprecated, message: "Use async getTodayVisitCount(). Sync methods risk deadlock via DispatchSemaphore.")
     public func getTodayVisitCount() -> Int {
         var result: Int = 0
         let semaphore = DispatchSemaphore(value: 0)
@@ -175,8 +168,7 @@ extension WebPageHistoryManager {
         return result
     }
 
-    /// Synchronous version of getMostVisited for backward compatibility
-    /// Returns empty array on error
+    @available(*, deprecated, message: "Use async getMostVisited(limit:). Sync methods risk deadlock via DispatchSemaphore.")
     public func getMostVisited(limit: Int = 10) -> [WebPageHistory] {
         var result: [WebPageHistory] = []
         let semaphore = DispatchSemaphore(value: 0)

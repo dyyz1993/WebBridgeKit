@@ -30,9 +30,16 @@ public class ManifestCacheManager: @unchecked Sendable {
     let resourceCache: ResourceCache
     let queue = DispatchQueue(label: "com.webbridgekit.manifest-cache", qos: .userInitiated)
 
-    var cacheHits: Int64 = 0
-    var cacheMisses: Int64 = 0
+    var _cacheHits: Int64 = 0
+    var _cacheMisses: Int64 = 0
     let statsLock = NSLock()
+
+    var cacheHits: Int64 {
+        statsLock.withLock { _cacheHits }
+    }
+    var cacheMisses: Int64 {
+        statsLock.withLock { _cacheMisses }
+    }
 
     // MARK: - Initialization
 

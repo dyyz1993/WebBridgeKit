@@ -166,6 +166,10 @@ func capitalizeFirst(_ s: String) -> String {
     return String(first).uppercased() + s.dropFirst()
 }
 
+func generateDynamicColorAlias(_ key: String) -> String {
+    "        public static var \(key): UIColor { dynamicColor(light: Colors.Light.\(key), dark: Colors.Dark.\(key)) }"
+}
+
 // MARK: - Generate ThemeTokens.swift
 
 func generateSwift(_ tokens: DesignTokens) -> String {
@@ -177,6 +181,7 @@ func generateSwift(_ tokens: DesignTokens) -> String {
     lines.append("")
 
     // Colors
+    lines.append("    // DEPRECATED: Use ThemeTokens.Color instead (auto-adapts to Dark Mode)")
     lines.append("    public enum Colors {")
     lines.append("        public enum Light {")
     let lightKeys = tokens.colors.light.keys.sorted()
@@ -192,6 +197,30 @@ func generateSwift(_ tokens: DesignTokens) -> String {
         let val = tokens.colors.dark[key]!
         lines.append("            public static let \(key) = \(swiftUIColorExpr(val))")
     }
+    lines.append("        }")
+    lines.append("    }")
+    lines.append("")
+
+    // Dynamic Colors
+    lines.append("    // === Dynamic Color aliases (the ONE way to get colors) ===")
+    lines.append("    /// Dynamic color tokens — auto-adapt to Light/Dark Mode.")
+    lines.append("    /// New code must use ThemeTokens.Color.* instead of ThemeTokens.Colors.Light/Dark or hardcoded UIColor values.")
+    lines.append("    public enum Color {")
+    let colorKeys = lightKeys.filter { tokens.colors.dark[$0] != nil }
+    for key in colorKeys {
+        lines.append(generateDynamicColorAlias(key))
+    }
+    lines.append("")
+    lines.append("        // Compatibility aliases used by existing components.")
+    lines.append("        public static var divider: UIColor { separator }")
+    lines.append("        public static var navigationBarTitle: UIColor { text }")
+    lines.append("        public static var iconBackground: UIColor { primary.withAlphaComponent(0.1) }")
+    lines.append("        public static var dimOverlay: UIColor { overlay }")
+    lines.append("")
+    lines.append("        private static func dynamicColor(light: UIColor, dark: UIColor) -> UIColor {")
+    lines.append("            UIColor { trait in")
+    lines.append("                trait.userInterfaceStyle == .dark ? dark : light")
+    lines.append("            }")
     lines.append("        }")
     lines.append("    }")
     lines.append("")
@@ -304,7 +333,7 @@ func generateSwift(_ tokens: DesignTokens) -> String {
     lines.append("    }")
     lines.append("}")
 
-    return lines.joined(separator: "\n")
+    return lines.joined(separator: "\n") + "\n"
 }
 
 // MARK: - Generate design-tokens.css
@@ -378,7 +407,7 @@ func generateCSS(_ tokens: DesignTokens) -> String {
     }
     lines.append("}")
 
-    return lines.joined(separator: "\n")
+    return lines.joined(separator: "\n") + "\n"
 }
 
 // MARK: - Validation Report

@@ -88,22 +88,39 @@ class PresetURLCatalogViewModel: ViewModel {
             .disposed(by: rx)
 
         Observable.just(())
-            .flatMap { Observable.from(optional: try? PinnedURLManager.shared.getAllPinnedSync() ?? []) }
-            .map { $0.map(\.url) }
+            .flatMap { _ -> Observable<[String]> in
+                Observable.create { observer in
+                    Task {
+                        let urls = (try? await PinnedURLManager.shared.getAllPinned()) ?? []
+                        observer.onNext(urls.map(\.url))
+                        observer.onCompleted()
+                    }
+                    return Disposables.create()
+                }
+            }
             .subscribe(onNext: { [weak self] urls in
                 self?.existingPinnedURLs = Set(urls)
             })
             .disposed(by: rx)
 
         input.pinTapped
-            .map { [weak self] model -> (PresetURLItem, Bool) in
-                guard let self else { return (PresetURLItem(id: "", url: "", title: "", description: "", category: .htmlPages, tags: [], isRecommended: false), false) }
-                let item = PresetURLItem(id: model.id, url: model.url, title: model.title, description: model.description, category: PresetCategory.htmlPages, tags: model.tags, isRecommended: model.isRecommended)
-                if PinnedURLManager.shared.addSync(url: item.url, title: item.title, notes: item.description) != nil {
-                    self.existingPinnedURLs.insert(item.url)
-                    return (item, true)
+            .flatMap { [weak self] model -> Observable<(PresetURLItem, Bool)> in
+                guard let self else {
+                    return .just((PresetURLItem(id: "", url: "", title: "", description: "", category: .htmlPages, tags: [], isRecommended: false), false))
                 }
-                return (item, false)
+                let item = PresetURLItem(id: model.id, url: model.url, title: model.title, description: model.description, category: PresetCategory.htmlPages, tags: model.tags, isRecommended: model.isRecommended)
+                return Observable.create { observer in
+                    Task {
+                        if (try? await PinnedURLManager.shared.add(url: item.url, title: item.title, notes: item.description)) != nil {
+                            self.existingPinnedURLs.insert(item.url)
+                            observer.onNext((item, true))
+                        } else {
+                            observer.onNext((item, false))
+                        }
+                        observer.onCompleted()
+                    }
+                    return Disposables.create()
+                }
             }
             .bind(to: pinResultRelay)
             .disposed(by: rx)

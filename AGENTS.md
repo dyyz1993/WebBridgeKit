@@ -38,6 +38,10 @@ xcrun simctl install booted "$APP"
 xcrun simctl launch booted com.webbridgekit.superapp
 ```
 
+## XcodeBuildMCP
+
+- If using XcodeBuildMCP, use the installed XcodeBuildMCP skill before calling XcodeBuildMCP tools.
+
 ## Project Structure
 
 - `Server/` - Swift Hummingbird backend (SPM)

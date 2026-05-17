@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import RealmSwift
 import UIKit
 
 // MARK: - Actions
@@ -243,15 +244,17 @@ extension WebCacheDebugPanelViewController {
     // MARK: - Page Actions
 
     func openCachedPage(_ pageInfo: CachedPageInfo) {
-        let historyService = RealmHistoryService.shared
-        if let history = historyService.findHistory(id: pageInfo.id),
-           let htmlPath = history.htmlPath {
-            let fileURL = URL(fileURLWithPath: htmlPath)
-            let modalVC = ModalWebViewController(url: fileURL)
-            present(modalVC, animated: true)
-            WebBridgeLogger.shared.info("Opening cached page: \(pageInfo.url)")
-        } else {
-            WebBridgeLogger.shared.error("Failed to find cached page: \(pageInfo.url)")
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            if let history = try? await WebPageHistoryManager.shared.findHistory(id: pageInfo.id),
+               let htmlPath = history.htmlPath {
+                let fileURL = URL(fileURLWithPath: htmlPath)
+                let modalVC = ModalWebViewController(url: fileURL)
+                self.present(modalVC, animated: true)
+                WebBridgeLogger.shared.info("Opening cached page: \(pageInfo.url)")
+            } else {
+                WebBridgeLogger.shared.error("Failed to find cached page: \(pageInfo.url)")
+            }
         }
     }
 

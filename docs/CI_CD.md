@@ -190,7 +190,7 @@ pod install
 
 **Path:** `.github/actions/setup-project/action.yml`
 
-Installs xcodegen + swiftlint, caches CocoaPods and DerivedData, then runs `xcodegen generate` and `pod install`.
+Ensures `xcodegen`, `swiftlint`, `pod`, and `xcpretty` are available, caches CocoaPods and DerivedData, then runs `xcodegen generate` and `pod install`.
 
 **Usage in workflow:**
 

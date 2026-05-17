@@ -1,5 +1,5 @@
 name: 'Setup Xcode Project'
-description: 'Install deps, generate project, pod install'
+description: 'Install deps, generate project, pod install, and ensure formatter tooling exists'
 runs:
   using: 'composite'
   steps:
@@ -15,11 +15,13 @@ runs:
       shell: bash
       run: brew install xcodegen swiftlint
 
-    - name: Ensure tools available
+    - name: Ensure CLI tooling available
       shell: bash
       run: |
         command -v xcodegen || brew install xcodegen
         command -v swiftlint || brew install swiftlint
+        command -v pod >/dev/null || sudo gem install cocoapods --no-document
+        command -v xcpretty >/dev/null || sudo gem install xcpretty --no-document
 
     - name: Cache CocoaPods
       uses: actions/cache@v4

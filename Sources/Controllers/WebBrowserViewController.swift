@@ -21,7 +21,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         return viewModel.getWebView()
     }()
 
-    private let progressView: UIProgressView = {
+    let progressView: UIProgressView = {
         let progressView = UIProgressView(progressViewStyle: .default)
         progressView.tintColor = ThemeTokens.Color.textSecondary
         progressView.trackTintColor = ThemeTokens.Color.textTertiary
@@ -43,7 +43,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     }()
 
     /// 标题容器
-    private let titleContainerView: UIView = {
+    let titleContainerView: UIView = {
         let view = UIView()
         return view
     }()
@@ -93,7 +93,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     }()
 
     /// 手势 - 点击底部区域关闭（当导航栏隐藏时）
-    private var tapGesture: UITapGestureRecognizer?
+    var tapGesture: UITapGestureRecognizer?
 
     // MARK: - Bar Buttons
 
@@ -184,115 +184,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         }
     }
 
-    /// 配置系统的导航栏
-    private func configureNavigationBar() {
-        navigationItem.largeTitleDisplayMode = .never
 
-        titleContainerView.frame = CGRect(x: 0, y: 0, width: 200, height: 44)
-        titleContainerView.addSubview(titleLabel)
-        titleContainerView.addSubview(cacheStatusLabel)
-
-        titleLabel.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
-            make.centerX.equalToSuperview().offset(-20)
-            make.left.greaterThanOrEqualToSuperview()
-        }
-
-        cacheStatusLabel.snp.makeConstraints { make in
-            make.left.equalTo(titleLabel.snp.right).offset(6)
-            make.centerY.equalTo(titleLabel)
-            make.width.equalTo(60)
-            make.height.equalTo(18)
-        }
-
-        navigationItem.titleView = titleContainerView
-
-        let closeBtn = UIBarButtonItem(
-            image: LucideIcon.xmark.image(),
-            style: .plain,
-            target: self,
-            action: #selector(closeButtonTapped)
-        )
-        closeBtn.tintColor = ThemeTokens.Color.text
-        closeBtn.accessibilityIdentifier = "browserManager.closeButton"
-        closeBtn.accessibilityLabel = "关闭"
-        self.closeBarButton = closeBtn
-
-        let menuBtn = UIBarButtonItem(
-            image: LucideIcon.ellipsis.image(),
-            style: .plain,
-            target: self,
-            action: #selector(menuButtonTapped)
-        )
-        menuBtn.tintColor = ThemeTokens.Color.text
-        menuBtn.accessibilityIdentifier = "browserManager.menuButton"
-        menuBtn.accessibilityLabel = "更多菜单"
-        self.menuBarButton = menuBtn
-
-        let backBtn = UIBarButtonItem(
-            image: LucideIcon.chevronLeft.image(),
-            style: .plain,
-            target: self,
-            action: #selector(backButtonTapped)
-        )
-        backBtn.tintColor = ThemeTokens.Color.text
-        backBtn.accessibilityIdentifier = "browserManager.backButton"
-        backBtn.accessibilityLabel = "返回"
-        self.backBarButton = backBtn
-
-        navigationItem.leftBarButtonItems = [closeBtn]
-        navigationItem.rightBarButtonItem = menuBtn
-
-        backBtn.isEnabled = false
-        backBtn.tintColor = .clear
-    }
-
-    @objc private func closeButtonTapped() {
-        dismissOrPop()
-    }
-
-    @objc private func backButtonTapped() {
-        webView.goBack()
-    }
-
-    @objc private func menuButtonTapped() {
-        showMenu()
-    }
-
-    private func setupConstraints() {
-        let safeAreaLayoutGuide = view.safeAreaLayoutGuide
-
-        webView.snp.makeConstraints { make in
-            make.top.equalTo(safeAreaLayoutGuide.snp.top)
-            make.left.right.bottom.equalToSuperview()
-        }
-
-        progressView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
-            make.left.right.equalToSuperview()
-            make.height.equalTo(2)
-        }
-    }
-
-    private func setupActions() {
-        // Buttons use target-action pattern in configureNavigationBar()
-    }
-
-    private func setupGestures() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-        tap.delegate = self
-        view.addGestureRecognizer(tap)
-        tapGesture = tap
-    }
-
-    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-        guard hideNavBar else { return }
-
-        let location = gesture.location(in: view)
-        if location.y > view.bounds.height - 100 {
-            dismissOrPop()
-        }
-    }
 
     // MARK: - Lifecycle
 
@@ -521,7 +413,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         print("📱 [Browser] 状态栏: \(hidden ? "隐藏" : "显示")")
     }
 
-    private func dismissOrPop() {
+    func dismissOrPop() {
         if let navigationController = navigationController, navigationController.viewControllers.count > 1 {
             navigationController.popViewController(animated: true)
         } else if presentingViewController != nil {

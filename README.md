@@ -90,6 +90,59 @@ xcodegen generate
 open WebBridgeKit.xcworkspace
 ```
 
+### 一键开发初始化
+
+仓库内置了开发引导脚本，适合第一次拉起环境或切回项目时快速复位：
+
+```bash
+bash scripts/bootstrap-dev.sh
+```
+
+它会完成这些事情：
+
+- 检查 `xcodegen`、`pod`、`swiftlint` 等核心工具
+- 重新生成 `WebBridgeKit.xcodeproj`
+- 执行 `pod install`
+- 安装仓库自带 git hooks
+- 启动并验证本地 3 个测试服务
+
+如果你只想准备工程、不启动服务：
+
+```bash
+bash scripts/bootstrap-dev.sh --no-services
+```
+
+如果缺少工具并希望脚本尝试自动安装：
+
+```bash
+bash scripts/bootstrap-dev.sh --install-tools
+```
+
+### XcodeBuildMCP
+
+仓库已内置项目级 `.xcodebuildmcp/config.yaml`，默认启用了：
+
+- `session-management`
+- `project-discovery`
+- `simulator`
+- `simulator-management`
+- `debugging`
+- `ui-automation`
+- `device`
+- `xcode-ide`
+
+基础上下文已经预设为 `WebBridgeKit.xcworkspace` + `SuperApp` + `Debug`。模拟器机型则做成 profile，方便在 MCP 客户端里按本机环境切换：
+
+- `simulator-iphone-16-pro`
+- `simulator-iphone-17-pro`
+- `ui-tests`
+
+如果你是直接使用 CLI，而不是通过 MCP 客户端管理 session defaults，可以运行：
+
+```bash
+xcodebuildmcp setup
+```
+
 ### 初始化
 
 ```swift

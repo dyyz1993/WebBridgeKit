@@ -442,7 +442,9 @@ extension WebAccessViewController: WKNavigationDelegate {
         print("✅ [WebAccessVC] WebView didFinish navigation - URL: \(webView.url?.absoluteString ?? "nil")")
         // 更新历史记录
         if let url = webView.url {
-            WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webView.title)
+            Task {
+                try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webView.title)
+            }
             viewModel.refreshCacheStatus()
 
             // 记录最后打开的 URL

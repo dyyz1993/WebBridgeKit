@@ -73,9 +73,15 @@ class PinnedURLViewModel: ViewModel {
 
     func transform(input: Input) -> Output {
         input.loadTrigger
-            .map { [weak self] () -> [PinnedURLRealm] in
-                guard let self else { return [] }
-                return PinnedURLManager.shared.getAllPinnedSync() ?? []
+            .flatMap { _ -> Observable<[PinnedURLRealm]> in
+                Observable.create { observer in
+                    Task {
+                        let urls = (try? await PinnedURLManager.shared.getAllPinned()) ?? []
+                        observer.onNext(urls)
+                        observer.onCompleted()
+                    }
+                    return Disposables.create()
+                }
             }
             .bind(to: urlsRelay)
             .disposed(by: rx)
@@ -86,63 +92,91 @@ class PinnedURLViewModel: ViewModel {
                 let type = URLType.detect(from: url)
                 self?.detectedTypeRelay.accept((url, type))
             })
-            .map { [weak self] url -> Result<PinnedURLRealm, Error> in
-                guard let self else { return .failure(NSError(domain: "PinnedURL", code: -1, userInfo: nil)) }
-                guard let result = PinnedURLManager.shared.addSync(url: url) else {
-                    return .failure(NSError(domain: "PinnedURL", code: -2, userInfo: [NSLocalizedDescriptionKey: "addSync returned nil"]))
+            .flatMap { [weak self] url -> Observable<Result<PinnedURLRealm, Error>> in
+                guard let self else {
+                    return .just(.failure(NSError(domain: "PinnedURL", code: -1)))
                 }
-                if let urls = PinnedURLManager.shared.getAllPinnedSync() {
-                    self.urlsRelay.accept(urls)
+                return Observable.create { observer in
+                    Task {
+                        do {
+                            let result = try await PinnedURLManager.shared.add(url: url)
+                            let urls = (try? await PinnedURLManager.shared.getAllPinned()) ?? []
+                            self.urlsRelay.accept(urls)
+                            observer.onNext(.success(result))
+                        } catch {
+                            observer.onNext(.failure(error))
+                        }
+                        observer.onCompleted()
+                    }
+                    return Disposables.create()
                 }
-                return .success(result)
             }
             .bind(to: addResultRelay)
             .disposed(by: rx)
 
         input.deleteTapped
-            .map { [weak self] item -> Bool in
-                guard let self else { return false }
-                do {
-                    try PinnedURLManager.shared.deleteSync(id: item.id)
-                    if let urls = PinnedURLManager.shared.getAllPinnedSync() {
-                        self.urlsRelay.accept(urls)
+            .flatMap { [weak self] item -> Observable<Bool> in
+                guard let self else { return .just(false) }
+                return Observable.create { observer in
+                    Task {
+                        do {
+                            try await PinnedURLManager.shared.delete(id: item.id)
+                            let urls = (try? await PinnedURLManager.shared.getAllPinned()) ?? []
+                            self.urlsRelay.accept(urls)
+                            observer.onNext(true)
+                        } catch {
+                            self.errorRelay.accept(error.localizedDescription)
+                            observer.onNext(false)
+                        }
+                        observer.onCompleted()
                     }
-                    return true
-                } catch {
-                    self.errorRelay.accept(error.localizedDescription)
-                    return false
+                    return Disposables.create()
                 }
             }
             .bind(to: deleteResultRelay)
             .disposed(by: rx)
 
         input.unpinTapped
-            .map { [weak self] item -> Bool in
-                guard let self else { return false }
-                do {
-                    try PinnedURLManager.shared.unpinSync(id: item.id)
-                    if let urls = PinnedURLManager.shared.getAllPinnedSync() {
-                        self.urlsRelay.accept(urls)
+            .flatMap { [weak self] item -> Observable<Bool> in
+                guard let self else { return .just(false) }
+                return Observable.create { observer in
+                    Task {
+                        do {
+                            try await PinnedURLManager.shared.unpin(id: item.id)
+                            let urls = (try? await PinnedURLManager.shared.getAllPinned()) ?? []
+                            self.urlsRelay.accept(urls)
+                            observer.onNext(true)
+                        } catch {
+                            self.errorRelay.accept(error.localizedDescription)
+                            observer.onNext(false)
+                        }
+                        observer.onCompleted()
                     }
-                    return true
-                } catch {
-                    self.errorRelay.accept(error.localizedDescription)
-                    return false
+                    return Disposables.create()
                 }
             }
             .bind(to: deleteResultRelay)
             .disposed(by: rx)
 
         input.importPreset
-            .map { [weak self] preset -> Result<PinnedURLRealm, Error> in
-                guard let self else { return .failure(NSError(domain: "PinnedURL", code: -1, userInfo: nil)) }
-                guard let result = PinnedURLManager.shared.addSync(url: preset.url, title: preset.title, notes: preset.description) else {
-                    return .failure(NSError(domain: "PinnedURL", code: -2, userInfo: [NSLocalizedDescriptionKey: "addSync returned nil"]))
+            .flatMap { [weak self] preset -> Observable<Result<PinnedURLRealm, Error>> in
+                guard let self else {
+                    return .just(.failure(NSError(domain: "PinnedURL", code: -1)))
                 }
-                if let urls = PinnedURLManager.shared.getAllPinnedSync() {
-                    self.urlsRelay.accept(urls)
+                return Observable.create { observer in
+                    Task {
+                        do {
+                            let result = try await PinnedURLManager.shared.add(url: preset.url, title: preset.title, notes: preset.description)
+                            let urls = (try? await PinnedURLManager.shared.getAllPinned()) ?? []
+                            self.urlsRelay.accept(urls)
+                            observer.onNext(.success(result))
+                        } catch {
+                            observer.onNext(.failure(error))
+                        }
+                        observer.onCompleted()
+                    }
+                    return Disposables.create()
                 }
-                return .success(result)
             }
             .bind(to: addResultRelay)
             .disposed(by: rx)

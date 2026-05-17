@@ -312,27 +312,23 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         }
 
         WebPageThumbnailGenerator.shared.generateThumbnail(for: webView, url: url) { [weak self] thumbnailData in
-            Task { @MainActor in
+            Task { [weak self] in
                 guard let thumbnailData else {
                     return
                 }
 
-                // 通过URL查找历史记录并更新缩略图
-                if let history = WebPageHistoryManager.shared.findHistory(url: url) {
-                    // 使用 WebPageOfflineCacheManager 的 Realm 实例来更新
-                    // 因为它可能已经打开了 Realm
-                    do {
-                        let realm = try Realm(configuration: WebPageHistoryManager.shared.realmConfiguration)
-                        try realm.write {
-                            if let cachedHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
-                                cachedHistory.thumbnail = thumbnailData
-                                print(" [BarkWebVC] Thumbnail saved for: \(url)")
+                if let history = try? await WebPageHistoryManager.shared.findHistory(url: url) {
+                    await MainActor.run {
+                        do {
+                            let realm = try Realm(configuration: WebPageHistoryManager.shared.realmConfiguration)
+                            try realm.write {
+                                if let cachedHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
+                                    cachedHistory.thumbnail = thumbnailData
+                                }
                             }
+                        } catch {
+                            print(" [BarkWebVC] Failed to save thumbnail for: \(url)")
                         }
-                    } catch {
-                        // 🔒 Proper error handling with logging
-                        print(" [BarkWebVC] Failed to save thumbnail for: \(url)")
-                        print("   - Error: \(error.localizedDescription)")
                     }
                 }
             }

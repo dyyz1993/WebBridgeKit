@@ -277,7 +277,7 @@ class MessageDetailViewController: UIViewController {
 extension MessageDetailViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self] result, error in
+        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self] result, _ in
             guard let self = self, let height = result as? CGFloat else { return }
             webView.snp.updateConstraints { make in
                 make.height.equalTo(height + 16)

@@ -139,9 +139,14 @@ class TokenGenerateViewModel: ViewModel {
     // MARK: - Private Methods
 
     private func loadHistories() {
-        let histories = Array(historyManager.getAllHistories().prefix(50))  // 只取最近50条
-        historiesRelay.accept(histories)
-        isEmptyRelay.accept(histories.isEmpty)
+        Task { [weak self] in
+            let allHistories = (try? await WebPageHistoryManager.shared.getAllHistories()) ?? []
+            let histories = Array(allHistories.prefix(50))
+            await MainActor.run {
+                self?.historiesRelay.accept(histories)
+                self?.isEmptyRelay.accept(histories.isEmpty)
+            }
+        }
     }
 
     // MARK: - Public Methods

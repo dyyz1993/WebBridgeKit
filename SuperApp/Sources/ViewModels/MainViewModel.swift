@@ -331,8 +331,10 @@ class MainViewModel: ViewModel {
     }
 
     func addToFavorites(url: URL) {
-        let history = historyService.findHistory(url: url)
-        favoriteService.addFavorite(url: url, title: history?.title ?? url.host, favicon: history?.favicon)
+        Task {
+            let history = try? await WebPageHistoryManager.shared.findHistory(url: url)
+            _ = try? await URLFavoriteManager.shared.addFavorite(url: url, title: history?.title ?? url.host, favicon: history?.favicon)
+        }
     }
 
     func isPinned(url: URL) -> Bool {
@@ -345,43 +347,47 @@ class MainViewModel: ViewModel {
     }
 
     func togglePin(url: URL) {
-        if let favorite = favoriteService.findFavorite(url: url) {
-            favoriteService.togglePin(id: favorite.id)
-        } else {
-            // 如果还不是收藏，先添加为收藏并置顶
-            let history = historyService.findHistory(url: url)
-            if let newFavorite = favoriteService.addFavorite(url: url, title: history?.title ?? url.host, favicon: history?.favicon) {
-                favoriteService.togglePin(id: newFavorite.id)
+        Task {
+            if let favorite = try? await URLFavoriteManager.shared.findFavorite(url: url) {
+                _ = try? await URLFavoriteManager.shared.togglePin(id: favorite.id)
+            } else {
+                let history = try? await WebPageHistoryManager.shared.findHistory(url: url)
+                if let newFavorite = try? await URLFavoriteManager.shared.addFavorite(url: url, title: history?.title ?? url.host, favicon: history?.favicon) {
+                    _ = try? await URLFavoriteManager.shared.togglePin(id: newFavorite.id)
+                }
             }
         }
     }
 
     func toggleFavorite(url: URL) {
-        if let favorite = favoriteService.findFavorite(url: url) {
-            // 如果已经是收藏，则移除
-            favoriteService.deleteFavorite(id: favorite.id)
-        } else {
-            // 如果不是收藏，则添加
-            let history = historyService.findHistory(url: url)
-            favoriteService.addFavorite(url: url, title: history?.title ?? url.host, favicon: history?.favicon)
+        Task {
+            if let favorite = try? await URLFavoriteManager.shared.findFavorite(url: url) {
+                try? await URLFavoriteManager.shared.deleteFavorite(id: favorite.id)
+            } else {
+                let history = try? await WebPageHistoryManager.shared.findHistory(url: url)
+                _ = try? await URLFavoriteManager.shared.addFavorite(url: url, title: history?.title ?? url.host, favicon: history?.favicon)
+            }
         }
     }
 
     func clearCache(url: URL) {
         PersistentManifestLoader.shared.clearCache(for: url)
-        // 清除缓存后刷新列表以更新显示的大小
         loadHistories()
     }
 
     func deleteHistory(url: URL) {
-        guard let history = historyService.findHistory(url: url) else { return }
-        historyService.deleteHistory(id: history.id)
-        loadHistories()
+        Task { [weak self] in
+            guard let history = try? await WebPageHistoryManager.shared.findHistory(url: url) else { return }
+            try? await WebPageHistoryManager.shared.deleteHistory(id: history.id)
+            self?.loadHistories()
+        }
     }
 
     func clearAllHistory() {
-        historyService.clearAllHistory()
-        loadHistories()
+        Task { [weak self] in
+            try? await WebPageHistoryManager.shared.clearAllHistory()
+            self?.loadHistories()
+        }
     }
 }
 

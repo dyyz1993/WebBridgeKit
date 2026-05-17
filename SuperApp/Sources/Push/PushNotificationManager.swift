@@ -33,7 +33,7 @@ class PushNotificationManager: NSObject {
             switch settings.authorizationStatus {
             case .notDetermined:
                 // 尚未请求过权限 → 弹系统授权弹窗
-                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
                     DispatchQueue.main.async {
                         if granted {
                             UIApplication.shared.registerForRemoteNotifications()

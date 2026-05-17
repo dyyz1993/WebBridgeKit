@@ -58,7 +58,7 @@ class TabBarController: UITabBarController {
     }
 
     private func handlePushJump(_ notification: Notification) {
-        guard notification.userInfo?["url"] as? URL != nil else { return }
+        guard notification.userInfo?["url"] is URL else { return }
         self.selectedIndex = 0
     }
 

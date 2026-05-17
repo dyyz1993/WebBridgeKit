@@ -139,66 +139,64 @@ public class CacheResourceViewModel: ViewModel {
     // MARK: - Private Methods
 
     private func loadResources(for url: URL) {
-        // 获取该页面的所有资源
-        guard let history = historyManager.findHistory(url: url) else {
-            resourcesRelay.accept([])
-            isEmptyRelay.accept(true)
-            totalCountRelay.accept("0 个资源")
-            loadingRelay.accept(false)
-            return
-        }
+        Task { [weak self] in
+            guard let self = self else { return }
+            guard let history = try? await WebPageHistoryManager.shared.findHistory(url: url) else {
+                self.resourcesRelay.accept([])
+                self.isEmptyRelay.accept(true)
+                self.totalCountRelay.accept("0 个资源")
+                self.loadingRelay.accept(false)
+                return
+            }
 
-        var items: [CacheResourceItem] = []
+            var items: [CacheResourceItem] = []
 
-        // 添加 HTML 文件
-        if let htmlPath = history.htmlPath {
-            let fileSize = getFileSize(path: htmlPath)
-            items.append(CacheResourceItem(
-                key: "html",
-                url: url.absoluteString,
-                type: .html,
-                size: fileSize,
-                compressedSize: nil,
-                date: history.cacheDate ?? Date()
-            ))
-        }
-
-        // 添加资源文件
-        for resourcePath in history.resourcePaths {
-            let fileName = (resourcePath as NSString).lastPathComponent
-            let fileSize = getFileSize(path: resourcePath)
-            let fileType = guessFileType(from: fileName)
-
-            items.append(CacheResourceItem(
-                key: resourcePath,
-                url: resourcePath,
-                type: fileType,
-                size: fileSize,
-                compressedSize: nil,
-                date: history.cacheDate ?? Date()
-            ))
-        }
-
-        // 按类型分组
-        let grouped = Dictionary(grouping: items) { $0.type }
-
-        var sections: [CacheResourceSection] = []
-
-        // 按类型排序
-        let typeOrder: [CacheFileResourceType] = [.html, .script, .stylesheet, .image, .font, .other]
-        for type in typeOrder {
-            if let items = grouped[type], !items.isEmpty {
-                sections.append(CacheResourceSection(
-                    type: type,
-                    items: items.sorted { $0.url < $1.url }
+            if let htmlPath = history.htmlPath {
+                let fileSize = self.getFileSize(path: htmlPath)
+                items.append(CacheResourceItem(
+                    key: "html",
+                    url: url.absoluteString,
+                    type: .html,
+                    size: fileSize,
+                    compressedSize: nil,
+                    date: history.cacheDate ?? Date()
                 ))
             }
-        }
 
-        resourcesRelay.accept(sections)
-        isEmptyRelay.accept(items.isEmpty)
-        totalCountRelay.accept("\(items.count) 个资源")
-        loadingRelay.accept(false)
+            for resourcePath in history.resourcePaths {
+                let fileName = (resourcePath as NSString).lastPathComponent
+                let fileSize = self.getFileSize(path: resourcePath)
+                let fileType = self.guessFileType(from: fileName)
+
+                items.append(CacheResourceItem(
+                    key: resourcePath,
+                    url: resourcePath,
+                    type: fileType,
+                    size: fileSize,
+                    compressedSize: nil,
+                    date: history.cacheDate ?? Date()
+                ))
+            }
+
+            let grouped = Dictionary(grouping: items) { $0.type }
+
+            var sections: [CacheResourceSection] = []
+
+            let typeOrder: [CacheFileResourceType] = [.html, .script, .stylesheet, .image, .font, .other]
+            for type in typeOrder {
+                if let items = grouped[type], !items.isEmpty {
+                    sections.append(CacheResourceSection(
+                        type: type,
+                        items: items.sorted { $0.url < $1.url }
+                    ))
+                }
+            }
+
+            self.resourcesRelay.accept(sections)
+            self.isEmptyRelay.accept(items.isEmpty)
+            self.totalCountRelay.accept("\(items.count) 个资源")
+            self.loadingRelay.accept(false)
+        }
     }
 
     private func selectAllResources() {
@@ -241,24 +239,27 @@ public class CacheResourceViewModel: ViewModel {
     }
 
     public func deleteResource(key: String) {
-        // 删除文件
         try? FileManager.default.removeItem(atPath: key)
 
-        // 从数据库中更新
-        if let history = historyManager.getAllHistories().first(where: { h in
-            h.resourcePaths.contains(key) || h.htmlPath == key
-        }) {
+        Task {
+            let allHistories = (try? await WebPageHistoryManager.shared.getAllHistories()) ?? []
+            guard let history = allHistories.first(where: { h in
+                h.resourcePaths.contains(key) || h.htmlPath == key
+            }) else { return }
+
             if key == history.htmlPath {
-                // 删除的是 HTML 文件
-                cacheManager.deleteCache(history: history)
+                await MainActor.run {
+                    cacheManager.deleteCache(history: history)
+                }
             } else {
-                // 删除的是资源文件
-                let realm = try? Realm()
-                try? realm?.write {
-                    if let cachedHistory = realm?.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
-                        let index = cachedHistory.resourcePaths.index(of: key)
-                        if let index = index {
-                            cachedHistory.resourcePaths.remove(at: index)
+                await MainActor.run {
+                    let realm = try? Realm(configuration: WebPageHistoryManager.shared.realmConfiguration)
+                    try? realm?.write {
+                        if let cachedHistory = realm?.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
+                            let index = cachedHistory.resourcePaths.index(of: key)
+                            if let index = index {
+                                cachedHistory.resourcePaths.remove(at: index)
+                            }
                         }
                     }
                 }

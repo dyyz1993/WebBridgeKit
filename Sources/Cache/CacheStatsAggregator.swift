@@ -15,6 +15,7 @@ public class CacheStatsAggregator {
     public static let shared = CacheStatsAggregator()
 
     private var providers: [SubsystemID: CacheStatisticsProviding] = [:]
+    private let lock = NSLock()
 
     private init() {
         registerDefaultProviders()
@@ -23,17 +24,23 @@ public class CacheStatsAggregator {
     // MARK: - Provider Registration
 
     public func registerProvider(_ provider: CacheStatisticsProviding) {
-        providers[provider.subsystemID] = provider
+        lock.withLock {
+            providers[provider.subsystemID] = provider
+        }
     }
 
     public func registerProviders(_ providers: [CacheStatisticsProviding]) {
-        for provider in providers {
-            self.providers[provider.subsystemID] = provider
+        lock.withLock {
+            for provider in providers {
+                self.providers[provider.subsystemID] = provider
+            }
         }
     }
 
     public func unregisterProvider(for id: SubsystemID) {
-        providers.removeValue(forKey: id)
+        lock.withLock {
+            providers.removeValue(forKey: id)
+        }
     }
 
     // MARK: - Public API
@@ -59,8 +66,14 @@ public class CacheStatsAggregator {
 
     /// 同步采集（主线程调用需注意性能）
     public func syncAggregate() -> DashboardData {
+        let currentProviders = lock.withLock { providers }
         let subsystemIDs = SubsystemID.allCases
-        let subsystems = subsystemIDs.map { collectStats(for: $0) }
+        let subsystems = subsystemIDs.map { id in
+            if let provider = currentProviders[id] {
+                return provider.collectStats()
+            }
+            return SubsystemStats(id: id, status: .unknown)
+        }
 
         let totalSize = subsystems.reduce(Int64(0)) { $0 + $1.totalSize }
         let totalEntries = subsystems.reduce(0) { $0 + $1.totalEntries }
@@ -79,7 +92,8 @@ public class CacheStatsAggregator {
     /// 采集单个子系统的统计数据
     /// 优先使用注册的 CacheStatisticsProviding provider，否则返回 unknown 状态
     public func collectStats(for subsystemID: SubsystemID) -> SubsystemStats {
-        if let provider = providers[subsystemID] {
+        let currentProviders = lock.withLock { providers }
+        if let provider = currentProviders[subsystemID] {
             return provider.collectStats()
         }
         return SubsystemStats(id: subsystemID, status: .unknown)

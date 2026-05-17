@@ -14,7 +14,7 @@ extension ComponentCatalogViewController {
     func buildColorSection() {
         let header = makeSectionHeader(
             title: "Colors",
-            tokenInfo: "ThemeTokens.Colors.Light / Dark — 22 color tokens"
+            tokenInfo: "ThemeTokens.Color — dynamic color tokens"
         )
 
         let modeControl = UISegmentedControl(items: ["Light", "Dark", "System"])
@@ -27,29 +27,29 @@ extension ComponentCatalogViewController {
         gridContainer.layer.cornerRadius = ThemeCornerRadius.default.lg
 
         let colors: [(String, UIColor)] = [
-            ("background", ThemeTokens.Colors.Light.background),
-            ("primary", ThemeTokens.Colors.Light.primary),
-            ("secondary", ThemeTokens.Colors.Light.secondary),
-            ("text", ThemeTokens.Colors.Light.text),
-            ("textSecondary", ThemeTokens.Colors.Light.textSecondary),
+            ("background", ThemeTokens.Color.background),
+            ("primary", ThemeTokens.Color.primary),
+            ("secondary", ThemeTokens.Color.secondary),
+            ("text", ThemeTokens.Color.text),
+            ("textSecondary", ThemeTokens.Color.textSecondary),
             ("textTertiary", ThemeTokens.Color.textTertiary),
             ("border", ThemeTokens.Color.border),
             ("separator", ThemeTokens.Color.separator),
-            ("cardBackground", ThemeTokens.Colors.Light.cardBackground),
-            ("surface", ThemeTokens.Colors.Light.surface),
-            ("error", ThemeTokens.Colors.Light.error),
-            ("warning", ThemeTokens.Colors.Light.warning),
-            ("success", ThemeTokens.Colors.Light.success),
-            ("info", ThemeTokens.Colors.Light.info),
-            ("fabBackground", ThemeTokens.Colors.Light.fabBackground),
-            ("gradientStart", ThemeTokens.Colors.Light.gradientStart),
+            ("cardBackground", ThemeTokens.Color.cardBackground),
+            ("surface", ThemeTokens.Color.surface),
+            ("error", ThemeTokens.Color.error),
+            ("warning", ThemeTokens.Color.warning),
+            ("success", ThemeTokens.Color.success),
+            ("info", ThemeTokens.Color.info),
+            ("fabBackground", ThemeTokens.Color.fabBackground),
+            ("gradientStart", ThemeTokens.Color.gradientStart),
             ("gradientEnd", ThemeTokens.Color.gradientEnd),
-            ("badgeBackground", ThemeTokens.Colors.Light.badgeBackground),
-            ("badgeText", ThemeTokens.Colors.Light.badgeText),
+            ("badgeBackground", ThemeTokens.Color.badgeBackground),
+            ("badgeText", ThemeTokens.Color.badgeText),
             ("unreadDot", ThemeTokens.Color.unreadDot),
-            ("overlay", ThemeTokens.Colors.Light.overlay),
-            ("navBarBg", ThemeTokens.Colors.Light.navigationBarBackground),
-            ("tabBarBg", ThemeTokens.Colors.Light.tabBarBackground)
+            ("overlay", ThemeTokens.Color.overlay),
+            ("navBarBg", ThemeTokens.Color.navigationBarBackground),
+            ("tabBarBg", ThemeTokens.Color.tabBarBackground)
         ]
 
         let cols = 4

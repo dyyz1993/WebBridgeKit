@@ -447,7 +447,9 @@ public class WebBrowserManager: WebBrowserManaging {
             webVC.title = params.customTitle ?? displayTitle
 
             // 🔥 添加到历史记录追踪（只追踪外部URL）
-            WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webVC.title)
+            Task {
+                try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webVC.title)
+            }
             print("📝 [WebBrowserManager] Added to history: \(url.absoluteString)")
         }
 

@@ -130,32 +130,30 @@ class WebAccessViewModel: ViewModel {
     // MARK: - Private Methods
 
     private func updateURLInfo(url: URL) {
-        // 查找或创建历史记录
-        if let history = historyManager.findHistory(url: url) {
-            currentHistory = history
-            titleRelay.accept(history.title ?? url.host)
+        Task { [weak self] in
+            guard let self = self else { return }
+            if let history = try? await WebPageHistoryManager.shared.findHistory(url: url) {
+                self.currentHistory = history
+                self.titleRelay.accept(history.title ?? url.host)
 
-            // 更新缓存状态
-            isCachedRelay.accept(history.isCached)
+                self.isCachedRelay.accept(history.isCached)
 
-            if history.isCached {
-                // 已缓存，显示资源数量
-                let count = history.resourcePaths.count
-                cacheCountRelay.accept(L10n.tr("web_access.cache_count_format", "\(count)"))
-                canCacheRelay.accept(false)
+                if history.isCached {
+                    let count = history.resourcePaths.count
+                    self.cacheCountRelay.accept(L10n.tr("web_access.cache_count_format", "\(count)"))
+                    self.canCacheRelay.accept(false)
+                } else {
+                    self.cacheCountRelay.accept(L10n.tr("web_access.not_cached"))
+                    self.canCacheRelay.accept(true)
+                }
+
+                self.loadingRelay.accept(false)
             } else {
-                // 未缓存，可以缓存
-                cacheCountRelay.accept(L10n.tr("web_access.not_cached"))
-                canCacheRelay.accept(true)
-            }
+                try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: url.host)
 
-            loadingRelay.accept(false)
-        } else {
-            // 新 URL，需要先创建历史记录
-            historyManager.addOrUpdateHistory(url: url, title: url.host)
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                self?.updateURLInfo(url: url)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                    self?.updateURLInfo(url: url)
+                }
             }
         }
     }

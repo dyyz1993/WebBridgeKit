@@ -9,6 +9,21 @@
 import Foundation
 import RealmSwift
 
+// MARK: - PinnedURLManaging Protocol
+
+public protocol PinnedURLManaging: AnyObject {
+    func add(url: String, title: String?, notes: String?) async throws -> PinnedURLRealm
+    func unpin(id: String) async throws
+    func delete(id: String) async throws
+    func recordAccess(id: String) async
+    func getAllPinned() async throws -> [PinnedURLRealm]
+    func getByType(_ type: URLType) async throws -> [PinnedURLRealm]
+    func search(_ query: String) async throws -> [PinnedURLRealm]
+    func getSummary() async throws -> PinnedURLSummary
+    func importPresets(_ items: [PresetURLItem]) async throws -> Int
+    func seedRecommendedPresetsIfNeeded() async throws -> Int
+}
+
 // MARK: - Database Actor
 
 actor PinnedURLDatabaseActor {
@@ -169,7 +184,7 @@ actor PinnedURLDatabaseActor {
 
 // MARK: - PinnedURL Manager
 
-public class PinnedURLManager {
+public class PinnedURLManager: PinnedURLManaging {
 
     public static let shared = PinnedURLManager()
 
@@ -260,6 +275,7 @@ public class PinnedURLManager {
 
     // MARK: - Synchronous Compatibility Layer
 
+    @available(*, deprecated, message: "Use async add(url:title:notes:) instead. Sync methods risk deadlock on main thread.")
     public func addSync(url: String, title: String? = nil, notes: String? = nil) -> PinnedURLRealm? {
         var result: PinnedURLRealm?
         let semaphore = DispatchSemaphore(value: 0)
@@ -271,6 +287,7 @@ public class PinnedURLManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async getAllPinned() instead. Sync methods risk deadlock on main thread.")
     public func getAllPinnedSync() -> [PinnedURLRealm]? {
         var result: [PinnedURLRealm]?
         let semaphore = DispatchSemaphore(value: 0)
@@ -282,6 +299,7 @@ public class PinnedURLManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async delete(id:) instead. Sync methods risk deadlock on main thread.")
     public func deleteSync(id: String) throws {
         var caughtError: Error?
         let semaphore = DispatchSemaphore(value: 0)
@@ -293,6 +311,7 @@ public class PinnedURLManager {
         if let err = caughtError { throw err }
     }
 
+    @available(*, deprecated, message: "Use async unpin(id:) instead. Sync methods risk deadlock on main thread.")
     public func unpinSync(id: String) throws {
         var caughtError: Error?
         let semaphore = DispatchSemaphore(value: 0)

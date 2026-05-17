@@ -325,6 +325,7 @@ public class URLFavoriteManager: URLManaging {
 
 extension URLFavoriteManager {
 
+    @available(*, deprecated, message: "Use async addFavorite(url:title:). Sync methods risk deadlock via DispatchSemaphore.")
     public func addURL(_ url: URL, title: String?) throws {
         let semaphore = DispatchSemaphore(value: 0)
         var thrownError: Error?
@@ -340,6 +341,7 @@ extension URLFavoriteManager {
         if let error = thrownError { throw error }
     }
 
+    @available(*, deprecated, message: "Use async deleteFavorite(url:). Sync methods risk deadlock via DispatchSemaphore.")
     public func removeURL(_ url: URL) throws {
         let semaphore = DispatchSemaphore(value: 0)
         var thrownError: Error?
@@ -355,19 +357,24 @@ extension URLFavoriteManager {
         if let error = thrownError { throw error }
     }
 
+    @available(*, deprecated, message: "Use async getAllFavorites(). Calls deprecated sync method.")
     public func getAllURLs() -> [URL] {
         return getAllFavorites().compactMap { URL(string: $0.url) }
     }
 
+    @available(*, deprecated, message: "Use async findFavorite(url:). Calls deprecated sync method.")
     public func isFavorite(_ url: URL) -> Bool {
         return findFavorite(url: url) != nil
     }
 }
 
-// MARK: - Synchronous Compatibility Layer
+// MARK: - Synchronous Compatibility Layer (DEPRECATED)
+// These methods risk deadlock via DispatchSemaphore on the calling thread.
+// Use the async equivalents on URLFavoriteManager instead.
 
 extension URLFavoriteManager {
 
+    @available(*, deprecated, message: "Use async addFavorite(url:title:favicon:). Sync methods risk deadlock via DispatchSemaphore.")
     @discardableResult
     public func addFavorite(url: URL, title: String? = nil, favicon: Data? = nil) -> URLFavorite? {
         var result: URLFavorite?
@@ -386,6 +393,7 @@ extension URLFavoriteManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async updateFavorite(_:). Sync methods risk deadlock.")
     public func updateFavorite(_ favorite: URLFavorite) {
         Task {
             do {
@@ -396,6 +404,7 @@ extension URLFavoriteManager {
         }
     }
 
+    @available(*, deprecated, message: "Use async deleteFavorite(id:). Sync methods risk deadlock.")
     public func deleteFavorite(id: String) {
         Task {
             do {
@@ -406,6 +415,7 @@ extension URLFavoriteManager {
         }
     }
 
+    @available(*, deprecated, message: "Use async deleteFavorite(url:). Sync methods risk deadlock.")
     public func deleteFavorite(url: URL) {
         Task {
             do {
@@ -416,6 +426,7 @@ extension URLFavoriteManager {
         }
     }
 
+    @available(*, deprecated, message: "Use async getAllFavorites(). This sync version accesses Realm directly and may deadlock.")
     public func getAllFavorites() -> [URLFavorite] {
         guard let realm = try? Realm(configuration: realmConfiguration) else {
             WebBridgeLogger.shared.log(.error, "[URLFavoriteManager] Failed to open Realm at \(realmConfiguration.fileURL?.path ?? "nil")")
@@ -436,10 +447,12 @@ extension URLFavoriteManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async getAllFavorites(). This sync version accesses Realm directly and may deadlock.")
     public func getAllFavoritesAsArray() -> [URLFavorite] {
         return getAllFavorites()
     }
 
+    @available(*, deprecated, message: "Use async findFavorite(url:). Sync methods risk deadlock via DispatchSemaphore.")
     public func findFavorite(url: URL) -> URLFavorite? {
         var result: URLFavorite?
         let semaphore = DispatchSemaphore(value: 0)
@@ -457,6 +470,7 @@ extension URLFavoriteManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async findFavorite(id:). Sync methods risk deadlock via DispatchSemaphore.")
     public func findFavorite(id: String) -> URLFavorite? {
         var result: URLFavorite?
         let semaphore = DispatchSemaphore(value: 0)
@@ -474,6 +488,7 @@ extension URLFavoriteManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async searchFavorites(keyword:). This sync version accesses Realm directly.")
     public func searchFavorites(keyword: String) -> [URLFavorite] {
         guard let realm = try? Realm(configuration: realmConfiguration) else { return [] }
         let lowerKeyword = keyword.lowercased()
@@ -492,10 +507,12 @@ extension URLFavoriteManager {
         return matched
     }
 
+    @available(*, deprecated, message: "Use async searchFavorites(keyword:). This sync version accesses Realm directly.")
     public func searchFavoritesAsArray(keyword: String) -> [URLFavorite] {
         return searchFavorites(keyword: keyword)
     }
 
+    @available(*, deprecated, message: "Use async getTotalCount(). Sync methods risk deadlock via DispatchSemaphore.")
     public func getTotalCount() -> Int {
         var result: Int = 0
         let semaphore = DispatchSemaphore(value: 0)
@@ -513,6 +530,7 @@ extension URLFavoriteManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async togglePin(id:). Sync methods risk deadlock via DispatchSemaphore.")
     @discardableResult
     public func togglePin(id: String) -> Bool {
         var result: Bool = false
@@ -531,6 +549,7 @@ extension URLFavoriteManager {
         return result
     }
 
+    @available(*, deprecated, message: "Use async updateCacheMode(id:enabled:). Sync methods risk deadlock.")
     public func updateCacheMode(id: String, enabled: Bool) {
         Task {
             do {
@@ -541,6 +560,7 @@ extension URLFavoriteManager {
         }
     }
 
+    @available(*, deprecated, message: "Use async updateSortOrder(favorites:). Sync methods risk deadlock.")
     public func updateSortOrder(favorites: [URLFavorite]) {
         Task {
             do {

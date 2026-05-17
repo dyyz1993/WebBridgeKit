@@ -138,20 +138,20 @@ extension ManifestCacheManager {
     func recordCacheHit() {
         statsLock.lock()
         defer { statsLock.unlock() }
-        cacheHits += 1
+        _cacheHits += 1
     }
 
     func recordCacheMiss() {
         statsLock.lock()
         defer { statsLock.unlock() }
-        cacheMisses += 1
+        _cacheMisses += 1
     }
 
     func resetStats() {
         statsLock.lock()
         defer { statsLock.unlock() }
-        cacheHits = 0
-        cacheMisses = 0
+        _cacheHits = 0
+        _cacheMisses = 0
     }
 
     // MARK: - MIME Type

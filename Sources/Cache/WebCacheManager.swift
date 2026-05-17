@@ -16,7 +16,7 @@ import WebKit
 // Framework imports
 
 /// 网站缓存管理器
-public class WebCacheManager {
+public class WebCacheManager: WebCacheManaging {
 
     public static let shared = WebCacheManager()
 
@@ -100,15 +100,11 @@ public class WebCacheManager {
     public func performAutoCleanup() {
         Log.info("Starting auto cleanup...", category: .cache)
 
-        // 异步执行清理任务，避免阻塞主线程（特别是应用启动时）
-        DispatchQueue.global(qos: .utility).async {
+        Task {
             // 1. 清理低频历史记录 (由 WebPageHistoryManager 处理)
-            WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
+            try? await WebPageHistoryManager.shared.cleanupLowFrequencyItems(limit: 50)
 
-            // 2. 清理过期的拦截资源缓存 (已删除 InterceptiveCacheManager)
-            // InterceptiveCacheManager.shared.cleanupExpiredCache()
-
-            // 3. 清理未使用的资源缓存 (超过 7 天未访问)
+            // 2. 清理未使用的资源缓存 (超过 7 天未访问)
             WebResourceCacheManager.shared.cleanupUnusedResources(olderThan: 7 * 24 * 3600)
 
             Log.info("Auto cleanup completed in background", category: .cache)

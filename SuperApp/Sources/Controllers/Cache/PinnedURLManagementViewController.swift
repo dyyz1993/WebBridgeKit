@@ -235,15 +235,21 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
     }
 
     private func deletePinned(id: String) {
-        guard let urls = PinnedURLManager.shared.getAllPinnedSync(),
-              let item = urls.first(where: { $0.id == id }) else { return }
-        deleteRelay.accept(item)
+        Task { [weak self] in
+            guard let self else { return }
+            guard let urls = try? await PinnedURLManager.shared.getAllPinned(),
+                  let item = urls.first(where: { $0.id == id }) else { return }
+            self.deleteRelay.accept(item)
+        }
     }
 
     private func unpinPinned(id: String) {
-        guard let urls = PinnedURLManager.shared.getAllPinnedSync(),
-              let item = urls.first(where: { $0.id == id }) else { return }
-        unpinRelay.accept(item)
+        Task { [weak self] in
+            guard let self else { return }
+            guard let urls = try? await PinnedURLManager.shared.getAllPinned(),
+                  let item = urls.first(where: { $0.id == id }) else { return }
+            self.unpinRelay.accept(item)
+        }
     }
 
     private func navigateToPresetCatalog() {

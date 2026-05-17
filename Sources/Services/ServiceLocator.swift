@@ -30,6 +30,16 @@ public class ServiceLocator {
     private var _historyService: HistoryServiceProtocol?
     /// 收藏服务
     private var _favoriteService: FavoriteServiceProtocol?
+    /// 置顶 URL 管理器
+    private var _pinnedURLManager: PinnedURLManaging?
+    /// URL 收藏管理器
+    private var _urlFavoriteManager: URLManaging?
+    /// Manifest 缓存管理器
+    private var _manifestStore: ManifestCacheManaging?
+    /// Web 缓存管理器
+    private var _cacheManager: WebCacheManaging?
+    /// 消息引擎
+    private var _messageEngine: (any MessageEngineProtocol)?
 
     /// 当前服务模式
     public private(set) var currentMode: ServiceMode = .production
@@ -117,22 +127,58 @@ public class ServiceLocator {
         WebBridgeLogger.shared.log(.info, "🔧 ServiceLocator: Custom services registered")
     }
 
+    /// 注册管理器实现（可选覆盖，不传则保持默认 .shared 单例）
+    public func register(
+        pinnedURLManager: PinnedURLManaging? = nil,
+        urlFavoriteManager: URLManaging? = nil,
+        manifestStore: ManifestCacheManaging? = nil,
+        cacheManager: WebCacheManaging? = nil,
+        messageEngine: (any MessageEngineProtocol)? = nil
+    ) {
+        if let m = pinnedURLManager { _pinnedURLManager = m }
+        if let m = urlFavoriteManager { _urlFavoriteManager = m }
+        if let m = manifestStore { _manifestStore = m }
+        if let m = cacheManager { _cacheManager = m }
+        if let m = messageEngine { _messageEngine = m }
+
+        WebBridgeLogger.shared.log(.info, "🔧 ServiceLocator: Manager services registered")
+    }
+
     // MARK: - 服务访问
 
     /// 获取历史记录服务
     public var historyService: HistoryServiceProtocol {
-        guard let service = _historyService else {
-            fatalError("HistoryService not configured. Call setupProductionServices() or setupMockServices() first.")
-        }
-        return service
+        return _historyService ?? RealmHistoryService.shared
     }
 
     /// 获取收藏服务
     public var favoriteService: FavoriteServiceProtocol {
-        guard let service = _favoriteService else {
-            fatalError("FavoriteService not configured. Call setupProductionServices() or setupMockServices() first.")
-        }
-        return service
+        return _favoriteService ?? RealmFavoriteService.shared
+    }
+
+    /// 获取置顶 URL 管理器
+    public var pinnedURLManager: PinnedURLManaging {
+        return _pinnedURLManager ?? PinnedURLManager.shared
+    }
+
+    /// 获取 URL 收藏管理器
+    public var urlFavoriteManager: URLManaging {
+        return _urlFavoriteManager ?? URLFavoriteManager.shared
+    }
+
+    /// 获取 Manifest 缓存管理器
+    public var manifestStore: ManifestCacheManaging {
+        return _manifestStore ?? ManifestStore.shared
+    }
+
+    /// 获取 Web 缓存管理器
+    public var cacheManager: WebCacheManaging {
+        return _cacheManager ?? WebCacheManager.shared
+    }
+
+    /// 获取消息引擎
+    public var messageEngine: any MessageEngineProtocol {
+        return _messageEngine ?? MessageEngine.shared
     }
 
     // MARK: - 重置
@@ -146,6 +192,11 @@ public class ServiceLocator {
     public func clearServices() {
         _historyService = nil
         _favoriteService = nil
+        _pinnedURLManager = nil
+        _urlFavoriteManager = nil
+        _manifestStore = nil
+        _cacheManager = nil
+        _messageEngine = nil
 
         WebBridgeLogger.shared.log(.info, "🧹 ServiceLocator: All services cleared")
     }
@@ -163,5 +214,30 @@ public extension ServiceLocator {
     /// 快捷访问收藏服务
     static var favorite: FavoriteServiceProtocol {
         return shared.favoriteService
+    }
+
+    /// 快捷访问置顶 URL 管理器
+    static var pinnedURLs: PinnedURLManaging {
+        return shared.pinnedURLManager
+    }
+
+    /// 快捷访问 URL 收藏管理器
+    static var urlFavorites: URLManaging {
+        return shared.urlFavoriteManager
+    }
+
+    /// 快捷访问 Manifest 缓存管理器
+    static var manifest: ManifestCacheManaging {
+        return shared.manifestStore
+    }
+
+    /// 快捷访问 Web 缓存管理器
+    static var cache: WebCacheManaging {
+        return shared.cacheManager
+    }
+
+    /// 快捷访问消息引擎
+    static var messages: any MessageEngineProtocol {
+        return shared.messageEngine
     }
 }

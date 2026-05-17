@@ -29,12 +29,50 @@ _is_alive() {
     kill -0 "$pid" 2>/dev/null
 }
 
+_http_status() {
+    local url="$1"
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null) || status="000"
+    printf "%s" "$status"
+}
+
+_status_in() {
+    local status="$1"
+    local expected="$2"
+    [[ " $expected " == *" $status "* ]]
+}
+
+_wait_for_http_status() {
+    local url="$1"
+    local expected="$2"
+    local timeout="${3:-10}"
+    local status="000"
+
+    for _ in $(seq 1 "$timeout"); do
+        status=$(_http_status "$url")
+        if _status_in "$status" "$expected"; then
+            printf "%s" "$status"
+            return 0
+        fi
+        sleep 1
+    done
+
+    printf "%s" "$status"
+    return 1
+}
+
 start_backend() {
     local pid
     pid=$(_port_pid "$SWIFT_PORT")
     if [ -n "$pid" ]; then
-        ok "Backend already running on :$SWIFT_PORT (PID $pid)"
-        return 0
+        local status_code
+        status_code=$(_http_status "http://localhost:$SWIFT_PORT/health")
+        if _status_in "$status_code" "200 204"; then
+            ok "Backend already running on :$SWIFT_PORT (PID $pid, /health -> $status_code)"
+            return 0
+        fi
+        fail "Backend port :$SWIFT_PORT is occupied (PID $pid), but /health -> $status_code"
+        return 1
     fi
 
     log "Starting WebBridgeServer (Swift Hummingbird) on :$SWIFT_PORT ..."
@@ -47,15 +85,16 @@ start_backend() {
     SERVER_PORT=$SWIFT_PORT \
     ADMIN_API_KEY=test-admin-key \
     DATA_DIR="$PROJECT_ROOT/.data" \
-    nohup .build/debug/WebBridgeServer > "$PID_DIR/backend.log" 2>&1 &
+    nohup .build/debug/WebBridgeServer > "$PID_DIR/backend.log" 2>&1 < /dev/null &
     echo $! > "$PID_DIR/backend.pid"
-    sleep 2
 
     pid=$(_port_pid "$SWIFT_PORT")
-    if [ -n "$pid" ]; then
-        ok "Backend running on :$SWIFT_PORT (PID $pid)"
+    local status_code
+    if status_code=$(_wait_for_http_status "http://localhost:$SWIFT_PORT/health" "200 204" 10); then
+        pid=$(_port_pid "$SWIFT_PORT")
+        ok "Backend running on :$SWIFT_PORT (PID $pid, /health -> $status_code)"
     else
-        fail "Backend failed to start. See $PID_DIR/backend.log"
+        fail "Backend failed health check (/health -> $status_code). See $PID_DIR/backend.log"
         tail -5 "$PID_DIR/backend.log"
         return 1
     fi
@@ -79,16 +118,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Cache-Control', 'max-age=3600')
         super().end_headers()
-socketserver.TCPServer(('', $HTTP_PORT), Handler).serve_forever()
-" > "$PID_DIR/http.log" 2>&1 &
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+ReusableTCPServer(('', $HTTP_PORT), Handler).serve_forever()
+" > "$PID_DIR/http.log" 2>&1 < /dev/null &
     echo $! > "$PID_DIR/http.pid"
-    sleep 1
 
     pid=$(_port_pid "$HTTP_PORT")
-    if [ -n "$pid" ]; then
-        ok "Test HTTP server running on :$HTTP_PORT (PID $pid)"
+    local status_code
+    if status_code=$(_wait_for_http_status "http://localhost:$HTTP_PORT/" "200" 10); then
+        pid=$(_port_pid "$HTTP_PORT")
+        ok "Test HTTP server running on :$HTTP_PORT (PID $pid, / -> $status_code)"
     else
-        fail "Test HTTP server failed to start. See $PID_DIR/http.log"
+        fail "Test HTTP server failed health check (/ -> $status_code). See $PID_DIR/http.log"
+        tail -5 "$PID_DIR/http.log"
         return 1
     fi
 }
@@ -110,16 +153,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         super().end_headers()
-socketserver.TCPServer(('', $PROTO_PORT), Handler).serve_forever()
-" > "$PID_DIR/prototype.log" 2>&1 &
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+ReusableTCPServer(('', $PROTO_PORT), Handler).serve_forever()
+" > "$PID_DIR/prototype.log" 2>&1 < /dev/null &
     echo $! > "$PID_DIR/prototype.pid"
-    sleep 1
 
     pid=$(_port_pid "$PROTO_PORT")
-    if [ -n "$pid" ]; then
-        ok "Prototype server running on :$PROTO_PORT (PID $pid)"
+    local status_code
+    if status_code=$(_wait_for_http_status "http://localhost:$PROTO_PORT/index.html" "200" 10); then
+        pid=$(_port_pid "$PROTO_PORT")
+        ok "Prototype server running on :$PROTO_PORT (PID $pid, /index.html -> $status_code)"
     else
-        fail "Prototype server failed to start. See $PID_DIR/prototype.log"
+        fail "Prototype server failed health check (/index.html -> $status_code). See $PID_DIR/prototype.log"
+        tail -5 "$PID_DIR/prototype.log"
         return 1
     fi
 }
@@ -171,7 +218,14 @@ status() {
     local pid
     pid=$(_port_pid "$SWIFT_PORT")
     if [ -n "$pid" ]; then
-        echo -e "║  ${GREEN}●${NC} Backend (Swift)    http://localhost:$SWIFT_PORT  PID:$pid"
+        local status_code
+        status_code=$(_http_status "http://localhost:$SWIFT_PORT/health")
+        if _status_in "$status_code" "200 204"; then
+            echo -e "║  ${GREEN}●${NC} Backend (Swift)    http://localhost:$SWIFT_PORT  PID:$pid  /health:$status_code"
+        else
+            echo -e "║  ${YELLOW}●${NC} Backend (Swift)    http://localhost:$SWIFT_PORT  PID:$pid  /health:$status_code"
+            all_ok=false
+        fi
         echo "║    Routes: /health /push /manifest /command"
     else
         echo -e "║  ${RED}○${NC} Backend (Swift)    STOPPED"
@@ -212,8 +266,8 @@ verify() {
 
     # Backend health check
     local resp
-    resp=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$SWIFT_PORT/health" 2>/dev/null || echo "000")
-    if [ "$resp" = "200" ] || [ "$resp" = "204" ]; then
+    resp=$(_http_status "http://localhost:$SWIFT_PORT/health")
+    if _status_in "$resp" "200 204"; then
         ok "Backend /health -> $resp"
     else
         fail "Backend /health -> $resp (expected 200/204)"
@@ -221,7 +275,7 @@ verify() {
     fi
 
     # HTTP server
-    resp=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$HTTP_PORT/" 2>/dev/null || echo "000")
+    resp=$(_http_status "http://localhost:$HTTP_PORT/")
     if [ "$resp" = "200" ]; then
         ok "Test HTTP / -> $resp"
     else
@@ -230,7 +284,7 @@ verify() {
     fi
 
     # Prototype
-    resp=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PROTO_PORT/index.html" 2>/dev/null || echo "000")
+    resp=$(_http_status "http://localhost:$PROTO_PORT/index.html")
     if [ "$resp" = "200" ]; then
         ok "Prototype /index.html -> $resp"
     else
