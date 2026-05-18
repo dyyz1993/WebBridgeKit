@@ -5,28 +5,28 @@ import CommonCrypto
 public enum CacheKeyGenerator {
     /// Generate cache key from components
     /// - Parameter components: Components to combine
-    /// - Returns: MD5 hash of combined components
+    /// - Returns: SHA256 hash of combined components
     public static func generate(from components: String...) -> String {
         let combined = components.joined(separator: ":")
-        return md5(combined)
+        return sha256(combined)
     }
 
     /// Generate cache key from array of components
     /// - Parameter components: Array of components to combine
-    /// - Returns: MD5 hash of combined components
+    /// - Returns: SHA256 hash of combined components
     public static func generate(from components: [String]) -> String {
         let combined = components.joined(separator: ":")
-        return md5(combined)
+        return sha256(combined)
     }
 
     /// Generate cache key from dictionary
     /// - Parameter dictionary: Dictionary to hash
-    /// - Returns: MD5 hash of dictionary JSON representation
+    /// - Returns: SHA256 hash of dictionary representation
     public static func generate(from dictionary: [String: String]) -> String {
         let sorted = dictionary.sorted { $0.key < $1.key }
             .map { "\($0.key)=\($0.value)" }
             .joined(separator: "&")
-        return md5(sorted)
+        return sha256(sorted)
     }
 
     /// Generate cache key from URL
@@ -70,13 +70,13 @@ public enum CacheKeyGenerator {
 
     // MARK: - Private Methods
 
-    private static func md5(_ string: String) -> String {
-        let length = Int(CC_MD5_DIGEST_LENGTH)
+    private static func sha256(_ string: String) -> String {
+        let length = Int(CC_SHA256_DIGEST_LENGTH)
         var digest = [UInt8](repeating: 0, count: length)
 
         if let data = string.data(using: .utf8) {
             _ = data.withUnsafeBytes { (body: UnsafeRawBufferPointer) in
-                CC_MD5(body.baseAddress, CC_LONG(data.count), &digest)
+                CC_SHA256(body.baseAddress, CC_LONG(data.count), &digest)
             }
         }
 

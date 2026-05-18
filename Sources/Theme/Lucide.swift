@@ -10,6 +10,15 @@ public struct Lucide {
 
 public extension UIImage {
     convenience init?(lucideId: String) {
-        self.init(named: lucideId, in: Lucide.bundle, compatibleWith: nil)
+        let assetName: String
+        switch lucideId {
+        case "book-image":
+            assetName = "book-image-lucide"
+        case "file-image":
+            assetName = "file-image-lucide"
+        default:
+            assetName = lucideId
+        }
+        self.init(named: assetName, in: Lucide.bundle, compatibleWith: nil)
     }
 }

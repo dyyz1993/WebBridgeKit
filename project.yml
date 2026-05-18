@@ -36,10 +36,8 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
         - $(SDKROOT)/System/Library/Frameworks
-        - $(BUILT_PRODUCTS_DIR)/Pods
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
-        - $(BUILT_PRODUCTS_DIR)/Pods
     dependencies:
       - target: Message
     buildPhases:
@@ -70,10 +68,8 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
         - $(SDKROOT)/System/Library/Frameworks
-        - $(BUILT_PRODUCTS_DIR)/Pods
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
-        - $(BUILT_PRODUCTS_DIR)/Pods
       CODE_SIGN_STYLE: Automatic
       DEVELOPMENT_TEAM: "B45VZCNYU3"
       GENERATE_INFOPLIST_FILE: YES
@@ -148,10 +144,8 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
         - $(SDKROOT)/System/Library/Frameworks
-        - $(BUILT_PRODUCTS_DIR)/Pods
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
-        - $(BUILT_PRODUCTS_DIR)/Pods
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
 
   MessageTests:
@@ -195,10 +189,8 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
         - $(SDKROOT)/System/Library/Frameworks
-        - $(BUILT_PRODUCTS_DIR)/Pods
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
-        - $(BUILT_PRODUCTS_DIR)/Pods
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
 
   CacheTests:
@@ -243,10 +235,8 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
         - $(SDKROOT)/System/Library/Frameworks
-        - $(BUILT_PRODUCTS_DIR)/Pods
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
-        - $(BUILT_PRODUCTS_DIR)/Pods
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
 
   AITests:
@@ -290,10 +280,8 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
         - $(SDKROOT)/System/Library/Frameworks
-        - $(BUILT_PRODUCTS_DIR)/Pods
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
-        - $(BUILT_PRODUCTS_DIR)/Pods
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
 
   Skills:
@@ -319,10 +307,8 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
         - $(SDKROOT)/System/Library/Frameworks
-        - $(BUILT_PRODUCTS_DIR)/Pods
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
-        - $(BUILT_PRODUCTS_DIR)/Pods
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
 
   SkillsTests:
