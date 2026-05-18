@@ -49,7 +49,7 @@ struct TestDataSeeder {
         do {
             let config = ServerConfigManager.shared.realmConfiguration
             let realm = try Realm(configuration: config)
-            if realm.object(ofType: ServerConfig.self, forPrimaryKey: "default") != nil { return }
+            if realm.objects(ServerConfig.self).filter("id == %@", "default").first != nil { return }
 
             try realm.write {
                 let defaultConfig = ServerConfig()
@@ -118,7 +118,7 @@ struct TestDataSeeder {
         do {
             let config = AccessTokenManager.shared.realmConfiguration
             let realm = try Realm(configuration: config)
-            if realm.object(ofType: AccessToken.self, forPrimaryKey: "token-perm-001") != nil { return }
+            if realm.objects(AccessToken.self).filter("id == %@", "token-perm-001").first != nil { return }
 
             try realm.write {
                 let perm = AccessToken()
@@ -197,7 +197,10 @@ struct TestDataSeeder {
             print("[TestDataSeeder] Favorites Realm config: \(config.fileURL?.path ?? "nil") schemaVersion=\(config.schemaVersion)")
 
             let realm = try Realm(configuration: config)
-            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-e2e-001") != nil {
+            // Use NSPredicate filter instead of object(ofType:forPrimaryKey:) to avoid
+            // swift_dynamicCastFailure crash on iOS 26 beta (Realm 10.x compatibility)
+            let existing = realm.objects(URLFavorite.self).filter("id == %@", "fav-e2e-001").first
+            if existing != nil {
                 UserDefaults.standard.set(true, forKey: fk)
                 return
             }
@@ -234,7 +237,8 @@ struct TestDataSeeder {
             print("[TestDataSeeder] 收藏夹: 9 条 (total in realm: \(realm.objects(URLFavorite.self).count))")
 
             // 增量添加：192.168.0.4:5173 开发服务器(已存在种子数据时单独补充)
-            if realm.object(ofType: URLFavorite.self, forPrimaryKey: "fav-dev-009") == nil {
+            let devServer = realm.objects(URLFavorite.self).filter("id == %@", "fav-dev-009").first
+            if devServer == nil {
                 try realm.write {
                     let fav = URLFavorite()
                     fav.id = "fav-dev-009"
@@ -260,7 +264,7 @@ struct TestDataSeeder {
         do {
             let config = WebPageHistoryManager.shared.realmConfiguration
             let realm = try Realm(configuration: config)
-            if realm.object(ofType: WebPageHistory.self, forPrimaryKey: "hist-weather-001") != nil { return }
+            if realm.objects(WebPageHistory.self).filter("id == %@", "hist-weather-001").first != nil { return }
 
             let now = Date()
 

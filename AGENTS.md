@@ -153,6 +153,10 @@ bash scripts/scan-crash-logs.sh --fix
 
 (暂无记录)
 
+| 日期 | 类型 | 原因 | 定位 | 修复 |
+|------|------|------|------|------|
+| 2026-05-19 | SIGABRT | Podfile 重复链接 shared_pods 导致 ObjC runtime 重复类定义 | Podfile:107, WebBridgeKit+SuperApp targets | SuperApp `inherit! :search_paths` 从 WebBridgeKit 继承 pods |
+
 ## Recent Commits
 
 | Commit | Description |

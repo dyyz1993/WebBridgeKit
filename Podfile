@@ -102,10 +102,13 @@ target 'WebBridgeKit' do
   target 'ManagersTests' do
     inherit! :complete
   end
-end
 
-target 'SuperApp' do
-  shared_pods
+  # SuperApp inherits pods from WebBridgeKit (search_paths only)
+  # to avoid duplicate class symbols that cause swift_dynamicCast crashes at runtime.
+  # SuperApp source files import pods directly, so they resolve via WebBridgeKit.framework.
+  target 'SuperApp' do
+    inherit! :search_paths
+  end
 end
 
 target 'SuperAppUITests' do
