@@ -127,7 +127,7 @@ struct UIAuditTool {
                 desc = "Button \"\(btn.titleLabel?.text ?? "")\""
             } else if let tf = view as? UITextField {
                 desc = "TextField placeholder \"\(tf.placeholder ?? "")\""
-            } else if let sw = view as? UISwitch {
+            } else if view is UISwitch {
                 desc = "Switch"
             } else {
                 desc = "Interactive element"

@@ -68,7 +68,7 @@ public class WebPermissionHandler: BaseWebNativeHandler {
                 return
             }
 
-            let status = CLLocationManager.authorizationStatus()
+            let status = locationManager.authorizationStatus
 
             if status == .notDetermined {
                 // 显示权限请求提示

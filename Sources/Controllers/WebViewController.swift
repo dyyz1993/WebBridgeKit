@@ -124,7 +124,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
     private func setupUserAgent() {
         // 获取原始 UA 并追加自定义信息
-        _ = webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, _) in
+        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, _) in
             guard let self = self, let baseUA = result as? String else { return }
 
             let info = Bundle.main.infoDictionary
@@ -311,8 +311,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             return
         }
 
-        WebPageThumbnailGenerator.shared.generateThumbnail(for: webView, url: url) { [weak self] thumbnailData in
-            Task { [weak self] in
+        WebPageThumbnailGenerator.shared.generateThumbnail(for: webView, url: url) { thumbnailData in
+            Task {
                 guard let thumbnailData else {
                     return
                 }

@@ -221,7 +221,6 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     private func executePendingCommand() {
-        let title = pendingCommandTitle
         hideCommandBanner()
 
         guard let text = ClipboardMonitor.shared.readClipboard(),

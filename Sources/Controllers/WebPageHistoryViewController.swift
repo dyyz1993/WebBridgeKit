@@ -154,6 +154,9 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
             }
             cell.history = item
             return cell
+        },
+        titleForHeaderInSection: { dataSource, section in
+            dataSource[section].model
         }
     )
 

@@ -243,9 +243,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         ]
 
         let inactiveBg = ThemeTokens.Color.surface
-        let inactiveFg = ThemeColors.current.textSecondary
-        let activeBg = ThemeTokens.Color.primary
-        let activeFg = ThemeTokens.Color.text
+        let inactiveFg = ThemeTokens.Color.textSecondary
 
         for (title, type) in filters {
             let button: UIButton
@@ -394,7 +392,6 @@ extension InboxViewController: UITableViewDataSource {
         )
         header.onTap = { [weak self] in
             guard let self = self else { return }
-            let wasExpanded = self.viewModel.isGroupExpanded(section)
             self.viewModel.toggleGroup(section)
             let isExpanded = self.viewModel.isGroupExpanded(section)
             let rowsInGroup = self.viewModel.numberOfRowsInGroup(section)

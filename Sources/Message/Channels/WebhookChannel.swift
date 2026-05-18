@@ -83,7 +83,7 @@ public actor WebhookChannel: @preconcurrency MessageChannel {
 
         // Build user info from remaining fields
         let knownKeys: Set<String> = ["title", "body", "content", "text", "source", "url", "appid", "appId", "mode", "group", "sound", "level"]
-        var userInfo: [String: String] = [:]
+        var userInfo: [String: String] = ["source": source]
         for (key, value) in json where !knownKeys.contains(key) {
             if let stringValue = value as? String {
                 userInfo[key] = stringValue

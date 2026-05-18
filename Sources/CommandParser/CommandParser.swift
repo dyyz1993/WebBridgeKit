@@ -87,12 +87,9 @@ public actor CommandParser {
         }
 
         let dataToVerify: Data
-        if var json = rawPayload.json as? [String: Any] {
-            json.removeValue(forKey: "sig")
-            dataToVerify = (try? JSONSerialization.data(withJSONObject: json)) ?? rawPayload.data
-        } else {
-            dataToVerify = rawPayload.data
-        }
+        var json = rawPayload.json
+        json.removeValue(forKey: "sig")
+        dataToVerify = (try? JSONSerialization.data(withJSONObject: json)) ?? rawPayload.data
 
         let signedPayload = CommandRawPayload(data: dataToVerify, json: rawPayload.json, signature: signature)
 

@@ -161,14 +161,6 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
             })
             .disposed(by: rx)
 
-        // Summary text
-        output.summaryText
-            .drive(onNext: { [weak self] text in
-                guard let self, !text.isEmpty else { return }
-                // Update summary card's summary label
-            })
-            .disposed(by: rx)
-
         // Error
         output.error
             .drive(onNext: { [weak self] errorMsg in
@@ -238,8 +230,6 @@ extension CacheDashboardViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        let item = sections[indexPath.section].items[indexPath.row]
-        
         // Compute global index into the flat subsystem list
         var globalIndex = indexPath.row
         for s in 0..<indexPath.section {

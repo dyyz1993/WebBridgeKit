@@ -327,7 +327,7 @@ extension WebGestureInterceptor: UIGestureRecognizerDelegate {
         return false
     }
 
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UILongPressGestureRecognizer) -> Bool {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         // 下拉手势不需要等待长按失败
         return false
     }

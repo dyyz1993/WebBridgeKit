@@ -212,7 +212,7 @@ extension WebViewController {
                 }
 
                 let geometryPreferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: targetMask)
-                _ = windowScene.requestGeometryUpdate(geometryPreferences) { error in
+                windowScene.requestGeometryUpdate(geometryPreferences) { error in
                     print("⚠️ [BarkWebVC] Geometry update error: \(error.localizedDescription)")
                 }
                 print("✅ [BarkWebVC] Geometry update requested (iOS 16+)")

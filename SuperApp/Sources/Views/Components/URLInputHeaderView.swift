@@ -145,6 +145,7 @@ class URLInputHeaderView: UICollectionReusableView {
         case .mcpServer: return ThemeTokens.Color.error
         case .manifest: return ThemeTokens.Color.info
         case .other: return ThemeTokens.Color.textTertiary
+        @unknown default: return ThemeTokens.Color.textTertiary
         }
     }
 }

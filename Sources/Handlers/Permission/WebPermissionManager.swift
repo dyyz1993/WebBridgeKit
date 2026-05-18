@@ -49,7 +49,7 @@ public class WebPermissionManager {
 
     /// 检查位置权限
     public func checkLocationPermission() -> [String: Any] {
-        let status = CLLocationManager.authorizationStatus()
+        let status = CLLocationManager().authorizationStatus
         let statusString: String
         let granted: Bool
 

@@ -217,7 +217,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
     }
 
     @objc private func addTapped() {
-        urlInputHeader.becomeFirstResponder()
+        _ = urlInputHeader.becomeFirstResponder()
     }
 
     // MARK: - Actions

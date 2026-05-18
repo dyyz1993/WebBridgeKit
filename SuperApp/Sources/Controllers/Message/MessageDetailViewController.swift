@@ -157,8 +157,7 @@ class MessageDetailViewController: UIViewController {
             ? (message.payload.markdown ?? message.payload.body)
             : message.payload.body
 
-        addAction(title: L10n.tr("message.detail.copy_content"), icon: .copy) { [weak self] in
-            guard let self = self else { return }
+        addAction(title: L10n.tr("message.detail.copy_content"), icon: .copy) {
             UIPasteboard.general.string = bodyToCopy
             HUDService.shared.showSuccess(withStatus: L10n.tr("message.detail.copied"))
         }
@@ -277,8 +276,8 @@ class MessageDetailViewController: UIViewController {
 extension MessageDetailViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self] result, _ in
-            guard let self = self, let height = result as? CGFloat else { return }
+        webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+            guard let height = result as? CGFloat else { return }
             webView.snp.updateConstraints { make in
                 make.height.equalTo(height + 16)
             }

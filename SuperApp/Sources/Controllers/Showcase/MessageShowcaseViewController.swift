@@ -64,6 +64,7 @@ class MessageShowcaseViewController: UIViewController {
                 case .success(let id): msg = "Sent: \(id)"
                 case .failed(let err): msg = "Failed: \(err.localizedDescription)"
                 case .queued(let id): msg = "Queued: \(id)"
+                @unknown default: msg = "Unknown result"
                 }
                 let alert = UIAlertController(title: "Push Result", message: msg, preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default))

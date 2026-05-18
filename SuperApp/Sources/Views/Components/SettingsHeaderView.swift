@@ -155,7 +155,6 @@ class SettingsHeaderView: UIView {
             iconImageView.image = appIcon
         } else {
             // 使用默认图标
-            let config = UIImage.SymbolConfiguration(pointSize: 40, weight: .regular)
             iconImageView.image = LucideIcon.appBadge.image(pointSize: 40, weight: .regular)
         }
 

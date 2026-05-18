@@ -129,13 +129,13 @@ class CacheSubsystemDetailViewController: UIViewController {
         case .webCompressedCache:
             WebCompressedCacheStore.shared.clearAll()
         case .webcacheWKWebView:
-            WebCacheManager.shared.clearAllCache()
+            _ = WebCacheManager.shared.clearAllCache()
         case .systemURLCache:
             SystemURLCacheManager.shared.removeAllCachedResponses()
         case .offlinePageCache:
             WebPageOfflineCacheManager.shared.clearAllCache()
         case .pageCacheRule:
-            PageCacheRuleManager.shared.clearAllRules()
+            _ = PageCacheRuleManager.shared.clearAllRules()
         default:
             break
         }
@@ -158,6 +158,7 @@ class CacheSubsystemDetailViewController: UIViewController {
         case .memoryCacheRule:     return MemoryRuleDetailVC(subsystemID: id)
         case .userdefaultsMessageStore: return MessageStoreDetailVC(subsystemID: id)
         case .resourceCacheLRU:    return ResourceCacheDetailVC(subsystemID: id)
+        @unknown default:          return GenericCacheDetailVC(subsystemID: id)
         }
     }
 }
@@ -354,6 +355,7 @@ class DetailHeaderView: UIView {
         case .empty: statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
         case .error: statusBadge.backgroundColor = ThemeTokens.Color.error
         case .unknown: statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
+        @unknown default: statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
         }
     }
 }

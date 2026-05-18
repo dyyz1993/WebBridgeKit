@@ -175,7 +175,7 @@ public class CrashLogManager {
             timestamp: isoFormatter.string(from: Date()),
             name: exception.name.rawValue,
             reason: exception.reason ?? "Unknown exception",
-            callStack: exception.callStackSymbols ?? [],
+            callStack: exception.callStackSymbols,
             appVersion: appVersion,
             buildNumber: buildNumber,
             deviceModel: deviceModel,

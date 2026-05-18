@@ -61,7 +61,7 @@ public actor WebSocketEngine {
         heartbeatTask = nil
         receiveTask?.cancel()
         receiveTask = nil
-        try? await task?.cancel(with: code, reason: nil)
+        task?.cancel(with: code, reason: nil)
         task = nil
         session?.invalidateAndCancel()
         session = nil
@@ -124,7 +124,7 @@ public actor WebSocketEngine {
                 }
             } catch {
                 if !isManualDisconnect && !Task.isCancelled {
-                    await handleReconnect()
+                    handleReconnect()
                     return
                 }
             }

@@ -391,7 +391,7 @@ public class AppIconGenerator {
 
             // 配置文本属性
             let fontSize = min(size.width, size.height) * 0.5
-            var attributes: [NSAttributedString.Key: Any] = [
+            let attributes: [NSAttributedString.Key: Any] = [
                 .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
                 .foregroundColor: textColor
             ]
