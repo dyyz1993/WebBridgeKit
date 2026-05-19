@@ -10,6 +10,8 @@ import UIKit
 import SnapKit
 import WebBridgeKit
 
+#if DEBUG
+
 class DebugPanelViewController: UIViewController {
 
     private let tabScrollView = UIScrollView()
@@ -190,7 +192,7 @@ private class HandlerDebugListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         tableView.delegate = self
         tableView.dataSource = self
@@ -362,7 +364,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("debug.panel.execute"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        button.backgroundColor = ThemeColors.current.primary
+        button.backgroundColor = ThemeTokens.Color.primary
         button.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.addTarget(self, action: #selector(execute), for: .touchUpInside)
@@ -494,7 +496,7 @@ private class LogDebugViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         let toolbar = makeToolbar()
         textView.isEditable = false
@@ -605,7 +607,7 @@ private class EnvironmentDebugViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: L10n.tr("common.copy"),
@@ -665,3 +667,5 @@ private extension Dictionary where Key == String {
         return string
     }
 }
+
+#endif

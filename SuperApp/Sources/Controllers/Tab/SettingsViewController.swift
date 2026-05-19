@@ -100,9 +100,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .drive(onNext: { [weak self] in self?.navigateToAbout() })
             .disposed(by: rx)
 
+        #if DEBUG
         output.navigateToDebugPanel
             .drive(onNext: { [weak self] in self?.navigateToDebugPanel() })
             .disposed(by: rx)
+        #endif
 
         output.navigateToCacheDashboard
             .drive(onNext: { [weak self] in
@@ -161,12 +163,14 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    #if DEBUG
     private func navigateToDebugPanel() {
         let debugPanel = DebugPanelViewController()
         let nav = UINavigationController(rootViewController: debugPanel)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
+    #endif
 
     private func navigateToCacheDashboard() {
         let vc = CacheDashboardViewController(viewModel: CacheDashboardViewModel())

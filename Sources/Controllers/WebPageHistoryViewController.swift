@@ -410,9 +410,18 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
 
         // 删除
         alert.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: ""), style: .destructive) { [weak self] _ in
-            Task { @MainActor in
-                await self?.deleteHistory(history)
-            }
+            let confirm = UIAlertController(
+                title: NSLocalizedString("Confirm Delete", comment: "Confirm Delete"),
+                message: NSLocalizedString("This history record will be permanently deleted.", comment: ""),
+                preferredStyle: .alert
+            )
+            confirm.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
+            confirm.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: ""), style: .destructive) { [weak self] _ in
+                Task { @MainActor in
+                    await self?.deleteHistory(history)
+                }
+            })
+            self?.present(confirm, animated: true)
         })
 
         alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))

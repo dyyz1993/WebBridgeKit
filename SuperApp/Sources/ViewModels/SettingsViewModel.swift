@@ -197,34 +197,58 @@ class SettingsViewModel: ViewModel {
                     iconTintColor: put
                 )
             ]),
-            SettingsSection(header: L10n.tr("settings.section.developer"), items: [
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .bug,
-                    title: L10n.tr("settings.debug.panel"),
-                    action: .debugPanel,
-                    iconBackgroundColor: gb,
-                    iconTintColor: gt,
-                    badge: L10n.tr("settings.debug.badge")
-                ),
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .download,
-                    title: L10n.tr("settings.export.diagnostics"),
-                    action: .exportDiagnostics,
-                    iconBackgroundColor: tb,
-                    iconTintColor: tt
-                ),
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .chartBar,
-                    title: L10n.tr("settings.cache.dashboard"),
-                    action: .cacheDashboard,
-                    value: nil,
-                    showArrow: true,
-                    hasToggle: false
-                )
-            ]),
+            SettingsSection(header: L10n.tr("settings.section.developer"), items: {
+                #if DEBUG
+                return [
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .bug,
+                        title: L10n.tr("settings.debug.panel"),
+                        action: .debugPanel,
+                        iconBackgroundColor: gb,
+                        iconTintColor: gt,
+                        badge: L10n.tr("settings.debug.badge")
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .download,
+                        title: L10n.tr("settings.export.diagnostics"),
+                        action: .exportDiagnostics,
+                        iconBackgroundColor: tb,
+                        iconTintColor: tt
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .chartBar,
+                        title: L10n.tr("settings.cache.dashboard"),
+                        action: .cacheDashboard,
+                        value: nil,
+                        showArrow: true,
+                        hasToggle: false
+                    )
+                ]
+                #else
+                return [
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .download,
+                        title: L10n.tr("settings.export.diagnostics"),
+                        action: .exportDiagnostics,
+                        iconBackgroundColor: tb,
+                        iconTintColor: tt
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .chartBar,
+                        title: L10n.tr("settings.cache.dashboard"),
+                        action: .cacheDashboard,
+                        value: nil,
+                        showArrow: true,
+                        hasToggle: false
+                    )
+                ]
+                #endif
+            }()),
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
                 SettingsItem(
                     icon: nil,

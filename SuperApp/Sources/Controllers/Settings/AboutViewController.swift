@@ -18,7 +18,7 @@ class AboutViewController: UIViewController {
     /// 顶部容器视图
     private let headerContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         return view
     }()
 
@@ -38,7 +38,7 @@ class AboutViewController: UIViewController {
         let label = UILabel()
         label.textAlignment = .center
         label.font = ThemeTokens.Typography.title3
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
@@ -47,14 +47,14 @@ class AboutViewController: UIViewController {
         let label = UILabel()
         label.textAlignment = .center
         label.font = ThemeTokens.Typography.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
     /// TableView
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
-        tableView.backgroundColor = ThemeColors.current.background
+        tableView.backgroundColor = ThemeTokens.Color.background
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
@@ -142,7 +142,7 @@ class AboutViewController: UIViewController {
     // MARK: - Setup UI
 
     private func setupUI() {
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         // 添加子视图
         view.addSubview(headerContainerView)
@@ -195,7 +195,7 @@ class AboutViewController: UIViewController {
         } else {
             // 如果无法获取 App 图标，使用系统图标
             appIconImageView.image = LucideIcon.appFill.templateImage(pointSize: 60, weight: .light)
-                appIconImageView.tintColor = ThemeColors.current.primary
+                appIconImageView.tintColor = ThemeTokens.Color.primary
         }
 
         // 加载 App 名称
@@ -224,7 +224,7 @@ class AboutViewController: UIViewController {
             attributes: [
                 .font: ThemeTokens.Typography.caption2,
                 .paragraphStyle: paragraphStyle,
-                .foregroundColor: ThemeColors.current.text
+                .foregroundColor: ThemeTokens.Color.text
             ]
         )
 
@@ -274,20 +274,20 @@ extension AboutViewController: UITableViewDataSource {
 
             switch section {
         case .introduction:
-            content.textProperties.color = ThemeColors.current.textSecondary
+            content.textProperties.color = ThemeTokens.Color.textSecondary
             content.textProperties.alignment = .natural
             cell.selectionStyle = .none
             cell.accessoryType = .none
         case .features:
-            content.textProperties.color = ThemeColors.current.text
+            content.textProperties.color = ThemeTokens.Color.text
             cell.selectionStyle = .none
             cell.accessoryType = .none
         case .license:
-            content.textProperties.color = ThemeColors.current.primary
+            content.textProperties.color = ThemeTokens.Color.primary
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
         case .feedback:
-            content.textProperties.color = ThemeColors.current.primary
+            content.textProperties.color = ThemeTokens.Color.primary
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
         }

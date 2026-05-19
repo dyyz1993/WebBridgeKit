@@ -543,8 +543,18 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     @objc private func clearCacheTapped() {
-        WebCacheManager.shared.clearAll()
-        viewModel.refreshData()
+        let alert = UIAlertController(
+            title: "确认清理缓存",
+            message: "将清除所有本地缓存数据，此操作不可撤销",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: "清理", style: .destructive) { [weak self] _ in
+            WebCacheManager.shared.clearAll()
+            self?.viewModel.refreshData()
+            HUDService.shared.showSuccess(withStatus: "缓存已清理")
+        })
+        present(alert, animated: true)
     }
 
     func handleQuickAction(index: Int) {

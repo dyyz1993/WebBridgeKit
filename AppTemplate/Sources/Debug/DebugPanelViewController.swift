@@ -3,6 +3,8 @@
 //  AppTemplate
 //
 //  Created on 2025-05-05.
+
+#if DEBUG
 //  Copyright © 2025年 WebBridgeKit. All rights reserved.
 //
 
@@ -190,8 +192,10 @@ private class ButtonCell: UITableViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(16)
-        }
     }
+}
+
+#endif
 
     func configure(title: String, action: @escaping () -> Void) {
         button.setTitle(title, for: .normal)

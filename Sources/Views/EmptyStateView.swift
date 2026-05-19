@@ -9,15 +9,15 @@
 import UIKit
 import SnapKit
 
-/// 空状态视图
-/// 用于显示列表为空时的提示信息
+/// 统一空状态视图
+/// 支持图标（Lucide 或 SF Symbol）、标题、副标题、操作按钮
 public class EmptyStateView: UIView {
 
     // MARK: - UI Components
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .clear  // 确保容器背景透明
+        view.backgroundColor = .clear
         return view
     }()
 
@@ -31,9 +31,20 @@ public class EmptyStateView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.headline
-        label.textColor = ThemeTokens.Color.text
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
+        label.numberOfLines = 0
         label.accessibilityIdentifier = "EmptyStateView.titleLabel"
+        return label
+    }()
+
+    private let subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.font = ThemeTokens.Typography.subheadline
+        label.textColor = ThemeTokens.Color.textSecondary
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.isHidden = true
         return label
     }()
 
@@ -48,16 +59,23 @@ public class EmptyStateView: UIView {
 
     private let actionButton: UIButton = {
         let button = UIButton(type: .system)
-        button.titleLabel?.font = ThemeTokens.Typography.callout
+        button.titleLabel?.font = ThemeTokens.Typography.subheadline
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.backgroundColor = ThemeTokens.Color.primary
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.background, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(
+            top: ThemeTokens.Spacing.sm,
+            left: ThemeTokens.Spacing.md,
+            bottom: ThemeTokens.Spacing.sm,
+            right: ThemeTokens.Spacing.md
+        )
         return button
     }()
 
     // MARK: - Properties
 
     public var onActionTap: (() -> Void)?
+    private var actionIcon: LucideIcon?
 
     // MARK: - Initialization
 
@@ -70,46 +88,54 @@ public class EmptyStateView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    public convenience init(onAction: (() -> Void)? = nil) {
+        self.init(frame: .zero)
+        self.onActionTap = onAction
+    }
+
     // MARK: - Setup
 
     private func setupUI() {
-        backgroundColor = .clear  // 确保背景透明，避免白色蒙层
-
-        // Accessibility identifier for testing
+        backgroundColor = .clear
         accessibilityIdentifier = "EmptyStateView"
 
         addSubview(containerView)
         containerView.addSubview(iconImageView)
         containerView.addSubview(titleLabel)
+        containerView.addSubview(subtitleLabel)
         containerView.addSubview(descriptionLabel)
         containerView.addSubview(actionButton)
 
         containerView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.left.greaterThanOrEqualToSuperview().offset(40)
-            make.right.lessThanOrEqualToSuperview().offset(-40)
+            make.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.xl)
         }
 
         iconImageView.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.centerX.equalToSuperview()
-            make.width.height.equalTo(80)
+            make.size.equalTo(ThemeTokens.Icons.Sizes.xxl)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(iconImageView.snp.bottom).offset(16)
-            make.left.right.equalToSuperview()
+            make.top.equalTo(iconImageView.snp.bottom).offset(ThemeTokens.Spacing.md)
+            make.leading.trailing.equalToSuperview()
+        }
+
+        subtitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(ThemeTokens.Spacing.xs)
+            make.leading.trailing.equalToSuperview()
         }
 
         descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.left.right.equalToSuperview()
+            make.top.equalTo(subtitleLabel.snp.bottom).offset(ThemeTokens.Spacing.xs)
+            make.leading.trailing.equalToSuperview()
         }
 
         actionButton.snp.makeConstraints { make in
-            make.top.equalTo(descriptionLabel.snp.bottom).offset(20)
+            make.top.equalTo(descriptionLabel.snp.bottom).offset(ThemeTokens.Spacing.lg)
             make.centerX.equalToSuperview()
-            make.width.equalTo(160)
+            make.width.greaterThanOrEqualTo(120)
             make.height.equalTo(44)
             make.bottom.equalToSuperview()
         }
@@ -117,7 +143,27 @@ public class EmptyStateView: UIView {
         actionButton.addTarget(self, action: #selector(actionButtonTapped), for: .touchUpInside)
     }
 
-    // MARK: - Configure
+    // MARK: - Configure (Lucide Icon)
+
+    public func configure(
+        icon: LucideIcon,
+        title: String,
+        subtitle: String? = nil,
+        description: String,
+        actionTitle: String? = nil,
+        actionIcon: LucideIcon? = nil
+    ) {
+        iconImageView.image = icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.xxl, weight: .light)
+        iconImageView.isHidden = false
+
+        titleLabel.text = title
+        configureSubtitle(subtitle)
+        descriptionLabel.text = description
+        self.actionIcon = actionIcon
+        configureActionButton(actionTitle, icon: actionIcon)
+    }
+
+    // MARK: - Configure (SF Symbol)
 
     public func configure(icon: String? = nil, title: String, description: String, actionTitle: String? = nil) {
         if let icon = icon {
@@ -129,19 +175,39 @@ public class EmptyStateView: UIView {
         }
 
         titleLabel.text = title
+        subtitleLabel.isHidden = true
         descriptionLabel.text = description
+        configureActionButton(actionTitle)
+    }
 
-        // Debug: 打印配置信息
-        print("🔍 [EmptyStateView] configured - title: \(title), icon: \(icon ?? "none")")
+    // MARK: - Private
 
+    private func configureSubtitle(_ subtitle: String?) {
+        if let subtitle = subtitle, !subtitle.isEmpty {
+            subtitleLabel.text = subtitle
+            subtitleLabel.isHidden = false
+        } else {
+            subtitleLabel.isHidden = true
+        }
+    }
+
+    private func configureActionButton(_ actionTitle: String?, icon: LucideIcon? = nil) {
         if let actionTitle = actionTitle {
             actionButton.setTitle(actionTitle, for: .normal)
+            if let icon = icon {
+                actionButton.setImage(icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm), for: .normal)
+                actionButton.tintColor = ThemeTokens.Color.background
+                actionButton.semanticContentAttribute = .forceLeftToRight
+                actionButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: ThemeTokens.Spacing.sm)
+            } else {
+                actionButton.setImage(nil, for: .normal)
+            }
             actionButton.isHidden = false
 
             actionButton.snp.remakeConstraints { make in
-                make.top.equalTo(descriptionLabel.snp.bottom).offset(20)
+                make.top.equalTo(descriptionLabel.snp.bottom).offset(ThemeTokens.Spacing.lg)
                 make.centerX.equalToSuperview()
-                make.width.greaterThanOrEqualTo(160)
+                make.width.greaterThanOrEqualTo(120)
                 make.height.equalTo(44)
                 make.bottom.equalToSuperview()
             }
@@ -149,7 +215,7 @@ public class EmptyStateView: UIView {
             actionButton.isHidden = true
 
             actionButton.snp.remakeConstraints { make in
-                make.top.equalTo(descriptionLabel.snp.bottom).offset(20)
+                make.top.equalTo(descriptionLabel.snp.bottom)
                 make.height.equalTo(0)
                 make.bottom.equalToSuperview()
             }

@@ -59,6 +59,8 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 页面加载完成 - 检查是否需要自动缓存页面
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        HUDService.shared.dismiss()
+
         guard let url = webView.url else { return }
 
         print("📄 ========================================")
@@ -266,6 +268,19 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
         webView.configuration.userContentController.addUserScript(userScript)
         print("🔍 [WebBridgeVC] Debug script injected for: \(url.absoluteString)")
+    }
+
+    /// 加载错误提示页面
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        HUDService.shared.showError(withStatus: error.localizedDescription)
+    }
+
+    public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        HUDService.shared.showError(withStatus: error.localizedDescription)
+    }
+
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        HUDService.shared.show()
     }
 
     /// 加载错误提示页面

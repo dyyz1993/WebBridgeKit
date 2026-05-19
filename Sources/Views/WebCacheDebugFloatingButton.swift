@@ -8,6 +8,8 @@
 import UIKit
 import WebKit
 
+#if DEBUG
+
 /// Floating debug button for monitoring WebView cache status
 public class WebCacheDebugFloatingButton: UIView {
 
@@ -508,3 +510,5 @@ public extension WebViewController {
         debugFloatingButton?.updateStatus(url: url, status: status, resourceCount: resourceCount, cacheSize: cacheSize)
     }
 }
+
+#endif

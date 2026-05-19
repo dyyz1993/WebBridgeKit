@@ -161,6 +161,8 @@ bash scripts/scan-crash-logs.sh --fix
 
 | Commit | Description |
 |--------|-------------|
+| `703f1e2` | fix(ui): P1/P2 quality pass — tabs, empty states, contrast, WKColor cleanup |
+| `5218431` | feat(quality): accessibility audit, UI tests, CI hardening, release docs |
 | `7638ba0` | feat(services): add services management script + visual polish |
 | `667338c` | ci(smoke-tests): fix SIGABRT crash |
 | `6df60f4` | docs(screenshots): update with working i18n |
