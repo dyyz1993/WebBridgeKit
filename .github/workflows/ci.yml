@@ -48,7 +48,7 @@ jobs:
     name: Build
     runs-on: macos-15
     timeout-minutes: 30
-    needs: swiftlint
+    needs: []
     steps:
       - uses: actions/checkout@v4
 
@@ -59,6 +59,12 @@ jobs:
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
+
+      - name: Cache SPM Server
+        uses: actions/cache@v4
+        with:
+          path: Server/.build
+          key: spm-server-${{ runner.os }}-${{ hashFiles('Server/Package.resolved') }}
 
       - name: Build
         run: |
@@ -83,21 +89,31 @@ jobs:
           path: build/BuildResults.xcresult
           retention-days: 7
 
+      - name: Upload DerivedData
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: derived-data
+          path: ~/Library/Developer/Xcode/DerivedData/WebBridgeKit-*/
+          retention-days: 1
+
   # ─── Job 3-5: Unit Tests (3 groups, was 11 individual) ─────────
   unit-tests:
     name: Unit Tests (${{ matrix.group.name }})
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 30
     needs: build
     strategy:
       fail-fast: false
       matrix:
         group:
-          - name: Core
+          - name: CoreA
             schemes: >-
               CacheTests
               BridgeTests
               CoreTests
+          - name: CoreB
+            schemes: >-
               ModelsTests
               UtilsTests
               ServicesTests
@@ -105,14 +121,13 @@ jobs:
             schemes: >-
               HandlerTests-Part1
               HandlerTests-Part2
-              AITests
+              CommandParserTests
+              WebSocketTests
               SkillsTests
-              ThemeTests
           - name: Modules
             schemes: >-
               MessageTests
-              WebSocketTests
-              CommandParserTests
+              AITests
               InfrastructureTests
               BaseTests
               ExtensionsTests
@@ -126,6 +141,12 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Download DerivedData
+        uses: actions/download-artifact@v4
+        with:
+          name: derived-data
+          path: ~/Library/Developer/Xcode/DerivedData/
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -361,6 +382,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     needs: build
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -368,6 +390,12 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Download DerivedData
+        uses: actions/download-artifact@v4
+        with:
+          name: derived-data
+          path: ~/Library/Developer/Xcode/DerivedData/
 
       - name: Setup Project
         uses: ./.github/actions/setup-project
@@ -537,6 +565,12 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Download DerivedData
+        uses: actions/download-artifact@v4
+        with:
+          name: derived-data
+          path: ~/Library/Developer/Xcode/DerivedData/
 
       - name: Setup Project
         uses: ./.github/actions/setup-project

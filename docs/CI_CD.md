@@ -7,43 +7,49 @@ The CI pipeline is defined in `.github/workflows/ci.yml` and runs on every push/
 ### Pipeline Flow
 
 ```
-SwiftLint ──► Build ──┬──► Unit Tests (matrix × 10)
-                      ├──► Smoke Tests
-                      ├──► Core UI Tests
-                      └──► Manifest Cache Tests
+SwiftLint ──┐
+            ├──► Unit Tests (Core A) ──┐
+Build ──────┤──► Unit Tests (Core B)   ├──► ✅
+            ├──► Unit Tests (Handlers) │
+            ├──► Unit Tests (Modules) ─┘
+            ├──► Smoke Tests (continue-on-error)
+            └──► UI Fidelity Tests (continue-on-error)
 ```
 
-### Jobs
+- SwiftLint and Build run **in parallel** (no dependency)
+- Build uploads DerivedData artifact; test jobs download it to skip recompilation
+- Critical path: **~15–20 min** (SwiftLint ~3 min + Build ~12 min || parallel, Tests ~15 min)
 
-| Job | Runner | Timeout | Description |
-|-----|--------|---------|-------------|
-| **SwiftLint** | macos-15 | 30 min | Lint `Sources/` and `SuperApp/Sources/` |
-| **Build** | macos-15 | 30 min | Compile SuperApp (Debug, arm64 simulator) |
-| **Unit Tests** | macos-15 | 30 min | 10 test schemes in parallel matrix |
-| **Smoke Tests** | macos-15 | 30 min | Main flow + settings + permission UI tests |
-| **Core UI Tests** | macos-15 | 45 min | Core UI tests (3 parallel workers, skips manifest) |
-| **Manifest Tests** | macos-15 | 30 min | Manifest cache tests (sequential, no parallelism) |
+### Jobs (8 total)
+
+| # | Job | Runner | Timeout | Dependency | Description |
+|---|-----|--------|---------|------------|-------------|
+| 1 | **SwiftLint** | macos-15 | 10 min | — | Lint `Sources/` and `SuperApp/Sources/` |
+| 2 | **Build** | macos-15 | 30 min | — | Compile SuperApp, upload DerivedData artifact |
+| 3 | **Unit Tests (Core A)** | macos-15 | 30 min | Build | Cache, Bridge, Core, Models tests |
+| 4 | **Unit Tests (Core B)** | macos-15 | 30 min | Build | Utils, Services, Extensions, Base tests |
+| 5 | **Unit Tests (Handlers)** | macos-15 | 30 min | Build | HandlerTests-Part1/2, AI, Skills, Theme tests |
+| 6 | **Unit Tests (Modules)** | macos-15 | 30 min | Build | Message, WebSocket, CommandParser, Infra, Managers, ViewModel tests |
+| 7 | **Smoke Tests** | macos-15 | 30 min | Build | Main flow + settings UI tests (continue-on-error) |
+| 8 | **UI Fidelity Tests** | macos-15 | 30 min | Build | Screenshot diff comparison (continue-on-error) |
 
 ### Unit Test Matrix
 
-| Scheme | Module |
-|--------|--------|
-| CacheTests | Cache Engine |
-| MessageTests | Message Engine |
-| AITests | AI Engine |
-| SkillsTests | Skills Engine |
-| HandlerTests | 41 Handlers |
-| BridgeTests | Bridge Engine |
-| CoreTests | Core module |
-| ModelsTests | Data models |
-| UtilsTests | Utilities |
-| ServicesTests | Service layer |
+| Group | Schemes |
+|-------|---------|
+| **Core A** | CacheTests, BridgeTests, CoreTests, ModelsTests |
+| **Core B** | UtilsTests, ServicesTests, ExtensionsTests, BaseTests |
+| **Handlers** | HandlerTests-Part1, HandlerTests-Part2, AITests, SkillsTests, ThemeTests |
+| **Modules** | MessageTests, WebSocketTests, CommandParserTests, InfrastructureTests, ManagersTests, ViewModelTests, WebBridgeKitTests |
 
 ### Features
 
 - **Concurrency control** — same branch cancels older runs
 - **CocoaPods cache** — keyed by `Podfile.lock` hash
 - **DerivedData cache** — keyed by `Podfile.lock` + `project.yml`
+- **SPM Server cache** — caches `Server/.build` for Swift Hummingbird backend
+- **Build artifact sharing** — Build job uploads DerivedData; test jobs download and reuse (skip recompilation)
+- **Retry on flaky tests** — each unit test scheme retries up to 2×, Smoke/UI Fidelity retry up to 3×
 - **Code coverage** — collected and uploaded as artifact
 - **Screenshots** — collected on failure
 - **JUnit reports** — published via `mikepenz/action-junit-report@v4`
@@ -84,21 +90,12 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO \
   CODE_SIGNING_ALLOWED=NO
 
-# Single module
+# Single scheme
 xcodebuild test \
   -workspace WebBridgeKit.xcworkspace \
   -scheme CacheTests \
   -sdk iphonesimulator \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
-```
-
-### Integration Tests
-
-```bash
-./run_tests.sh            # All tests
-./run_tests.sh basic      # Basic functionality
-./run_tests.sh manifest   # Manifest cache
-./run_tests.sh display    # Display mode
 ```
 
 ## Handling CI Failures
@@ -132,13 +129,15 @@ swiftlint --fix --config .swiftlint.yml Sources/ SuperApp/Sources/
 
 ### Simulator Issues
 
-- CI creates a fresh simulator each run via `setup-sim` composite action
+- CI creates a fresh simulator each run
 - Locally: `xcrun simctl delete unavailable` to clean up
 
 ### Dependency Cache Miss
 
-- If CocoaPods cache is stale, the cache key is based on `Podfile.lock`
-- Bump a pod version or clear the cache in GitHub Actions UI
+- CocoaPods cache key: `Podfile.lock` hash
+- DerivedData cache key: `Podfile.lock` + `project.yml`
+- SPM Server cache key: `Server/Package.resolved` hash
+- Bump a dependency version or clear the cache in GitHub Actions UI
 
 ## Adding New Test Targets
 
@@ -166,15 +165,17 @@ targets:
 
 ### 3. Update CI matrix
 
-Edit `.github/workflows/ci.yml` — add the new scheme to the `unit-tests` matrix:
+Edit `.github/workflows/ci.yml` — add the new scheme to the appropriate group:
 
 ```yaml
-matrix:
-  scheme:
-    - CacheTests
-    - MessageTests
-    # ... existing schemes
-    - NewModuleTests   # Add here
+group:
+  - name: Core A
+    schemes: >-
+      CacheTests
+      BridgeTests
+      CoreTests
+      ModelsTests
+      NewModuleTests   # Add to appropriate group
 ```
 
 ### 4. Regenerate and install
@@ -190,7 +191,7 @@ pod install
 
 **Path:** `.github/actions/setup-project/action.yml`
 
-Ensures `xcodegen`, `swiftlint`, `pod`, and `xcpretty` are available, caches CocoaPods and DerivedData, then runs `xcodegen generate` and `pod install`.
+Installs `xcodegen`, `swiftlint`, `pod`, `xcpretty`, caches CocoaPods + DerivedData + SPM Server, then runs `xcodegen generate` and `pod install`.
 
 **Usage in workflow:**
 
