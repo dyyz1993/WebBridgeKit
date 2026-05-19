@@ -24,7 +24,7 @@ target 'WebBridgeKit' do
   shared_pods
 
   target 'CacheTests' do
-    inherit! :complete
+    inherit! :search_paths
   end
 
   target 'MessageTests' do

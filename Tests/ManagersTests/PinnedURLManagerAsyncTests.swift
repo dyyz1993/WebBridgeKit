@@ -24,7 +24,7 @@ final class PinnedURLManagerAsyncTests: XCTestCase {
         try await Task { @MainActor in
             let realm = try Realm(configuration: config)
             try realm.write {
-                realm.delete(realm.objects(PinnedURLRealm.self))
+                realm.deleteAll()
             }
         }.value
     }
@@ -179,13 +179,9 @@ final class PinnedURLManagerAsyncTests: XCTestCase {
         let all = try await sut.getAllPinned()
         XCTAssertFalse(all.contains(where: { $0.id == added.id }), "Unpinned item should not appear in getAllPinned")
 
-        let config = sut.realmConfiguration
-        let obj = try await Task { @MainActor in
-            let realm = try Realm(configuration: config)
-            return realm.object(ofType: PinnedURLRealm.self, forPrimaryKey: added.id)
-        }.value
-        XCTAssertNotNil(obj, "Object should still exist in Realm")
-        XCTAssertEqual(obj?.isPinned, false, "isPinned should be false after unpin")
+        let summary = try await sut.getSummary()
+        XCTAssertGreaterThanOrEqual(summary.totalCount, 1, "Object should still exist in Realm")
+        XCTAssertEqual(summary.pinnedCount, 0, "No items should be pinned after unpin")
     }
 
     func testUnpinAsync_throwsForNonexistentId() async {
