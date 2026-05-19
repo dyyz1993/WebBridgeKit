@@ -13,6 +13,7 @@ import RealmSwift
 
 public protocol PinnedURLManaging: AnyObject {
     func add(url: String, title: String?, notes: String?) async throws -> PinnedURLRealm
+    func update(id: String, url: String?, newTitle: String?, notes: String?) async throws -> PinnedURLRealm
     func unpin(id: String) async throws
     func delete(id: String) async throws
     func recordAccess(id: String) async
@@ -22,6 +23,7 @@ public protocol PinnedURLManaging: AnyObject {
     func getSummary() async throws -> PinnedURLSummary
     func importPresets(_ items: [PresetURLItem]) async throws -> Int
     func seedRecommendedPresetsIfNeeded() async throws -> Int
+    func move(fromIndex: Int, toIndex: Int) async throws
 }
 
 // MARK: - Database Actor
@@ -53,6 +55,9 @@ actor PinnedURLDatabaseActor {
             return PinnedURLRealm(value: existing)
         }
 
+        let allPinned = try realm.objects(PinnedURLRealm.self).filter("isPinned == true")
+        let maxOrder = allPinned.max(of: \PinnedURLRealm.orderIndex) ?? -1
+
         let obj = PinnedURLRealm()
         obj.url = url
         obj.title = title?.isEmpty == nil ? URL(string: url)?.host : title
@@ -62,9 +67,63 @@ actor PinnedURLDatabaseActor {
         obj.createdAt = Date()
         obj.lastAccessedAt = Date()
         obj.accessCount = 1
+        obj.orderIndex = maxOrder + 1
 
         try realm.write { realm.add(obj) }
         return PinnedURLRealm(value: obj)
+    }
+
+    // MARK: - UPDATE
+
+    func update(id: String, url: String?, newTitle: String?, notes: String?) throws -> PinnedURLRealm {
+        let realm = try getRealm()
+        guard let obj = realm.object(ofType: PinnedURLRealm.self, forPrimaryKey: id) else {
+            throw WebBridgeError.invalidInput("PinnedURL not found: \(id)")
+        }
+
+        try realm.write {
+            if let newUrl = url, !newUrl.isEmpty {
+                obj.url = newUrl
+                obj.domain = URL(string: newUrl)?.host ?? obj.domain
+                obj.urlType = URLType.detect(from: newUrl)
+            }
+            if let newTitle = newTitle { obj.title = newTitle.isEmpty ? nil : newTitle }
+            if let notes = notes { obj.notes = notes.isEmpty ? nil : notes }
+        }
+
+        return PinnedURLRealm(value: obj)
+    }
+
+    func move(fromIndex: Int, toIndex: Int) throws {
+        let realm = try getRealm()
+        let allPinned = realm.objects(PinnedURLRealm.self)
+            .filter("isPinned == true")
+            .sorted(byKeyPath: "orderIndex", ascending: true)
+
+        guard fromIndex >= 0 && fromIndex < allPinned.count,
+              toIndex >= 0 && toIndex < allPinned.count else {
+            throw WebBridgeError.invalidInput("Invalid index range")
+        }
+
+        let fromItem = allPinned[fromIndex]
+
+        try realm.write {
+            if fromIndex < toIndex {
+                for item in allPinned {
+                    if item.orderIndex > fromIndex && item.orderIndex <= toIndex {
+                        item.orderIndex -= 1
+                    }
+                }
+                fromItem.orderIndex = toIndex
+            } else {
+                for item in allPinned {
+                    if item.orderIndex >= toIndex && item.orderIndex < fromIndex {
+                        item.orderIndex += 1
+                    }
+                }
+                fromItem.orderIndex = toIndex
+            }
+        }
     }
 
     // MARK: - UPDATE (Unpin)
@@ -104,7 +163,7 @@ actor PinnedURLDatabaseActor {
         let realm = try getRealm()
         return realm.objects(PinnedURLRealm.self)
             .filter("isPinned == true")
-            .sorted(by: [SortDescriptor(keyPath: "lastAccessedAt", ascending: false)])
+            .sorted(by: [SortDescriptor(keyPath: "orderIndex", ascending: true)])
             .map { PinnedURLRealm(value: $0) }
     }
 
@@ -158,8 +217,11 @@ actor PinnedURLDatabaseActor {
         let realm = try getRealm()
         var imported = 0
 
+        let allPinned = realm.objects(PinnedURLRealm.self).filter("isPinned == true")
+        let maxOrder = allPinned.max(of: \PinnedURLRealm.orderIndex) ?? -1
+
         try realm.write {
-            for item in items {
+            for (index, item) in items.enumerated() {
                 let exists = realm.objects(PinnedURLRealm.self).filter("url == %@", item.url).first
                 if exists != nil { continue }
 
@@ -172,6 +234,7 @@ actor PinnedURLDatabaseActor {
                 obj.tags = item.tags
                 obj.isPinned = true
                 obj.accessCount = 0
+                obj.orderIndex = maxOrder + 1 + index
 
                 realm.add(obj)
                 imported += 1
@@ -209,6 +272,12 @@ public class PinnedURLManager: PinnedURLManaging {
     public func add(url: String, title: String? = nil, notes: String? = nil) async throws -> PinnedURLRealm {
         return try await WebBridgeError.wrap {
             try await databaseActor.add(url: url, title: title, notes: notes)
+        }
+    }
+
+    public func update(id: String, url: String? = nil, newTitle: String? = nil, notes: String? = nil) async throws -> PinnedURLRealm {
+        return try await WebBridgeError.wrap {
+            try await databaseActor.update(id: id, url: url, newTitle: newTitle, notes: notes)
         }
     }
 
@@ -271,6 +340,12 @@ public class PinnedURLManager: PinnedURLManaging {
         if let existing, !existing.isEmpty { return 0 }
 
         return try await importPresets(recommended)
+    }
+
+    public func move(fromIndex: Int, toIndex: Int) async throws {
+        try await WebBridgeError.wrap {
+            try await databaseActor.move(fromIndex: fromIndex, toIndex: toIndex)
+        }
     }
 
     // MARK: - Synchronous Compatibility Layer

@@ -49,6 +49,15 @@ public struct Manifest: Codable, Sendable {
     /// 访问频率计数
     public var accessCount: Int?
 
+    /// Web App Manifest: 启动 URL
+    public var startURL: String?
+
+    /// Web App Manifest: 显示模式 (standalone, minimal-ui, fullscreen, browser)
+    public var displayMode: String?
+
+    /// Web App Manifest: 主题色 (hex color like #RRGGBB or #RRGGBBAA)
+    public var themeColor: String?
+
     public init(
         resources: [String: String] = [:],
         version: String? = nil,
@@ -60,7 +69,10 @@ public struct Manifest: Codable, Sendable {
         isPinned: Bool? = false,
         isFavorite: Bool? = false,
         lastAccessed: Date? = nil,
-        accessCount: Int? = 0
+        accessCount: Int? = 0,
+        startURL: String? = nil,
+        displayMode: String? = nil,
+        themeColor: String? = nil
     ) {
         self.resources = resources
         self.version = version
@@ -73,6 +85,9 @@ public struct Manifest: Codable, Sendable {
         self.isFavorite = isFavorite
         self.lastAccessed = lastAccessed
         self.accessCount = accessCount
+        self.startURL = startURL
+        self.displayMode = displayMode
+        self.themeColor = themeColor
     }
 
     /// 获取版本号，如果没有则返回默认值

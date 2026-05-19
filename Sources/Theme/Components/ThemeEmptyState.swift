@@ -18,7 +18,7 @@ public class ThemeEmptyState: UIView {
         return label
     }()
 
-    private let descriptionLabel: UILabel = {
+    public let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTypography.current.body
         label.textColor = ThemeColors.current.textSecondary

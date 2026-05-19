@@ -28,6 +28,32 @@ public final class NetworkHelper {
 
     // MARK: - Public Methods
 
+    // MARK: - Weak Network Test (#57)
+    ///
+    /// Weak Network Test:
+    /// Requirements:
+    /// - Detect network timeouts (current: 10s request timeout, 30s resource timeout)
+    /// - Show offline state with retry option when network unavailable
+    /// - Don't freeze UI on slow network
+    ///
+    /// Test procedure:
+    /// 1. Enable Network Link Conditioner in Simulator: Device > Set Network Link Conditioner
+    /// 2. Select "100% Loss" or "Very Slow Network" profile
+    /// 3. Attempt to load URLs and observe behavior
+    /// 4. Verify: UI remains responsive, timeout triggers, retry button appears
+    ///
+    /// Expected behavior:
+    /// - Timeout after 10s (configured timeout)
+    /// - Show error message with retry option
+    /// - UI remains interactive during slow load
+    /// - No blocking of main thread
+    ///
+    /// Current timeout configuration:
+    /// - Request timeout: 10 seconds (URLSessionConfiguration.timeoutIntervalForRequest)
+    /// - Resource timeout: 30 seconds (URLSessionConfiguration.timeoutIntervalForResource)
+    ///
+    ///
+
     /// Fetches data from the specified URL
     /// - Parameter url: The URL to fetch data from
     /// - Returns: The data retrieved from the URL

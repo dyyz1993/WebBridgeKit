@@ -16,6 +16,14 @@ enum PushRoutes {
         router.post("/register") { request, context in
             try await Self.handleRegister(request: request, context: context, services: services)
         }
+
+        // Test endpoint for local verification
+        // Usage: curl -X POST http://localhost:8080/api/v1/push/test \
+        //   -H "Content-Type: application/json" \
+        //   -d '{"device_key":"test-key","title":"Test","body":"Test notification"}'
+        router.post("/test") { request, context in
+            try await Self.handleTestPush(request: request, context: context, services: services)
+        }
     }
 
     private static func handleBarkPush(
@@ -82,6 +90,81 @@ enum PushRoutes {
             }
             .first
     }
+
+    /// Test endpoint for local push verification
+    /// - Parameters:
+    ///   - request: HTTP request
+    ///   - context: Request context
+    ///   - services: Service registry
+    /// - Returns: Test push response
+    /// - Discussion: This endpoint logs the received payload for verification purposes
+    private static func handleTestPush(
+        request: Request,
+        context: some RequestContext,
+        services: ServiceRegistry
+    ) async throws -> TestPushResponse {
+        let testRequest = try await request.decode(as: JSONPushRequest.self, context: context)
+
+        NSLog("🧪 [PushRoutes] TEST ENDPOINT - Received push payload:")
+        NSLog("   - Device Key: \(testRequest.deviceKey)")
+        NSLog("   - Title: \(testRequest.title)")
+        NSLog("   - Body: \(testRequest.body)")
+        NSLog("   - Sound: \(testRequest.sound ?? "default")")
+        NSLog("   - Group: \(testRequest.group ?? "default")")
+        NSLog("   - URL: \(testRequest.url ?? "none")")
+
+        // Attempt to send push if device is registered
+        do {
+            let payload = PushPayload(
+                title: testRequest.title,
+                body: testRequest.body,
+                sound: testRequest.sound,
+                badge: testRequest.badge,
+                icon: testRequest.icon,
+                group: testRequest.group,
+                url: testRequest.url,
+                copy: testRequest.copy,
+                isArchive: testRequest.isArchive
+            )
+
+            _ = try await services.apnsService.sendPush(key: testRequest.deviceKey, payload: payload)
+
+            NSLog("✅ [PushRoutes] TEST ENDPOINT - Push sent successfully")
+
+            return TestPushResponse(
+                success: true,
+                message: "Test push sent successfully",
+                deviceKey: testRequest.deviceKey,
+                timestamp: ISO8601DateFormatter().string(from: Date())
+            )
+        } catch {
+            NSLog("❌ [PushRoutes] TEST ENDPOINT - Push failed: \(error.localizedDescription)")
+
+            // Return success for test purposes even if push fails (device might not be registered)
+            return TestPushResponse(
+                success: false,
+                message: "Test push failed: \(error.localizedDescription)",
+                deviceKey: testRequest.deviceKey,
+                timestamp: ISO8601DateFormatter().string(from: Date())
+            )
+        }
+    }
+
+    /// ISO8601 date formatter
+    private static func ISO8601DateFormatter() -> ISO8601DateFormatter {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }
+}
+
+// MARK: - Test Response Models
+
+private struct TestPushResponse: ResponseEncodable, Sendable {
+    let success: Bool
+    let message: String
+    let deviceKey: String
+    let timestamp: String
 }
 
 private struct JSONPushRequest: Codable, Sendable {

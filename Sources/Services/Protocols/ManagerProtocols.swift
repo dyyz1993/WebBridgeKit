@@ -92,6 +92,11 @@ public protocol WebPageHistoryManaging {
     /// - Returns: 历史记录数组
     func getAllHistories() async throws -> [WebPageHistory]
 
+    /// 获取指定日期之后的历史记录
+    /// - Parameter date: 起始日期
+    /// - Returns: 历史记录数组
+    func getHistoriesSince(date: Date) async throws -> [WebPageHistory]
+
     /// 根据 URL 查找历史记录
     /// - Parameter url: 页面 URL
     /// - Returns: 历史记录对象，如果不存在则返回 nil

@@ -119,6 +119,9 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 当前缓存来源标识
     var currentCacheSource: String = "LIVE"
 
+    /// WebView load start time for performance tracking (#54)
+    var loadStartTime: Date?
+
     /// 调试模式：启用时会显示错误页面而不是白屏
     public var debugMode: Bool = false
 

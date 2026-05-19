@@ -157,6 +157,22 @@ actor HistoryDatabaseActor {
         }
     }
 
+    /// Get history records since a specific date (sorted by last visit date descending)
+    func getHistoriesSince(date: Date) async throws -> [WebPageHistory] {
+        let monitor = PerformanceMonitor.shared
+        return try monitor.measure(
+            "Database.getHistoriesSince",
+            metadata: ["operation": "query", "sort": "lastVisitDate"]
+        ) {
+            let realm = try getRealm()
+            let results = realm.objects(WebPageHistory.self)
+                .filter("lastVisitDate >= %@", date)
+                .sorted(byKeyPath: "lastVisitDate", ascending: false)
+            // Create independent copies to avoid cross-thread access issues
+            return results.map { WebPageHistory(value: $0) }
+        }
+    }
+
     /// Get cached history records
     func getCachedHistories() async throws -> [WebPageHistory] {
         let realm = try getRealm()
@@ -330,6 +346,14 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
     public func getAllHistories() async throws -> [WebPageHistory] {
         return try await WebBridgeError.wrap {
             try await databaseActor.getAllHistories()
+        }
+    }
+
+    /// Get history records since a specific date (sorted by last visit date descending)
+    /// Returns independent copy array to avoid cross-thread access issues
+    public func getHistoriesSince(date: Date) async throws -> [WebPageHistory] {
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getHistoriesSince(date: date)
         }
     }
 

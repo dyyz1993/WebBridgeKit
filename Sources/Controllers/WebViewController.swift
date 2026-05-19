@@ -242,8 +242,17 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         do {
             _ = try InputValidator.validateURLScheme(url, allowedSchemes: allowedSchemes)
         } catch {
+            Log.error("Invalid URL scheme blocked: \(url.absoluteString) - \(error.localizedDescription)", category: .general)
             print("❌ [BarkWebVC] Invalid URL scheme: \(url.absoluteString)")
             print("   - Error: \(error.localizedDescription)")
+            return
+        }
+
+        // 🔒 Additional security: Block javascript: and data: schemes explicitly
+        let blockedSchemes: Set<String> = ["javascript", "data", "vbscript", "file"]
+        if let scheme = url.scheme?.lowercased(), blockedSchemes.contains(scheme) {
+            Log.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
+            print("❌ [BarkWebVC] Blocked dangerous URL scheme: \(scheme)")
             return
         }
 

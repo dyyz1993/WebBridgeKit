@@ -237,6 +237,22 @@ public actor CacheManager {
         print("  Overall Hit Rate: \(String(format: "%.2f%%", global.hitRate * 100))")
         print("  Total Cache Size: \(ByteCountFormatter.string(fromByteCount: global.totalCacheSize, countStyle: .file))")
     }
+
+    /// Record current memory usage
+    public func recordMemoryUsage() {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+
+        if result == KERN_SUCCESS {
+            let residentMB = Double(info.resident_size) / 1024.0 / 1024.0
+            Log.info("Memory usage: \(String(format: "%.2f", residentMB)) MB (type: resident)", category: .performance)
+        }
+    }
 }
 
 // MARK: - Convenience Extensions
