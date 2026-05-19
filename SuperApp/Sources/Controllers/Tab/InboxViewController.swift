@@ -339,7 +339,6 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             .drive(onNext: { [weak self] isEmpty in
                 guard let self = self else { return }
                 self.emptyStateView.isHidden = !isEmpty
-                self.tableView.isHidden = isEmpty
                 if !isEmpty {
                     self.view.bringSubviewToFront(self.tableView)
                 }
