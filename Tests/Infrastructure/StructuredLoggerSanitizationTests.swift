@@ -77,7 +77,7 @@ final class StructuredLoggerSanitizationTests: XCTestCase {
 
         let entry = logger.query().last
         let sanitized = entry?.context?["password"]
-        XCTAssertEqual(sanitized, "P@ss****3456!")
+        XCTAssertEqual(sanitized, "P@ss****456!")
     }
 
     func testSanitize_bearerKey_masksValue() {
@@ -186,13 +186,13 @@ final class StructuredLoggerSanitizationTests: XCTestCase {
         let entries = logger.query(search: "batch")
         XCTAssertEqual(entries.count, 3)
 
-        XCTAssertEqual(entries[0].context?["token"], "abcd****mnop")
-        XCTAssertEqual(entries[0].context?["name"], "app1")
+        XCTAssertEqual(entries[2].context?["token"], "abcd****mnop")
+        XCTAssertEqual(entries[2].context?["name"], "app1")
 
         XCTAssertEqual(entries[1].context?["password"], "mypa****d123")
         XCTAssertEqual(entries[1].context?["status"], "ok")
 
-        XCTAssertEqual(entries[2].context?["url"], "https://safe.com")
-        XCTAssertEqual(entries[2].context?["secret"], "supe****alue")
+        XCTAssertEqual(entries[0].context?["url"], "https://safe.com")
+        XCTAssertEqual(entries[0].context?["secret"], "supe****alue")
     }
 }

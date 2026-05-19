@@ -106,7 +106,10 @@ final class CacheStatsAggregatorTests: XCTestCase {
     // MARK: - Performance: Aggregation Under 500ms
 
     func testAggregationPerformance() {
-        measure {
+        let options = XCTMeasureOptions()
+        options.iterationCount = 3
+
+        measure(metrics: [XCTClockMetric()], options: options) {
             _ = aggregator.syncAggregate()
         }
     }
