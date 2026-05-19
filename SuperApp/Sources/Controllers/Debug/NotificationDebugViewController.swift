@@ -214,6 +214,7 @@ class NotificationDebugViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: views)
         stack.axis = .vertical
         stack.spacing = ThemeTokens.Spacing.sm
+        card.addSubview(header)
         card.addSubview(stack)
 
         header.snp.makeConstraints { make in

@@ -151,6 +151,10 @@ bash scripts/scan-crash-logs.sh --fix
 <!-- 格式: | 日期 | 类型 | 原因 | 修复 | -->
 <!-- 示例: | 2026-05-14 | SIGABRT | Realm schema migration | PR #123 | -->
 
+| 日期 | 类型 | 原因 | 定位 | 修复 |
+|------|------|------|------|------|
+| 2026-05-20 | SIGTRAP | Notification Debug section header 未加入 card 视图层级就使用 SnapKit `equalToSuperview()`，触发 assertionFailure | SuperApp/Sources/Controllers/Debug/NotificationDebugViewController.swift:219 | 在约束 header 前补 `card.addSubview(header)` |
+
 ## Command History Access
 
 ### How to Access Command History
