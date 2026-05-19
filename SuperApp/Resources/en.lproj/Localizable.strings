@@ -493,3 +493,7 @@
 "subsystem.detail.refresh" = "Refresh";
 "subsystem.detail.clear" = "Clear";
 "subsystem.detail.clear_confirm" = "Clear all cache data for this subsystem?\nNote: Pinned URLs will NOT be affected.";
+
+// Third Party Licenses
+"about.third_party_licenses" = "Open Source Licenses";
+"about.license_detail" = "License Details";

@@ -75,6 +75,20 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
       INFOPLIST_KEY_NSAppTransportSecurity: YES
+    postBuildScripts:
+      - name: Strip Test Resources from Release
+        script: |
+          if [ "${CONFIGURATION}" = "Release" ]; then
+            echo "Stripping test/debug HTML resources from Release bundle..."
+            cd "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app" || exit 0
+            rm -f *test*.html bridge-*.html slow_resource*.html trigger_*.html \
+                  manifest_*test*.html manifest_cache_demo.html manifest_demo.html \
+                  permission-test.html execute_network_test.html ua_test.html static_test.html \
+                  2>/dev/null || true
+            echo "Done. Test resources stripped."
+          else
+            echo "Skipping test resource strip (Debug build)"
+          fi
     dependencies:
       - target: WebBridgeKit
         embed: true

@@ -336,8 +336,8 @@ final class PinnedURLManagerAsyncTests: XCTestCase {
 
     func testImportPresetsAsync_importsNewItems() async throws {
         let items = [
-            PresetURLItem(url: "https://preset-a.com", title: "Preset A", description: "Desc A", category: .development),
-            PresetURLItem(url: "https://preset-b.com", title: "Preset B", description: "Desc B", category: .tools)
+            PresetURLItem(url: "https://preset-a.com", title: "Preset A", description: "Desc A", category: .testing),
+            PresetURLItem(url: "https://preset-b.com", title: "Preset B", description: "Desc B", category: .apiEndpoints)
         ]
 
         let count = try await sut.importPresets(items)
@@ -350,8 +350,8 @@ final class PinnedURLManagerAsyncTests: XCTestCase {
     func testImportPresetsAsync_skipsExistingURLs() async throws {
         try await sut.add(url: "https://existing-preset.com")
         let items = [
-            PresetURLItem(url: "https://existing-preset.com", title: "Already There", description: "", category: .development),
-            PresetURLItem(url: "https://new-preset.com", title: "New One", description: "", category: .tools)
+            PresetURLItem(url: "https://existing-preset.com", title: "Already There", description: "", category: .testing),
+            PresetURLItem(url: "https://new-preset.com", title: "New One", description: "", category: .apiEndpoints)
         ]
 
         let count = try await sut.importPresets(items)

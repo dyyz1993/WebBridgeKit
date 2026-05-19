@@ -121,40 +121,34 @@ Log.error(
 
 ### 4. Local Server CORS Strategy (#80)
 
-**Location:** `Server/Sources/WebBridgeServer/entrypoint.swift:13-18`
+**Location:** `Server/Sources/WebBridgeServer/entrypoint.swift`, `Server/Sources/WebBridgeServer/CORSWhitelistMiddleware.swift`
 
-**Purpose:** Configure CORS headers to control cross-origin requests.
+**Purpose:** Configure CORS headers to control cross-origin requests with environment-driven origin whitelisting.
 
-**Current Configuration:**
-```swift
-let cors = Hummingbird.CORSMiddleware<BasicRequestContext>(
-    allowOrigin: .all,  // ⚠️ Development mode
-    allowHeaders: [.accept, .authorization, .contentType, .origin],
-    allowMethods: [.get, .post, .put, .delete, .head, .options, .patch]
-)
+**Configuration:**
+- **Environment variable:** `CORS_ALLOWED_ORIGINS` (comma-separated list of allowed origins)
+- **Dev mode fallback:** If not set, `allowOrigin: .all` is used
+- **Production mode:** If set, only whitelisted origins receive CORS headers
+- **Preflight cache:** `maxAge: 3600` (1 hour)
+
+**Production Configuration:**
+```bash
+export CORS_ALLOWED_ORIGINS="https://yourdomain.com,https://app.yourdomain.com"
 ```
+
+**How it works:**
+- `CORSWhitelistMiddleware` validates the request `Origin` header against the configured whitelist
+- Whitelisted origins receive full CORS headers (`Access-Control-Allow-Origin`, `Vary: Origin`)
+- Non-whitelisted origins receive no CORS headers → browser blocks the request/response
+- Preflight (OPTIONS) requests from non-whitelisted origins return 204 with no CORS headers
+- `Access-Control-Max-Age: 3600` caches preflight results for 1 hour
 
 **Headers Configured:**
-- `Access-Control-Allow-Origin: *` (WARNING: For development only!)
+- `Access-Control-Allow-Origin: <matched-origin>` (whitelist) or `*` (dev mode)
 - `Access-Control-Allow-Headers: accept, authorization, content-type, origin`
 - `Access-Control-Allow-Methods: GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH`
-
-**Production Recommendation:**
-```swift
-// Replace .all with specific origins:
-allowOrigin: .custom("https://yourdomain.com")
-
-// Or for multiple origins:
-allowOrigin: .matching(["https://yourdomain.com", "https://app.yourdomain.com"])
-```
-
-**Security Warning:**
-The current configuration allows requests from any origin (`*`), which is suitable for development but should be restricted in production to prevent CSRF attacks.
-
-**Security Logging:**
-```swift
-logger.warning("CORS configured with allowOrigin: .all (DEVELOPMENT MODE)")
-```
+- `Access-Control-Max-Age: 3600`
+- `Vary: Origin` (whitelist mode only)
 
 ### 5. Debug Panel Production Switch (#81)
 
@@ -211,7 +205,7 @@ webView.configuration.userContentController.addUserScript(
 - [ ] WebView URL allowlist enforced
 - [ ] JS Bridge command allowlist enforced
 - [ ] Manifest integrity verification enabled
-- [ ] CORS headers configured (check for production)
+- [x] CORS headers configured for production
 - [ ] Debug features disabled in release builds
 - [ ] Security logging enabled and monitored
 - [ ] All blocked attempts logged with context
