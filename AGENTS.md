@@ -193,12 +193,16 @@ Example output:
 
 | 日期 | 类型 | 原因 | 定位 | 修复 |
 |------|------|------|------|------|
+| 2026-05-20 | SIGABRT | SnapKit 约束冲突：固定高度 90pt vs 内容高度超 90pt | ComponentCatalog/LayoutSections.swift:152-166 | 移除固定高度约束，改用 auto-layout 自适应 d9a7a38 |
 | 2026-05-19 | SIGABRT | Podfile 重复链接 shared_pods 导致 ObjC runtime 重复类定义 | Podfile:107, WebBridgeKit+SuperApp targets | SuperApp `inherit! :search_paths` 从 WebBridgeKit 继承 pods |
 
 ## Recent Commits
 
 | Commit | Description |
 |--------|-------------|
+| `d9a7a38` | fix(tests): skip MessageEngine in UI test mode to avoid async race condition |
+| `cba3982` | fix(tests): synchronous seeding for UI tests + keep inbox table visible |
+| `b4d97a2` | fix(tests): remove stale tab tests, seed inbox messages, fix SnapKit constraint crash |
 | `e632a9a` | fix(warnings): clear remaining 24 business warnings to zero |
 | `d826dc1` | feat(productization): bookmarks, history, manifest preview, diagnostics, UI polish |
 | `720c61d` | feat(core): WebBridge security + core capabilities + stability baselines |
