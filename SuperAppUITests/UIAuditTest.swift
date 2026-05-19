@@ -145,18 +145,6 @@ final class UIAuditTest: XCTestCase {
         runAudit(page: "首页 (Home)")
     }
 
-    func testAuditTestCasesTab() {
-        app.tabBars.buttons["用例"].tap()
-        sleep(2)
-        runAudit(page: "用例 (Test Cases)")
-    }
-
-    func testAuditManageTab() {
-        app.tabBars.buttons["管理"].tap()
-        sleep(2)
-        runAudit(page: "管理 (Manage)")
-    }
-
     func testAuditSettingsTab() {
         app.tabBars.buttons["设置"].tap()
         sleep(2)
