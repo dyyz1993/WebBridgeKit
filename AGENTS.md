@@ -151,6 +151,44 @@ bash scripts/scan-crash-logs.sh --fix
 <!-- 格式: | 日期 | 类型 | 原因 | 修复 | -->
 <!-- 示例: | 2026-05-14 | SIGABRT | Realm schema migration | PR #123 | -->
 
+## Command History Access
+
+### How to Access Command History
+
+The Debug Panel provides access to command execution history with timestamps, status, and results.
+
+**Access Path:**
+1. Open Debug Panel: Settings → 测试面板 (or directly in development builds)
+2. Navigate to **Logs tab** (tab index 2, labeled "日志" with 📄 icon)
+3. View command traces with the following information:
+   - **Timestamp**: When the command was executed
+   - **Level**: Info/debug/error
+   - **Category**: `.handler` for command executions
+   - **Action**: Handler name (e.g., `push_notification`, `get_manifest`)
+   - **Message**: Detailed log message
+   - **Context**: Parameters (if any)
+   - **Duration**: Execution time in milliseconds
+
+**Features in Logs Tab:**
+- **Filter All**: Shows all logs (default)
+- **Filter Errors**: Shows only error-level logs
+- **Copy All**: Copies all logs to clipboard
+- **Export JSON**: Exports logs as JSON for external analysis
+
+**Log Entry Format:**
+Each command trace includes:
+```
+[TIMESTAMP] [LEVEL] [CATEGORY] action=ACTION_NAME message=MESSAGE context=PARAMS duration=XXXms
+```
+
+Example output:
+```
+2026-05-19 10:30:45.123 INFO [handler] action=push_notification message="Sent push to device" context={"token":"****","data":"..."} duration=125ms
+2026-05-19 10:30:45.456 INFO [handler] action=get_manifest message="Manifest fetched successfully" duration=89ms
+```
+
+**Note**: Command history is stored in memory via `StructuredLogger.shared.memoryBuffer` with a maximum capacity of 1000 entries.
+
 (暂无记录)
 
 | 日期 | 类型 | 原因 | 定位 | 修复 |

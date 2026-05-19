@@ -44,10 +44,6 @@ class NetworkDebugViewController: UIViewController {
         refreshRequests()
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-    }
-
     private func refreshRequests() {
         requests = MockNetworkRequestStore.shared.getRecentRequests()
         tableView.reloadData()
