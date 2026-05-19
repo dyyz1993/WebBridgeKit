@@ -222,14 +222,28 @@ class InboxViewModel: ViewModel {
     private func loadMessages() {
         Task { [weak self] in
             guard let self = self else { return }
-            var messages = await MessageEngine.shared.getMessages()
-            if messages.isEmpty {
+
+            var messages: [StoredMessage] = []
+
+            let isUITesting = CommandLine.arguments.contains("-UITesting") || CommandLine.arguments.contains("--UITesting")
+
+            if isUITesting {
                 let fallbackKey = "SuperCache_Messages"
                 if let data = UserDefaults.standard.data(forKey: fallbackKey),
                    let decoded = try? JSONDecoder().decode([StoredMessage].self, from: data) {
                     messages = decoded
                 }
+            } else {
+                messages = await MessageEngine.shared.getMessages()
+                if messages.isEmpty {
+                    let fallbackKey = "SuperCache_Messages"
+                    if let data = UserDefaults.standard.data(forKey: fallbackKey),
+                       let decoded = try? JSONDecoder().decode([StoredMessage].self, from: data) {
+                        messages = decoded
+                    }
+                }
             }
+
             let loadedMessages = messages
             let unreadCount = await MessageEngine.shared.getUnreadCount()
             await MainActor.run {
