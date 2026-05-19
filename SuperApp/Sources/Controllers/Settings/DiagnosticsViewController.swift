@@ -301,7 +301,8 @@ class DiagnosticsViewController: UIViewController {
         let sensitiveKeys = ["token", "password", "secret", "key", "authorization", "cookie"]
 
         for key in sanitized.keys {
-            if let lowerKey = key as? String, sensitiveKeys.contains(where: { lowerKey.lowercased().contains($0) }) {
+            let lowerKey = key.lowercased()
+            if sensitiveKeys.contains(where: { lowerKey.contains($0) }) {
                 sanitized[key] = "***REDACTED***"
             }
         }

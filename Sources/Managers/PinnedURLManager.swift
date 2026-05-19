@@ -55,7 +55,7 @@ actor PinnedURLDatabaseActor {
             return PinnedURLRealm(value: existing)
         }
 
-        let allPinned = try realm.objects(PinnedURLRealm.self).filter("isPinned == true")
+        let allPinned = realm.objects(PinnedURLRealm.self).filter("isPinned == true")
         let maxOrder = allPinned.max(of: \PinnedURLRealm.orderIndex) ?? -1
 
         let obj = PinnedURLRealm()

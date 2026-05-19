@@ -594,19 +594,22 @@ extension WebAccessViewController: WKNavigationDelegate {
         }
 
         // 检查是否有缓存的页面
-        if let url = currentURL,
-           let cachedHistory = try? WebPageHistoryManager.shared.findHistory(url: url),
-           cachedHistory.isCached {
-            print("📦 [WebAccessVC] Loading cached page: \(url.absoluteString)")
+        if let url = currentURL {
+            Task { @MainActor in
+                if let cachedHistory = try? await WebPageHistoryManager.shared.findHistory(url: url),
+                   cachedHistory.isCached {
+                    print("📦 [WebAccessVC] Loading cached page: \(url.absoluteString)")
 
-            let cachedPageVC = CacheResourceViewController(url: url)
-            navigationController?.pushViewController(cachedPageVC, animated: true)
-            hideOfflineState()
-            return
+                    let cachedPageVC = CacheResourceViewController(url: url)
+                    navigationController?.pushViewController(cachedPageVC, animated: true)
+                    hideOfflineState()
+                    return
+                }
+
+                // 重新加载页面
+                hideOfflineState()
+            }
         }
-
-        // 重新加载页面
-        hideOfflineState()
     }
 
     private func isNetworkRelatedError(_ error: Error) -> Bool {

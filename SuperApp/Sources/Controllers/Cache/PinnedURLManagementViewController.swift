@@ -279,9 +279,8 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
             }
 
             alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-            alert.addAction(UIAlertAction(title: "保存", style: .default) { [weak self] _ in
-                guard let self,
-                      let titleTextField = alert.textFields?.first,
+            alert.addAction(UIAlertAction(title: "保存", style: .default) { _ in
+                guard let titleTextField = alert.textFields?.first,
                       let urlTextField = alert.textFields?.last else { return }
 
                 let newTitle = titleTextField.text?.isEmpty == false ? titleTextField.text : nil

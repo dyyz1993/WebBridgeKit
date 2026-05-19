@@ -220,7 +220,7 @@ public enum ManifestDownloaderError: Error, LocalizedError {
 // MARK: - ManifestDownloader
 
 /// Manifest 下载器
-public class ManifestDownloader {
+public class ManifestDownloader: @unchecked Sendable {
 
     // MARK: - Singleton
 
