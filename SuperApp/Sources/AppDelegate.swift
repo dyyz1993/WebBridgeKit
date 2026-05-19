@@ -24,9 +24,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             CrashLogManager.shared.uploadPendingCrashReports()
         }
 
-        DispatchQueue.global(qos: .userInitiated).async {
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("-UITesting") || ProcessInfo.processInfo.arguments.contains("--UITesting")
+        if isUITesting {
             TestDataSeeder.populateIfNeeded()
             Self.cleanupInvalidHistoryURLs()
+        } else {
+            DispatchQueue.global(qos: .userInitiated).async {
+                TestDataSeeder.populateIfNeeded()
+                Self.cleanupInvalidHistoryURLs()
+            }
         }
 
         // 🔥 Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
