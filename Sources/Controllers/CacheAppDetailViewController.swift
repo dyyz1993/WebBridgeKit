@@ -63,18 +63,18 @@ public class CacheAppDetailViewController: UIViewController {
         startURLLabel.tag = 201
 
         let displayModeLabel = UILabel()
-        displayModeLabel.font = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.systemFont(ofSize: 13, weight: .medium))
+        displayModeLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
         displayModeLabel.textColor = ThemeTokens.Color.text
         displayModeLabel.tag = 202
 
         let themeColorLabel = UILabel()
-        themeColorLabel.font = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.systemFont(ofSize: 13, weight: .medium))
+        themeColorLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
         themeColorLabel.textColor = ThemeTokens.Color.text
         themeColorLabel.tag = 203
 
         let openButton = UIButton(type: .system)
         openButton.setTitle("在 WebView 中打开", for: .normal)
-        openButton.titleLabel?.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.systemFont(ofSize: 15, weight: .semibold))
+        openButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
         openButton.backgroundColor = ThemeTokens.Color.primary
         openButton.setTitleColor(.white, for: .normal)
         openButton.layer.cornerRadius = 8

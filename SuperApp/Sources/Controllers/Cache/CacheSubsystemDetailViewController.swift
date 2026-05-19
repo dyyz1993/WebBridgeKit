@@ -583,7 +583,7 @@ class WebResourceCacheDetailVC: CacheSubsystemDetailViewController {
         present(hud, animated: true)
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let task = URLSession.shared.dataTask(with: url) { data, _, _ in
+            let task = URLSession.shared.dataTask(with: url) { _, response, error in
                 DispatchQueue.main.async {
                     hud.dismiss(animated: true)
 
