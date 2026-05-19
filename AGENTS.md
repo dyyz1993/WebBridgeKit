@@ -204,6 +204,8 @@ Example output:
 
 | Commit | Description |
 |--------|-------------|
+| `49a0e69` | perf(ci): share build artifacts, 4-group matrix, parallel lint+build, 30min timeout |
+| `634cb49` | feat(security): CORS whitelist, third-party licenses page, 39 security tests |
 | `d9a7a38` | fix(tests): skip MessageEngine in UI test mode to avoid async race condition |
 | `cba3982` | fix(tests): synchronous seeding for UI tests + keep inbox table visible |
 | `b4d97a2` | fix(tests): remove stale tab tests, seed inbox messages, fix SnapKit constraint crash |
