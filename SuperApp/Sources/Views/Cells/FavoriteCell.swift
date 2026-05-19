@@ -59,6 +59,7 @@ class FavoriteCell: UITableViewCell {
         let image = LucideIcon.pin.image(pointSize: 16)
         button.setImage(image, for: .normal)
         button.tintColor = ThemeColors.current.warning
+        button.accessibilityLabel = "置顶"
         return button
     }()
 

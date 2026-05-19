@@ -29,7 +29,8 @@ actor HistoryDatabaseActor {
 
     /// Add or update history record
     func addOrUpdateHistory(url: URL, title: String?, favicon: Data?) async throws {
-        try await PerformanceMonitor.shared.measure(
+        let monitor = PerformanceMonitor.shared
+        try monitor.measure(
             "Database.addOrUpdateHistory",
             metadata: ["url": url.absoluteString, "operation": "write"]
         ) {
@@ -143,12 +144,29 @@ actor HistoryDatabaseActor {
 
     /// Get all history records (sorted by last visit date descending)
     func getAllHistories() async throws -> [WebPageHistory] {
-        return try await PerformanceMonitor.shared.measure(
+        let monitor = PerformanceMonitor.shared
+        return try monitor.measure(
             "Database.getAllHistories",
             metadata: ["operation": "query", "sort": "lastVisitDate"]
         ) {
             let realm = try getRealm()
             let results = realm.objects(WebPageHistory.self)
+                .sorted(byKeyPath: "lastVisitDate", ascending: false)
+            // Create independent copies to avoid cross-thread access issues
+            return results.map { WebPageHistory(value: $0) }
+        }
+    }
+
+    /// Get history records since a specific date (sorted by last visit date descending)
+    func getHistoriesSince(date: Date) async throws -> [WebPageHistory] {
+        let monitor = PerformanceMonitor.shared
+        return try monitor.measure(
+            "Database.getHistoriesSince",
+            metadata: ["operation": "query", "sort": "lastVisitDate"]
+        ) {
+            let realm = try getRealm()
+            let results = realm.objects(WebPageHistory.self)
+                .filter("lastVisitDate >= %@", date)
                 .sorted(byKeyPath: "lastVisitDate", ascending: false)
             // Create independent copies to avoid cross-thread access issues
             return results.map { WebPageHistory(value: $0) }
@@ -190,7 +208,8 @@ actor HistoryDatabaseActor {
 
     /// Search history records (title or URL contains keyword)
     func searchHistories(keyword: String) async throws -> [WebPageHistory] {
-        return try await PerformanceMonitor.shared.measure(
+        let monitor = PerformanceMonitor.shared
+        return try monitor.measure(
             "Database.searchHistories",
             metadata: ["keyword": keyword, "operation": "search"]
         ) {
@@ -327,6 +346,14 @@ public class WebPageHistoryManager: WebPageHistoryManaging {
     public func getAllHistories() async throws -> [WebPageHistory] {
         return try await WebBridgeError.wrap {
             try await databaseActor.getAllHistories()
+        }
+    }
+
+    /// Get history records since a specific date (sorted by last visit date descending)
+    /// Returns independent copy array to avoid cross-thread access issues
+    public func getHistoriesSince(date: Date) async throws -> [WebPageHistory] {
+        return try await WebBridgeError.wrap {
+            try await databaseActor.getHistoriesSince(date: date)
         }
     }
 

@@ -39,7 +39,7 @@ public class CacheStatsAggregator {
 
     public func unregisterProvider(for id: SubsystemID) {
         lock.withLock {
-            providers.removeValue(forKey: id)
+            providers[id] = nil
         }
     }
 
@@ -122,22 +122,18 @@ private final class ManifestCacheStatsProvider: CacheStatisticsProviding {
     let subsystemID: SubsystemID = .manifestCache
 
     func collectStats() -> SubsystemStats {
-        do {
-            let stats = ManifestCacheManager.shared.getStats()
-            return SubsystemStats(
-                id: .manifestCache,
-                totalEntries: stats.totalRequests,
-                totalSize: stats.totalCacheSize,
-                hitRate: stats.hitRate,
-                extraMetrics: [
-                    "cacheHits": "\(stats.cacheHits)",
-                    "cacheMisses": "\(stats.cacheMisses)"
-                ],
-                status: stats.totalRequests > 0 ? .active : .empty
-            )
-        } catch {
-            return SubsystemStats(id: .manifestCache, status: .error(error.localizedDescription))
-        }
+        let stats = ManifestCacheManager.shared.getStats()
+        return SubsystemStats(
+            id: .manifestCache,
+            totalEntries: stats.totalRequests,
+            totalSize: stats.totalCacheSize,
+            hitRate: stats.hitRate,
+            extraMetrics: [
+                "cacheHits": "\(stats.cacheHits)",
+                "cacheMisses": "\(stats.cacheMisses)"
+            ],
+            status: stats.totalRequests > 0 ? .active : .empty
+        )
     }
 }
 
@@ -145,21 +141,17 @@ private final class WebResourceCacheStatsProvider: CacheStatisticsProviding {
     let subsystemID: SubsystemID = .webResourceCache
 
     func collectStats() -> SubsystemStats {
-        do {
-            let global = WebResourceCacheManager.shared.getGlobalStats()
-            let allStats = WebResourceCacheManager.shared.getAllCacheStats()
-            return SubsystemStats(
-                id: .webResourceCache,
-                totalEntries: global.totalFiles,
-                totalSize: global.totalSize,
-                extraMetrics: [
-                    "cacheSpaces": "\(allStats.count)"
-                ],
-                status: global.totalFiles > 0 ? .active : .empty
-            )
-        } catch {
-            return SubsystemStats(id: .webResourceCache, status: .error(error.localizedDescription))
-        }
+        let global = WebResourceCacheManager.shared.getGlobalStats()
+        let allStats = WebResourceCacheManager.shared.getAllCacheStats()
+        return SubsystemStats(
+            id: .webResourceCache,
+            totalEntries: global.totalFiles,
+            totalSize: global.totalSize,
+            extraMetrics: [
+                "cacheSpaces": "\(allStats.count)"
+            ],
+            status: global.totalFiles > 0 ? .active : .empty
+        )
     }
 }
 
@@ -167,23 +159,19 @@ private final class CompressedCacheStatsProvider: CacheStatisticsProviding {
     let subsystemID: SubsystemID = .webCompressedCache
 
     func collectStats() -> SubsystemStats {
-        do {
-            let memInfo = WebCompressedCacheStore.shared.getMemoryInfo()
-            return SubsystemStats(
-                id: .webCompressedCache,
-                totalEntries: memInfo.totalEntries,
-                totalSize: memInfo.totalOriginalSize,
-                hitRate: nil,
-                extraMetrics: [
-                    "compressedSize": "\(memInfo.totalCompressedSize)",
-                    "compressionRatio": String(format: "%.2f", memInfo.compressionRatio),
-                    "savedSpace": "\(memInfo.savedSpace)"
-                ],
-                status: memInfo.totalEntries > 0 ? .active : .empty
-            )
-        } catch {
-            return SubsystemStats(id: .webCompressedCache, status: .error(error.localizedDescription))
-        }
+        let memInfo = WebCompressedCacheStore.shared.getMemoryInfo()
+        return SubsystemStats(
+            id: .webCompressedCache,
+            totalEntries: memInfo.totalEntries,
+            totalSize: memInfo.totalOriginalSize,
+            hitRate: nil,
+            extraMetrics: [
+                "compressedSize": "\(memInfo.totalCompressedSize)",
+                "compressionRatio": String(format: "%.2f", memInfo.compressionRatio),
+                "savedSpace": "\(memInfo.savedSpace)"
+            ],
+            status: memInfo.totalEntries > 0 ? .active : .empty
+        )
     }
 }
 
@@ -208,24 +196,20 @@ private final class SystemURLCacheStatsProvider: CacheStatisticsProviding {
     let subsystemID: SubsystemID = .systemURLCache
 
     func collectStats() -> SubsystemStats {
-        do {
-            let stats = SystemURLCacheManager.shared.getCacheStats()
-            return SubsystemStats(
-                id: .systemURLCache,
-                totalEntries: Int(stats.totalEntries),
-                totalSize: stats.totalCacheSize,
-                hitRate: stats.hitRate,
-                extraMetrics: [
-                    "cacheHits": "\(stats.cacheHits)",
-                    "cacheMisses": "\(stats.cacheMisses)",
-                    "memoryCapacity": "50MB",
-                    "diskCapacity": "500MB"
-                ],
-                status: stats.totalRequests > 0 ? .active : .empty
-            )
-        } catch {
-            return SubsystemStats(id: .systemURLCache, status: .error(error.localizedDescription))
-        }
+        let stats = SystemURLCacheManager.shared.getCacheStats()
+        return SubsystemStats(
+            id: .systemURLCache,
+            totalEntries: Int(stats.totalEntries),
+            totalSize: stats.totalCacheSize,
+            hitRate: stats.hitRate,
+            extraMetrics: [
+                "cacheHits": "\(stats.cacheHits)",
+                "cacheMisses": "\(stats.cacheMisses)",
+                "memoryCapacity": "50MB",
+                "diskCapacity": "500MB"
+            ],
+            status: stats.totalRequests > 0 ? .active : .empty
+        )
     }
 }
 
@@ -233,21 +217,17 @@ private final class OfflinePageCacheStatsProvider: CacheStatisticsProviding {
     let subsystemID: SubsystemID = .offlinePageCache
 
     func collectStats() -> SubsystemStats {
-        do {
-            let count = WebPageOfflineCacheManager.shared.getCachedCount()
-            let size = WebPageOfflineCacheManager.shared.getTotalCacheSize()
-            return SubsystemStats(
-                id: .offlinePageCache,
-                totalEntries: count,
-                totalSize: size,
-                extraMetrics: [
-                    "cachedPages": "\(count)"
-                ],
-                status: count > 0 ? .active : .empty
-            )
-        } catch {
-            return SubsystemStats(id: .offlinePageCache, status: .error(error.localizedDescription))
-        }
+        let count = WebPageOfflineCacheManager.shared.getCachedCount()
+        let size = WebPageOfflineCacheManager.shared.getTotalCacheSize()
+        return SubsystemStats(
+            id: .offlinePageCache,
+            totalEntries: count,
+            totalSize: size,
+            extraMetrics: [
+                "cachedPages": "\(count)"
+            ],
+            status: count > 0 ? .active : .empty
+        )
     }
 }
 
@@ -255,22 +235,18 @@ private final class PageCacheRuleStatsProvider: CacheStatisticsProviding {
     let subsystemID: SubsystemID = .pageCacheRule
 
     func collectStats() -> SubsystemStats {
-        do {
-            let rules = PageCacheRuleManager.shared.getAllRules()
-            let enabled = PageCacheRuleManager.shared.getEnabledRules()
-            return SubsystemStats(
-                id: .pageCacheRule,
-                totalEntries: rules.count,
-                totalSize: 0,
-                extraMetrics: [
-                    "enabledRules": "\(enabled.count)",
-                    "disabledRules": "\(rules.count - enabled.count)"
-                ],
-                status: !rules.isEmpty ? .active : .empty
-            )
-        } catch {
-            return SubsystemStats(id: .pageCacheRule, status: .error(error.localizedDescription))
-        }
+        let rules = PageCacheRuleManager.shared.getAllRules()
+        let enabled = PageCacheRuleManager.shared.getEnabledRules()
+        return SubsystemStats(
+            id: .pageCacheRule,
+            totalEntries: rules.count,
+            totalSize: 0,
+            extraMetrics: [
+                "enabledRules": "\(enabled.count)",
+                "disabledRules": "\(rules.count - enabled.count)"
+            ],
+            status: !rules.isEmpty ? .active : .empty
+        )
     }
 }
 
@@ -331,21 +307,17 @@ private final class ResourceCacheLRUStatsProvider: CacheStatisticsProviding {
     let subsystemID: SubsystemID = .resourceCacheLRU
 
     func collectStats() -> SubsystemStats {
-        do {
-            let mcmStats = ManifestCacheManager.shared.getStats()
-            let size = ManifestCacheManager.shared.calculateTotalCacheSize()
-            return SubsystemStats(
-                id: .resourceCacheLRU,
-                totalEntries: mcmStats.totalRequests,
-                totalSize: size,
-                extraMetrics: [
-                    "type": "LRU (100MB memory limit)",
-                    "storage": "Filesystem + Memory"
-                ],
-                status: size > 0 ? .active : .empty
-            )
-        } catch {
-            return SubsystemStats(id: .resourceCacheLRU, status: .error(error.localizedDescription))
-        }
+        let mcmStats = ManifestCacheManager.shared.getStats()
+        let size = ManifestCacheManager.shared.calculateTotalCacheSize()
+        return SubsystemStats(
+            id: .resourceCacheLRU,
+            totalEntries: mcmStats.totalRequests,
+            totalSize: size,
+            extraMetrics: [
+                "type": "LRU (100MB memory limit)",
+                "storage": "Filesystem + Memory"
+            ],
+            status: size > 0 ? .active : .empty
+        )
     }
 }

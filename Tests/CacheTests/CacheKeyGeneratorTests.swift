@@ -95,13 +95,13 @@ final class CacheKeyGeneratorTests: XCTestCase {
         XCTAssertEqual(key2, key3)
     }
     
-    // MARK: - MD5 Format
+    // MARK: - SHA256 Format
     
-    func testMD5Format() {
+    func testSHA256Format() {
         let key = CacheKeyGenerator.generate(from: "test")
         
-        // MD5 should be 32 characters
-        XCTAssertEqual(key.count, 32)
+        // SHA256 should be 64 characters
+        XCTAssertEqual(key.count, 64)
         
         // Should only contain hexadecimal characters
         let hexSet = CharacterSet(charactersIn: "0123456789abcdef")

@@ -126,7 +126,7 @@ public class CacheURLSchemeHandler: NSObject, WKURLSchemeHandler {
     /// 更新命中统计
     private func updateHitStats(for key: String) {
         statsLock.lock()
-        defer { statsLock.unlock() }
+        statsLock.unlock()
 
         // 压缩缓存的命中统计在 WebCompressedCacheStore 内部处理
         // 这里可以添加额外的统计逻辑

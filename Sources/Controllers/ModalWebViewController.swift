@@ -56,10 +56,14 @@ public class ModalWebViewController: UIViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        // 入场动画
-        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration, delay: 0, options: .curveEaseOut) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.containerView.transform = .identity
             self.maskView?.alpha = 1
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.slow.duration, delay: 0, options: .curveEaseOut) {
+                self.containerView.transform = .identity
+                self.maskView?.alpha = 1
+            }
         }
     }
 
@@ -149,13 +153,14 @@ public class ModalWebViewController: UIViewController {
         closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)
         closeButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         closeButton.accessibilityLabel = "关闭弹窗"
+        closeButton.accessibilityHint = "双击关闭此弹窗"
         closeButton.addTarget(self, action: #selector(handleCloseButtonTap), for: .touchUpInside)
 
         containerView.addSubview(closeButton)
         closeButton.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.right.equalToSuperview().offset(-12)
-            make.width.height.equalTo(32)
+            make.top.equalToSuperview().offset(6)
+            make.right.equalToSuperview().offset(-6)
+            make.width.height.equalTo(44)
         }
     }
 
@@ -190,9 +195,14 @@ public class ModalWebViewController: UIViewController {
             if translation.y > 100 || velocity.y > 1000 {
                 closeWithAnimation()
             } else {
-                UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+                if UIAccessibility.isReduceMotionEnabled {
                     self.containerView.transform = .identity
                     self.maskView?.alpha = 1
+                } else {
+                    UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+                        self.containerView.transform = .identity
+                        self.maskView?.alpha = 1
+                    }
                 }
             }
         default:
@@ -259,12 +269,18 @@ public class ModalWebViewController: UIViewController {
     }
 
     private func closeWithAnimation() {
-        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
+        if UIAccessibility.isReduceMotionEnabled {
             self.containerView.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
             self.maskView?.alpha = 0
-        }, completion: { _ in
             self.dismiss(animated: false)
-        })
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
+                self.containerView.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+                self.maskView?.alpha = 0
+            }, completion: { _ in
+                self.dismiss(animated: false)
+            })
+        }
     }
 
     // MARK: - Cleanup

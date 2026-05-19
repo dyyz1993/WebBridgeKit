@@ -247,15 +247,31 @@ public class CacheResourceViewModel: ViewModel {
                 h.resourcePaths.contains(key) || h.htmlPath == key
             }) else { return }
 
-            if key == history.htmlPath {
+            let historyId = history.id
+            let htmlPath = history.htmlPath
+            let cacheDirectory = history.cacheDirectory
+
+            if key == htmlPath {
+                if let cacheDirectory {
+                    try? FileManager.default.removeItem(at: cacheDirectory)
+                }
                 await MainActor.run {
-                    cacheManager.deleteCache(history: history)
+                    let realm = try? Realm(configuration: WebPageHistoryManager.shared.realmConfiguration)
+                    try? realm?.write {
+                        if let cachedHistory = realm?.object(ofType: WebPageHistory.self, forPrimaryKey: historyId) {
+                            cachedHistory.htmlPath = nil
+                            cachedHistory.resourcePaths.removeAll()
+                            cachedHistory.cachedSize = 0
+                            cachedHistory.isCached = false
+                            cachedHistory.cacheDate = nil
+                        }
+                    }
                 }
             } else {
                 await MainActor.run {
                     let realm = try? Realm(configuration: WebPageHistoryManager.shared.realmConfiguration)
                     try? realm?.write {
-                        if let cachedHistory = realm?.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
+                        if let cachedHistory = realm?.object(ofType: WebPageHistory.self, forPrimaryKey: historyId) {
                             let index = cachedHistory.resourcePaths.index(of: key)
                             if let index = index {
                                 cachedHistory.resourcePaths.remove(at: index)

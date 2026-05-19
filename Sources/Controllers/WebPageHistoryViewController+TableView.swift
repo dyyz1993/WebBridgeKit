@@ -26,10 +26,26 @@ extension WebPageHistoryViewController: UITableViewDelegate {
         }
 
         let deleteAction = UIContextualAction(style: .destructive, title: NSLocalizedString("Delete", comment: "Delete")) { [weak self] _, _, completion in
-            Task { @MainActor in
-                await self?.deleteHistory(history)
-                completion(true)
+            guard let self = self else {
+                completion(false)
+                return
             }
+
+            let alert = UIAlertController(
+                title: NSLocalizedString("Confirm Delete", comment: "Confirm Delete"),
+                message: NSLocalizedString("This history record will be permanently deleted.", comment: "Delete history confirmation message"),
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel"), style: .cancel) { _ in
+                completion(false)
+            })
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: "Delete"), style: .destructive) { [weak self] _ in
+                Task { @MainActor in
+                    await self?.deleteHistory(history)
+                    completion(true)
+                }
+            })
+            self.present(alert, animated: true)
         }
         deleteAction.backgroundColor = ThemeTokens.Color.error
 
@@ -54,10 +70,6 @@ extension WebPageHistoryViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 80
-    }
-
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return dataSource[section].model
     }
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {

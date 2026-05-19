@@ -21,6 +21,9 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         let tv = UITableView(frame: .zero, style: .insetGrouped)
         tv.backgroundColor = ThemeTokens.Color.background
         tv.register(PinnedURLCell.self, forCellReuseIdentifier: PinnedURLCell.reuseIdentifier)
+        tv.dragDelegate = self
+        tv.dropDelegate = self
+        tv.dragInteractionEnabled = true
         return tv
     }()
 
@@ -57,7 +60,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         let l = UILabel()
         l.text = "从预设目录添加，或手动输入 URL\n置顶的 URL 在缓存清理时不会被删除"
         l.font = UIFont.preferredFont(forTextStyle: .caption1)
-        l.textColor = ThemeTokens.Color.textTertiary
+        l.textColor = ThemeTokens.Color.textSecondary
         l.textAlignment = .center
         l.numberOfLines = 0
         return l
@@ -81,6 +84,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
     private let deleteRelay = PublishRelay<PinnedURLRealm>()
     private let unpinRelay = PublishRelay<PinnedURLRealm>()
     private let addURLRelay = PublishRelay<String>()
+    private var pinnedURLs: [PinnedURLRealm] = []
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -217,7 +221,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
     }
 
     @objc private func addTapped() {
-        urlInputHeader.becomeFirstResponder()
+        _ = urlInputHeader.becomeFirstResponder()
     }
 
     // MARK: - Actions
@@ -249,6 +253,57 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
             guard let urls = try? await PinnedURLManager.shared.getAllPinned(),
                   let item = urls.first(where: { $0.id == id }) else { return }
             self.unpinRelay.accept(item)
+        }
+    }
+
+    private func editPinned(id: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            guard let urls = try? await PinnedURLManager.shared.getAllPinned(),
+                  let item = urls.first(where: { $0.id == id }) else { return }
+
+            let alert = UIAlertController(
+                title: "编辑置顶 URL",
+                message: "修改标题和 URL",
+                preferredStyle: .alert
+            )
+
+            alert.addTextField { textField in
+                textField.text = item.title
+                textField.placeholder = "标题"
+            }
+
+            alert.addTextField { textField in
+                textField.text = item.url
+                textField.placeholder = "URL"
+            }
+
+            alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+            alert.addAction(UIAlertAction(title: "保存", style: .default) { _ in
+                guard let titleTextField = alert.textFields?.first,
+                      let urlTextField = alert.textFields?.last else { return }
+
+                let newTitle = titleTextField.text?.isEmpty == false ? titleTextField.text : nil
+                let newURL = urlTextField.text?.isEmpty == false ? urlTextField.text : item.url
+
+                Task {
+                    do {
+                        _ = try await PinnedURLManager.shared.update(
+                            id: item.id,
+                            url: newURL,
+                            newTitle: newTitle,
+                            notes: item.notes
+                        )
+                        HUDService.shared.showSuccess(withStatus: "已更新")
+                    } catch {
+                        HUDService.shared.showError(withStatus: "更新失败: \(error.localizedDescription)")
+                    }
+                }
+            })
+
+            await MainActor.run {
+                self.present(alert, animated: true)
+            }
         }
     }
 
@@ -286,10 +341,61 @@ extension PinnedURLManagementViewController: UITableViewDelegate {
         }
         unpin.backgroundColor = ThemeTokens.Color.secondary
 
-        return UISwipeActionsConfiguration(actions: [delete, unpin])
+        let edit = UIContextualAction(style: .normal, title: "编辑") { [weak self] _, _, completion in
+            guard let self else { completion(false); return }
+            guard let dataSource = self.dataSource,
+                  let item = try? dataSource.model(at: indexPath) as? PinnedURLViewModel.PinnedURLItemModel else {
+                completion(false); return
+            }
+            self.editPinned(id: item.id)
+            completion(true)
+        }
+        edit.backgroundColor = ThemeTokens.Color.primary
+
+        return UISwipeActionsConfiguration(actions: [delete, unpin, edit])
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 72
+    }
+}
+
+// MARK: - UITableViewDragDelegate
+extension PinnedURLManagementViewController: UITableViewDragDelegate {
+    func tableView(_ tableView: UITableView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        return [UIDragItem(itemProvider: NSItemProvider(object: "\(indexPath.row)" as NSString))]
+    }
+}
+
+// MARK: - UITableViewDropDelegate
+extension PinnedURLManagementViewController: UITableViewDropDelegate {
+    func tableView(_ tableView: UITableView, performDropWith coordinator: UITableViewDropCoordinator) {
+        guard let destinationIndexPath = coordinator.destinationIndexPath,
+              let item = coordinator.items.first,
+              let sourceIndexPath = item.sourceIndexPath else { return }
+
+        guard sourceIndexPath.section == destinationIndexPath.section else { return }
+
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await PinnedURLManager.shared.move(
+                    fromIndex: sourceIndexPath.row,
+                    toIndex: destinationIndexPath.row
+                )
+                await MainActor.run {
+                    self.tableView.reloadData()
+                }
+            } catch {
+                HUDService.shared.showError(withStatus: "移动失败: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func tableView(_ tableView: UITableView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UITableViewDropProposal {
+        if tableView.hasActiveDrag {
+            return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+        }
+        return UITableViewDropProposal(operation: .forbidden)
     }
 }

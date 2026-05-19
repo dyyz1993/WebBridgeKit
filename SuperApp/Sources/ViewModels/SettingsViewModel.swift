@@ -25,6 +25,7 @@ class SettingsViewModel: ViewModel {
         let navigateToAPIKeyManage: Driver<Void>
         let navigateToTokenManage: Driver<Void>
         let navigateToFavorites: Driver<Void>
+        let navigateToHistory: Driver<Void>
         let navigateToManagement: Driver<Void>
         let navigateToAbout: Driver<Void>
         let navigateToDebugPanel: Driver<Void>
@@ -42,6 +43,7 @@ class SettingsViewModel: ViewModel {
         case apiKeyManage
         case cacheManager
         case favorites
+        case history
         case notificationSettings
         case rememberLastApp
         case appearance
@@ -163,6 +165,14 @@ class SettingsViewModel: ViewModel {
                     action: .favorites,
                     iconBackgroundColor: tb,
                     iconTintColor: tt
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .clock,
+                    title: "最近访问",
+                    action: .history,
+                    iconBackgroundColor: pb,
+                    iconTintColor: pt
                 )
             ]),
             SettingsSection(header: L10n.tr("settings.section.notification"), items: [
@@ -197,34 +207,58 @@ class SettingsViewModel: ViewModel {
                     iconTintColor: put
                 )
             ]),
-            SettingsSection(header: L10n.tr("settings.section.developer"), items: [
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .bug,
-                    title: L10n.tr("settings.debug.panel"),
-                    action: .debugPanel,
-                    iconBackgroundColor: gb,
-                    iconTintColor: gt,
-                    badge: L10n.tr("settings.debug.badge")
-                ),
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .download,
-                    title: L10n.tr("settings.export.diagnostics"),
-                    action: .exportDiagnostics,
-                    iconBackgroundColor: tb,
-                    iconTintColor: tt
-                ),
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .chartBar,
-                    title: L10n.tr("settings.cache.dashboard"),
-                    action: .cacheDashboard,
-                    value: nil,
-                    showArrow: true,
-                    hasToggle: false
-                )
-            ]),
+            SettingsSection(header: L10n.tr("settings.section.developer"), items: {
+                #if DEBUG
+                return [
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .bug,
+                        title: L10n.tr("settings.debug.panel"),
+                        action: .debugPanel,
+                        iconBackgroundColor: gb,
+                        iconTintColor: gt,
+                        badge: L10n.tr("settings.debug.badge")
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .download,
+                        title: L10n.tr("settings.export.diagnostics"),
+                        action: .exportDiagnostics,
+                        iconBackgroundColor: tb,
+                        iconTintColor: tt
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .chartBar,
+                        title: L10n.tr("settings.cache.dashboard"),
+                        action: .cacheDashboard,
+                        value: nil,
+                        showArrow: true,
+                        hasToggle: false
+                    )
+                ]
+                #else
+                return [
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .download,
+                        title: L10n.tr("settings.export.diagnostics"),
+                        action: .exportDiagnostics,
+                        iconBackgroundColor: tb,
+                        iconTintColor: tt
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .chartBar,
+                        title: L10n.tr("settings.cache.dashboard"),
+                        action: .cacheDashboard,
+                        value: nil,
+                        showArrow: true,
+                        hasToggle: false
+                    )
+                ]
+                #endif
+            }()),
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
                 SettingsItem(
                     icon: nil,
@@ -258,6 +292,7 @@ class SettingsViewModel: ViewModel {
     private let navigateToAPIKeyManageRelay = PublishRelay<Void>()
     private let navigateToTokenManageRelay = PublishRelay<Void>()
     private let navigateToFavoritesRelay = PublishRelay<Void>()
+    private let navigateToHistoryRelay = PublishRelay<Void>()
     private let navigateToManagementRelay = PublishRelay<Void>()
     private let navigateToAboutRelay = PublishRelay<Void>()
     private let navigateToDebugPanelRelay = PublishRelay<Void>()
@@ -280,6 +315,7 @@ class SettingsViewModel: ViewModel {
                 case .apiKeyManage: self.navigateToAPIKeyManageRelay.accept(())
                 case .cacheManager: self.navigateToManagementRelay.accept(())
                 case .favorites: self.navigateToFavoritesRelay.accept(())
+                case .history: self.navigateToHistoryRelay.accept(())
                 case .notificationSettings: self.openNotificationSettingsRelay.accept(())
                 case .rememberLastApp: break
                 case .appearance: self.navigateToAppearanceRelay.accept(())
@@ -312,6 +348,7 @@ class SettingsViewModel: ViewModel {
             navigateToAPIKeyManage: navigateToAPIKeyManageRelay.asDriver(onErrorJustReturn: ()),
             navigateToTokenManage: navigateToTokenManageRelay.asDriver(onErrorJustReturn: ()),
             navigateToFavorites: navigateToFavoritesRelay.asDriver(onErrorJustReturn: ()),
+            navigateToHistory: navigateToHistoryRelay.asDriver(onErrorJustReturn: ()),
             navigateToManagement: navigateToManagementRelay.asDriver(onErrorJustReturn: ()),
             navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
             navigateToDebugPanel: navigateToDebugPanelRelay.asDriver(onErrorJustReturn: ()),

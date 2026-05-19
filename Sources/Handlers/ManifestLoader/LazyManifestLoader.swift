@@ -165,7 +165,7 @@ public class LazyManifestLoader: NSObject {
                         ))))
                         return
                     }
-                    await PersistentManifestLoader.load(
+                    PersistentManifestLoader.load(
                         url: url,
                         in: webView,
                         from: viewController
@@ -421,7 +421,7 @@ public class LazyManifestLoader: NSObject {
     ) {
         // 持久化加载逻辑由 PersistentManifestLoader 处理，这里仅作兼容
         Task { @MainActor in
-            await PersistentManifestLoader.load(url: url, in: webView, completion: completion)
+            PersistentManifestLoader.load(url: url, in: webView, completion: completion)
         }
     }
 

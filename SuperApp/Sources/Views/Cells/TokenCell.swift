@@ -57,7 +57,7 @@ class TokenCell: UITableViewCell {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         return label
     }()
@@ -80,7 +80,7 @@ class TokenCell: UITableViewCell {
     private let accessCountLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .right
         return label
     }()

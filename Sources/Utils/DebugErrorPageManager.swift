@@ -132,7 +132,6 @@ public class DebugErrorPageManager {
         """
 
         // 添加错误信息
-        let errorTitle = error.localizedDescription
         let errorMessage = error.localizedDescription
 
         html += """
@@ -204,6 +203,6 @@ public class DebugErrorPageManager {
 
     /// URL 编码（用于在 data URL 中传递）
     private func encodeURL(_ url: URL) -> String {
-        return (url.absoluteString ?? "").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return url.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
     }
 }

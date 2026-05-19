@@ -63,9 +63,12 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private let loadingView = LoadingView()
 
+    private var offlineStateView: ThemeEmptyState?
+
     // MARK: - Properties
 
     private var currentURL: URL?
+    private var isShowingOfflineState = false
 
     // MARK: - Lifecycle
 
@@ -77,11 +80,42 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
         setupUI()
         setupGestures()
+        setupNetworkMonitoring()
 
         view.accessibilityIdentifier = "WebAccessViewController"
         webView.accessibilityIdentifier = "webAccess.webView"
         urlInputView.accessibilityIdentifier = "webAccess.urlInputView"
         cacheCountButton.accessibilityIdentifier = "webAccess.cacheCountButton"
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        NetworkMonitor.shared.startMonitoring()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NetworkMonitor.shared.stopMonitoring()
+    }
+
+    private func setupNetworkMonitoring() {
+        // 监听网络状态变化
+        NetworkMonitor.shared.addStatusChangeCallback { [weak self] isConnected, _ in
+            guard let self = self else { return }
+
+            DispatchQueue.main.async {
+                if !isConnected && self.currentURL != nil {
+                    self.showOfflineState()
+                } else if isConnected && self.isShowingOfflineState {
+                    self.hideOfflineState()
+                }
+            }
+        }
+
+        // 初始检查网络状态
+        if !NetworkMonitor.shared.isConnected {
+            print("⚠️ [WebAccessVC] Network is currently offline")
+        }
     }
 
     // MARK: - Setup UI
@@ -460,16 +494,140 @@ extension WebAccessViewController: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        let alert = UIAlertController(
-            title: L10n.tr("web_access.load_failed"),
-            message: error.localizedDescription,
-            preferredStyle: .alert
+        print("❌ [WebAccessVC] Navigation failed: \(error.localizedDescription)")
+
+        // 检查是否为网络错误
+        if isNetworkRelatedError(error) || !NetworkMonitor.shared.isConnected {
+            showOfflineState()
+        } else {
+            // 非 network 错误，显示标准错误提示
+            let alert = UIAlertController(
+                title: L10n.tr("web_access.load_failed"),
+                message: error.localizedDescription,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: L10n.tr("web_access.retry"), style: .default) { [weak self] _ in
+                self?.webView.reload()
+            })
+            alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+            present(alert, animated: true)
+        }
+    }
+
+    private func showOfflineState() {
+        guard !isShowingOfflineState else { return }
+        isShowingOfflineState = true
+
+        print("⚠️ [WebAccessVC] Showing offline state")
+
+        let emptyState = ThemeEmptyState(frame: .zero)
+        emptyState.configure(
+            icon: .network,
+            title: L10n.tr("web_access.offline_title"),
+            description: L10n.tr("web_access.offline_description")
         )
-        alert.addAction(UIAlertAction(title: L10n.tr("web_access.retry"), style: .default) { [weak self] _ in
-            self?.webView.reload()
-        })
-        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
-        present(alert, animated: true)
+
+        // 添加重试按钮
+        let retryButton = createRetryButton()
+        emptyState.addSubview(retryButton)
+        retryButton.snp.makeConstraints { make in
+            make.top.equalTo(emptyState.descriptionLabel.snp.bottom).offset(24)
+            make.centerX.equalToSuperview()
+            make.width.equalTo(120)
+            make.height.equalTo(44)
+        }
+
+        // 隐藏 WebView，显示离线状态
+        webView.isHidden = true
+        offlineStateView?.removeFromSuperview()
+
+        view.addSubview(emptyState)
+        emptyState.snp.makeConstraints { make in
+            make.centerX.centerY.equalToSuperview()
+            make.width.lessThanOrEqualToSuperview().offset(-40)
+        }
+
+        offlineStateView = emptyState
+    }
+
+    private func hideOfflineState() {
+        guard isShowingOfflineState else { return }
+        isShowingOfflineState = false
+
+        print("✅ [WebAccessVC] Hiding offline state")
+
+        offlineStateView?.removeFromSuperview()
+        offlineStateView = nil
+
+        webView.isHidden = false
+
+        // 重新加载当前 URL
+        if let url = currentURL {
+            loadWebView(url: url)
+        }
+    }
+
+    private func createRetryButton() -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(L10n.tr("web_access.retry"), for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.callout
+        button.backgroundColor = ThemeColors.current.primary
+        button.setTitleColor(ThemeColors.current.background, for: .normal)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        button.addTarget(self, action: #selector(handleRetry), for: .touchUpInside)
+        return button
+    }
+
+    @objc private func handleRetry() {
+        print("🔄 [WebAccessVC] Retry tapped")
+
+        // 检查网络状态
+        if !NetworkMonitor.shared.isConnected {
+            let alert = UIAlertController(
+                title: L10n.tr("web_access.offline_title"),
+                message: L10n.tr("web_access.offline_no_connection"),
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: L10n.tr("common.confirm"), style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        // 检查是否有缓存的页面
+        if let url = currentURL {
+            Task { @MainActor in
+                if let cachedHistory = try? await WebPageHistoryManager.shared.findHistory(url: url),
+                   cachedHistory.isCached {
+                    print("📦 [WebAccessVC] Loading cached page: \(url.absoluteString)")
+
+                    let cachedPageVC = CacheResourceViewController(url: url)
+                    navigationController?.pushViewController(cachedPageVC, animated: true)
+                    hideOfflineState()
+                    return
+                }
+
+                // 重新加载页面
+                hideOfflineState()
+            }
+        }
+    }
+
+    private func isNetworkRelatedError(_ error: Error) -> Bool {
+        let errorDescription = error.localizedDescription.lowercased()
+
+        let networkKeywords = [
+            "network",
+            "connection",
+            "offline",
+            "internet",
+            "timed out",
+            "timeout",
+            "host",
+            "dns",
+            "server"
+        ]
+
+        return networkKeywords.contains { errorDescription.contains($0) }
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {

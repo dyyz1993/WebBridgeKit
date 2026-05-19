@@ -54,7 +54,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         let footerLabel = UILabel()
         footerLabel.text = "WebBridgeKit v\(version) (Build \(build))"
         footerLabel.font = .systemFont(ofSize: 12, weight: .regular)
-        footerLabel.textColor = ThemeTokens.Color.textTertiary
+        footerLabel.textColor = ThemeTokens.Color.textSecondary
         footerLabel.textAlignment = .center
         footerLabel.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: 44)
         tableView.tableFooterView = footerLabel
@@ -92,6 +92,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .drive(onNext: { [weak self] in self?.navigateToFavorites() })
             .disposed(by: rx)
 
+        output.navigateToHistory
+            .drive(onNext: { [weak self] in self?.navigateToHistory() })
+            .disposed(by: rx)
+
         output.navigateToManagement
             .drive(onNext: { [weak self] in self?.navigateToManagement() })
             .disposed(by: rx)
@@ -100,9 +104,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .drive(onNext: { [weak self] in self?.navigateToAbout() })
             .disposed(by: rx)
 
+        #if DEBUG
         output.navigateToDebugPanel
             .drive(onNext: { [weak self] in self?.navigateToDebugPanel() })
             .disposed(by: rx)
+        #endif
 
         output.navigateToCacheDashboard
             .drive(onNext: { [weak self] in
@@ -151,6 +157,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    private func navigateToHistory() {
+        let vc = RecentAccessHistoryViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
     private func navigateToManagement() {
         let vc = ManagementViewController()
         navigationController?.pushViewController(vc, animated: true)
@@ -161,12 +172,14 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    #if DEBUG
     private func navigateToDebugPanel() {
         let debugPanel = DebugPanelViewController()
         let nav = UINavigationController(rootViewController: debugPanel)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
+    #endif
 
     private func navigateToCacheDashboard() {
         let vc = CacheDashboardViewController(viewModel: CacheDashboardViewModel())
@@ -180,6 +193,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func handleExportDiagnostics() {
+        #if DEBUG
+        let vc = DiagnosticsViewController()
+        navigationController?.pushViewController(vc, animated: true)
+        #else
         let alert = UIAlertController(
             title: L10n.tr("settings.hero.copied_title"),
             message: L10n.tr("settings.export.diagnostics"),
@@ -187,6 +204,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         )
         alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
+        #endif
     }
 }
 

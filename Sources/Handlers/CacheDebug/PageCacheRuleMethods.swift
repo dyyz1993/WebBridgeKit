@@ -90,7 +90,7 @@ extension WebCacheDebugHandler {
             return
         }
 
-        var updatedRule = PageCacheRule(
+        let updatedRule = PageCacheRule(
             id: ruleId,
             name: name,
             includePatterns: includePatterns,

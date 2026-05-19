@@ -203,25 +203,34 @@ class MainViewController: BaseViewController<MainViewModel> {
     private func showCommandBanner(title: String) {
         commandBanner.configure(title: title)
         commandBanner.isHidden = false
-        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.commandBanner.alpha = 1
             self.commandBanner.transform = .identity
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+                self.commandBanner.alpha = 1
+                self.commandBanner.transform = .identity
+            }
         }
     }
 
     private func hideCommandBanner() {
         pendingCommandTitle = nil
         guard !commandBanner.isHidden else { return }
-        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
+        if UIAccessibility.isReduceMotionEnabled {
             self.commandBanner.alpha = 0
-            self.commandBanner.transform = CGAffineTransform(translationX: 0, y: -self.commandBanner.bounds.height)
-        }, completion: { _ in
             self.commandBanner.isHidden = true
-        })
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
+                self.commandBanner.alpha = 0
+                self.commandBanner.transform = CGAffineTransform(translationX: 0, y: -self.commandBanner.bounds.height)
+            }, completion: { _ in
+                self.commandBanner.isHidden = true
+            })
+        }
     }
 
     private func executePendingCommand() {
-        let title = pendingCommandTitle
         hideCommandBanner()
 
         guard let text = ClipboardMonitor.shared.readClipboard(),
@@ -316,6 +325,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         navigationItem.leftBarButtonItem = scanItem
 
         let storageItem = UIBarButtonItem(customView: trashButton)
+        storageItem.accessibilityIdentifier = "main.clearCacheButton"
         navigationItem.rightBarButtonItems = [storageItem]
 
         emptyStateView.configure(
@@ -533,8 +543,18 @@ class MainViewController: BaseViewController<MainViewModel> {
     }
 
     @objc private func clearCacheTapped() {
-        WebCacheManager.shared.clearAll()
-        viewModel.refreshData()
+        let alert = UIAlertController(
+            title: "确认清理缓存",
+            message: "将清除所有本地缓存数据，此操作不可撤销",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: "清理", style: .destructive) { [weak self] _ in
+            WebCacheManager.shared.clearAll()
+            self?.viewModel.refreshData()
+            HUDService.shared.showSuccess(withStatus: "缓存已清理")
+        })
+        present(alert, animated: true)
     }
 
     func handleQuickAction(index: Int) {

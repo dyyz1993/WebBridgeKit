@@ -13,6 +13,8 @@ import RxCocoa
 import RxDataSources
 import WebBridgeKit
 
+
+
 class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> {
 
     // MARK: - UI Components
@@ -43,6 +45,23 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
         ai.color = ThemeTokens.Color.primary
         ai.hidesWhenStopped = true
         return ai
+    }()
+
+    private lazy var emptyStateView: EmptyStateView = {
+        let v = EmptyStateView(onAction: { [weak self] in
+            self?.refreshRelay.accept(())
+        })
+        v.configure(
+            icon: LucideIcon.hardDrive,
+            title: "暂无缓存数据",
+            subtitle: "缓存数据加载后将显示在这里",
+            description: "下拉或点击按钮刷新",
+            actionTitle: "刷新",
+            actionIcon: LucideIcon.refresh
+        )
+        v.isHidden = true
+        v.accessibilityIdentifier = "cacheDashboard.emptyState"
+        return v
     }()
 
     private lazy var errorLabel: UILabel = {
@@ -89,6 +108,7 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
         // Add views
         view.addSubview(tableView)
         view.addSubview(errorLabel)
+        view.addSubview(emptyStateView)
 
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -96,7 +116,11 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
 
         errorLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(32)
+            make.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.xl)
+        }
+
+        emptyStateView.snp.makeConstraints { make in
+            make.edges.equalTo(tableView)
         }
     }
 
@@ -158,14 +182,8 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
             .drive(onNext: { [weak self] newSections in
                 self?.sections = newSections
                 self?.tableView.reloadData()
-            })
-            .disposed(by: rx)
-
-        // Summary text
-        output.summaryText
-            .drive(onNext: { [weak self] text in
-                guard let self, !text.isEmpty else { return }
-                // Update summary card's summary label
+                let isEmpty = newSections.allSatisfy { $0.items.isEmpty }
+                self?.emptyStateView.isHidden = !isEmpty
             })
             .disposed(by: rx)
 
@@ -238,8 +256,6 @@ extension CacheDashboardViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        let item = sections[indexPath.section].items[indexPath.row]
-        
         // Compute global index into the flat subsystem list
         var globalIndex = indexPath.row
         for s in 0..<indexPath.section {

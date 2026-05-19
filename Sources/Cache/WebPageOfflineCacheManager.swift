@@ -39,9 +39,9 @@ public class WebPageOfflineCacheManager {
         return try? Realm(configuration: realmConfiguration)
     }
 
-    /// 获取 Realm 实例（异步）
-    private func asyncRealm() async throws -> Realm {
-        return try await Realm(configuration: realmConfiguration)
+    /// 获取 Realm 实例
+    private func asyncRealm() throws -> Realm {
+        return try Realm(configuration: realmConfiguration)
     }
 
     // MARK: - 缓存操作
@@ -103,8 +103,8 @@ public class WebPageOfflineCacheManager {
                 // 未来可以通过 WebPageThumbnailGenerator 来实现
 
                 // 8. 更新Realm记录
-                let realm = try await asyncRealm()
-                try await realm.write {
+                let realm = try asyncRealm()
+                try realm.write {
                     if let cachedHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: history.id) {
                         cachedHistory.htmlPath = htmlPath.path
                         cachedHistory.resourcePaths.removeAll()
@@ -287,10 +287,10 @@ extension WebPageOfflineCacheManager {
                 }
 
                 // 2. 查找或创建 WebPageHistory，并设置规则信息
-                let realm = try await asyncRealm()
+                let realm = try asyncRealm()
                 let historyId = url.sha256
 
-                try await realm.write {
+                try realm.write {
                     let history: WebPageHistory
                     if let existingHistory = realm.object(ofType: WebPageHistory.self, forPrimaryKey: historyId) {
                         history = existingHistory

@@ -97,24 +97,19 @@ public class WebBrowserManager: WebBrowserManaging {
                 return
             }
 
-            do {
-                let effectiveParams = params ?? WebBrowserParams.from(url: url)
-                os_log("DisplayMode: %ld", log: OSLog.default, type: .info, effectiveParams.displayMode.rawValue)
+            let effectiveParams = params ?? WebBrowserParams.from(url: url)
+            os_log("DisplayMode: %ld", log: OSLog.default, type: .info, effectiveParams.displayMode.rawValue)
 
-                switch effectiveParams.displayMode {
-                case .modal:
-                    self.openModalBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
-                case .immersive:
-                    self.openImmersiveBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
-                case .normal:
-                    self.openNormalBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
-                }
-
-                completion?(.success(()))
-            } catch {
-                os_log("❌ 打开浏览器失败: %@", log: OSLog.default, type: .error, error.localizedDescription)
-                completion?(.failure(WebBridgeError.browserOpenFailed(reason: error.localizedDescription)))
+            switch effectiveParams.displayMode {
+            case .modal:
+                self.openModalBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
+            case .immersive:
+                self.openImmersiveBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
+            case .normal:
+                self.openNormalBrowser(url: url, params: effectiveParams, from: sourceViewController, forceRefresh: forceRefresh, animated: animated)
             }
+
+            completion?(.success(()))
         }
     }
 
@@ -158,25 +153,20 @@ public class WebBrowserManager: WebBrowserManaging {
             return
         }
 
-        do {
-            os_log("✅ 找到 NavigationController", log: OSLog.default, type: .info)
-            let webVC = createWebViewController(for: url, params: params)
-            addToNavigationStack(webVC, url: url, params: params)
+        os_log("✅ 找到 NavigationController", log: OSLog.default, type: .info)
+        let webVC = createWebViewController(for: url, params: params)
+        addToNavigationStack(webVC, url: url, params: params)
 
-            navController.pushViewController(webVC, animated: animated)
-            currentBrowser = webVC
+        navController.pushViewController(webVC, animated: animated)
+        currentBrowser = webVC
 
-            // 🔥 统一调用 loadURLWithCache
-            if let browserVC = webVC as? WebBrowserViewController {
-                browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
-            }
-
-            os_log("✅ 已推送浏览器到导航栈", log: OSLog.default, type: .info)
-            print("✅ [WebBrowserManager] Pushed normal browser to navigation stack")
-        } catch {
-            os_log("❌ 打开普通浏览器失败: %@", log: OSLog.default, type: .error, error.localizedDescription)
-            print("❌ [WebBrowserManager] Failed to open normal browser: \(error.localizedDescription)")
+        // 🔥 统一调用 loadURLWithCache
+        if let browserVC = webVC as? WebBrowserViewController {
+            browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
         }
+
+        os_log("✅ 已推送浏览器到导航栈", log: OSLog.default, type: .info)
+        print("✅ [WebBrowserManager] Pushed normal browser to navigation stack")
     }
 
     private func openImmersiveBrowser(
@@ -385,12 +375,12 @@ public class WebBrowserManager: WebBrowserManaging {
     }
 
     private func executeGoForward(steps: Int) -> Bool {
-        let (targetIndex, stackCount, item) = stateQueue.sync { () -> (Int, Int, NavigationItem?) in
+        let (targetIndex, item) = stateQueue.sync { () -> (Int, NavigationItem?) in
             let targetIndex = _currentIndex + steps
             guard targetIndex < navigationStack.count else {
-                return (targetIndex, 0, nil)
+                return (targetIndex, nil)
             }
-            return (targetIndex, navigationStack.count, navigationStack[targetIndex])
+            return (targetIndex, navigationStack[targetIndex])
         }
 
         guard let item = item else {

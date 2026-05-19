@@ -100,6 +100,7 @@ public class PinnedURLRealm: Object {
     @objc dynamic public var cacheSubsystemId: String?
     @objc dynamic public var cacheKey: String?
     @objc dynamic public var tagsJson: String = "[]"
+    @objc dynamic public var orderIndex: Int = 0
 
     // MARK: - Computed Properties
 
@@ -137,7 +138,7 @@ public class PinnedURLRealm: Object {
     }
 
     override public class func indexedProperties() -> [String] {
-        return ["url", "domain", "isPinned", "urlTypeRaw", "createdAt", "lastAccessedAt"]
+        return ["url", "domain", "isPinned", "urlTypeRaw", "createdAt", "lastAccessedAt", "orderIndex"]
     }
 }
 

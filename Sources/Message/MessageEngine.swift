@@ -123,11 +123,11 @@ public actor MessageEngine: MessageEngineProtocol {
         let result = try await channel.send(payload)
 
         switch result {
-        case .success(let messageId):
+        case .success:
             statistics.recordSent(channelId: channelId)
         case .failed:
             statistics.recordFailed(channelId: channelId)
-        case .queued(let messageId):
+        case .queued:
             statistics.recordQueued(channelId: channelId)
         }
 
@@ -149,7 +149,7 @@ public actor MessageEngine: MessageEngineProtocol {
             targetURL: payload.targetURL,
             targetAppId: payload.targetAppId,
             targetMode: payload.targetMode,
-            userInfo: (payload.userInfo as? [String: Any]) ?? [:]
+            userInfo: payload.userInfo ?? [:]
         )
         
         // Process through pipeline if available

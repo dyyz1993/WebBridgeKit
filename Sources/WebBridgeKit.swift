@@ -27,9 +27,9 @@ private func configureLoggerForRelease() {
 #endif
 
 /// Main framework class providing access to WebBridgeKit functionality
-public final class WebBridgeKit {
+public final class WebBridgeKitManager {
     /// Shared singleton instance
-    public static let shared = WebBridgeKit()
+    public static let shared = WebBridgeKitManager()
 
     private init() {
         // Configure logger based on build configuration

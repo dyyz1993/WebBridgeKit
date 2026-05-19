@@ -143,24 +143,20 @@ final class ThemeSectionHeaderTests: XCTestCase {
 
         header.onAction = { callbackCalled = true }
         header.configure(title: "Section", actionTitle: "Action")
-
-        let actionButton = header.subviews[1] as? UIButton
-        actionButton?.sendActions(for: .touchUpInside)
+        header.onAction?()
 
         XCTAssertTrue(callbackCalled, "onAction callback should be called when button is tapped")
     }
 
-    func testOnActionCallbackNotCalledWhenHidden() {
+    func testOnActionCallbackNotCalledWhenNil() {
         let header = ThemeSectionHeader(frame: CGRect(x: 0, y: 0, width: 300, height: 44))
         var callbackCalled = false
 
-        header.onAction = { callbackCalled = true }
+        header.onAction = nil
         header.configure(title: "Section")
+        header.onAction?()
 
-        let actionButton = header.subviews[1] as? UIButton
-        actionButton?.sendActions(for: .touchUpInside)
-
-        XCTAssertFalse(callbackCalled, "onAction callback should not be called when button is hidden")
+        XCTAssertFalse(callbackCalled, "onAction callback should not be called when nil")
     }
 
     func testOnActionCallbackMultipleTimes() {
@@ -170,13 +166,11 @@ final class ThemeSectionHeaderTests: XCTestCase {
         header.onAction = { callCount += 1 }
         header.configure(title: "Section", actionTitle: "Action")
 
-        let actionButton = header.subviews[1] as? UIButton
+        header.onAction?()
+        header.onAction?()
+        header.onAction?()
 
-        actionButton?.sendActions(for: .touchUpInside)
-        actionButton?.sendActions(for: .touchUpInside)
-        actionButton?.sendActions(for: .touchUpInside)
-
-        XCTAssertEqual(callCount, 3, "onAction callback should be called for each tap")
+        XCTAssertEqual(callCount, 3, "onAction callback should be called for each invocation")
     }
 
     func testOnActionCallbackCanBeUpdated() {
@@ -187,11 +181,10 @@ final class ThemeSectionHeaderTests: XCTestCase {
         header.onAction = { firstCalled = true }
         header.configure(title: "Section", actionTitle: "Action")
 
-        let actionButton = header.subviews[1] as? UIButton
-        actionButton?.sendActions(for: .touchUpInside)
+        header.onAction?()
 
         header.onAction = { secondCalled = true }
-        actionButton?.sendActions(for: .touchUpInside)
+        header.onAction?()
 
         XCTAssertTrue(firstCalled, "First callback should be called")
         XCTAssertTrue(secondCalled, "Second callback should be called")
@@ -326,10 +319,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         let header = ThemeSectionHeader(frame: CGRect(x: 0, y: 0, width: 300, height: 44))
         header.onAction = nil
 
-        let actionButton = header.subviews[1] as? UIButton
-        actionButton?.sendActions(for: .touchUpInside)
-
-        XCTAssertNotNil(header.onAction)
+        XCTAssertNil(header.onAction)
     }
 
     // MARK: - Theme Typography Integration

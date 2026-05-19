@@ -150,7 +150,7 @@ extension WebViewController {
         let dataStore = WKWebsiteDataStore.default()
         let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
         let from = Date.distantPast
-        _ = dataStore.removeData(ofTypes: dataTypes, modifiedSince: from) { [weak self] in
+        dataStore.removeData(ofTypes: dataTypes, modifiedSince: from) { [weak self] in
             Task { @MainActor [weak self] in
                 self?.showToast(message: "All cache cleared successfully")
                 print(" All cache cleared")

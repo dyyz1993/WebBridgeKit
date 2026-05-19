@@ -70,7 +70,7 @@ public class WebResourceURLSchemeHandler: NSObject, WKURLSchemeHandler {
         guard let (cacheID, relativePath) = parseURL(url) else {
             sendErrorResponse(task: urlSchemeTask, statusCode: 400, description: "Invalid wb-resource:// URL format")
             tasksQueue.sync {
-                activeTasks.removeValue(forKey: taskID)
+                activeTasks[taskID] = nil
             }
             return
         }
@@ -86,7 +86,7 @@ public class WebResourceURLSchemeHandler: NSObject, WKURLSchemeHandler {
         // Find and remove task from active tasks
         tasksQueue.sync {
             if let key = activeTasks.first(where: { $0.value === urlSchemeTask })?.key {
-                activeTasks.removeValue(forKey: key)
+                activeTasks[key] = nil
             }
         }
 
@@ -147,7 +147,7 @@ public class WebResourceURLSchemeHandler: NSObject, WKURLSchemeHandler {
             task.didFinish()
 
             tasksQueue.sync {
-                activeTasks.removeValue(forKey: taskID)
+                activeTasks[taskID] = nil
             }
 
         } else {
@@ -157,7 +157,7 @@ public class WebResourceURLSchemeHandler: NSObject, WKURLSchemeHandler {
             // The resource should have been pre-cached when the manifest was loaded
             sendErrorResponse(task: task, statusCode: 404, description: "Resource not found in cache")
             tasksQueue.sync {
-                activeTasks.removeValue(forKey: taskID)
+                activeTasks[taskID] = nil
             }
         }
     }
