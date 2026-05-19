@@ -26,6 +26,88 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
     private var activeTokens: [String: WebBridgeLogToken] = [:]
     private let tokensLock = NSLock()
 
+    // MARK: - Command Trace History
+
+    /// 命令执行历史记录（最多保留 100 条）
+    private var commandHistory: [CommandTraceEntry] = []
+    private let historyLock = NSLock()
+    private let maxHistorySize = 100
+
+    // MARK: - Security: Command Allowlist
+
+    /// 允许的 JS Bridge 命令列表（安全边界）
+    /// 在开发模式下可以放宽限制，但生产环境必须严格验证
+    private static let ALLOWED_COMMANDS: Set<String> = [
+        // 基础功能
+        "share",
+        "getLocation",
+        "requestPermission",
+        // 系统信息
+        "getSystemInfo",
+        "getNetworkInfo",
+        // 交互反馈
+        "haptic",
+        "vibrate",
+        // 剪贴板
+        "clipboard",
+        // 扫码
+        "scan",
+        // 相机
+        "camera",
+        // 视频流
+        "videoStream",
+        // 语音识别
+        "speech",
+        // 实时音频音量监控
+        "audioLevel",
+        // 通讯录
+        "contacts",
+        // 屏幕控制
+        "screen",
+        // 布局控制
+        "layout",
+        // 投屏控制
+        "mirroring",
+        // 传感器控制
+        "sensors",
+        // 媒体与文件
+        "media",
+        // 系统增强
+        "systemExtra",
+        // 语音合成
+        "tts",
+        // 蓝牙控制
+        "bluetooth",
+        // 文件选择
+        "file",
+        // 权限状态查询
+        "getPermissionStatus",
+        // 打开系统设置
+        "openSettings",
+        // 打开本地页面
+        "openPage",
+        // 关闭当前页面
+        "closePage",
+        // 获取导航历史
+        "getHistory",
+        // 获取透传参数
+        "getPayload",
+        // 后退
+        "goBack",
+        // 设置弹窗参数
+        "setModal",
+        // 手势监控
+        "gesture",
+        // 缓存调试
+        "cacheDebug",
+        // 页面缓存管理
+        "page",
+        // 本地通知（非 APNs）
+        "showNotification",
+        // 相册选择 (iOS 14+)
+        "photo"
+    ]
+
     // MARK: - Initialization
 
     public override init() {
@@ -43,20 +125,41 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             return
         }
 
+        // 🔒 Security: Validate command against allowlist
+        guard Self.ALLOWED_COMMANDS.contains(action) else {
+            let error = "Command not allowed: \(action)"
+            Log.error(error, category: .general)
+            WebBridgeLogger.shared.log(.error, "[JS Bridge] \(error)")
+            print("❌ [JS Bridge] Blocked unknown command: \(action)")
+
+            // 添加到历史记录（标记为失败）
+            let trace = CommandTraceEntry(
+                action: action,
+                input: body,
+                timestamp: Date(),
+                callbackId: body["callbackId"] as? String,
+                status: .failed
+            )
+            addCommandToHistory(trace)
+
+            sendErrorToJS(error, callbackId: body["callbackId"] as? String)
+            return
+        }
+
         // 获取 callbackId，避免并发时被覆盖
         let callbackId = body["callbackId"] as? String
 
-        // 自动记录请求日志（使用 Token 机制）
-        let token = WebBridgeLogToken(
+        // 创建命令跟踪条目
+        let trace = CommandTraceEntry(
             action: action,
             input: body,
-            module: "JSBridge"
+            timestamp: Date(),
+            callbackId: callbackId,
+            status: .received
         )
 
-        // 保存 Token
-        tokensLock.lock()
-        activeTokens[action] = token
-        tokensLock.unlock()
+        // 添加到历史记录
+        addCommandToHistory(trace)
 
         // 输出到控制台
         #if DEBUG
@@ -68,33 +171,22 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             WebBridgeLogger.shared.error("Unsupported action: \(action)")
             sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
 
-            // 记录错误响应
-            WebBridgeLogger.shared.logResponse(
-                token: token,
-                result: nil,
-                error: NSError(domain: "JSBridge", code: 404, userInfo: [NSLocalizedDescriptionKey: "Unsupported action"])
-            )
-
-            // 清理 Token
-            tokensLock.lock()
-            activeTokens.removeValue(forKey: action)
-            tokensLock.unlock()
+            // 更新跟踪状态为失败
+            updateCommandStatus(action: action, status: .failed, error: "Unsupported action")
 
             return
         }
+
+        // 更新跟踪状态为执行中
+        updateCommandStatus(action: action, status: .executing)
 
         // 异步处理，避免阻塞主线程
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
 
             handler.handle(body: body) { [weak self] result in
-                // 自动记录响应日志
-                WebBridgeLogger.shared.logResponse(token: token, result: result, error: nil)
-
-                // 清理 Token
-                self?.tokensLock.lock()
-                self?.activeTokens.removeValue(forKey: action)
-                self?.tokensLock.unlock()
+                // 更新跟踪状态为成功
+                self?.updateCommandStatus(action: action, status: .succeeded, result: result)
 
                 self?.sendResultToJS(result, callbackId: callbackId)
             }
@@ -359,5 +451,137 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         }
 
         print("🔗 [JS Bridge] WebView 已设置，已创建 \(createdHandlers.count) 个 Handler")
+    }
+
+    // MARK: - Command Trace History Management
+
+    /// 添加命令到历史记录
+    /// - Parameter trace: 命令跟踪条目
+    private func addCommandToHistory(_ trace: CommandTraceEntry) {
+        historyLock.lock()
+        defer { historyLock.unlock() }
+
+        commandHistory.append(trace)
+
+        // 限制历史记录大小（FIFO）
+        if commandHistory.count > maxHistorySize {
+            commandHistory.removeFirst()
+        }
+
+        NSLog("📝 [JS Bridge] Added command to history: \(trace.action) (total: \(commandHistory.count))")
+    }
+
+    /// 更新命令状态
+    /// - Parameters:
+    ///   - action: 命令名称
+    ///   - status: 新状态
+    ///   - result: 成功结果（可选）
+    ///   - error: 错误信息（可选）
+    private func updateCommandStatus(action: String, status: CommandTraceEntry.Status, result: Any? = nil, error: String? = nil) {
+        historyLock.lock()
+        defer { historyLock.unlock() }
+
+        // 查找并更新最新的同名命令
+        if let index = commandHistory.lastIndex(where: { $0.action == action }) {
+            var entry = commandHistory[index]
+            entry.status = status
+            entry.result = result
+            entry.error = error
+            entry.completedAt = status == .received ? nil : Date()
+            commandHistory[index] = entry
+
+            let logMessage: String
+            switch status {
+            case .succeeded:
+                logMessage = "✅ Command succeeded: \(action)"
+            case .failed:
+                logMessage = "❌ Command failed: \(action) - \(error ?? "Unknown error")"
+            case .executing:
+                logMessage = "⏳ Command executing: \(action)"
+            case .received:
+                logMessage = "📥 Command received: \(action)"
+            }
+
+            NSLog(logMessage)
+        }
+    }
+
+    /// 获取最近的命令历史记录
+    /// - Parameter limit: 最大返回数量（默认 20）
+    /// - Returns: 命令跟踪条目数组
+    public func getCommandHistory(limit: Int = 20) -> [CommandTraceEntry] {
+        historyLock.lock()
+        defer { historyLock.unlock() }
+
+        let count = min(limit, commandHistory.count)
+        return Array(commandHistory.suffix(count))
+    }
+
+    /// 清空命令历史记录
+    public func clearCommandHistory() {
+        historyLock.lock()
+        defer { historyLock.unlock() }
+
+        commandHistory.removeAll()
+        NSLog("🗑️ [JS Bridge] Cleared command history")
+    }
+
+    /// 按操作名称筛选命令历史
+    /// - Parameter action: 操作名称
+    /// - Returns: 匹配的命令历史记录
+    public func getCommandsByAction(_ action: String) -> [CommandTraceEntry] {
+        historyLock.lock()
+        defer { historyLock.unlock() }
+
+        return commandHistory.filter { $0.action == action }
+    }
+}
+
+// MARK: - Command Trace Entry
+
+/// 命令跟踪条目（用于调试和历史记录）
+public struct CommandTraceEntry {
+    /// 操作名称
+    public let action: String
+
+    /// 输入参数
+    public let input: [String: Any]
+
+    /// 时间戳
+    public let timestamp: Date
+
+    /// 回调 ID
+    public let callbackId: String?
+
+    /// 状态
+    public var status: Status
+
+    /// 执行结果
+    public var result: Any?
+
+    /// 错误信息
+    public var error: String?
+
+    /// 完成时间
+    public var completedAt: Date?
+
+    /// 命令执行状态
+    public enum Status {
+        case received      // 已接收
+        case executing    // 执行中
+        case succeeded    // 成功
+        case failed       // 失败
+    }
+
+    /// 创建跟踪条目
+    public init(action: String, input: [String: Any], timestamp: Date, callbackId: String?, status: Status) {
+        self.action = action
+        self.input = input
+        self.timestamp = timestamp
+        self.callbackId = callbackId
+        self.status = status
+        self.result = nil
+        self.error = nil
+        self.completedAt = nil
     }
 }

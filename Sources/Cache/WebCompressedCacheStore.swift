@@ -406,7 +406,7 @@ public class WebCompressedCacheStore {
                     throw CompressedCacheError.compressionFailed
                 }
 
-                var result = Data(bytes: dstPointer, count: Int(compressedSize))
+                let result = Data(bytes: dstPointer, count: Int(compressedSize))
                 return result
             }
         }

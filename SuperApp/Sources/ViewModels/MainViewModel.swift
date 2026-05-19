@@ -286,7 +286,7 @@ class MainViewModel: ViewModel {
                     }
                 }
 
-                Task.detached { [weak self] in
+                Task { [weak self] in
                     let totalBytes = PersistentManifestLoader.shared.getCacheSize()
                     let formattedTotalSize = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
                     await MainActor.run {

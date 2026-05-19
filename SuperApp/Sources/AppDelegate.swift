@@ -15,6 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        let start = Date()
 
         CrashLogManager.shared.initialize()
 
@@ -45,7 +46,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             // 仅记录初始化，不调用池预热
             WebBridgeLogger.shared.info("WebBridgeKit initialized (warmup skipped for UI testing)")
         } else {
-            WebBridgeKit.shared.initialize()
+            WebBridgeKitManager.shared.initialize()
         }
 
         let messageStore = UserDefaultsMessageStore(key: "SuperCache_Messages")
@@ -101,7 +102,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             PushRelayManager.shared.connect()
         }
 
+        let duration = Date().timeIntervalSince(start)
+        Log.info("App launch took \(String(format: "%.3f", duration))s", category: .performance)
+
         return true
+    }
+
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        Log.info("App entering foreground", category: .general)
+    }
+
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        Log.info("App entering background", category: .general)
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
@@ -243,26 +255,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let key = "AppDelegate_DidCleanupAllData_v2"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in
             let favoriteManager = URLFavoriteManager.shared
-            let allFavorites = favoriteManager.getAllFavorites()
+            let allFavorites = (try? await favoriteManager.getAllFavorites()) ?? []
             for fav in allFavorites {
                 if let url = URL(string: fav.url) {
-                    favoriteManager.deleteFavorite(url: url)
+                    try? await favoriteManager.deleteFavorite(url: url)
                 }
             }
 
             let historyManager = WebPageHistoryManager.shared
-            Task {
-                try? await historyManager.clearAllHistory()
-            }
+            try? await historyManager.clearAllHistory()
 
             let recommended = PresetURLCatalog.recommendedItems
             var seeded = 0
             for item in recommended {
                 guard let url = URL(string: item.url) else { continue }
-                if favoriteManager.findFavorite(url: url) == nil {
-                    favoriteManager.addFavorite(url: url, title: item.title)
+                if (try? await favoriteManager.findFavorite(url: url)) == nil {
+                    _ = try? await favoriteManager.addFavorite(url: url, title: item.title)
                     seeded += 1
                 }
             }

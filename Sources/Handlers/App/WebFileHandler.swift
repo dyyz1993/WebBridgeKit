@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 import WebKit
-import MobileCoreServices
+import UniformTypeIdentifiers
 
 // Framework imports
 
@@ -44,7 +44,13 @@ public class WebFileHandler: BaseWebNativeHandler {
             return
         }
 
-        let documentPicker = UIDocumentPickerViewController(documentTypes: [accept == "*/*" ? "public.item" : accept], in: .import)
+        let contentType: UTType
+        if accept == "*/*" {
+            contentType = .item
+        } else {
+            contentType = UTType(filenameExtension: accept) ?? UTType(mimeType: accept) ?? .item
+        }
+        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [contentType], asCopy: true)
         documentPicker.allowsMultipleSelection = multiple
 
         let delegateId = "WebFileHandler_\(Self.delegateCounter)"
@@ -120,11 +126,8 @@ public class WebFileHandler: BaseWebNativeHandler {
         }
 
         private func getMimeType(for url: URL) -> String {
-            let pathExtension = url.pathExtension
-            if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension as CFString, nil)?.takeRetainedValue() {
-                if let mimetype = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() {
-                    return mimetype as String
-                }
+            if let uttype = UTType(filenameExtension: url.pathExtension) {
+                return uttype.preferredMIMEType ?? "application/octet-stream"
             }
             return "application/octet-stream"
         }

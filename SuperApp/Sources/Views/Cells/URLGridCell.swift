@@ -59,14 +59,14 @@ class URLGridCell: UICollectionViewCell {
     private let statusLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
     private let timeLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
@@ -298,7 +298,7 @@ class URLGridCell: UICollectionViewCell {
             } else {
                 statusDot.backgroundColor = ThemeTokens.Color.textTertiary
                 statusLabel.text = L10n.tr("discover.badge.not_cached")
-                statusLabel.textColor = ThemeTokens.Color.textTertiary
+                statusLabel.textColor = ThemeTokens.Color.textSecondary
             }
         }
 

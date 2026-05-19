@@ -46,7 +46,7 @@ public class CacheAppCell: UITableViewCell {
     /// AppID 标签（主要信息，大字体）
     private let appIDLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 17, weight: .semibold)
+        label.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: .monospacedSystemFont(ofSize: 17, weight: .semibold))
         label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         return label
@@ -107,6 +107,7 @@ public class CacheAppCell: UITableViewCell {
             button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
             button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
         }
+        button.accessibilityLabel = "复制AppID"
         return button
     }()
 
@@ -134,6 +135,7 @@ public class CacheAppCell: UITableViewCell {
             button.layer.masksToBounds = true
             button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         }
+        button.accessibilityLabel = "删除缓存"
         return button
     }()
 
@@ -376,16 +378,16 @@ public class CacheAppCell: UITableViewCell {
     }
 
     private func showCopyFeedback() {
-        // 复制按钮动画反馈
-        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: {
-            self.copyButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }, completion: { _ in
-            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
-                self.copyButton.transform = .identity
-            }
-        })
+        if !UIAccessibility.isReduceMotionEnabled {
+            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: {
+                self.copyButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+            }, completion: { _ in
+                UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
+                    self.copyButton.transform = .identity
+                }
+            })
+        }
 
-        // 临时改变按钮文字（iOS 15+）
         if #available(iOS 15.0, *) {
             let originalConfig = copyButton.configuration
             var newConfig = originalConfig

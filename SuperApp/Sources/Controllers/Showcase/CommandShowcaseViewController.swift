@@ -225,6 +225,8 @@ class CommandShowcaseViewController: UIViewController {
             routeLabel.text = "Route: deeplink(\(url))"
         case .none:
             routeLabel.text = "Route: none"
+        @unknown default:
+            routeLabel.text = "Route: unknown"
         }
     }
 

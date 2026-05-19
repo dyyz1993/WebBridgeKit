@@ -66,6 +66,27 @@ public class StructuredLogger {
 
     // MARK: - Core Logging
 
+    private static func sanitize(_ value: String, key: String) -> String {
+        let sensitiveKeys = ["token", "authorization", "cookie", "apikey", "api_key", "secret", "password", "bearer"]
+        let lowerKey = key.lowercased()
+        if sensitiveKeys.contains(where: { lowerKey.contains($0) }) {
+            if value.count > 8 {
+                return String(value.prefix(4)) + "****" + String(value.suffix(4))
+            }
+            return "****"
+        }
+        return value
+    }
+
+    private func sanitizeContext(_ context: [String: String]?) -> [String: String]? {
+        guard let context = context else { return nil }
+        var sanitized: [String: String] = [:]
+        for (key, value) in context {
+            sanitized[key] = Self.sanitize(value, key: key)
+        }
+        return sanitized
+    }
+
     private func log(
         level: LogLevel,
         category: LogCategory,
@@ -79,6 +100,8 @@ public class StructuredLogger {
     ) {
         guard level >= minLevel else { return }
 
+        let sanitizedContext = sanitizeContext(context)
+
         let entry = LogEntry(
             level: level,
             category: category,
@@ -86,7 +109,7 @@ public class StructuredLogger {
             file: includeFileLocation ? file?.components(separatedBy: "/").last : nil,
             function: function,
             line: line,
-            context: context,
+            context: sanitizedContext,
             action: action,
             durationMs: durationMs,
             sessionId: sessionId

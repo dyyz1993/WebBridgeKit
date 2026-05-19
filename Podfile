@@ -102,10 +102,13 @@ target 'WebBridgeKit' do
   target 'ManagersTests' do
     inherit! :complete
   end
-end
 
-target 'SuperApp' do
-  shared_pods
+  # SuperApp inherits pods from WebBridgeKit (search_paths only)
+  # to avoid duplicate class symbols that cause swift_dynamicCast crashes at runtime.
+  # SuperApp source files import pods directly, so they resolve via WebBridgeKit.framework.
+  target 'SuperApp' do
+    inherit! :search_paths
+  end
 end
 
 target 'SuperAppUITests' do
@@ -130,6 +133,12 @@ post_install do |installer|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'REALM_HAVE_CONFIG=1'
         config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end
+
+    target.shell_script_build_phases.each do |phase|
+      if phase.name.include?("Create Symlinks to Header Folders") || phase.name.include?("Copy generated compatibility header")
+        phase.always_out_of_date = "1"
       end
     end
   end

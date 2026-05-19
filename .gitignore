@@ -125,3 +125,8 @@ MANIFEST_CACHE_TEST_PLAN.md
 # Test output
 TestResults_*/*
 .services/
+
+# Agent tooling
+.opencode/
+.ui-tester/
+.xcodebuildmcp/

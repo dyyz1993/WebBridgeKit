@@ -58,7 +58,7 @@ public class BarChartView: UIView {
 
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: ThemeTokens.Typography.caption2,
-                .foregroundColor: ThemeTokens.Color.textTertiary
+                .foregroundColor: ThemeTokens.Color.textSecondary
             ]
             let labelSize = item.label.size(withAttributes: attrs)
             let labelX = x + (barWidth - labelSize.width) / 2

@@ -14,6 +14,8 @@ import WebKit
 /// 支持：强制横竖屏切换、全屏显示控制
 public class WebLayoutHandler: BaseWebNativeHandler {
 
+    private static var _isFullscreen = false
+
     // MARK: - Handle
 
     /**
@@ -66,7 +68,7 @@ public class WebLayoutHandler: BaseWebNativeHandler {
 
             self?.resolve([
                 "orientation": orientation,
-                "fullscreen": UIApplication.shared.isStatusBarHidden,
+                "fullscreen": Self._isFullscreen,
                 "scrollEnabled": self?.webView?.scrollView.isScrollEnabled ?? true
             ], completion: completion)
         }
@@ -117,12 +119,8 @@ public class WebLayoutHandler: BaseWebNativeHandler {
                 userInfo: ["hidden": enabled]
             )
 
-            // 尝试通过全局设置隐藏状态栏 (仅作为辅助)
-            #if !targetEnvironment(macCatalyst)
-            UIApplication.shared.isStatusBarHidden = enabled
-            #endif
-
             WebBridgeLogger.shared.log(.info, "[WebLayoutHandler] Fullscreen change requested: \(enabled)")
+            Self._isFullscreen = enabled
             self?.resolve(["fullscreen": enabled], completion: completion)
         }
     }

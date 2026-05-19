@@ -19,7 +19,7 @@ extension WebVideoHandler {
     }
 
     func handleFaceDetectionResults(_ results: [VNFaceObservation]) {
-        guard isFaceTrackingEnabled, let webView = self.webView else { return }
+        guard isFaceTrackingEnabled else { return }
 
         let faceData = results.map { observation -> [String: Any] in
             let box = observation.boundingBox
@@ -158,7 +158,7 @@ extension WebVideoHandler {
 
     @available(iOS 14.0, *)
     func handleHandDetectionResults(_ results: [VNHumanHandPoseObservation]) {
-        guard isHandTrackingEnabled, let webView = self.webView else { return }
+        guard isHandTrackingEnabled else { return }
 
         let handData = results.map { observation -> [String: Any] in
             var joints: [String: [String: CGFloat]] = [:]

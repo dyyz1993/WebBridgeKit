@@ -96,7 +96,7 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
 
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 20, weight: .semibold)
+        label.font = UIFontMetrics(forTextStyle: .title3).scaledFont(for: .monospacedSystemFont(ofSize: 20, weight: .semibold))
         label.textColor = ThemeColors.current.text
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -367,8 +367,12 @@ class TokenGenerateViewController: BaseViewController<TokenGenerateViewModel> {
                 guard let self = self, let token = token else { return }
                 self.tokenLabel.text = token
                 self.resultCardView.isHidden = false
-                UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+                if UIAccessibility.isReduceMotionEnabled {
                     self.scrollView.layoutIfNeeded()
+                } else {
+                    UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+                        self.scrollView.layoutIfNeeded()
+                    }
                 }
             })
             .disposed(by: rx)

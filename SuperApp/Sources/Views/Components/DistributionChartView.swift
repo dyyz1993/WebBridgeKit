@@ -14,7 +14,7 @@ class DistributionChartView: UIView {
     private let titleHeader: UILabel = {
         let l = UILabel()
         l.font = ThemeTokens.Typography.caption2
-        l.textColor = ThemeTokens.Color.textTertiary
+        l.textColor = ThemeTokens.Color.textSecondary
         l.text = "存储分布"
         return l
     }()
@@ -50,7 +50,7 @@ class DistributionChartView: UIView {
             let empty = UILabel()
             empty.text = "暂无数据"
             empty.font = ThemeTokens.Typography.caption1
-            empty.textColor = ThemeTokens.Color.textTertiary
+            empty.textColor = ThemeTokens.Color.textSecondary
             empty.textAlignment = .center
             stackView.addArrangedSubview(empty)
             return
@@ -90,7 +90,7 @@ class DistributionChartView: UIView {
         private let percentLabel: UILabel = {
             let l = UILabel()
             l.font = UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-            l.textColor = ThemeTokens.Color.textTertiary
+            l.textColor = ThemeTokens.Color.textSecondary
             l.textAlignment = .right
             l.setContentHuggingPriority(.required, for: .horizontal)
             return l

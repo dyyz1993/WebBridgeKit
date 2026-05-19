@@ -178,7 +178,7 @@ class PresetURLCatalogViewController: BaseViewController<PresetURLCatalogViewMod
         let descLabel = UILabel()
         descLabel.text = desc
         descLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        descLabel.textColor = ThemeTokens.Color.textTertiary
+        descLabel.textColor = ThemeTokens.Color.textSecondary
         descLabel.textAlignment = .center
         descLabel.numberOfLines = 0
 

@@ -89,46 +89,38 @@ public class ManifestCacheManager: @unchecked Sendable {
         queue.async { [weak self] in
             guard let self = self else { return }
 
-            do {
-                // 从缓存获取 HTML
-                guard let html = self.manifestStore.getHTML(for: pageKey) else {
-                    let error = WebBridgeError.cacheLoadFailed(reason: "Page not found: \(pageKey)")
-                    NSLog("❌ [ManifestCache] \(error.localizedDescription)")
-                    DispatchQueue.main.async {
-                        completion?(.failure(error))
-                    }
-                    return
-                }
-
-                // 获取或创建 manifest
-                let manifest = self.manifestStore.getManifest(for: pageKey) ?? Manifest()
-
-                // 设置当前页面的 manifest
-                self.manifestStore.setCurrentManifest(manifest, for: pageKey)
-
-                // ⚠️ WebView 操作必须在主线程执行
+            // 从缓存获取 HTML
+            guard let html = self.manifestStore.getHTML(for: pageKey) else {
+                let error = WebBridgeError.cacheLoadFailed(reason: "Page not found: \(pageKey)")
+                NSLog("❌ [ManifestCache] \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    webView.loadHTMLString(html, baseURL: URL(string: "\(self.scheme)://"))
-
-                    // 发送通知，用于 UI 显示
-                    NotificationCenter.default.post(
-                        name: .manifestCacheHit,
-                        object: nil,
-                        userInfo: ["pageKey": pageKey, "source": "HTML"]
-                    )
-
-                    completion?(.success(()))
+                    completion?(.failure(error))
                 }
-
-                NSLog("✅ [ManifestCache] Loaded page: \(pageKey)")
-                NSLog("   - Manifest entries: \(manifest.resources.count)")
-            } catch {
-                let bridgeError = WebBridgeError.cacheLoadFailed(reason: error.localizedDescription)
-                NSLog("❌ [ManifestCache] Failed to load page: \(bridgeError.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion?(.failure(bridgeError))
-                }
+                return
             }
+
+            // 获取或创建 manifest
+            let manifest = self.manifestStore.getManifest(for: pageKey) ?? Manifest()
+
+            // 设置当前页面的 manifest
+            self.manifestStore.setCurrentManifest(manifest, for: pageKey)
+
+            // ⚠️ WebView 操作必须在主线程执行
+            DispatchQueue.main.async {
+                webView.loadHTMLString(html, baseURL: URL(string: "\(self.scheme)://"))
+
+                // 发送通知，用于 UI 显示
+                NotificationCenter.default.post(
+                    name: .manifestCacheHit,
+                    object: nil,
+                    userInfo: ["pageKey": pageKey, "source": "HTML"]
+                )
+
+                completion?(.success(()))
+            }
+
+            NSLog("✅ [ManifestCache] Loaded page: \(pageKey)")
+            NSLog("   - Manifest entries: \(manifest.resources.count)")
         }
     }
 

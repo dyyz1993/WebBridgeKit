@@ -48,6 +48,7 @@ public class ThemeBadge: UIView {
 
     private func setupUI() {
         layer.cornerRadius = ThemeCornerRadius.default.sm
+        clipsToBounds = true
         addSubview(label)
         label.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))

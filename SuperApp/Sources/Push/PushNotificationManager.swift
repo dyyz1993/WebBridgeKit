@@ -29,7 +29,7 @@ class PushNotificationManager: NSObject {
     /// 请求通知权限并注册 APNs
     /// - Parameter completion: 注册完成回调，success=true 代表注册成功
     func registerForPushNotifications(completion: ((Bool) -> Void)? = nil) {
-        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
             switch settings.authorizationStatus {
             case .notDetermined:
                 // 尚未请求过权限 → 弹系统授权弹窗

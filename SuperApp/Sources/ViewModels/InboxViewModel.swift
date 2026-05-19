@@ -230,10 +230,11 @@ class InboxViewModel: ViewModel {
                     messages = decoded
                 }
             }
+            let loadedMessages = messages
             let unreadCount = await MessageEngine.shared.getUnreadCount()
             await MainActor.run {
-                self.messagesRelay.accept(messages)
-                self.unreadCountRelay.accept(unreadCount > 0 ? unreadCount : messages.filter { !$0.isRead }.count)
+                self.messagesRelay.accept(loadedMessages)
+                self.unreadCountRelay.accept(unreadCount > 0 ? unreadCount : loadedMessages.filter { !$0.isRead }.count)
                 self.applyFilters()
                 self.reloadDataRelay.accept(())
             }

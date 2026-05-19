@@ -128,6 +128,29 @@ public struct SubsystemStats: Equatable {
         self.lastUpdated = lastUpdated
     }
 
+    // MARK: - Cache Miss Reasons (#51)
+    ///
+    /// Cache Miss Reason Tracking:
+    /// Add these to extraMetrics when tracking miss reasons:
+    /// - "miss_reason": "network_error" | "ttl_expired" | "not_found" | "policy_evicted"
+    /// - "miss_count": Total number of misses
+    /// - "last_miss_reason": Most recent miss reason
+    ///
+    /// Example:
+    /// ```swift
+    /// let stats = SubsystemStats(
+    ///     id: .webResourceCache,
+    ///     totalEntries: 100,
+    ///     totalSize: 50_000_000,
+    ///     hitRate: 0.75,
+    ///     extraMetrics: [
+    ///         "miss_count": "25",
+    ///         "miss_reason": "network_error"
+    ///     ]
+    /// )
+    /// ```
+    ///
+
     public var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
     }

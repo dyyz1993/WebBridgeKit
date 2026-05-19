@@ -32,7 +32,7 @@ public class WebOpenPageHandler: BaseWebNativeHandler {
         if let pageName = params["page"] as? String {
             // 验证页面名称，防止路径遍历攻击
             do {
-                try InputValidator.validateHTMLName(pageName)
+                _ = try InputValidator.validateHTMLName(pageName)
                 queryItems.append(URLQueryItem(name: "page", value: pageName))
             } catch {
                 reject(error: "Invalid page name: \(error.localizedDescription)", completion: completion)

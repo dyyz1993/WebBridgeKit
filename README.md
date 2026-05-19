@@ -67,6 +67,38 @@ WebBridgeKit 是一个 iOS 原生框架，将 WKWebView 与 **41 种原生能力
 
 ## 快速开始
 
+### Quick Start (10 minutes)
+
+#### Prerequisites
+- Xcode 16+
+- CocoaPods
+- iOS 17+ Simulator
+
+#### Setup
+
+```bash
+# 1. Clone and install dependencies
+git clone https://github.com/dyyz1993/WebBridgeKit.git
+cd WebBridgeKit
+pod install
+
+# 2. Generate Xcode project
+xcodegen generate
+
+# 3. Start backend services
+bash scripts/services.sh start
+
+# 4. Build
+xcodebuild build -workspace WebBridgeKit.xcworkspace -scheme SuperApp \
+  -sdk iphonesimulator -arch arm64 -derivedDataPath /tmp/wbk-dd
+
+# 5. Run on simulator
+APP=$(find /tmp/wbk-dd -name "SuperApp.app" -maxdepth 5 | head -1)
+xcrun simctl boot "iPhone 16 Pro" 2>/dev/null || true
+xcrun simctl install booted "$APP"
+xcrun simctl launch booted com.webbridgekit.superapp
+```
+
 ### 环境要求
 
 - Xcode 15+

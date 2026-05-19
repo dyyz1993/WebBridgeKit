@@ -10,6 +10,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import WebKit
 
 
 /// 缓存应用详情页面
@@ -32,6 +33,81 @@ public class CacheAppDetailViewController: UIViewController {
         table.rowHeight = UITableView.automaticDimension
         table.estimatedRowHeight = 60
         return table
+    }()
+
+    private lazy var manifestPreviewView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.isHidden = true
+
+        let containerView = UIView()
+        containerView.backgroundColor = ThemeTokens.Color.surface
+        containerView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        containerView.layer.masksToBounds = false
+        let shadow = ThemeTokens.Shadows.Card
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOpacity = Float(shadow.opacity)
+        containerView.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        containerView.layer.shadowRadius = shadow.radius
+
+        let titleLabel = UILabel()
+        titleLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        titleLabel.textColor = ThemeTokens.Color.textSecondary
+        titleLabel.text = "Web App Manifest"
+        titleLabel.tag = 200
+
+        let startURLLabel = UILabel()
+        startURLLabel.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+        startURLLabel.textColor = ThemeTokens.Color.text
+        startURLLabel.numberOfLines = 0
+        startURLLabel.tag = 201
+
+        let displayModeLabel = UILabel()
+        displayModeLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        displayModeLabel.textColor = ThemeTokens.Color.text
+        displayModeLabel.tag = 202
+
+        let themeColorLabel = UILabel()
+        themeColorLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        themeColorLabel.textColor = ThemeTokens.Color.text
+        themeColorLabel.tag = 203
+
+        let openButton = UIButton(type: .system)
+        openButton.setTitle("在 WebView 中打开", for: .normal)
+        openButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+        openButton.backgroundColor = ThemeTokens.Color.primary
+        openButton.setTitleColor(.white, for: .normal)
+        openButton.layer.cornerRadius = 8
+        openButton.tag = 204
+
+        let infoStackView = UIStackView(arrangedSubviews: [startURLLabel, displayModeLabel, themeColorLabel])
+        infoStackView.axis = .vertical
+        infoStackView.spacing = 8
+        infoStackView.alignment = .leading
+
+        let mainStackView = UIStackView(arrangedSubviews: [titleLabel, infoStackView, openButton])
+        mainStackView.axis = .vertical
+        mainStackView.spacing = 12
+
+        containerView.addSubview(mainStackView)
+        view.addSubview(containerView)
+
+        containerView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(8)
+            make.left.equalToSuperview().offset(16)
+            make.right.equalToSuperview().offset(-16)
+            make.bottom.equalToSuperview().offset(-8)
+        }
+
+        mainStackView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
+        }
+
+        openButton.snp.makeConstraints { make in
+            make.height.equalTo(44)
+        }
+
+        return view
     }()
 
     private lazy var headerView: UIView = {
@@ -71,7 +147,7 @@ public class CacheAppDetailViewController: UIViewController {
 
         let infoLabel = UILabel()
         infoLabel.font = ThemeTokens.Typography.footnote
-        infoLabel.textColor = ThemeTokens.Color.textTertiary
+        infoLabel.textColor = ThemeTokens.Color.textSecondary
         infoLabel.numberOfLines = 0
         infoLabel.textAlignment = .center
         infoLabel.tag = 103
@@ -121,6 +197,7 @@ public class CacheAppDetailViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         configureHeaderView()
+        loadManifestPreview()
         bindTableView()
     }
 
@@ -146,10 +223,17 @@ public class CacheAppDetailViewController: UIViewController {
         )
 
         view.addSubview(tableView)
+        view.addSubview(manifestPreviewView)
+
         tableView.tableHeaderView = headerView
+        tableView.tableFooterView = manifestPreviewView
 
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+
+        if let openButton = manifestPreviewView.viewWithTag(204) as? UIButton {
+            openButton.addTarget(self, action: #selector(openInWebViewTapped), for: .touchUpInside)
         }
     }
 
@@ -180,6 +264,62 @@ public class CacheAppDetailViewController: UIViewController {
         }
     }
 
+    private func loadManifestPreview() {
+        guard let firstPageKey = appInfo.pageKeys.first else {
+            return
+        }
+
+        guard let manifest = ManifestStore.shared.getManifest(for: firstPageKey) else {
+            manifestPreviewView.isHidden = true
+            return
+        }
+
+        guard manifest.startURL != nil || manifest.displayMode != nil || manifest.themeColor != nil else {
+            manifestPreviewView.isHidden = true
+            return
+        }
+
+        manifestPreviewView.isHidden = false
+
+        guard let startURLLabel = manifestPreviewView.viewWithTag(201) as? UILabel,
+              let displayModeLabel = manifestPreviewView.viewWithTag(202) as? UILabel,
+              let themeColorLabel = manifestPreviewView.viewWithTag(203) as? UILabel else {
+            return
+        }
+
+        var infoText = ""
+
+        if let startURL = manifest.startURL, !startURL.isEmpty {
+            infoText += "启动 URL: \(startURL)\n"
+        }
+
+        if let displayMode = manifest.displayMode, !displayMode.isEmpty {
+            infoText += "显示模式: \(displayMode)\n"
+        }
+
+        if let themeColor = manifest.themeColor, !themeColor.isEmpty {
+            infoText += "主题色: \(themeColor)"
+        }
+
+        startURLLabel.text = infoText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        displayModeLabel.text = manifest.displayMode != nil ? "显示模式: \(manifest.displayMode!)" : "显示模式: -"
+        themeColorLabel.text = manifest.themeColor != nil ? "主题色: \(manifest.themeColor!)" : "主题色: -"
+    }
+
+    private var previewStartURL: URL? {
+        guard let firstPageKey = appInfo.pageKeys.first else {
+            return nil
+        }
+
+        guard let manifest = ManifestStore.shared.getManifest(for: firstPageKey),
+              let startURLString = manifest.startURL else {
+            return nil
+        }
+
+        return URL(string: startURLString)
+    }
+
     private func bindTableView() {
         let pageKeys = appInfo.pageKeys
 
@@ -200,6 +340,16 @@ public class CacheAppDetailViewController: UIViewController {
     }
 
     // MARK: - Actions
+
+    @objc private func openInWebViewTapped() {
+        guard let url = previewStartURL else {
+            HUDService.shared.showError(withStatus: "无效的启动 URL")
+            HUDService.shared.dismiss(withDelay: 1.5)
+            return
+        }
+
+        WebBrowserManager.shared.openBrowser(url: url, from: navigationController)
+    }
 
     @objc private func doneTapped() {
         navigationController?.popViewController(animated: true)

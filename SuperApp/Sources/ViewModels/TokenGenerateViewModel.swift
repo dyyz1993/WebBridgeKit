@@ -140,11 +140,12 @@ class TokenGenerateViewModel: ViewModel {
 
     private func loadHistories() {
         Task { [weak self] in
+            guard let self else { return }
             let allHistories = (try? await WebPageHistoryManager.shared.getAllHistories()) ?? []
             let histories = Array(allHistories.prefix(50))
             await MainActor.run {
-                self?.historiesRelay.accept(histories)
-                self?.isEmptyRelay.accept(histories.isEmpty)
+                self.historiesRelay.accept(histories)
+                self.isEmptyRelay.accept(histories.isEmpty)
             }
         }
     }

@@ -270,6 +270,6 @@ extension WebBrowserViewController {
     }
 }
 
-private struct AssociatedKeys {
-    nonisolated(unsafe) static var debugPanelDidShow = "debugPanelDidShow"
+private enum AssociatedKeys {
+    nonisolated(unsafe) static var debugPanelDidShow: UInt8 = 0
 }

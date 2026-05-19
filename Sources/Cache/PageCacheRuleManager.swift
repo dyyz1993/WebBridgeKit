@@ -216,7 +216,7 @@ public class PageCacheRuleManager {
 
     /// 重置为预设规则
     public func resetToPresetRules() -> Bool {
-        clearAllRules()
+        _ = clearAllRules()
         return addRules(PageCacheRule.presetRules) == PageCacheRule.presetRules.count
     }
 

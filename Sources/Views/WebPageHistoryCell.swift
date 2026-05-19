@@ -28,7 +28,7 @@ class WebPageHistoryCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 2
         return label
     }()
@@ -45,7 +45,7 @@ class WebPageHistoryCell: UITableViewCell {
     private let visitInfoLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
@@ -170,7 +170,7 @@ class WebPageHistoryCell: UITableViewCell {
             cacheSizeLabel.isHidden = false
         } else {
             cacheStatusImageView.image = LucideIcon.circle.templateImage()
-            cacheStatusImageView.tintColor = ThemeTokens.Color.textTertiary
+            cacheStatusImageView.tintColor = ThemeTokens.Color.textSecondary
             cacheSizeLabel.isHidden = true
         }
     }

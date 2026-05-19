@@ -8,7 +8,7 @@ class DiscoverAppCell: UICollectionViewCell {
 
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
@@ -59,25 +59,28 @@ class DiscoverAppCell: UICollectionViewCell {
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 2
         label.lineBreakMode = .byTruncatingTail
         label.setContentHuggingPriority(.required, for: .vertical)
-        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }()
 
     private let sizeLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 11, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
     private let badgeView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        view.setContentHuggingPriority(.required, for: .horizontal)
+        view.setContentCompressionResistancePriority(.required, for: .horizontal)
         return view
     }()
 
@@ -99,16 +102,18 @@ class DiscoverAppCell: UICollectionViewCell {
     private let detailLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 11, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -181,7 +186,7 @@ class DiscoverAppCell: UICollectionViewCell {
 
         mainStack.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview().inset(14)
-            make.bottom.lessThanOrEqualToSuperview().offset(-14)
+            make.bottom.equalToSuperview().offset(-14).priority(.high)
         }
     }
 

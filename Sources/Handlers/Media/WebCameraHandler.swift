@@ -29,14 +29,7 @@ public class WebCameraHandler: BaseWebNativeHandler {
     public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         // 兼容 body 或 body.params
         let params = body["params"] as? [String: Any] ?? body
-        let action = params["action"] as? String ?? "start" // 针对 videoStream 的 action
         let type = params["type"] as? String ?? "photo" // 针对 camera 的 type
-
-        // 如果是通过 videoStream 调用的，转发给 WebVideoHandler
-        if let videoHandler = WebVideoHandler.sharedInstance {
-            // 这里我们不需要显式转发，因为 Bridge 已经注册了 videoStream 对应 WebVideoHandler
-            // 但如果 JS 混用了 camera action 发送给 videoStream，我们需要在这里处理
-        }
 
         switch type {
         case "photo":

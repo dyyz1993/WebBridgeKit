@@ -110,13 +110,13 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         container.backgroundColor = .clear
         let iconView = UIImageView()
         iconView.image = LucideIcon.info.templateImage(pointSize: 12)
-        iconView.tintColor = ThemeTokens.Color.textTertiary
+        iconView.tintColor = ThemeTokens.Color.textSecondary
         iconView.contentMode = .scaleAspectFit
         iconView.accessibilityLabel = "提示信息"
         let label = UILabel()
         label.text = L10n.tr("inbox.swipe.hint")
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         let stack = UIStackView(arrangedSubviews: [iconView, label])
         stack.axis = .horizontal
         stack.spacing = ThemeTokens.Spacing.sm
@@ -243,9 +243,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         ]
 
         let inactiveBg = ThemeTokens.Color.surface
-        let inactiveFg = ThemeColors.current.textSecondary
-        let activeBg = ThemeTokens.Color.primary
-        let activeFg = ThemeTokens.Color.text
+        let inactiveFg = ThemeTokens.Color.textSecondary
 
         for (title, type) in filters {
             let button: UIButton
@@ -394,7 +392,6 @@ extension InboxViewController: UITableViewDataSource {
         )
         header.onTap = { [weak self] in
             guard let self = self else { return }
-            let wasExpanded = self.viewModel.isGroupExpanded(section)
             self.viewModel.toggleGroup(section)
             let isExpanded = self.viewModel.isGroupExpanded(section)
             let rowsInGroup = self.viewModel.numberOfRowsInGroup(section)

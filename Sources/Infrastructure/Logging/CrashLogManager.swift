@@ -20,6 +20,8 @@ public struct CrashReport: Codable {
     public let systemVersion: String
     public let memoryFootprintMB: Double
     public let sessionId: String
+    public let currentScreen: String?
+    public let lastUserAction: String?
 }
 
 private func wbk_crashSignalHandler(_ sig: Int32) {
@@ -58,6 +60,29 @@ public class CrashLogManager {
     public var hasUnresolvedCrash: Bool {
         return !crashLogFiles().isEmpty
     }
+
+    // MARK: - Multiple Launch Soak Test (#59)
+    ///
+    /// Soak Test Procedure:
+    /// 1. Run app 20 consecutive times
+    /// 2. After each launch, run: `bash scripts/scan-crash-logs.sh`
+    /// 3. Monitor for memory leaks (check crash logs for SIGABRT, SIGSEGV)
+    /// 4. Check for OOM/jetsam events in simulator logs
+    ///
+    /// Test script:
+    /// ```bash
+    /// #!/bin/bash
+    /// for i in {1..20}; do
+    ///   echo "Launch #$i"
+    ///   xcrun simctl launch booted com.webbridgekit.superapp
+    ///   sleep 5
+    ///   xcrun simctl terminate booted com.webbridgekit.superapp
+    ///   bash scripts/scan-crash-logs.sh --json
+    /// done
+    /// ```
+    ///
+    /// Expected behavior: Zero crashes after 20 launches
+    ///
 
     public func getCrashLogs() -> [CrashReport] {
         return crashLogFiles().compactMap { url -> CrashReport? in
@@ -111,7 +136,9 @@ public class CrashLogManager {
             deviceModel: deviceModel,
             systemVersion: systemVersion,
             memoryFootprintMB: memoryFootprintMB,
-            sessionId: StructuredLogger.shared.sessionId
+            sessionId: StructuredLogger.shared.sessionId,
+            currentScreen: nil,
+            lastUserAction: nil
         )
         writeCrashReport(report)
 
@@ -175,13 +202,15 @@ public class CrashLogManager {
             timestamp: isoFormatter.string(from: Date()),
             name: exception.name.rawValue,
             reason: exception.reason ?? "Unknown exception",
-            callStack: exception.callStackSymbols ?? [],
+            callStack: exception.callStackSymbols,
             appVersion: appVersion,
             buildNumber: buildNumber,
             deviceModel: deviceModel,
             systemVersion: systemVersion,
             memoryFootprintMB: memoryFootprintMB,
-            sessionId: StructuredLogger.shared.sessionId
+            sessionId: StructuredLogger.shared.sessionId,
+            currentScreen: nil,
+            lastUserAction: nil
         )
         writeCrashReport(report)
     }

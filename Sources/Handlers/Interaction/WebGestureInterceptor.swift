@@ -327,7 +327,7 @@ extension WebGestureInterceptor: UIGestureRecognizerDelegate {
         return false
     }
 
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UILongPressGestureRecognizer) -> Bool {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         // 下拉手势不需要等待长按失败
         return false
     }
@@ -368,7 +368,7 @@ private class PullIndicatorView: UIView {
 
         // 标签
         label.text = "下拉刷新"
-        label.font = .systemFont(ofSize: 12)
+        label.font = UIFont.preferredFont(forTextStyle: .caption1)
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         addSubview(label)

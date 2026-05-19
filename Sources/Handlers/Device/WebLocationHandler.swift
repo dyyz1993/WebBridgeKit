@@ -29,7 +29,7 @@ public class WebLocationHandler: BaseWebNativeHandler {
     /// Default CLLocationManager wrapper
     internal final class LocationManagerProvider: LocationProviding {
         private let manager = CLLocationManager()
-        var authorizationStatus: CLAuthorizationStatus { CLLocationManager.authorizationStatus() }
+        var authorizationStatus: CLAuthorizationStatus { manager.authorizationStatus }
         var locationServicesEnabled: Bool { CLLocationManager.locationServicesEnabled() }
         func requestWhenInUseAuthorization() { manager.requestWhenInUseAuthorization() }
         func requestLocation() { manager.requestLocation() }

@@ -105,24 +105,28 @@ class TabBarController: UITabBarController {
             image: LucideIcon.home.templateImage(pointSize: 20),
             selectedImage: LucideIcon.home.templateImage(pointSize: 20)
         )
+        mainVC.tabBarItem.accessibilityIdentifier = "tab.home"
 
         inboxVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.inbox"),
             image: LucideIcon.inbox.templateImage(pointSize: 20),
             selectedImage: LucideIcon.inbox.templateImage(pointSize: 20)
         )
+        inboxVC.tabBarItem.accessibilityIdentifier = "tab.inbox"
 
         discoverVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.discover"),
             image: LucideIcon.compass.templateImage(pointSize: 20),
             selectedImage: LucideIcon.compass.templateImage(pointSize: 20)
         )
+        discoverVC.tabBarItem.accessibilityIdentifier = "tab.discover"
 
         settingsVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.settings"),
             image: LucideIcon.settings.templateImage(pointSize: 20),
             selectedImage: LucideIcon.settings.templateImage(pointSize: 20)
         )
+        settingsVC.tabBarItem.accessibilityIdentifier = "tab.settings"
 
         viewControllers = [
             UINavigationController(rootViewController: mainVC),

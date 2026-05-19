@@ -31,7 +31,11 @@ final class ThemeManagerTests: XCTestCase {
     }
 
     func testThemeColorsDefaultEqualsCurrent() {
-        XCTAssertEqual(ThemeColors.default.primary, ThemeColors.current.primary)
+        let trait = UITraitCollection(userInterfaceStyle: .light)
+        XCTAssertEqual(
+            ThemeColors.default.primary.resolvedColor(with: trait),
+            ThemeColors.current.primary.resolvedColor(with: trait)
+        )
     }
 
     // MARK: - ThemeTypography
@@ -221,7 +225,7 @@ final class ThemeManagerTests: XCTestCase {
         }
         XCTAssertNotNil(gradient.colors)
         XCTAssertEqual(gradient.colors?.count, 2)
-        XCTAssertEqual(gradient.cornerRadius, ThemeCornerRadius.default.lg)
+        XCTAssertEqual(view.layer.cornerRadius, ThemeCornerRadius.default.lg)
     }
 
     // MARK: - Theme (Legacy)

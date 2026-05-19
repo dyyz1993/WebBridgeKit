@@ -146,7 +146,7 @@ class SummaryCardView: UIView {
         let nameLabel: UILabel = {
             let l = UILabel()
             l.font = ThemeTokens.Typography.caption2
-            l.textColor = ThemeTokens.Color.textTertiary
+            l.textColor = ThemeTokens.Color.textSecondary
             l.textAlignment = .center
             return l
         }()

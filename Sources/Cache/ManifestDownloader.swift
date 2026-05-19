@@ -220,7 +220,7 @@ public enum ManifestDownloaderError: Error, LocalizedError {
 // MARK: - ManifestDownloader
 
 /// Manifest 下载器
-public class ManifestDownloader {
+public class ManifestDownloader: @unchecked Sendable {
 
     // MARK: - Singleton
 
@@ -262,7 +262,7 @@ public class ManifestDownloader {
 
     // MARK: - Public Methods
 
-    /// 下载 manifest
+    /// 下载 manifest（带重试机制）
     /// - Parameters:
     ///   - url: manifest.json 的 URL
     ///   - useCache: 是否使用缓存
@@ -279,62 +279,131 @@ public class ManifestDownloader {
             return
         }
 
-        // 创建下载任务
-        let task = session.dataTask(with: url) { [weak self] data, response, error in
-            guard let self = self else { return }
+        // 使用指数退避重试机制下载
+        Task {
+            var lastError: Error?
+            var manifest: ManifestDocument?
 
-            // 处理网络错误
-            if let error = error {
-                completion(.failure(.networkError(error)))
+            for attempt in 0..<3 {
+                do {
+                    manifest = try await downloadManifest(url: url)
+                    break
+                } catch {
+                    lastError = error
+                    if attempt < 2 {
+                        let delay = 1.0 * pow(2.0, Double(attempt))
+                        NSLog("⏳ [ManifestDownloader] Retry \(attempt + 1) after \(delay) seconds...")
+                        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    }
+                }
+            }
+
+            // 检查是否成功获取 manifest
+            guard let finalManifest = manifest else {
+                if let error = lastError {
+                    if let manifestError = error as? ManifestDownloaderError {
+                        completion(.failure(manifestError))
+                    } else {
+                        completion(.failure(.networkError(error)))
+                    }
+                } else {
+                    completion(.failure(.emptyResponse))
+                }
                 return
             }
 
-            // 验证响应
-            guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(.emptyResponse))
-                return
-            }
+            // 缓存结果
+            self.manifestCache[cacheKey] = CachedManifest(
+                manifest: finalManifest,
+                timestamp: Date(),
+                expiration: self.cacheExpiration
+            )
 
-            guard httpResponse.statusCode == 200 else {
-                completion(.failure(.networkError(
-                    NSError(domain: "HTTP", code: httpResponse.statusCode, userInfo: [
-                        NSLocalizedDescriptionKey: HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
-                    ])
-                )))
-                return
-            }
-
-            // 验证数据
-            guard let data = data, !data.isEmpty else {
-                completion(.failure(.emptyResponse))
-                return
-            }
-
-            // 解析 JSON
-            do {
-                let manifest = try self.parseAndValidate(data: data)
-
-                // 缓存结果
-                self.manifestCache[cacheKey] = CachedManifest(
-                    manifest: manifest,
-                    timestamp: Date(),
-                    expiration: self.cacheExpiration
-                )
-
-                completion(.success(manifest))
-            } catch let error as ManifestDownloaderError {
-                // 已经是 ManifestDownloaderError，直接传递
-                completion(.failure(error))
-            } catch let error as DecodingError {
-                // 解码错误，转换为 ManifestDownloaderError
-                completion(.failure(.invalidJSON(error)))
-            } catch {
-                // 其他错误，包装为 ManifestDownloaderError
-                completion(.failure(.invalidJSON(error)))
-            }
+            completion(.success(finalManifest))
         }
+    }
 
-        task.resume()
+    /// 执行实际的 manifest 下载（内部方法）
+    /// - Parameter url: manifest.json 的 URL
+    /// - Returns: 解析后的 ManifestDocument
+    /// - Throws: 网络错误或解析错误
+    private func downloadManifest(url: URL) async throws -> ManifestDocument {
+        return try await withCheckedThrowingContinuation { continuation in
+            let task = session.dataTask(with: url) { [weak self] data, response, error in
+                guard let self = self else {
+                    continuation.resume(throwing: ManifestDownloaderError.networkError(
+                        NSError(domain: "ManifestDownloader", code: -1, userInfo: [
+                            NSLocalizedDescriptionKey: "Self is nil"
+                        ])
+                    ))
+                    return
+                }
+
+                // 处理网络错误
+                if let error = error {
+                    NSLog("❌ [ManifestDownloader] Network error fetching manifest: \(url.absoluteString)")
+                    NSLog("   - Error: \(error.localizedDescription)")
+                    continuation.resume(throwing: ManifestDownloaderError.networkError(error))
+                    return
+                }
+
+                // 验证响应
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    NSLog("❌ [ManifestDownloader] Invalid response from: \(url.absoluteString)")
+                    continuation.resume(throwing: ManifestDownloaderError.emptyResponse)
+                    return
+                }
+
+                // 记录 HTTP 状态码（用于调试）
+                NSLog("📡 [ManifestDownloader] HTTP \(httpResponse.statusCode) from: \(url.absoluteString)")
+
+                guard httpResponse.statusCode == 200 else {
+                    let statusText = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
+                    NSLog("❌ [ManifestDownloader] HTTP \(httpResponse.statusCode) (\(statusText)) from: \(url.absoluteString)")
+
+                    // 5xx 错误提供更友好的错误信息
+                    if httpResponse.statusCode >= 500 {
+                        continuation.resume(throwing: ManifestDownloaderError.networkError(
+                            NSError(domain: "ManifestDownloader", code: httpResponse.statusCode, userInfo: [
+                                NSLocalizedDescriptionKey: "Backend server error (\(statusText)). Please try again later."
+                            ])
+                        ))
+                    } else {
+                        continuation.resume(throwing: ManifestDownloaderError.networkError(
+                            NSError(domain: "HTTP", code: httpResponse.statusCode, userInfo: [
+                                NSLocalizedDescriptionKey: statusText
+                            ])
+                        ))
+                    }
+                    return
+                }
+
+                // 验证数据
+                guard let data = data, !data.isEmpty else {
+                    NSLog("❌ [ManifestDownloader] Empty response from: \(url.absoluteString)")
+                    continuation.resume(throwing: ManifestDownloaderError.emptyResponse)
+                    return
+                }
+
+                NSLog("✅ [ManifestDownloader] Successfully fetched manifest: \(data.count) bytes from: \(url.absoluteString)")
+
+                // 解析 JSON
+                do {
+                    let manifest = try self.parseAndValidate(data: data)
+                    continuation.resume(returning: manifest)
+                } catch let manifestError as ManifestDownloaderError {
+                    continuation.resume(throwing: manifestError)
+                } catch let decodingError as DecodingError {
+                    NSLog("❌ [ManifestDownloader] JSON decode error: \(decodingError.localizedDescription)")
+                    continuation.resume(throwing: ManifestDownloaderError.invalidJSON(decodingError))
+                } catch {
+                    NSLog("❌ [ManifestDownloader] Unknown error parsing manifest: \(error.localizedDescription)")
+                    continuation.resume(throwing: ManifestDownloaderError.invalidJSON(error))
+                }
+            }
+
+            task.resume()
+        }
     }
 
     /// 检查更新
@@ -461,6 +530,26 @@ public class ManifestDownloader {
             errors.append("resources cannot be empty")
         }
 
+        // 验证可选字段类型
+        if let startURL = manifest.startURL {
+            if !isValidURLString(startURL) {
+                errors.append("Invalid startURL format: '\(startURL)' (expected URL string)")
+            }
+        }
+
+        if let display = manifest.display {
+            let validDisplays = ["standalone", "minimal-ui", "fullscreen", "browser"]
+            if !validDisplays.contains(display) {
+                errors.append("Invalid display mode: '\(display)' (expected: \(validDisplays.joined(separator: ", ")))")
+            }
+        }
+
+        if let themeColor = manifest.themeColor {
+            if !isValidColorString(themeColor) {
+                errors.append("Invalid themeColor format: '\(themeColor)' (expected hex color like #RRGGBB or #RRGGBBAA)")
+            }
+        }
+
         // 验证每个资源
         for (path, resource) in manifest.resources {
             // Validate resource path for security
@@ -495,11 +584,41 @@ public class ManifestDownloader {
                 // Log as warning, not error
                 continue
             }
+
+            // 验证 MIME 类型（如果提供）
+            if let mimeType = resource.mimeType {
+                if !mimeType.contains("/") {
+                    errors.append("Invalid MIME type for resource \(path): '\(mimeType)' (expected format like 'text/html')")
+                }
+            }
         }
 
         if !errors.isEmpty {
+            NSLog("❌ [ManifestDownloader] Manifest validation failed with \(errors.count) errors:")
+            for error in errors {
+                NSLog("   - \(error)")
+            }
             throw ManifestDownloaderError.validationFailed(errors)
         }
+    }
+
+    /// 验证 URL 字符串格式
+    /// - Parameter urlString: URL 字符串
+    /// - Returns: 是否为有效的 URL 字符串
+    private func isValidURLString(_ urlString: String) -> Bool {
+        return URL(string: urlString) != nil
+    }
+
+    /// 验证颜色字符串格式（十六进制）
+    /// - Parameter colorString: 颜色字符串
+    /// - Returns: 是否为有效的颜色字符串
+    private func isValidColorString(_ colorString: String) -> Bool {
+        let hexPattern = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$"
+        let range = NSRange(location: 0, length: colorString.utf16.count)
+        guard let regex = try? NSRegularExpression(pattern: hexPattern, options: []) else {
+            return false
+        }
+        return regex.firstMatch(in: colorString, options: [], range: range) != nil
     }
 
     /// 比较版本

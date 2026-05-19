@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 import WebBridgeKit
 
-class PresetURLCell: UITableViewCell {
+class PresetURLCell: UICollectionViewCell {
 
     static let reuseIdentifier = "PresetURLCell"
 
@@ -63,7 +63,7 @@ class PresetURLCell: UITableViewCell {
     private let urlLabel: UILabel = {
         let l = UILabel()
         l.font = UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
-        l.textColor = ThemeTokens.Color.textTertiary
+        l.textColor = ThemeTokens.Color.textSecondary
         l.numberOfLines = 1
         return l
     }()
@@ -119,10 +119,9 @@ class PresetURLCell: UITableViewCell {
         return l
     }()
 
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    override init(frame: CGRect) {
+        super.init(frame: frame)
         setupUI()
-        selectionStyle = .default
         pinButton.addTarget(self, action: #selector(pinButtonTapped), for: .touchUpInside)
     }
 

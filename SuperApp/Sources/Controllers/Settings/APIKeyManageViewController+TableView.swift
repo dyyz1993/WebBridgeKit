@@ -47,8 +47,24 @@ extension APIKeyManageViewController: UITableViewDelegate {
         let key = currentTemporaryKeys[indexPath.row]
 
         let deleteAction = UIContextualAction(style: .destructive, title: L10n.tr("common.delete")) { [weak self] _, _, completion in
-            self?.deleteKeySubject.onNext(key.id)
-            completion(true)
+            guard let self = self else {
+                completion(false)
+                return
+            }
+
+            let alert = UIAlertController(
+                title: "确认删除",
+                message: "确定要删除密钥「\(key.name)」吗？此操作不可撤销。",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel) { _ in
+                completion(false)
+            })
+            alert.addAction(UIAlertAction(title: L10n.tr("common.delete"), style: .destructive) { [weak self] _ in
+                self?.deleteKeySubject.onNext(key.id)
+                completion(true)
+            })
+            self.present(alert, animated: true)
         }
         deleteAction.image = LucideIcon.trash.image()
 

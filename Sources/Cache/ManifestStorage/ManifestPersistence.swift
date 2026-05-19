@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 extension ManifestStore {
 
@@ -54,7 +55,14 @@ extension ManifestStore {
                     }
 
                     let cacheTimestamp = manifest.lastUpdated ?? Date()
-                    loaded[key] = ManifestCacheEntry(manifest: manifest, timestamp: cacheTimestamp)
+
+                    // 🔒 Security: Handle new contentHash field for integrity verification
+                    let contentHash = value["contentHash"] as? String ?? UUID().uuidString
+                    loaded[key] = ManifestCacheEntry(
+                        manifest: manifest,
+                        timestamp: cacheTimestamp,
+                        contentHash: contentHash
+                    )
                 }
             }
 
@@ -113,7 +121,14 @@ extension ManifestStore {
                     }
 
                     let cacheTimestamp = manifest.lastUpdated ?? Date()
-                    loaded[key] = ManifestCacheEntry(manifest: manifest, timestamp: cacheTimestamp)
+
+                    // 🔒 Security: Handle new contentHash field for integrity verification
+                    let contentHash = value["contentHash"] as? String ?? UUID().uuidString
+                    loaded[key] = ManifestCacheEntry(
+                        manifest: manifest,
+                        timestamp: cacheTimestamp,
+                        contentHash: contentHash
+                    )
                 }
             }
 
@@ -152,7 +167,8 @@ extension ManifestStore {
                         "icon": manifest.icon ?? "",
                         "isPinned": manifest.isPinned ?? false,
                         "isFavorite": manifest.isFavorite ?? false,
-                        "accessCount": manifest.accessCount ?? 0
+                        "accessCount": manifest.accessCount ?? 0,
+                        "contentHash": entry.contentHash  // 🔒 Security: Persist hash for integrity check
                     ]
                     if let version = manifest.version {
                         manifestDict["version"] = version
@@ -242,7 +258,8 @@ extension ManifestStore {
                 "icon": manifest.icon ?? "",
                 "isPinned": manifest.isPinned ?? false,
                 "isFavorite": manifest.isFavorite ?? false,
-                "accessCount": manifest.accessCount ?? 0
+                "accessCount": manifest.accessCount ?? 0,
+                "contentHash": entry.contentHash  // 🔒 Security: Persist hash for integrity check
             ]
             if let version = manifest.version {
                 manifestDict["version"] = version

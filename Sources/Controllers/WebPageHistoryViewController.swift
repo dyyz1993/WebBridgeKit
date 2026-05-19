@@ -90,7 +90,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         let imageView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
         imageView.image = LucideIcon.clock.image(pointSize: 60, weight: .medium)
-        imageView.tintColor = ThemeTokens.Color.textTertiary
+        imageView.tintColor = ThemeTokens.Color.textSecondary
         imageView.contentMode = .scaleAspectFit
         imageView.accessibilityLabel = "无历史记录"
 
@@ -102,7 +102,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
 
         let detailLabel = UILabel()
         detailLabel.text = NSLocalizedString("Visit a webpage to see it here", comment: "")
-        detailLabel.textColor = ThemeTokens.Color.textTertiary
+        detailLabel.textColor = ThemeTokens.Color.textSecondary
         detailLabel.font = ThemeTokens.Typography.footnote
         detailLabel.textAlignment = .center
 
@@ -154,6 +154,9 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
             }
             cell.history = item
             return cell
+        },
+        titleForHeaderInSection: { dataSource, section in
+            dataSource[section].model
         }
     )
 
@@ -407,9 +410,18 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
 
         // 删除
         alert.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: ""), style: .destructive) { [weak self] _ in
-            Task { @MainActor in
-                await self?.deleteHistory(history)
-            }
+            let confirm = UIAlertController(
+                title: NSLocalizedString("Confirm Delete", comment: "Confirm Delete"),
+                message: NSLocalizedString("This history record will be permanently deleted.", comment: ""),
+                preferredStyle: .alert
+            )
+            confirm.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
+            confirm.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: ""), style: .destructive) { [weak self] _ in
+                Task { @MainActor in
+                    await self?.deleteHistory(history)
+                }
+            })
+            self?.present(confirm, animated: true)
         })
 
         alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))

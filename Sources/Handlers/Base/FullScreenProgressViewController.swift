@@ -18,7 +18,7 @@ public class FullScreenProgressViewController: UIViewController {
     // ✅ 验证标签：确认使用的是正确的文件
     private let verificationLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.font = UIFont.preferredFont(forTextStyle: .caption1)
         label.textColor = ThemeTokens.Color.success
         label.textAlignment = .center
         label.text = "✅ 已修改 2025-02-04 Sources/Handlers/FullScreenProgressViewController.swift"
@@ -50,7 +50,7 @@ public class FullScreenProgressViewController: UIViewController {
 
     private let statusLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: .systemFont(ofSize: 16, weight: .medium))
         label.textColor = ThemeTokens.Color.text
         label.textAlignment = .center
         label.numberOfLines = 2
@@ -69,7 +69,7 @@ public class FullScreenProgressViewController: UIViewController {
 
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -190,37 +190,46 @@ public class FullScreenProgressViewController: UIViewController {
         containerView.alpha = 0
         containerView.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
 
-        UIView.animate(
-            withDuration: 0.3,
-            delay: 0,
-            usingSpringWithDamping: 0.8,
-            initialSpringVelocity: 0,
-            options: .curveEaseOut
-        ) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.containerView.alpha = 1
             self.containerView.transform = .identity
-        }
+        } else {
+            UIView.animate(
+                withDuration: 0.3,
+                delay: 0,
+                usingSpringWithDamping: 0.8,
+                initialSpringVelocity: 0,
+                options: .curveEaseOut
+            ) {
+                self.containerView.alpha = 1
+                self.containerView.transform = .identity
+            }
 
-        // 图标轻微动画
-        UIView.animate(
-            withDuration: 1.0,
-            delay: 0.3,
-            options: [.repeat, .autoreverse]
-        ) {
-            self.iconImageView.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+            UIView.animate(
+                withDuration: 1.0,
+                delay: 0.3,
+                options: [.repeat, .autoreverse]
+            ) {
+                self.iconImageView.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+            }
         }
     }
 
     private func animateOut(completion: @escaping () -> Void) {
-        UIView.animate(
-            withDuration: 0.25,
-            delay: 0,
-            options: .curveEaseIn
-        ) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.containerView.alpha = 0
-            self.containerView.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        } completion: { _ in
             completion()
+        } else {
+            UIView.animate(
+                withDuration: 0.25,
+                delay: 0,
+                options: .curveEaseIn
+            ) {
+                self.containerView.alpha = 0
+                self.containerView.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            } completion: { _ in
+                completion()
+            }
         }
     }
 

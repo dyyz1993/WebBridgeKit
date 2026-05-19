@@ -29,7 +29,7 @@ extension DiscoverViewController {
             self?.openURL(item.url)
         })
         alert.addAction(UIAlertAction(title: L10n.tr("discover.action_sheet.delete_cache"), style: .destructive) { [weak self] _ in
-            self?.deleteCache(for: item)
+            self?.confirmDeleteCache(for: item)
         })
         alert.addAction(UIAlertAction(title: L10n.tr("discover.action_sheet.share"), style: .default) { [weak self] _ in
             self?.shareURL(item.url)
@@ -40,6 +40,19 @@ extension DiscoverViewController {
             popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
             popover.permittedArrowDirections = []
         }
+        present(alert, animated: true)
+    }
+
+    private func confirmDeleteCache(for item: DiscoverItem) {
+        let alert = UIAlertController(
+            title: L10n.tr("discover.action_sheet.delete_cache"),
+            message: "将清除「\(item.name)」的所有缓存数据，此操作不可撤销。",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("discover.action_sheet.delete_cache"), style: .destructive) { [weak self] _ in
+            self?.deleteCache(for: item)
+        })
         present(alert, animated: true)
     }
 

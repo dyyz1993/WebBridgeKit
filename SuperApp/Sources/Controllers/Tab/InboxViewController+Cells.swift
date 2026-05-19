@@ -159,7 +159,7 @@ class InboxMessageCell: UITableViewCell {
     private let chevronImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = LucideIcon.chevronRight.image(pointSize: 16, weight: .medium)
-        iv.tintColor = ThemeTokens.Color.textTertiary
+        iv.tintColor = ThemeTokens.Color.textSecondary
         iv.contentMode = .scaleAspectFit
         iv.accessibilityLabel = "查看详情"
         return iv
@@ -310,7 +310,7 @@ class InboxEmptyStateView: UIView {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = ThemeTokens.Color.textTertiary
+        iv.tintColor = ThemeTokens.Color.textSecondary
         iv.accessibilityLabel = "空收件箱"
         return iv
     }()

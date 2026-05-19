@@ -33,6 +33,24 @@ struct ManifestRoutes {
     }
 }
 
+// MARK: - HTTP Error Helpers
+
+extension HTTPURLResponse {
+    /// 获取用户友好的 HTTP 状态描述
+    /// - Parameter statusCode: HTTP 状态码
+    /// - Returns: 用户友好的描述文本
+    static func localizedString(forStatusCode statusCode: Int) -> String {
+        switch statusCode {
+        case 400...499:
+            return "Client error (\(statusCode)) - Please check your request"
+        case 500...599:
+            return "Server error (\(statusCode)) - Backend service is unavailable. Please try again later."
+        default:
+            return "HTTP \(statusCode)"
+        }
+    }
+}
+
 private struct ManifestUploadResponse: ResponseEncodable, Sendable {
     let code: Int
     let message: String

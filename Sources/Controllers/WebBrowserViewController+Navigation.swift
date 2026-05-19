@@ -8,7 +8,6 @@
 import WebKit
 
 // MARK: - WKNavigationDelegate - Auto-Capture by Rules
-
 extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 处理导航策略，防止系统弹窗和外部跳转
@@ -18,17 +17,33 @@ extension WebBrowserViewController: WKNavigationDelegate {
             return
         }
 
+        // 🔒 Security: Block dangerous URL schemes
+        let allowedSchemes: Set<String> = ["http", "https", "file", "about", "manifest-cache", "custom"]
+        let blockedSchemes: Set<String> = ["javascript", "data", "vbscript"]
+
+        if let scheme = url.scheme?.lowercased() {
+            if blockedSchemes.contains(scheme) {
+                Log.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
+                print("❌ [Browser] Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)")
+                decisionHandler(.cancel)
+                return
+            }
+
+            if !allowedSchemes.contains(scheme) {
+                Log.warning("Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
+                print("⚠️ [Browser] Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)")
+                decisionHandler(.cancel)
+                return
+            }
+        }
+
         if navigationAction.targetFrame == nil {
             webView.load(navigationAction.request)
             decisionHandler(.cancel)
             return
         }
 
-        let scheme = url.scheme?.lowercased() ?? ""
-        if !["http", "https", "file", "about", "manifest-cache"].contains(scheme) {
-            print("🔗 [Browser] 拦截到特殊协议跳转: \(url.absoluteString)")
-        }
-
+        print("🔗 [Browser] Allowed navigation: \(url.absoluteString)")
         decisionHandler(.allow)
     }
 
@@ -59,12 +74,20 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 页面加载完成 - 检查是否需要自动缓存页面
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        HUDService.shared.dismiss()
+
         guard let url = webView.url else { return }
+
+        guard let start = loadStartTime else { return }
+        let duration = Date().timeIntervalSince(start)
+        Log.info("WebView first screen load: \(String(format: "%.3f", duration))s (url: \(url.absoluteString))", category: .performance)
+        loadStartTime = nil
 
         print("📄 ========================================")
         print("📄 页面加载完成")
         print("- URL: \(url.absoluteString)")
         print("- Title: \(webView.title ?? "nil")")
+        print("- Load time: \(String(format: "%.3f", duration))s")
         print("📄 ========================================")
         WebBridgeLogger.shared.info("📄 Page loaded: \(url.absoluteString)")
 
@@ -266,6 +289,20 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
         webView.configuration.userContentController.addUserScript(userScript)
         print("🔍 [WebBridgeVC] Debug script injected for: \(url.absoluteString)")
+    }
+
+    /// 加载错误提示页面
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        HUDService.shared.showError(withStatus: error.localizedDescription)
+    }
+
+    public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        HUDService.shared.showError(withStatus: error.localizedDescription)
+    }
+
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        loadStartTime = Date()
+        HUDService.shared.show()
     }
 
     /// 加载错误提示页面

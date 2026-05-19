@@ -141,6 +141,39 @@ public class WebCacheManager: WebCacheManaging {
         Log.info("All caches clearing triggered (WebView data on main, Realm on background)", category: .cache)
     }
 
+    /// 按时间清理缓存
+    /// - Parameter olderThanDays: 清理超过 N 天的缓存
+    /// - Returns: Observable<Void>
+    public func clearCacheOlderThan(days: Int) -> Observable<Void> {
+        return Observable.create { observer in
+            // WKWebsiteDataStore 操作必须在主线程执行
+            DispatchQueue.main.async {
+                let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date.distantPast
+                let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+
+                self.dataStore.removeData(ofTypes: dataTypes, modifiedSince: cutoffDate) {
+                    // 清理对应的 Realm 统计 (必须在后台线程执行)
+                    DispatchQueue.global(qos: .utility).async {
+                        if let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) {
+                            try? realm.write {
+                                let oldStats = realm.objects(WebCacheStatistics.self)
+                                    .filter("lastUpdate < %@", cutoffDate as NSDate)
+                                realm.delete(oldStats)
+                            }
+                        }
+
+                        DispatchQueue.main.async {
+                            observer.onNext(())
+                            observer.onCompleted()
+                        }
+                    }
+                }
+            }
+
+            return Disposables.create()
+        }
+    }
+
     /// 清理特定域名的缓存
     public func clearCache(for domain: String) -> Observable<Void> {
         return Observable.create { observer in
@@ -431,6 +464,25 @@ public class WebCacheManager: WebCacheManaging {
     }
 
     // MARK: - Helper Methods
+
+    // MARK: - Large Cache Stress Test (#56)
+    ///
+    /// Stress Test Procedure:
+    /// 1. Navigate to Cache Dashboard
+    /// 2. Call backend to generate test pages with large resources (50MB/100MB total)
+    /// 3. Monitor cache size growth: use `getTotalCacheSize()` periodically
+    /// 4. Measure UI responsiveness during cache operations
+    /// 5. Verify cleanup still works after large cache is created
+    ///
+    /// Example test command:
+    /// ```swift
+    /// // Generate large test cache
+    /// for i in 0..<10 {
+    ///     let testURL = URL(string: "http://localhost:8081/large-page-\(i).html")!
+    ///     WebCacheManager.shared.preloadURL(testURL).subscribe().disposed(by: disposeBag)
+    /// }
+    /// ```
+    ///
 
     private func saveSystemCacheStatistics(_ stats: [WebCacheStatistics]) {
         guard let realm = try? Realm(configuration: WebResourceCacheManager.shared.configuration) else { return }

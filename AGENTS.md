@@ -151,14 +151,59 @@ bash scripts/scan-crash-logs.sh --fix
 <!-- 格式: | 日期 | 类型 | 原因 | 修复 | -->
 <!-- 示例: | 2026-05-14 | SIGABRT | Realm schema migration | PR #123 | -->
 
+## Command History Access
+
+### How to Access Command History
+
+The Debug Panel provides access to command execution history with timestamps, status, and results.
+
+**Access Path:**
+1. Open Debug Panel: Settings → 测试面板 (or directly in development builds)
+2. Navigate to **Logs tab** (tab index 2, labeled "日志" with 📄 icon)
+3. View command traces with the following information:
+   - **Timestamp**: When the command was executed
+   - **Level**: Info/debug/error
+   - **Category**: `.handler` for command executions
+   - **Action**: Handler name (e.g., `push_notification`, `get_manifest`)
+   - **Message**: Detailed log message
+   - **Context**: Parameters (if any)
+   - **Duration**: Execution time in milliseconds
+
+**Features in Logs Tab:**
+- **Filter All**: Shows all logs (default)
+- **Filter Errors**: Shows only error-level logs
+- **Copy All**: Copies all logs to clipboard
+- **Export JSON**: Exports logs as JSON for external analysis
+
+**Log Entry Format:**
+Each command trace includes:
+```
+[TIMESTAMP] [LEVEL] [CATEGORY] action=ACTION_NAME message=MESSAGE context=PARAMS duration=XXXms
+```
+
+Example output:
+```
+2026-05-19 10:30:45.123 INFO [handler] action=push_notification message="Sent push to device" context={"token":"****","data":"..."} duration=125ms
+2026-05-19 10:30:45.456 INFO [handler] action=get_manifest message="Manifest fetched successfully" duration=89ms
+```
+
+**Note**: Command history is stored in memory via `StructuredLogger.shared.memoryBuffer` with a maximum capacity of 1000 entries.
+
 (暂无记录)
+
+| 日期 | 类型 | 原因 | 定位 | 修复 |
+|------|------|------|------|------|
+| 2026-05-19 | SIGABRT | Podfile 重复链接 shared_pods 导致 ObjC runtime 重复类定义 | Podfile:107, WebBridgeKit+SuperApp targets | SuperApp `inherit! :search_paths` 从 WebBridgeKit 继承 pods |
 
 ## Recent Commits
 
 | Commit | Description |
 |--------|-------------|
-| `7638ba0` | feat(services): add services management script + visual polish |
-| `667338c` | ci(smoke-tests): fix SIGABRT crash |
-| `6df60f4` | docs(screenshots): update with working i18n |
-| `b8ad205` | fix(home): pixel-perfect Home page alignment |
-| `542d9a6` | feat(icons): install real Lucide icon library |
+| `e632a9a` | fix(warnings): clear remaining 24 business warnings to zero |
+| `d826dc1` | feat(productization): bookmarks, history, manifest preview, diagnostics, UI polish |
+| `720c61d` | feat(core): WebBridge security + core capabilities + stability baselines |
+| `8ef63cf` | feat(ui): empty state unification, destructive confirmations, WebView loading, Debug prod gate |
+| `5218431` | feat(quality): accessibility audit, UI tests, CI hardening, release docs, screenshots |
+| `703f1e2` | fix(ui): P1/P2 quality pass — tabs, empty states, contrast, WKColor cleanup |
+| `4770643` | docs(ui): add UI fidelity audit screenshots and handoff completion report |
+| `05ce516` | fix(build): eliminate all business-code warnings (25→4) and fix fragile ThemeTests |

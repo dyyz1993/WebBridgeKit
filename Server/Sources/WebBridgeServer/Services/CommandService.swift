@@ -6,6 +6,9 @@ actor CommandService {
     private var tokens: [String: CommandToken] = [:]
     private let hmacKey: SymmetricKey
 
+    // Command timeout (30 seconds default)
+    private let commandTimeout: TimeInterval = 30.0
+
     init() {
         self.hmacKey = SymmetricKey(size: .bits256)
     }
@@ -21,8 +24,14 @@ actor CommandService {
 
         let formatter = ISO8601DateFormatter()
         let now = Date()
-        let expiresAt = request.ttlSeconds.map { ttl in
-            formatter.string(from: now.addingTimeInterval(TimeInterval(ttl)))
+
+        // 如果请求未指定 TTL，使用默认超时时间（30 秒）
+        let expiresAt: String?
+        if let ttl = request.ttlSeconds {
+            expiresAt = formatter.string(from: now.addingTimeInterval(TimeInterval(ttl)))
+        } else {
+            // 默认 TTL 为 30 秒（commandTimeout）
+            expiresAt = formatter.string(from: now.addingTimeInterval(commandTimeout))
         }
 
         let signature = generateSignature(id: id, payload: payload)

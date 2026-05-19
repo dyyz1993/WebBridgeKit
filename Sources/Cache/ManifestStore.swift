@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 /// Manifest 存储管理
 public class ManifestStore: ManifestCacheManaging {
@@ -25,10 +26,11 @@ public class ManifestStore: ManifestCacheManaging {
         }
     }
 
-    /// Manifest 缓存条目（带时间戳）
+    /// Manifest 缓存条目（带时间戳和完整性校验）
     struct ManifestCacheEntry {
         let manifest: Manifest
         let timestamp: Date
+        let contentHash: String  // 🔒 Security: SHA-256 hash for tamper detection
 
         var isExpired: Bool {
             let expirationDays = 7
@@ -107,7 +109,15 @@ public class ManifestStore: ManifestCacheManaging {
             var updatedManifest = manifest
             updatedManifest.version = updatedManifest.version ?? UUID().uuidString
             updatedManifest.lastUpdated = Date()
-            self.manifestCache[key] = ManifestCacheEntry(manifest: updatedManifest, timestamp: Date())
+
+            // 🔒 Security: Calculate SHA-256 hash for integrity verification
+            let contentHash = self.calculateManifestHash(manifest: updatedManifest)
+
+            self.manifestCache[key] = ManifestCacheEntry(
+                manifest: updatedManifest,
+                timestamp: Date(),
+                contentHash: contentHash
+            )
             self.scheduleAsyncSave()
 
             DispatchQueue.main.async {
@@ -120,7 +130,15 @@ public class ManifestStore: ManifestCacheManaging {
         var updatedManifest = manifest
         updatedManifest.version = updatedManifest.version ?? UUID().uuidString
         updatedManifest.lastUpdated = Date()
-        manifestCache[key] = ManifestCacheEntry(manifest: updatedManifest, timestamp: Date())
+
+        // 🔒 Security: Calculate SHA-256 hash for integrity verification
+        let contentHash = calculateManifestHash(manifest: updatedManifest)
+
+        manifestCache[key] = ManifestCacheEntry(
+            manifest: updatedManifest,
+            timestamp: Date(),
+            contentHash: contentHash
+        )
     }
 
     public func saveHTMLSync(_ html: String, for key: String) {
@@ -187,6 +205,68 @@ public class ManifestStore: ManifestCacheManaging {
                 return (key, entry.manifest)
             }
             return nil
+        }
+    }
+
+    // MARK: - Security: Integrity Verification
+
+    /// 计算 Manifest 的 SHA-256 哈希值
+    /// - Parameter manifest: Manifest 对象
+    /// - Returns: SHA-256 哈希字符串
+    private func calculateManifestHash(manifest: Manifest) -> String {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(manifest)
+            let hash = SHA256.hash(data: data)
+            return Data(hash).map { String(format: "%02x", $0) }.joined()
+        } catch {
+            Log.error("Failed to calculate manifest hash: \(error.localizedDescription)", category: .general)
+            return UUID().uuidString  // Fallback: use random UUID if hashing fails
+        }
+    }
+
+    /// 验证 Manifest 完整性（防篡改）
+    /// - Parameter cachedEntry: 缓存的 Manifest 条目
+    /// - Returns: true if manifest is intact, false if tampered
+    func verifyManifestIntegrity(_ cachedEntry: ManifestCacheEntry) -> Bool {
+        let currentHash = calculateManifestHash(manifest: cachedEntry.manifest)
+        let isValid = currentHash == cachedEntry.contentHash
+
+        if !isValid {
+            Log.error(
+                "Manifest tampering detected! Expected hash: \(cachedEntry.contentHash), Actual: \(currentHash)",
+                category: .general
+            )
+        }
+
+        return isValid
+    }
+
+    /// 批量验证所有缓存的 Manifest 完整性
+    /// - Returns: 元组 (totalCount, intactCount, tamperedCount)
+    public func verifyAllManifestsIntegrity() -> (total: Int, intact: Int, tampered: Int) {
+        return serialQueue.sync {
+            var intactCount = 0
+            var tamperedCount = 0
+
+            for (key, entry) in manifestCache {
+                if verifyManifestIntegrity(entry) {
+                    intactCount += 1
+                } else {
+                    tamperedCount += 1
+                    // 自动删除篡改的 manifest
+                    manifestCache.removeValue(forKey: key)
+                    Log.warning("Removed tampered manifest for key: \(key)", category: .general)
+                }
+            }
+
+            let total = manifestCache.count
+            Log.info(
+                "Manifest integrity check complete - Total: \(total), Intact: \(intactCount), Tampered: \(tamperedCount)",
+                category: .general
+            )
+
+            return (total: total, intact: intactCount, tampered: tamperedCount)
         }
     }
 }

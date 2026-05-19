@@ -212,6 +212,8 @@ public final class EngineBootstrap {
             }
         case .none:
             break
+        @unknown default:
+            break
         }
     }
 
