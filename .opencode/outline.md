@@ -5,6 +5,26 @@
 - **最后更新**: 2026-05-07 (Phase 1-11 全部完成, WebSocket 模块, CI 修复, ~1700+ 测试, ~75K+ 行)
 - **仓库**: github.com/dyyz1993/WebBridgeKit
 
+## Round 2 Completion（2026-05-20）
+
+### Summary
+- **PR #1 squash-merged to master** (`4f53c00`), followed by 3 fix commits on master
+- **CORS production whitelist middleware**: env var `CORS_ALLOWED_ORIGINS` controls allowed origins on the server
+- **ThirdPartyLicensesViewController + LicenseDetailViewController**: 13 dependencies listed in Settings → 关于 → 第三方许可
+- **39 security tests**: HMAC validation (12) + Manifest integrity (9) + Log sanitization (18)
+- **CI optimization**: artifact sharing between jobs, 4-group test matrix, parallel lint+build, 30min timeout
+- **Total tests: 3,769** (101 UI + 3,668 unit) — all passing on master
+- **0 business warnings**, clean build
+
+### Round 2 Commits
+| Commit | Description |
+|--------|-------------|
+| `49a0e69` | perf(ci): share build artifacts, 4-group matrix, parallel lint+build, 30min timeout |
+| `634cb49` | feat(security): CORS whitelist, third-party licenses page, 39 security tests |
+| `d9a7a38` | fix(tests): skip MessageEngine in UI test mode to avoid async race condition |
+
+---
+
 ## PR #1 Master Merge — 进度跟踪（2026-05-20）
 
 ### Completed on master branch
