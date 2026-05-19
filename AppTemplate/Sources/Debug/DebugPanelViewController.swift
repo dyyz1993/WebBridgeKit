@@ -54,7 +54,7 @@ public class DebugPanelViewController: UIViewController {
 
     private func setupUI() {
         title = "🧠 Handlers"
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
 
         view.addSubview(tableView)
         tableView.snp.makeConstraints { make in
@@ -144,8 +144,8 @@ extension DebugPanelViewController: UITableViewDataSource {
         var config = cell.defaultContentConfiguration()
         config.text = handler.displayName
         config.secondaryText = handler.action
-        config.image = UIImage(systemName: "chevron.right")
-        config.imageProperties.tintColor = .tertiarySystemFill
+        config.image = LucideIcon.chevronRight.image()
+        config.imageProperties.tintColor = ThemeTokens.Color.textTertiary
 
         if !handler.requiredPermissions.isEmpty {
             config.secondaryText = "\(handler.action) 🔐"
