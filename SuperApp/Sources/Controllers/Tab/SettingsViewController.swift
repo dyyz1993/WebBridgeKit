@@ -92,6 +92,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             .drive(onNext: { [weak self] in self?.navigateToFavorites() })
             .disposed(by: rx)
 
+        output.navigateToHistory
+            .drive(onNext: { [weak self] in self?.navigateToHistory() })
+            .disposed(by: rx)
+
         output.navigateToManagement
             .drive(onNext: { [weak self] in self?.navigateToManagement() })
             .disposed(by: rx)
@@ -153,6 +157,11 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    private func navigateToHistory() {
+        let vc = RecentAccessHistoryViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
     private func navigateToManagement() {
         let vc = ManagementViewController()
         navigationController?.pushViewController(vc, animated: true)
@@ -184,6 +193,10 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func handleExportDiagnostics() {
+        #if DEBUG
+        let vc = DiagnosticsViewController()
+        navigationController?.pushViewController(vc, animated: true)
+        #else
         let alert = UIAlertController(
             title: L10n.tr("settings.hero.copied_title"),
             message: L10n.tr("settings.export.diagnostics"),
@@ -191,6 +204,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         )
         alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
+        #endif
     }
 }
 

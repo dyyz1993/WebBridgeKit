@@ -15,6 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        let start = Date()
 
         CrashLogManager.shared.initialize()
 
@@ -101,7 +102,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             PushRelayManager.shared.connect()
         }
 
+        let duration = Date().timeIntervalSince(start)
+        Log.info("App launch took \(String(format: "%.3f", duration))s", category: .performance)
+
         return true
+    }
+
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        Log.info("App entering foreground", category: .general)
+    }
+
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        Log.info("App entering background", category: .general)
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {

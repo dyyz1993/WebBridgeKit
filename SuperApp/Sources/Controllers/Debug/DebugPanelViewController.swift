@@ -27,7 +27,8 @@ class DebugPanelViewController: UIViewController {
         (L10n.tr("debug.panel.notification_test"), .bell),
         (L10n.tr("debug.panel.logs"), .docText),
         (L10n.tr("debug.panel.environment"), .server),
-        (L10n.tr("debug.panel.cache_stats"), .hardDrive)
+        (L10n.tr("debug.panel.cache_stats"), .hardDrive),
+        (L10n.tr("debug.panel.network"), .network)
     ]
 
     private lazy var handlerListVC = HandlerDebugListViewController()
@@ -35,6 +36,7 @@ class DebugPanelViewController: UIViewController {
     private lazy var logViewerVC = LogDebugViewController()
     private lazy var environmentVC = EnvironmentDebugViewController()
     private lazy var cacheDashboardVC = CacheDashboardViewController(viewModel: CacheDashboardViewModel())
+    private lazy var networkVC = NetworkDebugViewController()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -166,6 +168,7 @@ class DebugPanelViewController: UIViewController {
         case 2: vc = logViewerVC
         case 3: vc = environmentVC
         case 4: vc = cacheDashboardVC
+        case 5: vc = networkVC
         default: vc = handlerListVC
         }
 

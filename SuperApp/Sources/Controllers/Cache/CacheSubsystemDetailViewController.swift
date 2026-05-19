@@ -450,8 +450,171 @@ class ManifestCacheDetailVC: CacheSubsystemDetailViewController {
     required init?(coder: NSCoder) { fatalError() }
 }
 class WebResourceCacheDetailVC: CacheSubsystemDetailViewController {
+    private var resourceBreakdown: (css: Int?, js: Int?, images: Int?, other: Int?) = (nil, nil, nil, nil)
+
     override init(subsystemID: SubsystemID) { super.init(subsystemID: subsystemID) }
     required init?(coder: NSCoder) { fatalError() }
+
+    override func refreshStats() {
+        super.refreshStats()
+        calculateResourceBreakdown()
+    }
+
+    override var extraDataRows: [(label: String, value: String)] {
+        var rows: [(label: String, value: String)] = []
+
+        let allStats = WebResourceCacheManager.shared.getAllCacheStats()
+        if let manifestStats = allStats.first {
+            let htmlSize = manifestStats.manifest?.htmlContent.count ?? 0
+            rows.append(("HTML 大小", formatBytes(htmlSize)))
+            rows.append(("创建时间", formatDate(manifestStats.createdAt)))
+            rows.append(("最后访问", formatDate(manifestStats.lastAccessedAt)))
+
+            if let manifest = manifestStats.manifest {
+                let breakdown = getResourceTypeBreakdown(resources: manifest.resources)
+                rows.append(("CSS 文件", "\(breakdown.css ?? 0)"))
+                rows.append(("JavaScript", "\(breakdown.js ?? 0)"))
+                rows.append(("图片资源", "\(breakdown.images ?? 0)"))
+                rows.append(("其他资源", "\(breakdown.other ?? 0)"))
+            }
+        }
+
+        return rows
+    }
+
+    override var customActions: [(title: String, iconName: String, action: () -> Void)] {
+        var actions = super.customActions
+
+        if let allStats = WebResourceCacheManager.shared.getAllCacheStats().first,
+           let url = allStats.manifest?.url {
+            actions.append((
+                title: "重新下载",
+                iconName: "download",
+                action: { [weak self] in
+                    self?.redownloadResource(from: url)
+                }
+            ))
+        }
+
+        return actions
+    }
+
+    private func calculateResourceBreakdown() {
+        let allStats = WebResourceCacheManager.shared.getAllCacheStats()
+        guard let manifestStats = allStats.first,
+              let manifest = manifestStats.manifest else { return }
+
+        resourceBreakdown = getResourceTypeBreakdown(resources: manifest.resources)
+    }
+
+    private func getResourceTypeBreakdown(resources: [String: Any]?) -> (css: Int?, js: Int?, images: Int?, other: Int?) {
+        guard let resources = resources else {
+            return (nil, nil, nil, nil)
+        }
+
+        var cssCount = 0
+        var jsCount = 0
+        var imageCount = 0
+        var otherCount = 0
+
+        for resource in resources.values {
+            if let resourceDict = resource as? [String: Any] {
+                if let mimeType = resourceDict["mimeType"] as? String {
+                    let lowerMimeType = mimeType.lowercased()
+
+                    if lowerMimeType.hasPrefix("text/css") {
+                        cssCount += 1
+                    } else if lowerMimeType.hasPrefix("text/javascript") || lowerMimeType.hasPrefix("application/javascript") {
+                        jsCount += 1
+                    } else if lowerMimeType.hasPrefix("image/") {
+                        imageCount += 1
+                    } else {
+                        otherCount += 1
+                    }
+                }
+            }
+        }
+
+        return (cssCount, jsCount, imageCount, otherCount)
+    }
+
+    private func formatBytes(_ bytes: Int) -> String {
+        ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter.string(from: date)
+    }
+
+    private func redownloadResource(from urlString: String) {
+        guard let url = URL(string: urlString) else {
+            let alert = UIAlertController(
+                title: "错误",
+                message: "无效的 URL: \(urlString)",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "确定", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        let alert = UIAlertController(
+            title: "重新下载",
+            message: "确定要重新下载: \(urlString) 吗？",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: "确定", style: .default, handler: { [weak self] _ in
+            self?.performRedownload(url: url)
+        }))
+        present(alert, animated: true)
+    }
+
+    private func performRedownload(url: URL) {
+        let hud = UIAlertController(
+            title: "下载中...",
+            message: nil,
+            preferredStyle: .alert
+        )
+        present(hud, animated: true)
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                DispatchQueue.main.async {
+                    hud.dismiss(animated: true)
+
+                    if let error = error {
+                        let alert = UIAlertController(
+                            title: "下载失败",
+                            message: error.localizedDescription,
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "确定", style: .default))
+                        self?.present(alert, animated: true)
+                        return
+                    }
+
+                    if let httpResponse = response as? HTTPURLResponse {
+                        let message = "下载完成\n状态码: \(httpResponse.statusCode)"
+                        let alert = UIAlertController(
+                            title: "成功",
+                            message: message,
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "确定", style: .default, handler: { _ in
+                            self?.refreshStats()
+                        }))
+                        self?.present(alert, animated: true)
+                    }
+                }
+            }
+            task.resume()
+        }
+    }
 }
 class CompressedCacheDetailVC: CacheSubsystemDetailViewController {
     override init(subsystemID: SubsystemID) { super.init(subsystemID: subsystemID) }
