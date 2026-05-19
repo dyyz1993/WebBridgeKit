@@ -85,7 +85,11 @@ targets:
                   manifest_*test*.html manifest_cache_demo.html manifest_demo.html \
                   permission-test.html execute_network_test.html ua_test.html static_test.html \
                   2>/dev/null || true
-            echo "Done. Test resources stripped."
+            find . -name "*test*.js" -not -name "WebBridge.js" -delete 2>/dev/null || true
+            find . -name "*debug*.js" -delete 2>/dev/null || true
+            find . -name "*test*.css" -delete 2>/dev/null || true
+            find Frameworks -name "*debug*.js" -delete 2>/dev/null || true
+            echo "Done. Test/debug resources stripped."
           else
             echo "Skipping test resource strip (Debug build)"
           fi
