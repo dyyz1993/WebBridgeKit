@@ -233,9 +233,11 @@ bash scripts/scan-crash-logs.sh
 | Lucide imagesets | 73 |
 | Assets.car | 465 KB |
 | Debug .app size | 56 MB |
-| Largest framework | WebBridgeKit.framework (44 MB, Debug symbols) |
+| **Release .app size** | **27 MB** |
+| Archive size | 123 MB |
+| Largest framework | WebBridgeKit.framework (44 MB Debug, ~21 MB Release) |
 | Non-Lucide SVGs | 3 branding assets (icon-set.svg, hero-bg.svg, logo.svg) |
-| Hardcoded color violations | 0 in active code (only deprecated WKColor.swift) |
+| Hardcoded color violations | 0 (WKColor.swift deleted) |
 
 ### Additional Commit (on feature branch)
 
@@ -246,4 +248,38 @@ bash scripts/scan-crash-logs.sh
   - Deleted WKColor.swift, migrated setLetterIcon to UIImageView+LetterIcon.swift
   - Added tools/run-visual-regression.sh
 
-Final build status: 0 business warnings, 0 errors, all tests pass.
+- `5218431` feat(quality): accessibility audit, UI tests, CI hardening, release docs, screenshots
+  - VoiceOver labels, accessibility identifiers, 44pt touch targets
+  - Reduce Motion (20 animations wrapped), Dynamic Type (8 files)
+  - ComponentCatalogTests (19 tests), DebugPanelTests (8 tests)
+  - Crash scan CI step + filter-test-noise.sh
+  - Warning policy, release checklist, PR template, size budget, deps audit
+
+- `8ef63cf` feat(ui): empty state unification, destructive confirmations, Debug prod gate
+  - Unified EmptyStateView (icon/title/subtitle/action), CacheEmptyStateView removed
+  - 5 destructive confirmations (cache clear, API key delete, history delete)
+  - HUDService verified complete (success/error/info/progress/loading)
+  - Debug Panel gated with #if DEBUG (hidden in Release)
+  - StructuredLogger sanitization (tokens, passwords, cookies, auth headers)
+
+- `720c61d` feat(core): WebBridge security + core capabilities + stability baselines
+  - URL allowlist, JS command allowlist (31 commands), manifest SHA-256 integrity
+  - Manifest fallback (exponential backoff), command timeout (30s)
+  - JS bridge trace (100 FIFO), manifest schema validation
+  - Cache: clearCacheOlderThan(days:), stress test documented
+  - Startup/WebView loading/memory baselines, crash log enhanced
+
+- `d826dc1` feat(productization): bookmarks, history, manifest preview, diagnostics
+  - Bookmark management (edit/reorder/create), recent history (time filters)
+  - Manifest preview (icon/name/start URL/display mode/theme color)
+  - Network request viewer (Debug Panel → Network tab)
+  - Diagnostics export (JSON + clipboard + share sheet + clear data)
+  - Cache detail page (resource breakdown, formatted bytes)
+
+- `e632a9a` fix(warnings): clear remaining 24 business warnings to zero
+  - Removed unnecessary try, unused self capture, no-op String cast
+  - Added @unchecked Sendable to ManifestDownloader (non-Sendable capture)
+  - Migrated deprecated sync findHistory to async/await
+
+Final build status: 0 business warnings, 0 errors, all tests pass. ✅
+Final build: **28 total warnings → 4** (all accepted Apple/libtool noise).

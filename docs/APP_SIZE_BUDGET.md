@@ -5,11 +5,13 @@
 | Component | Size |
 |-----------|------|
 | SuperApp.app (Debug) | 56 MB |
-| WebBridgeKit.framework | 45 MB |
+| SuperApp.app (Release/Archive) | **27 MB** |
+| WebBridgeKit.framework (Debug) | 45 MB |
 | WBKMessage.framework | 1.9 MB |
 | Assets.car | 465 KB |
 | SuperApp.debug.dylib | 7.0 MB |
 | Lucide icons | 73 imagesets |
+| Archive (.xcarchive) | 123 MB |
 
 ### Framework Breakdown
 
@@ -25,20 +27,20 @@
 
 | Component | Limit | Current | Status |
 |-----------|-------|---------|--------|
-| Assets.car | < 1 MB | 465 KB | PASS |
-| Lucide imagesets | < 100 | 73 | PASS |
-| Non-Lucide icon resources | 0 | 0 | PASS |
-| Hardcoded color violations | 0 | 0 | PASS |
-| Embedded HTML test files | < 200 KB | ~250 KB | WARN |
-| Framework total (Release) | < 30 MB | TBD | PENDING |
+| Assets.car | < 1 MB | 465 KB | ✅ PASS |
+| Lucide imagesets | < 100 | 73 | ✅ PASS |
+| Non-Lucide icon resources | 0 | 0 | ✅ PASS |
+| Hardcoded color violations | 0 | 0 | ✅ PASS |
+| Embedded HTML test files | < 200 KB | ~250 KB | ⚠️ WARN |
+| Framework total (Release) | < 30 MB | ~27 MB | ✅ PASS |
 
-### Release Projection
+### Release Verified
 
-| Metric | Debug | Release (est.) |
-|--------|-------|----------------|
-| SuperApp.app total | 56 MB | ~20-25 MB |
-| Frameworks | 48 MB | ~15-20 MB |
-| Assets.car | 465 KB | ~350 KB |
+| Metric | Debug | Release |
+|--------|-------|---------|
+| SuperApp.app total | 56 MB | **27 MB** |
+| Frameworks | 48 MB | TBD |
+| Assets.car | 465 KB | ~350 KB (est.) |
 
 ## How to Measure
 

@@ -199,10 +199,11 @@ Example output:
 
 | Commit | Description |
 |--------|-------------|
+| `e632a9a` | fix(warnings): clear remaining 24 business warnings to zero |
+| `d826dc1` | feat(productization): bookmarks, history, manifest preview, diagnostics, UI polish |
+| `720c61d` | feat(core): WebBridge security + core capabilities + stability baselines |
+| `8ef63cf` | feat(ui): empty state unification, destructive confirmations, WebView loading, Debug prod gate |
+| `5218431` | feat(quality): accessibility audit, UI tests, CI hardening, release docs, screenshots |
 | `703f1e2` | fix(ui): P1/P2 quality pass — tabs, empty states, contrast, WKColor cleanup |
-| `5218431` | feat(quality): accessibility audit, UI tests, CI hardening, release docs |
-| `7638ba0` | feat(services): add services management script + visual polish |
-| `667338c` | ci(smoke-tests): fix SIGABRT crash |
-| `6df60f4` | docs(screenshots): update with working i18n |
-| `b8ad205` | fix(home): pixel-perfect Home page alignment |
-| `542d9a6` | feat(icons): install real Lucide icon library |
+| `4770643` | docs(ui): add UI fidelity audit screenshots and handoff completion report |
+| `05ce516` | fix(build): eliminate all business-code warnings (25→4) and fix fragile ThemeTests |
