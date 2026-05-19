@@ -1,4 +1,5 @@
 import XCTest
+import RxSwift
 @testable import WebBridgeKit
 
 final class ServiceLocatorManagerTests: XCTestCase {
@@ -184,6 +185,12 @@ private final class MockPinnedURLManager: PinnedURLManaging {
     }
     func importPresets(_ items: [PresetURLItem]) async throws -> Int { 0 }
     func seedRecommendedPresetsIfNeeded() async throws -> Int { 0 }
+    func update(id: String, url: String?, newTitle: String?, notes: String?) async throws -> PinnedURLRealm {
+        fatalError("not implemented")
+    }
+    func move(fromIndex: Int, toIndex: Int) async throws {
+        fatalError("not implemented")
+    }
 }
 
 private final class MockURLManaging: URLManaging {
@@ -205,34 +212,34 @@ private final class MockManifestCacheManaging: ManifestCacheManaging {
 }
 
 private final class MockWebCacheManaging: WebCacheManaging {
-    func fetchSystemCacheStatistics() -> Observable<[WebCacheStatistics]> {
-        Observable.just([])
+    func fetchSystemCacheStatistics() -> RxSwift.Observable<[WebCacheStatistics]> {
+        RxSwift.Observable.just([])
     }
     func clearAll() {}
-    func clearCache(for domain: String) -> Observable<Void> { Observable.just(()) }
-    func clearAllCache() -> Observable<Void> { Observable.just(()) }
+    func clearCache(for domain: String) -> RxSwift.Observable<Void> { RxSwift.Observable.just(()) }
+    func clearAllCache() -> RxSwift.Observable<Void> { RxSwift.Observable.just(()) }
     func performAutoCleanup() {}
     func getCachedDomains() -> [WebCacheStatistics] { [] }
     func getTotalCacheSize() -> Int64 { 0 }
     func isURLCached(_ url: URL) -> Bool { false }
-    func preloadURL(_ url: URL) -> Observable<Void> { Observable.just(()) }
-    func deleteCacheByGlob(pattern: String) -> Observable<Int> { Observable.just(0) }
-    func getCacheMemoryInfo() -> Observable<CacheMemoryInfo> {
+    func preloadURL(_ url: URL) -> RxSwift.Observable<Void> { RxSwift.Observable.just(()) }
+    func deleteCacheByGlob(pattern: String) -> RxSwift.Observable<Int> { RxSwift.Observable.just(0) }
+    func getCacheMemoryInfo() -> RxSwift.Observable<CacheMemoryInfo> {
         fatalError("not implemented")
     }
-    func getDetailedCacheEntries(filterPattern: String?) -> Observable<[CacheEntryInfo]> {
-        Observable.just([])
+    func getDetailedCacheEntries(filterPattern: String?) -> RxSwift.Observable<[CacheEntryInfo]> {
+        RxSwift.Observable.just([])
     }
-    func getCacheEntriesGroupedByDomain() -> Observable<[String: [CacheEntryInfo]]> {
-        Observable.just([:])
+    func getCacheEntriesGroupedByDomain() -> RxSwift.Observable<[String: [CacheEntryInfo]]> {
+        RxSwift.Observable.just([:])
     }
     func isResourceCached(url: URL) -> (cached: Bool, info: CacheEntryInfo?) {
         (false, nil)
     }
-    func preloadToCompressedCache(url: URL) -> Observable<Progress> {
+    func preloadToCompressedCache(url: URL) -> RxSwift.Observable<Progress> {
         fatalError("not implemented")
     }
-    func clearAllCompressedCache() -> Observable<Void> { Observable.just(()) }
+    func clearAllCompressedCache() -> RxSwift.Observable<Void> { RxSwift.Observable.just(()) }
 }
 
 private final class MockMessageEngineProtocol: MessageEngineProtocol {

@@ -11,6 +11,7 @@ struct ServerConfiguration: Sendable {
     let apnsTopic: String
     let apnsEnvironment: String
     let dataDir: String
+    let allowedCORSOrigins: [String]
 
     init() {
         let env = Environment()
@@ -23,6 +24,10 @@ struct ServerConfiguration: Sendable {
         self.apnsTopic = env.get("APNS_TOPIC") ?? "com.webbridgekit.app"
         self.apnsEnvironment = env.get("APNS_ENVIRONMENT") ?? "sandbox"
         self.dataDir = env.get("DATA_DIR") ?? "./data"
+        let originsRaw: String? = env.get("CORS_ALLOWED_ORIGINS")
+        self.allowedCORSOrigins = originsRaw.map {
+            $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        } ?? []
     }
 }
 

@@ -37,7 +37,7 @@ public protocol WebBrowserManaging {
 
 /// Manifest 缓存管理协议
 /// 用于管理 HTML 和 Manifest 的存储
-public protocol ManifestCacheManaging {
+public protocol ManifestCacheManaging: AnyObject {
     /// 保存 HTML 内容
     /// - Parameters:
     ///   - html: HTML 内容
@@ -145,7 +145,7 @@ public protocol WebPageHistoryManaging {
 
 /// 缓存管理协议
 /// 用于管理 WebView 和资源缓存
-public protocol WebCacheManaging {
+public protocol WebCacheManaging: AnyObject {
     /// 获取所有网站的缓存统计
     /// - Returns: Observable 序列，返回缓存统计数组
     func fetchSystemCacheStatistics() -> Observable<[WebCacheStatistics]>

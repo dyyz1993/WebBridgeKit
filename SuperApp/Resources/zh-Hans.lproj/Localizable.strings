@@ -493,3 +493,7 @@
 "subsystem.detail.refresh" = "刷新";
 "subsystem.detail.clear" = "清除";
 "subsystem.detail.clear_confirm" = "确定要清除该子系统的所有缓存数据吗？\n注意：置顶的 URL 不会受影响。";
+
+// Third Party Licenses
+"about.third_party_licenses" = "开源许可";
+"about.license_detail" = "许可详情";

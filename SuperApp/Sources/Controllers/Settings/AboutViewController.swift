@@ -313,7 +313,9 @@ extension AboutViewController: UITableViewDelegate {
 
         switch section {
         case .license:
-            showLicenseAlert()
+            let vc = ThirdPartyLicensesViewController()
+            vc.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(vc, animated: true)
         case .feedback:
             if indexPath.row == 0 {
                 openGitHubIssues()

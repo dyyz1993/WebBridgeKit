@@ -180,10 +180,7 @@ final class ThreadSafetyTests: XCTestCase {
     // MARK: - Progress Update Tests
 
     func testProgressUpdateThrottling() throws {
-        let modal = ResourceProgressModal(
-            description: "Throttle Test",
-            totalResources: 1000
-        ) { }
+        let modal = FullScreenProgressViewController(totalResources: 1000)
 
         let expectation = XCTestExpectation(description: "Rapid updates")
         let updateCount = 1000
@@ -192,7 +189,7 @@ final class ThreadSafetyTests: XCTestCase {
         DispatchQueue.global(qos: .userInitiated).async {
             for i in 0..<updateCount {
                 DispatchQueue.main.async {
-                    modal.updateProgress(current: i, total: updateCount, resourceName: "res_\(i)")
+                    modal.updateProgress(current: i, total: updateCount, message: "Throttle Test", resourceName: "res_\(i)")
                     actualUpdates += 1
 
                     if i == updateCount - 1 {
@@ -207,10 +204,7 @@ final class ThreadSafetyTests: XCTestCase {
     }
 
     func testProgressUpdateCompletion() throws {
-        let modal = ResourceProgressModal(
-            description: "Completion Test",
-            totalResources: 10
-        ) { }
+        let modal = FullScreenProgressViewController(totalResources: 10)
 
         let expectation = XCTestExpectation(description: "Progress completion")
 
@@ -218,7 +212,7 @@ final class ThreadSafetyTests: XCTestCase {
             for i in 0...10 {
                 Thread.sleep(forTimeInterval: 0.01)
                 DispatchQueue.main.async {
-                    modal.updateProgress(current: i, total: 10, resourceName: "res_\(i)")
+                    modal.updateProgress(current: i, total: 10, message: "Completion Test", resourceName: "res_\(i)")
 
                     if i == 10 {
                         expectation.fulfill()
