@@ -115,7 +115,7 @@ extension ComponentCatalogViewController {
             let timeLabel = UILabel()
             timeLabel.text = "05-08 14:30"
             timeLabel.font = ThemeTokens.Typography.caption2
-            timeLabel.textColor = ThemeTokens.Color.textTertiary
+            timeLabel.textColor = ThemeTokens.Color.textSecondary
             timeLabel.textAlignment = .right
             cell.addSubview(timeLabel)
 

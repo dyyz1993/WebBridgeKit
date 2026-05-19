@@ -23,7 +23,7 @@ class PushTokenCardCell: UICollectionViewCell {
         let iv = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         iv.image = LucideIcon.server.image(pointSize: 14, weight: .medium)
-        iv.tintColor = ThemeTokens.Color.textTertiary
+        iv.tintColor = ThemeTokens.Color.textSecondary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -31,7 +31,7 @@ class PushTokenCardCell: UICollectionViewCell {
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -175,7 +175,7 @@ class PushTokenCardCell: UICollectionViewCell {
         } else {
             urlLabel.text = serverURL
             tokenLabel.text = L10n.tr("home.token_card.not_registered")
-            tokenLabel.textColor = ThemeTokens.Color.textTertiary
+            tokenLabel.textColor = ThemeTokens.Color.textSecondary
             copyButton.isHidden = true
             registerButton.isHidden = false
         }
@@ -337,7 +337,7 @@ class CommandBannerView: UIView {
     private let dismissButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(LucideIcon.xmark.image(pointSize: 14, weight: .bold), for: .normal)
-        button.tintColor = ThemeTokens.Color.textTertiary
+        button.tintColor = ThemeTokens.Color.textSecondary
         return button
     }()
 

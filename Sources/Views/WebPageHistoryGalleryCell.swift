@@ -66,7 +66,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 2
         label.textAlignment = .center
         return label

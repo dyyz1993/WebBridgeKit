@@ -115,7 +115,7 @@ public class CacheManagementViewController: UIViewController {
 
         let appCountLabel = UILabel()
         appCountLabel.font = .systemFont(ofSize: 12, weight: .regular)
-        appCountLabel.textColor = ThemeTokens.Color.textTertiary
+        appCountLabel.textColor = ThemeTokens.Color.textSecondary
         appCountLabel.text = "0 个应用"
         appCountLabel.tag = 101
 

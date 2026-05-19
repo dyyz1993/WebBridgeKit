@@ -168,13 +168,13 @@ public class WebCacheDebugFloatingButton: UIView {
 
         // Current URL section
         let urlLabel = createLabel(text: "Current URL:", font: .systemFont(ofSize: 14, weight: .semibold))
-        let urlValueLabel = createLabel(text: "N/A", font: .systemFont(ofSize: 12), textColor: ThemeTokens.Color.textTertiary)
+        let urlValueLabel = createLabel(text: "N/A", font: .systemFont(ofSize: 12), textColor: ThemeTokens.Color.textSecondary)
         urlValueLabel.numberOfLines = 2
         urlValueLabel.tag = 100
 
         // Status section
         let statusLabel = createLabel(text: "Status:", font: .systemFont(ofSize: 14, weight: .semibold))
-        let statusValueLabel = createLabel(text: "No Cache", font: .systemFont(ofSize: 14), textColor: ThemeTokens.Color.textTertiary)
+        let statusValueLabel = createLabel(text: "No Cache", font: .systemFont(ofSize: 14), textColor: ThemeTokens.Color.textSecondary)
         statusValueLabel.tag = 101
 
         // Resources section
@@ -357,7 +357,7 @@ public class WebCacheDebugFloatingButton: UIView {
         eventsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         if cacheEvents.isEmpty {
-            let emptyLabel = createLabel(text: "No events yet", font: .systemFont(ofSize: 12), textColor: ThemeTokens.Color.textTertiary)
+            let emptyLabel = createLabel(text: "No events yet", font: .systemFont(ofSize: 12), textColor: ThemeTokens.Color.textSecondary)
             eventsStack.addArrangedSubview(emptyLabel)
         } else {
             for event in cacheEvents {

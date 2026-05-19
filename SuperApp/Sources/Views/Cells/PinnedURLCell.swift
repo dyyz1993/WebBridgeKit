@@ -75,7 +75,7 @@ class PinnedURLCell: UITableViewCell {
     private let accessLabel: UILabel = {
         let l = UILabel()
         l.font = ThemeTokens.Typography.caption2
-        l.textColor = ThemeTokens.Color.textTertiary
+        l.textColor = ThemeTokens.Color.textSecondary
         return l
     }()
 

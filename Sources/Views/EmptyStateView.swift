@@ -24,7 +24,7 @@ public class EmptyStateView: UIView {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeTokens.Color.textTertiary
+        imageView.tintColor = ThemeTokens.Color.textSecondary
         return imageView
     }()
 

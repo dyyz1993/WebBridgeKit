@@ -63,7 +63,7 @@ class PresetURLCell: UICollectionViewCell {
     private let urlLabel: UILabel = {
         let l = UILabel()
         l.font = UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
-        l.textColor = ThemeTokens.Color.textTertiary
+        l.textColor = ThemeTokens.Color.textSecondary
         l.numberOfLines = 1
         return l
     }()

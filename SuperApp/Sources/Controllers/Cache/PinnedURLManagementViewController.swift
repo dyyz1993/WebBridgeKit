@@ -57,7 +57,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         let l = UILabel()
         l.text = "从预设目录添加，或手动输入 URL\n置顶的 URL 在缓存清理时不会被删除"
         l.font = UIFont.preferredFont(forTextStyle: .caption1)
-        l.textColor = ThemeTokens.Color.textTertiary
+        l.textColor = ThemeTokens.Color.textSecondary
         l.textAlignment = .center
         l.numberOfLines = 0
         return l

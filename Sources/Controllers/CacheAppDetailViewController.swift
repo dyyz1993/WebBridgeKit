@@ -71,7 +71,7 @@ public class CacheAppDetailViewController: UIViewController {
 
         let infoLabel = UILabel()
         infoLabel.font = ThemeTokens.Typography.footnote
-        infoLabel.textColor = ThemeTokens.Color.textTertiary
+        infoLabel.textColor = ThemeTokens.Color.textSecondary
         infoLabel.numberOfLines = 0
         infoLabel.textAlignment = .center
         infoLabel.tag = 103

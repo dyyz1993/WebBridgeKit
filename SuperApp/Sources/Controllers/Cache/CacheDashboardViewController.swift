@@ -13,6 +13,105 @@ import RxCocoa
 import RxDataSources
 import WebBridgeKit
 
+final class CacheEmptyStateView: UIView {
+
+    private let onRefresh: () -> Void
+
+    private lazy var iconImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.hardDrive.templateImage(pointSize: ThemeTokens.Icons.Sizes.xxl)
+        iv.tintColor = ThemeTokens.Color.textSecondary
+        iv.contentMode = .scaleAspectFit
+        iv.accessibilityLabel = "缓存图标"
+        return iv
+    }()
+
+    private lazy var titleLabel: UILabel = {
+        let l = UILabel()
+        l.font = ThemeTokens.Typography.headline
+        l.textColor = ThemeTokens.Color.textSecondary
+        l.textAlignment = .center
+        l.text = "暂无缓存数据"
+        l.numberOfLines = 0
+        l.adjustsFontForContentSizeCategory = true
+        return l
+    }()
+
+    private lazy var subtitleLabel: UILabel = {
+        let l = UILabel()
+        l.font = ThemeTokens.Typography.subheadline
+        l.textColor = ThemeTokens.Color.textSecondary
+        l.textAlignment = .center
+        l.text = "缓存数据加载后将显示在这里"
+        l.numberOfLines = 0
+        l.adjustsFontForContentSizeCategory = true
+        return l
+    }()
+
+    private lazy var refreshButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("刷新", for: .normal)
+        btn.setTitleColor(ThemeTokens.Color.background, for: .normal)
+        btn.titleLabel?.font = ThemeTokens.Typography.subheadline
+        btn.backgroundColor = ThemeTokens.Color.primary
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        btn.contentEdgeInsets = UIEdgeInsets(
+            top: ThemeTokens.Spacing.sm,
+            left: ThemeTokens.Spacing.md,
+            bottom: ThemeTokens.Spacing.sm,
+            right: ThemeTokens.Spacing.md
+        )
+        let icon = LucideIcon.refresh.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm)
+        btn.setImage(icon, for: .normal)
+        btn.tintColor = ThemeTokens.Color.background
+        btn.semanticContentAttribute = .forceLeftToRight
+        btn.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: ThemeTokens.Spacing.sm)
+        btn.accessibilityLabel = "刷新缓存数据"
+        btn.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
+        return btn
+    }()
+
+    init(onRefresh: @escaping () -> Void) {
+        self.onRefresh = onRefresh
+        super.init(frame: .zero)
+        setupLayout()
+    }
+
+    required init?(coder: NSCoder) {
+        self.onRefresh = {}
+        super.init(coder: coder)
+        setupLayout()
+    }
+
+    private func setupLayout() {
+        isHidden = true
+        accessibilityIdentifier = "cacheDashboard.emptyState"
+
+        let stack = UIStackView(arrangedSubviews: [iconImageView, titleLabel, subtitleLabel, refreshButton])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = ThemeTokens.Spacing.md
+
+        iconImageView.snp.makeConstraints { make in
+            make.size.equalTo(ThemeTokens.Icons.Sizes.xxl)
+        }
+
+        refreshButton.snp.makeConstraints { make in
+            make.width.greaterThanOrEqualTo(120)
+        }
+
+        addSubview(stack)
+        stack.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.xl)
+        }
+    }
+
+    @objc private func refreshTapped() {
+        onRefresh()
+    }
+}
+
 class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> {
 
     // MARK: - UI Components
@@ -43,6 +142,13 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
         ai.color = ThemeTokens.Color.primary
         ai.hidesWhenStopped = true
         return ai
+    }()
+
+    private lazy var emptyStateView: CacheEmptyStateView = {
+        let v = CacheEmptyStateView { [weak self] in
+            self?.refreshRelay.accept(())
+        }
+        return v
     }()
 
     private lazy var errorLabel: UILabel = {
@@ -89,6 +195,7 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
         // Add views
         view.addSubview(tableView)
         view.addSubview(errorLabel)
+        view.addSubview(emptyStateView)
 
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -96,7 +203,11 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
 
         errorLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(32)
+            make.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.xl)
+        }
+
+        emptyStateView.snp.makeConstraints { make in
+            make.edges.equalTo(tableView)
         }
     }
 
@@ -158,6 +269,8 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
             .drive(onNext: { [weak self] newSections in
                 self?.sections = newSections
                 self?.tableView.reloadData()
+                let isEmpty = newSections.allSatisfy { $0.items.isEmpty }
+                self?.emptyStateView.isHidden = !isEmpty
             })
             .disposed(by: rx)
 

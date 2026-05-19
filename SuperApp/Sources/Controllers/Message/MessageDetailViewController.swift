@@ -206,7 +206,7 @@ class MessageDetailViewController: UIViewController {
         let labelLabel = UILabel()
         labelLabel.text = label
         labelLabel.font = ThemeTokens.Typography.footnote
-        labelLabel.textColor = ThemeTokens.Color.textTertiary
+        labelLabel.textColor = ThemeTokens.Color.textSecondary
         labelLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         let valueLabel = UILabel()

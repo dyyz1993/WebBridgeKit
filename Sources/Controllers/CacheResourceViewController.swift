@@ -91,7 +91,7 @@ public class CacheResourceViewController: BaseViewController<CacheResourceViewMo
     private let totalCountLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13, weight: .regular)
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.text = "共 0 个资源"
         return label
     }()

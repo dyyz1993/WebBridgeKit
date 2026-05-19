@@ -12,10 +12,21 @@ import WebBridgeKit
 
 class DebugPanelViewController: UIViewController {
 
-    private let segmentedControl = UISegmentedControl(items: [L10n.tr("debug.panel.handlers"), L10n.tr("debug.panel.notification_test"), L10n.tr("debug.panel.logs"), L10n.tr("debug.panel.environment"), L10n.tr("debug.panel.cache_stats")])
+    private let tabScrollView = UIScrollView()
+    private let tabStack = UIStackView()
     private let containerView = UIView()
+    private let underlineView = UIView()
 
     private var currentViewController: UIViewController?
+    private var selectedIndex: Int = 0
+
+    private let tabs: [(title: String, icon: LucideIcon)] = [
+        (L10n.tr("debug.panel.handlers"), .terminal),
+        (L10n.tr("debug.panel.notification_test"), .bell),
+        (L10n.tr("debug.panel.logs"), .docText),
+        (L10n.tr("debug.panel.environment"), .server),
+        (L10n.tr("debug.panel.cache_stats"), .hardDrive)
+    ]
 
     private lazy var handlerListVC = HandlerDebugListViewController()
     private lazy var notificationVC = NotificationDebugViewController()
@@ -26,7 +37,7 @@ class DebugPanelViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("debug.panel.title")
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: L10n.tr("common.done"),
@@ -40,25 +51,104 @@ class DebugPanelViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.addSubview(segmentedControl)
+        tabScrollView.showsHorizontalScrollIndicator = false
+        tabScrollView.showsVerticalScrollIndicator = false
+        tabScrollView.bounces = true
+
+        tabStack.axis = .horizontal
+        tabStack.spacing = 4
+        tabStack.distribution = .fill
+        tabStack.alignment = .center
+
+        for (index, tab) in tabs.enumerated() {
+            let button = makeTabButton(title: tab.title, icon: tab.icon, index: index)
+            tabStack.addArrangedSubview(button)
+        }
+
+        tabScrollView.addSubview(tabStack)
+
+        underlineView.backgroundColor = ThemeTokens.Color.primary
+
+        view.addSubview(tabScrollView)
+        view.addSubview(underlineView)
         view.addSubview(containerView)
 
-        segmentedControl.selectedSegmentIndex = 0
-        segmentedControl.addTarget(self, action: #selector(segmentChanged), for: UIControl.Event.valueChanged)
+        tabScrollView.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(4)
+            make.left.right.equalToSuperview()
+            make.height.equalTo(40)
+        }
 
-        segmentedControl.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
-            make.left.right.equalToSuperview().inset(16)
+        tabStack.snp.makeConstraints { make in
+            make.top.bottom.equalToSuperview()
+            make.left.right.equalToSuperview().inset(12)
+            make.height.equalToSuperview()
+        }
+
+        underlineView.snp.makeConstraints { make in
+            make.top.equalTo(tabScrollView.snp.bottom)
+            make.left.right.equalToSuperview()
+            make.height.equalTo(1)
         }
 
         containerView.snp.makeConstraints { make in
-            make.top.equalTo(segmentedControl.snp.bottom).offset(8)
+            make.top.equalTo(underlineView.snp.bottom).offset(8)
             make.left.right.bottom.equalToSuperview()
         }
     }
 
-    @objc private func segmentChanged() {
-        switchToTab(index: segmentedControl.selectedSegmentIndex)
+    private func makeTabButton(title: String, icon: LucideIcon, index: Int) -> UIButton {
+        let button = UIButton(type: .custom)
+        button.tag = index
+
+        let iconImage = icon.templateImage(pointSize: 14)
+        button.setImage(iconImage, for: .normal)
+
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -4)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        button.accessibilityLabel = title
+
+        updateTabButtonAppearance(button, isSelected: index == 0)
+
+        button.addTarget(self, action: #selector(tabTapped(_:)), for: .touchUpInside)
+
+        button.snp.makeConstraints { make in
+            make.height.equalTo(32)
+        }
+
+        return button
+    }
+
+    private func updateTabButtonAppearance(_ button: UIButton, isSelected: Bool) {
+        if isSelected {
+            button.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.12)
+            button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
+            button.tintColor = ThemeTokens.Color.primary
+        } else {
+            button.backgroundColor = ThemeTokens.Color.surface
+            button.setTitleColor(ThemeTokens.Color.textSecondary, for: .normal)
+            button.tintColor = ThemeTokens.Color.textSecondary
+        }
+    }
+
+    @objc private func tabTapped(_ sender: UIButton) {
+        let index = sender.tag
+        guard index != selectedIndex else { return }
+        selectedIndex = index
+
+        for case let button as UIButton in tabStack.arrangedSubviews {
+            updateTabButtonAppearance(button, isSelected: button.tag == index)
+        }
+
+        if let selectedButton = tabStack.arrangedSubviews.first(where: { $0.tag == index }) {
+            tabScrollView.scrollRectToVisible(selectedButton.frame.insetBy(dx: -12, dy: 0), animated: true)
+        }
+
+        switchToTab(index: index)
     }
 
     private func switchToTab(index: Int) {
@@ -244,7 +334,7 @@ private class HandlerDebugDetailViewController: UIViewController {
 
         let infoLabel = UILabel()
         infoLabel.text = "\(meta.category.emoji) \(meta.category.displayName) · action: \(meta.action)"
-        infoLabel.textColor = ThemeTokens.Color.textTertiary
+        infoLabel.textColor = ThemeTokens.Color.textSecondary
         infoLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
         stack.addArrangedSubview(infoLabel)
 
@@ -341,7 +431,7 @@ private class HandlerDebugDetailViewController: UIViewController {
             let optionsLabel = UILabel()
             optionsLabel.text = L10n.tr("debug.panel.options", options.joined(separator: " | "))
             optionsLabel.font = .systemFont(ofSize: 11, weight: .regular)
-            optionsLabel.textColor = ThemeTokens.Color.textTertiary
+            optionsLabel.textColor = ThemeTokens.Color.textSecondary
             stack.addArrangedSubview(optionsLabel)
         }
 

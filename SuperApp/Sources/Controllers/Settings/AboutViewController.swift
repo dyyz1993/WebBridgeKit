@@ -67,7 +67,7 @@ class AboutViewController: UIViewController {
         let label = UILabel()
         label.textAlignment = .center
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Color.textTertiary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         label.text = "WebBridgeKit © 2025"
         return label

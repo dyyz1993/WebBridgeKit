@@ -90,7 +90,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         let imageView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
         imageView.image = LucideIcon.clock.image(pointSize: 60, weight: .medium)
-        imageView.tintColor = ThemeTokens.Color.textTertiary
+        imageView.tintColor = ThemeTokens.Color.textSecondary
         imageView.contentMode = .scaleAspectFit
         imageView.accessibilityLabel = "无历史记录"
 
@@ -102,7 +102,7 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
 
         let detailLabel = UILabel()
         detailLabel.text = NSLocalizedString("Visit a webpage to see it here", comment: "")
-        detailLabel.textColor = ThemeTokens.Color.textTertiary
+        detailLabel.textColor = ThemeTokens.Color.textSecondary
         detailLabel.font = ThemeTokens.Typography.footnote
         detailLabel.textAlignment = .center
 
