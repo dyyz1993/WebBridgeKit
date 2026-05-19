@@ -117,7 +117,7 @@ final class GlobPatternTests: XCTestCase {
         // 排除后不应该缓存
         let url = URL(string: "https://www.vip.com/login")!
         let shouldCache = includePatterns.contains { pattern in
-            guard GlobPattern.matches(pattern, against: url.absoluteString) else { return true }
+            guard GlobPattern.matches(pattern, against: url.absoluteString) else { return false }
             return !excludePatterns.contains { excludePattern in
                 GlobPattern.matches(excludePattern, against: url.absoluteString)
             }
