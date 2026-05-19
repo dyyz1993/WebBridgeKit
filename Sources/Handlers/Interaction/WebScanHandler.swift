@@ -200,7 +200,7 @@ private class QRScanViewController: UIViewController {
         label.text = "将二维码放入框内即可自动扫描"
         label.textColor = .white
         label.textAlignment = .center
-        label.font = .systemFont(ofSize: 14)
+        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
         label.frame = CGRect(
             x: 20,
             y: scanFrame.frame.maxY + 20,
@@ -209,8 +209,7 @@ private class QRScanViewController: UIViewController {
         )
         view.addSubview(label)
 
-        // 扫描线动画
-        UIView.animate(withDuration: 1.5, delay: 0, options: [.repeat, .autoreverse]) {
+        UIView.animate(withDuration: 1.5, delay: 0, options: UIAccessibility.isReduceMotionEnabled ? [] : [.repeat, .autoreverse]) {
             self.scanLine?.frame.origin.y = scanFrameSize - 2
         }
     }

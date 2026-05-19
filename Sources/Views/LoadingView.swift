@@ -138,9 +138,13 @@ public class LoadingView: UIView {
         detailLabel.isHidden = true
 
         isHidden = false
-        alpha = 0
-        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.alpha = 1
+        } else {
+            alpha = 0
+            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
+                self.alpha = 1
+            }
         }
     }
 
@@ -164,9 +168,13 @@ public class LoadingView: UIView {
         detailLabel.isHidden = false
 
         isHidden = false
-        alpha = 0
-        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.alpha = 1
+        } else {
+            alpha = 0
+            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
+                self.alpha = 1
+            }
         }
     }
 
@@ -186,11 +194,16 @@ public class LoadingView: UIView {
     public func stopLoading() {
         activityIndicator.stopAnimating()
 
-        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: {
-            self.alpha = 0
-        }, completion: { _ in
+        if UIAccessibility.isReduceMotionEnabled {
             self.isHidden = true
-        })
+            self.alpha = 0
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: {
+                self.alpha = 0
+            }, completion: { _ in
+                self.isHidden = true
+            })
+        }
     }
 
     /// 更新消息

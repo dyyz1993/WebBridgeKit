@@ -236,3 +236,14 @@ bash scripts/scan-crash-logs.sh
 | Largest framework | WebBridgeKit.framework (44 MB, Debug symbols) |
 | Non-Lucide SVGs | 3 branding assets (icon-set.svg, hero-bg.svg, logo.svg) |
 | Hardcoded color violations | 0 in active code (only deprecated WKColor.swift) |
+
+### Additional Commit (on feature branch)
+
+- `703f1e2` fix(ui): P1/P2 quality pass — Debug Panel tabs, empty states, contrast, WKColor cleanup
+  - Debug Panel: scrollable tab bar with Lucide icons (fixes truncation)
+  - Cache Dashboard: CacheEmptyStateView with icon, text, refresh button
+  - Dark Mode contrast: ~40 elements textTertiary→textSecondary across 21 files
+  - Deleted WKColor.swift, migrated setLetterIcon to UIImageView+LetterIcon.swift
+  - Added tools/run-visual-regression.sh
+
+Final build status: 0 business warnings, 0 errors, all tests pass.

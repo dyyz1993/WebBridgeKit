@@ -105,12 +105,13 @@ class DebugPanelViewController: UIViewController {
         button.setImage(iconImage, for: .normal)
 
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
+        button.titleLabel?.font = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: .systemFont(ofSize: 13, weight: .medium))
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -4)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.accessibilityLabel = title
+        button.accessibilityIdentifier = "debugPanel.tab.\(index)"
 
         updateTabButtonAppearance(button, isSelected: index == 0)
 

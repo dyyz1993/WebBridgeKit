@@ -103,8 +103,12 @@ public final class HUDService {
         ])
 
         window.alpha = 0
-        UIView.animate(withDuration: animationDuration) {
+        if UIAccessibility.isReduceMotionEnabled {
             window.alpha = 1
+        } else {
+            UIView.animate(withDuration: animationDuration) {
+                window.alpha = 1
+            }
         }
     }
 
@@ -113,17 +117,23 @@ public final class HUDService {
 
         cancelAutoDismiss()
 
-        UIView.animate(
-            withDuration: animationDuration,
-            animations: {
-                window.alpha = 0
-            },
-            completion: { _ in
-                window.isHidden = true
-                self.hudView = nil
-                self.hudWindow = nil
-            }
-        )
+        if UIAccessibility.isReduceMotionEnabled {
+            window.isHidden = true
+            self.hudView = nil
+            self.hudWindow = nil
+        } else {
+            UIView.animate(
+                withDuration: animationDuration,
+                animations: {
+                    window.alpha = 0
+                },
+                completion: { _ in
+                    window.isHidden = true
+                    self.hudView = nil
+                    self.hudWindow = nil
+                }
+            )
+        }
     }
 
     private func scheduleAutoDismiss(delay: TimeInterval) {
@@ -200,7 +210,7 @@ private final class HUDContainerView: UIView {
         iconView.contentMode = .scaleAspectFit
         iconView.tintColor = .white
 
-        statusLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        statusLabel.font = UIFontMetrics(forTextStyle: .subheadline).scaledFont(for: .systemFont(ofSize: 14, weight: .medium))
         statusLabel.textColor = .white
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0

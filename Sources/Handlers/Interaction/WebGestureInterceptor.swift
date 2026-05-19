@@ -368,7 +368,7 @@ private class PullIndicatorView: UIView {
 
         // 标签
         label.text = "下拉刷新"
-        label.font = .systemFont(ofSize: 12)
+        label.font = UIFont.preferredFont(forTextStyle: .caption1)
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         addSubview(label)

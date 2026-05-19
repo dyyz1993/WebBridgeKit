@@ -88,7 +88,7 @@ public class WebCacheDebugFloatingButton: UIView {
         button.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
         button.layer.shadowRadius = shadow.radius
         button.layer.shadowOpacity = Float(shadow.opacity)
-        button.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
+        button.titleLabel?.font = UIFontMetrics(forTextStyle: .title1).scaledFont(for: .systemFont(ofSize: 24, weight: .bold))
         button.setTitleColor(.white, for: .normal)
         button.accessibilityLabel = "缓存调试按钮"
         return button
@@ -97,7 +97,7 @@ public class WebCacheDebugFloatingButton: UIView {
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("✕", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
+        button.titleLabel?.font = UIFontMetrics(forTextStyle: .title3).scaledFont(for: .systemFont(ofSize: 18, weight: .bold))
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
@@ -164,31 +164,27 @@ public class WebCacheDebugFloatingButton: UIView {
 
     private func setupDebugPanel() {
         // Title
-        let titleLabel = createLabel(text: "Cache Debug Panel", font: .systemFont(ofSize: 18, weight: .bold))
+        let titleLabel = createLabel(text: "Cache Debug Panel", font: ThemeTokens.Typography.title3)
 
-        // Current URL section
-        let urlLabel = createLabel(text: "Current URL:", font: .systemFont(ofSize: 14, weight: .semibold))
-        let urlValueLabel = createLabel(text: "N/A", font: .systemFont(ofSize: 12), textColor: ThemeTokens.Color.textSecondary)
+        let urlLabel = createLabel(text: "Current URL:", font: ThemeTokens.Typography.headline)
+        let urlValueLabel = createLabel(text: "N/A", font: ThemeTokens.Typography.footnote, textColor: ThemeTokens.Color.textSecondary)
         urlValueLabel.numberOfLines = 2
         urlValueLabel.tag = 100
 
         // Status section
-        let statusLabel = createLabel(text: "Status:", font: .systemFont(ofSize: 14, weight: .semibold))
-        let statusValueLabel = createLabel(text: "No Cache", font: .systemFont(ofSize: 14), textColor: ThemeTokens.Color.textSecondary)
+        let statusLabel = createLabel(text: "Status:", font: ThemeTokens.Typography.headline)
+        let statusValueLabel = createLabel(text: "No Cache", font: ThemeTokens.Typography.body, textColor: ThemeTokens.Color.textSecondary)
         statusValueLabel.tag = 101
 
-        // Resources section
-        let resourcesLabel = createLabel(text: "Cached Resources:", font: .systemFont(ofSize: 14, weight: .semibold))
-        let resourcesValueLabel = createLabel(text: "0 items", font: .systemFont(ofSize: 14))
+        let resourcesLabel = createLabel(text: "Cached Resources:", font: ThemeTokens.Typography.headline)
+        let resourcesValueLabel = createLabel(text: "0 items", font: ThemeTokens.Typography.body)
         resourcesValueLabel.tag = 102
 
-        // Cache size section
-        let sizeLabel = createLabel(text: "Cache Size:", font: .systemFont(ofSize: 14, weight: .semibold))
-        let sizeValueLabel = createLabel(text: "0 B", font: .systemFont(ofSize: 14))
+        let sizeLabel = createLabel(text: "Cache Size:", font: ThemeTokens.Typography.headline)
+        let sizeValueLabel = createLabel(text: "0 B", font: ThemeTokens.Typography.body)
         sizeValueLabel.tag = 103
 
-        // Recent events section
-        let eventsLabel = createLabel(text: "Recent Events (Last 10):", font: .systemFont(ofSize: 14, weight: .semibold))
+        let eventsLabel = createLabel(text: "Recent Events (Last 10):", font: ThemeTokens.Typography.headline)
 
         let eventsStack = UIStackView()
         eventsStack.axis = .vertical
@@ -294,22 +290,17 @@ public class WebCacheDebugFloatingButton: UIView {
         isExpanded = true
         closeButton.isHidden = false
 
-        // Calculate panel position
         var panelFrame: CGRect
         let rightEdge = frame.maxX
         let bottomEdge = frame.maxY
 
         if rightEdge + panelWidth <= superview.bounds.width {
-            // Place to the right
             panelFrame = CGRect(x: rightEdge + 8, y: frame.minY, width: panelWidth, height: panelHeight)
         } else if frame.minX - panelWidth >= 0 {
-            // Place to the left
             panelFrame = CGRect(x: frame.minX - panelWidth - 8, y: frame.minY, width: panelWidth, height: panelHeight)
         } else if bottomEdge + panelHeight <= superview.bounds.height {
-            // Place below
             panelFrame = CGRect(x: frame.minX, y: bottomEdge + 8, width: panelWidth, height: panelHeight)
         } else {
-            // Place above
             panelFrame = CGRect(x: frame.minX, y: frame.minY - panelHeight - 8, width: panelWidth, height: panelHeight)
         }
 
@@ -319,22 +310,35 @@ public class WebCacheDebugFloatingButton: UIView {
 
         updatePanelContent()
 
-        UIView.animate(withDuration: ThemeTokens.Animation.spring.duration, delay: 0, usingSpringWithDamping: ThemeTokens.Animation.spring.damping, initialSpringVelocity: 0, options: .curveEaseOut) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.debugPanel.alpha = 1
             self.debugPanel.transform = .identity
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.spring.duration, delay: 0, usingSpringWithDamping: ThemeTokens.Animation.spring.damping, initialSpringVelocity: 0, options: .curveEaseOut) {
+                self.debugPanel.alpha = 1
+                self.debugPanel.transform = .identity
+            }
         }
     }
 
     private func collapsePanel() {
         isExpanded = true
 
-        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, delay: 0, options: .curveEaseIn) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.debugPanel.alpha = 0
             self.debugPanel.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        } completion: { _ in
             self.debugPanel.removeFromSuperview()
             self.isExpanded = false
             self.closeButton.isHidden = true
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, delay: 0, options: .curveEaseIn) {
+                self.debugPanel.alpha = 0
+                self.debugPanel.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            } completion: { _ in
+                self.debugPanel.removeFromSuperview()
+                self.isExpanded = false
+                self.closeButton.isHidden = true
+            }
         }
     }
 
@@ -357,13 +361,13 @@ public class WebCacheDebugFloatingButton: UIView {
         eventsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         if cacheEvents.isEmpty {
-            let emptyLabel = createLabel(text: "No events yet", font: .systemFont(ofSize: 12), textColor: ThemeTokens.Color.textSecondary)
+            let emptyLabel = createLabel(text: "No events yet", font: ThemeTokens.Typography.caption1, textColor: ThemeTokens.Color.textSecondary)
             eventsStack.addArrangedSubview(emptyLabel)
         } else {
             for event in cacheEvents {
                 let eventLabel = createLabel(
                     text: formatEvent(event),
-                    font: .systemFont(ofSize: 11),
+                    font: ThemeTokens.Typography.caption2,
                     textColor: event.status.color
                 )
                 eventsStack.addArrangedSubview(eventLabel)

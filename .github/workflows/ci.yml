@@ -509,6 +509,20 @@ jobs:
         if: always()
         run: xcrun simctl shutdown all 2>/dev/null || true
 
+      - name: Scan Crash Logs
+        if: always()
+        run: bash scripts/scan-crash-logs.sh --json || true
+
+      - name: Upload Crash Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-logs-smoke
+          path: |
+            ~/Library/Logs/DiagnosticReports/SuperApp*.ips
+          retention-days: 7
+          if-no-files-found: ignore
+
   # ─── Job 7: UI Fidelity Tests (with retry) ──────────────────────
   ui-fidelity:
     name: 🎨 UI Fidelity Tests
@@ -700,3 +714,17 @@ jobs:
       - name: Cleanup Simulators
         if: always()
         run: xcrun simctl shutdown all 2>/dev/null || true
+
+      - name: Scan Crash Logs
+        if: always()
+        run: bash scripts/scan-crash-logs.sh --json || true
+
+      - name: Upload Crash Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-logs-ui-fidelity
+          path: |
+            ~/Library/Logs/DiagnosticReports/SuperApp*.ips
+          retention-days: 7
+          if-no-files-found: ignore

@@ -111,6 +111,7 @@ extension ComponentCatalogViewController {
             sourceLabel.text = "APNS"
             sourceLabel.font = ThemeTokens.Typography.caption2
             sourceLabel.textColor = ThemeColors.current.info
+            cell.addSubview(sourceLabel)
 
             let timeLabel = UILabel()
             timeLabel.text = "05-08 14:30"

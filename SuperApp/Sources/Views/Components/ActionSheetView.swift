@@ -170,22 +170,32 @@ class ActionSheetView: UIView {
         self.frame = view.bounds
         view.addSubview(self)
 
-        // 初始状态
         backgroundView.alpha = 0
         containerView.transform = CGAffineTransform(translationX: 0, y: containerView.bounds.height)
 
-        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration, delay: 0, options: .curveEaseOut) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.backgroundView.alpha = 1
             self.containerView.transform = .identity
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.slow.duration, delay: 0, options: .curveEaseOut) {
+                self.backgroundView.alpha = 1
+                self.containerView.transform = .identity
+            }
         }
     }
 
     func dismiss() {
-        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, delay: 0, options: .curveEaseIn) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.backgroundView.alpha = 0
             self.containerView.transform = CGAffineTransform(translationX: 0, y: self.containerView.bounds.height)
-        } completion: { _ in
             self.removeFromSuperview()
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, delay: 0, options: .curveEaseIn) {
+                self.backgroundView.alpha = 0
+                self.containerView.transform = CGAffineTransform(translationX: 0, y: self.containerView.bounds.height)
+            } completion: { _ in
+                self.removeFromSuperview()
+            }
         }
     }
 

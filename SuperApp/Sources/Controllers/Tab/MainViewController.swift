@@ -203,21 +203,31 @@ class MainViewController: BaseViewController<MainViewModel> {
     private func showCommandBanner(title: String) {
         commandBanner.configure(title: title)
         commandBanner.isHidden = false
-        UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+        if UIAccessibility.isReduceMotionEnabled {
             self.commandBanner.alpha = 1
             self.commandBanner.transform = .identity
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.slow.duration) {
+                self.commandBanner.alpha = 1
+                self.commandBanner.transform = .identity
+            }
         }
     }
 
     private func hideCommandBanner() {
         pendingCommandTitle = nil
         guard !commandBanner.isHidden else { return }
-        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
+        if UIAccessibility.isReduceMotionEnabled {
             self.commandBanner.alpha = 0
-            self.commandBanner.transform = CGAffineTransform(translationX: 0, y: -self.commandBanner.bounds.height)
-        }, completion: { _ in
             self.commandBanner.isHidden = true
-        })
+        } else {
+            UIView.animate(withDuration: ThemeTokens.Animation.normal.duration, animations: {
+                self.commandBanner.alpha = 0
+                self.commandBanner.transform = CGAffineTransform(translationX: 0, y: -self.commandBanner.bounds.height)
+            }, completion: { _ in
+                self.commandBanner.isHidden = true
+            })
+        }
     }
 
     private func executePendingCommand() {
@@ -315,6 +325,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         navigationItem.leftBarButtonItem = scanItem
 
         let storageItem = UIBarButtonItem(customView: trashButton)
+        storageItem.accessibilityIdentifier = "main.clearCacheButton"
         navigationItem.rightBarButtonItems = [storageItem]
 
         emptyStateView.configure(
