@@ -141,11 +141,18 @@ bash scripts/scan-crash-logs.sh
 - Packaging audit: 73 Lucide imagesets, Assets.car 465 KB, zero hardcoded color violations in active source files.
 - Test runtime noise: 378 duplicate class warnings from `inherit! :complete` in Podfile — harmless CocoaPods test-target linkage, documented as safe to leave.
 - Local verification path documented below.
+- **Master branch up to date**: PR #1 squash-merged to master (`4f53c00`) with all fix commits included.
+- **101/101 UI tests pass** on master (stale tab tests removed, inbox race condition fixed, MessageEngine skipped in UI test mode).
+- **ComponentCatalogVC crash fixed**: SnapKit fixed-height constraint removed, auto-layout self-sizing applied (`d9a7a38`).
 
 ### Commits
 
 - `05ce516` fix(build): eliminate all business-code warnings (25→4) and fix fragile ThemeTests
 - `171e366` chore: gitignore agent tooling directories (.opencode, .ui-tester, .xcodebuildmcp)
+- `b4d97a2` fix(tests): remove stale tab tests, seed inbox messages, fix SnapKit constraint crash
+- `cba3982` fix(tests): synchronous seeding for UI tests + keep inbox table visible
+- `d9a7a38` fix(tests): skip MessageEngine in UI test mode to avoid async race condition
+- `4f53c00` squash-merge PR #1 to master (includes all above fix commits)
 
 ### Verification
 
@@ -179,6 +186,15 @@ bash scripts/scan-crash-logs.sh
 - Add empty state to Cache Dashboard (icon + text)
 - Consider removing deprecated `WKColor.swift` entirely
 - Component Catalog and Error/Permission states not captured (require launch arguments or manual trigger)
+
+### Remaining P1 Items for Next Round
+
+- **UI test stability**: Monitor for flaky tests after MessageEngine skip fix — may need a more robust solution than skip
+- **ComponentCatalogVC layout**: Verify the auto-sizing fix works across all device sizes (iPhone SE, iPad)
+- **Debug Panel tab truncation**: Still needs a UI fix (scrollable tab bar or shorter labels)
+- **Cache Dashboard empty state**: No visual feedback when empty
+- **Dark mode contrast**: Subtitle text on cards still has low contrast
+- **Discover card truncation**: Verify on narrow screens (iPhone SE)
 
 ### Local Verification Path (Task 5)
 

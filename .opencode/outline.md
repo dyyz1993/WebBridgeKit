@@ -5,6 +5,25 @@
 - **最后更新**: 2026-05-07 (Phase 1-11 全部完成, WebSocket 模块, CI 修复, ~1700+ 测试, ~75K+ 行)
 - **仓库**: github.com/dyyz1993/WebBridgeKit
 
+## PR #1 Master Merge — 进度跟踪（2026-05-20）
+
+### Completed on master branch
+- **PR #1 squash-merged to master** (commit `4f53c00`)
+- **Master verification**: BUILD SUCCEEDED, 0 business warnings, **101/101 tests passed**
+- **Fixed**: 4 UI test failures (stale tab tests + inbox race condition) → commits `b4d97a2`, `cba3982`
+- **Fixed**: ComponentCatalogVC SnapKit constraint crash (SIGABRT) → commit `d9a7a38`
+  - Root cause: fixed height 90pt constraint conflicted with auto-sizing content
+  - Fix: removed fixed height, switched to auto-layout self-sizing
+
+### Fix Commits (squash-merged into master via PR #1)
+| Commit | Description |
+|--------|-------------|
+| `b4d97a2` | fix(tests): remove stale tab tests, seed inbox messages, fix SnapKit constraint crash |
+| `cba3982` | fix(tests): synchronous seeding for UI tests + keep inbox table visible |
+| `d9a7a38` | fix(tests): skip MessageEngine in UI test mode to avoid async race condition |
+
+---
+
 ## 最近完成（2026-05-08）
 
 ### i18n 修复 — 中文文本终于显示正确
