@@ -151,7 +151,8 @@ class WebAccessViewModel: ViewModel {
             } else {
                 try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: url.host)
 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 100_000_000)
                     self?.updateURLInfo(url: url)
                 }
             }

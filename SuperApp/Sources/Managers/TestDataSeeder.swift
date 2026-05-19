@@ -564,16 +564,18 @@ struct TestDataSeeder {
         let key = "TestDataSeeder_PinnedURLs_v2"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
 
-        let recommended = PresetURLCatalog.recommendedItems
-        let manager = URLFavoriteManager.shared
-        for item in recommended {
-            guard let url = URL(string: item.url) else { continue }
-            if manager.findFavorite(url: url) == nil {
-                manager.addFavorite(url: url, title: item.title)
+        Task {
+            let recommended = PresetURLCatalog.recommendedItems
+            let manager = URLFavoriteManager.shared
+            for item in recommended {
+                guard let url = URL(string: item.url) else { continue }
+                if (try? await manager.findFavorite(url: url)) == nil {
+                    _ = try? await manager.addFavorite(url: url, title: item.title)
+                }
             }
-        }
-        WebBridgeLogger.shared.log(.info, "Seeded \(recommended.count) recommended pinned URLs")
+            WebBridgeLogger.shared.log(.info, "Seeded \(recommended.count) recommended pinned URLs")
 
-        UserDefaults.standard.set(true, forKey: key)
+            UserDefaults.standard.set(true, forKey: key)
+        }
     }
 }

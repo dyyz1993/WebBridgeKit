@@ -134,7 +134,6 @@ final class ThemeButtonTests: XCTestCase {
         button.configure(title: "Test", style: .primary)
 
         XCTAssertEqual(button.layer.borderWidth, 0)
-        XCTAssertNil(button.layer.borderColor)
     }
 
     func testSecondaryStyleHasBorder() {

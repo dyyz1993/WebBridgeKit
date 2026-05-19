@@ -456,8 +456,8 @@ public class WebCacheDebugFloatingButton: UIView {
 
 public extension WebViewController {
 
-    private struct AssociatedKeys {
-        static var debugFloatingButton = "debugFloatingButton"
+    private enum AssociatedKeys {
+        nonisolated(unsafe) static var debugFloatingButton: UInt8 = 0
     }
 
     /// The debug floating button associated with this view controller

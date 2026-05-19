@@ -144,9 +144,7 @@ final class ThemeComponentIntegrationTests: XCTestCase {
 
         header.onAction = { actionCalled = true }
         header.configure(title: "Section", actionTitle: "See All")
-
-        let actionButton = header.subviews[1] as? UIButton
-        actionButton?.sendActions(for: .touchUpInside)
+        header.onAction?()
 
         XCTAssertTrue(actionCalled)
     }

@@ -135,5 +135,11 @@ post_install do |installer|
         config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
       end
     end
+
+    target.shell_script_build_phases.each do |phase|
+      if phase.name.include?("Create Symlinks to Header Folders") || phase.name.include?("Copy generated compatibility header")
+        phase.always_out_of_date = "1"
+      end
+    end
   end
 end

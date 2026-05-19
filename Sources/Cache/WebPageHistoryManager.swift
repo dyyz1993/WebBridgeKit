@@ -29,7 +29,8 @@ actor HistoryDatabaseActor {
 
     /// Add or update history record
     func addOrUpdateHistory(url: URL, title: String?, favicon: Data?) async throws {
-        try await PerformanceMonitor.shared.measure(
+        let monitor = PerformanceMonitor.shared
+        try monitor.measure(
             "Database.addOrUpdateHistory",
             metadata: ["url": url.absoluteString, "operation": "write"]
         ) {
@@ -143,7 +144,8 @@ actor HistoryDatabaseActor {
 
     /// Get all history records (sorted by last visit date descending)
     func getAllHistories() async throws -> [WebPageHistory] {
-        return try await PerformanceMonitor.shared.measure(
+        let monitor = PerformanceMonitor.shared
+        return try monitor.measure(
             "Database.getAllHistories",
             metadata: ["operation": "query", "sort": "lastVisitDate"]
         ) {
@@ -190,7 +192,8 @@ actor HistoryDatabaseActor {
 
     /// Search history records (title or URL contains keyword)
     func searchHistories(keyword: String) async throws -> [WebPageHistory] {
-        return try await PerformanceMonitor.shared.measure(
+        let monitor = PerformanceMonitor.shared
+        return try monitor.measure(
             "Database.searchHistories",
             metadata: ["keyword": keyword, "operation": "search"]
         ) {
