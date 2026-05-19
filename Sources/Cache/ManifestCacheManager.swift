@@ -365,13 +365,15 @@ public class ManifestCacheManager: @unchecked Sendable {
         statsLock.lock()
         defer { statsLock.unlock() }
 
-        let total = cacheHits + cacheMisses
-        _ = total > 0 ? Double(cacheHits) / Double(total) : 0.0
+        let hits = _cacheHits
+        let misses = _cacheMisses
+        let total = hits + misses
+        _ = total > 0 ? Double(hits) / Double(total) : 0.0
 
         return CacheStats(
             totalRequests: Int(total),
-            cacheHits: Int(cacheHits),
-            cacheMisses: Int(cacheMisses),
+            cacheHits: Int(hits),
+            cacheMisses: Int(misses),
             totalCacheSize: resourceCache.totalSize()
         )
     }

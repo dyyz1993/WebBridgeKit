@@ -75,7 +75,7 @@ final class HMACSignatureVerifierTests: XCTestCase {
     func testInitWithHexKey_producesWorkingVerifier() {
         let hexKey = "abababababababababababababababababababababababababababababababab"
         let verifier = HMACSignatureVerifier(secretKeyHex: hexKey)
-        let keyData = Data(hex: hexKey)
+        let keyData = Data(repeating: 0xAB, count: 32)
         let payloadData = try! JSONSerialization.data(withJSONObject: ["appid": "test"])
         let signature = computeHMAC(data: payloadData, key: keyData)
         let payload = makePayload(data: payloadData)

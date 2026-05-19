@@ -106,12 +106,11 @@ public class ManifestStore: ManifestCacheManaging {
         serialQueue.async { [weak self] in
             guard let self = self else { return }
 
+            let contentHash = self.calculateManifestHash(manifest: manifest)
+
             var updatedManifest = manifest
             updatedManifest.version = updatedManifest.version ?? UUID().uuidString
             updatedManifest.lastUpdated = Date()
-
-            // 🔒 Security: Calculate SHA-256 hash for integrity verification
-            let contentHash = self.calculateManifestHash(manifest: updatedManifest)
 
             self.manifestCache[key] = ManifestCacheEntry(
                 manifest: updatedManifest,
@@ -127,12 +126,11 @@ public class ManifestStore: ManifestCacheManaging {
     }
 
     public func saveManifestSync(_ manifest: Manifest, for key: String) {
+        let contentHash = calculateManifestHash(manifest: manifest)
+
         var updatedManifest = manifest
         updatedManifest.version = updatedManifest.version ?? UUID().uuidString
         updatedManifest.lastUpdated = Date()
-
-        // 🔒 Security: Calculate SHA-256 hash for integrity verification
-        let contentHash = calculateManifestHash(manifest: updatedManifest)
 
         manifestCache[key] = ManifestCacheEntry(
             manifest: updatedManifest,
@@ -213,15 +211,28 @@ public class ManifestStore: ManifestCacheManaging {
     /// 计算 Manifest 的 SHA-256 哈希值
     /// - Parameter manifest: Manifest 对象
     /// - Returns: SHA-256 哈希字符串
+    private func contentManifest(from manifest: Manifest) -> Manifest {
+        var content = manifest
+        content.version = nil
+        content.lastUpdated = nil
+        content.lastAccessed = nil
+        content.accessCount = nil
+        content.isPinned = nil
+        content.isFavorite = nil
+        return content
+    }
+
     private func calculateManifestHash(manifest: Manifest) -> String {
         do {
             let encoder = JSONEncoder()
-            let data = try encoder.encode(manifest)
+            encoder.outputFormatting = .sortedKeys
+            let content = contentManifest(from: manifest)
+            let data = try encoder.encode(content)
             let hash = SHA256.hash(data: data)
             return Data(hash).map { String(format: "%02x", $0) }.joined()
         } catch {
             Log.error("Failed to calculate manifest hash: \(error.localizedDescription)", category: .general)
-            return UUID().uuidString  // Fallback: use random UUID if hashing fails
+            return UUID().uuidString
         }
     }
 

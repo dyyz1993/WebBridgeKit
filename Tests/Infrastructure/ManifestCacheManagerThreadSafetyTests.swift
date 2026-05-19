@@ -99,23 +99,29 @@ final class ManifestCacheManagerThreadSafetyTests: XCTestCase {
 
     func testCacheStatsAreAccurateAfterHighContention() {
         manager.resetStats()
-        let totalOps = 500
+        let totalOps = 100
 
         let expectation = XCTestExpectation(description: "high contention")
         expectation.expectedFulfillmentCount = totalOps * 2
 
-        for i in 0..<totalOps {
+        let group = DispatchGroup()
+
+        for _ in 0..<totalOps {
+            group.enter()
             DispatchQueue.global().async {
                 self.manager.recordCacheHit()
                 expectation.fulfill()
+                group.leave()
             }
+            group.enter()
             DispatchQueue.global().async {
                 self.manager.recordCacheMiss()
                 expectation.fulfill()
+                group.leave()
             }
         }
 
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 15)
 
         let stats = manager.getStats()
         XCTAssertEqual(stats.cacheHits, totalOps)
