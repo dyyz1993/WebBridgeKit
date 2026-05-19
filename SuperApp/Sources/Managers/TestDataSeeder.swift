@@ -30,6 +30,7 @@ struct TestDataSeeder {
             seedAPIKeys()
             seedCacheRules()
             seedPageCacheRules()
+            seedMessages()
 
             UserDefaults.standard.set(true, forKey: seededKey)
 

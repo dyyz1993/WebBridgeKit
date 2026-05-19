@@ -74,7 +74,7 @@ extension ComponentCatalogViewController {
         }
 
         container.snp.makeConstraints { make in
-            make.height.equalTo(100)
+            make.height.greaterThanOrEqualTo(180)
         }
         addSection(header, container)
     }
@@ -140,6 +140,7 @@ extension ComponentCatalogViewController {
             sourceLabel.snp.makeConstraints { make in
                 make.top.equalTo(titleLabel.snp.bottom).offset(4)
                 make.leading.equalTo(titleLabel)
+                make.trailing.lessThanOrEqualTo(timeLabel.snp.leading).offset(-8)
             }
             timeLabel.snp.makeConstraints { make in
                 make.centerY.equalTo(sourceLabel)
@@ -156,14 +157,8 @@ extension ComponentCatalogViewController {
         }
 
         let unreadCell = createMessageCell(isUnread: true)
-        unreadCell.snp.makeConstraints { make in
-            make.height.equalTo(90)
-        }
 
         let readCell = createMessageCell(isUnread: false)
-        readCell.snp.makeConstraints { make in
-            make.height.equalTo(90)
-        }
 
         let stack = UIStackView(arrangedSubviews: [unreadCell, readCell])
         stack.axis = .vertical
@@ -175,7 +170,7 @@ extension ComponentCatalogViewController {
         }
 
         container.snp.makeConstraints { make in
-            make.height.equalTo(200)
+            make.height.greaterThanOrEqualTo(180)
         }
         addSection(header, container)
     }
