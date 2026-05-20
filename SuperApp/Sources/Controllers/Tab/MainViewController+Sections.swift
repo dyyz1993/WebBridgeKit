@@ -165,16 +165,16 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // pushToken section: ignore taps
         if indexPath.section == MainSection.pushToken.rawValue { return }
 
-        // quickActions section: handle shortcut buttons
-        if indexPath.section == MainSection.quickActions.rawValue {
-            handleQuickAction(index: indexPath.item)
-            return
-        }
+        if indexPath.section == MainSection.quickActions.rawValue { return }
 
-        // appGrid sections: handled entirely by Rx binding (collectionView.rx.itemSelected)
-        // DO NOT call openURL here — Rx delegate proxy already forwards to the reactive path
+        let sections = viewModel.historiesRelayValue
+        let gridIndex = indexPath.section - MainSection.appGrid.rawValue
+        guard gridIndex >= 0, gridIndex < sections.count,
+              indexPath.item < sections[gridIndex].items.count else { return }
+        let history = sections[gridIndex].items[indexPath.item].history
+        guard !history.url.isEmpty, let url = URL(string: history.url) else { return }
+        openURL(url)
     }
 }

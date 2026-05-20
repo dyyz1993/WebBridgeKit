@@ -102,7 +102,6 @@ class MainViewModel: ViewModel {
                 return Driver.just(url)
             }
             .do(onNext: { [weak self] url in
-                self?.openURLRelay.accept(url)
                 self?.historyService.addOrUpdateHistory(url: url, title: nil, favicon: nil)
             })
             .drive()
