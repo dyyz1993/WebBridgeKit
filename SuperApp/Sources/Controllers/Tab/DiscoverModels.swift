@@ -50,7 +50,7 @@ struct DiscoverItem {
 
         var color: UIColor {
             switch self {
-            case .persistent: return ThemeTokens.Color.success
+            case .persistent: return ThemeTokens.Color.primary
             case .cached: return ThemeTokens.Color.success
             case .needsUpdate: return ThemeTokens.Color.warning
             case .notCached: return ThemeTokens.Color.textSecondary

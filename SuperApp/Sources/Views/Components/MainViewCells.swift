@@ -8,9 +8,7 @@ class PushTokenCardCell: UICollectionViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.cardBackground
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
-        view.layer.borderColor = ThemeTokens.Color.primary.withAlphaComponent(0.1).cgColor
-        view.layer.borderWidth = 1
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
@@ -21,8 +19,7 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let serverIcon: UIImageView = {
         let iv = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        iv.image = LucideIcon.server.image(pointSize: 14, weight: .medium)
+        iv.image = LucideIcon.server.templateImage(pointSize: 14, weight: .medium)
         iv.tintColor = ThemeTokens.Color.textSecondary
         iv.contentMode = .scaleAspectFit
         return iv
@@ -47,7 +44,7 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let keyIcon: UIImageView = {
         let iv = UIImageView()
-        iv.image = LucideIcon.key.image(pointSize: 12, weight: .medium)
+        iv.image = LucideIcon.key.templateImage(pointSize: 12, weight: .medium)
         iv.tintColor = ThemeTokens.Color.primary
         iv.contentMode = .scaleAspectFit
         return iv
@@ -64,9 +61,12 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let copyButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle(L10n.tr("common.copy"), for: .normal)
-        button.titleLabel?.font = ThemeTokens.Typography.footnote
+        button.setTitle(L10n.tr("home.token_card.copy_token"), for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.caption1
         button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        button.layer.cornerRadius = 14
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         return button
     }()
 
@@ -115,9 +115,9 @@ class PushTokenCardCell: UICollectionViewCell {
         }
 
         serverIcon.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16)
+            make.top.equalToSuperview().offset(14)
             make.left.equalToSuperview().offset(16)
-            make.width.height.equalTo(16)
+            make.width.height.equalTo(14)
         }
 
         urlLabel.snp.makeConstraints { make in
@@ -127,7 +127,7 @@ class PushTokenCardCell: UICollectionViewCell {
         }
 
         tokenPill.snp.makeConstraints { make in
-            make.top.equalTo(serverIcon.snp.bottom).offset(14)
+            make.top.equalTo(serverIcon.snp.bottom).offset(10)
             make.left.equalToSuperview().offset(16)
             make.right.equalTo(copyButton.snp.left).offset(-12)
             make.height.equalTo(28)
@@ -148,6 +148,7 @@ class PushTokenCardCell: UICollectionViewCell {
         copyButton.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
             make.centerY.equalTo(tokenPill)
+            make.height.equalTo(28)
         }
 
         registerButton.snp.makeConstraints { make in
@@ -197,7 +198,6 @@ class QuickActionCell: UICollectionViewCell {
         let sv = UIStackView()
         sv.axis = .horizontal
         sv.distribution = .fillEqually
-        sv.spacing = ThemeTokens.Spacing.md
         return sv
     }()
 
@@ -221,14 +221,14 @@ class QuickActionCell: UICollectionViewCell {
     private func setupUI() {
         contentView.addSubview(stackView)
         stackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 12, bottom: 2, right: 12))
+            make.edges.equalToSuperview()
         }
     }
 
-    func configure(actions: [(icon: LucideIcon, title: String)]) {
+    func configure(actions: [(icon: LucideIcon, title: String, tintColor: UIColor, bgColor: UIColor)]) {
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         for (index, action) in actions.enumerated() {
-            let card = createActionCard(icon: action.icon, title: action.title)
+            let card = createActionCard(icon: action.icon, title: action.title, tintColor: action.tintColor, bgColor: action.bgColor)
             card.tag = index
             let tapGesture = UITapGestureRecognizer(target: self, action: #selector(cardTapped(_:)))
             card.addGestureRecognizer(tapGesture)
@@ -236,18 +236,18 @@ class QuickActionCell: UICollectionViewCell {
         }
     }
 
-    private func createActionCard(icon: LucideIcon, title: String) -> UIView {
+    private func createActionCard(icon: LucideIcon, title: String, tintColor: UIColor, bgColor: UIColor) -> UIView {
         let card = UIView()
         card.backgroundColor = .clear
 
         let iconContainer = UIView()
-        iconContainer.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        iconContainer.backgroundColor = bgColor
         iconContainer.layer.cornerRadius = 24
         iconContainer.clipsToBounds = true
 
         let iconView = UIImageView()
-        iconView.image = icon.templateImage(pointSize: 14, weight: .medium)
-        iconView.tintColor = ThemeTokens.Color.primary
+        iconView.image = icon.templateImage(pointSize: 20, weight: .medium)
+        iconView.tintColor = tintColor
         iconView.contentMode = .scaleAspectFit
 
         let titleLabel = UILabel()
@@ -264,18 +264,18 @@ class QuickActionCell: UICollectionViewCell {
         card.addSubview(titleLabel)
 
         iconContainer.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(40)
+            make.top.equalToSuperview().offset(4)
+            make.centerX.equalToSuperview()
+            make.width.height.equalTo(48)
         }
         iconView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(14)
+            make.width.height.equalTo(20)
         }
 
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(iconContainer.snp.bottom).offset(4)
-            make.leading.trailing.equalToSuperview().inset(6)
-            make.bottom.lessThanOrEqualToSuperview().offset(-4)
+            make.leading.trailing.equalToSuperview().inset(4)
         }
 
         return card
@@ -292,8 +292,8 @@ class SectionHeaderView: UICollectionReusableView {
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeTokens.Color.textSecondary
+        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
 
@@ -321,7 +321,7 @@ class CommandBannerView: UIView {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.tintColor = ThemeTokens.Color.primary
-        iv.image = LucideIcon.shield.image(pointSize: 15, weight: .semibold)
+        iv.image = LucideIcon.shield.templateImage(pointSize: 16, weight: .semibold)
         return iv
     }()
 
@@ -336,7 +336,7 @@ class CommandBannerView: UIView {
 
     private let dismissButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(LucideIcon.xmark.image(pointSize: 14, weight: .bold), for: .normal)
+        button.setImage(LucideIcon.xmark.templateImage(pointSize: 14, weight: .bold), for: .normal)
         button.tintColor = ThemeTokens.Color.textSecondary
         return button
     }()
@@ -352,7 +352,7 @@ class CommandBannerView: UIView {
 
     private func setupUI() {
         backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
-        layer.cornerRadius = ThemeTokens.CornerRadius.md
+        layer.cornerRadius = 22
         clipsToBounds = true
 
         addSubview(iconView)

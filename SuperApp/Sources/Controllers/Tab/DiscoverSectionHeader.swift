@@ -9,7 +9,7 @@ class DiscoverSectionHeader: UICollectionReusableView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13, weight: .semibold)
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label

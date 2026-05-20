@@ -8,7 +8,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
@@ -20,14 +20,14 @@ class URLGridCell: UICollectionViewCell {
 
     private let iconContainer: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        v.layer.cornerRadius = 22
         v.layer.masksToBounds = true
         return v
     }()
 
     private let iconGradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
-        layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        layer.cornerRadius = 22
         layer.startPoint = CGPoint(x: 0, y: 0)
         layer.endPoint = CGPoint(x: 1, y: 1)
         return layer
@@ -42,8 +42,8 @@ class URLGridCell: UICollectionViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.text
+        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -51,7 +51,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let statusDot: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
+        v.layer.cornerRadius = 3.5
         v.backgroundColor = ThemeTokens.Color.success
         return v
     }()
@@ -66,13 +66,13 @@ class URLGridCell: UICollectionViewCell {
     private let timeLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeTokens.Color.textSecondary
+        label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
 
     private let tokenBadge: UIView = {
         let v = UIView()
-        v.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.08)
+        v.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
         v.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         v.clipsToBounds = true
         v.isHidden = true
@@ -82,7 +82,7 @@ class URLGridCell: UICollectionViewCell {
     private let tokenKeyIcon: UIImageView = {
         let iv = UIImageView()
         iv.image = LucideIcon.key.templateImage(pointSize: 10, weight: .medium)
-        iv.tintColor = ThemeColors.current.primary
+        iv.tintColor = ThemeTokens.Color.primary
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -90,14 +90,14 @@ class URLGridCell: UICollectionViewCell {
     private let tokenLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .medium)
-        label.textColor = ThemeColors.current.primary
+        label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         return label
     }()
 
     private let cacheTypeDot: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
+        v.layer.cornerRadius = 3.5
         v.isHidden = true
         return v
     }()
@@ -192,12 +192,12 @@ class URLGridCell: UICollectionViewCell {
         iconContainer.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(14)
             make.left.equalToSuperview().offset(14)
-            make.width.height.equalTo(42)
+            make.width.height.equalTo(44)
         }
 
         faviconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.width.height.equalTo(22)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -209,7 +209,7 @@ class URLGridCell: UICollectionViewCell {
         statusDot.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(6)
             make.left.equalToSuperview().offset(12)
-            make.width.height.equalTo(6)
+            make.width.height.equalTo(7)
         }
 
         statusLabel.snp.makeConstraints { make in
@@ -243,7 +243,7 @@ class URLGridCell: UICollectionViewCell {
         cacheTypeDot.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(6)
             make.left.equalToSuperview().offset(12)
-            make.width.height.equalTo(6)
+            make.width.height.equalTo(7)
         }
 
         cacheTypeLabel.snp.makeConstraints { make in
@@ -264,7 +264,7 @@ class URLGridCell: UICollectionViewCell {
         } else {
             let iconIndex = abs(titleText.hashValue) % Self.lucideIcons.count
             let icon = Self.lucideIcons[iconIndex]
-            faviconImageView.image = icon.image(pointSize: 20, weight: .medium)
+            faviconImageView.image = icon.templateImage(pointSize: 22, weight: .medium)
             faviconImageView.isHidden = false
         }
 

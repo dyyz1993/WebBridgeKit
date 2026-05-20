@@ -15,6 +15,18 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     static let identifier = "InboxGroupHeaderCell"
 
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = ThemeColors.current.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
+        let shadow = ThemeTokens.Shadows.Card
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
+        view.layer.shadowRadius = shadow.radius
+        view.layer.shadowOpacity = Float(shadow.opacity)
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
@@ -22,6 +34,21 @@ class InboxGroupHeaderCell: UITableViewCell {
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
+    }()
+
+    private let countLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 11, weight: .medium))
+        label.textColor = ThemeTokens.Color.text
+        label.textAlignment = .center
+        return label
+    }()
+
+    private let countContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.12)
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        return view
     }()
 
     private let chevronImageView: UIImageView = {
@@ -52,27 +79,58 @@ class InboxGroupHeaderCell: UITableViewCell {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         contentView.addGestureRecognizer(tapGesture)
 
-        contentView.addSubview(titleLabel)
-        contentView.addSubview(chevronImageView)
+        contentView.addSubview(containerView)
+        containerView.addSubview(titleLabel)
+        containerView.addSubview(countContainer)
+        countContainer.addSubview(countLabel)
+        containerView.addSubview(chevronImageView)
+
+        containerView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(4)
+            make.bottom.equalToSuperview().offset(-4)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(44)
+        }
 
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(4)
+            make.leading.equalToSuperview().offset(16)
+            make.centerY.equalToSuperview()
+            make.trailing.lessThanOrEqualTo(countContainer.snp.leading).offset(-8)
+        }
+
+        countContainer.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-8)
+            make.height.equalTo(20)
+        }
+
+        countLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
         }
 
         chevronImageView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-4)
+            make.trailing.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(14)
         }
     }
 
-    func configure(title: String, isExpanded: Bool, hasUnread: Bool = false) {
+    func configure(title: String, count: Int, isExpanded: Bool, hasUnread: Bool = false) {
         titleLabel.text = title
-        chevronImageView.image = isExpanded
-            ? LucideIcon.chevronDown.templateImage(pointSize: 14)
-            : LucideIcon.chevronRight.templateImage(pointSize: 14)
+        countLabel.text = "\(count)"
+        countContainer.isHidden = count == 0
+        titleLabel.font = hasUnread
+            ? ThemeTokens.Typography.headline
+            : ThemeTokens.Typography.footnote
+        titleLabel.textColor = hasUnread
+            ? ThemeColors.current.text
+            : ThemeColors.current.textSecondary
+
+        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration) {
+            self.chevronImageView.transform = isExpanded
+                ? .identity
+                : CGAffineTransform(rotationAngle: -.pi / 2)
+        }
     }
 
     @objc private func handleTap() {
@@ -98,25 +156,10 @@ class InboxMessageCell: UITableViewCell {
         return view
     }()
 
-    private let typeIconContainer: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
-        view.clipsToBounds = true
-        return view
-    }()
-
-    private let typeIconView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.tintColor = .white
-        iv.accessibilityLabel = "消息类型图标"
-        return iv
-    }()
-
     private let unreadDot: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeTokens.Color.error
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        view.backgroundColor = ThemeTokens.Color.primary
+        view.layer.cornerRadius = 5
         return view
     }()
 
@@ -136,7 +179,7 @@ class InboxMessageCell: UITableViewCell {
 
     private let sourceLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 10, weight: .bold)
+        label.font = UIFontMetrics.default.scaledFont(for: UIFont.systemFont(ofSize: 10, weight: .bold))
         label.numberOfLines = 1
         return label
     }()
@@ -150,7 +193,7 @@ class InboxMessageCell: UITableViewCell {
 
     private let bodyLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13)
+        label.font = UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 14))
         label.textColor = ThemeColors.current.textSecondary
         label.numberOfLines = 2
         return label
@@ -179,70 +222,57 @@ class InboxMessageCell: UITableViewCell {
         selectionStyle = .none
 
         contentView.addSubview(cardView)
-        cardView.addSubview(typeIconContainer)
-        typeIconContainer.addSubview(typeIconView)
         cardView.addSubview(unreadDot)
         cardView.addSubview(titleLabel)
-        cardView.addSubview(bodyLabel)
         cardView.addSubview(sourceContainer)
         sourceContainer.addSubview(sourceLabel)
+        cardView.addSubview(bodyLabel)
         cardView.addSubview(timeLabel)
         cardView.addSubview(chevronImageView)
 
         cardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(2)
             make.bottom.equalToSuperview().offset(-2)
-            make.leading.trailing.equalToSuperview()
-        }
-
-        typeIconContainer.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
-            make.top.equalToSuperview().offset(12)
-            make.width.height.equalTo(40)
-        }
-
-        typeIconView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.leading.trailing.equalToSuperview().inset(16)
         }
 
         unreadDot.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.trailing.equalToSuperview().offset(-12)
+            make.leading.equalToSuperview().offset(12)
+            make.top.equalToSuperview().offset(16)
             make.width.height.equalTo(10)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalTo(typeIconContainer.snp.trailing).offset(12)
+            make.leading.equalTo(unreadDot.snp.trailing).offset(8)
             make.top.equalToSuperview().offset(12)
-            make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-8)
-        }
-
-        bodyLabel.snp.makeConstraints { make in
-            make.leading.equalTo(titleLabel)
-            make.trailing.equalTo(titleLabel)
-            make.top.equalTo(titleLabel.snp.bottom).offset(2)
-        }
-
-        sourceContainer.snp.makeConstraints { make in
-            make.leading.equalTo(titleLabel)
-            make.top.equalTo(bodyLabel.snp.bottom).offset(4)
-            make.bottom.equalToSuperview().offset(-12)
-        }
-
-        sourceLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 1, left: 6, bottom: 1, right: 6))
+            make.trailing.lessThanOrEqualTo(timeLabel.snp.leading).offset(-8)
         }
 
         timeLabel.snp.makeConstraints { make in
-            make.leading.equalTo(sourceContainer.snp.trailing).offset(6)
-            make.centerY.equalTo(sourceContainer)
+            make.trailing.equalTo(chevronImageView.snp.leading).offset(-4)
+            make.top.equalToSuperview().offset(12)
         }
 
         chevronImageView.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-12)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(16)
+        }
+
+        bodyLabel.snp.makeConstraints { make in
+            make.leading.equalTo(titleLabel)
+            make.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
+            make.top.equalTo(titleLabel.snp.bottom).offset(4)
+        }
+
+        sourceContainer.snp.makeConstraints { make in
+            make.leading.equalTo(titleLabel)
+            make.top.equalTo(bodyLabel.snp.bottom).offset(6)
+            make.bottom.equalToSuperview().offset(-12)
+        }
+
+        sourceLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
         }
     }
 
@@ -252,49 +282,29 @@ class InboxMessageCell: UITableViewCell {
 
         let isUnread = !message.isRead
         titleLabel.font = isUnread
-            ? ThemeTokens.Typography.subheadline
-            : ThemeTokens.Typography.subheadline
-        unreadDot.alpha = isUnread ? 1 : 0
+            ? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 15, weight: .semibold))
+            : UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 15, weight: .regular))
+        unreadDot.isHidden = !isUnread
 
         let channel = message.payload.channel.uppercased()
         sourceLabel.text = channel
 
-        let primaryColor = ThemeTokens.Color.primary
-        let accentColor = ThemeTokens.Color.success
-        let warningColor = ThemeTokens.Color.warning
-        let grayColor = ThemeTokens.Color.textSecondary
-
         switch channel {
         case "APNS", "APN":
-            typeIconContainer.backgroundColor = primaryColor.withAlphaComponent(0.12)
-            typeIconView.tintColor = primaryColor
-            typeIconView.image = UIImage(lucideId: "package") ?? LucideIcon.appFill.image(pointSize: 20)
-            sourceContainer.backgroundColor = primaryColor.withAlphaComponent(0.12)
-            sourceLabel.textColor = primaryColor
+            sourceContainer.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeTokens.Color.primary
         case "BARK":
-            typeIconContainer.backgroundColor = accentColor.withAlphaComponent(0.12)
-            typeIconView.tintColor = accentColor
-            typeIconView.image = LucideIcon.link.templateImage(pointSize: 20)
-            sourceContainer.backgroundColor = accentColor.withAlphaComponent(0.12)
-            sourceLabel.textColor = accentColor
+            sourceContainer.backgroundColor = ThemeTokens.Color.success.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeTokens.Color.success
         case "BRIDGE":
-            typeIconContainer.backgroundColor = warningColor.withAlphaComponent(0.12)
-            typeIconView.tintColor = warningColor
-            typeIconView.image = LucideIcon.bell.templateImage(pointSize: 20)
-            sourceContainer.backgroundColor = warningColor.withAlphaComponent(0.12)
-            sourceLabel.textColor = warningColor
+            sourceContainer.backgroundColor = ThemeTokens.Color.warning.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeTokens.Color.warning
         case "SYSTEM", "LOCAL":
-            typeIconContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
-            typeIconView.tintColor = grayColor
-            typeIconView.image = LucideIcon.settings.templateImage(pointSize: 20)
-            sourceContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
-            sourceLabel.textColor = grayColor
+            sourceContainer.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeTokens.Color.textSecondary
         default:
-            typeIconContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
-            typeIconView.tintColor = grayColor
-            typeIconView.image = LucideIcon.settings.templateImage(pointSize: 20)
-            sourceContainer.backgroundColor = grayColor.withAlphaComponent(0.12)
-            sourceLabel.textColor = grayColor
+            sourceContainer.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)
+            sourceLabel.textColor = ThemeTokens.Color.textSecondary
         }
 
         let timeFmt = DateFormatter()

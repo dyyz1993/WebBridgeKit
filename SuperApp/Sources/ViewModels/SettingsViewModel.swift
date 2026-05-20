@@ -94,16 +94,32 @@ class SettingsViewModel: ViewModel {
         let pt = ThemeTokens.Color.primary
         let eb = ThemeTokens.Color.error.withAlphaComponent(0.1)
         let et = ThemeTokens.Color.error
+        let pubg = UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 0.1)
+                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 0.1)
+        }
+        let put = UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)
+                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)
+        }
         let sb = ThemeTokens.Color.success.withAlphaComponent(0.1)
         let st = ThemeTokens.Color.success
         let wb = ThemeTokens.Color.warning.withAlphaComponent(0.1)
         let wt = ThemeTokens.Color.warning
-        let pubg = ThemeTokens.Color.info.withAlphaComponent(0.1)
-        let put = ThemeTokens.Color.info
-        let ob = ThemeTokens.Color.gradientStart.withAlphaComponent(0.1)
-        let ot = ThemeTokens.Color.gradientStart
-        let tb = ThemeTokens.Color.gradientEnd.withAlphaComponent(0.1)
-        let tt = ThemeTokens.Color.gradientEnd
+        let tb = UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 0.1)
+                : UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 0.1)
+        }
+        let tt = UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 1)
+                : UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 1)
+        }
+        let ob = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        let ot = ThemeTokens.Color.primary
         let gb = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)
         let gt = ThemeTokens.Color.textSecondary
 
@@ -163,16 +179,16 @@ class SettingsViewModel: ViewModel {
                     lucideIcon: .star,
                     title: L10n.tr("settings.favorites"),
                     action: .favorites,
-                    iconBackgroundColor: tb,
-                    iconTintColor: tt
+                    iconBackgroundColor: sb,
+                    iconTintColor: st
                 ),
                 SettingsItem(
                     icon: nil,
                     lucideIcon: .clock,
                     title: "最近访问",
                     action: .history,
-                    iconBackgroundColor: pb,
-                    iconTintColor: pt
+                    iconBackgroundColor: wb,
+                    iconTintColor: wt
                 )
             ]),
             SettingsSection(header: L10n.tr("settings.section.notification"), items: [
