@@ -178,23 +178,32 @@ extension PersistentManifestLoader {
     }
 
     /// 保存 HTML
-    func saveHTML(_ html: String, to cacheDir: URL) throws {
+    /// - Parameters:
+    ///   - html: HTML 内容
+    ///   - cacheDir: 目标目录（可能是临时目录或最终缓存目录）
+    ///   - cacheID: 缓存 ID，传 nil 则不更新 ManifestStore（用于临时目录写入）
+    func saveHTML(_ html: String, to cacheDir: URL, cacheID: String? = nil) throws {
         let htmlPath = cacheDir.appendingPathComponent("index.html")
         try html.write(to: htmlPath, atomically: true, encoding: .utf8)
 
-        let cacheID = cacheDir.lastPathComponent
-        ManifestStore.shared.saveHTML(html, for: cacheID)
+        if let cacheID = cacheID {
+            ManifestStore.shared.saveHTML(html, for: cacheID)
+        }
     }
 
     /// 保存 manifest
-    func saveManifest(_ manifest: WebManifest, to cacheDir: URL) throws {
+    /// - Parameters:
+    ///   - manifest: Web Manifest
+    ///   - cacheDir: 目标目录（可能是临时目录或最终缓存目录）
+    ///   - cacheID: 缓存 ID，传 nil 则不更新 ManifestStore（用于临时目录写入）
+    func saveManifest(_ manifest: WebManifest, to cacheDir: URL, cacheID: String? = nil) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(manifest)
         let manifestPath = cacheDir.appendingPathComponent(manifestFileName)
         try data.write(to: manifestPath)
 
-        let cacheID = cacheDir.lastPathComponent
+        guard let cacheID = cacheID else { return }
 
         var coreManifest: Manifest
         if let existing = ManifestStore.shared.getManifest(for: cacheID) {

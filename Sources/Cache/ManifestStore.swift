@@ -196,6 +196,72 @@ public class ManifestStore: ManifestCacheManaging {
         }
     }
 
+    /// 获取所有已缓存的 Manifest
+    /// - Returns: 所有 manifest 对象数组
+    public func getAllManifests() -> [Manifest] {
+        return serialQueue.sync {
+            return manifestCache.values.map { $0.manifest }
+        }
+    }
+
+    // MARK: - Version Status
+
+    /// 获取指定缓存的版本状态
+    /// - Parameters:
+    ///   - cacheID: 缓存 ID
+    ///   - remoteManifest: 远程 manifest（如果刚检查过），用于比较版本
+    /// - Returns: 版本状态
+    public func getVersionStatus(
+        for cacheID: String,
+        remoteManifest: (version: String?, name: String?, icon: String?)? = nil
+    ) -> CacheVersionStatus? {
+        guard let local = getManifestByAppId(cacheID)?.manifest ?? getManifest(for: cacheID) else {
+            return nil
+        }
+
+        let updateState: CacheUpdateState
+        if let remote = remoteManifest {
+            if let localVer = local.version, let remoteVer = remote.version {
+                updateState = localVer < remoteVer ? .updateAvailable : .upToDate
+            } else {
+                updateState = .upToDate
+            }
+        } else {
+            updateState = .offline
+        }
+
+        let cacheSize = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
+
+        return CacheVersionStatus(
+            cacheID: cacheID,
+            name: local.name ?? remoteManifest?.name,
+            iconURL: local.icon ?? remoteManifest?.icon,
+            currentVersion: local.version,
+            latestVersion: remoteManifest?.version,
+            updateState: updateState,
+            cacheSize: cacheSize,
+            lastAccessed: local.lastAccessed,
+            lastChecked: updateState != .offline ? Date() : nil
+        )
+    }
+
+    /// 获取所有已缓存应用的版本状态
+    public func getAllVersionStatuses() -> [CacheVersionStatus] {
+        return getAllManifests().compactMap { manifest in
+            guard let cacheID = manifest.appid else { return nil }
+            return CacheVersionStatus(
+                cacheID: cacheID,
+                name: manifest.name,
+                iconURL: manifest.icon,
+                currentVersion: manifest.version,
+                latestVersion: nil,
+                updateState: .offline,
+                cacheSize: PersistentManifestLoader.shared.getCacheSize(for: cacheID),
+                lastAccessed: manifest.lastAccessed
+            )
+        }
+    }
+
     /// 根据 appId 获取 Manifest 和对应的 key
     public func getManifestByAppId(_ appId: String) -> (key: String, manifest: Manifest)? {
         return serialQueue.sync {
