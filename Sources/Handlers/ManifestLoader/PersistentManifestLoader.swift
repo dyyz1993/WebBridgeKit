@@ -181,10 +181,13 @@ public class PersistentManifestLoader: NSObject {
         let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
         NSLog("   缓存目录: %@", cacheDir.path)
 
-        // 4. 创建缓存目录
-        NSLog("📁 [PersistentManifestLoader] 步骤 3: 创建缓存目录")
-        try createCacheDirectory(at: cacheDir)
-        NSLog("✅ [PersistentManifestLoader] 缓存目录创建成功")
+        // 4. 确保缓存根目录存在（不创建具体的 cacheDir，等原子更新时创建）
+        NSLog("📁 [PersistentManifestLoader] 步骤 3: 确保缓存根目录存在")
+        createCacheDirectoryIfNeeded()
+        NSLog("✅ [PersistentManifestLoader] 缓存根目录就绪")
+
+        // 4b. 清理上次失败残留的临时/备份目录
+        cleanupStaleDirectories(for: cacheID)
 
         // 5. 检查是否已经缓存（跳过进度页面）
         let htmlPath = cacheDir.appendingPathComponent("index.html")
@@ -255,71 +258,121 @@ public class PersistentManifestLoader: NSObject {
             )
         }
 
-        // 7. 下载 HTML
-        updateState(.downloadingResources(current: 0, total: totalResources))
-        let html = try await downloadHTML(from: url)
+        // 7. 使用临时目录进行原子更新
+        let tempUUID = UUID().uuidString
+        let tempDir = cacheDirectory.appendingPathComponent("\(cacheID).tmp.\(tempUUID)")
+        let backupDir = cacheDirectory.appendingPathComponent("\(cacheID).old")
+        let fileManager = FileManager.default
 
-        // 8. 下载所有资源
-        let baseURL = url.deletingLastPathComponent()
-        try await downloadAllResources(
-            manifest: manifest,
-            cacheID: cacheID,
-            cacheDir: cacheDir,
-            baseURL: baseURL
-        ) { [weak modal] current, total, resourceName in
-            modal?.updateProgress(current: current, total: total, message: "正在下载", resourceName: resourceName)
+        do {
+            try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+            NSLog("📁 [PersistentManifestLoader] 创建临时下载目录: %@", tempDir.lastPathComponent)
+
+            // 8. 下载 HTML
+            updateState(.downloadingResources(current: 0, total: totalResources))
+            let html = try await downloadHTML(from: url)
+
+            // 9. 下载所有资源到临时目录（非最终缓存目录）
+            let baseURL = url.deletingLastPathComponent()
+            try await downloadAllResources(
+                manifest: manifest,
+                cacheID: cacheID,
+                cacheDir: tempDir,
+                baseURL: baseURL
+            ) { [weak modal] current, total, resourceName in
+                modal?.updateProgress(current: current, total: total, message: "正在下载", resourceName: resourceName)
+            }
+
+            // 10. 保存 HTML 和 manifest 到临时目录（不更新 ManifestStore）
+            try saveHTML(html, to: tempDir)
+            try saveManifest(manifest, to: tempDir)
+
+            // 11. 原子交换: old → .old, temp → current, delete .old
+            if fileManager.fileExists(atPath: cacheDir.path) {
+                try? fileManager.removeItem(at: backupDir)
+                try fileManager.moveItem(at: cacheDir, to: backupDir)
+                NSLog("📦 [PersistentManifestLoader] 备份旧缓存 → %@", backupDir.lastPathComponent)
+            }
+
+            try fileManager.moveItem(at: tempDir, to: cacheDir)
+            NSLog("✅ [PersistentManifestLoader] 原子更新: 临时目录 → 缓存目录")
+
+            try? fileManager.removeItem(at: backupDir)
+            NSLog("✅ [PersistentManifestLoader] 原子更新完成: 缓存已替换")
+
+            // 12. 注册到 ManifestStore（用于首页展示）
+            var finalManifest: Manifest
+            if let existing = ManifestStore.shared.getManifest(for: cacheID) {
+                finalManifest = Manifest(
+                    resources: manifest.resources,
+                    version: manifest.version,
+                    lastUpdated: Date(),
+                    appid: manifest.appid,
+                    name: manifest.name,
+                    icon: manifest.icon,
+                    isPinned: existing.isPinned,
+                    isFavorite: existing.isFavorite,
+                    lastAccessed: Date(),
+                    accessCount: (existing.accessCount ?? 0) + 1
+                )
+            } else {
+                finalManifest = Manifest(
+                    resources: manifest.resources,
+                    version: manifest.version,
+                    lastUpdated: Date(),
+                    appid: manifest.appid,
+                    name: manifest.name,
+                    icon: manifest.icon,
+                    isPinned: false,
+                    isFavorite: false,
+                    lastAccessed: Date(),
+                    accessCount: 1
+                )
+            }
+            ManifestStore.shared.saveManifest(finalManifest, for: cacheID)
+            ManifestStore.shared.saveHTML(html, for: cacheID)
+
+            // 13. 注册到 URL Scheme Handler
+            await registerManifest(manifest, for: cacheID, in: webView)
+
+            // 14. 加载 HTML 到 WebView
+            updateState(.loadingWebView)
+            try await loadHTML(html, cacheID: cacheID, in: webView)
+
+            // 15. 完成
+            updateState(.completed)
+
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            await dismissProgressModal()
+
+        } catch {
+            // 下载失败 — 清理临时目录
+            try? fileManager.removeItem(at: tempDir)
+            NSLog("❌ [PersistentManifestLoader] 下载失败，清理临时目录，回退: %@", error.localizedDescription)
+
+            // 如果旧备份存在，恢复备份
+            if fileManager.fileExists(atPath: backupDir.path) {
+                try? fileManager.removeItem(at: cacheDir)
+                try? fileManager.moveItem(at: backupDir, to: cacheDir)
+                NSLog("♻️ [PersistentManifestLoader] 已恢复旧版本备份")
+            }
+
+            // 尝试从旧缓存加载（如果有）
+            let htmlPath = cacheDir.appendingPathComponent("index.html")
+            if fileManager.fileExists(atPath: htmlPath.path),
+               let html = try? String(contentsOfFile: htmlPath.path, encoding: .utf8) {
+                NSLog("♻️ [PersistentManifestLoader] 使用旧版本缓存（不受更新失败影响）")
+
+                await registerManifest(manifest, for: cacheID, in: webView)
+                try await loadHTML(html, cacheID: cacheID, in: webView)
+                await dismissProgressModal()
+                return
+            }
+
+            // 没有旧缓存 — 真正失败
+            await dismissProgressModal()
+            throw error
         }
-
-        // 9. 保存 HTML
-        try saveHTML(html, to: cacheDir)
-
-        // 10. 保存 manifest
-        try saveManifest(manifest, to: cacheDir)
-
-        // 10b. 注册到 ManifestStore（用于首页展示）
-        var finalManifest: Manifest
-        if let existing = ManifestStore.shared.getManifest(for: cacheID) {
-            finalManifest = Manifest(
-                resources: manifest.resources,
-                version: manifest.version,
-                lastUpdated: Date(),
-                appid: manifest.appid,
-                name: manifest.name,
-                icon: manifest.icon,
-                isPinned: existing.isPinned,
-                isFavorite: existing.isFavorite,
-                lastAccessed: Date(),
-                accessCount: (existing.accessCount ?? 0) + 1
-            )
-        } else {
-            finalManifest = Manifest(
-                resources: manifest.resources,
-                version: manifest.version,
-                lastUpdated: Date(),
-                appid: manifest.appid,
-                name: manifest.name,
-                icon: manifest.icon,
-                isPinned: false,
-                isFavorite: false,
-                lastAccessed: Date(),
-                accessCount: 1
-            )
-        }
-        ManifestStore.shared.saveManifest(finalManifest, for: cacheID)
-        ManifestStore.shared.saveHTML(html, for: cacheID)
-
-        // 11. 注册到 URL Scheme Handler
-        await registerManifest(manifest, for: cacheID, in: webView)
-
-        // 12. 加载 HTML 到 WebView
-        updateState(.loadingWebView)
-        try await loadHTML(html, cacheID: cacheID, in: webView)
-
-        // 13. 完成
-        updateState(.completed)
-
-        try? await Task.sleep(nanoseconds: 300_000_000)
-        await dismissProgressModal()
     }
 
     // MARK: - Helper Methods
@@ -352,6 +405,34 @@ public class PersistentManifestLoader: NSObject {
 
     private func createCacheDirectory(at url: URL) throws {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    }
+
+    /// 清理上次失败残留的临时/备份目录（崩溃恢复）
+    private func cleanupStaleDirectories(for cacheID: String) {
+        let fileManager = FileManager.default
+        let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
+        let backupDir = cacheDirectory.appendingPathComponent("\(cacheID).old")
+        let tempPrefix = "\(cacheID).tmp."
+
+        guard let contents = try? fileManager.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) else { return }
+
+        // 崩溃恢复: 如果 cacheDir 不存在但 backupDir 存在，说明在 swap 过程中崩溃了
+        if !fileManager.fileExists(atPath: cacheDir.path) && fileManager.fileExists(atPath: backupDir.path) {
+            try? fileManager.moveItem(at: backupDir, to: cacheDir)
+            NSLog("🧹 [PersistentManifestLoader] 恢复崩溃备份: %@", cacheID)
+        }
+
+        // 清理残留的临时目录
+        for url in contents where url.lastPathComponent.hasPrefix(tempPrefix) {
+            try? fileManager.removeItem(at: url)
+            NSLog("🧹 [PersistentManifestLoader] 清理残留临时目录: %@", url.lastPathComponent)
+        }
+
+        // 清理残留的备份目录
+        if fileManager.fileExists(atPath: backupDir.path) {
+            try? fileManager.removeItem(at: backupDir)
+            NSLog("🧹 [PersistentManifestLoader] 清理残留备份目录")
+        }
     }
 
     private func updateState(_ newState: LoadingState) {

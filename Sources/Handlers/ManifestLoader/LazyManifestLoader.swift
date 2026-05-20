@@ -144,6 +144,25 @@ public class LazyManifestLoader: NSObject {
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         Task {
+            let isOffline = !NetworkMonitor.shared.isConnected
+
+            if isOffline && !forceRefresh {
+                shared.postLog("📡 [离线检测] 设备离线，尝试从本地缓存加载")
+
+                let loaded = shared.tryLoadFromCache(url: url, in: webView) { result in
+                    completion(result)
+                }
+
+                if !loaded {
+                    shared.postLog("❌ [离线检测] 未找到本地缓存，显示离线提示页")
+                    DispatchQueue.main.async {
+                        shared.loadOfflineErrorPage(url: url, in: webView)
+                    }
+                    completion(.success(()))
+                }
+                return
+            }
+
             do {
                 if forceRefresh {
                     shared.postLog("🔄 [强制刷新] 绕过缓存，重新下载所有内容")
@@ -174,19 +193,26 @@ public class LazyManifestLoader: NSObject {
                     }
                 } else {
                     shared.postLog("⚡ [智能加载] 选择懒加载模式")
-                    // ✅ 直接调用内部加载逻辑，不再重复下载 manifest
                     shared.loadInternal(url: url, in: webView, manifest: manifest, forceRefresh: forceRefresh, completion: completion)
                 }
             } catch {
-                shared.postLog("⚠️ [智能加载] 未找到 manifest.json，回退到普通 WebView 加载")
-                DispatchQueue.main.async {
-                    if url.isFileURL {
-                        webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
-                    } else {
-                        let request = URLRequest(url: url)
-                        webView.load(request)
+                shared.postLog("⚠️ [智能加载] 未找到 manifest.json，尝试本地缓存")
+
+                let loaded = shared.tryLoadFromCache(url: url, in: webView) { result in
+                    completion(result)
+                }
+
+                if !loaded {
+                    shared.postLog("⚠️ [智能加载] 本地也无缓存，回退到普通 WebView 加载")
+                    DispatchQueue.main.async {
+                        if url.isFileURL {
+                            webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+                        } else {
+                            let request = URLRequest(url: url)
+                            webView.load(request)
+                        }
+                        completion(.success(()))
                     }
-                    completion(.success(()))
                 }
             }
         }
@@ -316,6 +342,92 @@ public class LazyManifestLoader: NSObject {
                 }
             }
         }
+    }
+
+    // MARK: - Offline Fallback
+
+    @discardableResult
+    private func tryLoadFromCache(
+        url: URL,
+        in webView: WKWebView,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) -> Bool {
+        let cacheID = generateCacheID(for: url)
+
+        let persistentLoader = PersistentManifestLoader.shared
+        if persistentLoader.isCached(url: url) {
+            postLog("♻️ [离线回退] 发现本地持久化缓存: \(cacheID)")
+            persistentLoader.loadFromCache(url: url, in: webView) { [weak self] result in
+                switch result {
+                case .success:
+                    self?.postLog("✅ [离线回退] 从本地缓存加载成功")
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(
+                            name: .manifestCacheHit,
+                            object: nil,
+                            userInfo: ["source": "OFFLINE_FALLBACK"]
+                        )
+                    }
+                    completion(.success(()))
+                case .failure(let error):
+                    self?.postLog("❌ [离线回退] 本地缓存加载失败: \(error.localizedDescription)")
+                    completion(.failure(error))
+                }
+            }
+            return true
+        }
+
+        if let cachedHTML = manifestCacheManager.getCachedHTML(for: cacheID) {
+            postLog("♻️ [离线回退] 发现内存缓存: \(cacheID)")
+            manifestCacheManager.loadHTML(cachedHTML, into: webView)
+            if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: scheme) as? ManifestURLSchemeHandler {
+                schemeHandler.setPageKey(cacheID, for: webView)
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: .manifestCacheHit,
+                    object: nil,
+                    userInfo: ["source": "OFFLINE_FALLBACK"]
+                )
+            }
+            completion(.success(()))
+            return true
+        }
+
+        return false
+    }
+
+    private func loadOfflineErrorPage(url: URL, in webView: WKWebView) {
+        let escaped = url.absoluteString
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+        let html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+                body { font-family: -apple-system; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f7fa; color: #333; text-align: center; padding: 20px; }
+                .container { max-width: 320px; }
+                .icon { font-size: 48px; margin-bottom: 16px; }
+                h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+                p { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 16px; }
+                .url { font-size: 12px; color: #999; word-break: break-all; padding: 8px; background: #fff; border-radius: 8px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="icon">\u{1F4E1}</div>
+                <h2>\u{65E0}\u{6CD5}\u{8BBF}\u{95EE}\u{6B64}\u{9875}\u{9762}</h2>
+                <p>\u{8BBE}\u{5907}\u{5904}\u{4E8E}\u{79BB}\u{7EBF}\u{72B6}\u{6001}\u{FF0C}\u{4E14}\u{8BE5}\u{9875}\u{9762}\u{5C1A}\u{672A}\u{7F13}\u{5B58}\u{3002}\u{8BF7}\u{8FDE}\u{63A5}\u{7F51}\u{7EDC}\u{540E}\u{91CD}\u{8BD5}\u{3002}</p>
+                <div class="url">\(escaped)</div>
+            </div>
+        </body>
+        </html>
+        """
+        webView.loadHTMLString(html, baseURL: nil)
     }
 
     // MARK: - Helper Methods
