@@ -140,6 +140,7 @@ public enum ThemeTokens {
 
     public enum Shadows {
         public static let Card = ShadowValues(opacity: 0.08, offsetX: 0.0, offsetY: 4.0, radius: 12.0)
+        public static let SearchBar = ShadowValues(opacity: 0.06, offsetX: 0.0, offsetY: 2.0, radius: 8.0)
         public static let Fab = ShadowValues(opacity: 0.3, offsetX: 0.0, offsetY: 4.0, radius: 8.0)
         public static let Modal = ShadowValues(opacity: 0.15, offsetX: 0.0, offsetY: 8.0, radius: 24.0)
         public static let NavBar = ShadowValues(opacity: 0.03, offsetX: 0.0, offsetY: 2.0, radius: 8.0)

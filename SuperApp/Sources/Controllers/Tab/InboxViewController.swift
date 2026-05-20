@@ -36,9 +36,9 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     private let searchBarContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
-        let shadow = ThemeTokens.Shadows.Card
+        view.backgroundColor = ThemeTokens.Color.cardBackground
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        let shadow = ThemeTokens.Shadows.SearchBar
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
         view.layer.shadowRadius = shadow.radius
