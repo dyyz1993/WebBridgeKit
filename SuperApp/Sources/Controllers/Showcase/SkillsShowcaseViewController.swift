@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class SkillsShowcaseViewController: UIViewController {
 
     private var tableView: UITableView!
@@ -164,3 +166,4 @@ extension SkillsShowcaseViewController {
         present(alert, animated: true)
     }
 }
+#endif

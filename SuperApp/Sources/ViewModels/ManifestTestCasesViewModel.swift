@@ -451,7 +451,9 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         logger.logSeparator()
         logger.log("步骤 1: 使用 WebBrowserManager 打开页面")
+        #if DEBUG
         print("🚀 [ViewModel] executeTest using WebBrowserManager for: \(testCase.name)")
+        #endif
 
         // 在主线程操作 UI
         DispatchQueue.main.async { [weak self] in

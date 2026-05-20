@@ -178,11 +178,11 @@ extension GlobPattern {
                 passed += 1
             } else {
                 failed += 1
-                print("❌ Test failed: pattern='\(test.pattern)', text='\(test.text)', expected=\(test.expected), got=\(result)")
+                StructuredLogger.shared.error("❌ Test failed: pattern='\(test.pattern)', text='\(test.text)', expected=\(test.expected), got=\(result)", category: .cache)
             }
         }
 
-        print("🧪 GlobPattern Tests: \(passed) passed, \(failed) failed")
+        StructuredLogger.shared.error("🧪 GlobPattern Tests: \(passed) passed, \(failed) failed", category: .cache)
 
         return failed == 0
     }

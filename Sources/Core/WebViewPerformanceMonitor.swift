@@ -32,7 +32,7 @@ public class WebViewPerformanceMonitor {
         operation()
         let duration = (CFAbsoluteTimeGetCurrent() - start) * 1000
 
-        print("⏱️ [Performance] Duration: \(String(format: "%.2f", duration))ms")
+        StructuredLogger.shared.debug("⏱️ [Performance] Duration: \(String(format: "%.2f", duration))ms", category: .bridge)
 
         return duration
     }
@@ -46,7 +46,7 @@ public class WebViewPerformanceMonitor {
         operation()
         let duration = (CFAbsoluteTimeGetCurrent() - start) * 1000
 
-        print("⏱️ [Performance] \(label): \(String(format: "%.2f", duration))ms")
+        StructuredLogger.shared.debug("⏱️ [Performance] \(label): \(String(format: "%.2f", duration))ms", category: .bridge)
 
         // 记录到日志
         WebBridgeLogger.shared.log(
@@ -72,7 +72,7 @@ public class WebViewPerformanceMonitor {
         let memory = result == KERN_SUCCESS ? info.resident_size : 0
         let memoryMB = Double(memory) / 1024 / 1024
 
-        print("💾 [Performance] Memory usage: \(String(format: "%.2f", memoryMB))MB")
+        StructuredLogger.shared.debug("💾 [Performance] Memory usage: \(String(format: "%.2f", memoryMB))MB", category: .bridge)
 
         return memory
     }
@@ -89,7 +89,7 @@ public class WebViewPerformanceMonitor {
         before: () -> Void,
         after: () -> Void
     ) {
-        print("📊 [Performance] Starting comparison test: \(label)...")
+        StructuredLogger.shared.debug("📊 [Performance] Starting comparison test: \(label)...", category: .bridge)
 
         // 测试优化前
         let memoryBefore = measureMemory()
@@ -106,6 +106,7 @@ public class WebViewPerformanceMonitor {
         let timeImprovement = timeBefore > 0 ? ((timeBefore - timeAfter) / timeBefore) * 100 : 0
         let memoryIncrease = Double(Int64(memoryAfter) - Int64(memoryBefore)) / 1024 / 1024
 
+        #if DEBUG
         print("""
 
         📊 [Performance] \(label) Results:
@@ -116,6 +117,7 @@ public class WebViewPerformanceMonitor {
         Memory Increase: \(String(format: "%.2f", memoryIncrease))MB
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         """)
+        #endif
     }
 
     // MARK: - 池状态监控
@@ -123,6 +125,7 @@ public class WebViewPerformanceMonitor {
     /// 打印池状态
     public func printPoolStatus() {
         let webPoolStatus = WebViewPool.shared.getPoolStatus()
+        #if DEBUG
         print("""
 
         📊 [Performance] Pool Status:
@@ -132,6 +135,7 @@ public class WebViewPerformanceMonitor {
         WebView Warmed Up: \(webPoolStatus.isWarmedUp)
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         """)
+        #endif
     }
 
     // MARK: - 性能报告

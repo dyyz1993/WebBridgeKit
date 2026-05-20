@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class MessageShowcaseViewController: UIViewController {
 
     private var tableView: UITableView!
@@ -276,3 +278,4 @@ private class ActionCell: UITableViewCell {
         button.addAction(UIAction { _ in action() }, for: .touchUpInside)
     }
 }
+#endif

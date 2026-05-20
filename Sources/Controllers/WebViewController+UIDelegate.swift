@@ -25,7 +25,7 @@ extension WebViewController {
             return
         }
 
-        print("🎮 [BarkWebVC] Received action: \(action)")
+        StructuredLogger.shared.debug("🎮 [BarkWebVC] Received action: \(action)", category: .ui)
 
         // 获取当前 callbackId
         let callbackId = body["callbackId"] as? String
@@ -38,7 +38,7 @@ extension WebViewController {
 
         // 使用 getHandler 方法支持懒加载
         guard let handler = bridge.getHandler(for: action) else {
-            print("❌ [BarkWebVC] No handler for: \(action)")
+            StructuredLogger.shared.error("❌ [BarkWebVC] No handler for: \(action)", category: .handler)
             bridge.sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
             return
         }

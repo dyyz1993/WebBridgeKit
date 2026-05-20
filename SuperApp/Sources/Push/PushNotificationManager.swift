@@ -39,7 +39,9 @@ class PushNotificationManager: NSObject {
                             UIApplication.shared.registerForRemoteNotifications()
                             completion?(true)
                         } else {
+                            #if DEBUG
                             print("[PushManager] User denied notification permission")
+                            #endif
                             completion?(false)
                         }
                     }
@@ -55,14 +57,18 @@ class PushNotificationManager: NSObject {
             case .denied:
                 // 被拒绝 → 通知用户去设置里开启
                 DispatchQueue.main.async {
+                    #if DEBUG
                     print("[PushManager] Push notification access denied")
+                    #endif
                     completion?(false)
                 }
 
             @unknown default:
                 // .restricted 及其他未知状态
                 DispatchQueue.main.async {
+                    #if DEBUG
                     print("[PushManager] Push notification not available (restricted or unknown)")
+                    #endif
                     completion?(false)
                 }
             }
@@ -73,7 +79,9 @@ class PushNotificationManager: NSObject {
     func didRegisterForRemoteNotifications(withDeviceToken deviceToken: Data) {
         let token = deviceToken.map { String(format: "%02x", $0) }.joined()
         self.deviceToken = token
+        #if DEBUG
         print("[PushManager] Device token: \(token.prefix(8))...")
+        #endif
 
         registerTokenToBarkServer(token: token)
     }
@@ -88,12 +96,16 @@ class PushNotificationManager: NSObject {
             ?? barkKey
 
         guard let key, !key.isEmpty else {
+            #if DEBUG
             print("[PushManager] Bark key not configured, skip token registration")
+            #endif
             return
         }
 
         guard let url = URL(string: server + "/register") else {
+            #if DEBUG
             print("[PushManager] Invalid Bark server URL: \(server)")
+            #endif
             return
         }
 
@@ -110,29 +122,39 @@ class PushNotificationManager: NSObject {
 
         URLSession.shared.dataTask(with: request) { _, response, error in
             if let error {
+                #if DEBUG
                 print("[PushManager] Bark register failed: \(error.localizedDescription)")
+                #endif
                 return
             }
             if let httpResponse = response as? HTTPURLResponse,
                (200...299).contains(httpResponse.statusCode) {
+                #if DEBUG
                 print("[PushManager] Bark register success (POST)")
+                #endif
             } else {
                 let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+                #if DEBUG
                 print("[PushManager] Bark register failed with status: \(statusCode)")
+                #endif
             }
         }.resume()
     }
 
     /// 处理 APNs Token 注册失败
     func didFailToRegisterForRemoteNotifications(error: Error) {
+        #if DEBUG
         print("[PushManager] Failed to register: \(error)")
+        #endif
     }
 
     // MARK: - Incoming Notification
 
     /// App 在前台收到通知
     func handleForegroundNotification(userInfo: [AnyHashable: Any]) {
+        #if DEBUG
         print("[PushManager] Received foreground notification")
+        #endif
         // 可以展示一个自定义的 App 内通知 banner
     }
 

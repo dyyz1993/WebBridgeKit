@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class ThemeShowcaseViewController: UIViewController {
 
     private let scrollView = UIScrollView()
@@ -320,3 +322,4 @@ private class ColorCell: UICollectionViewCell {
         nameLabel.text = name
     }
 }
+#endif

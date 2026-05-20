@@ -82,7 +82,9 @@ public class WebViewDisplayViewController: UIViewController {
 
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        #if DEBUG
         print("✅ [WebViewDisplayVC] Full screen view did appear - presentation successful!")
+        #endif
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -103,7 +105,9 @@ public class WebViewDisplayViewController: UIViewController {
             // 我们还在导航栈中，即将被 pop
             // 移除 WebView，让它返回到原控制器
             if webView.superview == self.view {
+                #if DEBUG
                 print("🔧 [WebViewDisplayVC] 准备返回，移除 WebView")
+                #endif
                 webView.removeFromSuperview()
             }
         }

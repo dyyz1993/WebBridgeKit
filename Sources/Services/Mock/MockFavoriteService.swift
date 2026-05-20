@@ -31,11 +31,11 @@ public class MockFavoriteService: FavoriteServiceProtocol {
         if useInMemoryRealm {
             self.realmConfiguration = Realm.Configuration(inMemoryIdentifier: "MockFavoriteRealm")
             self.sharedRealm = try? Realm(configuration: realmConfiguration)
-            print("🔍 [MockFavoriteService] Initialized with in-memory Realm, success: \(sharedRealm != nil)")
+            StructuredLogger.shared.info("🔍 [MockFavoriteService] Initialized with in-memory Realm, success: \(sharedRealm != nil)", category: .general)
         } else {
             self.realmConfiguration = Realm.Configuration(fileURL: URL(fileURLWithPath: "/dev/null/mock.realm"))
             self.sharedRealm = nil
-            print("🔍 [MockFavoriteService] Initialized with dictionary storage")
+            StructuredLogger.shared.debug("🔍 [MockFavoriteService] Initialized with dictionary storage", category: .general)
         }
     }
 
@@ -262,7 +262,7 @@ public class MockFavoriteService: FavoriteServiceProtocol {
     public func addMockData(urls: [String], titles: [String]? = nil) {
         for (index, url) in urls.enumerated() {
             guard let urlObject = URL(string: url) else {
-                print("⚠️ [MockFavoriteService] Invalid URL: \(url)")
+                StructuredLogger.shared.warning("⚠️ [MockFavoriteService] Invalid URL: \(url)", category: .general)
                 continue
             }
             let title = titles?.indices.contains(index) == true ? titles?[index] : nil

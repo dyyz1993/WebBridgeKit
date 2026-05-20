@@ -20,7 +20,7 @@ extension WebViewController {
         config.dataDetectorTypes = []
 
         ManifestURLSchemeHandler.register(to: config, scheme: "wb-resource")
-        print("✅ [ManifestCache] Registered wb-resource:// URLSchemeHandler")
+        StructuredLogger.shared.info("✅ [ManifestCache] Registered wb-resource:// URLSchemeHandler", category: .cache)
 
         webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
@@ -31,7 +31,7 @@ extension WebViewController {
             make.edges.equalToSuperview()
         }
 
-        print("✅ [BarkWebVC] WebView initialized with Manifest cache support")
+        StructuredLogger.shared.info("✅ [BarkWebVC] WebView initialized with Manifest cache support", category: .cache)
     }
 
     func setupBridge() {
@@ -105,14 +105,14 @@ extension WebViewController {
 
     func setupGestureInterceptor() {
         guard let gestureHandler = bridge.getHandler(for: "gesture") as? WebGestureHandler else {
-            print("⚠️ [BarkWebVC] WebGestureHandler not found, gesture interceptor not setup")
+            StructuredLogger.shared.warning("⚠️ [BarkWebVC] WebGestureHandler not found, gesture interceptor not setup", category: .handler)
             return
         }
 
         gestureHandler.setCurrentWebView(webView)
         gestureInterceptor = WebGestureInterceptor(webView: webView, gestureHandler: gestureHandler)
 
-        print("✅ [BarkWebVC] Gesture interceptor setup completed")
+        StructuredLogger.shared.info("✅ [BarkWebVC] Gesture interceptor setup completed", category: .ui)
     }
 
     func applyBrowserFeatures() {
@@ -125,7 +125,7 @@ extension WebViewController {
 
         webView.allowsBackForwardNavigationGestures = backForwardGesturesEnabled
 
-        print("🔒 [BarkWebVC] Browser features applied (all disabled by default)")
+        StructuredLogger.shared.debug("🔒 [BarkWebVC] Browser features applied (all disabled by default)", category: .ui)
     }
 
     func configureBrowserFeatures(params: WebBrowserParams) {
@@ -188,7 +188,7 @@ extension WebViewController {
     }
 
     func rotateTo(_ orientation: UIInterfaceOrientation) {
-        print("🔄 [BarkWebVC] Attempting to rotate to: \(orientation.rawValue)")
+        StructuredLogger.shared.debug("🔄 [BarkWebVC] Attempting to rotate to: \(orientation.rawValue)", category: .ui)
 
         UIDevice.current.setValue(orientation.rawValue, forKey: "orientation")
         UIViewController.attemptRotationToDeviceOrientation()
@@ -213,9 +213,9 @@ extension WebViewController {
 
                 let geometryPreferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: targetMask)
                 windowScene.requestGeometryUpdate(geometryPreferences) { error in
-                    print("⚠️ [BarkWebVC] Geometry update error: \(error.localizedDescription)")
+                    StructuredLogger.shared.error("⚠️ [BarkWebVC] Geometry update error: \(error.localizedDescription)", category: .ui)
                 }
-                print("✅ [BarkWebVC] Geometry update requested (iOS 16+)")
+                StructuredLogger.shared.info("✅ [BarkWebVC] Geometry update requested (iOS 16+)", category: .ui)
                 break
             }
         }

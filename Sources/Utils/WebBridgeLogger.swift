@@ -101,7 +101,9 @@ public class WebBridgeLogger {
                 logMessage += " [\(fileName):\(line) \(function)]"
             }
 
+            #if DEBUG
             print(logMessage)
+            #endif
 
             // Also use os.log to record to system logs
             let osLogType: OSLogType

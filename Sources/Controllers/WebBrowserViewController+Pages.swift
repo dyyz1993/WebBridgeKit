@@ -325,7 +325,7 @@ extension WebBrowserViewController {
         """
 
         webView.loadHTMLString(testHTML, baseURL: nil)
-        print("🌉 [Browser] 加载 JS 桥接测试页面")
+        StructuredLogger.shared.debug("🌉 [Browser] 加载 JS 桥接测试页面", category: .ui)
     }
 
     // MARK: - Permissions Page
@@ -462,7 +462,7 @@ extension WebBrowserViewController {
         """
 
         webView.loadHTMLString(permissionsHTML, baseURL: nil)
-        print("🔐 [Browser] 加载权限管理页面")
+        StructuredLogger.shared.debug("🔐 [Browser] 加载权限管理页面", category: .ui)
     }
 
     // MARK: - Voice Jump Game
@@ -472,13 +472,13 @@ extension WebBrowserViewController {
             do {
                 let htmlHTML = try String(contentsOfFile: htmlPath)
                 webView.loadHTMLString(htmlHTML, baseURL: Bundle.main.bundleURL)
-                print("🎮 [Browser] 加载语音控制游戏页面")
+                StructuredLogger.shared.debug("🎮 [Browser] 加载语音控制游戏页面", category: .ui)
             } catch {
-                print("❌ [Browser] 游戏文件加载失败: \(error)")
+                StructuredLogger.shared.error("❌ [Browser] 游戏文件加载失败: \(error)", category: .ui)
                 showErrorPage(message: "游戏文件加载失败")
             }
         } else {
-            print("❌ [Browser] 未找到游戏文件")
+            StructuredLogger.shared.error("❌ [Browser] 未找到游戏文件", category: .ui)
             showErrorPage(message: "未找到游戏文件")
         }
     }

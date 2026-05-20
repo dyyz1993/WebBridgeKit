@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class ViewsShowcaseViewController: UIViewController {
 
     private var tableView: UITableView!
@@ -175,3 +177,4 @@ private extension UIColor {
         return String(format: "#%06X", rgb)
     }
 }
+#endif

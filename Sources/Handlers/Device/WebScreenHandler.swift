@@ -87,7 +87,7 @@ public class WebScreenHandler: BaseWebNativeHandler {
             // 添加提示文字（可选，极其暗淡）
             let label = UILabel()
             label.text = "长按恢复"
-            label.textColor = UIColor(white: 0.1, alpha: 1.0) // 几乎看不见
+            label.textColor = ThemeTokens.Color.text.withAlphaComponent(0.1)
             label.font = .systemFont(ofSize: 12)
             label.sizeToFit()
             label.center = CGPoint(x: overlay.bounds.midX, y: overlay.bounds.maxY - 50)

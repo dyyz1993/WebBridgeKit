@@ -60,10 +60,14 @@ class PassphraseManager {
     }
 
     private func handlePassphrase(_ code: String, from viewController: UIViewController) {
+        #if DEBUG
         print("🔍 [Passphrase] Handling code: \(code)")
+        #endif
 
         guard let config = ServerConfigManager.shared.getActiveConfig() else {
+            #if DEBUG
             print("❌ [Passphrase] No active server config found")
+            #endif
             return
         }
 

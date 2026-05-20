@@ -206,11 +206,15 @@ class URLInputView: UIView {
     // MARK: - Private Methods
 
     private func handleURLInput() {
+        #if DEBUG
         print("🟡 [URLInputView] handleURLInput called")
+        #endif
         guard let text = urlTextField.text,
               !text.isEmpty,
               let url = URL(string: text) else {
+            #if DEBUG
             print("🟡 [URLInputView] Invalid URL, returning")
+            #endif
             return
         }
 
@@ -224,10 +228,14 @@ class URLInputView: UIView {
             finalURL = URL(string: "http://\(text)")!
         }
 
+        #if DEBUG
         print("🟡 [URLInputView] Calling onLoadURL callback with: \(finalURL.absoluteString)")
+        #endif
         onLoadURL?(finalURL)
         urlTextField.resignFirstResponder()
+        #if DEBUG
         print("🟡 [URLInputView] onLoadURL callback completed")
+        #endif
     }
 
     private let rx = DisposeBag()

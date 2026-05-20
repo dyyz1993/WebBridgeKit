@@ -144,21 +144,21 @@ public class WebCacheDebugPanelViewController: UIViewController {
         let rules = PageCacheRuleManager.shared.getAllRules()
         let cachedPages = WebPageOfflineCacheManager.shared.getCachedPages()
 
-        print("📋 ========================================")
-        print("📋 loadData 调试信息:")
-        print("- 规则数量: \(rules.count)")
+        StructuredLogger.shared.debug("📋 ========================================", category: .ui)
+        StructuredLogger.shared.debug("📋 loadData 调试信息:", category: .navigation)
+        StructuredLogger.shared.debug("- 规则数量: \(rules.count)", category: .ui)
         for rule in rules {
-            print("  - 规则: \(rule.name), ID: \(rule.id)")
+            StructuredLogger.shared.debug("  - 规则: \(rule.name), ID: \(rule.id)", category: .ui)
         }
-        print("- 缓存页面数量: \(cachedPages.count)")
+        StructuredLogger.shared.debug("- 缓存页面数量: \(cachedPages.count)", category: .cache)
         for page in cachedPages {
-            print("  - 页面: \(page.url), ruleId: \(page.ruleId), ruleName: \(page.ruleName)")
+            StructuredLogger.shared.debug("  - 页面: \(page.url), ruleId: \(page.ruleId), ruleName: \(page.ruleName)", category: .navigation)
         }
-        print("📋 ========================================")
+        StructuredLogger.shared.debug("📋 ========================================", category: .ui)
 
         rulesWithPages = rules.map { rule in
             let pages = cachedPages.filter { $0.ruleId == rule.id }
-            print("📊 规则 '\(rule.name)' (ID: \(rule.id)) 匹配到 \(pages.count) 个缓存页面")
+            StructuredLogger.shared.debug("📊 规则 '\(rule.name)' (ID: \(rule.id)) 匹配到 \(pages.count) 个缓存页面", category: .ui)
             return RuleWithPages(rule: rule, cachedPages: pages, isExpanded: false)
         }
 

@@ -31,12 +31,12 @@ public class MockHistoryService: HistoryServiceProtocol {
         if useInMemoryRealm {
             self.realmConfiguration = Realm.Configuration(inMemoryIdentifier: "MockHistoryRealm")
             self.sharedRealm = try? Realm(configuration: realmConfiguration)
-            print("🔍 [MockHistoryService] Initialized with in-memory Realm, success: \(sharedRealm != nil)")
+            StructuredLogger.shared.info("🔍 [MockHistoryService] Initialized with in-memory Realm, success: \(sharedRealm != nil)", category: .general)
         } else {
             // 创建一个无效配置，强制使用内存存储
             self.realmConfiguration = Realm.Configuration(fileURL: URL(fileURLWithPath: "/dev/null/mock.realm"))
             self.sharedRealm = nil
-            print("🔍 [MockHistoryService] Initialized with dictionary storage")
+            StructuredLogger.shared.debug("🔍 [MockHistoryService] Initialized with dictionary storage", category: .general)
         }
     }
 
@@ -64,7 +64,7 @@ public class MockHistoryService: HistoryServiceProtocol {
                     if let favicon = favicon, existing.favicon == nil {
                         existing.favicon = favicon
                     }
-                    print("🔍 [MockHistoryService] Updated history: \(urlString)")
+                    StructuredLogger.shared.debug("🔍 [MockHistoryService] Updated history: \(urlString)", category: .general)
                 } else {
                     let history = WebPageHistory()
                     history.id = UUID().uuidString
@@ -74,7 +74,7 @@ public class MockHistoryService: HistoryServiceProtocol {
                     history.visitCount = 1
                     history.lastVisitDate = Date()
                     realm.add(history)
-                    print("🔍 [MockHistoryService] Added history: \(urlString), total count: \(realm.objects(WebPageHistory.self).count)")
+                    StructuredLogger.shared.debug("🔍 [MockHistoryService] Added history: \(urlString), total count: \(realm.objects(WebPageHistory.self).count)", category: .general)
                 }
             }
         } else {
@@ -133,11 +133,11 @@ public class MockHistoryService: HistoryServiceProtocol {
         if useInMemoryRealm, let realm = getRealm() {
             let results = realm.objects(WebPageHistory.self)
                 .sorted(byKeyPath: "lastVisitDate", ascending: false)
-            print("🔍 [MockHistoryService] getAllHistories: useInMemoryRealm=true, count: \(results.count)")
+            StructuredLogger.shared.debug("🔍 [MockHistoryService] getAllHistories: useInMemoryRealm=true, count: \(results.count)", category: .general)
             return Array(results).map { WebPageHistory(value: $0) }
         }
 
-        print("🔍 [MockHistoryService] getAllHistories: useInMemoryRealm=false, returning array from dictionary")
+        StructuredLogger.shared.debug("🔍 [MockHistoryService] getAllHistories: useInMemoryRealm=false, returning array from dictionary", category: .general)
         return Array(mockHistories.values)
             .sorted { $0.lastVisitDate > $1.lastVisitDate }
     }
@@ -236,7 +236,7 @@ public class MockHistoryService: HistoryServiceProtocol {
     public func addMockData(urls: [String], titles: [String]? = nil) {
         for (index, url) in urls.enumerated() {
             guard let urlObject = URL(string: url) else {
-                print("⚠️ [MockHistoryService] Invalid URL: \(url)")
+                StructuredLogger.shared.warning("⚠️ [MockHistoryService] Invalid URL: \(url)", category: .general)
                 continue
             }
             let title = titles?.indices.contains(index) == true ? titles?[index] : "Mock: \(url)"

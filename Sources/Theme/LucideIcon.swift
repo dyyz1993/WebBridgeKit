@@ -157,7 +157,7 @@ public enum LucideIcon: CaseIterable {
     public func image(pointSize: CGFloat = 20, weight: UIImage.SymbolWeight = .medium) -> UIImage? {
         if let img = UIImage(lucideId: lucideId) {
             let scaled = UIImage(cgImage: img.cgImage!, scale: UIScreen.main.scale, orientation: img.imageOrientation)
-            return scaled.withTintColor(.label)
+            return scaled.withTintColor(ThemeTokens.Color.text)
         }
         let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: weight)
         return UIImage(systemName: sfSymbolName, withConfiguration: config)

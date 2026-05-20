@@ -389,7 +389,7 @@ public class PersistentManifestLoader: NSObject {
         let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
 
         try? FileManager.default.removeItem(at: cacheDir)
-        print("🗑️ [PersistentManifestLoader] Cleared cache for: \(url.absoluteString)")
+        StructuredLogger.shared.debug("🗑️ [PersistentManifestLoader] Cleared cache for: \(url.absoluteString)", category: .cache)
     }
 
     /// 清除所有缓存
@@ -398,7 +398,7 @@ public class PersistentManifestLoader: NSObject {
             guard let self = self else { return }
             try? FileManager.default.removeItem(at: self.cacheDirectory)
             self.createCacheDirectoryIfNeeded()
-            print("🗑️ [PersistentManifestLoader] Cleared all cache (async)")
+            StructuredLogger.shared.debug("🗑️ [PersistentManifestLoader] Cleared all cache (async)", category: .cache)
         }
     }
 

@@ -24,14 +24,14 @@ extension WebBrowserViewController: WKNavigationDelegate {
         if let scheme = url.scheme?.lowercased() {
             if blockedSchemes.contains(scheme) {
                 Log.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
-                print("❌ [Browser] Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)")
+                StructuredLogger.shared.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .navigation)
                 decisionHandler(.cancel)
                 return
             }
 
             if !allowedSchemes.contains(scheme) {
                 Log.warning("Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
-                print("⚠️ [Browser] Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)")
+                StructuredLogger.shared.warning("Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)", category: .navigation)
                 decisionHandler(.cancel)
                 return
             }
@@ -43,7 +43,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
             return
         }
 
-        print("🔗 [Browser] Allowed navigation: \(url.absoluteString)")
+        StructuredLogger.shared.debug("Allowed navigation: \(url.absoluteString)", category: .navigation)
         decisionHandler(.allow)
     }
 
@@ -83,12 +83,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
         Log.info("WebView first screen load: \(String(format: "%.3f", duration))s (url: \(url.absoluteString))", category: .performance)
         loadStartTime = nil
 
-        print("📄 ========================================")
-        print("📄 页面加载完成")
-        print("- URL: \(url.absoluteString)")
-        print("- Title: \(webView.title ?? "nil")")
-        print("- Load time: \(String(format: "%.3f", duration))s")
-        print("📄 ========================================")
+        StructuredLogger.shared.info("Page loaded - URL: \(url.absoluteString), Title: \(webView.title ?? "nil"), Load time: \(String(format: "%.3f", duration))s", category: .navigation)
         WebBridgeLogger.shared.info("📄 Page loaded: \(url.absoluteString)")
 
         checkURLParameters(url)
@@ -106,24 +101,21 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
                     NotificationCenter.default.post(name: .historyDidUpdate, object: nil)
 
-                    print("✅ History updated successfully for: \(url.absoluteString)")
+                    StructuredLogger.shared.debug("History updated for: \(url.absoluteString)", category: .storage)
                 } catch {
                     WebBridgeLogger.shared.log(.error, "Failed to update history: \(error.localizedDescription)")
-                    print("❌ Failed to update history for \(url.absoluteString): \(error.localizedDescription)")
+                    StructuredLogger.shared.error("Failed to update history for \(url.absoluteString): \(error.localizedDescription)", category: .storage)
                 }
             }
         }
 
         let (shouldCache, matchedRule) = PageCacheRuleManager.shared.shouldCache(url: url)
 
-        print("🔍 缓存检查结果:")
-        print("- shouldCache: \(shouldCache)")
-        print("- matchedRule: \(matchedRule?.name ?? "nil")")
-        print("🔍 ========================================")
+        StructuredLogger.shared.debug("Cache check - shouldCache: \(shouldCache), matchedRule: \(matchedRule?.name ?? "nil")", category: .cache)
         WebBridgeLogger.shared.info("🔍 Cache check - shouldCache: \(shouldCache), matchedRule: \(matchedRule?.name ?? "nil")")
 
         if shouldCache, let rule = matchedRule {
-            print("🎯 触发自动缓存，规则: \(rule.name)")
+            StructuredLogger.shared.debug("Triggered auto-cache with rule: \(rule.name)", category: .cache)
             WebBridgeLogger.shared.info("🎯 URL '\(url.absoluteString)' matches page cache rule: \(rule.name)")
 
             autoCachePage(url: url, rule: rule)
@@ -132,29 +124,18 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 自动缓存 URL 对应的页面及所有资源
     private func autoCachePage(url: URL, rule: PageCacheRule) {
-        print("🎯 ========================================")
-        print("🎯 开始自动缓存页面")
-        print("- URL: \(url.absoluteString)")
-        print("- 规则: \(rule.name)")
-        print("🎯 ========================================")
+        StructuredLogger.shared.info("Auto-caching page - URL: \(url.absoluteString), Rule: \(rule.name)", category: .cache)
 
         WebPageOfflineCacheManager.shared.cachePage(
             url: url,
             rule: rule
         ) { progress in
-            print("📊 [\(rule.name)] 缓存进度: \(Int(progress * 100))%")
+            StructuredLogger.shared.debug("Caching progress [\(rule.name)]: \(Int(progress * 100))%", category: .cache)
             WebBridgeLogger.shared.info("Caching progress: \(progress * 100)%")
         } completion: { result in
             switch result {
             case .success(let pageInfo):
-                print("✅ ========================================")
-                print("✅ 自动缓存成功！")
-                print("- URL: \(url.absoluteString)")
-                print("- 规则: \(rule.name)")
-                print("- 标题: \(pageInfo.title)")
-                print("- 资源数: \(pageInfo.resourceCount)")
-                print("- 大小: \(pageInfo.formattedSize)")
-                print("✅ ========================================")
+                StructuredLogger.shared.info("Auto-cache success - URL: \(url.absoluteString), Rule: \(rule.name), Title: \(pageInfo.title), Resources: \(pageInfo.resourceCount), Size: \(pageInfo.formattedSize)", category: .cache)
                 WebBridgeLogger.shared.info("""
                 ✅ Page cached by rule '\(rule.name)':
                 - URL: \(url.absoluteString)
@@ -165,11 +146,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 """)
 
             case .failure(let error):
-                print("❌ ========================================")
-                print("❌ 自动缓存失败！")
-                print("- URL: \(url.absoluteString)")
-                print("- 错误: \(error.localizedDescription)")
-                print("❌ ========================================")
+                StructuredLogger.shared.error("Auto-cache failed - URL: \(url.absoluteString), Error: \(error.localizedDescription)", category: .cache)
                 WebBridgeLogger.shared.error("❌ Failed to cache page: \(error.localizedDescription)")
             }
         }
@@ -182,7 +159,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
         guard hasAppeared, isViewLoaded, isViewModelBinded else {
             currentURL = url
             pendingCacheLoad = (url, forceRefresh)
-            print("⏳ [WebBrowserVC] Deferring URL load until view appears: \(url.absoluteString)")
+            StructuredLogger.shared.debug("Deferring URL load until view appears: \(url.absoluteString)", category: .navigation)
             return
         }
 
@@ -190,7 +167,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
     }
 
     func performLoadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
-        print("🌐 [WebBrowserVC] Loading URL with cache: \(url.absoluteString)")
+        StructuredLogger.shared.debug("Loading URL with cache: \(url.absoluteString)", category: .navigation)
 
         currentURL = url
 
@@ -198,7 +175,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
         updateCacheStatus(source: "CHECKING")
 
-        print("🔍 [WebBridgeVC] loadURLWithCache 调用，debugMode=\(debugMode)")
+        StructuredLogger.shared.debug("loadURLWithCache called, debugMode=\(debugMode)", category: .navigation)
         LazyManifestLoader.smartLoad(
             url: url,
             in: webView,
@@ -210,7 +187,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
                 switch result {
                 case .success:
-                    print("✅ [WebBrowserVC] URL loaded with cache: \(url.absoluteString)")
+                    StructuredLogger.shared.info("URL loaded with cache: \(url.absoluteString)", category: .navigation)
                     if self.currentCacheSource == "CHECKING" || self.currentCacheSource == "LIVE" {
                         let isActuallyCached = self.checkIfActuallyCached(for: url)
                         if !isActuallyCached {
@@ -218,7 +195,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
                         }
                     }
                 case .failure(let error):
-                    print("❌ [WebBrowserVC] Failed to load URL: \(error.localizedDescription)")
+                    StructuredLogger.shared.error("Failed to load URL: \(error.localizedDescription)", category: .navigation)
                     self.updateCacheStatus(source: "LIVE")
                     // smartLoad 已经在 error fallback 里调了 webView.load，不再重复加载
                 }
@@ -230,7 +207,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 注入调试脚本（当 debugMode 启用时）
     private func injectDebugScript(for url: URL) {
-        print("🔍 [WebBridgeVC] injectDebugScript 被调用！debugMode=\(debugMode)")
+        StructuredLogger.shared.debug("injectDebugScript called, debugMode=\(debugMode)", category: .navigation)
         guard debugMode else { return }
 
         let debugScript = """
@@ -299,7 +276,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
         )
 
         webView.configuration.userContentController.addUserScript(userScript)
-        print("🔍 [WebBridgeVC] Debug script injected for: \(url.absoluteString)")
+        StructuredLogger.shared.debug("Debug script injected for: \(url.absoluteString)", category: .navigation)
     }
 
     /// 加载错误提示页面
@@ -320,7 +297,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
     public func loadErrorPage(url: URL, error: Error) {
         let errorHTML = generateErrorHTML(url: url, error: error)
         webView.loadHTMLString(errorHTML, baseURL: url)
-        print("⚠️ [WebBrowserVC] Loaded error page for: \(url.absoluteString)")
+        StructuredLogger.shared.warning("Loaded error page for: \(url.absoluteString)", category: .navigation)
     }
 
     /// 生成错误提示 HTML
@@ -403,7 +380,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 self.cacheStatusLabel.backgroundColor = ThemeTokens.Color.warning
             }
 
-            print("📱 [Browser] Cache Status Updated: \(source)")
+            StructuredLogger.shared.debug("Cache Status Updated: \(source)", category: .cache)
         }
     }
 

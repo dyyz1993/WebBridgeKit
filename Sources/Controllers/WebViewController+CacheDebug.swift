@@ -18,7 +18,7 @@ extension WebViewController {
             action: #selector(showCacheDebugInfo)
         )
         navigationItem.rightBarButtonItem = debugButton
-        print("✅ [BarkWebVC] Cache debug button added")
+        StructuredLogger.shared.info("✅ [BarkWebVC] Cache debug button added", category: .cache)
     }
 
     /// 显示缓存调试信息
@@ -99,7 +99,7 @@ extension WebViewController {
         debugInfo += "\n\(cachePath.path)"
 
         // 打印到控制台
-        print(debugInfo)
+        StructuredLogger.shared.debug(debugInfo, category: .ui)
 
         // 显示 Alert
         let alert = UIAlertController(
@@ -153,7 +153,7 @@ extension WebViewController {
         dataStore.removeData(ofTypes: dataTypes, modifiedSince: from) { [weak self] in
             Task { @MainActor [weak self] in
                 self?.showToast(message: "All cache cleared successfully")
-                print(" All cache cleared")
+                StructuredLogger.shared.debug(" All cache cleared", category: .cache)
             }
         }
     }

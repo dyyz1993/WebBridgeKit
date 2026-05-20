@@ -538,7 +538,9 @@ class ManifestCacheTestViewController: UIViewController {
                 }
             }
 
+            #if DEBUG
             print(logLine)
+            #endif
         }
 
         if Thread.isMainThread {

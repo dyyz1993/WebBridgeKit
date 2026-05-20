@@ -136,7 +136,7 @@ public class WebPhotoHandler: BaseWebNativeHandler {
 
             result.itemProvider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { item, error in
                 if let error = error {
-                    print("Error loading photo: \(error.localizedDescription)")
+                    StructuredLogger.shared.error("Error loading photo: \(error.localizedDescription)", category: .handler)
                     // 继续处理下一张
                     self.processResults(results, startIndex: startIndex + 1, images: images)
                     return

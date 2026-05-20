@@ -41,23 +41,31 @@ class PushRouter {
         }
 
         // 3. 都没有 → 不做路由，让 App 正常打开
+        #if DEBUG
         print("[PushRouter] No route target in payload")
+        #endif
     }
 
     // MARK: - Open Cached App
 
     private func openCachedApp(appid: String, params: [String: Any], mode: PushPayload.OpenMode, from rootVC: UIViewController) {
+        #if DEBUG
         print("[PushRouter] Opening cached app: \(appid)")
+        #endif
 
         if let result = ManifestStore.shared.getManifestByAppId(appid),
            let url = URL(string: result.key) {
+            #if DEBUG
             print("[PushRouter] Cache hit for appid: \(appid), url: \(url)")
+            #endif
             let browserParams = makeParams(for: url, mode: mode)
             WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
             return
         }
 
+        #if DEBUG
         print("[PushRouter] Cache miss for appid: \(appid), falling back to URL scheme")
+        #endif
         guard let url = URL(string: "app://\(appid)") else { return }
         let browserParams = makeParams(for: url, mode: mode)
         WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
@@ -66,7 +74,9 @@ class PushRouter {
     // MARK: - Open Browser
 
     private func openBrowser(url: URL, mode: PushPayload.OpenMode, from rootVC: UIViewController) {
+        #if DEBUG
         print("[PushRouter] Opening URL: \(url) mode: \(mode)")
+        #endif
         let browserParams = makeParams(for: url, mode: mode)
         WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
     }

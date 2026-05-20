@@ -11,6 +11,8 @@ import SnapKit
 import RxSwift
 import WebBridgeKit
 
+#if DEBUG
+
 private struct NotificationParams {
     let server: String
     let key: String
@@ -511,3 +513,5 @@ extension NotificationDebugViewController: UIPickerViewDataSource, UIPickerViewD
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int { sounds.count }
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? { sounds[row] }
 }
+
+#endif

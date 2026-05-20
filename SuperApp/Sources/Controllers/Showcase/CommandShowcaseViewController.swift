@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class CommandShowcaseViewController: UIViewController {
 
     private let scrollView = UIScrollView()
@@ -254,3 +256,4 @@ class CommandShowcaseViewController: UIViewController {
         return view
     }
 }
+#endif
