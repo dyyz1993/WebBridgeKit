@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WBK Cache Edge Fixture</title>
+  <link rel="stylesheet" href="edge.css">
+  <script src="//localhost:8081/test_resources/cache-html-validation/cases/edge/protocol-relative.js"></script>
+</head>
+<body data-case="edge">
+  <main class="edge">
+    <h1>HTML edge cases</h1>
+    <p>This page intentionally includes features that often break HTML resource caching.</p>
+    <img src="edge.svg" srcset="edge.svg 1x, edge@2x.svg 2x" alt="Srcset image">
+    <iframe title="Nested frame" src="frame.html"></iframe>
+    <img alt="Data URL should be ignored" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E">
+    <p id="edge-status">edge script pending</p>
+  </main>
+  <script src="edge.js"></script>
+</body>
+</html>

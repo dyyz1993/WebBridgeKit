@@ -148,6 +148,44 @@ final class HTMLResourceParserTests: XCTestCase {
         XCTAssertTrue(resources.contains { $0.originalURL.absoluteString.contains("images/photo.png") })
     }
 
+    func testRelativeURLResolutionUsesHTMLDirectory() {
+        let html = """
+        <html><head>
+            <link rel="stylesheet" href="assets/styles.css">
+            <script src="assets/app.js"></script>
+        </head><body>
+            <img src="assets/badge.svg">
+        </body></html>
+        """
+        let baseURL = URL(string: "http://localhost:8081/test_resources/cache-html-validation/cases/basic/index.html")!
+
+        let resources = parser.parseResources(html: html, baseURL: baseURL)
+        let urls = Set(resources.map { $0.originalURL.absoluteString })
+
+        XCTAssertTrue(urls.contains("http://localhost:8081/test_resources/cache-html-validation/cases/basic/assets/styles.css"))
+        XCTAssertTrue(urls.contains("http://localhost:8081/test_resources/cache-html-validation/cases/basic/assets/app.js"))
+        XCTAssertTrue(urls.contains("http://localhost:8081/test_resources/cache-html-validation/cases/basic/assets/badge.svg"))
+    }
+
+    func testNestedRelativeURLResolutionUsesHTMLDirectory() {
+        let html = """
+        <html><head>
+            <link rel="stylesheet" href="../../assets/nested.css">
+            <script src="../../assets/nested.js"></script>
+        </head><body>
+            <img src="../../assets/nested-badge.svg">
+        </body></html>
+        """
+        let baseURL = URL(string: "http://localhost:8081/test_resources/cache-html-validation/cases/nested/pages/deep/index.html")!
+
+        let resources = parser.parseResources(html: html, baseURL: baseURL)
+        let urls = Set(resources.map { $0.originalURL.absoluteString })
+
+        XCTAssertTrue(urls.contains("http://localhost:8081/test_resources/cache-html-validation/cases/nested/assets/nested.css"))
+        XCTAssertTrue(urls.contains("http://localhost:8081/test_resources/cache-html-validation/cases/nested/assets/nested.js"))
+        XCTAssertTrue(urls.contains("http://localhost:8081/test_resources/cache-html-validation/cases/nested/assets/nested-badge.svg"))
+    }
+
     // MARK: - Skip data: and javascript: URLs
 
     func testSkipsDataURLs() {
@@ -331,7 +369,7 @@ final class HTMLResourceParserTests: XCTestCase {
 
     // MARK: - Protocol-Relative URLs
 
-    func testSkipsProtocolRelativeURLs() {
+    func testResolvesProtocolRelativeURLs() {
         let html = """
         <html><head>
             <script src="//cdn.example.com/app.js"></script>
@@ -340,6 +378,6 @@ final class HTMLResourceParserTests: XCTestCase {
         let baseURL = URL(string: "https://example.com/")!
 
         let resources = parser.parseResources(html: html, baseURL: baseURL)
-        XCTAssertTrue(resources.isEmpty)
+        XCTAssertEqual(resources.first?.originalURL.absoluteString, "https://cdn.example.com/app.js")
     }
 }

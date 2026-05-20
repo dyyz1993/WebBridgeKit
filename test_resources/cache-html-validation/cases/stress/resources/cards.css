@@ -1,0 +1,14 @@
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tiles img {
+  width: 100%;
+  min-height: 86px;
+  border: 1px solid #d7d3ca;
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+}

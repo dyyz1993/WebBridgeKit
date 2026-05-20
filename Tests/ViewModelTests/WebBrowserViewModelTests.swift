@@ -113,4 +113,13 @@ final class WebBrowserViewModelTests: XCTestCase {
             "WebView should allow back/forward navigation gestures"
         )
     }
+
+    func testGetWebView_WhenCreated_DoesNotRegisterDeprecatedOfflineCacheSchemeHandler() {
+        let viewModel = WebBrowserViewModel()
+        let webView = viewModel.getWebView()
+
+        let handler = webView.configuration.urlSchemeHandler(forURLScheme: "bark-cache")
+
+        XCTAssertNil(handler)
+    }
 }

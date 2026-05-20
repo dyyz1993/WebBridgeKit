@@ -79,7 +79,9 @@ inject_pinned_data.swift
 # Node/Testing
 node_modules/
 test-results/
-test_resources/
+test_resources/*
+!test_resources/cache-html-validation/
+!test_resources/cache-html-validation/**
 package.json
 package-lock.json
 tsconfig.json
