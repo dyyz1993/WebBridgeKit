@@ -367,20 +367,19 @@ public class HTMLResourceParser {
     }
 
     private func resolveURL(_ urlString: String, baseURL: URL) -> URL? {
-        // 跳过data: URL, javascript: URL, // 协议相对URL
-        if urlString.hasPrefix("data:") ||
-            urlString.hasPrefix("javascript:") ||
-            urlString.hasPrefix("//") {
+        let trimmedURL = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowercasedURL = trimmedURL.lowercased()
+
+        if lowercasedURL.hasPrefix("data:") ||
+            lowercasedURL.hasPrefix("javascript:") {
             return nil
         }
 
-        // 已经是完整的HTTP URL
-        if urlString.hasPrefix("http://") || urlString.hasPrefix("https://") {
-            return URL(string: urlString)
+        if trimmedURL.hasPrefix("//"), let scheme = baseURL.scheme {
+            return URL(string: "\(scheme):\(trimmedURL)")
         }
 
-        // 相对路径
-        return baseURL.appendingPathComponent(urlString)
+        return URL(string: trimmedURL, relativeTo: baseURL)?.absoluteURL
     }
 
     private func getLocalPath(for url: URL) -> String? {

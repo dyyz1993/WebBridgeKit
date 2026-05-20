@@ -67,7 +67,8 @@ scan_simulator_system_log() {
   log_tmp=$(mktemp)
   xcrun simctl spawn booted log show --predicate 'subsystem == "com.webbridgekit" AND messageType >= error' --last 1h --style compact 2>/dev/null > "$log_tmp" || true
   local count
-  count=$(grep -c "error\|crash\|SIGABRT\|SIGSEGV\|terminated\|OOM\|killed" "$log_tmp" 2>/dev/null || echo "0")
+  count=$(grep -c "error\|crash\|SIGABRT\|SIGSEGV\|terminated\|OOM\|killed" "$log_tmp" 2>/dev/null || true)
+  count=${count:-0}
   if [[ "$count" -gt 0 ]]; then
     local top_errors
     top_errors=$(grep -i "error\|crash\|terminated\|killed" "$log_tmp" | sort | uniq -c | sort -rn | head -10)
@@ -82,7 +83,8 @@ scan_memory_warnings() {
   log_tmp=$(mktemp)
   xcrun simctl spawn booted log show --predicate 'eventMessage CONTAINS "memory" OR eventMessage CONTAINS "OOM" OR eventMessage CONTAINS "jetsam"' --last 1h --style compact 2>/dev/null > "$log_tmp" || true
   local count
-  count=$(grep -ci "memory\|OOM\|jetsam\|pressure" "$log_tmp" 2>/dev/null || echo "0")
+  count=$(grep -ci "memory\|OOM\|jetsam\|pressure" "$log_tmp" 2>/dev/null || true)
+  count=${count:-0}
   if [[ "$count" -gt 0 ]]; then
     WARNINGS+=("MEMORY ($count memory events in last hour)")
   fi
@@ -193,21 +195,30 @@ echo "  System Log Errors (1h):    $syslog_count"
 echo "  Memory Events (1h):        $mem_count"
 echo ""
 
-total_crashes=${#CRASHES[@]}
+total_crashes=$((diag_count + app_count))
 if [[ "$total_crashes" -gt 0 ]]; then
   echo -e "${RED}--- Crash Logs Found ($total_crashes) ---${NC}"
-  for entry in "${CRASHES[@]}"; do
-    print_crash_detail "$entry"
-  done
+  if [[ "${#CRASHES[@]}" -gt 0 ]]; then
+    for entry in "${CRASHES[@]}"; do
+      print_crash_detail "$entry"
+    done
+  else
+    echo "  See counts above. Details are unavailable when scans run via command substitution."
+  fi
   echo ""
 fi
 
-total_warnings=${#WARNINGS[@]}
+total_warnings=$(( (syslog_count > 0 ? 1 : 0) + (mem_count > 0 ? 1 : 0) ))
 if [[ "$total_warnings" -gt 0 ]]; then
   echo -e "${YELLOW}--- Warnings ($total_warnings) ---${NC}"
-  for w in "${WARNINGS[@]}"; do
-    echo -e "$w"
-  done
+  if [[ "${#WARNINGS[@]}" -gt 0 ]]; then
+    for w in "${WARNINGS[@]}"; do
+      echo -e "$w"
+    done
+  else
+    [[ "$syslog_count" -gt 0 ]] && echo "SYSLOG ($syslog_count errors in last hour)"
+    [[ "$mem_count" -gt 0 ]] && echo "MEMORY ($mem_count memory events in last hour)"
+  fi
   echo ""
 fi
 

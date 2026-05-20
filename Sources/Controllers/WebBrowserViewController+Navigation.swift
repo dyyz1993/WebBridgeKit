@@ -179,6 +179,17 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 使用 Manifest 缓存加载 URL
     public func loadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
+        guard hasAppeared, isViewLoaded, isViewModelBinded else {
+            currentURL = url
+            pendingCacheLoad = (url, forceRefresh)
+            print("⏳ [WebBrowserVC] Deferring URL load until view appears: \(url.absoluteString)")
+            return
+        }
+
+        performLoadURLWithCache(url, forceRefresh: forceRefresh)
+    }
+
+    func performLoadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
         print("🌐 [WebBrowserVC] Loading URL with cache: \(url.absoluteString)")
 
         currentURL = url

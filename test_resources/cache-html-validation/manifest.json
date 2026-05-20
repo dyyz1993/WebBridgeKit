@@ -1,0 +1,37 @@
+{
+  "name": "WBK Cache HTML Validation",
+  "version": "1.0.0",
+  "base": "/test_resources/cache-html-validation/",
+  "cases": [
+    {
+      "id": "basic",
+      "path": "cases/basic/index.html",
+      "expectedResources": 4,
+      "purpose": "stylesheet, script, image, favicon, and same-directory relative URLs"
+    },
+    {
+      "id": "nested",
+      "path": "cases/nested/pages/deep/index.html",
+      "expectedResources": 3,
+      "purpose": "relative paths from an HTML file nested below the resource directory"
+    },
+    {
+      "id": "cache-control",
+      "path": "cases/cache-control/index.html",
+      "expectedResources": 2,
+      "purpose": "server cache headers and repeated-load browser metrics"
+    },
+    {
+      "id": "stress",
+      "path": "cases/stress/index.html",
+      "expectedResources": 12,
+      "purpose": "several CSS, JS, and image resources loaded by one HTML document"
+    },
+    {
+      "id": "edge",
+      "path": "cases/edge/index.html",
+      "expectedResources": 5,
+      "purpose": "protocol-relative URL, srcset, CSS url(), iframe, and data URL behavior"
+    }
+  ]
+}

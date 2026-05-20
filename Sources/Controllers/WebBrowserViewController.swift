@@ -122,6 +122,12 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// WebView load start time for performance tracking (#54)
     var loadStartTime: Date?
 
+    /// URL requested before the browser is visible and bound.
+    var pendingCacheLoad: (url: URL, forceRefresh: Bool)?
+
+    /// Tracks whether it is safe to start WebView navigation.
+    var hasAppeared = false
+
     /// 调试模式：启用时会显示错误页面而不是白屏
     public var debugMode: Bool = false
 
@@ -205,6 +211,15 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         restoreUIState()
+    }
+
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        hasAppeared = true
+
+        guard let pendingCacheLoad else { return }
+        self.pendingCacheLoad = nil
+        performLoadURLWithCache(pendingCacheLoad.url, forceRefresh: pendingCacheLoad.forceRefresh)
     }
 
     /// 还原系统 NavigationBar
