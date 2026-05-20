@@ -182,7 +182,7 @@ public class TestLogger {
     public func save() {
         // 确保所有日志都写入磁盘
         logFooter()
-        print("📝 日志已保存到: \(logFileURL.path)")
+        StructuredLogger.shared.debug("📝 日志已保存到: \(logFileURL.path)", category: .general)
     }
 
     /// 获取日志文件 URL
@@ -229,7 +229,7 @@ public class TestLogger {
                 try message.write(to: logFileURL, atomically: true, encoding: .utf8)
             }
         } catch {
-            print("❌ 写入日志失败: \(error.localizedDescription)")
+            StructuredLogger.shared.error("❌ 写入日志失败: \(error.localizedDescription)", category: .general)
         }
     }
 
@@ -270,7 +270,7 @@ extension TestLogger {
             return files.filter { $0.pathExtension == "log" }
                 .sorted { $0.lastPathComponent > $1.lastPathComponent }
         } catch {
-            print("❌ 读取日志目录失败: \(error.localizedDescription)")
+            StructuredLogger.shared.error("❌ 读取日志目录失败: \(error.localizedDescription)", category: .general)
             return []
         }
     }
@@ -294,9 +294,9 @@ extension TestLogger {
                 try FileManager.default.removeItem(at: file)
             }
 
-            print("🗑️ 所有测试日志已清空")
+            StructuredLogger.shared.debug("🗑️ 所有测试日志已清空", category: .general)
         } catch {
-            print("❌ 清空日志失败: \(error.localizedDescription)")
+            StructuredLogger.shared.error("❌ 清空日志失败: \(error.localizedDescription)", category: .general)
         }
     }
 
@@ -316,7 +316,7 @@ extension TestLogger {
         do {
             return try String(contentsOf: fileURL, encoding: .utf8)
         } catch {
-            print("❌ 读取日志失败: \(error.localizedDescription)")
+            StructuredLogger.shared.error("❌ 读取日志失败: \(error.localizedDescription)", category: .general)
             return nil
         }
     }

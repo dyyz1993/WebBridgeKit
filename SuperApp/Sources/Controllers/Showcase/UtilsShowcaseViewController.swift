@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class UtilsShowcaseViewController: UIViewController {
 
     private var tableView: UITableView!
@@ -167,3 +169,4 @@ extension UtilsShowcaseViewController {
         }
     }
 }
+#endif

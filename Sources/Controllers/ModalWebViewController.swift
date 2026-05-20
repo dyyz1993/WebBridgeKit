@@ -302,7 +302,7 @@ public class ModalWebViewController: UIViewController {
         // 🔒 Clean up bridge
         bridge = nil
 
-        print("🧹 [ModalWebVC] Cleaned up with proper memory management")
+        StructuredLogger.shared.debug("🧹 [ModalWebVC] Cleaned up with proper memory management", category: .ui)
     }
 }
 

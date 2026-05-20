@@ -101,12 +101,11 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             // 设置手势拦截器
             setupGestureInterceptor()
 
-            print("♻️ [BarkWebVC] Using pooled instance with message handler")
+            StructuredLogger.shared.debug("Using pooled WebView instance", category: .lifecycle)
         } else {
-            // 创建新实例
             setupUI()
             setupBridge()
-            print("🆕 [BarkWebVC] Created new instance")
+            StructuredLogger.shared.debug("Created new WebView instance", category: .lifecycle)
         }
 
         setupNotifications()
@@ -138,7 +137,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
 
             self.webView.customUserAgent = customUA
-            print("📱 [BarkWebVC] Custom UA configured: \(customUA)")
+            StructuredLogger.shared.debug("Custom UA configured: \(customUA)", category: .ui)
         }
     }
 
@@ -154,16 +153,16 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         if let config = browserConfig {
             if config.orientation == .landscapeLeft {
                 rotateTo(.landscapeLeft)
-                print("✅ [BarkWebVC] viewWillAppear - Forcing landscapeLeft orientation")
+                StructuredLogger.shared.debug("viewWillAppear - Forcing landscapeLeft orientation", category: .ui)
             } else if config.orientation == .landscapeRight {
                 rotateTo(.landscapeRight)
-                print("✅ [BarkWebVC] viewWillAppear - Forcing landscapeRight orientation")
+                StructuredLogger.shared.debug("viewWillAppear - Forcing landscapeRight orientation", category: .ui)
             } else if config.orientation == .landscape {
-                rotateTo(.landscapeLeft)  // .landscape 默认向左
-                print("✅ [BarkWebVC] viewWillAppear - Forcing landscape (left) orientation")
+                rotateTo(.landscapeLeft)
+                StructuredLogger.shared.debug("viewWillAppear - Forcing landscape (left) orientation", category: .ui)
             } else if config.orientation == .portrait {
                 rotateTo(.portrait)
-                print("✅ [BarkWebVC] viewWillAppear - Forcing portrait orientation")
+                StructuredLogger.shared.debug("viewWillAppear - Forcing portrait orientation", category: .ui)
             }
         }
     }
@@ -176,22 +175,22 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             if config.orientation == .landscapeLeft {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                     self?.rotateTo(.landscapeLeft)
-                    print("✅ [BarkWebVC] viewDidAppear - Final forcing landscapeLeft orientation")
+                    StructuredLogger.shared.debug("viewDidAppear - Final forcing landscapeLeft orientation", category: .ui)
                 }
             } else if config.orientation == .landscapeRight {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                     self?.rotateTo(.landscapeRight)
-                    print("✅ [BarkWebVC] viewDidAppear - Final forcing landscapeRight orientation")
+                    StructuredLogger.shared.debug("viewDidAppear - Final forcing landscapeRight orientation", category: .ui)
                 }
             } else if config.orientation == .landscape {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                    self?.rotateTo(.landscapeLeft)  // 默认向左
-                    print("✅ [BarkWebVC] viewDidAppear - Final forcing landscape (left) orientation")
+                    self?.rotateTo(.landscapeLeft)
+                    StructuredLogger.shared.debug("viewDidAppear - Final forcing landscape (left) orientation", category: .ui)
                 }
             } else if config.orientation == .portrait {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                     self?.rotateTo(.portrait)
-                    print("✅ [BarkWebVC] viewDidAppear - Final forcing portrait orientation")
+                    StructuredLogger.shared.debug("viewDidAppear - Final forcing portrait orientation", category: .ui)
                 }
             }
         }
@@ -209,25 +208,16 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         do {
             _ = try InputValidator.validateHTMLName(htmlName)
         } catch {
-            print("❌ [BarkWebVC] Invalid HTML name: \(htmlName)")
-            print("   - Error: \(error.localizedDescription)")
+            StructuredLogger.shared.error("Invalid HTML name: \(htmlName) - \(error.localizedDescription)", category: .ui)
             return
         }
 
         if let htmlPath = Bundle.main.path(forResource: htmlName, ofType: "html") {
             let htmlURL = URL(fileURLWithPath: htmlPath)
             webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
-            print("✅ [BarkWebVC] Loaded HTML: \(htmlName).html")
+            StructuredLogger.shared.debug("Loaded HTML: \(htmlName).html", category: .ui)
         } else {
-            print("❌ [BarkWebVC] HTML file not found: \(htmlName).html")
-            // 尝试列出所有可用的 HTML 文件
-            let bundlePath = Bundle.main.bundlePath
-            let resourcesPath = bundlePath + "/Resources"
-            print("📁 [BarkWebVC] Bundle path: \(resourcesPath)")
-            if let files = try? FileManager.default.contentsOfDirectory(atPath: resourcesPath) {
-                let htmlFiles = files.filter { $0.hasSuffix(".html") }
-                print("📄 [BarkWebVC] Available HTML files: \(htmlFiles.joined(separator: ", "))")
-            }
+            StructuredLogger.shared.error("HTML file not found: \(htmlName).html", category: .ui)
         }
     }
 
@@ -243,44 +233,34 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             _ = try InputValidator.validateURLScheme(url, allowedSchemes: allowedSchemes)
         } catch {
             Log.error("Invalid URL scheme blocked: \(url.absoluteString) - \(error.localizedDescription)", category: .general)
-            print("❌ [BarkWebVC] Invalid URL scheme: \(url.absoluteString)")
-            print("   - Error: \(error.localizedDescription)")
+            StructuredLogger.shared.error("Invalid URL scheme: \(url.absoluteString) - \(error.localizedDescription)", category: .ui)
             return
         }
 
-        // 🔒 Additional security: Block javascript: and data: schemes explicitly
         let blockedSchemes: Set<String> = ["javascript", "data", "vbscript", "file"]
         if let scheme = url.scheme?.lowercased(), blockedSchemes.contains(scheme) {
             Log.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
-            print("❌ [BarkWebVC] Blocked dangerous URL scheme: \(scheme)")
+            StructuredLogger.shared.error("Blocked dangerous URL scheme: \(scheme)", category: .ui)
             return
         }
 
         self.url = url
 
-        print("🧪 [ManifestCache] Attempting to match URL: \(url.absoluteString)")
+        StructuredLogger.shared.debug("Attempting to match URL: \(url.absoluteString)", category: .cache)
 
-        // 🔥 检查 URL 是否匹配缓存规则
         if let matchResult = URLRuleMatcher.shared.match(url: url) {
-            print("✅ [ManifestCache] Rule matched!")
-            print("   - Rule ID: \(matchResult.ruleId)")
-            print("   - Match Type: \(matchResult.matchType)")
-            print("   - Manifest URL: \(matchResult.manifestURL.absoluteString)")
+            StructuredLogger.shared.info("Rule matched - Rule ID: \(matchResult.ruleId), Match Type: \(matchResult.matchType), Manifest URL: \(matchResult.manifestURL.absoluteString)", category: .cache)
 
-            // 尝试下载 manifest
             downloadAndUseManifest(from: matchResult.manifestURL, pageURL: url)
         } else {
-            print("⏭️ [ManifestCache] No rule matched, using normal load")
+            StructuredLogger.shared.debug("No cache rule matched, using normal load", category: .cache)
 
-            // 🔥 新方案：使用系统 URLCache，无需 HTML 修改或 JS 注入
-            // WKWebView 会自动使用 URLCache.shared 处理缓存
-            // 基于 HTTP 缓存头，自动回退到网络
             if url.isFileURL {
                 webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
             } else {
                 webView.load(URLRequest(url: url))
             }
-            print("🌐 [BarkWebVC] Loading: \(url) (System URLCache will handle cache automatically)")
+            StructuredLogger.shared.debug("Loading: \(url) (System URLCache)", category: .navigation)
 
             // 🔥 页面加载完成后自动生成缩略图
             generateThumbnailAfterLoad(url: url)
@@ -336,7 +316,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                                 }
                             }
                         } catch {
-                            print(" [BarkWebVC] Failed to save thumbnail for: \(url)")
+                            StructuredLogger.shared.error("Failed to save thumbnail for: \(url)", category: .storage)
                         }
                     }
                 }
@@ -351,7 +331,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         _ = view
         self.url = url
         webView.load(URLRequest(url: url))
-        print("🌐 [BarkWebVC] Loading from network (forced): \(url)")
+        StructuredLogger.shared.debug("Loading from network (forced): \(url)", category: .navigation)
     }
 
     /// 配置浏览器参数
@@ -403,7 +383,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                 let scriptSource = "window.SuperCachePayload = \(payloadString);"
                 let userScript = WKUserScript(source: scriptSource, injectionTime: .atDocumentStart, forMainFrameOnly: true)
                 webView.configuration.userContentController.addUserScript(userScript)
-                print("🚀 [WebViewController] Injected payload: \(payloadString)")
+                StructuredLogger.shared.debug("Injected payload: \(payloadString)", category: .bridge)
             }
 
             // 将 payload 转换为 URL Query 参数
@@ -416,7 +396,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                 components.queryItems = queryItems
                 if let newURL = components.url {
                     self.url = newURL // 更新初始加载 URL
-                    print("🔗 [WebViewController] Appended payload to URL: \(newURL.absoluteString)")
+                    StructuredLogger.shared.debug("Appended payload to URL: \(newURL.absoluteString)", category: .bridge)
                 }
             }
         }
@@ -424,19 +404,19 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         // 🔥 主动触发屏幕旋转
         if params.orientation == .landscapeLeft {
             rotateTo(.landscapeLeft)
-            print("✅ [BarkWebVC] Forcing landscapeLeft orientation")
+            StructuredLogger.shared.debug("Forcing landscapeLeft orientation", category: .ui)
         } else if params.orientation == .landscapeRight {
             rotateTo(.landscapeRight)
-            print("✅ [BarkWebVC] Forcing landscapeRight orientation")
+            StructuredLogger.shared.debug("Forcing landscapeRight orientation", category: .ui)
         } else if params.orientation == .landscape {
-            rotateTo(.landscapeLeft)  // 默认向左
-            print("✅ [BarkWebVC] Forcing landscape (left) orientation")
+            rotateTo(.landscapeLeft)
+            StructuredLogger.shared.debug("Forcing landscape (left) orientation", category: .ui)
         } else if params.orientation == .portrait {
             rotateTo(.portrait)
-            print("✅ [BarkWebVC] Forcing portrait orientation")
+            StructuredLogger.shared.debug("Forcing portrait orientation", category: .ui)
         }
 
-        print("✅ [BarkWebVC] Configured with mode: \(params.displayMode), hideTabBar: \(params.hideTabBar), disableSwipeBack: \(params.disableSwipeBack)")
+        StructuredLogger.shared.debug("Configured with mode: \(params.displayMode), hideTabBar: \(params.hideTabBar), disableSwipeBack: \(params.disableSwipeBack)", category: .ui)
     }
 
     /// 🔥 通过 Bridge 开启/关闭浏览器特性
@@ -461,10 +441,10 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             webView.scrollView.isScrollEnabled = enabled
 
         default:
-            print("⚠️ [BarkWebVC] Unknown feature: \(feature)")
+            StructuredLogger.shared.warning("Unknown browser feature: \(feature)", category: .ui)
         }
 
-        print("🔧 [BarkWebVC] Browser feature '\(feature)' set to \(enabled)")
+        StructuredLogger.shared.debug("Browser feature '\(feature)' set to \(enabled)", category: .ui)
     }
 
     // MARK: - Overrides
@@ -513,11 +493,10 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                     bridge: bridge
                 )
                 WebViewPool.shared.recycle(instance)
-                print(" [BarkWebVC] Recycled instance to pool")
+                StructuredLogger.shared.debug("Recycled instance to pool", category: .lifecycle)
             } else if let bridge = bridgeInstance {
-                // 不是从池中获取的，尝试回收 Bridge
                 WebBridgePool.shared.recycleBridge(bridge)
-                print(" [BarkWebVC] Recycled bridge only")
+                StructuredLogger.shared.debug("Recycled bridge only", category: .lifecycle)
             }
         }
 
@@ -525,6 +504,6 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         interceptor?.cleanup()
         registeredHandlerNames.removeAll()
 
-        print(" [BarkWebVC] Cleaned up with proper memory management")
+        StructuredLogger.shared.debug("Cleaned up with proper memory management", category: .lifecycle)
     }
 }

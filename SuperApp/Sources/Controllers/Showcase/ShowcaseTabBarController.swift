@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class ShowcaseTabBarController: UITabBarController {
 
     override func viewDidLoad() {
@@ -66,3 +68,4 @@ class ShowcaseTabBarController: UITabBarController {
         }
     }
 }
+#endif

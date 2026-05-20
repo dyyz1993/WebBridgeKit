@@ -67,15 +67,15 @@ public class WebResourceCacheManager {
                 self.loadCacheIndex()
                 self.updateTotalCacheSize()
 
-                print("✅ [WebResourceCacheManager] Initialization tasks completed in background")
+                StructuredLogger.shared.info("✅ [WebResourceCacheManager] Initialization tasks completed in background", category: .cache)
             }
         } else {
             queue.async { [weak self] in
                 self?.loadCacheIndex()
             }
-            print("🧪 [WebResourceCacheManager] UI Testing mode: Skipped heavy size calculation")
+            StructuredLogger.shared.debug("🧪 [WebResourceCacheManager] UI Testing mode: Skipped heavy size calculation", category: .cache)
         }
 
-        print("✅ [WebResourceCacheManager] Initialized (background loading started)")
+        StructuredLogger.shared.info("✅ [WebResourceCacheManager] Initialized (background loading started)", category: .cache)
     }
 }

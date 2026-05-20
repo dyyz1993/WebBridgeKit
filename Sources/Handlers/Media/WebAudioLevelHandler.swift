@@ -103,7 +103,7 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
                 )
                 try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-                print("🎤 [AudioLevel] Audio session configured")
+                StructuredLogger.shared.debug("🎤 [AudioLevel] Audio session configured", category: .handler)
 
                 // 创建音频引擎
                 self.audioEngine = AVAudioEngine()
@@ -114,7 +114,7 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
                 }
                 let format = inputNode.outputFormat(forBus: 0)
 
-                print("🎤 [AudioLevel] Audio format: \(format)")
+                StructuredLogger.shared.debug("🎤 [AudioLevel] Audio format: \(format)", category: .handler)
 
                 // 安装音频 tap - 实时处理音频数据
                 inputNode.installTap(onBus: 0, bufferSize: WebBridgeKitConfiguration.Audio.bufferSize, format: format) { [weak self] buffer, _ in
@@ -128,7 +128,7 @@ public class WebAudioLevelHandler: BaseWebNativeHandler {
                 try self.audioEngine?.start()
                 self.isMonitoring = true
 
-                print("🎤 [AudioLevel] Audio engine started")
+                StructuredLogger.shared.debug("🎤 [AudioLevel] Audio engine started", category: .handler)
 
                 // 启动定时器发送结果
                 self.startTimer(fps: fps)

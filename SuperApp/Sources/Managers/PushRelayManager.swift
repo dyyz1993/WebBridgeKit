@@ -85,7 +85,9 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         dataTask?.resume()
         isConnected = true
         reconnectAttempts = 0
+        #if DEBUG
         print("[PushRelay] SSE connecting: \(url)")
+        #endif
     }
 
     func disconnect() {
@@ -93,13 +95,17 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         dataTask?.cancel(); dataTask = nil
         session?.invalidateAndCancel(); session = nil
         isConnected = false; buffer = ""
+        #if DEBUG
         print("[PushRelay] Disconnected")
+        #endif
     }
 
     // MARK: - URLSessionDataDelegate
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+        #if DEBUG
         print("[PushRelay] SSE connected, status: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        #endif
         completionHandler(.allow)
     }
 
@@ -114,7 +120,9 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        #if DEBUG
         if let error = error { print("[PushRelay] Stream ended: \(error.localizedDescription)") }
+        #endif
         scheduleReconnect()
     }
 
@@ -127,7 +135,9 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
             guard let data = jsonStr.data(using: .utf8) else { continue }
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let type = json["type"] as? String else { continue }
+            #if DEBUG
             if type == "connected" { print("[PushRelay] SSE connected"); continue }
+            #endif
             guard type == "push", let pushData = json["data"] as? [String: Any] else { continue }
             let payload = SSEPushPayload(data: pushData)
             showLocalNotification(payload)
@@ -204,7 +214,11 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
                 if let att = try? UNNotificationAttachment(identifier: "icon", url: dest, options: nil) {
                     finalContent.attachments = [att]
                 }
-            } catch { print("[PushRelay] Icon attach failed: \(error)") }
+            } catch {
+                #if DEBUG
+                print("[PushRelay] Icon attach failed: \(error)")
+                #endif
+            }
         }.resume()
     }
 
@@ -212,9 +226,13 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         let req = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(req) { err in
             if let err = err {
+                #if DEBUG
                 print("[PushRelay] Failed: \(err)")
+                #endif
             } else {
+                #if DEBUG
                 print("[PushRelay] ✅ Shown: \(content.title)")
+                #endif
             }
         }
     }
@@ -223,7 +241,9 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
 
     private func scheduleReconnect() {
         guard reconnectAttempts < maxReconnectAttempts else {
+            #if DEBUG
             print("[PushRelay] Max reconnect reached")
+            #endif
             disconnect(); return
         }
         isConnected = false
@@ -233,6 +253,8 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         reconnectTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
             self?.disconnect(); self?.connect()
         }
+        #if DEBUG
         print("[PushRelay] Reconnecting in \(delay)s (attempt \(reconnectAttempts))")
+        #endif
     }
 }

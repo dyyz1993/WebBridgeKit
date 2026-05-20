@@ -229,11 +229,15 @@ class WebAccessViewModel: ViewModel {
             case .success:
                 self?.isCachedRelay.accept(true)
                 self?.updateURLInfo(url: url)
+                #if DEBUG
                 print("✅ Auto-cache completed for: \(url.absoluteString)")
+                #endif
             case .failure(let error):
                 self?.errorMessageRelay.accept(L10n.tr("web_access.auto_cache_failure_format", error.localizedDescription))
                 self?.canCacheRelay.accept(true)
+                #if DEBUG
                 print("❌ Auto-cache failed: \(error.localizedDescription)")
+                #endif
             }
         })
     }

@@ -38,17 +38,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // 🔥 Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                #if DEBUG
                 print("🗑️ [AppDelegate] Triggering global cache clearing...")
+                #endif
                 WebCacheManager.shared.clearAll()
             }
         } else {
+            #if DEBUG
             print("🧪 [AppDelegate] Skipping clearAll during UI testing")
+            #endif
         }
 
         // 初始化 WebBridgeKit
         // UI 测试时禁用 WebBridgeKit 预热，减少主线程压力和 WebKit 进程消耗
         if ProcessInfo.processInfo.arguments.contains("-UITesting") {
+            #if DEBUG
             print("🧪 [AppDelegate] UI Testing detected, disabling WebBridgeKit warmup")
+            #endif
             // 仅记录初始化，不调用池预热
             WebBridgeLogger.shared.info("WebBridgeKit initialized (warmup skipped for UI testing)")
         } else {
@@ -92,7 +98,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // 🔥 Support automated testing via launch arguments
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
+            #if DEBUG
             print("🧪 [AppDelegate] Automated testing triggered via launch argument")
+            #endif
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if let tabBarController = self.window?.rootViewController as? UITabBarController {
                     tabBarController.selectedIndex = 1
@@ -130,7 +138,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        #if DEBUG
         print("🔗 [AppDelegate] openURL called: \(url.absoluteString)")
+        #endif
 
         // 如果是 webbridgekit:// 协议，则在 App 内部打开
         if url.scheme == "webbridgekit" {
@@ -184,7 +194,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     private func registerForPushNotifications(_ application: UIApplication) {
         if ProcessInfo.processInfo.arguments.contains("-UITesting") {
+            #if DEBUG
             print("🧪 [AppDelegate] Skipping push registration during UI testing")
+            #endif
             return
         }
 
@@ -193,7 +205,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         #if !targetEnvironment(simulator)
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, _ in
+            #if DEBUG
             print("🔔 [AppDelegate] Push authorization granted: \(granted)")
+            #endif
             if granted {
                 DispatchQueue.main.async {
                     application.registerForRemoteNotifications()
@@ -206,14 +220,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         let token = tokenParts.joined()
+        #if DEBUG
         print("🔔 [AppDelegate] Device Token: \(token)")
+        #endif
 
         // 将 Token 发送给服务器
         // APIKeyManager.shared.updateDeviceToken(token)
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        #if DEBUG
         print("❌ [AppDelegate] Failed to register for remote notifications: \(error)")
+        #endif
     }
 
     // MARK: - UNUserNotificationCenterDelegate
@@ -233,7 +251,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
+        #if DEBUG
         print("🔔 [AppDelegate] Did receive notification tap, userInfo: \(userInfo)")
+        #endif
 
         Task {
             let payload = MessagePayload(

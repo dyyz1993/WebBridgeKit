@@ -89,10 +89,14 @@ extension TestDataSeeder {
                     realm.add(entry)
                 }
             }
+            #if DEBUG
             print("[TestDataSeeder] 缓存条目: 34 条")
+            #endif
             UserDefaults.standard.set(true, forKey: storageKey)
         } catch {
+            #if DEBUG
             print("[TestDataSeeder] 缓存条目填充失败: \(error)")
+            #endif
         }
     }
 
@@ -326,9 +330,13 @@ extension TestDataSeeder {
         do {
             let data = try JSONEncoder().encode(messages)
             defaults.set(data, forKey: key)
+            #if DEBUG
             print("[TestDataSeeder] 消息: \(messages.count) 条")
+            #endif
         } catch {
+            #if DEBUG
             print("[TestDataSeeder] 消息填充失败: \(error)")
+            #endif
         }
     }
 
@@ -423,6 +431,8 @@ extension TestDataSeeder {
 
         store.saveToDiskSync()
 
+        #if DEBUG
         print("[TestDataSeeder] Manifest 缓存: \(entries.count) 条")
+        #endif
     }
 }

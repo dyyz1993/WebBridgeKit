@@ -157,8 +157,8 @@ class DiscoverAppCell: UICollectionViewCell {
         badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(ThemeTokens.Opacity.badge)
 
         let gradient = Self.gradientColors(for: item.name)
-        gradientLayer.colors = [gradient.0.cgColor, gradient.1.cgColor]
-        iconImageView.image = Self.icon(for: item.name).image(pointSize: 22)
+        gradientLayer.colors = [gradient.0.withAlphaComponent(1.0).cgColor, gradient.1.withAlphaComponent(1.0).cgColor]
+        iconImageView.image = Self.icon(for: item.name).templateImage(pointSize: 22)
 
         if let lastAccessed = item.lastAccessed {
             detailLabel.text = "\(item.cacheSize) · \(lastAccessed)"

@@ -43,7 +43,9 @@ public class ServerConfigManager {
                 try resetToDefaultSync(in: realm)
             }
         } catch {
+            #if DEBUG
             print("⚠️ [ServerConfigManager] Failed to ensure default config: \(error)")
+            #endif
         }
     }
 

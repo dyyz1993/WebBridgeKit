@@ -102,7 +102,7 @@ extension WebResourceCacheManager {
             removeCacheSpace(cacheID: cacheID)
         }
 
-        print("🧹 [WebResourceCacheManager] Evicted \(toRemove.count) cache spaces using policy: \(policy)")
+        StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Evicted \(toRemove.count) cache spaces using policy: \(policy)", category: .cache)
 
         return toRemove
     }
@@ -132,7 +132,7 @@ extension WebResourceCacheManager {
             currentSize -= size
         }
 
-        print("🧹 [WebResourceCacheManager] Evicted \(removed.count) cache spaces to fit size limit")
+        StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Evicted \(removed.count) cache spaces to fit size limit", category: .cache)
 
         return removed
     }
@@ -149,7 +149,7 @@ extension WebResourceCacheManager {
             removeCacheSpace(cacheID: cacheID)
         }
 
-        print("🧹 [WebResourceCacheManager] Evicted \(toRemove.count) old cache spaces (older than \(maxAge)s)")
+        StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Evicted \(toRemove.count) old cache spaces (older than \(maxAge)s)", category: .cache)
 
         return toRemove
     }
@@ -176,7 +176,7 @@ extension WebResourceCacheManager {
             self.saveCacheIndex()
             self.updateTotalCacheSize()
 
-            print("🗑️ [WebResourceCacheManager] Cleared all cache spaces (async)")
+            StructuredLogger.shared.debug("🗑️ [WebResourceCacheManager] Cleared all cache spaces (async)", category: .cache)
         }
     }
 
@@ -192,7 +192,7 @@ extension WebResourceCacheManager {
             }
 
             if !expiredIDs.isEmpty {
-                print("🧹 [WebResourceCacheManager] Cleaned up \(expiredIDs.count) expired cache spaces")
+                StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Cleaned up \(expiredIDs.count) expired cache spaces", category: .cache)
             }
         }
     }

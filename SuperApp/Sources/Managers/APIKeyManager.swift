@@ -122,7 +122,9 @@ class APIKeyManager {
             let data = try JSONEncoder().encode(keysRelay.value)
             UserDefaults.standard.set(data, forKey: storageKey)
         } catch {
+            #if DEBUG
             print("❌ [APIKeyManager] Failed to save keys: \(error)")
+            #endif
         }
     }
 
@@ -135,7 +137,9 @@ class APIKeyManager {
             let decoded = try JSONDecoder().decode([APIKey].self, from: data)
             keysRelay.accept(decoded)
         } catch {
+            #if DEBUG
             print("❌ [APIKeyManager] Failed to load keys: \(error)")
+            #endif
         }
     }
 }

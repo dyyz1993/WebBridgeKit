@@ -99,7 +99,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
     override func bindViewModel() {
         dataSource = RxTableViewSectionedReloadDataSource<PinnedURLViewModel.PinnedURLSection>(
             configureCell: { _, tableView, indexPath, item in
-                let cell = tableView.dequeueReusableCell(withIdentifier: PinnedURLCell.reuseIdentifier, for: indexPath) as! PinnedURLCell
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: PinnedURLCell.reuseIdentifier, for: indexPath) as? PinnedURLCell else { return UITableViewCell() } // safe: registered cell
                 cell.configure(with: item)
                 return cell
             }
@@ -136,7 +136,9 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         output.error
             .drive(onNext: { (error: String?) in
                 if let error, !error.isEmpty {
+                    #if DEBUG
                     print("[PinnedURL] Error: \(error)")
+                    #endif
                 }
             })
             .disposed(by: rx)
@@ -194,7 +196,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         // DataSource
         dataSource = RxTableViewSectionedReloadDataSource<PinnedURLViewModel.PinnedURLSection>(
             configureCell: { _, tableView, indexPath, item in
-                let cell = tableView.dequeueReusableCell(withIdentifier: PinnedURLCell.reuseIdentifier, for: indexPath) as! PinnedURLCell
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: PinnedURLCell.reuseIdentifier, for: indexPath) as? PinnedURLCell else { return UITableViewCell() } // safe: registered cell
                 cell.configure(with: item)
                 return cell
             },

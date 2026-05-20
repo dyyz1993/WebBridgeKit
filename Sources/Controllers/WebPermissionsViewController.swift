@@ -135,7 +135,7 @@ class WebPermissionsViewController: UIViewController {
         // 🔒 Remove from superview
         webView?.removeFromSuperview()
 
-        print("🧹 [WebPermissionsVC] Cleaned up with proper memory management")
+        StructuredLogger.shared.debug("🧹 [WebPermissionsVC] Cleaned up with proper memory management", category: .ui)
     }
 }
 

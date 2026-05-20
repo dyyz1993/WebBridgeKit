@@ -130,7 +130,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             let error = "Command not allowed: \(action)"
             Log.error(error, category: .general)
             WebBridgeLogger.shared.log(.error, "[JS Bridge] \(error)")
-            print("❌ [JS Bridge] Blocked unknown command: \(action)")
+            StructuredLogger.shared.error("❌ [JS Bridge] Blocked unknown command: \(action)", category: .bridge)
 
             // 添加到历史记录（标记为失败）
             let trace = CommandTraceEntry(
@@ -300,8 +300,8 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 本地通知（非 APNs）
         handlerFactories["showNotification"] = { WebShowNotificationHandler() }
 
-        print("🌉 [JS Bridge] 已注册 \(handlerFactories.count) 个 Handler 工厂（懒加载模式）")
-        print("   工厂列表: \(Array(handlerFactories.keys).sorted())")
+        StructuredLogger.shared.debug("🌉 [JS Bridge] 已注册 \(handlerFactories.count) 个 Handler 工厂（懒加载模式）", category: .handler)
+        StructuredLogger.shared.debug("   工厂列表: \(Array(handlerFactories.keys).sorted())", category: .handler)
     }
 
     // MARK: - Get Handler (Lazy Loading)
@@ -339,7 +339,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             }
         }
 
-        print("♻️ [JS Bridge] 懒加载创建 Handler: \(action)")
+        StructuredLogger.shared.debug("♻️ [JS Bridge] 懒加载创建 Handler: \(action)", category: .handler)
         return handler
     }
 
@@ -450,7 +450,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             }
         }
 
-        print("🔗 [JS Bridge] WebView 已设置，已创建 \(createdHandlers.count) 个 Handler")
+        StructuredLogger.shared.debug("🔗 [JS Bridge] WebView 已设置，已创建 \(createdHandlers.count) 个 Handler", category: .handler)
     }
 
     // MARK: - Command Trace History Management

@@ -53,7 +53,9 @@ class ManifestCacheDemo: UIViewController {
     // MARK: - Setup
 
     private func setupWebView() {
+        #if DEBUG
         print("📱 [Demo] Setting up WebView with Manifest Cache")
+        #endif
 
         // Create WKWebViewConfiguration
         let configuration = WKWebViewConfiguration()
@@ -66,11 +68,15 @@ class ManifestCacheDemo: UIViewController {
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(webView)
 
+        #if DEBUG
         print("✅ [Demo] WebView created with custom:// URL scheme")
+        #endif
     }
 
     private func setupManifest() {
+        #if DEBUG
         print("📋 [Demo] Setting up manifest cache")
+        #endif
 
         manifestManager = ManifestCacheManager.shared
 
@@ -99,24 +105,38 @@ class ManifestCacheDemo: UIViewController {
             manifest: manifest
         )
 
+        #if DEBUG
         print("✅ [Demo] Manifest saved with \(manifest.resources.count) resource mappings")
+        #endif
+        #if DEBUG
         print("   Mappings:")
+        #endif
         for (relativePath, url) in manifest.resources {
+            #if DEBUG
             print("   - \(relativePath) -> \(url)")
+            #endif
         }
     }
 
     private func loadDemoPage() {
+        #if DEBUG
         print("🚀 [Demo] Loading demo page")
+        #endif
 
         // Load the page using manifest cache
         // This will use loadHTMLString with baseURL = "custom://"
         // Relative paths will auto-complete to custom:// URLs
         manifestManager.loadPage(pageKey: pageKey, into: webView)
 
+        #if DEBUG
         print("✅ [Demo] Page loaded with custom:// baseURL")
+        #endif
+        #if DEBUG
         print("   Relative paths will resolve to custom:// URLs")
+        #endif
+        #if DEBUG
         print("   Example: src='logo.png' -> custom://logo.png")
+        #endif
     }
 
     // MARK: - Demo HTML
@@ -126,10 +146,14 @@ class ManifestCacheDemo: UIViewController {
         if let path = Bundle.main.path(forResource: "manifest_cache_test", ofType: "html", inDirectory: "test_resources") {
             do {
                 let html = try String(contentsOfFile: path, encoding: .utf8)
+                #if DEBUG
                 print("✅ [Demo] Loaded HTML from test_resources/manifest_cache_test.html")
+                #endif
                 return html
             } catch {
+                #if DEBUG
                 print("⚠️ [Demo] Could not load HTML from test_resources: \(error)")
+                #endif
             }
         }
 
@@ -137,15 +161,21 @@ class ManifestCacheDemo: UIViewController {
         if let path = Bundle.main.path(forResource: "manifest_cache_test", ofType: "html") {
             do {
                 let html = try String(contentsOfFile: path, encoding: .utf8)
+                #if DEBUG
                 print("✅ [Demo] Loaded HTML from main bundle")
+                #endif
                 return html
             } catch {
+                #if DEBUG
                 print("⚠️ [Demo] Could not load HTML from bundle: \(error)")
+                #endif
             }
         }
 
         // Fallback: Use simple inline HTML
+        #if DEBUG
         print("⚠️ [Demo] Using fallback inline HTML")
+        #endif
         return getFallbackHTML()
     }
 
@@ -277,7 +307,9 @@ class ManifestCacheDemo: UIViewController {
     // MARK: - Actions
 
     @objc private func refreshDemo() {
+        #if DEBUG
         print("🔄 [Demo] Refreshing demo page")
+        #endif
         loadDemoPage()
 
         // Show alert after refresh
@@ -342,36 +374,98 @@ extension ManifestCacheDemo {
 
     /// Example: How to use the manifest cache system in your app
     static func demonstrateUsage() {
+        #if DEBUG
         print("📚 [Usage Guide] Manifest Cache System")
+        #endif
+        #if DEBUG
         print("=====================================")
+        #endif
+        #if DEBUG
         print("")
+        #endif
+        #if DEBUG
         print("1. 注册 URL Scheme Handler:")
+        #endif
+        #if DEBUG
         print("   let configuration = WKWebViewConfiguration()")
+        #endif
+        #if DEBUG
         print("   ManifestURLSchemeHandler.register(to: configuration, scheme: \"custom\")")
+        #endif
+        #if DEBUG
         print("")
+        #endif
+        #if DEBUG
         print("2. 创建 Manifest:")
+        #endif
+        #if DEBUG
         print("   let manifest = Manifest(resources: [")
+        #endif
+        #if DEBUG
         print("       \"logo.png\": \"https://wbk.shanbox.19930810.xyz:8443/logo.png\",")
+        #endif
+        #if DEBUG
         print("       \"styles.css\": \"https://wbk.shanbox.19930810.xyz:8443/styles.css\"")
+        #endif
+        #if DEBUG
         print("   ])")
+        #endif
+        #if DEBUG
         print("")
+        #endif
+        #if DEBUG
         print("3. 保存页面及 Manifest:")
+        #endif
+        #if DEBUG
         print("   ManifestCacheManager.shared.savePage(")
+        #endif
+        #if DEBUG
         print("       pageKey: \"my-page\",")
+        #endif
+        #if DEBUG
         print("       html: htmlString,")
+        #endif
+        #if DEBUG
         print("       manifest: manifest")
+        #endif
+        #if DEBUG
         print("   )")
+        #endif
+        #if DEBUG
         print("")
+        #endif
+        #if DEBUG
         print("4. 加载页面:")
+        #endif
+        #if DEBUG
         print("   ManifestCacheManager.shared.loadPage(")
+        #endif
+        #if DEBUG
         print("       pageKey: \"my-page\",")
+        #endif
+        #if DEBUG
         print("       into: webView")
+        #endif
+        #if DEBUG
         print("   )")
+        #endif
+        #if DEBUG
         print("")
+        #endif
+        #if DEBUG
         print("5. 查看统计:")
+        #endif
+        #if DEBUG
         print("   let stats = ManifestCacheManager.shared.getStats()")
+        #endif
+        #if DEBUG
         print("   print(\"Hit rate: \\(stats.formattedHitRate)\")")
+        #endif
+        #if DEBUG
         print("")
+        #endif
+        #if DEBUG
         print("✅ 就这样！系统会处理其余部分。")
+        #endif
     }
 }

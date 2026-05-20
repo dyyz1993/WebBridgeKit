@@ -304,7 +304,7 @@ public class ResourceCache {
 
         try? FileManager.default.createDirectory(at: diskCacheDirectory, withIntermediateDirectories: true)
 
-        print("✅ [ResourceCache] Initialized with disk cache: \(diskCacheDirectory.path)")
+        StructuredLogger.shared.info("✅ [ResourceCache] Initialized with disk cache: \(diskCacheDirectory.path)", category: .cache)
     }
 
     // MARK: - Cache Operations
@@ -371,13 +371,13 @@ public class ResourceCache {
                 self.memoryCache[key] = resource
                 self.currentMemorySize += resourceSize
 
-                print("✅ [ResourceCache] Cached: \(resource.relativePath) (\(resource.data.count) bytes)")
+                StructuredLogger.shared.info("✅ [ResourceCache] Cached: \(resource.relativePath) (\(resource.data.count) bytes)", category: .cache)
 
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(name: .manifestCacheDidUpdate, object: nil)
                 }
             } catch {
-                print("❌ [ResourceCache] Failed to cache: \(error.localizedDescription)")
+                StructuredLogger.shared.error("❌ [ResourceCache] Failed to cache: \(error.localizedDescription)", category: .cache)
             }
         }
     }
@@ -453,7 +453,7 @@ public class ResourceCache {
                 }
             }
 
-            print("🗑️ [ResourceCache] Removed all resources for pageKey: \(pageKey)")
+            StructuredLogger.shared.debug("🗑️ [ResourceCache] Removed all resources for pageKey: \(pageKey)", category: .cache)
         }
     }
 

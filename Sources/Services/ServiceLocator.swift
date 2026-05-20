@@ -82,7 +82,7 @@ public class ServiceLocator {
             ])
             // 验证数据是否添加成功
             let count = historyService.getTotalCount()
-            print("🔍 [ServiceLocator] Mock history count: \(count)")
+            StructuredLogger.shared.debug("🔍 [ServiceLocator] Mock history count: \(count)", category: .general)
         }
 
         if let favoriteService = _favoriteService as? MockFavoriteService {
@@ -93,7 +93,7 @@ public class ServiceLocator {
             ])
             // 验证数据是否添加成功
             let count = favoriteService.getTotalCount()
-            print("🔍 [ServiceLocator] Mock favorite count: \(count)")
+            StructuredLogger.shared.debug("🔍 [ServiceLocator] Mock favorite count: \(count)", category: .general)
         }
 
         WebBridgeLogger.shared.log(.info, "🎨 ServiceLocator: Mock services with sample data configured")

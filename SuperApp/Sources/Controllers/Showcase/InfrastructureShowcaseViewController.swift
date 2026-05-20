@@ -2,6 +2,8 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
+#if DEBUG
+
 class InfrastructureShowcaseViewController: UIViewController {
 
     private var tableView: UITableView!
@@ -167,3 +169,4 @@ extension InfrastructureShowcaseViewController {
         present(alert, animated: true)
     }
 }
+#endif
