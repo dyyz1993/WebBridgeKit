@@ -9,26 +9,19 @@ class DiscoverAppCell: UICollectionViewCell {
     private let cardView: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.cardBackground
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
         view.layer.shadowRadius = shadow.radius
         view.layer.shadowOpacity = Float(shadow.opacity)
+        view.clipsToBounds = false
         return view
-    }()
-
-    private let topRowStack: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .horizontal
-        sv.alignment = .center
-        sv.spacing = ThemeTokens.Spacing.sm
-        return sv
     }()
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        view.layer.cornerRadius = 22
         view.clipsToBounds = true
         return view
     }()
@@ -48,37 +41,19 @@ class DiscoverAppCell: UICollectionViewCell {
         return iv
     }()
 
-    private let textStack: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .vertical
-        sv.spacing = ThemeTokens.Spacing.xs
-        sv.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        return sv
-    }()
-
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 2
         label.lineBreakMode = .byTruncatingTail
-        label.setContentHuggingPriority(.required, for: .vertical)
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        return label
-    }()
-
-    private let sizeLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 11, weight: .regular)
-        label.textColor = ThemeTokens.Color.textSecondary
-        label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
+        label.textAlignment = .center
         return label
     }()
 
     private let badgeView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         view.setContentHuggingPriority(.required, for: .horizontal)
         view.setContentCompressionResistancePriority(.required, for: .horizontal)
         return view
@@ -86,42 +61,27 @@ class DiscoverAppCell: UICollectionViewCell {
 
     private let badgeLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 10, weight: .bold)
+        label.font = .systemFont(ofSize: 9, weight: .bold)
         label.textAlignment = .center
         return label
     }()
 
-    private let bottomRowStack: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .horizontal
-        sv.alignment = .center
-        sv.spacing = ThemeTokens.Spacing.xs
-        return sv
-    }()
-
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 11, weight: .regular)
+        label.font = .systemFont(ofSize: 10, weight: .regular)
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
+        label.textAlignment = .center
         return label
     }()
 
-    private let descriptionLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 12, weight: .regular)
-        label.textColor = ThemeTokens.Color.textSecondary
-        label.numberOfLines = 2
-        label.lineBreakMode = .byTruncatingTail
-        return label
-    }()
-
-    private let statusDot: UIView = {
-        let v = UIView()
-        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
-        v.clipsToBounds = true
-        return v
+    private let contentStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .vertical
+        sv.alignment = .center
+        sv.spacing = ThemeTokens.Spacing.xs
+        return sv
     }()
 
     override init(frame: CGRect) {
@@ -138,83 +98,76 @@ class DiscoverAppCell: UICollectionViewCell {
         gradientLayer.frame = iconContainer.bounds
     }
 
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        detailLabel.text = nil
+        nameLabel.text = nil
+        badgeLabel.text = nil
+    }
+
     private func setupUI() {
         contentView.backgroundColor = .clear
         contentView.addSubview(cardView)
 
         iconContainer.layer.addSublayer(gradientLayer)
         iconContainer.addSubview(iconImageView)
-        textStack.addArrangedSubview(nameLabel)
-        textStack.addArrangedSubview(sizeLabel)
+
         badgeView.addSubview(badgeLabel)
-        bottomRowStack.addArrangedSubview(statusDot)
-        bottomRowStack.addArrangedSubview(detailLabel)
 
-        topRowStack.addArrangedSubview(iconContainer)
-        topRowStack.addArrangedSubview(textStack)
-        topRowStack.addArrangedSubview(badgeView)
+        contentStack.addArrangedSubview(iconContainer)
+        contentStack.addArrangedSubview(nameLabel)
+        contentStack.addArrangedSubview(badgeView)
+        contentStack.addArrangedSubview(detailLabel)
+        contentStack.setCustomSpacing(ThemeTokens.Spacing.xs, after: iconContainer)
+        contentStack.setCustomSpacing(2, after: nameLabel)
 
-        let mainStack = UIStackView(arrangedSubviews: [topRowStack, bottomRowStack, descriptionLabel])
-        mainStack.axis = .vertical
-        mainStack.spacing = ThemeTokens.Spacing.sm
-        cardView.addSubview(mainStack)
+        cardView.addSubview(contentStack)
 
         cardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(4)
+            make.edges.equalToSuperview()
         }
 
         iconContainer.snp.makeConstraints { make in
-            make.width.height.equalTo(32)
+            make.width.height.equalTo(44)
         }
 
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(16)
+            make.width.height.equalTo(22)
         }
 
         badgeView.snp.makeConstraints { make in
-            make.height.equalTo(18)
+            make.height.equalTo(16)
         }
 
         badgeLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 3, left: 6, bottom: 3, right: 6))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
         }
 
-        statusDot.snp.makeConstraints { make in
-            make.width.height.equalTo(6)
-        }
-
-        mainStack.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview().inset(14)
-            make.bottom.equalToSuperview().offset(-14).priority(.high)
+        contentStack.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.md)
+            make.bottom.lessThanOrEqualToSuperview().offset(-ThemeTokens.Spacing.md).priority(.high)
         }
     }
 
     func configure(with item: DiscoverItem) {
         nameLabel.text = item.name
-        sizeLabel.text = item.cacheSize
         badgeLabel.text = item.cacheStatus.displayText
         badgeLabel.textColor = item.cacheStatus.color
         badgeView.backgroundColor = item.cacheStatus.color.withAlphaComponent(ThemeTokens.Opacity.badge)
 
         let gradient = Self.gradientColors(for: item.name)
         gradientLayer.colors = [gradient.0.cgColor, gradient.1.cgColor]
-        iconImageView.image = Self.icon(for: item.name).image(pointSize: 18)
-
-        statusDot.backgroundColor = item.cacheStatus.color
+        iconImageView.image = Self.icon(for: item.name).image(pointSize: 22)
 
         if let lastAccessed = item.lastAccessed {
-            detailLabel.text = "\(item.cacheStatus.statusTypeText) · \(lastAccessed)"
+            detailLabel.text = "\(item.cacheSize) · \(lastAccessed)"
         } else {
-            detailLabel.text = item.cacheStatus.statusTypeText
+            detailLabel.text = item.cacheSize
         }
 
-        if let desc = item.descriptionText, !desc.isEmpty {
-            descriptionLabel.text = desc
-            descriptionLabel.isHidden = false
-        } else {
-            descriptionLabel.isHidden = true
-        }
+        detailLabel.isHidden = (detailLabel.text ?? "").isEmpty
+        badgeView.isHidden = (badgeLabel.text ?? "").isEmpty
     }
 
     private static let gradients: [(UIColor, UIColor)] = [

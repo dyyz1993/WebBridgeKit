@@ -37,7 +37,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let searchBarContainer: UIView = {
         let view = UIView()
         view.backgroundColor = ThemeColors.current.cardBackground
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
@@ -85,19 +85,15 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     private let fabButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(LucideIcon.send.image(pointSize: 16, weight: .semibold), for: .normal)
-        button.setTitle(L10n.tr("inbox.send_test"), for: .normal)
-        button.titleLabel?.font = ThemeTokens.Typography.footnote
+        button.setImage(LucideIcon.plus.image(pointSize: 24, weight: .semibold), for: .normal)
         button.backgroundColor = ThemeTokens.Color.primary
         button.tintColor = ThemeTokens.Color.text
-        button.layer.cornerRadius = ThemeTokens.CornerRadius.full
+        button.layer.cornerRadius = 28
         let shadow = ThemeTokens.Shadows.Fab
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
         button.layer.shadowRadius = shadow.radius
         button.layer.shadowOpacity = Float(shadow.opacity)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
         button.accessibilityLabel = "发送测试通知"
         return button
     }()
@@ -175,14 +171,14 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         }
 
         searchIconImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(10)
+            make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(16)
         }
 
         searchTextField.snp.makeConstraints { make in
-            make.leading.equalTo(searchIconImageView.snp.trailing).offset(6)
-            make.trailing.equalToSuperview().offset(-10)
+            make.leading.equalTo(searchIconImageView.snp.trailing).offset(8)
+            make.trailing.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
         }
 
@@ -212,7 +208,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         fabButton.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-20)
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
-            make.height.equalTo(50)
+            make.width.height.equalTo(56)
         }
 
         emptyStateView.configure(
@@ -386,6 +382,7 @@ extension InboxViewController: UITableViewDataSource {
         ) as! InboxGroupHeaderCell
         header.configure(
             title: viewModel.groupHeaderTitle(section),
+            count: viewModel.numberOfRowsInGroup(section),
             isExpanded: viewModel.isGroupExpanded(section),
             hasUnread: viewModel.groupHasUnread(section)
         )

@@ -17,7 +17,7 @@ class MenuCell: UITableViewCell {
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        view.layer.cornerRadius = 7
         return view
     }()
 
@@ -31,7 +31,7 @@ class MenuCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .regular)
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -40,7 +40,7 @@ class MenuCell: UITableViewCell {
     private let valueLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .right
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -50,7 +50,7 @@ class MenuCell: UITableViewCell {
     private let chevronImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = LucideIcon.chevronRight.templateImage(pointSize: 16, weight: .medium)
-        iv.tintColor = ThemeColors.current.textSecondary.withAlphaComponent(0.4)
+        iv.tintColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.4)
         iv.contentMode = .scaleAspectFit
         iv.accessibilityLabel = "更多"
         return iv
@@ -100,14 +100,14 @@ class MenuCell: UITableViewCell {
     private let heroTitleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
     private let heroSubtitleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
@@ -151,7 +151,7 @@ class MenuCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .default
-        backgroundColor = ThemeColors.current.cardBackground
+        backgroundColor = ThemeTokens.Color.cardBackground
 
         contentView.addSubview(heroContainer)
         heroContainer.addSubview(heroIconContainer)
@@ -171,12 +171,12 @@ class MenuCell: UITableViewCell {
         iconContainer.snp.makeConstraints { make in
             make.left.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(32)
+            make.width.height.equalTo(30)
         }
 
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(16)
+            make.width.height.equalTo(18)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -289,7 +289,7 @@ class MenuCell: UITableViewCell {
             iconContainer.backgroundColor = bg
             iconContainer.isHidden = false
         } else if icon != nil || lucideIcon != nil {
-            iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+            iconContainer.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
             iconContainer.isHidden = false
         } else {
             iconContainer.isHidden = true
@@ -298,7 +298,7 @@ class MenuCell: UITableViewCell {
         if let tint = iconTintColor {
             iconImageView.tintColor = tint
         } else {
-            iconImageView.tintColor = ThemeColors.current.primary
+            iconImageView.tintColor = ThemeTokens.Color.primary
         }
 
         if let lucide = lucideIcon {

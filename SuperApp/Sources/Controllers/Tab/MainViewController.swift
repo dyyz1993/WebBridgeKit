@@ -22,12 +22,19 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private let loadingView = LoadingView()
 
-    private lazy var trashButton: UIButton = {
+    private lazy var storageInfoButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setImage(LucideIcon.trash.image(pointSize: 18, weight: .semibold), for: .normal)
-        btn.tintColor = ThemeTokens.Color.textSecondary
+        btn.titleLabel?.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .medium)
+        btn.setTitleColor(ThemeTokens.Color.textSecondary, for: .normal)
+        btn.backgroundColor = ThemeTokens.Color.cardBackground
+        btn.layer.cornerRadius = 14
+        btn.clipsToBounds = true
+        btn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
         btn.addTarget(self, action: #selector(clearCacheTapped), for: .touchUpInside)
         btn.accessibilityLabel = "清理缓存"
+        btn.layer.borderWidth = 1
+        btn.layer.borderColor = ThemeTokens.Color.border.cgColor
+        btn.setTitle("0 MB", for: .normal)
         return btn
     }()
 
@@ -53,10 +60,19 @@ class MainViewController: BaseViewController<MainViewModel> {
         return PushNotificationManager.shared.deviceToken != nil
     }
 
-    let quickActions: [(icon: LucideIcon, title: String)] = [
-        (.scan, L10n.tr("home.quick_action.scan")),
-        (.clipboard, L10n.tr("home.quick_action.paste")),
-        (.inbox, L10n.tr("home.quick_action.inbox"))
+    let quickActions: [(icon: LucideIcon, title: String, tintColor: UIColor, bgColor: UIColor)] = [
+        (.scan, L10n.tr("home.quick_action.scan"), ThemeTokens.Color.primary, ThemeTokens.Color.primary.withAlphaComponent(0.12)),
+        (.clipboard, L10n.tr("home.quick_action.paste"), ThemeTokens.Color.warning, ThemeTokens.Color.warning.withAlphaComponent(0.12)),
+        (.inbox, L10n.tr("home.quick_action.inbox"), UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 0.682, green: 0.459, blue: 0.902, alpha: 1)
+                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)
+        }, UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 0.682, green: 0.459, blue: 0.902, alpha: 0.12)
+                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 0.12)
+        }),
+        (.ellipsis, L10n.tr("home.quick_action.more"), ThemeTokens.Color.success, ThemeTokens.Color.success.withAlphaComponent(0.12))
     ]
 
     private lazy var commandBanner: CommandBannerView = {
@@ -314,19 +330,28 @@ class MainViewController: BaseViewController<MainViewModel> {
 
         let scanButton: UIButton = {
             let btn = UIButton(type: .system)
-            btn.setImage(LucideIcon.scan.image(pointSize: 20, weight: .medium), for: .normal)
-            btn.tintColor = ThemeTokens.Color.primary
+            btn.setImage(LucideIcon.qrCode.image(pointSize: 20, weight: .medium), for: .normal)
+            btn.tintColor = ThemeTokens.Color.text
             btn.addTarget(self, action: #selector(openScanner), for: .touchUpInside)
             btn.accessibilityLabel = "扫描二维码"
+            btn.snp.makeConstraints { make in
+                make.width.height.equalTo(40)
+            }
             return btn
         }()
         let scanItem = UIBarButtonItem(customView: scanButton)
         scanItem.accessibilityIdentifier = "main.scanButton"
         navigationItem.leftBarButtonItem = scanItem
 
-        let storageItem = UIBarButtonItem(customView: trashButton)
+        let storageItem = UIBarButtonItem(customView: storageInfoButton)
         storageItem.accessibilityIdentifier = "main.clearCacheButton"
         navigationItem.rightBarButtonItems = [storageItem]
+
+        navigationItem.title = L10n.tr("tab.home")
+        navigationController?.navigationBar.titleTextAttributes = [
+            .foregroundColor: ThemeTokens.Color.text,
+            .font: UIFont.systemFont(ofSize: 28, weight: .bold)
+        ]
 
         emptyStateView.configure(
             icon: "square.grid.2x2.fill",
@@ -465,7 +490,9 @@ class MainViewController: BaseViewController<MainViewModel> {
 
         viewModel.totalStorageSizeRelay
             .asDriver(onErrorJustReturn: "")
-            .drive()
+            .drive(onNext: { [weak self] sizeText in
+                self?.storageInfoButton.setTitle(sizeText.isEmpty ? "0 MB" : sizeText, for: .normal)
+            })
             .disposed(by: rx)
     }
 
@@ -565,6 +592,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             if let tabBarController = self.tabBarController {
                 tabBarController.selectedIndex = 1
             }
+        case 3: break
         default: break
         }
     }
