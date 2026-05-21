@@ -77,6 +77,8 @@ targets:
       INFOPLIST_KEY_NSAppTransportSecurity: YES
     postBuildScripts:
       - name: Strip Test Resources from Release
+        outputFiles:
+          - $(DERIVED_FILE_DIR)/strip-test-resources.stamp
         script: |
           if [ "${CONFIGURATION}" = "Release" ]; then
             echo "Stripping test/debug HTML resources from Release bundle..."
@@ -93,6 +95,8 @@ targets:
           else
             echo "Skipping test resource strip (Debug build)"
           fi
+          mkdir -p "${DERIVED_FILE_DIR}"
+          touch "${DERIVED_FILE_DIR}/strip-test-resources.stamp"
     dependencies:
       - target: WebBridgeKit
         embed: true

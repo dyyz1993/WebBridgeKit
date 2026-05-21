@@ -63,15 +63,7 @@ class MainViewController: BaseViewController<MainViewModel> {
     let quickActions: [(icon: LucideIcon, title: String, tintColor: UIColor, bgColor: UIColor)] = [
         (.scan, L10n.tr("home.quick_action.scan"), ThemeTokens.Color.primary, ThemeTokens.Color.primary.withAlphaComponent(0.12)),
         (.clipboard, L10n.tr("home.quick_action.paste"), ThemeTokens.Color.warning, ThemeTokens.Color.warning.withAlphaComponent(0.12)),
-        (.inbox, L10n.tr("home.quick_action.inbox"), UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.682, green: 0.459, blue: 0.902, alpha: 1)
-                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)
-        }, UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.682, green: 0.459, blue: 0.902, alpha: 0.12)
-                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 0.12)
-        }),
+        (.inbox, L10n.tr("home.quick_action.inbox"), ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientEnd.withAlphaComponent(0.12)),
         (.ellipsis, L10n.tr("home.quick_action.more"), ThemeTokens.Color.success, ThemeTokens.Color.success.withAlphaComponent(0.12))
     ]
 

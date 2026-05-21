@@ -46,19 +46,19 @@ class HandlerDetailViewController: UIViewController {
         let descLabel = UILabel()
         descLabel.text = meta.description
         descLabel.numberOfLines = 0
-        descLabel.textColor = .secondaryLabel
+        descLabel.textColor = ThemeTokens.Color.textSecondary
         stack.addArrangedSubview(descLabel)
         
         let infoLabel = UILabel()
         infoLabel.text = "\(meta.category.emoji) \(meta.category.displayName) · action: \(meta.action)"
-        infoLabel.textColor = .tertiaryLabel
+        infoLabel.textColor = ThemeTokens.Color.textTertiary
         infoLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
         stack.addArrangedSubview(infoLabel)
         
         if !meta.requiredPermissions.isEmpty {
             let permLabel = UILabel()
             permLabel.text = "🔐 Required: \(meta.requiredPermissions.joined(separator: ", "))"
-            permLabel.textColor = .systemOrange
+            permLabel.textColor = ThemeTokens.Color.warning
             stack.addArrangedSubview(permLabel)
         }
         
@@ -78,7 +78,7 @@ class HandlerDetailViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("▶️ Execute", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        button.backgroundColor = .systemBlue
+        button.backgroundColor = ThemeTokens.Color.primary
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 10
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
@@ -148,7 +148,7 @@ class HandlerDetailViewController: UIViewController {
             let optionsLabel = UILabel()
             optionsLabel.text = "Options: \(options.joined(separator: " | "))"
             optionsLabel.font = .systemFont(ofSize: 11, weight: .regular)
-            optionsLabel.textColor = .tertiaryLabel
+            optionsLabel.textColor = ThemeTokens.Color.textTertiary
             stack.addArrangedSubview(optionsLabel)
         }
         

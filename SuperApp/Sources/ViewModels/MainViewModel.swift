@@ -12,6 +12,43 @@ import RxSwift
 import UIKit
 import WebBridgeKit
 
+private struct MainHistorySnapshot: Sendable {
+    let id: String
+    let url: String
+    let title: String?
+    let favicon: Data?
+    let visitCount: Int
+    let lastVisitDate: Date
+    let cachedSize: Int64
+    let isCached: Bool
+
+    init(history: WebPageHistory) {
+        self.id = history.id
+        self.url = history.url
+        self.title = history.title
+        self.favicon = history.favicon
+        self.visitCount = history.visitCount
+        self.lastVisitDate = history.lastVisitDate
+        self.cachedSize = history.cachedSize
+        self.isCached = history.isCached
+    }
+
+    func makeHistory() -> WebPageHistory {
+        let history = WebPageHistory()
+        history.id = id
+        history.url = url
+        history.title = title
+        history.favicon = favicon
+        history.visitCount = visitCount
+        history.lastVisitDate = lastVisitDate
+        history.cachedSize = cachedSize
+        history.isCached = isCached
+        history.isFavorite = false
+        history.isPinned = false
+        return history
+    }
+}
+
 /// 首页 ViewModel
 class MainViewModel: ViewModel {
 
@@ -181,6 +218,7 @@ class MainViewModel: ViewModel {
                 Log.error("Failed to get all histories: \(error.localizedDescription)", category: .ui)
                 historyResults = []
             }
+            let historySnapshots = historyResults.prefix(100).map { MainHistorySnapshot(history: $0) }
 
             // 3. 一次性获取所有收藏数据，避免在循环中重复查询 Realm
             // 注意：favoriteService 目前还是同步的，保持在主线程执行
@@ -236,30 +274,21 @@ class MainViewModel: ViewModel {
                     sections.append(WebPageHistorySection(header: header, items: items, cacheType: type))
                 }
 
-                let histories = historyResults.prefix(100)
+                let histories = historySnapshots
                     .filter { !favoriteURLs.contains($0.url) }
                     .prefix(20)
-                    .map { history -> WebPageHistorySectionItem in
-                        let displayHistory = WebPageHistory()
-                        displayHistory.id = history.id
-                        displayHistory.url = history.url
-                        displayHistory.title = history.title
-                        displayHistory.favicon = history.favicon
-                        displayHistory.visitCount = history.visitCount
-                        displayHistory.lastVisitDate = history.lastVisitDate
-                        displayHistory.isFavorite = false
-                        displayHistory.isPinned = false
+                    .map { snapshot -> WebPageHistorySectionItem in
+                        let displayHistory = snapshot.makeHistory()
 
-                        if let url = URL(string: history.url) {
+                        if let url = URL(string: snapshot.url) {
                             let cacheID = url.host ?? url.lastPathComponent
-                            displayHistory.cachedSize = history.cachedSize
-                            displayHistory.isCached = history.isCached
+                            let itemURL = snapshot.url
 
                             Task.detached {
                                 let size = PersistentManifestLoader.shared.getCacheSize(for: cacheID)
                                 if size > 0 {
                                     await MainActor.run { [weak self] in
-                                        self?.updateHistoryItemSize(url: history.url, size: size)
+                                        self?.updateHistoryItemSize(url: itemURL, size: size)
                                     }
                                 }
                             }
