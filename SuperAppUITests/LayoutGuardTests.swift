@@ -144,12 +144,22 @@ final class LayoutGuardTests: XCTestCase {
 
     func testEmptyStateActionVisibleAboveTabBar() {
         navigateToTab(identifier: "tab.discover", zhName: "发现", enName: "Discover")
-        let emptyState = app.otherElements["EmptyStateView"]
-        guard emptyState.waitForExistence(timeout: 3) else { return }
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.exists, "Tab bar should exist")
-        for button in emptyState.buttons.allElementsBoundByIndex where button.isHittable {
-            XCTAssertLessThan(button.frame.maxY, tabBar.frame.minY, "Empty state button behind tab bar")
+
+        let wbkEmptyState = app.otherElements["wbk_empty_state"]
+        let legacyEmptyState = app.otherElements["EmptyStateView"]
+        let hasEmptyState = wbkEmptyState.waitForExistence(timeout: 3) || legacyEmptyState.waitForExistence(timeout: 3)
+
+        if hasEmptyState {
+            let resolvedEmptyState = wbkEmptyState.exists ? wbkEmptyState : legacyEmptyState
+            let tabBar = app.tabBars.firstMatch
+            XCTAssertTrue(tabBar.exists, "Tab bar should exist")
+            for button in resolvedEmptyState.buttons.allElementsBoundByIndex where button.isHittable {
+                XCTAssertLessThan(button.frame.maxY, tabBar.frame.minY, "Empty state button behind tab bar")
+            }
+        } else {
+            let tabBar = app.tabBars.firstMatch
+            XCTAssertTrue(tabBar.exists, "Tab bar should exist even when no empty state is shown")
+            XCTAssertTrue(app.staticTexts.count > 0, "Discover should have visible content when empty state is absent")
         }
     }
 
@@ -176,6 +186,46 @@ final class LayoutGuardTests: XCTestCase {
             if btnChecked >= 30 { break }
         }
     }
+    // MARK: - iPhone SE Layout
+
+    // Note: Run this test separately with SE destination:
+    // xcodebuild test -destination 'platform=iOS Simulator,name=iPhone SE (3rd generation)'
+    func testLayoutOnIPhoneSE() {
+        let screen = app.windows.firstMatch.frame
+        XCTAssertTrue(screen.width > 0, "Screen width should be positive")
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 3), "Tab bar should exist")
+
+        let tabButtons = tabBar.buttons.allElementsBoundByIndex
+        for btn in tabButtons where btn.exists {
+            XCTAssertLessThanOrEqual(btn.frame.maxX, screen.width,
+                "Tab button '\(btn.identifier)' extends beyond SE screen width \(screen.width)")
+        }
+
+        navigateToTab(identifier: "tab.home", zhName: "首页", enName: "Home")
+        let searchField = app.otherElements["wbk_search_field"]
+        if searchField.waitForExistence(timeout: 3) {
+            XCTAssertLessThanOrEqual(searchField.frame.maxX, screen.width,
+                "Search field extends beyond SE screen")
+        }
+
+        navigateToTab(identifier: "tab.inbox", zhName: "收信箱", enName: "Inbox")
+        let pills = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH 'filter_'")).allElementsBoundByIndex
+        for pill in pills where pill.isHittable {
+            XCTAssertLessThanOrEqual(pill.frame.maxX, screen.width,
+                "Filter pill extends beyond SE screen")
+        }
+
+        let labels = app.staticTexts.allElementsBoundByIndex
+        var labelChecked = 0
+        for label in labels where label.exists && label.isHittable {
+            XCTAssertLessThanOrEqual(label.frame.maxX, screen.width + 1,
+                "Label '\(label.label.prefix(20))' extends beyond SE screen")
+            labelChecked += 1
+            if labelChecked >= 20 { break }
+        }
+    }
 }
 
 final class ComponentCatalogLayoutTests: XCTestCase {
@@ -195,9 +245,11 @@ final class ComponentCatalogLayoutTests: XCTestCase {
         for _ in 0..<8 {
             sv.swipeUp()
         }
-        if let last = sv.otherElements.allElementsBoundByIndex.last, last.exists {
-            XCTAssertTrue(last.isHittable, "Last item not hittable after scrolling")
-        }
+        let allOtherElements = sv.otherElements.allElementsBoundByIndex
+        XCTAssertTrue(allOtherElements.count > 0, "ComponentCatalog should have at least one element")
+        let last = allOtherElements.last!
+        XCTAssertTrue(last.waitForExistence(timeout: 3), "Last item should exist after scrolling")
+        XCTAssertTrue(last.isHittable, "Last item not hittable after scrolling")
     }
 
     func testComponentCatalogAllButtonsAccessible() {

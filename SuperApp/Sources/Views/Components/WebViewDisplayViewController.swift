@@ -80,10 +80,6 @@ public class WebViewDisplayViewController: UIViewController {
         webView.isUserInteractionEnabled = true
     }
 
-    public override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-    }
-
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 

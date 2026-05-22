@@ -63,6 +63,8 @@ public final class WBKEmptyState: UIView {
     }
 
     private func setupUI(title: String, message: String?, actionTitle: String?) {
+        accessibilityIdentifier = "wbk_empty_state"
+
         let stack = UIStackView()
         stack.axis = .vertical
         stack.alignment = .center

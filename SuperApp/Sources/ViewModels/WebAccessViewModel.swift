@@ -227,12 +227,12 @@ class WebAccessViewModel: ViewModel {
 
             switch result {
             case .success:
-                    self?.isCachedRelay.accept(true)
-                    self?.updateURLInfo(url: url)
-                case .failure(let error):
-                    self?.errorMessageRelay.accept(L10n.tr("web_access.auto_cache_failure_format", error.localizedDescription))
-                    self?.canCacheRelay.accept(true)
-                }
+                self?.isCachedRelay.accept(true)
+                self?.updateURLInfo(url: url)
+            case .failure(let error):
+                self?.errorMessageRelay.accept(L10n.tr("web_access.auto_cache_failure_format", error.localizedDescription))
+                self?.canCacheRelay.accept(true)
+            }
         })
     }
 
