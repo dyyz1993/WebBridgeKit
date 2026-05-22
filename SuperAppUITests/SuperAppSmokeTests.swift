@@ -117,11 +117,11 @@ final class SuperAppSmokeTests: XCTestCase {
         let homeTab = findTabButton(in: tabBar, zhName: "首页", enName: "Home")
         homeTab.tap()
 
-        let collectionView = app.collectionViews["MainCollectionView"]
-        let emptyState = app.otherElements["EmptyStateView"]
-        let collectionViewExists = collectionView.waitForExistence(timeout: 5)
-        let emptyStateExists = emptyState.waitForExistence(timeout: 2)
-        XCTAssertTrue(collectionViewExists || emptyStateExists, "Home screen should have a collection view or empty state")
+        let scaffoldExists = app.otherElements["wbk_screen_scaffold"].waitForExistence(timeout: 5)
+        let actionTileExists = app.otherElements["wbk_action_tile"].waitForExistence(timeout: 3)
+        let emptyStateExists = app.otherElements["wbk_empty_state"].waitForExistence(timeout: 2)
+        XCTAssertTrue(scaffoldExists && (actionTileExists || emptyStateExists),
+            "Home screen should have a scaffold with action tiles or empty state")
     }
 
     // MARK: - Settings Screen

@@ -27,6 +27,7 @@ public final class WBKScreenScaffold: UIView {
     public init(style: Style = .standard) {
         self.style = style
         super.init(frame: .zero)
+        accessibilityIdentifier = "wbk_screen_scaffold"
         setupUI()
     }
 
