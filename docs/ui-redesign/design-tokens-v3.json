@@ -1,0 +1,205 @@
+{
+  "$schema": "../design-tokens.schema.json",
+  "version": "3.0.0-proposal",
+  "description": "WebBridgeKit v3 UI tokens for a professional developer-tool iOS app. Use this as the redesign target before syncing into docs/design-tokens.json, ThemeTokens.swift, and design-tokens.css.",
+  "principles": {
+    "productTone": "quiet developer tool",
+    "density": "compact but readable",
+    "icons": "Lucide only",
+    "colorPolicy": "semantic tokens only; no UIKit system colors in feature UI",
+    "radiusPolicy": "controlled radius; cards max 12pt, rows 10pt, pills full"
+  },
+  "colors": {
+    "light": {
+      "background": "#F6F7F9",
+      "surface": "#FFFFFF",
+      "surfaceElevated": "#FFFFFF",
+      "cardBackground": "#FFFFFF",
+      "text": "#111827",
+      "textSecondary": "#5B6472",
+      "textTertiary": "#8B94A3",
+      "placeholder": "#A5ADBA",
+      "border": "#D8DEE8",
+      "separator": "#E6EAF0",
+      "primary": "#2563EB",
+      "primaryPressed": "#1D4ED8",
+      "primarySoft": "#EAF1FF",
+      "accent": "#7C3AED",
+      "accentSoft": "#F1EAFF",
+      "success": "#16A34A",
+      "successSoft": "#EAF8EF",
+      "warning": "#D97706",
+      "warningSoft": "#FFF4E5",
+      "error": "#DC2626",
+      "errorSoft": "#FEECEC",
+      "info": "#0F766E",
+      "infoSoft": "#E7F6F4",
+      "offline": "#64748B",
+      "offlineSoft": "#EEF2F6",
+      "navigationBarBackground": "#FFFFFF",
+      "tabBarBackground": "#FFFFFF",
+      "overlay": "rgba(17,24,39,0.42)",
+      "shadow": "rgba(17,24,39,0.10)"
+    },
+    "dark": {
+      "background": "#0B0D10",
+      "surface": "#13171D",
+      "surfaceElevated": "#191E26",
+      "cardBackground": "#171C23",
+      "text": "#F4F7FB",
+      "textSecondary": "#A8B1C0",
+      "textTertiary": "#727D8E",
+      "placeholder": "#667085",
+      "border": "#2A323D",
+      "separator": "#232A34",
+      "primary": "#60A5FA",
+      "primaryPressed": "#3B82F6",
+      "primarySoft": "rgba(96,165,250,0.14)",
+      "accent": "#A78BFA",
+      "accentSoft": "rgba(167,139,250,0.14)",
+      "success": "#4ADE80",
+      "successSoft": "rgba(74,222,128,0.13)",
+      "warning": "#FBBF24",
+      "warningSoft": "rgba(251,191,36,0.14)",
+      "error": "#F87171",
+      "errorSoft": "rgba(248,113,113,0.14)",
+      "info": "#2DD4BF",
+      "infoSoft": "rgba(45,212,191,0.13)",
+      "offline": "#94A3B8",
+      "offlineSoft": "rgba(148,163,184,0.13)",
+      "navigationBarBackground": "#0B0D10",
+      "tabBarBackground": "#10141A",
+      "overlay": "rgba(0,0,0,0.58)",
+      "shadow": "rgba(0,0,0,0.30)"
+    }
+  },
+  "typography": {
+    "screenTitle": { "size": 28, "weight": "bold", "tracking": 0, "maxLines": 1 },
+    "compactTitle": { "size": 24, "weight": "bold", "tracking": 0, "maxLines": 1 },
+    "sectionTitle": { "size": 17, "weight": "semibold", "tracking": 0, "maxLines": 1 },
+    "rowTitle": { "size": 17, "weight": "regular", "tracking": 0, "maxLines": 1 },
+    "cardTitle": { "size": 16, "weight": "semibold", "tracking": 0, "maxLines": 2 },
+    "body": { "size": 15, "weight": "regular", "tracking": 0, "maxLines": 3 },
+    "metadata": { "size": 13, "weight": "regular", "tracking": 0, "maxLines": 1 },
+    "caption": { "size": 12, "weight": "regular", "tracking": 0, "maxLines": 1 },
+    "tabLabel": { "size": 11, "weight": "medium", "tracking": 0, "maxLines": 1 },
+    "button": { "size": 15, "weight": "semibold", "tracking": 0, "maxLines": 1 },
+    "monospaceMeta": { "size": 12, "weight": "regular", "tracking": 0, "maxLines": 1 }
+  },
+  "spacing": {
+    "xxs": 2,
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 20,
+    "xxl": 24,
+    "section": 32,
+    "screenHorizontal": 16,
+    "screenTop": 12,
+    "screenBottom": 24
+  },
+  "cornerRadius": {
+    "xs": 4,
+    "sm": 6,
+    "md": 8,
+    "row": 10,
+    "card": 12,
+    "sheet": 16,
+    "full": 999
+  },
+  "icon": {
+    "xs": 14,
+    "sm": 16,
+    "md": 20,
+    "lg": 24,
+    "empty": 48,
+    "tab": 23,
+    "settings": 20,
+    "quickAction": 22,
+    "chevron": 16
+  },
+  "componentContracts": {
+    "screen": {
+      "horizontalInset": 16,
+      "interSectionSpacing": 24,
+      "safeAreaRequired": true
+    },
+    "tabBar": {
+      "height": 56,
+      "iconSize": 23,
+      "labelSize": 11,
+      "contentTopPadding": 6,
+      "mustNotOverlapScrollContent": true
+    },
+    "settingsRow": {
+      "minHeight": 52,
+      "maxHeight": 60,
+      "iconBox": 32,
+      "iconSize": 20,
+      "chevronSize": 16,
+      "horizontalPadding": 16,
+      "titleMaxLines": 1
+    },
+    "searchField": {
+      "height": 42,
+      "cornerRadius": 10,
+      "iconSize": 18,
+      "horizontalPadding": 12
+    },
+    "filterPill": {
+      "height": 32,
+      "horizontalPadding": 14,
+      "minWidth": 56
+    },
+    "actionTile": {
+      "height": 72,
+      "minWidth": 72,
+      "iconSize": 22,
+      "titleMaxLines": 1
+    },
+    "resourceCard": {
+      "minHeight": 92,
+      "maxHeight": 116,
+      "iconSize": 22,
+      "titleMaxLines": 2,
+      "metadataMaxLines": 1
+    },
+    "messageCell": {
+      "minHeight": 72,
+      "maxHeight": 96,
+      "titleMaxLines": 1,
+      "bodyMaxLines": 2
+    },
+    "emptyState": {
+      "iconSize": 48,
+      "titleSize": 17,
+      "bodySize": 13,
+      "maxWidth": 280,
+      "requiresPrimaryAction": true
+    },
+    "tapTarget": {
+      "minimumWidth": 44,
+      "minimumHeight": 44
+    }
+  },
+  "shadows": {
+    "none": { "opacity": 0, "offsetX": 0, "offsetY": 0, "radius": 0 },
+    "card": { "color": "shadow", "opacity": 1, "offsetX": 0, "offsetY": 2, "radius": 8 },
+    "floatingAction": { "color": "shadow", "opacity": 1, "offsetX": 0, "offsetY": 8, "radius": 18 },
+    "sheet": { "color": "shadow", "opacity": 1, "offsetX": 0, "offsetY": 12, "radius": 28 }
+  },
+  "opacity": {
+    "disabled": 0.36,
+    "pressed": 0.72,
+    "separator": 0.72,
+    "badgeFill": 0.14,
+    "scrim": 0.42
+  },
+  "animation": {
+    "fast": { "duration": 0.12, "curve": "easeInOut" },
+    "normal": { "duration": 0.22, "curve": "easeInOut" },
+    "spring": { "duration": 0.32, "damping": 0.84, "curve": "spring" },
+    "sheet": { "duration": 0.36, "damping": 0.88, "curve": "spring" }
+  }
+}
