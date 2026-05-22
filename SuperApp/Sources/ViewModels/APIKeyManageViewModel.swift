@@ -182,10 +182,6 @@ class APIKeyManageViewModel: ViewModel {
             return
         }
 
-        #if DEBUG
-        print("[LAUNCH] [APIKey] Sending test push: \(urlString)")
-        #endif
-
         URLSession.shared.dataTask(with: url) { [weak self] _, response, error in
             DispatchQueue.main.async {
                 if let error = error {

@@ -27,7 +27,7 @@ class LogViewerViewController: UIViewController {
         
         let toolbar = makeToolbar()
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        textView.font = ThemeTokens.Typography.monospaceSmall
         textView.backgroundColor = .secondarySystemBackground
         
         view.addSubview(toolbar)

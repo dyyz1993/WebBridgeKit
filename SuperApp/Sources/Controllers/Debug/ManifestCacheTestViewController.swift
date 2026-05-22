@@ -537,10 +537,6 @@ class ManifestCacheTestViewController: UIViewController {
                     self.logTextView.setContentOffset(bottomOffset, animated: false)
                 }
             }
-
-            #if DEBUG
-            print(logLine)
-            #endif
         }
 
         if Thread.isMainThread {

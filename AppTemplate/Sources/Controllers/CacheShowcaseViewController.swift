@@ -188,7 +188,7 @@ private class StatCell: UITableViewCell {
 private class ActivityCell: UITableViewCell {
     private let label: UILabel = {
         let label = UILabel()
-        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        label.font = ThemeTokens.Typography.monospaceMeta
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label

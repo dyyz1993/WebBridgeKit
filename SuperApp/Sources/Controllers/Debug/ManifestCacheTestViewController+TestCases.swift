@@ -171,22 +171,6 @@ extension ManifestCacheTestViewController {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
-            #if DEBUG
-            print("[SEARCH] [DEBUG] navigationController = \(String(describing: self.navigationController))")
-            #endif
-            #if DEBUG
-            print("[SEARCH] [DEBUG] tabBarController = \(String(describing: self.tabBarController))")
-            #endif
-            #if DEBUG
-            print("[SEARCH] [DEBUG] presentingViewController = \(String(describing: self.presentingViewController))")
-            #endif
-            #if DEBUG
-            print("[SEARCH] [DEBUG] view.window = \(String(describing: self.view.window))")
-            #endif
-            #if DEBUG
-            print("[SEARCH] [DEBUG] isViewLoaded = \(self.isViewLoaded)")
-            #endif
-
             // Try push instead of present for better reliability
             if let navController = self.navigationController {
                 self.addLog("[SYNC] 使用 Navigation Push 打开全屏页面")

@@ -29,7 +29,7 @@ class CommandShowcaseViewController: UIViewController {
     private let resultTextView: UITextView = {
         let tv = UITextView()
         tv.isEditable = false
-        tv.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        tv.font = ThemeTokens.Typography.monospaceBody
         tv.backgroundColor = ThemeTokens.Color.surface
         tv.layer.cornerRadius = ThemeTokens.CornerRadius.md
         tv.text = "Parse result will appear here..."

@@ -161,12 +161,6 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 添加到历史记录
         addCommandToHistory(trace)
 
-        // 输出到控制台
-        #if DEBUG
-        print("[BRIDGE] [JS Bridge] Received action: \(action), callbackId: \(callbackId ?? "nil")")
-        #endif
-
-        // 使用 getHandler 实现懒加载
         guard let handler = getHandler(for: action) else {
             WebBridgeLogger.shared.error("Unsupported action: \(action)")
             sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
@@ -333,9 +327,6 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             if let webView = self.webView {
                 baseHandler.webView = webView
             } else {
-                #if DEBUG
-                print("[WARN] [JS Bridge] Warning: webView is nil when creating handler \(action). It will be set later in setWebView().")
-                #endif
             }
         }
 
@@ -364,11 +355,6 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         if let callbackId = callbackId {
             resultDict["callbackId"] = callbackId
         } else {
-            // 如果没有 callbackId，可能是主动推送或旧版兼容
-            // 在调试模式下记录
-            #if DEBUG
-            print("[BRIDGE] [JS Bridge] No callbackId for result: \(resultDict.keys)")
-            #endif
         }
 
         let script: String

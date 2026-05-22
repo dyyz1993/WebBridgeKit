@@ -114,9 +114,6 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
         // 初始检查网络状态
         if !NetworkMonitor.shared.isConnected {
-            #if DEBUG
-            print("[WARN] [WebAccessVC] Network is currently offline")
-            #endif
         }
     }
 
@@ -292,30 +289,16 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
     // MARK: - Internal Methods
 
     func loadTargetURL(_ url: URL) {
-        #if DEBUG
-        print("[BLUE] [WebAccessVC] loadURL called: \(url.absoluteString)")
-        #endif
         currentURL = url
 
-        // 保存上次打开的 URL（如果启用了记忆功能）
         if UserDefaults.standard.bool(forKey: "EnableLastAppMemory") {
             UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
             UserDefaults.standard.synchronize()
-            #if DEBUG
-            print("[SAVE] [WebAccessVC] Saved LastOpenedURL: \(url.absoluteString)")
-            #endif
         }
 
-        // 🔥 Check URL parameters for fullscreen mode
         checkURLParameters(url)
 
-        #if DEBUG
-        print("[BLUE] [WebAccessVC] Loading URL in WebView...")
-        #endif
         webView.load(URLRequest(url: url))
-        #if DEBUG
-        print("[BLUE] [WebAccessVC] webView.load() called successfully")
-        #endif
     }
 
     /// Check URL parameters for fullscreen mode
@@ -356,17 +339,9 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
     /// Hide/show TabBar
     private func setTabBarHidden(_ hidden: Bool) {
         guard let tabBarController = self.tabBarController else {
-            #if DEBUG
-            print("[WARN] [WebAccessVC] No TabBarController found")
-            #endif
             return
         }
 
-        #if DEBUG
-        print("[CTRL] [WebAccessVC] setTabBarHidden: \(hidden)")
-        #endif
-
-        // Use DispatchQueue.main to avoid threading issues
         DispatchQueue.main.async { [weak tabBarController] in
             tabBarController?.tabBar.isHidden = hidden
         }
@@ -376,9 +351,6 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
     private func setNavigationBarHidden(_ hidden: Bool) {
         // Use non-animated for UI testing stability
         navigationController?.setNavigationBarHidden(hidden, animated: false)
-        #if DEBUG
-        print("[CTRL] [WebAccessVC] NavigationBar hidden: \(hidden)")
-        #endif
     }
 
     /// Hide/show URL input view and status bar
@@ -391,18 +363,12 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
             self.statusBarView.alpha = hidden ? 0 : 1
             self.statusBarView.isHidden = hidden
         }
-        #if DEBUG
-        print("[CTRL] [WebAccessVC] URLInputView and StatusBarView hidden: \(hidden)")
-        #endif
     }
 
     /// Hide/show status bar
     private func setStatusBarHidden(_ hidden: Bool) {
         isStatusBarHidden = hidden
         setNeedsStatusBarAppearanceUpdate()
-        #if DEBUG
-        print("[CTRL] [WebAccessVC] StatusBar hidden: \(hidden)")
-        #endif
     }
 
     // MARK: - Status Bar Appearance
@@ -414,35 +380,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
     private var isStatusBarHidden: Bool = false
 
     private func loadWebView(url: URL) {
-        #if DEBUG
-        print("[GREEN] [WebAccessVC] loadWebView called: \(url.absoluteString)")
-        #endif
-
-        // ============================================================
-        // NEW APPROACH: System URLCache
-        // 无需 HTML 修改或 JS 注入
-        // WKWebView 会自动使用 URLCache.shared 处理缓存
-        // ============================================================
-        #if DEBUG
-        print("[GREEN] [WebAccessVC] Loading with System URLCache")
-        #endif
         webView.load(URLRequest(url: url))
-
-        // ============================================================
-        // OLD APPROACH (DISABLED): bark-cache:// URL Scheme
-        // This approach required HTML modification
-        // ============================================================
-        // if let cachedHistory = WebPageHistoryManager.shared.findHistory(url: url),
-        //    cachedHistory.isCached {
-        //     let cacheURL = URL(string: "bark-cache://\(cachedHistory.id)/index.html")!
-        //     webView.load(URLRequest(url: cacheURL))
-        // } else {
-        //     webView.load(URLRequest(url: url))
-        // }
-
-        #if DEBUG
-        print("[GREEN] [WebAccessVC] WebView load initiated")
-        #endif
     }
 
     private func openCacheResources() {
@@ -493,44 +431,26 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 extension WebAccessViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        #if DEBUG
-        print("[WARN] [WebAccessVC] WebView didStartProvisionalNavigation")
-        #endif
-        // 通知 ViewModel 页面开始加载
         viewModel.notifyPageDidStartLoading()
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        #if DEBUG
-        print("[OK] [WebAccessVC] WebView didFinish navigation - URL: \(webView.url?.absoluteString ?? "nil")")
-        #endif
-        // 更新历史记录
         if let url = webView.url {
             Task {
                 try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webView.title)
             }
             viewModel.refreshCacheStatus()
 
-            // 记录最后打开的 URL
             if UserDefaults.standard.bool(forKey: "EnableLastAppMemory") {
                 UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
                 UserDefaults.standard.synchronize()
-                #if DEBUG
-                print("[SAVE] [WebAccess] 记忆上次应用 URL: \(url.absoluteString)")
-                #endif
             }
         }
 
-        // 通知 ViewModel 页面加载完成
         viewModel.notifyPageDidFinishLoading()
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        #if DEBUG
-        print("[FAIL] [WebAccessVC] Navigation failed: \(error.localizedDescription)")
-        #endif
-
-        // 检查是否为网络错误
         if isNetworkRelatedError(error) || !NetworkMonitor.shared.isConnected {
             showOfflineState()
         } else {
@@ -551,10 +471,6 @@ extension WebAccessViewController: WKNavigationDelegate {
     private func showOfflineState() {
         guard !isShowingOfflineState else { return }
         isShowingOfflineState = true
-
-        #if DEBUG
-        print("[WARN] [WebAccessVC] Showing offline state")
-        #endif
 
         let emptyState = ThemeEmptyState(frame: .zero)
         emptyState.configure(
@@ -590,10 +506,6 @@ extension WebAccessViewController: WKNavigationDelegate {
         guard isShowingOfflineState else { return }
         isShowingOfflineState = false
 
-        #if DEBUG
-        print("[OK] [WebAccessVC] Hiding offline state")
-        #endif
-
         offlineStateView?.removeFromSuperview()
         offlineStateView = nil
 
@@ -617,11 +529,6 @@ extension WebAccessViewController: WKNavigationDelegate {
     }
 
     @objc private func handleRetry() {
-        #if DEBUG
-        print("[SYNC] [WebAccessVC] Retry tapped")
-        #endif
-
-        // 检查网络状态
         if !NetworkMonitor.shared.isConnected {
             let alert = UIAlertController(
                 title: L10n.tr("web_access.offline_title"),
@@ -638,10 +545,6 @@ extension WebAccessViewController: WKNavigationDelegate {
             Task { @MainActor in
                 if let cachedHistory = try? await WebPageHistoryManager.shared.findHistory(url: url),
                    cachedHistory.isCached {
-                    #if DEBUG
-                    print("[CACHE] [WebAccessVC] Loading cached page: \(url.absoluteString)")
-                    #endif
-
                     let cachedPageVC = CacheResourceViewController(url: url)
                     navigationController?.pushViewController(cachedPageVC, animated: true)
                     hideOfflineState()

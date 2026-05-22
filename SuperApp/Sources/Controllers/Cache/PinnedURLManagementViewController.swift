@@ -136,9 +136,6 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         output.error
             .drive(onNext: { (error: String?) in
                 if let error, !error.isEmpty {
-                    #if DEBUG
-                    print("[PinnedURL] Error: \(error)")
-                    #endif
                 }
             })
             .disposed(by: rx)

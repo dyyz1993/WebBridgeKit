@@ -102,7 +102,7 @@ public class WebBridgeLogger {
             }
 
             #if DEBUG
-            print(logMessage)
+            NSLog("%@", logMessage)
             #endif
 
             // Also use os.log to record to system logs

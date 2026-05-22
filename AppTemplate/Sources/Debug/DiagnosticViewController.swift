@@ -24,7 +24,7 @@ class DiagnosticViewController: UIViewController {
         )
         
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        textView.font = ThemeTokens.Typography.monospaceBody
         textView.backgroundColor = .secondarySystemBackground
         textView.translatesAutoresizingMaskIntoConstraints = false
         

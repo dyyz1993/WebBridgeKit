@@ -206,19 +206,12 @@ class URLInputView: UIView {
     // MARK: - Private Methods
 
     private func handleURLInput() {
-        #if DEBUG
-        print("[EMOJI] [URLInputView] handleURLInput called")
-        #endif
         guard let text = urlTextField.text,
               !text.isEmpty,
               let url = URL(string: text) else {
-            #if DEBUG
-            print("[EMOJI] [URLInputView] Invalid URL, returning")
-            #endif
             return
         }
 
-        // 自动添加 http/https 前缀
         let finalURL: URL
         if let scheme = url.scheme, !scheme.isEmpty {
             finalURL = url
@@ -228,14 +221,8 @@ class URLInputView: UIView {
             finalURL = URL(string: "http://\(text)")!
         }
 
-        #if DEBUG
-        print("[EMOJI] [URLInputView] Calling onLoadURL callback with: \(finalURL.absoluteString)")
-        #endif
         onLoadURL?(finalURL)
         urlTextField.resignFirstResponder()
-        #if DEBUG
-        print("[EMOJI] [URLInputView] onLoadURL callback completed")
-        #endif
     }
 
     private let rx = DisposeBag()

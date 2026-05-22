@@ -122,24 +122,17 @@ class APIKeyManager {
             let data = try JSONEncoder().encode(keysRelay.value)
             UserDefaults.standard.set(data, forKey: storageKey)
         } catch {
-            #if DEBUG
-            print("[FAIL] [APIKeyManager] Failed to save keys: \(error)")
-            #endif
         }
     }
 
     private func loadKeys() {
         guard let data = UserDefaults.standard.data(forKey: storageKey) else {
-            // 如果是第一次使用，不默认创建，让 getPermanentKey 处理
             return
         }
         do {
             let decoded = try JSONDecoder().decode([APIKey].self, from: data)
             keysRelay.accept(decoded)
         } catch {
-            #if DEBUG
-            print("[FAIL] [APIKeyManager] Failed to load keys: \(error)")
-            #endif
         }
     }
 }

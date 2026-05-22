@@ -29,7 +29,7 @@ public class DebugPanelBridge {
         vc.view.backgroundColor = ThemeTokens.Color.background
         let textView = UITextView()
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        textView.font = ThemeTokens.Typography.monospaceBody
         textView.backgroundColor = ThemeTokens.Color.surface
         textView.translatesAutoresizingMaskIntoConstraints = false
         vc.view.addSubview(textView)
@@ -69,7 +69,7 @@ public class DebugPanelBridge {
         vc.view.backgroundColor = ThemeTokens.Color.background
         let textView = UITextView()
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        textView.font = ThemeTokens.Typography.monospaceBody
         textView.backgroundColor = ThemeTokens.Color.surface
         textView.translatesAutoresizingMaskIntoConstraints = false
         vc.view.addSubview(textView)

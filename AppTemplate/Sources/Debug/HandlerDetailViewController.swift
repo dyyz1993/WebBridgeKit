@@ -52,7 +52,7 @@ class HandlerDetailViewController: UIViewController {
         let infoLabel = UILabel()
         infoLabel.text = "\(meta.category.displayName) · action: \(meta.action)"
         infoLabel.textColor = ThemeTokens.Color.textTertiary
-        infoLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        infoLabel.font = ThemeTokens.Typography.monospaceBody
         stack.addArrangedSubview(infoLabel)
         
         if !meta.requiredPermissions.isEmpty {
@@ -91,7 +91,7 @@ class HandlerDetailViewController: UIViewController {
         stack.addArrangedSubview(resultHeader)
         
         resultTextView.isEditable = false
-        resultTextView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        resultTextView.font = ThemeTokens.Typography.monospaceBody
         resultTextView.heightAnchor.constraint(equalToConstant: 200).isActive = true
         resultTextView.backgroundColor = .secondarySystemBackground
         resultTextView.layer.cornerRadius = 8
