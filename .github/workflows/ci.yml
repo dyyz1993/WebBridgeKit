@@ -760,3 +760,23 @@ jobs:
             ~/Library/Logs/DiagnosticReports/SuperApp*.ips
           retention-days: 7
           if-no-files-found: ignore
+
+  # ─── Job 8: Design System Lint ──────────────────────────────────
+  design-lint:
+    name: 🎨 Design System Lint
+    runs-on: macos-15
+    timeout-minutes: 10
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Install ripgrep
+        run: brew install ripgrep
+
+      - name: Run Design System Lint
+        run: bash tools/ci-lint.sh
