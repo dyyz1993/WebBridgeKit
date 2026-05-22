@@ -70,7 +70,7 @@ public class ManifestCacheManager: @unchecked Sendable {
             // 构建 baseURL：相对路径会基于此补全为 custom://
             let baseURL = URL(string: "\(self.scheme)://")
 
-            // ⚠️ WebView 操作必须在主线程执行
+            //  WebView 操作必须在主线程执行
             DispatchQueue.main.async {
                 webView.loadHTMLString(htmlString, baseURL: baseURL)
             }
@@ -105,7 +105,7 @@ public class ManifestCacheManager: @unchecked Sendable {
             // 设置当前页面的 manifest
             self.manifestStore.setCurrentManifest(manifest, for: pageKey)
 
-            // ⚠️ WebView 操作必须在主线程执行
+            //  WebView 操作必须在主线程执行
             DispatchQueue.main.async {
                 webView.loadHTMLString(html, baseURL: URL(string: "\(self.scheme)://"))
 
@@ -223,7 +223,7 @@ public class ManifestCacheManager: @unchecked Sendable {
                 self.manifestStore.removeManifest(for: pageKey)
                 self.resourceCache.removeAll(for: pageKey)
 
-                // ✅ 同时清理 PersistentManifestLoader 的物理缓存
+                //  同时清理 PersistentManifestLoader 的物理缓存
                 let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
                 let persistentDir = cachesDir.appendingPathComponent("WebBridgeKit/PersistentCache").appendingPathComponent(pageKey)
                 if FileManager.default.fileExists(atPath: persistentDir.path) {
@@ -322,7 +322,7 @@ public class ManifestCacheManager: @unchecked Sendable {
             self.resourceCache.removeAll()
             self.resetStats()
 
-            // ✅ 清理所有持久化物理缓存
+            //  清理所有持久化物理缓存
             let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             let persistentRootDir = cachesDir.appendingPathComponent("WebBridgeKit/PersistentCache")
             if FileManager.default.fileExists(atPath: persistentRootDir.path) {

@@ -163,6 +163,15 @@ public enum LucideIcon: CaseIterable {
         return UIImage(systemName: sfSymbolName, withConfiguration: config)
     }
 
+    public static func fallbackImage(sfName: String, pointSize: CGFloat = 20, weight: UIImage.SymbolWeight = .medium) -> UIImage? {
+        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: weight)
+        return UIImage(systemName: sfName, withConfiguration: config)
+    }
+
+    public static func fallbackTemplateImage(sfName: String, pointSize: CGFloat = 20, weight: UIImage.SymbolWeight = .medium) -> UIImage? {
+        return fallbackImage(sfName: sfName, pointSize: pointSize, weight: weight)?.withRenderingMode(.alwaysTemplate)
+    }
+
     public func templateImage(pointSize: CGFloat = 20, weight: UIImage.SymbolWeight = .medium) -> UIImage? {
         if let img = UIImage(lucideId: lucideId) {
             let scaled = UIImage(cgImage: img.cgImage!, scale: UIScreen.main.scale, orientation: img.imageOrientation)

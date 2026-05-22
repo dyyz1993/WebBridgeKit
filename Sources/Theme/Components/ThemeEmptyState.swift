@@ -66,8 +66,7 @@ public class ThemeEmptyState: UIView {
     }
 
     public func configure(icon: String, title: String, description: String) {
-        let config = UIImage.SymbolConfiguration(pointSize: 48, weight: .light)
-        iconImageView.image = UIImage(systemName: icon, withConfiguration: config)?.withRenderingMode(.alwaysTemplate)
+        iconImageView.image = LucideIcon.fallbackTemplateImage(sfName: icon, pointSize: 48, weight: .light)
         titleLabel.text = title
         descriptionLabel.text = description
     }

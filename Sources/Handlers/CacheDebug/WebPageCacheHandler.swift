@@ -32,7 +32,7 @@ public class PageCacheManager {
         public let cachedAt: Date
         public var hitCount: Int
 
-        /// ⚠️ 重要：我们不保存 WebView 实例
+        ///  重要：我们不保存 WebView 实例
         /// 当页面不可见时，WebView 会被销毁，JS 停止运行
         /// 只有当页面再次显示时，才会用缓存的 HTML 重新创建
 

@@ -17,7 +17,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
             return
         }
 
-        // 🔒 Security: Block dangerous URL schemes
+        //  Security: Block dangerous URL schemes
         let allowedSchemes: Set<String> = ["http", "https", "file", "about", "manifest-cache", "custom"]
         let blockedSchemes: Set<String> = ["javascript", "data", "vbscript"]
 

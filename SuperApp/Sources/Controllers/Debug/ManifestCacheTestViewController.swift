@@ -176,7 +176,7 @@ class ManifestCacheTestViewController: UIViewController {
         return button
     }()
 
-    // ✅ WebView 已删除 - 底部 WebView 不再需要，因为测试时会使用全屏展示
+    //  WebView 已删除 - 底部 WebView 不再需要，因为测试时会使用全屏展示
     // 原因：底部 WebView 会导致视图层级复杂，可能出现覆盖问题
     // 解决方案：测试时直接在全屏模式下创建新的 WebView 实例
 
@@ -298,7 +298,7 @@ class ManifestCacheTestViewController: UIViewController {
         buttonStack.axis = .horizontal
         buttonStack.spacing = ThemeTokens.Spacing.md
         buttonStack.distribution = .fillEqually
-        // ✅ 关键修复：StackView 必须允许触摸事件传递到子视图
+        //  关键修复：StackView 必须允许触摸事件传递到子视图
         // 删除 isUserInteractionEnabled = true，让 StackView 不拦截触摸事件
         // 这样内部的按钮才能接收到 .touchUpInside 事件
 
@@ -357,12 +357,12 @@ class ManifestCacheTestViewController: UIViewController {
         logButtonStack.axis = .horizontal
         logButtonStack.spacing = ThemeTokens.Spacing.sm
         logButtonStack.distribution = .fillEqually
-        // ✅ 关键修复：StackView 必须允许触摸事件传递到子视图
+        //  关键修复：StackView 必须允许触摸事件传递到子视图
         // 删除 isUserInteractionEnabled = true，让 StackView 不拦截触摸事件
 
         logContainer.addSubview(logButtonStack)
         logButtonStack.snp.makeConstraints { make in
-            // ✅ 修复: 让 logButtonStack 和 logTitleLabel 顶部对齐
+            //  修复: 让 logButtonStack 和 logTitleLabel 顶部对齐
             make.top.equalTo(logTitleLabel)
             make.right.equalToSuperview().offset(-16)
             make.height.equalTo(28)
@@ -377,14 +377,14 @@ class ManifestCacheTestViewController: UIViewController {
         }
 
         logTextView.snp.makeConstraints { make in
-            // ✅ 修复: logTextView 的顶部应该相对于 logButtonStack.bottom，而不是 logTitleLabel.bottom
+            //  修复: logTextView 的顶部应该相对于 logButtonStack.bottom，而不是 logTitleLabel.bottom
             make.top.equalTo(logButtonStack.snp.bottom).offset(8)
             make.left.equalToSuperview().offset(16)
             make.right.equalToSuperview().offset(-16)
             make.bottom.equalToSuperview().offset(-12)
         }
 
-        // ✅ 所有视图都已添加，现在设置 contentView 的约束
+        //  所有视图都已添加，现在设置 contentView 的约束
         contentView.snp.makeConstraints { make in
             make.top.left.right.equalToSuperview()
             make.width.equalToSuperview()
@@ -441,7 +441,7 @@ class ManifestCacheTestViewController: UIViewController {
         addLog("[LAUNCH] 开始测试")
         addLog("[PIN] URL: \(url.absoluteString)")
 
-        // ✅ FIX: 使用 smartLoad 自动根据 manifest.persistent 选择模式
+        //  FIX: 使用 smartLoad 自动根据 manifest.persistent 选择模式
         // 不管用户选择什么，都以 manifest.json 的 persistent 字段为准
         let userSelectedMode = modeSegment.selectedSegmentIndex == 1 ? "持久化" : "懒加载"
         addLog("[CACHE] 用户选择: \(userSelectedMode)")
@@ -515,7 +515,7 @@ class ManifestCacheTestViewController: UIViewController {
     }
 
     func addLog(_ message: String) {
-        // ✅ FIX: 简化 log 方法，避免复杂的 text range 计算
+        //  FIX: 简化 log 方法，避免复杂的 text range 计算
         let logAction = { [weak self] in
             guard let self = self else { return }
 
@@ -573,5 +573,5 @@ class ManifestCacheTestViewController: UIViewController {
 
 // MARK: - Extensions
 
-// ✅ WKNavigationDelegate 扩展已删除 - 底部 WebView 不再需要
+//  WKNavigationDelegate 扩展已删除 - 底部 WebView 不再需要
 // 页面验证和展示功能已移至全屏模式下的 WebView

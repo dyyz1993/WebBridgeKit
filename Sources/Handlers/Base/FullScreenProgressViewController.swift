@@ -15,7 +15,7 @@ public class FullScreenProgressViewController: UIViewController {
 
     // MARK: - UI Components
 
-    // ✅ 验证标签：确认使用的是正确的文件
+    //  验证标签：确认使用的是正确的文件
     private let verificationLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .caption1)
@@ -280,7 +280,7 @@ public class FullScreenProgressViewController: UIViewController {
         // 停止图标动画
         iconImageView.layer.removeAllAnimations()
 
-        // ✅ 只更新进度条到100%，不改变任何文案
+        //  只更新进度条到100%，不改变任何文案
         progressView.setProgress(1.0, animated: true)
         percentageLabel.text = "100%"
 

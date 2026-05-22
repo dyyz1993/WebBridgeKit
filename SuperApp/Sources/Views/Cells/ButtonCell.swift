@@ -105,7 +105,7 @@ class ButtonCell: UITableViewCell {
         actionButton.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
-            make.height.equalTo(36)
+            make.height.equalTo(44)
         }
 
         actionButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)

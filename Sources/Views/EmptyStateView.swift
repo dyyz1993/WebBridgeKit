@@ -167,8 +167,7 @@ public class EmptyStateView: UIView {
 
     public func configure(icon: String? = nil, title: String, description: String, actionTitle: String? = nil) {
         if let icon = icon {
-            let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .light)
-            iconImageView.image = UIImage(systemName: icon, withConfiguration: config)
+            iconImageView.image = LucideIcon.fallbackImage(sfName: icon, pointSize: 60, weight: .light)
             iconImageView.isHidden = false
         } else {
             iconImageView.isHidden = true

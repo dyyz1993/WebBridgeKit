@@ -160,7 +160,7 @@ public class WebBrowserManager: WebBrowserManaging {
         navController.pushViewController(webVC, animated: animated)
         currentBrowser = webVC
 
-        // 🔥 统一调用 loadURLWithCache
+        //  统一调用 loadURLWithCache
         if let browserVC = webVC as? WebBrowserViewController {
             browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
         }
@@ -191,7 +191,7 @@ public class WebBrowserManager: WebBrowserManaging {
         navController.pushViewController(webVC, animated: animated)
         currentBrowser = webVC
 
-        // 🔥 统一调用 loadURLWithCache
+        //  统一调用 loadURLWithCache
         if let browserVC = webVC as? WebBrowserViewController {
             browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
         }
@@ -419,7 +419,7 @@ public class WebBrowserManager: WebBrowserManaging {
         StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.hideTabBar: \(params.hideTabBar)", category: .bridge)
         StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.displayMode: \(params.displayMode)", category: .bridge)
 
-        // 🔥 关键：必须在创建时就设置 hidesBottomBarWhenPushed（在 push 之前）
+        //  关键：必须在创建时就设置 hidesBottomBarWhenPushed（在 push 之前）
         // 使用 WebBrowserViewController 以支持页面自动缓存功能
         let webVC: WebBrowserViewController
         if isLocalURL(url) {
@@ -432,18 +432,18 @@ public class WebBrowserManager: WebBrowserManaging {
             StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] Creating WebBrowserViewController for remote URL", category: .bridge)
             webVC = WebBrowserViewController(url: url)  // 使用便捷初始化
 
-            // 🔥 优化：如果是 localhost，不作为标题显示
+            //  优化：如果是 localhost，不作为标题显示
             let displayTitle = (url.host == "localhost") ? nil : url.host
             webVC.title = params.customTitle ?? displayTitle
 
-            // 🔥 添加到历史记录追踪（只追踪外部URL）
+            //  添加到历史记录追踪（只追踪外部URL）
             Task {
                 try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webVC.title)
             }
             StructuredLogger.shared.debug("[NOTE] [WebBrowserManager] Added to history: \(url.absoluteString)", category: .bridge)
         }
 
-        // 🔥 必须在 push 之前设置 hidesBottomBarWhenPushed
+        //  必须在 push 之前设置 hidesBottomBarWhenPushed
         webVC.hidesBottomBarWhenPushed = params.hideTabBar
 
         // 添加 accessibility identifier
@@ -506,7 +506,7 @@ public class WebBrowserManager: WebBrowserManaging {
     private func findNavigationController(from viewController: UIViewController?) -> UINavigationController? {
         guard let viewController = viewController else { return nil }
 
-        // 🔥 修复：先向上查找 parent 链（这是关键的修复）
+        //  修复：先向上查找 parent 链（这是关键的修复）
         var current: UIViewController? = viewController
         while let parent = current?.parent {
             if let navController = parent as? UINavigationController {

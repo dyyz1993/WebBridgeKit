@@ -18,7 +18,7 @@ extension ManifestCacheTestViewController {
     private func testPersistentLoad(url: URL) {
         addLog("[RECV] 持久化模式：")
 
-        // ✅ 创建临时 WebView 用于测试
+        //  创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
         let schemeHandler = ManifestURLSchemeHandler()
         config.setURLSchemeHandler(schemeHandler, forURLScheme: "custom")
@@ -36,7 +36,7 @@ extension ManifestCacheTestViewController {
                 url: url,
                 in: tempWebView
             ) { [weak self] result in
-                // ✅ FIX: 回调可能在后台线程，必须切换到主线程更新 UI
+                //  FIX: 回调可能在后台线程，必须切换到主线程更新 UI
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
 
@@ -71,7 +71,7 @@ extension ManifestCacheTestViewController {
     private func downloadAndCache(url: URL) {
         addLog("[RECV] 持久化模式：显示全屏进度条")
 
-        // ✅ 创建临时 WebView 用于测试
+        //  创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
         let schemeHandler = ManifestURLSchemeHandler()
         config.setURLSchemeHandler(schemeHandler, forURLScheme: "custom")
@@ -90,7 +90,7 @@ extension ManifestCacheTestViewController {
                 in: tempWebView,
                 from: self
             ) { [weak self, weak progressVC] result in
-                // ✅ FIX: URLSession 回调在后台线程，必须切换到主线程更新 UI
+                //  FIX: URLSession 回调在后台线程，必须切换到主线程更新 UI
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
 
@@ -151,7 +151,7 @@ extension ManifestCacheTestViewController {
     private func testLazyLoad(url: URL) {
         addLog("[FAST] 懒加载模式：立即打开全屏页面")
 
-        // ✅ 创建临时 WebView 用于测试
+        //  创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
         let schemeHandler = ManifestURLSchemeHandler()
         config.setURLSchemeHandler(schemeHandler, forURLScheme: "custom")
@@ -194,7 +194,7 @@ extension ManifestCacheTestViewController {
             url: url,
             in: tempWebView
         ) { [weak self] result in
-            // ✅ FIX: URLSession 回调在后台线程，必须切换到主线程更新 UI
+            //  FIX: URLSession 回调在后台线程，必须切换到主线程更新 UI
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
 
@@ -226,14 +226,14 @@ extension ManifestCacheTestViewController {
     func testSmartLoad(url: URL) {
         addLog("[BOT] 智能模式：自动根据 manifest.json 的 persistent 字段选择加载器")
 
-        // ✅ 创建临时 WebView 用于测试
+        //  创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
         let schemeHandler = ManifestURLSchemeHandler()
         config.setURLSchemeHandler(schemeHandler, forURLScheme: "custom")
         config.setURLSchemeHandler(schemeHandler, forURLScheme: "wb-resource")
         let tempWebView = WKWebView(frame: .zero, configuration: config)
 
-        // ✅ 先创建 WebView 展示页面（先 present，这样进度页面可以覆盖在上面）
+        //  先创建 WebView 展示页面（先 present，这样进度页面可以覆盖在上面）
         addLog("[MOBILE] 准备 WebView 展示页面...")
         let displayVC = WebViewDisplayViewController(webView: tempWebView) { [weak self] in
             self?.addLog("[OK] 全屏页面已关闭")
@@ -257,7 +257,7 @@ extension ManifestCacheTestViewController {
                 in: tempWebView,
                 from: displayVC  // [OK] 从展示页面上显示进度页面
             ) { [weak self] result in
-                // ✅ FIX: URLSession 回调在后台线程，必须切换到主线程更新 UI
+                //  FIX: URLSession 回调在后台线程，必须切换到主线程更新 UI
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
 
@@ -267,7 +267,7 @@ extension ManifestCacheTestViewController {
 
                     switch result {
                     case .success:
-                        // ✅ 展示页面已经打开了，不需要再 present
+                        //  展示页面已经打开了，不需要再 present
                         // 进度页面会自动关闭，WebView 就显示出来了
                         self.addLog("[OK] 智能加载成功")
                         self.addLog("[MOBILE] WebView 已准备就绪")
@@ -294,7 +294,7 @@ extension ManifestCacheTestViewController {
 
     /// 监控后台下载进度
     private func monitorBackgroundDownload(url: URL) {
-        // ⚠️ 禁用进度监控（可能导致后台线程 UI 更新问题）
+        //  禁用进度监控（可能导致后台线程 UI 更新问题）
         // 懒加载会在后台自动下载，无需轮询
         /*
          let cacheID = "lazy_\(abs(url.absoluteString.hashValue))"

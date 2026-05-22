@@ -5,7 +5,7 @@
 //  Created on 2026-05-11.
 //  Copyright © 2026年 WebBridgeKit. All rights reserved.
 //
-//  ⚠️ CRITICAL: All Rx Observable element types must be built-in Swift types
+//   CRITICAL: All Rx Observable element types must be built-in Swift types
 //  (Void, Int, Bool, String). Using types from WebBridgeKit framework as Rx
 //  generic parameters causes Swift runtime metadata crash (AnonymousObservableSink,
 //  MapSink, SubscribeOnSink, CatchSink etc.). All WebBridgeKit types are handled
@@ -33,7 +33,7 @@ class CacheDashboardViewModel: ViewModel {
     }
 
     // MARK: - Output
-    // ⚠️ All Rx element types must be built-in Swift types (Void, Int, Bool, String)
+    //  All Rx element types must be built-in Swift types (Void, Int, Bool, String)
     // Using WebBridgeKit framework types as Rx generics causes Swift runtime crash.
 
     struct Output {

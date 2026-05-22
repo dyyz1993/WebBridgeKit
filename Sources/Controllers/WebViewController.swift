@@ -51,7 +51,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 浏览器配置
     public var browserConfig: WebBrowserParams?
 
-    // 🔥 浏览器特性控制（默认全部禁用，通过 Bridge 按需开启）
+    //  浏览器特性控制（默认全部禁用，通过 Bridge 按需开启）
     var bouncesEnabled = false
     var scrollIndicatorEnabled = false
     var backForwardGesturesEnabled = false
@@ -144,12 +144,12 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        // 🔥 在 viewWillAppear 中再次确保侧滑手势被禁用
+        //  在 viewWillAppear 中再次确保侧滑手势被禁用
         if let config = browserConfig, config.disableSwipeBack {
             navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         }
 
-        // 🔥 强制横屏：在 viewWillAppear 时再次强制旋转到目标方向
+        //  强制横屏：在 viewWillAppear 时再次强制旋转到目标方向
         if let config = browserConfig {
             if config.orientation == .landscapeLeft {
                 rotateTo(.landscapeLeft)
@@ -170,7 +170,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        // 🔥 强制横屏：在 viewDidAppear 时最后确认一次方向（防止用户快速旋转设备）
+        //  强制横屏：在 viewDidAppear 时最后确认一次方向（防止用户快速旋转设备）
         if let config = browserConfig {
             if config.orientation == .landscapeLeft {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
@@ -204,7 +204,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         // 确保 view 已加载，从而 webView 已初始化
         _ = view
 
-        // 🔒 Input validation: Validate HTML name to prevent path traversal attacks
+        //  Input validation: Validate HTML name to prevent path traversal attacks
         do {
             _ = try InputValidator.validateHTMLName(htmlName)
         } catch {
@@ -227,7 +227,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         // 确保 view 已加载
         _ = view
 
-        // 🔒 Input validation: Validate URL scheme to prevent loading dangerous URLs
+        //  Input validation: Validate URL scheme to prevent loading dangerous URLs
         let allowedSchemes: Set<String> = ["http", "https", "file", "custom"]
         do {
             _ = try InputValidator.validateURLScheme(url, allowedSchemes: allowedSchemes)
@@ -262,14 +262,14 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             }
             StructuredLogger.shared.debug("Loading: \(url) (System URLCache)", category: .navigation)
 
-            // 🔥 页面加载完成后自动生成缩略图
+            //  页面加载完成后自动生成缩略图
             generateThumbnailAfterLoad(url: url)
         }
     }
 
     /// 页面加载完成后生成缩略图
     func generateThumbnailAfterLoad(url: URL) {
-        // 🔒 Clean up any existing observer before creating a new one
+        //  Clean up any existing observer before creating a new one
         loadingObserver?.invalidate()
         loadingObserver = nil
 
@@ -282,7 +282,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                 // 延迟2秒等待页面渲染完成
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                     self?.captureThumbnail(for: url)
-                    // 🔒 Clean up observer after use
+                    //  Clean up observer after use
                     self?.loadingObserver?.invalidate()
                     self?.loadingObserver = nil
                 }
@@ -340,33 +340,33 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         supportedOrientations = params.orientation
         isStatusBarHidden = params.hideStatusBar
 
-        // 🔥 处理标题
+        //  处理标题
         if let title = params.customTitle {
             self.title = title
         }
 
-        // 🔥 隐藏导航栏（如果要完全沉浸式）
+        //  隐藏导航栏（如果要完全沉浸式）
         if params.hideNavigationBar || params.displayMode == .immersive {
             navigationController?.setNavigationBarHidden(true, animated: false)
         } else {
             navigationController?.setNavigationBarHidden(false, animated: false)
         }
 
-        // 🔥 TabBar 隐藏由系统的 hidesBottomBarWhenPushed 属性自动处理
+        //  TabBar 隐藏由系统的 hidesBottomBarWhenPushed 属性自动处理
         // 当 hideTabBar = true 时，系统会在 push 时自动隐藏 TabBar
         // 在 WebBrowserManager 创建 VC 时已设置 hidesBottomBarWhenPushed
 
-        // 🔥 禁用侧滑返回手势
+        //  禁用侧滑返回手势
         if params.disableSwipeBack {
             self.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
-            // 🔥 同时设置 delegate 以防止被重新启用
+            //  同时设置 delegate 以防止被重新启用
             self.navigationController?.delegate = self
         } else {
             self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
             self.navigationController?.delegate = nil
         }
 
-        // 🔥 沉浸式模式：移除安全区域
+        //  沉浸式模式：移除安全区域
         if params.displayMode == .immersive {
             webView.scrollView.contentInsetAdjustmentBehavior = .never
         } else {
@@ -376,7 +376,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         // 根据显示模式调整体验
         configureBrowserFeatures(params: params)
 
-        // 🔥 注入 payload 参数
+        //  注入 payload 参数
         if let payload = params.payload {
             if let payloadData = try? JSONSerialization.data(withJSONObject: payload),
                let payloadString = String(data: payloadData, encoding: .utf8) {
@@ -401,7 +401,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             }
         }
 
-        // 🔥 主动触发屏幕旋转
+        //  主动触发屏幕旋转
         if params.orientation == .landscapeLeft {
             rotateTo(.landscapeLeft)
             StructuredLogger.shared.debug("Forcing landscapeLeft orientation", category: .ui)
@@ -419,7 +419,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         StructuredLogger.shared.debug("Configured with mode: \(params.displayMode), hideTabBar: \(params.hideTabBar), disableSwipeBack: \(params.disableSwipeBack)", category: .ui)
     }
 
-    /// 🔥 通过 Bridge 开启/关闭浏览器特性
+    ///  通过 Bridge 开启/关闭浏览器特性
     public func setBrowserFeature(_ feature: String, enabled: Bool) {
         switch feature {
         case "bounces":
@@ -462,7 +462,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     }
 
     deinit {
-        // 🔒 Clean up KVO observer
+        //  Clean up KVO observer
         loadingObserver?.invalidate()
         loadingObserver = nil
 
@@ -476,13 +476,13 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         let bridgeForPool = pooled ? bridge : nil
 
         Task { @MainActor in
-            // 🔒 Remove all script message handlers to prevent memory leaks
+            //  Remove all script message handlers to prevent memory leaks
             // WKUserContentController.add(_:name:) creates strong references
             for handlerName in handlerNames {
                 webViewInstance?.configuration.userContentController.removeScriptMessageHandler(forName: handlerName)
             }
 
-            // 🔒 Clear delegates to break strong reference cycles
+            //  Clear delegates to break strong reference cycles
             webViewInstance?.navigationDelegate = nil
             webViewInstance?.uiDelegate = nil
 

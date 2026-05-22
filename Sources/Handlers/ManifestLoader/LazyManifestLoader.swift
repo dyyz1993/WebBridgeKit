@@ -265,7 +265,7 @@ public class LazyManifestLoader: NSObject {
 
             // 2. 检查是否已有缓存（除非强制刷新）
             if !forceRefresh, let cachedHTML = self.manifestCacheManager.getCachedHTML(for: cacheID) {
-                // ✅ FIX: 检查版本，如果版本变化则清除旧缓存
+                //  FIX: 检查版本，如果版本变化则清除旧缓存
                 let cachedManifest = self.manifestCacheManager.getCachedManifest(for: cacheID)
                 let currentVersion = manifest.resolvedVersion
                 let cachedVersion = cachedManifest?.version ?? "unknown"
@@ -288,7 +288,7 @@ public class LazyManifestLoader: NSObject {
                 // 从缓存加载
                 self.manifestCacheManager.loadHTML(cachedHTML, into: webView)
 
-                // 🔥 发送通知用于 UI 更新
+                //  发送通知用于 UI 更新
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
                         name: .manifestCacheHit,
@@ -297,7 +297,7 @@ public class LazyManifestLoader: NSObject {
                     )
                 }
 
-                // ✅ FIX: 从缓存加载时也需要设置 pageKey
+                //  FIX: 从缓存加载时也需要设置 pageKey
                 if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: self.scheme) as? ManifestURLSchemeHandler {
                     schemeHandler.setPageKey(cacheID, for: webView)
                     self.postLog("[OK] [pageKey] 已设置 '\(cacheID)'")
@@ -450,7 +450,7 @@ public class LazyManifestLoader: NSObject {
     }
 
     private func fetchManifestSync(from url: URL) async throws -> WebManifest {
-        // 🔥 修复：如果 URL 看起来像是一个 HTML 文件，先取其父目录
+        //  修复：如果 URL 看起来像是一个 HTML 文件，先取其父目录
         var baseURL = url
         if url.pathExtension.lowercased() == "html" || url.pathExtension.lowercased() == "htm" {
             baseURL = url.deletingLastPathComponent()
@@ -561,7 +561,7 @@ public class LazyManifestLoader: NSObject {
                 ResourceCache.shared.set(resource, for: pageKey)
                 self.postLog("[OK] [资源下载] 已缓存: \(relativePath)")
 
-                // ✅ 资源下载完成后通知 UI 刷新，以便更新缓存大小显示
+                //  资源下载完成后通知 UI 刷新，以便更新缓存大小显示
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
                         name: .manifestCacheDidUpdate,

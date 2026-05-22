@@ -83,7 +83,7 @@ public struct WebBrowserParams {
     public let allowJavaScriptClose: Bool
     public let customTitle: String?
 
-    /// 🔥 调试模式：启用时会显示错误页面而不是白屏
+    ///  调试模式：启用时会显示错误页面而不是白屏
     public var debugMode: Bool = false
 
     /// 附加负载数据（用于透传给网页）
@@ -223,7 +223,7 @@ public struct WebBrowserParams {
             }
         }
 
-        // 🔥 沉浸式模式自动隐藏 TabBar
+        //  沉浸式模式自动隐藏 TabBar
         if displayMode == .immersive {
             hideTabBar = true
         }

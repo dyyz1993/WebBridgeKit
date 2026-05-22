@@ -82,7 +82,7 @@ public class WebOpenPageHandler: BaseWebNativeHandler {
         if let hideStatusBar = params["hideStatusBar"] as? Bool {
             queryItems.append(URLQueryItem(name: "hideStatusBar", value: hideStatusBar ? "1" : "0"))
         }
-        // 🔥 新增参数
+        //  新增参数
         if let hideTabBar = params["hideTabBar"] as? Bool {
             queryItems.append(URLQueryItem(name: "hideTabBar", value: hideTabBar ? "1" : "0"))
         }

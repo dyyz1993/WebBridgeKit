@@ -78,7 +78,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             case .failure(let error):
                 NSLog("   [FAIL] Failed: %@, error: %@", relativePath, error.localizedDescription)
 
-                // 🔥 优化：如果是 HTML 页面或主请求失败，显示错误提示页，而不是白屏
+                //  优化：如果是 HTML 页面或主请求失败，显示错误提示页，而不是白屏
                 let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
                 if isPageRequest {
                     self.deliverErrorPage(to: urlSchemeTask, url: url, error: error)
@@ -109,7 +109,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             let error = ManifestCacheError.resourceNotFound(relativePath)
             NSLog("[FAIL] [SchemeHandler] Resource not found in cache: %@", relativePath)
 
-            // 🔥 优化：如果是 HTML 页面失败，显示错误提示页
+            //  优化：如果是 HTML 页面失败，显示错误提示页
             let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
             if isPageRequest {
                 self.deliverErrorPage(to: urlSchemeTask, url: url, error: error)

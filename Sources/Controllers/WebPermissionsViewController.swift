@@ -124,15 +124,15 @@ class WebPermissionsViewController: UIViewController {
     // MARK: - Cleanup
 
     deinit {
-        // 🔒 Stop loading and remove delegates to prevent memory leaks
+        //  Stop loading and remove delegates to prevent memory leaks
         webView?.stopLoading()
         webView?.navigationDelegate = nil
 
-        // 🔒 Remove script message handler to break strong reference cycle
+        //  Remove script message handler to break strong reference cycle
         // WKUserContentController.add(_:name:) creates a strong reference to the handler
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "barkBridge")
 
-        // 🔒 Remove from superview
+        //  Remove from superview
         webView?.removeFromSuperview()
 
         StructuredLogger.shared.debug("[CLEAN] [WebPermissionsVC] Cleaned up with proper memory management", category: .ui)

@@ -35,7 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-        // 🔥 Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
+        //  Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 WebCacheManager.shared.clearAll()
@@ -74,7 +74,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         registerForPushNotifications(application)
         #endif
 
-        // 🔥 Support UI Fidelity Testing — show Component Catalog
+        //  Support UI Fidelity Testing — show Component Catalog
         if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 guard let self = self else { return }
@@ -85,7 +85,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-        // 🔥 Support automated testing via launch arguments
+        //  Support automated testing via launch arguments
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if let tabBarController = self.window?.rootViewController as? UITabBarController {
