@@ -149,7 +149,7 @@ public class ModalWebViewController: UIViewController {
         let closeButton = UIButton(type: .system)
         closeButton.accessibilityIdentifier = "modalBrowser.closeButton"
         closeButton.setImage(LucideIcon.xmarkCircle.templateImage(), for: .normal)
-        closeButton.tintColor = .gray
+        closeButton.tintColor = ThemeTokens.Color.textSecondary
         closeButton.backgroundColor = ThemeTokens.Color.overlaySoft.withAlphaComponent(0.8)
         closeButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         closeButton.accessibilityLabel = "关闭弹窗"

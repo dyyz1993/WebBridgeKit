@@ -200,20 +200,78 @@ Example output:
 | 2026-05-20 | SIGABRT | SnapKit 约束冲突：固定高度 90pt vs 内容高度超 90pt | ComponentCatalog/LayoutSections.swift:152-166 | 移除固定高度约束，改用 auto-layout 自适应 d9a7a38 |
 | 2026-05-19 | SIGABRT | Podfile 重复链接 shared_pods 导致 ObjC runtime 重复类定义 | Podfile:107, WebBridgeKit+SuperApp targets | SuperApp `inherit! :search_paths` 从 WebBridgeKit 继承 pods |
 
+## UI Testing
+
+### Running UI Tests
+
+```bash
+# Build and run UI tests
+xcodebuild test \
+  -workspace WebBridgeKit.xcworkspace \
+  -scheme SuperApp \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -derivedDataPath /tmp/wbk-dd \
+  -only-testing:SuperAppUITests
+
+# Run with component catalog visible
+xcrun simctl launch booted com.webbridgekit.superapp --show-component-catalog
+```
+
+### Launch Arguments
+
+| Argument | Purpose |
+|----------|---------|
+| `--ui-testing` | Seeds test data, skips onboarding |
+| `--show-component-catalog` | Shows WBK component showcase |
+
+## Release Checklist
+
+### Pre-Release
+
+- [ ] `bash scripts/services.sh start` — all 3 services running
+- [ ] `xcodebuild build` — zero build errors
+- [ ] Business warnings = 0 (toolchain warnings acceptable)
+- [ ] `bash scripts/scan-crash-logs.sh` — zero crashes
+- [ ] `xcodebuild test` — all tests pass
+- [ ] UI smoke test on simulator (Home/Inbox/Discover/Settings)
+- [ ] Dark mode visual check
+- [ ] iPhone SE layout check
+
+### Post-Release
+
+- [ ] Update AGENTS.md Recent Commits
+- [ ] Tag release: `git tag v{version}`
+- [ ] Verify CI green: `gh run list --limit 5`
+
+## Quality Policies
+
+### Warning Policy
+
+- **Business code warnings = 0**: All Swift source warnings in `Sources/` and `SuperApp/` must be zero
+- **Toolchain warnings acceptable**: Warnings from CocoaPods, SPM dependencies, or Xcode itself are acceptable
+- **Enforcement**: CI `lint` job checks for business warnings
+
+### Crash Policy
+
+- **Crash count must be 0**: No crashes allowed in any build
+- **Enforcement**: `bash scripts/scan-crash-logs.sh` must return `total: 0`
+- **If crash found**: Fix immediately before any other work, log in `## Crash Analysis`
+
 ## Recent Commits
 
 | Commit | Description |
 |--------|-------------|
+| `3608f0e` | feat(ui): add screenshot capture tests, visual check scripts, CI design lint |
+| `ef2874e` | feat(ui): v3 UI redesign — token system, 11 WBK components, 4 page redesigns (#2) |
+| `3d79ccf` | fix(ui): inbox search bar shadow + home bookmark tap opens URL instead of camera |
+| `5150fba` | fix(quality): production readiness — remove 559 prints, fix 85 force unwraps, extract hardcoded colors to ThemeTokens, add DEBUG guards |
+| `12ebddc` | fix(ui): align all pages to design prototype — home token card, quick actions, app cards, inbox source pills/FAB, discover badges, settings icon tints |
+| `864ad2c` | feat(offline): offline fallback, atomic updates, version status model |
+| `3a9f9c1` | fix(core): HTML parser URL resolution, deferred WebView loading, crash scan improvements, cache validation tooling |
 | `49a0e69` | perf(ci): share build artifacts, 4-group matrix, parallel lint+build, 30min timeout |
 | `634cb49` | feat(security): CORS whitelist, third-party licenses page, 39 security tests |
 | `d9a7a38` | fix(tests): skip MessageEngine in UI test mode to avoid async race condition |
-| `cba3982` | fix(tests): synchronous seeding for UI tests + keep inbox table visible |
-| `b4d97a2` | fix(tests): remove stale tab tests, seed inbox messages, fix SnapKit constraint crash |
-| `e632a9a` | fix(warnings): clear remaining 24 business warnings to zero |
+| `4f53c00` | fix(build): UI build quality pass — warnings 25→4, UI audit, packaging (#1) |
 | `d826dc1` | feat(productization): bookmarks, history, manifest preview, diagnostics, UI polish |
-| `720c61d` | feat(core): WebBridge security + core capabilities + stability baselines |
-| `8ef63cf` | feat(ui): empty state unification, destructive confirmations, WebView loading, Debug prod gate |
 | `5218431` | feat(quality): accessibility audit, UI tests, CI hardening, release docs, screenshots |
-| `703f1e2` | fix(ui): P1/P2 quality pass — tabs, empty states, contrast, WKColor cleanup |
-| `4770643` | docs(ui): add UI fidelity audit screenshots and handoff completion report |
-| `05ce516` | fix(build): eliminate all business-code warnings (25→4) and fix fragile ThemeTests |
