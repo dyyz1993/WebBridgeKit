@@ -145,6 +145,7 @@ public final class WBKMessageCell: UIView {
         avatarLabel.font = UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 17, weight: .medium))
         avatarLabel.textColor = ThemeTokens.Color.text
         avatarLabel.textAlignment = .center
+        avatarLabel.numberOfLines = 1
         avatarLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
         }
