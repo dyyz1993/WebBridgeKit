@@ -196,7 +196,7 @@ public class WebViewPool {
                     if (window.onAudioLevelChange) window.onAudioLevelChange(data.level !== undefined ? data.level : data);
                 }
 
-                // 🔥 手势事件回调
+                //  手势事件回调
                 if (event === 'onGesture') {
                     if (window.onGesture) window.onGesture(data);
                     const customEvent = new CustomEvent('bark_gesture', { detail: data });

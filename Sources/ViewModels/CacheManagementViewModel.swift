@@ -165,7 +165,7 @@ public class CacheManagementViewModel: ViewModel {
                 self.cacheAppsRelay.accept(sortedApps)
                 self.isEmptyRelay.accept(sortedApps.isEmpty)
 
-                // ✅ 重新计算总大小，确保准确
+                //  重新计算总大小，确保准确
                 let totalBytes = sortedApps.reduce(0) { $0 + $1.cacheSize }
                 self.totalCacheSizeRelay.accept(self.formatBytes(totalBytes))
 

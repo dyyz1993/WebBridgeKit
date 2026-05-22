@@ -125,7 +125,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             return
         }
 
-        // 🔒 Security: Validate command against allowlist
+        //  Security: Validate command against allowlist
         guard Self.ALLOWED_COMMANDS.contains(action) else {
             let error = "Command not allowed: \(action)"
             Log.error(error, category: .general)

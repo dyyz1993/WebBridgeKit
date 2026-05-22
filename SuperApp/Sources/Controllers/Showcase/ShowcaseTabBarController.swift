@@ -40,7 +40,7 @@ class ShowcaseTabBarController: UITabBarController {
 
         viewControllers = controllers.map { vc, title, iconName in
             let nav = UINavigationController(rootViewController: vc)
-            let tabItem = UITabBarItem(title: title, image: UIImage(systemName: iconName), selectedImage: nil)
+            let tabItem = UITabBarItem(title: title, image: LucideIcon.fallbackImage(sfName: iconName), selectedImage: nil)
             nav.tabBarItem = tabItem
             return nav
         }

@@ -9,7 +9,7 @@ import WebKit
 // MARK: - UINavigationControllerDelegate
 extension WebViewController {
     public func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
-        // 🔥 确保侧滑手势始终被禁用（如果配置要求）
+        //  确保侧滑手势始终被禁用（如果配置要求）
         if let config = browserConfig, config.disableSwipeBack {
             navigationController.interactivePopGestureRecognizer?.isEnabled = false
         }
@@ -48,7 +48,7 @@ extension WebViewController {
         }
     }
 
-    /// 🔥 处理浏览器特性相关的 Bridge 调用
+    ///  处理浏览器特性相关的 Bridge 调用
     private func handleBrowserAction(body: [String: Any], callbackId: String?) {
         guard let params = body["params"] as? [String: Any],
               let action = params["action"] as? String else {

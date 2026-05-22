@@ -304,7 +304,7 @@ class MenuCell: UITableViewCell {
         if let lucide = lucideIcon {
             iconImageView.image = lucide.image(pointSize: 18)
         } else if let iconName = icon {
-            iconImageView.image = UIImage(systemName: iconName)
+            iconImageView.image = LucideIcon.fallbackImage(sfName: iconName)
         } else {
             iconImageView.image = nil
         }

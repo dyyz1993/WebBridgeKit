@@ -40,7 +40,7 @@ extension ComponentCatalogViewController {
             btn.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
             let iconView = UIImageView()
-            iconView.image = UIImage(systemName: action.icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .medium))
+            iconView.image = LucideIcon.fallbackImage(sfName: action.icon, pointSize: 22, weight: .medium)
             iconView.tintColor = action.color
             iconView.contentMode = .scaleAspectFit
 
@@ -187,7 +187,7 @@ extension ComponentCatalogViewController {
 
             let iconIV = UIImageView()
             if let icon = icon {
-                iconIV.image = UIImage(systemName: icon)
+                iconIV.image = LucideIcon.fallbackImage(sfName: icon)
                 iconIV.tintColor = ThemeTokens.Color.primary
                 iconIV.contentMode = .scaleAspectFit
             }

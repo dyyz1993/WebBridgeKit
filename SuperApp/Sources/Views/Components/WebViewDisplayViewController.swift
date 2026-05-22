@@ -75,7 +75,7 @@ public class WebViewDisplayViewController: UIViewController {
         setupUI()
         setupActions()
 
-        // ✅ 修复：在全屏展示时启用 WebView 的用户交互
+        //  修复：在全屏展示时启用 WebView 的用户交互
         // 这样用户可以与 WebView 内容进行交互（滚动、点击链接等）
         webView.isUserInteractionEnabled = true
     }
@@ -92,7 +92,7 @@ public class WebViewDisplayViewController: UIViewController {
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
-        // ⚠️ 关键：在 pop 返回时移除 WebView
+        //  关键：在 pop 返回时移除 WebView
         // 这样原控制器的 viewDidAppear 会检测到 webView.superview == nil 并重新添加
         if navigationController?.viewControllers.count ?? 0 > 1 {
             // 我们还在导航栈中，即将被 pop

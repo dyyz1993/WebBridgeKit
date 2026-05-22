@@ -177,7 +177,7 @@ public class ResourceDownloader {
     }
 
     private func compressImageIfNeeded(_ data: Data) -> Data {
-        // ⚠️ UIKit 组件（如 UIImage）必须在主线程使用
+        //  UIKit 组件（如 UIImage）必须在主线程使用
         // 这里直接返回原始数据，避免在后台线程使用 UIImage
         // 如果需要压缩功能，应该使用 ImageIO 框架（支持后台线程）
         return data

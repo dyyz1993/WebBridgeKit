@@ -325,7 +325,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
     override init() {
         super.init()
-        // ✅ FIX: 创建新数组引用以确保 Driver 触发事件
+        //  FIX: 创建新数组引用以确保 Driver 触发事件
         testCasesRelay.accept(Array(defaultTestCases))
     }
 
@@ -380,7 +380,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
             defaultTestCases[index].status = .pending
             defaultTestCases[index].result = nil
         }
-        // ✅ FIX: 创建新数组引用以确保 Driver 触发事件
+        //  FIX: 创建新数组引用以确保 Driver 触发事件
         testCasesRelay.accept(Array(defaultTestCases))
         isEmptyRelay.accept(defaultTestCases.isEmpty)
         loadingRelay.accept(false)
@@ -393,7 +393,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         // 更新状态为运行中
         defaultTestCases[index].status = .running
-        // ✅ FIX: 创建新数组引用以确保 Driver 触发事件
+        //  FIX: 创建新数组引用以确保 Driver 触发事件
         testCasesRelay.accept(Array(defaultTestCases))
         testRunningRelay.accept(true)
 
@@ -431,7 +431,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
                 // 更新 UI（在主线程）
                 DispatchQueue.main.async {
-                    // ✅ FIX: 创建新数组引用以确保 Driver 触发事件
+                    //  FIX: 创建新数组引用以确保 Driver 触发事件
                     self.testCasesRelay.accept(Array(self.defaultTestCases))
                     self.testRunningRelay.accept(false)
                 }

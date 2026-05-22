@@ -216,8 +216,7 @@ public class CacheResourceCell: UITableViewCell {
         typeBadgeLabel.textColor = item.type.iconColor
 
         // 设置类型图标
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        typeIconView.image = UIImage(systemName: item.type.iconName, withConfiguration: config)
+        typeIconView.image = LucideIcon.fallbackImage(sfName: item.type.iconName, pointSize: 14, weight: .medium)
         typeIconView.tintColor = item.type.iconColor
     }
 

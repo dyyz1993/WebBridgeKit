@@ -56,7 +56,7 @@ extension ManifestStore {
 
                     let cacheTimestamp = manifest.lastUpdated ?? Date()
 
-                    // 🔒 Security: Handle new contentHash field for integrity verification
+                    //  Security: Handle new contentHash field for integrity verification
                     let contentHash = value["contentHash"] as? String ?? UUID().uuidString
                     loaded[key] = ManifestCacheEntry(
                         manifest: manifest,
@@ -122,7 +122,7 @@ extension ManifestStore {
 
                     let cacheTimestamp = manifest.lastUpdated ?? Date()
 
-                    // 🔒 Security: Handle new contentHash field for integrity verification
+                    //  Security: Handle new contentHash field for integrity verification
                     let contentHash = value["contentHash"] as? String ?? UUID().uuidString
                     loaded[key] = ManifestCacheEntry(
                         manifest: manifest,

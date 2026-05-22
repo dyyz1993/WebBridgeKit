@@ -126,7 +126,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
             row.iconTintColor = item.iconTintColor ?? ThemeTokens.Color.primary
             row.setIconBoxBackgroundColor(item.iconBackgroundColor ?? .clear)
         } else if let iconName = item.icon {
-            row.icon = UIImage(systemName: iconName)
+            row.icon = LucideIcon.fallbackImage(sfName: iconName)
             row.iconTintColor = item.iconTintColor ?? ThemeTokens.Color.primary
             row.setIconBoxBackgroundColor(item.iconBackgroundColor ?? .clear)
         }

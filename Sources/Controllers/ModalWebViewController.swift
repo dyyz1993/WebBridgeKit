@@ -286,20 +286,20 @@ public class ModalWebViewController: UIViewController {
     // MARK: - Cleanup
 
     deinit {
-        // 🔒 Clean up child view controller
+        //  Clean up child view controller
         webViewVC?.willMove(toParent: nil)
         webViewVC?.view.removeFromSuperview()
         webViewVC?.removeFromParent()
 
-        // 🔒 Stop loading and clean up WebView
+        //  Stop loading and clean up WebView
         webView?.stopLoading()
         webView?.navigationDelegate = nil
         webView?.uiDelegate = nil
 
-        // 🔒 Remove from superview
+        //  Remove from superview
         webView?.removeFromSuperview()
 
-        // 🔒 Clean up bridge
+        //  Clean up bridge
         bridge = nil
 
         StructuredLogger.shared.debug("[CLEAN] [ModalWebVC] Cleaned up with proper memory management", category: .ui)
