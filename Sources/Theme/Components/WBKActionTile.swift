@@ -137,6 +137,7 @@ public final class WBKActionTile: UIView {
         badgeView.font = ThemeTokens.Typography.badge
         badgeView.textColor = ThemeTokens.Color.surface
         badgeView.textAlignment = .center
+        badgeView.numberOfLines = 1
         badgeView.backgroundColor = ThemeTokens.Color.error
         badgeView.layer.cornerRadius = 8
         badgeView.clipsToBounds = true
