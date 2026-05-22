@@ -8,25 +8,25 @@ public enum ThemeButtonStyle {
 
     public var backgroundColor: UIColor {
         switch self {
-        case .primary: return ThemeColors.current.primary
-        case .secondary: return ThemeColors.current.surface
+        case .primary: return ThemeTokens.Color.primary
+        case .secondary: return ThemeTokens.Color.surface
         case .ghost: return .clear
         }
     }
 
     public var textColor: UIColor {
         switch self {
-        case .primary: return .white
-        case .secondary: return ThemeColors.current.text
-        case .ghost: return ThemeColors.current.primary
+        case .primary: return ThemeTokens.Color.textOnColor
+        case .secondary: return ThemeTokens.Color.text
+        case .ghost: return ThemeTokens.Color.primary
         }
     }
 
     public var borderColor: UIColor? {
         switch self {
         case .primary: return nil
-        case .secondary: return ThemeColors.current.border
-        case .ghost: return ThemeColors.current.primary.withAlphaComponent(0.3)
+        case .secondary: return ThemeTokens.Color.border
+        case .ghost: return ThemeTokens.Color.primary.withAlphaComponent(0.3)
         }
     }
 }
@@ -46,8 +46,8 @@ public class ThemeButton: UIButton {
     }
 
     private func setupUI() {
-        layer.cornerRadius = ThemeCornerRadius.default.md
-        titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        layer.cornerRadius = ThemeTokens.CornerRadius.md
+        titleLabel?.font = ThemeTokens.Typography.buttonMedium
         updateStyle()
     }
 

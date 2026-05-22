@@ -148,14 +148,14 @@ public class PersistentManifestLoader: NSObject {
         in webView: WKWebView,
         from viewController: UIViewController?
     ) async throws {
-        NSLog("🔄 [PersistentManifestLoader] 开始加载持久化页面")
+        NSLog("[SYNC] [PersistentManifestLoader] 开始加载持久化页面")
         NSLog("   URL: %@", url.absoluteString)
         updateState(.fetchingManifest)
 
         // 1. 下载 manifest.json
-        NSLog("📥 [PersistentManifestLoader] 步骤 1: 下载 manifest.json")
+        NSLog("[RECV] [PersistentManifestLoader] 步骤 1: 下载 manifest.json")
         let manifest = try await fetchManifest(from: url)
-        NSLog("✅ [PersistentManifestLoader] manifest.json 下载成功")
+        NSLog("[OK] [PersistentManifestLoader] manifest.json 下载成功")
         NSLog("   persistent: \(manifest.persistent)")
         NSLog("   资源数量: \(manifest.resources.count)")
         NSLog("   版本: \(manifest.resolvedVersion)")
@@ -164,7 +164,7 @@ public class PersistentManifestLoader: NSObject {
 
         // 2. 检查是否启用持久化
         guard manifest.persistent else {
-            NSLog("❌ [PersistentManifestLoader] persistent=false，取消持久化加载")
+            NSLog("[FAIL] [PersistentManifestLoader] persistent=false，取消持久化加载")
             updateState(.failed(LoaderError.persistentModeDisabled))
             throw LoaderError.persistentModeDisabled
         }
@@ -182,9 +182,9 @@ public class PersistentManifestLoader: NSObject {
         NSLog("   缓存目录: %@", cacheDir.path)
 
         // 4. 确保缓存根目录存在（不创建具体的 cacheDir，等原子更新时创建）
-        NSLog("📁 [PersistentManifestLoader] 步骤 3: 确保缓存根目录存在")
+        NSLog("[DIR] [PersistentManifestLoader] 步骤 3: 确保缓存根目录存在")
         createCacheDirectoryIfNeeded()
-        NSLog("✅ [PersistentManifestLoader] 缓存根目录就绪")
+        NSLog("[OK] [PersistentManifestLoader] 缓存根目录就绪")
 
         // 4b. 清理上次失败残留的临时/备份目录
         cleanupStaleDirectories(for: cacheID)
@@ -195,7 +195,7 @@ public class PersistentManifestLoader: NSObject {
 
         if FileManager.default.fileExists(atPath: htmlPath.path),
            FileManager.default.fileExists(atPath: manifestPath.path) {
-            NSLog("♻️ [PersistentManifestLoader] 发现完整缓存，跳过下载")
+            NSLog("[RECYCLE] [PersistentManifestLoader] 发现完整缓存，跳过下载")
 
             if let html = try? String(contentsOfFile: htmlPath.path, encoding: .utf8) {
                 var finalManifest: Manifest
@@ -240,13 +240,13 @@ public class PersistentManifestLoader: NSObject {
                     )
                 }
 
-                NSLog("✅ [PersistentManifestLoader] 从缓存加载完成")
+                NSLog("[OK] [PersistentManifestLoader] 从缓存加载完成")
                 return
             }
         }
 
         // 6. 没有缓存，显示进度页面
-        NSLog("📦 [PersistentManifestLoader] 未缓存，开始下载资源")
+        NSLog("[CACHE] [PersistentManifestLoader] 未缓存，开始下载资源")
         let totalResources = manifest.resources.count
 
         var modal: FullScreenProgressViewController?
@@ -266,7 +266,7 @@ public class PersistentManifestLoader: NSObject {
 
         do {
             try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
-            NSLog("📁 [PersistentManifestLoader] 创建临时下载目录: %@", tempDir.lastPathComponent)
+            NSLog("[DIR] [PersistentManifestLoader] 创建临时下载目录: %@", tempDir.lastPathComponent)
 
             // 8. 下载 HTML
             updateState(.downloadingResources(current: 0, total: totalResources))
@@ -291,14 +291,14 @@ public class PersistentManifestLoader: NSObject {
             if fileManager.fileExists(atPath: cacheDir.path) {
                 try? fileManager.removeItem(at: backupDir)
                 try fileManager.moveItem(at: cacheDir, to: backupDir)
-                NSLog("📦 [PersistentManifestLoader] 备份旧缓存 → %@", backupDir.lastPathComponent)
+                NSLog("[CACHE] [PersistentManifestLoader] 备份旧缓存 → %@", backupDir.lastPathComponent)
             }
 
             try fileManager.moveItem(at: tempDir, to: cacheDir)
-            NSLog("✅ [PersistentManifestLoader] 原子更新: 临时目录 → 缓存目录")
+            NSLog("[OK] [PersistentManifestLoader] 原子更新: 临时目录 → 缓存目录")
 
             try? fileManager.removeItem(at: backupDir)
-            NSLog("✅ [PersistentManifestLoader] 原子更新完成: 缓存已替换")
+            NSLog("[OK] [PersistentManifestLoader] 原子更新完成: 缓存已替换")
 
             // 12. 注册到 ManifestStore（用于首页展示）
             var finalManifest: Manifest
@@ -348,20 +348,20 @@ public class PersistentManifestLoader: NSObject {
         } catch {
             // 下载失败 — 清理临时目录
             try? fileManager.removeItem(at: tempDir)
-            NSLog("❌ [PersistentManifestLoader] 下载失败，清理临时目录，回退: %@", error.localizedDescription)
+            NSLog("[FAIL] [PersistentManifestLoader] 下载失败，清理临时目录，回退: %@", error.localizedDescription)
 
             // 如果旧备份存在，恢复备份
             if fileManager.fileExists(atPath: backupDir.path) {
                 try? fileManager.removeItem(at: cacheDir)
                 try? fileManager.moveItem(at: backupDir, to: cacheDir)
-                NSLog("♻️ [PersistentManifestLoader] 已恢复旧版本备份")
+                NSLog("[RECYCLE] [PersistentManifestLoader] 已恢复旧版本备份")
             }
 
             // 尝试从旧缓存加载（如果有）
             let htmlPath = cacheDir.appendingPathComponent("index.html")
             if fileManager.fileExists(atPath: htmlPath.path),
                let html = try? String(contentsOfFile: htmlPath.path, encoding: .utf8) {
-                NSLog("♻️ [PersistentManifestLoader] 使用旧版本缓存（不受更新失败影响）")
+                NSLog("[RECYCLE] [PersistentManifestLoader] 使用旧版本缓存（不受更新失败影响）")
 
                 await registerManifest(manifest, for: cacheID, in: webView)
                 try await loadHTML(html, cacheID: cacheID, in: webView)
@@ -419,19 +419,19 @@ public class PersistentManifestLoader: NSObject {
         // 崩溃恢复: 如果 cacheDir 不存在但 backupDir 存在，说明在 swap 过程中崩溃了
         if !fileManager.fileExists(atPath: cacheDir.path) && fileManager.fileExists(atPath: backupDir.path) {
             try? fileManager.moveItem(at: backupDir, to: cacheDir)
-            NSLog("🧹 [PersistentManifestLoader] 恢复崩溃备份: %@", cacheID)
+            NSLog("[CLEAN] [PersistentManifestLoader] 恢复崩溃备份: %@", cacheID)
         }
 
         // 清理残留的临时目录
         for url in contents where url.lastPathComponent.hasPrefix(tempPrefix) {
             try? fileManager.removeItem(at: url)
-            NSLog("🧹 [PersistentManifestLoader] 清理残留临时目录: %@", url.lastPathComponent)
+            NSLog("[CLEAN] [PersistentManifestLoader] 清理残留临时目录: %@", url.lastPathComponent)
         }
 
         // 清理残留的备份目录
         if fileManager.fileExists(atPath: backupDir.path) {
             try? fileManager.removeItem(at: backupDir)
-            NSLog("🧹 [PersistentManifestLoader] 清理残留备份目录")
+            NSLog("[CLEAN] [PersistentManifestLoader] 清理残留备份目录")
         }
     }
 
@@ -470,7 +470,7 @@ public class PersistentManifestLoader: NSObject {
         let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
 
         try? FileManager.default.removeItem(at: cacheDir)
-        StructuredLogger.shared.debug("🗑️ [PersistentManifestLoader] Cleared cache for: \(url.absoluteString)", category: .cache)
+        StructuredLogger.shared.debug("[DEL] [PersistentManifestLoader] Cleared cache for: \(url.absoluteString)", category: .cache)
     }
 
     /// 清除所有缓存
@@ -479,7 +479,7 @@ public class PersistentManifestLoader: NSObject {
             guard let self = self else { return }
             try? FileManager.default.removeItem(at: self.cacheDirectory)
             self.createCacheDirectoryIfNeeded()
-            StructuredLogger.shared.debug("🗑️ [PersistentManifestLoader] Cleared all cache (async)", category: .cache)
+            StructuredLogger.shared.debug("[DEL] [PersistentManifestLoader] Cleared all cache (async)", category: .cache)
         }
     }
 

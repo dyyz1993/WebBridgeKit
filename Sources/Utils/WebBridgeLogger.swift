@@ -33,10 +33,10 @@ public class WebBridgeLogger {
 
         var emoji: String {
             switch self {
-            case .debug: return "🔍"
-            case .info: return "ℹ️"
-            case .warning: return "⚠️"
-            case .error: return "❌"
+            case .debug: return "[SEARCH]"
+            case .info: return "[INFO]"
+            case .warning: return "[WARN]"
+            case .error: return "[FAIL]"
             }
         }
 
@@ -159,30 +159,30 @@ public class WebBridgeLogger {
     public func logRequest(action: String, params: [String: Any], module: String) -> WebBridgeLogToken {
         let token = WebBridgeLogToken(action: action, input: params, module: module)
         guard isEnabled else { return token }
-        logger.info("📤 [\(module)] Request: \(action)")
+        logger.info("[SEND] [\(module)] Request: \(action)")
         return token
     }
 
     /// 记录请求日志（使用已有 Token）
     public func logRequest(token: WebBridgeLogToken) {
         guard isEnabled else { return }
-        logger.info("📤 [\(token.module)] Request: \(token.action)")
+        logger.info("[SEND] [\(token.module)] Request: \(token.action)")
     }
 
     /// 记录响应日志
     public func logResponse(token: WebBridgeLogToken, result: Any?, error: Error?) {
         guard isEnabled else { return }
         if let error = error {
-            logger.error("❌ [\(token.module)] Response Error: \(error.localizedDescription)")
+            logger.error("[FAIL] [\(token.module)] Response Error: \(error.localizedDescription)")
         } else {
-            logger.info("✅ [\(token.module)] Response Success")
+            logger.info("[OK] [\(token.module)] Response Success")
         }
     }
 
     /// 记录事件日志
     public func logEvent(event: String, data: Any, module: String) {
         guard isEnabled else { return }
-        logger.info("📡 [\(module)] Event: \(event)")
+        logger.info("[SATELLITE] [\(module)] Event: \(event)")
     }
 }
 

@@ -201,22 +201,22 @@ private final class HUDContainerView: UIView {
     }
 
     private func setupViews() {
-        backgroundView.backgroundColor = UIColor(white: 0, alpha: 0.8)
+        backgroundView.backgroundColor = ThemeTokens.Color.overlayStrong
         backgroundView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         backgroundView.layer.masksToBounds = true
 
         contentView.backgroundColor = .clear
 
         iconView.contentMode = .scaleAspectFit
-        iconView.tintColor = .white
+        iconView.tintColor = ThemeTokens.Color.textOnColor
 
         statusLabel.font = UIFontMetrics(forTextStyle: .subheadline).scaledFont(for: .systemFont(ofSize: 14, weight: .medium))
-        statusLabel.textColor = .white
+        statusLabel.textColor = ThemeTokens.Color.textOnColor
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
 
         progressView.progressTintColor = ThemeTokens.Color.primary
-        progressView.trackTintColor = UIColor.white.withAlphaComponent(0.3)
+        progressView.trackTintColor = ThemeTokens.Color.overlaySoft
         progressView.layer.cornerRadius = ThemeTokens.CornerRadius.xs
         progressView.clipsToBounds = true
 
@@ -292,7 +292,7 @@ private final class HUDContainerView: UIView {
     private func configureActivityIndicator() {
         removeActivityIndicator()
         let indicator = UIActivityIndicatorView(style: .large)
-        indicator.color = .white
+        indicator.color = ThemeTokens.Color.textOnColor
         indicator.startAnimating()
         indicator.translatesAutoresizingMaskIntoConstraints = false
 

@@ -387,7 +387,7 @@ public class AppIconGenerator {
         text: String,
         size: CGSize = CGSize(width: 64, height: 64),
         backgroundColor: UIColor = ThemeTokens.Color.primary,
-        textColor: UIColor = .white
+        textColor: UIColor = ThemeTokens.Color.onPrimary
     ) throws -> UIImage {
         // 验证文本
         let displayText = extractFirstCharacter(from: text)

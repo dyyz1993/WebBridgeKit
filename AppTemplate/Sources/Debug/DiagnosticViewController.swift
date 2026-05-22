@@ -17,7 +17,7 @@ class DiagnosticViewController: UIViewController {
         view.backgroundColor = .systemBackground
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "🔄 Run Checks",
+            title: "[SYNC] Run Checks",
             style: .plain,
             target: self,
             action: #selector(runChecks)
@@ -29,7 +29,7 @@ class DiagnosticViewController: UIViewController {
         textView.translatesAutoresizingMaskIntoConstraints = false
         
         let copyButton = UIButton(type: .system)
-        copyButton.setTitle("📋 Copy Report", for: .normal)
+        copyButton.setTitle("[LIST] Copy Report", for: .normal)
         copyButton.translatesAutoresizingMaskIntoConstraints = false
         copyButton.addTarget(self, action: #selector(copyReport), for: .touchUpInside)
         

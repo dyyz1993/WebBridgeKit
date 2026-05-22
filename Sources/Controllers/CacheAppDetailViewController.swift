@@ -44,7 +44,7 @@ public class CacheAppDetailViewController: UIViewController {
         containerView.backgroundColor = ThemeTokens.Color.surface
         containerView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         containerView.layer.masksToBounds = false
-        let shadow = ThemeTokens.Shadows.Card
+        let shadow = ThemeTokens.Shadows.card
         containerView.layer.shadowColor = UIColor.black.cgColor
         containerView.layer.shadowOpacity = Float(shadow.opacity)
         containerView.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
@@ -57,7 +57,7 @@ public class CacheAppDetailViewController: UIViewController {
         titleLabel.tag = 200
 
         let startURLLabel = UILabel()
-        startURLLabel.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+        startURLLabel.font = ThemeTokens.Typography.monospaceBody
         startURLLabel.textColor = ThemeTokens.Color.text
         startURLLabel.numberOfLines = 0
         startURLLabel.tag = 201
@@ -76,18 +76,18 @@ public class CacheAppDetailViewController: UIViewController {
         openButton.setTitle("在 WebView 中打开", for: .normal)
         openButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
         openButton.backgroundColor = ThemeTokens.Color.primary
-        openButton.setTitleColor(.white, for: .normal)
-        openButton.layer.cornerRadius = 8
+        openButton.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
+        openButton.layer.cornerRadius = ThemeTokens.CornerRadius.md
         openButton.tag = 204
 
         let infoStackView = UIStackView(arrangedSubviews: [startURLLabel, displayModeLabel, themeColorLabel])
         infoStackView.axis = .vertical
-        infoStackView.spacing = 8
+        infoStackView.spacing = ThemeTokens.Spacing.sm
         infoStackView.alignment = .leading
 
         let mainStackView = UIStackView(arrangedSubviews: [titleLabel, infoStackView, openButton])
         mainStackView.axis = .vertical
-        mainStackView.spacing = 12
+        mainStackView.spacing = ThemeTokens.Spacing.md
 
         containerView.addSubview(mainStackView)
         view.addSubview(containerView)
@@ -118,7 +118,7 @@ public class CacheAppDetailViewController: UIViewController {
         container.backgroundColor = ThemeTokens.Color.surface
         container.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         container.layer.masksToBounds = false
-        let shadow = ThemeTokens.Shadows.Card
+        let shadow = ThemeTokens.Shadows.card
         container.layer.shadowColor = UIColor.black.cgColor
         container.layer.shadowOpacity = Float(shadow.opacity)
         container.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
@@ -132,21 +132,21 @@ public class CacheAppDetailViewController: UIViewController {
         iconImageView.tag = 100
 
         let appIDLabel = UILabel()
-        appIDLabel.font = UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)
+        appIDLabel.font = ThemeTokens.Typography.monospaceTitle
         appIDLabel.textColor = ThemeTokens.Color.text
         appIDLabel.numberOfLines = 0
         appIDLabel.textAlignment = .center
         appIDLabel.tag = 101
 
         let nameLabel = UILabel()
-        nameLabel.font = ThemeTokens.Typography.callout
+        nameLabel.font = ThemeTokens.Typography.body
         nameLabel.textColor = ThemeTokens.Color.textSecondary
         nameLabel.numberOfLines = 1
         nameLabel.textAlignment = .center
         nameLabel.tag = 102
 
         let infoLabel = UILabel()
-        infoLabel.font = ThemeTokens.Typography.footnote
+        infoLabel.font = ThemeTokens.Typography.metadata
         infoLabel.textColor = ThemeTokens.Color.textSecondary
         infoLabel.numberOfLines = 0
         infoLabel.textAlignment = .center
@@ -154,7 +154,7 @@ public class CacheAppDetailViewController: UIViewController {
 
         let stackView = UIStackView(arrangedSubviews: [iconImageView, appIDLabel, nameLabel, infoLabel])
         stackView.axis = .vertical
-        stackView.spacing = 12
+        stackView.spacing = ThemeTokens.Spacing.md
         stackView.alignment = .center
 
         container.addSubview(stackView)
@@ -391,7 +391,7 @@ public class CachePageCell: UITableViewCell {
 
     private let indexLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)
+        label.font = ThemeTokens.Typography.monospaceDisplay
         label.textColor = ThemeTokens.Color.primary
         label.textAlignment = .center
         label.widthAnchor.constraint(equalToConstant: 40).isActive = true
@@ -400,7 +400,7 @@ public class CachePageCell: UITableViewCell {
 
     private let pageKeyLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium)
+        label.font = ThemeTokens.Typography.monospaceLargeMedium
         label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 2
         return label

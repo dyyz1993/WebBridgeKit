@@ -46,7 +46,7 @@ extension WebViewController {
             cacheSize: Int64(cacheInfo.totalCompressedSize)
         )
 
-        StructuredLogger.shared.debug("🔍 [CacheDebug] Navigation committed - URL: \(url.absoluteString)", category: .cache)
+        StructuredLogger.shared.debug("[SEARCH] [CacheDebug] Navigation committed - URL: \(url.absoluteString)", category: .cache)
         StructuredLogger.shared.debug("   - Cache Status: \(cacheStatus.description)", category: .cache)
         StructuredLogger.shared.debug("   - Cached Resources: \(resourceCount)", category: .cache)
         #endif
@@ -56,7 +56,7 @@ extension WebViewController {
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         #if DEBUG
         if let url = webView.url {
-            StructuredLogger.shared.info("✅ [CacheDebug] Page loaded: \(url.absoluteString)", category: .cache)
+            StructuredLogger.shared.info("[OK] [CacheDebug] Page loaded: \(url.absoluteString)", category: .cache)
         }
         #endif
     }
@@ -71,7 +71,7 @@ extension WebViewController {
                 resourceCount: 0,
                 cacheSize: 0
             )
-            StructuredLogger.shared.error("❌ [CacheDebug] Navigation failed: \(url.absoluteString)", category: .cache)
+            StructuredLogger.shared.error("[FAIL] [CacheDebug] Navigation failed: \(url.absoluteString)", category: .cache)
             StructuredLogger.shared.error("   - Error: \(error.localizedDescription)", category: .ui)
         }
         #endif
@@ -87,7 +87,7 @@ extension WebViewController {
                 resourceCount: 0,
                 cacheSize: 0
             )
-            StructuredLogger.shared.error("❌ [CacheDebug] Provisional navigation failed: \(url.absoluteString)", category: .cache)
+            StructuredLogger.shared.error("[FAIL] [CacheDebug] Provisional navigation failed: \(url.absoluteString)", category: .cache)
             StructuredLogger.shared.error("   - Error: \(error.localizedDescription)", category: .ui)
         }
         #endif

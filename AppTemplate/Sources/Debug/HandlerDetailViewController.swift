@@ -50,14 +50,14 @@ class HandlerDetailViewController: UIViewController {
         stack.addArrangedSubview(descLabel)
         
         let infoLabel = UILabel()
-        infoLabel.text = "\(meta.category.emoji) \(meta.category.displayName) · action: \(meta.action)"
+        infoLabel.text = "\(meta.category.displayName) · action: \(meta.action)"
         infoLabel.textColor = ThemeTokens.Color.textTertiary
         infoLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
         stack.addArrangedSubview(infoLabel)
         
         if !meta.requiredPermissions.isEmpty {
             let permLabel = UILabel()
-            permLabel.text = "🔐 Required: \(meta.requiredPermissions.joined(separator: ", "))"
+            permLabel.text = "Required: \(meta.requiredPermissions.joined(separator: ", "))"
             permLabel.textColor = ThemeTokens.Color.warning
             stack.addArrangedSubview(permLabel)
         }
@@ -76,10 +76,10 @@ class HandlerDetailViewController: UIViewController {
         }
         
         let button = UIButton(type: .system)
-        button.setTitle("▶️ Execute", for: .normal)
+        button.setTitle("Execute", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         button.backgroundColor = ThemeTokens.Color.primary
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.textOnColor, for: .normal)
         button.layer.cornerRadius = 10
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
         button.addTarget(self, action: #selector(execute), for: .touchUpInside)
@@ -99,7 +99,7 @@ class HandlerDetailViewController: UIViewController {
         stack.addArrangedSubview(resultTextView)
         
         let copyButton = UIButton(type: .system)
-        copyButton.setTitle("📋 Copy Result", for: .normal)
+        copyButton.setTitle("Copy Result", for: .normal)
         copyButton.addTarget(self, action: #selector(copyResult), for: .touchUpInside)
         stack.addArrangedSubview(copyButton)
         
@@ -171,9 +171,9 @@ class HandlerDetailViewController: UIViewController {
             guard let self = self else { return }
             
             let result = """
-            ✅ Handler: \(self.meta.action)
-            📋 Category: \(self.meta.category.displayName)
-            📥 Parameters: \(params)
+            Handler: \(self.meta.action)
+            Category: \(self.meta.category.displayName)
+            Parameters: \(params)
             
             Note: Full execution requires an active WebView context.
             This debug panel shows the handler metadata and parameter validation.

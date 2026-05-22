@@ -69,17 +69,17 @@ class LogViewerViewController: UIViewController {
         
         let errorButton = UIButton(type: .system)
         errorButton.setTitle("Errors", for: .normal)
-        errorButton.tintColor = .systemRed
+        errorButton.tintColor = ThemeTokens.Color.error
         errorButton.addTarget(self, action: #selector(filterErrors), for: .touchUpInside)
         stack.addArrangedSubview(errorButton)
         
         let copyButton = UIButton(type: .system)
-        copyButton.setTitle("📋 Copy All", for: .normal)
+        copyButton.setTitle("[LIST] Copy All", for: .normal)
         copyButton.addTarget(self, action: #selector(copyLogs), for: .touchUpInside)
         stack.addArrangedSubview(copyButton)
         
         let exportButton = UIButton(type: .system)
-        exportButton.setTitle("📤 Export JSON", for: .normal)
+        exportButton.setTitle("[SEND] Export JSON", for: .normal)
         exportButton.addTarget(self, action: #selector(exportJSON), for: .touchUpInside)
         stack.addArrangedSubview(exportButton)
         
@@ -106,7 +106,7 @@ class LogViewerViewController: UIViewController {
         filterCategory = nil
         logs = StructuredLogger.shared.query(minLevel: .error, limit: 200)
         let text = logs.map { $0.consoleString }.joined(separator: "\n")
-        textView.text = text.isEmpty ? "No errors! 🎉" : text
+        textView.text = text.isEmpty ? "No errors! [EMOJI]" : text
     }
     
     @objc private func copyLogs() {

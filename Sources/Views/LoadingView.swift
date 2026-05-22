@@ -38,7 +38,7 @@ public class LoadingView: UIView {
 
     private let messageLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
+        label.font = ThemeTokens.Typography.metadata
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -47,7 +47,7 @@ public class LoadingView: UIView {
 
     private let detailLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption1
+        label.font = ThemeTokens.Typography.caption
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -75,7 +75,7 @@ public class LoadingView: UIView {
         // 默认隐藏，避免显示白色面板
         isHidden = true
         alpha = 0
-        backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        backgroundColor = ThemeTokens.Color.scrim
 
         addSubview(containerView)
         containerView.addSubview(activityIndicator)

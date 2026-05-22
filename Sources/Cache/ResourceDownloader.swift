@@ -123,7 +123,7 @@ public class ResourceDownloader {
         // 写入文件
         try finalData.write(to: localPath)
 
-        WebBridgeLogger.shared.log(.debug, "✅ Downloaded: \(resource.originalURL.lastPathComponent) -> \(subdir)/\(filename)")
+        WebBridgeLogger.shared.log(.debug, "[OK] Downloaded: \(resource.originalURL.lastPathComponent) -> \(subdir)/\(filename)")
 
         return (subdir + "/" + filename, Int64(finalData.count))
     }

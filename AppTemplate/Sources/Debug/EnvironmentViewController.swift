@@ -17,7 +17,7 @@ class EnvironmentViewController: UIViewController {
         view.backgroundColor = .systemBackground
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "📋 Copy",
+            title: "[LIST] Copy",
             style: .plain,
             target: self,
             action: #selector(copyInfo)

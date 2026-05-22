@@ -45,10 +45,10 @@ extension WebCacheDebugPanelViewController {
         alert.addAction(UIAlertAction(title: "重置", style: .destructive) { _ in
             let success = PageCacheRuleManager.shared.resetToPresetRules()
             if success {
-                WebBridgeLogger.shared.info("✅ 规则已重置为预设规则")
+                WebBridgeLogger.shared.info("[OK] 规则已重置为预设规则")
                 self.loadData()
             } else {
-                WebBridgeLogger.shared.error("❌ 规则重置失败")
+                WebBridgeLogger.shared.error("[FAIL] 规则重置失败")
             }
         })
 
@@ -57,7 +57,7 @@ extension WebCacheDebugPanelViewController {
 
     @objc func testCache() {
         guard let testURL = URL(string: "https://example.com") else {
-            StructuredLogger.shared.error("❌ [DebugPanel] Failed to create test URL", category: .navigation)
+            StructuredLogger.shared.error("[FAIL] [DebugPanel] Failed to create test URL", category: .navigation)
             return
         }
         let testRule = PageCacheRule(
@@ -66,47 +66,47 @@ extension WebCacheDebugPanelViewController {
             excludePatterns: []
         )
 
-        StructuredLogger.shared.debug("🧪 ========================================", category: .ui)
-        StructuredLogger.shared.debug("🧪 开始测试缓存功能...", category: .ui)
-        StructuredLogger.shared.debug("📝 测试URL: \(testURL.absoluteString)", category: .navigation)
-        StructuredLogger.shared.debug("📝 测试规则: \(testRule.name)", category: .ui)
-        StructuredLogger.shared.debug("📝 测试规则ID: \(testRule.id)", category: .ui)
-        StructuredLogger.shared.debug("📝 测试规则模式: \(testRule.includePatterns)", category: .ui)
-        StructuredLogger.shared.debug("🧪 ========================================", category: .ui)
+        StructuredLogger.shared.debug("[TEST] ========================================", category: .ui)
+        StructuredLogger.shared.debug("[TEST] 开始测试缓存功能...", category: .ui)
+        StructuredLogger.shared.debug("[NOTE] 测试URL: \(testURL.absoluteString)", category: .navigation)
+        StructuredLogger.shared.debug("[NOTE] 测试规则: \(testRule.name)", category: .ui)
+        StructuredLogger.shared.debug("[NOTE] 测试规则ID: \(testRule.id)", category: .ui)
+        StructuredLogger.shared.debug("[NOTE] 测试规则模式: \(testRule.includePatterns)", category: .ui)
+        StructuredLogger.shared.debug("[TEST] ========================================", category: .ui)
 
-        WebBridgeLogger.shared.info("🧪 开始测试缓存功能...")
-        WebBridgeLogger.shared.info("📝 测试URL: \(testURL.absoluteString)")
-        WebBridgeLogger.shared.info("📝 测试规则: \(testRule.name), ID: \(testRule.id)")
+        WebBridgeLogger.shared.info("[TEST] 开始测试缓存功能...")
+        WebBridgeLogger.shared.info("[NOTE] 测试URL: \(testURL.absoluteString)")
+        WebBridgeLogger.shared.info("[NOTE] 测试规则: \(testRule.name), ID: \(testRule.id)")
 
         WebPageOfflineCacheManager.shared.cachePage(
             url: testURL,
             rule: testRule
         ) { progress in
             let percent = Int(progress * 100)
-            StructuredLogger.shared.debug("📊 缓存进度: \(percent)%", category: .ui)
-            WebBridgeLogger.shared.info("📊 缓存进度: \(percent)%")
+            StructuredLogger.shared.debug("[STATS] 缓存进度: \(percent)%", category: .ui)
+            WebBridgeLogger.shared.info("[STATS] 缓存进度: \(percent)%")
         } completion: { [weak self] result in
             guard let self = self else { return }
             switch result {
             case .success(let pageInfo):
-                StructuredLogger.shared.info("✅ ========================================", category: .ui)
-                StructuredLogger.shared.info("✅ 测试缓存成功！", category: .ui)
+                StructuredLogger.shared.info("[OK] ========================================", category: .ui)
+                StructuredLogger.shared.info("[OK] 测试缓存成功！", category: .ui)
                 StructuredLogger.shared.debug("- URL: \(pageInfo.url)", category: .navigation)
                 StructuredLogger.shared.debug("- 标题: \(pageInfo.title)", category: .ui)
                 StructuredLogger.shared.debug("- 资源数: \(pageInfo.resourceCount)", category: .ui)
                 StructuredLogger.shared.debug("- 大小: \(pageInfo.formattedSize)", category: .ui)
                 StructuredLogger.shared.debug("- 规则ID: \(pageInfo.ruleId)", category: .ui)
                 StructuredLogger.shared.debug("- 规则名称: \(pageInfo.ruleName)", category: .ui)
-                StructuredLogger.shared.info("✅ ========================================", category: .ui)
+                StructuredLogger.shared.info("[OK] ========================================", category: .ui)
 
                 let allCachedPages = WebPageOfflineCacheManager.shared.getCachedPages()
-                StructuredLogger.shared.debug("📦 数据库中的缓存页面数量: \(allCachedPages.count)", category: .cache)
+                StructuredLogger.shared.debug("[CACHE] 数据库中的缓存页面数量: \(allCachedPages.count)", category: .cache)
                 for page in allCachedPages {
                     StructuredLogger.shared.debug("  - \(page.url), ruleId: \(page.ruleId)", category: .navigation)
                 }
 
                 WebBridgeLogger.shared.info("""
-                ✅ 测试缓存成功！
+                [OK] 测试缓存成功！
                 - URL: \(pageInfo.url)
                 - 标题: \(pageInfo.title)
                 - 资源数: \(pageInfo.resourceCount)
@@ -118,10 +118,10 @@ extension WebCacheDebugPanelViewController {
                     self.loadData()
                 }
             case .failure(let error):
-                StructuredLogger.shared.error("❌ ========================================", category: .ui)
-                StructuredLogger.shared.error("❌ 测试缓存失败: \(error.localizedDescription)", category: .ui)
-                StructuredLogger.shared.error("❌ ========================================", category: .ui)
-                WebBridgeLogger.shared.error("❌ 测试缓存失败: \(error.localizedDescription)")
+                StructuredLogger.shared.error("[FAIL] ========================================", category: .ui)
+                StructuredLogger.shared.error("[FAIL] 测试缓存失败: \(error.localizedDescription)", category: .ui)
+                StructuredLogger.shared.error("[FAIL] ========================================", category: .ui)
+                WebBridgeLogger.shared.error("[FAIL] 测试缓存失败: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     let alert = UIAlertController(
                         title: "测试失败",

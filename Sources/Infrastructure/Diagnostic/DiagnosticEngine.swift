@@ -20,7 +20,7 @@ public struct HealthCheckResult {
         self.details = details
     }
 
-    var emoji: String { isHealthy ? "✅" : "❌" }
+    var emoji: String { isHealthy ? "[OK]" : "[FAIL]" }
 }
 
 /// 诊断引擎 - 一键全检、错误上下文捕获、环境信息

@@ -19,13 +19,13 @@ extension PersistentManifestLoader {
         }
 
         let manifestURL = baseURL.appendingPathComponent(manifestFileName)
-        StructuredLogger.shared.debug("📡 [PersistentManifestLoader] 请求 manifest.json", category: .handler)
+        StructuredLogger.shared.debug("[SATELLITE] [PersistentManifestLoader] 请求 manifest.json", category: .handler)
         StructuredLogger.shared.debug("   完整 URL: \(manifestURL.absoluteString)", category: .handler)
 
         return try await withCheckedThrowingContinuation { continuation in
             let task = urlSession.dataTask(with: manifestURL) { data, response, error in
                 if let error = error {
-                    StructuredLogger.shared.error("❌ [PersistentManifestLoader] 请求失败 (网络错误)", category: .handler)
+                    StructuredLogger.shared.error("[FAIL] [PersistentManifestLoader] 请求失败 (网络错误)", category: .handler)
                     StructuredLogger.shared.error("   错误: \(error)", category: .handler)
                     if let urlError = error as? URLError {
                         StructuredLogger.shared.error("   URLError 代码: \(urlError.code.rawValue)", category: .handler)
@@ -39,15 +39,15 @@ extension PersistentManifestLoader {
                 }
 
                 guard let data = data else {
-                    StructuredLogger.shared.error("❌ [PersistentManifestLoader] 数据为空", category: .handler)
+                    StructuredLogger.shared.error("[FAIL] [PersistentManifestLoader] 数据为空", category: .handler)
                     continuation.resume(throwing: LoaderError.manifestNotFound)
                     return
                 }
 
                 if let httpResponse = response as? HTTPURLResponse {
-                    StructuredLogger.shared.debug("📊 [PersistentManifestLoader] 响应状态码: \(httpResponse.statusCode)", category: .handler)
+                    StructuredLogger.shared.debug("[STATS] [PersistentManifestLoader] 响应状态码: \(httpResponse.statusCode)", category: .handler)
                     if httpResponse.statusCode != 200 {
-                        StructuredLogger.shared.error("❌ [PersistentManifestLoader] HTTP 错误: \(httpResponse.statusCode)", category: .handler)
+                        StructuredLogger.shared.error("[FAIL] [PersistentManifestLoader] HTTP 错误: \(httpResponse.statusCode)", category: .handler)
                         continuation.resume(throwing: LoaderError.htmlDownloadFailed(NSError(
                             domain: "HTTP",
                             code: httpResponse.statusCode,
@@ -59,10 +59,10 @@ extension PersistentManifestLoader {
 
                 do {
                     let manifest = try JSONDecoder().decode(WebManifest.self, from: data)
-                    StructuredLogger.shared.info("✅ [PersistentManifestLoader] manifest.json 解析成功", category: .handler)
+                    StructuredLogger.shared.info("[OK] [PersistentManifestLoader] manifest.json 解析成功", category: .handler)
                     continuation.resume(returning: manifest)
                 } catch {
-                    StructuredLogger.shared.error("❌ [PersistentManifestLoader] JSON 解析失败", category: .handler)
+                    StructuredLogger.shared.error("[FAIL] [PersistentManifestLoader] JSON 解析失败", category: .handler)
                     StructuredLogger.shared.error("   解析错误: \(error)", category: .handler)
                     if let jsonString = String(data: data, encoding: .utf8) {
                         StructuredLogger.shared.debug("   原始 JSON (前 500 字符):", category: .handler)
@@ -226,6 +226,6 @@ extension PersistentManifestLoader {
         }
 
         ManifestStore.shared.saveManifest(coreManifest, for: cacheID)
-        NSLog("✅ [PersistentManifestLoader] 已同步更新 ManifestStore: %@", cacheID)
+        NSLog("[OK] [PersistentManifestLoader] 已同步更新 ManifestStore: %@", cacheID)
     }
 }

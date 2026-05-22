@@ -84,7 +84,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
         loadStartTime = nil
 
         StructuredLogger.shared.info("Page loaded - URL: \(url.absoluteString), Title: \(webView.title ?? "nil"), Load time: \(String(format: "%.3f", duration))s", category: .navigation)
-        WebBridgeLogger.shared.info("📄 Page loaded: \(url.absoluteString)")
+        WebBridgeLogger.shared.info("[DOC] Page loaded: \(url.absoluteString)")
 
         checkURLParameters(url)
 
@@ -112,11 +112,11 @@ extension WebBrowserViewController: WKNavigationDelegate {
         let (shouldCache, matchedRule) = PageCacheRuleManager.shared.shouldCache(url: url)
 
         StructuredLogger.shared.debug("Cache check - shouldCache: \(shouldCache), matchedRule: \(matchedRule?.name ?? "nil")", category: .cache)
-        WebBridgeLogger.shared.info("🔍 Cache check - shouldCache: \(shouldCache), matchedRule: \(matchedRule?.name ?? "nil")")
+        WebBridgeLogger.shared.info("[SEARCH] Cache check - shouldCache: \(shouldCache), matchedRule: \(matchedRule?.name ?? "nil")")
 
         if shouldCache, let rule = matchedRule {
             StructuredLogger.shared.debug("Triggered auto-cache with rule: \(rule.name)", category: .cache)
-            WebBridgeLogger.shared.info("🎯 URL '\(url.absoluteString)' matches page cache rule: \(rule.name)")
+            WebBridgeLogger.shared.info("[TARGET] URL '\(url.absoluteString)' matches page cache rule: \(rule.name)")
 
             autoCachePage(url: url, rule: rule)
         }
@@ -137,7 +137,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
             case .success(let pageInfo):
                 StructuredLogger.shared.info("Auto-cache success - URL: \(url.absoluteString), Rule: \(rule.name), Title: \(pageInfo.title), Resources: \(pageInfo.resourceCount), Size: \(pageInfo.formattedSize)", category: .cache)
                 WebBridgeLogger.shared.info("""
-                ✅ Page cached by rule '\(rule.name)':
+                [OK] Page cached by rule '\(rule.name)':
                 - URL: \(url.absoluteString)
                 - Title: \(pageInfo.title)
                 - Resources: \(pageInfo.resourceCount)
@@ -147,7 +147,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
             case .failure(let error):
                 StructuredLogger.shared.error("Auto-cache failed - URL: \(url.absoluteString), Error: \(error.localizedDescription)", category: .cache)
-                WebBridgeLogger.shared.error("❌ Failed to cache page: \(error.localizedDescription)")
+                WebBridgeLogger.shared.error("[FAIL] Failed to cache page: \(error.localizedDescription)")
             }
         }
     }
@@ -251,11 +251,11 @@ extension WebBrowserViewController: WKNavigationDelegate {
                 panel.style.cssText = 'position:fixed;top:10px;right:10px;width:300px;max-height:80vh;background:rgba(220,53,69,0.95);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-family:-apple-system,system-ui,sans-serif;font-size:12px;color:#fff;z-index:99999;overflow:hidden;';
                 panel.innerHTML = `
                     <div style="padding:15px;border-bottom:1px solid rgba(255,255,255,255,0.1);">
-                        <strong>🔍 WebBridge 调试模式</strong>
+                        <strong>[SEARCH] WebBridge 调试模式</strong>
                         <button onclick="navigator.clipboard.writeText('URL: \\(url.absoluteString)\\n错误: 页面加载失败')" style="float:right;background:#4CAF50;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">复制信息</button>
                     </div>
                     <div style="padding:15px;">
-                        <div style="color:#ffc107;margin-bottom:10px;">⚠️ 检测到白屏</div>
+                        <div style="color:#ffc107;margin-bottom:10px;">[WARN] 检测到白屏</div>
                         <div style="font-size:11px;color:#ddd;">页面标题为空或 about:blank</div>
                     </div>
                 `;
@@ -329,7 +329,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
         </head>
         <body>
             <div class="container">
-                <h1><span class="icon">🚫</span>WebBridge 资源加载失败</h1>
+                <h1><span class="icon">[BLOCK]</span>WebBridge 资源加载失败</h1>
                 <p>在处理缓存加载请求时遇到了错误，无法加载目标页面。</p>
 
                 <div class="info-box">
@@ -386,24 +386,24 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 检查是否真正使用了缓存
     private func checkIfActuallyCached(for url: URL) -> Bool {
-        NSLog("🔍 [Browser] Checking cache for URL: %@", url.absoluteString)
+        NSLog("[SEARCH] [Browser] Checking cache for URL: %@", url.absoluteString)
 
         if PersistentManifestLoader.shared.isCached(url: url) {
-            NSLog("✅ [Browser] Cache Hit: Persistent (MANIFEST)")
+            NSLog("[OK] [Browser] Cache Hit: Persistent (MANIFEST)")
             updateCacheStatus(source: "MANIFEST")
             return true
         }
 
         let appID = AppIDResolver.resolveAppID(from: url)
-        NSLog("🔍 [Browser] Resolved AppID: %@", appID)
+        NSLog("[SEARCH] [Browser] Resolved AppID: %@", appID)
 
         if let manifest = ManifestCacheManager.shared.getCachedManifest(for: appID) {
-            NSLog("✅ [Browser] Cache Hit: Lazy Manifest (INTERCEPT), persistent=%d", manifest.persistent ?? false)
+            NSLog("[OK] [Browser] Cache Hit: Lazy Manifest (INTERCEPT), persistent=%d", manifest.persistent ?? false)
             updateCacheStatus(source: "INTERCEPT")
             return true
         }
 
-        NSLog("❌ [Browser] Cache Miss")
+        NSLog("[FAIL] [Browser] Cache Miss")
         return false
     }
 }

@@ -76,7 +76,7 @@ public class ModalWebViewController: UIViewController {
         // 遮罩层
         if config.showMask {
             maskView = UIView()
-            maskView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+            maskView.backgroundColor = ThemeTokens.Color.scrim
             maskView.accessibilityIdentifier = "modalBrowser.maskView"
             maskView.alpha = 0
             view.addSubview(maskView)
@@ -150,7 +150,7 @@ public class ModalWebViewController: UIViewController {
         closeButton.accessibilityIdentifier = "modalBrowser.closeButton"
         closeButton.setImage(LucideIcon.xmarkCircle.templateImage(), for: .normal)
         closeButton.tintColor = .gray
-        closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        closeButton.backgroundColor = ThemeTokens.Color.overlaySoft.withAlphaComponent(0.8)
         closeButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         closeButton.accessibilityLabel = "关闭弹窗"
         closeButton.accessibilityHint = "双击关闭此弹窗"
@@ -302,7 +302,7 @@ public class ModalWebViewController: UIViewController {
         // 🔒 Clean up bridge
         bridge = nil
 
-        StructuredLogger.shared.debug("🧹 [ModalWebVC] Cleaned up with proper memory management", category: .ui)
+        StructuredLogger.shared.debug("[CLEAN] [ModalWebVC] Cleaned up with proper memory management", category: .ui)
     }
 }
 
