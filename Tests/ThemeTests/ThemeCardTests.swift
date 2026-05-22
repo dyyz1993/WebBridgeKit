@@ -1,6 +1,15 @@
 import XCTest
 @testable import WebBridgeKit
 
+private func assertColorsEqual(_ actual: UIColor?, _ expected: UIColor?, file: StaticString = #file, line: UInt = #line) {
+    guard let actual = actual, let expected = expected else {
+        XCTAssertEqual(actual, expected, file: file, line: line)
+        return
+    }
+    let trait = UITraitCollection(userInterfaceStyle: .light)
+    XCTAssertEqual(actual.resolvedColor(with: trait), expected.resolvedColor(with: trait), file: file, line: line)
+}
+
 final class ThemeCardTests: XCTestCase {
 
     // MARK: - Initialization
@@ -98,17 +107,18 @@ final class ThemeCardTests: XCTestCase {
         let card = ThemeCard(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
         card.layoutIfNeeded()
 
-        XCTAssertEqual(card.innerContentView.backgroundColor, ThemeColors.current.cardBackground)
+        assertColorsEqual(card.innerContentView.backgroundColor, ThemeTokens.Color.cardBackground)
     }
 
     func testBackgroundColorUpdatesOnSecondLayout() {
         let card = ThemeCard(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
         card.layoutIfNeeded()
-        let firstColor = card.innerContentView.backgroundColor
+        let trait = UITraitCollection(userInterfaceStyle: .light)
+        let firstColor = card.innerContentView.backgroundColor?.resolvedColor(with: trait)
 
         card.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
         card.layoutIfNeeded()
-        let secondColor = card.innerContentView.backgroundColor
+        let secondColor = card.innerContentView.backgroundColor?.resolvedColor(with: trait)
 
         XCTAssertEqual(firstColor, secondColor, "Color should remain consistent across layouts")
     }
@@ -188,7 +198,7 @@ final class ThemeCardTests: XCTestCase {
         let card = ThemeCard(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
         card.layoutIfNeeded()
 
-        XCTAssertEqual(card.innerContentView.backgroundColor, ThemeColors.current.cardBackground)
+        assertColorsEqual(card.innerContentView.backgroundColor, ThemeTokens.Color.cardBackground)
     }
 
     func testCardCornerRadiusMatchesTheme() {
