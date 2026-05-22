@@ -19,7 +19,7 @@ class TokenCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -39,7 +39,7 @@ class TokenCell: UITableViewCell {
     private let tokenLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -48,7 +48,7 @@ class TokenCell: UITableViewCell {
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -72,7 +72,7 @@ class TokenCell: UITableViewCell {
     private let statusLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = .white
+        label.textColor = ThemeTokens.Color.textOnColor
         label.textAlignment = .center
         return label
     }()

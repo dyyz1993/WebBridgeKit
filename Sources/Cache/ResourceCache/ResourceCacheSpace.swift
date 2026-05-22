@@ -29,9 +29,9 @@ extension WebResourceCacheManager {
         if !fileManager.fileExists(atPath: cacheBaseDirectory.path) {
             do {
                 try fileManager.createDirectory(at: cacheBaseDirectory, withIntermediateDirectories: true, attributes: nil)
-                StructuredLogger.shared.info("✅ [WebResourceCacheManager] Created cache directory", category: .cache)
+                StructuredLogger.shared.info("[OK] [WebResourceCacheManager] Created cache directory", category: .cache)
             } catch {
-                StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to create cache directory: \(error.localizedDescription)", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to create cache directory: \(error.localizedDescription)", category: .cache)
             }
         }
     }
@@ -47,10 +47,10 @@ extension WebResourceCacheManager {
                 mapLock.lock()
                 urlToCacheIDMap = dict
                 mapLock.unlock()
-                StructuredLogger.shared.info("✅ [WebResourceCacheManager] Loaded cache index: \(dict.count) entries", category: .cache)
+                StructuredLogger.shared.info("[OK] [WebResourceCacheManager] Loaded cache index: \(dict.count) entries", category: .cache)
             }
         } catch {
-            StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to load cache index: \(error.localizedDescription)", category: .cache)
+            StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to load cache index: \(error.localizedDescription)", category: .cache)
         }
     }
 
@@ -66,7 +66,7 @@ extension WebResourceCacheManager {
                 let data = try PropertyListSerialization.data(fromPropertyList: mapCopy, format: .xml, options: 0)
                 try data.write(to: self.cacheIndexFile)
             } catch {
-                StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to save cache index: \(error.localizedDescription)", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to save cache index: \(error.localizedDescription)", category: .cache)
             }
         }
     }
@@ -96,7 +96,7 @@ extension WebResourceCacheManager {
             self.totalCacheSize = total
             self.sizeLock.unlock()
 
-            StructuredLogger.shared.debug("📊 [WebResourceCacheManager] Total cache size: \(ByteCountFormatter.string(fromByteCount: total, countStyle: .file))", category: .cache)
+            StructuredLogger.shared.debug("[STATS] [WebResourceCacheManager] Total cache size: \(ByteCountFormatter.string(fromByteCount: total, countStyle: .file))", category: .cache)
         }
     }
 
@@ -107,7 +107,7 @@ extension WebResourceCacheManager {
         let urlString = url.absoluteString
         if let existingID = urlToCacheIDMap[urlString] {
             updateAccessTime(for: existingID)
-            StructuredLogger.shared.debug("♻️ [WebResourceCacheManager] Reusing existing cache space: \(existingID)", category: .cache)
+            StructuredLogger.shared.debug("[RECYCLE] [WebResourceCacheManager] Reusing existing cache space: \(existingID)", category: .cache)
             return existingID
         }
 
@@ -124,14 +124,14 @@ extension WebResourceCacheManager {
             cacheAccessTimes[cacheID] = Date()
             saveCacheIndex()
 
-            StructuredLogger.shared.info("✅ [WebResourceCacheManager] Created cache space", category: .cache)
+            StructuredLogger.shared.info("[OK] [WebResourceCacheManager] Created cache space", category: .cache)
             StructuredLogger.shared.debug("   - Cache ID: \(cacheID)", category: .cache)
             StructuredLogger.shared.debug("   - URL: \(urlString)", category: .cache)
             StructuredLogger.shared.debug("   - Directory: \(cacheDirectory.path)", category: .cache)
 
             return cacheID
         } catch {
-            StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to create cache space: \(error.localizedDescription)", category: .cache)
+            StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to create cache space: \(error.localizedDescription)", category: .cache)
             return cacheID
         }
     }
@@ -180,9 +180,9 @@ extension WebResourceCacheManager {
                 self.saveCacheIndex()
                 self.updateTotalCacheSize()
 
-                StructuredLogger.shared.debug("🗑️ [WebResourceCacheManager] Removed cache space: \(cacheID)", category: .cache)
+                StructuredLogger.shared.debug("[DEL] [WebResourceCacheManager] Removed cache space: \(cacheID)", category: .cache)
             } catch {
-                StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to remove cache space: \(error.localizedDescription)", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to remove cache space: \(error.localizedDescription)", category: .cache)
             }
         }
     }

@@ -102,29 +102,29 @@ class TabBarController: UITabBarController {
 
         mainVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.home"),
-            image: LucideIcon.home.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.home.templateImage(pointSize: 20)
+            image: LucideIcon.home.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
+            selectedImage: LucideIcon.home.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
         )
         mainVC.tabBarItem.accessibilityIdentifier = "tab.home"
 
         inboxVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.inbox"),
-            image: LucideIcon.inbox.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.inbox.templateImage(pointSize: 20)
+            image: LucideIcon.inbox.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
+            selectedImage: LucideIcon.inbox.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
         )
         inboxVC.tabBarItem.accessibilityIdentifier = "tab.inbox"
 
         discoverVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.discover"),
-            image: LucideIcon.compass.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.compass.templateImage(pointSize: 20)
+            image: LucideIcon.compass.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
+            selectedImage: LucideIcon.compass.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
         )
         discoverVC.tabBarItem.accessibilityIdentifier = "tab.discover"
 
         settingsVC.tabBarItem = UITabBarItem(
             title: L10n.tr("tab.settings"),
-            image: LucideIcon.settings.templateImage(pointSize: 20),
-            selectedImage: LucideIcon.settings.templateImage(pointSize: 20)
+            image: LucideIcon.settings.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
+            selectedImage: LucideIcon.settings.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
         )
         settingsVC.tabBarItem.accessibilityIdentifier = "tab.settings"
 
@@ -138,7 +138,7 @@ class TabBarController: UITabBarController {
 
     private func setupAppearance() {
         tabBar.isTranslucent = true
-        tabBar.unselectedItemTintColor = ThemeColors.current.textSecondary
+        tabBar.unselectedItemTintColor = ThemeTokens.Color.textSecondary
         tabBar.tintColor = ThemeTokens.Color.primary
 
         if #available(iOS 15.0, *) {
@@ -153,7 +153,7 @@ class TabBarController: UITabBarController {
     }
 
     private func setupSeparator() {
-        separatorView.backgroundColor = ThemeColors.current.border
+        separatorView.backgroundColor = ThemeTokens.Color.border
         separatorView.isUserInteractionEnabled = false
         tabBar.addSubview(separatorView)
     }

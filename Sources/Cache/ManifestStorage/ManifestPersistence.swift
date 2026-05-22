@@ -168,7 +168,7 @@ extension ManifestStore {
                         "isPinned": manifest.isPinned ?? false,
                         "isFavorite": manifest.isFavorite ?? false,
                         "accessCount": manifest.accessCount ?? 0,
-                        "contentHash": entry.contentHash  // 🔒 Security: Persist hash for integrity check
+                        "contentHash": entry.contentHash  // [LOCK] Security: Persist hash for integrity check
                     ]
                     if let version = manifest.version {
                         manifestDict["version"] = version
@@ -259,7 +259,7 @@ extension ManifestStore {
                 "isPinned": manifest.isPinned ?? false,
                 "isFavorite": manifest.isFavorite ?? false,
                 "accessCount": manifest.accessCount ?? 0,
-                "contentHash": entry.contentHash  // 🔒 Security: Persist hash for integrity check
+                "contentHash": entry.contentHash  // [LOCK] Security: Persist hash for integrity check
             ]
             if let version = manifest.version {
                 manifestDict["version"] = version

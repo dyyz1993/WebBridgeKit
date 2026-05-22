@@ -10,21 +10,21 @@ public enum ThemeBadgeStyle {
 
     public var backgroundColor: UIColor {
         switch self {
-        case .success: return ThemeColors.current.success.withAlphaComponent(0.12)
-        case .warning: return ThemeColors.current.warning.withAlphaComponent(0.12)
-        case .error: return ThemeColors.current.error.withAlphaComponent(0.12)
-        case .info: return ThemeColors.current.info.withAlphaComponent(0.12)
-        case .default: return ThemeColors.current.badgeBackground
+        case .success: return ThemeTokens.Color.success.withAlphaComponent(0.12)
+        case .warning: return ThemeTokens.Color.warning.withAlphaComponent(0.12)
+        case .error: return ThemeTokens.Color.error.withAlphaComponent(0.12)
+        case .info: return ThemeTokens.Color.info.withAlphaComponent(0.12)
+        case .default: return ThemeTokens.Color.primarySoft
         }
     }
 
     public var textColor: UIColor {
         switch self {
-        case .success: return ThemeColors.current.success
-        case .warning: return ThemeColors.current.warning
-        case .error: return ThemeColors.current.error
-        case .info: return ThemeColors.current.info
-        case .default: return ThemeColors.current.badgeText
+        case .success: return ThemeTokens.Color.success
+        case .warning: return ThemeTokens.Color.warning
+        case .error: return ThemeTokens.Color.error
+        case .info: return ThemeTokens.Color.info
+        case .default: return ThemeTokens.Color.textSecondary
         }
     }
 }
@@ -32,7 +32,7 @@ public enum ThemeBadgeStyle {
 public class ThemeBadge: UIView {
     private let label: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 10, weight: .bold)
+        label.font = ThemeTokens.Typography.badge
         label.textAlignment = .center
         return label
     }()
@@ -47,7 +47,7 @@ public class ThemeBadge: UIView {
     }
 
     private func setupUI() {
-        layer.cornerRadius = ThemeCornerRadius.default.sm
+        layer.cornerRadius = ThemeTokens.CornerRadius.sm
         clipsToBounds = true
         addSubview(label)
         label.snp.makeConstraints { make in

@@ -20,7 +20,7 @@ extension WebViewController {
             guard let self else { return }
 
             if let error = error {
-                StructuredLogger.shared.error("❌ [ManifestCache] Failed to download manifest: \(error.localizedDescription)", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [ManifestCache] Failed to download manifest: \(error.localizedDescription)", category: .cache)
                 // 回退到普通加载
                 Task { @MainActor [weak self] in
                     self?.fallbackToNormalLoad(pageURL, error: error)
@@ -29,7 +29,7 @@ extension WebViewController {
             }
 
             guard let data else {
-                StructuredLogger.shared.error("❌ [ManifestCache] Manifest data is empty", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [ManifestCache] Manifest data is empty", category: .cache)
                 let emptyError = NSError(domain: "WebBridgeKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Manifest data is empty"])
                 Task { @MainActor [weak self] in
                     self?.fallbackToNormalLoad(pageURL, error: emptyError)
@@ -41,7 +41,7 @@ extension WebViewController {
                 // 解析 manifest
                 let manifest = try JSONDecoder().decode(PersistentManifestLoader.WebManifest.self, from: data)
 
-                StructuredLogger.shared.info("✅ [ManifestCache] Manifest downloaded successfully", category: .cache)
+                StructuredLogger.shared.info("[OK] [ManifestCache] Manifest downloaded successfully", category: .cache)
                 StructuredLogger.shared.debug("   - Persistent: \(manifest.persistent)", category: .ui)
                 StructuredLogger.shared.debug("   - Resources: \(manifest.resources.count)", category: .ui)
                 StructuredLogger.shared.debug("   - Version: \(manifest.version ?? "N/A")", category: .ui)
@@ -50,16 +50,16 @@ extension WebViewController {
                 Task { @MainActor [weak self] in
                     guard let self else { return }
                     if manifest.persistent {
-                        StructuredLogger.shared.debug("🔥 [ManifestCache] Using PERSISTENT mode (download all resources first)", category: .cache)
+                        StructuredLogger.shared.debug("[HOT] [ManifestCache] Using PERSISTENT mode (download all resources first)", category: .cache)
                         self.usePersistentMode(pageURL: pageURL, manifest: manifest)
                     } else {
-                        StructuredLogger.shared.debug("⚡ [ManifestCache] Using LAZY mode (load HTML immediately, background download)", category: .cache)
+                        StructuredLogger.shared.debug("[FAST] [ManifestCache] Using LAZY mode (load HTML immediately, background download)", category: .cache)
                         self.useLazyMode(pageURL: pageURL, manifest: manifest)
                     }
                 }
 
             } catch {
-                StructuredLogger.shared.error("❌ [ManifestCache] Failed to decode manifest: \(error.localizedDescription)", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [ManifestCache] Failed to decode manifest: \(error.localizedDescription)", category: .cache)
                 // 回退到普通加载
                 Task { @MainActor [weak self] in
                     self?.fallbackToNormalLoad(pageURL, error: error)
@@ -83,7 +83,7 @@ extension WebViewController {
             presentingViewController = self
         }
 
-        StructuredLogger.shared.debug("💾 [ManifestCache] Starting persistent mode download", category: .cache)
+        StructuredLogger.shared.debug("[SAVE] [ManifestCache] Starting persistent mode download", category: .cache)
 
         PersistentManifestLoader.load(
             url: pageURL,
@@ -95,9 +95,9 @@ extension WebViewController {
 
                 switch result {
                 case .success:
-                    StructuredLogger.shared.info("✅ [ManifestCache] Persistent mode load completed successfully", category: .cache)
+                    StructuredLogger.shared.info("[OK] [ManifestCache] Persistent mode load completed successfully", category: .cache)
                 case .failure(let error):
-                    StructuredLogger.shared.error("❌ [ManifestCache] Persistent mode failed: \(error.localizedDescription)", category: .cache)
+                    StructuredLogger.shared.error("[FAIL] [ManifestCache] Persistent mode failed: \(error.localizedDescription)", category: .cache)
                     // 回退到普通加载
                     self.fallbackToNormalLoad(pageURL, error: error)
                 }
@@ -107,7 +107,7 @@ extension WebViewController {
 
     /// 使用懒加载模式（立即加载 HTML，后台下载资源）
     private func useLazyMode(pageURL: URL, manifest: PersistentManifestLoader.WebManifest) {
-        StructuredLogger.shared.debug("⚡ [ManifestCache] Starting lazy mode load", category: .cache)
+        StructuredLogger.shared.debug("[FAST] [ManifestCache] Starting lazy mode load", category: .cache)
 
         // 将 WebManifest 转换为 LazyManifestLoader.WebManifest
         _ = LazyManifestLoader.WebManifest(
@@ -128,9 +128,9 @@ extension WebViewController {
 
                 switch result {
                 case .success:
-                    StructuredLogger.shared.info("✅ [ManifestCache] Lazy mode load completed successfully", category: .cache)
+                    StructuredLogger.shared.info("[OK] [ManifestCache] Lazy mode load completed successfully", category: .cache)
                 case .failure(let error):
-                    StructuredLogger.shared.error("❌ [ManifestCache] Lazy mode failed: \(error.localizedDescription)", category: .cache)
+                    StructuredLogger.shared.error("[FAIL] [ManifestCache] Lazy mode failed: \(error.localizedDescription)", category: .cache)
                     // 回退到普通加载
                     self.fallbackToNormalLoad(pageURL, error: error)
                 }
@@ -140,7 +140,7 @@ extension WebViewController {
 
     /// 回退到普通加载模式
     func fallbackToNormalLoad(_ url: URL, error: Error? = nil) {
-        StructuredLogger.shared.debug("⏭️ [ManifestCache] Falling back to normal load", category: .cache)
+        StructuredLogger.shared.debug("[NEXT] [ManifestCache] Falling back to normal load", category: .cache)
 
         // 如果提供了错误信息，且是自定义协议 URL，则显示错误页面
         if let error = error, url.scheme == customScheme || url.scheme == "wb-resource" {
@@ -149,7 +149,7 @@ extension WebViewController {
         }
 
         webView.load(URLRequest(url: url))
-        StructuredLogger.shared.debug("🌐 [BarkWebVC] Loading: \(url) (fallback mode)", category: .navigation)
+        StructuredLogger.shared.debug("[WEB] [BarkWebVC] Loading: \(url) (fallback mode)", category: .navigation)
 
         // 页面加载完成后自动生成缩略图
         generateThumbnailAfterLoad(url: url)
@@ -185,7 +185,7 @@ extension WebViewController {
         </head>
         <body>
             <div class="container">
-                <h1><span class="icon">🚫</span>资源加载失败</h1>
+                <h1><span class="icon">[BLOCK]</span>资源加载失败</h1>
                 <p>在处理 manifest 缓存加载时遇到了错误，无法加载目标页面。</p>
 
                 <div class="info-box">
@@ -214,7 +214,7 @@ extension WebViewController {
         """
 
         self.webView.loadHTMLString(errorHTML, baseURL: url)
-        StructuredLogger.shared.error("⚠️ [BarkWebVC] Loaded error page for: \(url.absoluteString)", category: .navigation)
+        StructuredLogger.shared.error("[WARN] [BarkWebVC] Loaded error page for: \(url.absoluteString)", category: .navigation)
     }
 
     // MARK: - Manifest Cache Helper Methods
@@ -228,12 +228,12 @@ extension WebViewController {
         _ = view
 
         guard Bundle.main.path(forResource: htmlName, ofType: "html") != nil else {
-            StructuredLogger.shared.error("❌ [BarkWebVC] HTML file not found: \(htmlName).html", category: .ui)
+            StructuredLogger.shared.error("[FAIL] [BarkWebVC] HTML file not found: \(htmlName).html", category: .ui)
             return
         }
 
         guard let manifestPath = Bundle.main.path(forResource: manifestName, ofType: "json") else {
-            StructuredLogger.shared.error("❌ [BarkWebVC] Manifest file not found: \(manifestName).json", category: .ui)
+            StructuredLogger.shared.error("[FAIL] [BarkWebVC] Manifest file not found: \(manifestName).json", category: .ui)
             return
         }
 
@@ -244,21 +244,21 @@ extension WebViewController {
             // Register manifest with ManifestURLSchemeHandler
             if let handler = webView.configuration.urlSchemeHandler(forURLScheme: customScheme) as? ManifestURLSchemeHandler {
                 handler.registerManifest(forPage: htmlName, manifest: manifest)
-                StructuredLogger.shared.info("✅ [BarkWebVC] Registered manifest for: \(htmlName)", category: .ui)
+                StructuredLogger.shared.info("[OK] [BarkWebVC] Registered manifest for: \(htmlName)", category: .ui)
             } else {
-                StructuredLogger.shared.warning("⚠️ [BarkWebVC] ManifestURLSchemeHandler not found", category: .handler)
+                StructuredLogger.shared.warning("[WARN] [BarkWebVC] ManifestURLSchemeHandler not found", category: .handler)
             }
 
             // Load HTML with custom scheme
             guard let htmlURL = URL(string: "\(customScheme)://\(htmlName).html") else {
-                StructuredLogger.shared.error("❌ [BarkWebVC] Failed to create URL for scheme: \(customScheme), page: \(htmlName)", category: .navigation)
+                StructuredLogger.shared.error("[FAIL] [BarkWebVC] Failed to create URL for scheme: \(customScheme), page: \(htmlName)", category: .navigation)
                 return
             }
             webView.load(URLRequest(url: htmlURL))
-            StructuredLogger.shared.info("✅ [BarkWebVC] Loaded HTML with manifest: \(htmlName).html", category: .navigation)
+            StructuredLogger.shared.info("[OK] [BarkWebVC] Loaded HTML with manifest: \(htmlName).html", category: .navigation)
 
         } catch {
-            StructuredLogger.shared.error("❌ [BarkWebVC] Failed to load manifest: \(error)", category: .navigation)
+            StructuredLogger.shared.error("[FAIL] [BarkWebVC] Failed to load manifest: \(error)", category: .navigation)
         }
     }
 
@@ -269,12 +269,12 @@ extension WebViewController {
         _ = view
 
         guard customURL.scheme == customScheme else {
-            StructuredLogger.shared.error("❌ [BarkWebVC] Invalid custom scheme: \(customURL.scheme ?? "nil")", category: .navigation)
+            StructuredLogger.shared.error("[FAIL] [BarkWebVC] Invalid custom scheme: \(customURL.scheme ?? "nil")", category: .navigation)
             return
         }
 
         webView.load(URLRequest(url: customURL))
-        StructuredLogger.shared.info("✅ [BarkWebVC] Loading custom URL: \(customURL)", category: .navigation)
+        StructuredLogger.shared.info("[OK] [BarkWebVC] Loading custom URL: \(customURL)", category: .navigation)
     }
 
     /// Register a resource manifest for a specific page
@@ -284,9 +284,9 @@ extension WebViewController {
     public func registerResourceManifest(forPage pageName: String, manifest: [String: String]) {
         if let handler = webView.configuration.urlSchemeHandler(forURLScheme: customScheme) as? ManifestURLSchemeHandler {
             handler.registerManifest(forPage: pageName, manifest: manifest)
-            StructuredLogger.shared.info("✅ [BarkWebVC] Registered manifest for page: \(pageName)", category: .ui)
+            StructuredLogger.shared.info("[OK] [BarkWebVC] Registered manifest for page: \(pageName)", category: .ui)
         } else {
-            StructuredLogger.shared.error("❌ [BarkWebVC] ManifestURLSchemeHandler not available", category: .handler)
+            StructuredLogger.shared.error("[FAIL] [BarkWebVC] ManifestURLSchemeHandler not available", category: .handler)
         }
     }
 
@@ -295,7 +295,7 @@ extension WebViewController {
     public func clearResourceCache(forPage pageName: String) {
         if let handler = webView.configuration.urlSchemeHandler(forURLScheme: customScheme) as? ManifestURLSchemeHandler {
             handler.unregisterManifest(forPage: pageName)
-            StructuredLogger.shared.info("✅ [BarkWebVC] Cleared cache for page: \(pageName)", category: .cache)
+            StructuredLogger.shared.info("[OK] [BarkWebVC] Cleared cache for page: \(pageName)", category: .cache)
         }
     }
 }

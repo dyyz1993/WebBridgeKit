@@ -32,10 +32,10 @@ public class WebCacheDebugFloatingButton: UIView {
 
         var icon: String {
             switch self {
-            case .hit: return "✓"
+            case .hit: return "[EMOJI]"
             case .downloading: return "↓"
             case .noCache: return "•"
-            case .error: return "✗"
+            case .error: return "[EMOJI]"
             }
         }
 
@@ -85,23 +85,23 @@ public class WebCacheDebugFloatingButton: UIView {
         let button = UIButton(type: .custom)
         button.backgroundColor = ThemeTokens.Color.textSecondary
         button.layer.cornerRadius = ThemeTokens.CornerRadius.full
-        let shadow = ThemeTokens.Shadows.Fab
+        let shadow = ThemeTokens.Shadows.floatingAction
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
         button.layer.shadowRadius = shadow.radius
         button.layer.shadowOpacity = Float(shadow.opacity)
         button.titleLabel?.font = UIFontMetrics(forTextStyle: .title1).scaledFont(for: .systemFont(ofSize: 24, weight: .bold))
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
         button.accessibilityLabel = "缓存调试按钮"
         return button
     }()
 
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("✕", for: .normal)
+        button.setTitle("[EMOJI]", for: .normal)
         button.titleLabel?.font = UIFontMetrics(forTextStyle: .title3).scaledFont(for: .systemFont(ofSize: 18, weight: .bold))
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        button.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.scrim
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.accessibilityLabel = "关闭调试面板"
         return button
@@ -111,7 +111,7 @@ public class WebCacheDebugFloatingButton: UIView {
         let view = UIView()
         view.backgroundColor = ThemeTokens.Color.background
         view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
-        let shadow = ThemeTokens.Shadows.Card
+        let shadow = ThemeTokens.Shadows.card
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
         view.layer.shadowRadius = shadow.radius
@@ -166,27 +166,27 @@ public class WebCacheDebugFloatingButton: UIView {
 
     private func setupDebugPanel() {
         // Title
-        let titleLabel = createLabel(text: "Cache Debug Panel", font: ThemeTokens.Typography.title3)
+        let titleLabel = createLabel(text: "Cache Debug Panel", font: ThemeTokens.Typography.cardTitle)
 
-        let urlLabel = createLabel(text: "Current URL:", font: ThemeTokens.Typography.headline)
-        let urlValueLabel = createLabel(text: "N/A", font: ThemeTokens.Typography.footnote, textColor: ThemeTokens.Color.textSecondary)
+        let urlLabel = createLabel(text: "Current URL:", font: ThemeTokens.Typography.sectionTitle)
+        let urlValueLabel = createLabel(text: "N/A", font: ThemeTokens.Typography.metadata, textColor: ThemeTokens.Color.textSecondary)
         urlValueLabel.numberOfLines = 2
         urlValueLabel.tag = 100
 
         // Status section
-        let statusLabel = createLabel(text: "Status:", font: ThemeTokens.Typography.headline)
+        let statusLabel = createLabel(text: "Status:", font: ThemeTokens.Typography.sectionTitle)
         let statusValueLabel = createLabel(text: "No Cache", font: ThemeTokens.Typography.body, textColor: ThemeTokens.Color.textSecondary)
         statusValueLabel.tag = 101
 
-        let resourcesLabel = createLabel(text: "Cached Resources:", font: ThemeTokens.Typography.headline)
+        let resourcesLabel = createLabel(text: "Cached Resources:", font: ThemeTokens.Typography.sectionTitle)
         let resourcesValueLabel = createLabel(text: "0 items", font: ThemeTokens.Typography.body)
         resourcesValueLabel.tag = 102
 
-        let sizeLabel = createLabel(text: "Cache Size:", font: ThemeTokens.Typography.headline)
+        let sizeLabel = createLabel(text: "Cache Size:", font: ThemeTokens.Typography.sectionTitle)
         let sizeValueLabel = createLabel(text: "0 B", font: ThemeTokens.Typography.body)
         sizeValueLabel.tag = 103
 
-        let eventsLabel = createLabel(text: "Recent Events (Last 10):", font: ThemeTokens.Typography.headline)
+        let eventsLabel = createLabel(text: "Recent Events (Last 10):", font: ThemeTokens.Typography.sectionTitle)
 
         let eventsStack = UIStackView()
         eventsStack.axis = .vertical
@@ -363,13 +363,13 @@ public class WebCacheDebugFloatingButton: UIView {
         eventsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         if cacheEvents.isEmpty {
-            let emptyLabel = createLabel(text: "No events yet", font: ThemeTokens.Typography.caption1, textColor: ThemeTokens.Color.textSecondary)
+            let emptyLabel = createLabel(text: "No events yet", font: ThemeTokens.Typography.caption, textColor: ThemeTokens.Color.textSecondary)
             eventsStack.addArrangedSubview(emptyLabel)
         } else {
             for event in cacheEvents {
                 let eventLabel = createLabel(
                     text: formatEvent(event),
-                    font: ThemeTokens.Typography.caption2,
+                    font: ThemeTokens.Typography.tabLabel,
                     textColor: event.status.color
                 )
                 eventsStack.addArrangedSubview(eventLabel)

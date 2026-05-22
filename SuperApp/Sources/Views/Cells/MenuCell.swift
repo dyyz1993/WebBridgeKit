@@ -17,7 +17,7 @@ class MenuCell: UITableViewCell {
 
     private let iconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 7
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         return view
     }()
 

@@ -32,7 +32,7 @@ public class WebViewPerformanceMonitor {
         operation()
         let duration = (CFAbsoluteTimeGetCurrent() - start) * 1000
 
-        StructuredLogger.shared.debug("⏱️ [Performance] Duration: \(String(format: "%.2f", duration))ms", category: .bridge)
+        StructuredLogger.shared.debug("[TIMER] [Performance] Duration: \(String(format: "%.2f", duration))ms", category: .bridge)
 
         return duration
     }
@@ -46,7 +46,7 @@ public class WebViewPerformanceMonitor {
         operation()
         let duration = (CFAbsoluteTimeGetCurrent() - start) * 1000
 
-        StructuredLogger.shared.debug("⏱️ [Performance] \(label): \(String(format: "%.2f", duration))ms", category: .bridge)
+        StructuredLogger.shared.debug("[TIMER] [Performance] \(label): \(String(format: "%.2f", duration))ms", category: .bridge)
 
         // 记录到日志
         WebBridgeLogger.shared.log(
@@ -72,7 +72,7 @@ public class WebViewPerformanceMonitor {
         let memory = result == KERN_SUCCESS ? info.resident_size : 0
         let memoryMB = Double(memory) / 1024 / 1024
 
-        StructuredLogger.shared.debug("💾 [Performance] Memory usage: \(String(format: "%.2f", memoryMB))MB", category: .bridge)
+        StructuredLogger.shared.debug("[SAVE] [Performance] Memory usage: \(String(format: "%.2f", memoryMB))MB", category: .bridge)
 
         return memory
     }
@@ -89,7 +89,7 @@ public class WebViewPerformanceMonitor {
         before: () -> Void,
         after: () -> Void
     ) {
-        StructuredLogger.shared.debug("📊 [Performance] Starting comparison test: \(label)...", category: .bridge)
+        StructuredLogger.shared.debug("[STATS] [Performance] Starting comparison test: \(label)...", category: .bridge)
 
         // 测试优化前
         let memoryBefore = measureMemory()
@@ -109,7 +109,7 @@ public class WebViewPerformanceMonitor {
         #if DEBUG
         print("""
 
-        📊 [Performance] \(label) Results:
+        [STATS] [Performance] \(label) Results:
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         Time Before: \(String(format: "%.2f", timeBefore))ms
         Time After:  \(String(format: "%.2f", timeAfter))ms
@@ -128,7 +128,7 @@ public class WebViewPerformanceMonitor {
         #if DEBUG
         print("""
 
-        📊 [Performance] Pool Status:
+        [STATS] [Performance] Pool Status:
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         WebView Pool Size: \(webPoolStatus.size)
         WebView Hit Rate: \(webPoolStatus.hitRate)%
@@ -148,7 +148,7 @@ public class WebViewPerformanceMonitor {
         let memoryMB = Double(memory) / 1024 / 1024
 
         return """
-        📊 WebView Performance Report
+        [STATS] WebView Performance Report
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         Memory Usage: \(String(format: "%.2f", memoryMB))MB
         WebView Pool Size: \(webPoolStatus.size)

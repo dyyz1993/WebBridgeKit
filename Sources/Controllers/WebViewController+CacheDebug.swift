@@ -12,13 +12,13 @@ extension WebViewController {
     /// 设置缓存调试按钮
     func setupCacheDebugButton() {
         let debugButton = UIBarButtonItem(
-            title: "🔍 Cache",
+            title: "[SEARCH] Cache",
             style: .plain,
             target: self,
             action: #selector(showCacheDebugInfo)
         )
         navigationItem.rightBarButtonItem = debugButton
-        StructuredLogger.shared.info("✅ [BarkWebVC] Cache debug button added", category: .cache)
+        StructuredLogger.shared.info("[OK] [BarkWebVC] Cache debug button added", category: .cache)
     }
 
     /// 显示缓存调试信息
@@ -28,13 +28,13 @@ extension WebViewController {
 
         // 收集缓存信息
         var debugInfo = """
-        🔍 WebBridgeKit Cache Debug Info
+        [SEARCH] WebBridgeKit Cache Debug Info
         =================================
 
-        📍 Current Page URL:
+        [PIN] Current Page URL:
         \(currentURL)
 
-        🌐 System URLCache Info:
+        [WEB] System URLCache Info:
         """
 
         // 获取系统 URLCache 信息
@@ -47,7 +47,7 @@ extension WebViewController {
         - Memory Capacity: \(ByteCountFormatter.string(fromByteCount: Int64(urlCache.memoryCapacity), countStyle: .memory))
         - Disk Capacity: \(ByteCountFormatter.string(fromByteCount: Int64(urlCache.diskCapacity), countStyle: .file))
 
-        📦 Compressed Cache Info:
+        [CACHE] Compressed Cache Info:
         """
 
         // 获取压缩缓存信息
@@ -59,7 +59,7 @@ extension WebViewController {
         - Compression Ratio: \(compressedCacheInfo.formattedCompressionRatio)
         - Saved Space: \(compressedCacheInfo.formattedSavedSpace)
 
-        📋 Cached Resources Summary:
+        [LIST] Cached Resources Summary:
         """
 
         // 获取缓存条目统计
@@ -76,7 +76,7 @@ extension WebViewController {
 
         debugInfo += """
 
-        📄 Page Cache Info:
+        [DOC] Page Cache Info:
         """
 
         // 获取页面缓存信息
@@ -91,7 +91,7 @@ extension WebViewController {
 
         debugInfo += """
 
-        📂 Cache Directory Path:
+        [DIR] Cache Directory Path:
         """
 
         // 获取缓存目录路径

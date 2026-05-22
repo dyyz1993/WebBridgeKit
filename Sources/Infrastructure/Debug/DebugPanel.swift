@@ -34,7 +34,7 @@ public class DebugPanel: NSObject {
         nav.modalPresentationStyle = .fullScreen
 
         debugPanelVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "✕ Close",
+            title: "[EMOJI] Close",
             style: .plain,
             target: self,
             action: #selector(dismissDebugPanel)
@@ -96,7 +96,7 @@ public class DebugPanelViewController: UIViewController {
         let btn = UIButton(type: .system)
         btn.setTitle("主页", for: .normal)
         btn.backgroundColor = ThemeTokens.Color.primary
-        btn.setTitleColor(.white, for: .normal)
+        btn.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showMain), for: .touchUpInside)
         btn.accessibilityLabel = "调试主页"
@@ -107,7 +107,7 @@ public class DebugPanelViewController: UIViewController {
         let btn = UIButton(type: .system)
         btn.setTitle("日志", for: .normal)
         btn.backgroundColor = ThemeTokens.Color.success
-        btn.setTitleColor(.white, for: .normal)
+        btn.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showLogs), for: .touchUpInside)
         btn.accessibilityLabel = "调试日志"
@@ -118,7 +118,7 @@ public class DebugPanelViewController: UIViewController {
         let btn = UIButton(type: .system)
         btn.setTitle("诊断", for: .normal)
         btn.backgroundColor = ThemeTokens.Color.warning
-        btn.setTitleColor(.white, for: .normal)
+        btn.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showDiagnostics), for: .touchUpInside)
         btn.accessibilityLabel = "调试诊断"
@@ -128,8 +128,8 @@ public class DebugPanelViewController: UIViewController {
     private lazy var settingsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("设置", for: .normal)
-        btn.backgroundColor = ThemeTokens.Color.gradientEnd
-        btn.setTitleColor(.white, for: .normal)
+        btn.backgroundColor = ThemeTokens.Color.accent
+        btn.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showSettings), for: .touchUpInside)
         btn.accessibilityLabel = "调试设置"
@@ -140,7 +140,7 @@ public class DebugPanelViewController: UIViewController {
         let btn = UIButton(type: .system)
         btn.setTitle("环境", for: .normal)
         btn.backgroundColor = ThemeTokens.Color.textSecondary
-        btn.setTitleColor(.white, for: .normal)
+        btn.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showInfo), for: .touchUpInside)
         btn.accessibilityLabel = "调试环境信息"
@@ -151,7 +151,7 @@ public class DebugPanelViewController: UIViewController {
         let btn = UIButton(type: .system)
         btn.setTitle("缓存管理", for: .normal)
         btn.backgroundColor = ThemeTokens.Color.info
-        btn.setTitleColor(.white, for: .normal)
+        btn.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
         btn.addTarget(self, action: #selector(showCacheManagement), for: .touchUpInside)
         btn.accessibilityLabel = "调试缓存管理"
@@ -170,7 +170,7 @@ public class DebugPanelViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        title = "🧩 Debug Panel"
+        title = "[PLUGIN] Debug Panel"
         view.backgroundColor = ThemeTokens.Color.background
 
         setupUI()

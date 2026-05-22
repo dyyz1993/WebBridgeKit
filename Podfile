@@ -72,7 +72,7 @@ target 'WebBridgeKit' do
   end
 
   target 'InfrastructureTests' do
-    inherit! :complete
+    inherit! :search_paths
   end
 
   target 'CommandParserTests' do

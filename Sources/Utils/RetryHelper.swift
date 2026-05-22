@@ -22,12 +22,12 @@ public class RetryHelper {
             do {
                 let result = try operation()
                 if attempt > 0 {
-                    NSLog("✅ [RetryHelper] 操作成功（第 \(attempt + 1) 次尝试）")
+                    NSLog("[OK] [RetryHelper] 操作成功（第 \(attempt + 1) 次尝试）")
                 }
                 return result
             } catch {
                 lastError = error
-                NSLog("⚠️ [RetryHelper] 第 \(attempt + 1) 次尝试失败: \(error.localizedDescription)")
+                NSLog("[WARN] [RetryHelper] 第 \(attempt + 1) 次尝试失败: \(error.localizedDescription)")
 
                 if attempt < maxRetries - 1 {
                     // 等待指定延迟时间
@@ -37,7 +37,7 @@ public class RetryHelper {
         }
 
         let finalError = lastError ?? WebBridgeError.cacheLoadFailed(reason: "Max retries exceeded")
-        NSLog("❌ [RetryHelper] 所有重试均失败，最终错误: \(finalError.localizedDescription)")
+        NSLog("[FAIL] [RetryHelper] 所有重试均失败，最终错误: \(finalError.localizedDescription)")
         throw finalError
     }
 
@@ -59,12 +59,12 @@ public class RetryHelper {
             do {
                 let result = try await operation()
                 if attempt > 0 {
-                    NSLog("✅ [RetryHelper] 异步操作成功（第 \(attempt + 1) 次尝试）")
+                    NSLog("[OK] [RetryHelper] 异步操作成功（第 \(attempt + 1) 次尝试）")
                 }
                 return result
             } catch {
                 lastError = error
-                NSLog("⚠️ [RetryHelper] 第 \(attempt + 1) 次异步尝试失败: \(error.localizedDescription)")
+                NSLog("[WARN] [RetryHelper] 第 \(attempt + 1) 次异步尝试失败: \(error.localizedDescription)")
 
                 if attempt < maxRetries - 1 {
                     // 等待指定延迟时间
@@ -74,7 +74,7 @@ public class RetryHelper {
         }
 
         let finalError = lastError ?? WebBridgeError.cacheLoadFailed(reason: "Max retries exceeded")
-        NSLog("❌ [RetryHelper] 所有异步重试均失败，最终错误: \(finalError.localizedDescription)")
+        NSLog("[FAIL] [RetryHelper] 所有异步重试均失败，最终错误: \(finalError.localizedDescription)")
         throw finalError
     }
 
@@ -97,12 +97,12 @@ public class RetryHelper {
             do {
                 let result = try operation()
                 if attempt > 0 {
-                    NSLog("✅ [RetryHelper] 指数退避操作成功（第 \(attempt + 1) 次尝试）")
+                    NSLog("[OK] [RetryHelper] 指数退避操作成功（第 \(attempt + 1) 次尝试）")
                 }
                 return result
             } catch {
                 lastError = error
-                NSLog("⚠️ [RetryHelper] 第 \(attempt + 1) 次尝试失败: \(error.localizedDescription)")
+                NSLog("[WARN] [RetryHelper] 第 \(attempt + 1) 次尝试失败: \(error.localizedDescription)")
 
                 if attempt < maxRetries - 1 {
                     // 计算指数退避延迟时间
@@ -114,7 +114,7 @@ public class RetryHelper {
         }
 
         let finalError = lastError ?? WebBridgeError.cacheLoadFailed(reason: "Max retries exceeded")
-        NSLog("❌ [RetryHelper] 所有指数退避重试均失败，最终错误: \(finalError.localizedDescription)")
+        NSLog("[FAIL] [RetryHelper] 所有指数退避重试均失败，最终错误: \(finalError.localizedDescription)")
         throw finalError
     }
 }

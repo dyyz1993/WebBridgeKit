@@ -14,60 +14,223 @@ import WebBridgeKit
 
 class SettingsViewController: BaseViewController<SettingsViewModel> {
 
-    private lazy var tableView: UITableView = {
-        let table = UITableView(frame: .zero, style: .insetGrouped)
-        table.backgroundColor = ThemeTokens.Color.background
-        table.register(MenuCell.self, forCellReuseIdentifier: MenuCell.identifier)
-        table.separatorStyle = .singleLine
-        table.separatorInset = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 0)
-        table.delegate = self
-        table.dataSource = self
-        return table
-    }()
+    private let scaffold = WBKScreenScaffold(style: .scrollable)
 
     private let itemSelectRelay = PublishRelay<IndexPath>()
     private let copyTokenTapRelay = PublishRelay<Void>()
     private let rememberToggleRelay = PublishRelay<Bool>()
 
+    private var sectionRows: [[(indexPath: IndexPath, item: SettingsViewModel.SettingsItem)]] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupVersionFooter()
     }
 
     private func setupUI() {
         view.backgroundColor = ThemeTokens.Color.background
-        view.addSubview(tableView)
-        tableView.snp.makeConstraints { make in
+        view.addSubview(scaffold)
+        scaffold.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        tableView.contentInsetAdjustmentBehavior = .always
-        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
-        view.accessibilityIdentifier = "SettingsViewController"
-        tableView.accessibilityIdentifier = "settings.tableView"
-        tableView.accessibilityLabel = "Settings Table View"
-    }
 
-    private func setupVersionFooter() {
+        let titleLabel = UILabel()
+        titleLabel.text = L10n.tr("tab.settings")
+        titleLabel.font = ThemeTokens.Typography.screenTitle
+        titleLabel.textColor = ThemeTokens.Color.text
+        titleLabel.numberOfLines = 1
+        titleLabel.accessibilityIdentifier = "settings.title"
+        scaffold.addSection(titleLabel, spacing: ThemeTokens.Spacing.lg)
+
+        let sections = viewModel.sections
+        for (sectionIndex, section) in sections.enumerated() {
+            if let header = section.header {
+                let sectionHeader = WBKSectionHeader(
+                    title: header.uppercased(),
+                    style: .compact
+                )
+                sectionHeader.accessibilityIdentifier = "settings.section.\(sectionIndex)"
+                scaffold.addSection(sectionHeader, spacing: ThemeTokens.Spacing.sm)
+            }
+
+            let cardWrapper = UIView()
+            cardWrapper.backgroundColor = ThemeTokens.Color.surface
+            cardWrapper.layer.cornerRadius = ThemeTokens.CornerRadius.card
+            cardWrapper.clipsToBounds = true
+
+            let rowsStack = UIStackView()
+            rowsStack.axis = .vertical
+            rowsStack.alignment = .fill
+            cardWrapper.addSubview(rowsStack)
+            rowsStack.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+
+            var rowEntries: [(indexPath: IndexPath, item: SettingsViewModel.SettingsItem)] = []
+
+            for (rowIndex, item) in section.items.enumerated() {
+                let indexPath = IndexPath(row: rowIndex, section: sectionIndex)
+
+                if item.cellKind == .hero {
+                    let heroRow = makeHeroRow(item: item, indexPath: indexPath)
+                    rowsStack.addArrangedSubview(heroRow)
+                    rowEntries.append((indexPath, item))
+                    continue
+                }
+
+                let row = makeListRow(item: item, indexPath: indexPath)
+                rowsStack.addArrangedSubview(row)
+
+                if rowIndex < section.items.count - 1 {
+                    let sep = UIView()
+                    sep.backgroundColor = ThemeTokens.Color.separator
+                    rowsStack.addArrangedSubview(sep)
+                    sep.snp.makeConstraints { make in
+                        make.height.equalTo(0.5)
+                        make.leading.trailing.equalToSuperview().inset(ThemeTokens.ComponentContract.SettingsRow.horizontalPadding)
+                    }
+                }
+
+                rowEntries.append((indexPath, item))
+            }
+
+            sectionRows.append(rowEntries)
+            scaffold.addSection(cardWrapper, spacing: ThemeTokens.Spacing.sm)
+        }
+
+        let versionLabel = UILabel()
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        let footerLabel = UILabel()
-        footerLabel.text = "WebBridgeKit v\(version) (Build \(build))"
-        footerLabel.font = .systemFont(ofSize: 12, weight: .regular)
-        footerLabel.textColor = ThemeTokens.Color.textSecondary
-        footerLabel.textAlignment = .center
-        footerLabel.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: 44)
-        tableView.tableFooterView = footerLabel
+        versionLabel.text = "WebBridgeKit v\(version) (Build \(build))"
+        versionLabel.font = ThemeTokens.Typography.metadata
+        versionLabel.textColor = ThemeTokens.Color.textTertiary
+        versionLabel.textAlignment = .center
+        versionLabel.numberOfLines = 1
+        scaffold.addSection(versionLabel, spacing: ThemeTokens.Spacing.xxl)
+
+        view.accessibilityIdentifier = "SettingsViewController"
+    }
+
+    private func makeListRow(
+        item: SettingsViewModel.SettingsItem,
+        indexPath: IndexPath
+    ) -> WBKListRow {
+        let isDestructive = item.action == .cacheManager
+        let rowStyle: WBKListRow.Style = isDestructive ? .destructive : (item.hasToggle ? .toggle : .default)
+
+        let row = WBKListRow(style: rowStyle)
+        row.accessibilityIdentifier = item.action.map { "settings.cell.\($0.rawValue)" } ?? "settings.cell.default"
+
+        if let lucide = item.lucideIcon {
+            row.setIcon(lucide)
+            row.iconTintColor = item.iconTintColor ?? ThemeTokens.Color.primary
+            row.setIconBoxBackgroundColor(item.iconBackgroundColor ?? .clear)
+        } else if let iconName = item.icon {
+            row.icon = UIImage(systemName: iconName)
+            row.iconTintColor = item.iconTintColor ?? ThemeTokens.Color.primary
+            row.setIconBoxBackgroundColor(item.iconBackgroundColor ?? .clear)
+        }
+
+        row.title = item.title
+        row.trailingText = item.value
+
+        if item.hasToggle {
+            row.isToggleOn = item.toggleIsOn
+            row.onToggleChanged = { [weak self] isOn in
+                self?.rememberToggleRelay.accept(isOn)
+            }
+        } else if item.showArrow {
+            row.accessoryType = .chevron
+        } else {
+            row.accessoryType = .none
+        }
+
+        if !item.hasToggle && item.cellKind != .hero {
+            row.onTap = { [weak self] in
+                self?.itemSelectRelay.accept(indexPath)
+            }
+        }
+
+        return row
+    }
+
+    private func makeHeroRow(
+        item: SettingsViewModel.SettingsItem,
+        indexPath: IndexPath
+    ) -> UIView {
+        let container = UIView()
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.snp.makeConstraints { make in
+            make.height.greaterThanOrEqualTo(ThemeTokens.ComponentContract.SettingsRow.minHeight)
+        }
+
+        let iconBox = UIView()
+        iconBox.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        iconBox.layer.cornerRadius = ThemeTokens.ComponentContract.SettingsRow.iconBox / 2
+        iconBox.clipsToBounds = true
+        container.addSubview(iconBox)
+
+        let iconView = UIImageView()
+        iconView.contentMode = .scaleAspectFit
+        iconView.tintColor = ThemeTokens.Color.primary
+        if let lucide = item.lucideIcon {
+            iconView.image = lucide.templateImage(pointSize: ThemeTokens.ComponentContract.SettingsRow.iconSize)
+        }
+        container.addSubview(iconView)
+
+        let titleLabel = UILabel()
+        titleLabel.text = item.title
+        titleLabel.font = ThemeTokens.Typography.rowTitle
+        titleLabel.textColor = ThemeTokens.Color.text
+        titleLabel.numberOfLines = 1
+        titleLabel.lineBreakMode = .byTruncatingTail
+        container.addSubview(titleLabel)
+
+        let copyButton = UIButton(type: .system)
+        copyButton.setImage(
+            LucideIcon.copy.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm),
+            for: .normal
+        )
+        copyButton.tintColor = ThemeTokens.Color.primary
+        copyButton.accessibilityLabel = L10n.tr("settings.hero.copied_title")
+        container.addSubview(copyButton)
+
+        copyButton.rx.tap
+            .bind(to: copyTokenTapRelay)
+            .disposed(by: rx)
+
+        let hPad = ThemeTokens.ComponentContract.SettingsRow.horizontalPadding
+        let iconBoxSize = ThemeTokens.ComponentContract.SettingsRow.iconBox
+        let iconSize = ThemeTokens.ComponentContract.SettingsRow.iconSize
+
+        iconBox.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(hPad)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(iconBoxSize)
+        }
+
+        iconView.snp.makeConstraints { make in
+            make.center.equalTo(iconBox)
+            make.width.height.equalTo(iconSize)
+        }
+
+        titleLabel.snp.makeConstraints { make in
+            make.leading.equalTo(iconBox.snp.trailing).offset(ThemeTokens.Spacing.md)
+            make.centerY.equalToSuperview()
+            make.trailing.lessThanOrEqualTo(copyButton.snp.leading).offset(-ThemeTokens.Spacing.sm)
+        }
+
+        copyButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-hPad)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(44)
+        }
+
+        container.accessibilityIdentifier = "settings.cell.hero"
+        return container
     }
 
     override func bindViewModel() {
-        tableView.rx.itemSelected
-            .do(onNext: { [weak self] indexPath in
-                self?.tableView.deselectRow(at: indexPath, animated: true)
-            })
-            .bind(to: itemSelectRelay)
-            .disposed(by: rx)
-
         let input = SettingsViewModel.Input(
             itemSelect: itemSelectRelay.asDriver(onErrorJustReturn: IndexPath(row: 0, section: 0)),
             copyTokenTap: copyTokenTapRelay.asDriver(onErrorJustReturn: ()),
@@ -111,9 +274,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         #endif
 
         output.navigateToCacheDashboard
-            .drive(onNext: { [weak self] in
-                self?.navigateToCacheDashboard()
-            })
+            .drive(onNext: { [weak self] in self?.navigateToCacheDashboard() })
             .disposed(by: rx)
 
         output.openNotificationSettings
@@ -205,93 +366,5 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
         alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
         present(alert, animated: true)
         #endif
-    }
-}
-
-extension SettingsViewController: UITableViewDataSource {
-
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return viewModel.sections.count
-    }
-
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.sections[section].items.count
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: MenuCell.identifier, for: indexPath) as! MenuCell
-        let item = viewModel.sections[indexPath.section].items[indexPath.row]
-
-        cell.configure(
-            icon: item.icon,
-            title: item.title,
-            value: item.value,
-            showArrow: item.showArrow,
-            iconBackgroundColor: item.iconBackgroundColor,
-            iconTintColor: item.iconTintColor,
-            lucideIcon: item.lucideIcon,
-            hasToggle: item.hasToggle,
-            toggleIsOn: item.toggleIsOn,
-            badge: item.badge,
-            isHero: item.cellKind == .hero
-        )
-
-        if item.cellKind == .hero {
-            cell.copyTokenButton.rx.tap
-                .bind(to: copyTokenTapRelay)
-                .disposed(by: cell.prepareForReuseBag)
-        }
-
-        if item.hasToggle {
-            cell.toggleSwitch.rx.isOn
-                .skip(1)
-                .bind(to: rememberToggleRelay)
-                .disposed(by: cell.prepareForReuseBag)
-        }
-
-        cell.accessibilityIdentifier = item.action.map { "settings.cell.\($0.rawValue)" } ?? "settings.cell.hero"
-        return cell
-    }
-
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return viewModel.sections[section].header
-    }
-
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if viewModel.sections[section].header == nil {
-            return 0.01
-        }
-        return UITableView.automaticDimension
-    }
-}
-
-extension SettingsViewController: UITableViewDelegate {
-
-    func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
-        guard let header = view as? UITableViewHeaderFooterView else { return }
-        header.textLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
-        header.textLabel?.textColor = ThemeTokens.Color.textSecondary
-        header.textLabel?.text = header.textLabel?.text?.uppercased()
-        if let text = header.textLabel?.text {
-            let attrs: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 13, weight: .semibold),
-                .foregroundColor: ThemeTokens.Color.textSecondary,
-                .kern: 0.5
-            ]
-            header.textLabel?.attributedText = NSAttributedString(string: text, attributes: attrs)
-        }
-    }
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        let item = viewModel.sections[indexPath.section].items[indexPath.row]
-        if item.hasToggle { return }
-        if item.cellKind == .hero { return }
-        itemSelectRelay.accept(indexPath)
-    }
-
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        let item = viewModel.sections[indexPath.section].items[indexPath.row]
-        return item.cellKind == .hero ? 96 : 44
     }
 }

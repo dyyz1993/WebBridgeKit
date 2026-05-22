@@ -12,6 +12,68 @@ import RxSwift
 import UIKit
 import WebBridgeKit
 
+private struct TokenHistorySnapshot: Sendable {
+    let id: String
+    let url: String
+    let title: String?
+    let favicon: Data?
+    let htmlPath: String?
+    let cachedSize: Int64
+    let isCached: Bool
+    let isPinned: Bool
+    let isFavorite: Bool
+    let visitCount: Int
+    let lastVisitDate: Date
+    let cacheDate: Date?
+    let thumbnail: Data?
+    let ruleId: String?
+    let ruleName: String?
+    let isExcluded: Bool
+    let resourcePaths: [String]
+
+    init(history: WebPageHistory) {
+        self.id = history.id
+        self.url = history.url
+        self.title = history.title
+        self.favicon = history.favicon
+        self.htmlPath = history.htmlPath
+        self.cachedSize = history.cachedSize
+        self.isCached = history.isCached
+        self.isPinned = history.isPinned
+        self.isFavorite = history.isFavorite
+        self.visitCount = history.visitCount
+        self.lastVisitDate = history.lastVisitDate
+        self.cacheDate = history.cacheDate
+        self.thumbnail = history.thumbnail
+        self.ruleId = history.ruleId
+        self.ruleName = history.ruleName
+        self.isExcluded = history.isExcluded
+        self.resourcePaths = Array(history.resourcePaths)
+    }
+
+    func makeHistory() -> WebPageHistory {
+        let history = WebPageHistory()
+        history.id = id
+        history.url = url
+        history.title = title
+        history.favicon = favicon
+        history.htmlPath = htmlPath
+        history.cachedSize = cachedSize
+        history.isCached = isCached
+        history.isPinned = isPinned
+        history.isFavorite = isFavorite
+        history.visitCount = visitCount
+        history.lastVisitDate = lastVisitDate
+        history.cacheDate = cacheDate
+        history.thumbnail = thumbnail
+        history.ruleId = ruleId
+        history.ruleName = ruleName
+        history.isExcluded = isExcluded
+        history.resourcePaths.append(objectsIn: resourcePaths)
+        return history
+    }
+}
+
 /// 口令生成 ViewModel
 class TokenGenerateViewModel: ViewModel {
 
@@ -142,8 +204,9 @@ class TokenGenerateViewModel: ViewModel {
         Task { [weak self] in
             guard let self else { return }
             let allHistories = (try? await WebPageHistoryManager.shared.getAllHistories()) ?? []
-            let histories = Array(allHistories.prefix(50))
+            let historySnapshots = allHistories.prefix(50).map { TokenHistorySnapshot(history: $0) }
             await MainActor.run {
+                let histories = historySnapshots.map { $0.makeHistory() }
                 self.historiesRelay.accept(histories)
                 self.isEmptyRelay.accept(histories.isEmpty)
             }

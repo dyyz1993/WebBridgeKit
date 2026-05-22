@@ -110,7 +110,7 @@ public class WebSpeechHandler: BaseWebNativeHandler {
             guard let self = self else { return }
 
             if self.isRecognizing {
-                StructuredLogger.shared.warning("⚠️ [Speech] Recognition already in progress (at entry point), rejecting request", category: .handler)
+                StructuredLogger.shared.warning("[WARN] [Speech] Recognition already in progress (at entry point), rejecting request", category: .handler)
                 self.reject(error: "语音识别正在进行中，请先等待当前识别完成", code: 409, completion: completion)
                 return
             }
@@ -125,23 +125,23 @@ public class WebSpeechHandler: BaseWebNativeHandler {
 
             // 先检查当前权限状态
             let currentStatus = SFSpeechRecognizer.authorizationStatus()
-            StructuredLogger.shared.debug("🎤 [Speech] Current speech recognition status: \(self.permissionStatusString(currentStatus))", category: .handler)
+            StructuredLogger.shared.debug("[MIC] [Speech] Current speech recognition status: \(self.permissionStatusString(currentStatus))", category: .handler)
 
             if currentStatus == .authorized {
                 // 已有权限，直接请求麦克风权限
                 self.requestMicrophonePermission(completion: completion)
             } else if currentStatus == .notDetermined {
                 // 未确定，请求权限
-                StructuredLogger.shared.debug("🎤 [Speech] Requesting speech recognition authorization...", category: .handler)
+                StructuredLogger.shared.debug("[MIC] [Speech] Requesting speech recognition authorization...", category: .handler)
                 SFSpeechRecognizer.requestAuthorization { [weak self] status in
                     guard let self = self else { return }
-                    StructuredLogger.shared.debug("🎤 [Speech] Authorization callback status: \(self.permissionStatusString(status))", category: .handler)
+                    StructuredLogger.shared.debug("[MIC] [Speech] Authorization callback status: \(self.permissionStatusString(status))", category: .handler)
 
                     // 延迟检查状态，确保 iOS 已更新缓存
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                         guard let self = self else { return }
                         let refreshedStatus = SFSpeechRecognizer.authorizationStatus()
-                        StructuredLogger.shared.debug("🎤 [Speech] Refreshed status after delay: \(self.permissionStatusString(refreshedStatus))", category: .handler)
+                        StructuredLogger.shared.debug("[MIC] [Speech] Refreshed status after delay: \(self.permissionStatusString(refreshedStatus))", category: .handler)
 
                         guard refreshedStatus == .authorized else {
                             let permissionStatus = PermissionStatus(rawValue: self.permissionStatusString(refreshedStatus)) ?? .unknown
@@ -169,7 +169,7 @@ public class WebSpeechHandler: BaseWebNativeHandler {
                 return
             }
 
-            StructuredLogger.shared.debug("🎤 [Speech] Microphone permission granted, starting recognition", category: .handler)
+            StructuredLogger.shared.debug("[MIC] [Speech] Microphone permission granted, starting recognition", category: .handler)
             self?.performRecognition(completion: completion)
         }
     }
@@ -203,13 +203,13 @@ public class WebSpeechHandler: BaseWebNativeHandler {
             )
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-            StructuredLogger.shared.debug("🎤 [Speech] Audio session configured, category: \(audioSession.category), mode: \(audioSession.mode)", category: .handler)
+            StructuredLogger.shared.debug("[MIC] [Speech] Audio session configured, category: \(audioSession.category), mode: \(audioSession.mode)", category: .handler)
 
             // 设置音频输入 - 使用与语音识别兼容的格式
             let inputNode = audioEngine.inputNode
             let recordingFormat = inputNode.outputFormat(forBus: 0)
 
-            StructuredLogger.shared.debug("🎤 [Speech] Input format: \(recordingFormat)", category: .handler)
+            StructuredLogger.shared.debug("[MIC] [Speech] Input format: \(recordingFormat)", category: .handler)
 
             // 直接使用硬件格式，但需要是线性PCM格式
             // Speech Recognition 支持多种格式，关键是 linear PCM
@@ -230,7 +230,7 @@ public class WebSpeechHandler: BaseWebNativeHandler {
 
             // 启动音频引擎
             try audioEngine.start()
-            StructuredLogger.shared.debug("🎤 [Speech] Audio engine started, isRunning: \(audioEngine.isRunning)", category: .handler)
+            StructuredLogger.shared.debug("[MIC] [Speech] Audio engine started, isRunning: \(audioEngine.isRunning)", category: .handler)
 
             // 开始识别
             var finalResult = ""
@@ -240,19 +240,19 @@ public class WebSpeechHandler: BaseWebNativeHandler {
             recognitionTask = recognizer.recognitionTask(with: recognitionRequest, resultHandler: { [weak self] result, error in
                 // 如果已经处理过最终结果，忽略后续回调
                 if hasFinalResult {
-                    StructuredLogger.shared.debug("🎤 [Speech] Already has final result, ignoring callback", category: .handler)
+                    StructuredLogger.shared.debug("[MIC] [Speech] Already has final result, ignoring callback", category: .handler)
                     return
                 }
 
                 if let error = error {
                     let errorDesc = error.localizedDescription
-                    StructuredLogger.shared.error("🎤 [Speech] Recognition error: \(errorDesc)", category: .handler)
+                    StructuredLogger.shared.error("[MIC] [Speech] Recognition error: \(errorDesc)", category: .handler)
 
                     // 检查是否是正常结束（用户停止或超时）
                     if errorDesc.contains("restart") || errorDesc.contains("cancelled") {
                         // 正常结束，使用最后一次的部分结果
                         let resultToUse = lastPartialResult.isEmpty ? finalResult : lastPartialResult
-                        StructuredLogger.shared.debug("🎤 [Speech] Recognition ended normally, result: '\(resultToUse)'", category: .handler)
+                        StructuredLogger.shared.debug("[MIC] [Speech] Recognition ended normally, result: '\(resultToUse)'", category: .handler)
 
                         if !resultToUse.isEmpty {
                             hasFinalResult = true
@@ -274,7 +274,7 @@ public class WebSpeechHandler: BaseWebNativeHandler {
 
                 if let result = result {
                     let transcription = result.bestTranscription.formattedString
-                    StructuredLogger.shared.debug("🎤 [Speech] Got result, isFinal: \(result.isFinal), text: '\(transcription)'", category: .handler)
+                    StructuredLogger.shared.debug("[MIC] [Speech] Got result, isFinal: \(result.isFinal), text: '\(transcription)'", category: .handler)
 
                     if !transcription.isEmpty {
                         lastPartialResult = transcription
@@ -293,7 +293,7 @@ public class WebSpeechHandler: BaseWebNativeHandler {
                 }
             })
 
-            StructuredLogger.shared.debug("🎤 [Speech] Recognition task created, waiting for audio input...", category: .handler)
+            StructuredLogger.shared.debug("[MIC] [Speech] Recognition task created, waiting for audio input...", category: .handler)
 
             // 设置超时定时器 - 给用户30秒时间说话
             let workItem = DispatchWorkItem { [weak self] in
@@ -349,7 +349,7 @@ public class WebSpeechHandler: BaseWebNativeHandler {
         if isTapInstalled {
             audioEngine.inputNode.removeTap(onBus: 0)
             isTapInstalled = false
-            StructuredLogger.shared.debug("🎤 [Speech] Tap removed", category: .handler)
+            StructuredLogger.shared.debug("[MIC] [Speech] Tap removed", category: .handler)
         }
 
         // 清理识别资源

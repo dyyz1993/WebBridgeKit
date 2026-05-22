@@ -28,7 +28,7 @@ class ManifestTestCasesViewController: UIViewController {
 
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .plain)
-        table.backgroundColor = ThemeColors.current.background
+        table.backgroundColor = ThemeTokens.Color.background
         table.separatorStyle = .none
         table.register(TestCaseCell.self, forCellReuseIdentifier: TestCaseCell.identifier)
         table.rowHeight = UITableView.automaticDimension
@@ -39,7 +39,7 @@ class ManifestTestCasesViewController: UIViewController {
 
     private lazy var refreshControl: UIRefreshControl = {
         let control = UIRefreshControl()
-        control.tintColor = ThemeColors.current.primary
+        control.tintColor = ThemeTokens.Color.primary
         return control
     }()
 
@@ -60,7 +60,7 @@ class ManifestTestCasesViewController: UIViewController {
 
         let infoLabel = UILabel()
         infoLabel.font = ThemeTokens.Typography.footnote
-        infoLabel.textColor = ThemeColors.current.textSecondary
+        infoLabel.textColor = ThemeTokens.Color.textSecondary
         infoLabel.text = "点击运行按钮执行测试，测试结果会记录到日志文件"
         infoLabel.textAlignment = .center
         infoLabel.numberOfLines = 0
@@ -96,7 +96,7 @@ class ManifestTestCasesViewController: UIViewController {
 
     private func setupUI() {
         title = "测试用例"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         // 添加导航栏按钮
         navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -292,15 +292,15 @@ class TestWebViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = ThemeColors.current.surface
+        view.backgroundColor = ThemeTokens.Color.surface
 
         webView.accessibilityIdentifier = "TestWebView"
         webView.backgroundColor = .blue
         webView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(webView)
 
-        debugLabel.textColor = ThemeColors.current.surface
-        debugLabel.backgroundColor = ThemeColors.current.text.withAlphaComponent(0.7)
+        debugLabel.textColor = ThemeTokens.Color.surface
+        debugLabel.backgroundColor = ThemeTokens.Color.text.withAlphaComponent(0.7)
         debugLabel.accessibilityIdentifier = "DebugLabel"
         debugLabel.numberOfLines = 0
         debugLabel.font = ThemeTokens.Typography.caption1
@@ -324,7 +324,7 @@ class TestWebViewController: UIViewController {
 
         NotificationCenter.default.addObserver(forName: .updateDebugLabel, object: nil, queue: .main) { [weak self] notification in
             if let text = notification.userInfo?["text"] as? String {
-                NSLog("📱 [TestVC] Received Notification: UpdateDebugLabel with text: %@", text)
+                NSLog("[MOBILE] [TestVC] Received Notification: UpdateDebugLabel with text: %@", text)
 
                 let currentText = self?.debugLabel.text ?? ""
                 let newText = currentText.isEmpty ? text : currentText + "\n" + text
@@ -334,7 +334,7 @@ class TestWebViewController: UIViewController {
                 self?.view.layoutIfNeeded()
 
                 // 打印当前标签内容以便调试
-                NSLog("📱 [TestVC] DebugLabel content is now: %@", self?.debugLabel.text ?? "nil")
+                NSLog("[MOBILE] [TestVC] DebugLabel content is now: %@", self?.debugLabel.text ?? "nil")
             }
         }
     }

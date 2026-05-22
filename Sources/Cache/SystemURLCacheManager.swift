@@ -48,7 +48,7 @@ public class SystemURLCacheManager {
         // 设置为 shared URLCache
         URLCache.shared = urlCache
 
-        StructuredLogger.shared.info("✅ [SystemURLCache] Initialized with:", category: .cache)
+        StructuredLogger.shared.info("[OK] [SystemURLCache] Initialized with:", category: .cache)
         StructuredLogger.shared.debug("   - Memory: 50 MB", category: .cache)
         StructuredLogger.shared.debug("   - Disk: 500 MB", category: .cache)
         StructuredLogger.shared.debug("   - Path: \(cachePath)", category: .cache)
@@ -97,7 +97,7 @@ public class SystemURLCacheManager {
     public func storeCachedResponse(data: Data, for response: URLResponse, request: URLRequest) {
         let cachedResponse = CachedURLResponse(response: response, data: data)
         urlCache.storeCachedResponse(cachedResponse, for: request)
-        StructuredLogger.shared.info("✅ [SystemURLCache] Stored: \(request.url?.absoluteString ?? "unknown")", category: .cache)
+        StructuredLogger.shared.info("[OK] [SystemURLCache] Stored: \(request.url?.absoluteString ?? "unknown")", category: .cache)
     }
 
     /// 移除指定 URL 的缓存
@@ -105,14 +105,14 @@ public class SystemURLCacheManager {
     public func removeCachedResponse(for url: URL) {
         let request = URLRequest(url: url)
         urlCache.removeCachedResponse(for: request)
-        StructuredLogger.shared.debug("🗑️ [SystemURLCache] Removed: \(url.absoluteString)", category: .cache)
+        StructuredLogger.shared.debug("[DEL] [SystemURLCache] Removed: \(url.absoluteString)", category: .cache)
     }
 
     /// 清除所有缓存
     public func removeAllCachedResponses() {
         urlCache.removeAllCachedResponses()
         resetStatistics()
-        StructuredLogger.shared.debug("🗑️ [SystemURLCache] All cache cleared", category: .cache)
+        StructuredLogger.shared.debug("[DEL] [SystemURLCache] All cache cleared", category: .cache)
     }
 
     /// 获取缓存大小
@@ -253,13 +253,13 @@ extension SystemURLCacheManager {
         // 设置默认的 URLCache
         URLCache.shared = urlCache
 
-        StructuredLogger.shared.info("✅ [SystemURLCache] Configured for WKWebView", category: .cache)
+        StructuredLogger.shared.info("[OK] [SystemURLCache] Configured for WKWebView", category: .cache)
     }
 
     /// 清理过期的缓存响应
     public func cleanupExpiredCache() {
         // URLCache 会自动管理过期
         // 这里不需要手动清理
-        StructuredLogger.shared.debug("🧹 [SystemURLCache] Auto-managed by system", category: .cache)
+        StructuredLogger.shared.debug("[CLEAN] [SystemURLCache] Auto-managed by system", category: .cache)
     }
 }

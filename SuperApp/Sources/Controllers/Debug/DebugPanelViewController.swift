@@ -60,7 +60,7 @@ class DebugPanelViewController: UIViewController {
         tabScrollView.bounces = true
 
         tabStack.axis = .horizontal
-        tabStack.spacing = 4
+        tabStack.spacing = ThemeTokens.Spacing.xs
         tabStack.distribution = .fill
         tabStack.alignment = .center
 
@@ -276,7 +276,7 @@ extension HandlerDebugListViewController: UITableViewDataSource {
         config.secondaryText = handler.action
 
         if !handler.requiredPermissions.isEmpty {
-            config.secondaryText = "\(handler.action) 🔐"
+            config.secondaryText = "\(handler.action) [AUTH]"
         }
 
         cell.contentConfiguration = config
@@ -330,7 +330,7 @@ private class HandlerDebugDetailViewController: UIViewController {
     private func setupUI() {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 16
+        stack.spacing = ThemeTokens.Spacing.lg
 
         let descLabel = UILabel()
         descLabel.text = meta.description
@@ -341,12 +341,12 @@ private class HandlerDebugDetailViewController: UIViewController {
         let infoLabel = UILabel()
         infoLabel.text = "\(meta.category.emoji) \(meta.category.displayName) · action: \(meta.action)"
         infoLabel.textColor = ThemeTokens.Color.textSecondary
-        infoLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        infoLabel.font = ThemeTokens.Typography.monospaceBody
         stack.addArrangedSubview(infoLabel)
 
         if !meta.requiredPermissions.isEmpty {
             let permLabel = UILabel()
-            permLabel.text = "🔐 Required: \(meta.requiredPermissions.joined(separator: ", "))"
+            permLabel.text = "[AUTH] Required: \(meta.requiredPermissions.joined(separator: ", "))"
             permLabel.textColor = ThemeTokens.Color.warning
             stack.addArrangedSubview(permLabel)
         }
@@ -377,7 +377,7 @@ private class HandlerDebugDetailViewController: UIViewController {
         }
         stack.addArrangedSubview(button)
 
-        resultTextView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        resultTextView.font = ThemeTokens.Typography.monospaceMeta
         resultTextView.layer.borderColor = ThemeTokens.Color.border.cgColor
         resultTextView.layer.borderWidth = 1
         resultTextView.layer.cornerRadius = ThemeTokens.CornerRadius.md
@@ -414,7 +414,7 @@ private class HandlerDebugDetailViewController: UIViewController {
     private func makeParamField(_ param: ParamDef) -> UIStackView {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 4
+        stack.spacing = ThemeTokens.Spacing.xs
 
         let label = UILabel()
         var text = param.name
@@ -460,9 +460,9 @@ private class HandlerDebugDetailViewController: UIViewController {
             guard let self = self else { return }
 
             let result = """
-            ✅ Handler: \(self.meta.action)
-            📋 Category: \(self.meta.category.displayName)
-            📥 Parameters: \(params)
+            [OK] Handler: \(self.meta.action)
+            [LIST] Category: \(self.meta.category.displayName)
+            [RECV] Parameters: \(params)
 
             Note: Full execution requires an active WebView context.
             This debug panel shows the handler metadata and parameter validation.
@@ -503,7 +503,7 @@ private class LogDebugViewController: UIViewController {
 
         let toolbar = makeToolbar()
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        textView.font = ThemeTokens.Typography.monospaceSmall
         textView.backgroundColor = ThemeTokens.Color.surface
 
         view.addSubview(toolbar)
@@ -532,7 +532,7 @@ private class LogDebugViewController: UIViewController {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.distribution = .fillEqually
-        stack.spacing = 8
+        stack.spacing = ThemeTokens.Spacing.sm
 
         let allButton = UIButton(type: .system)
         allButton.setTitle(L10n.tr("debug.panel.log_all"), for: .normal)
@@ -620,7 +620,7 @@ private class EnvironmentDebugViewController: UIViewController {
         )
 
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        textView.font = ThemeTokens.Typography.monospaceBody
         textView.backgroundColor = ThemeTokens.Color.surface
 
         view.addSubview(textView)

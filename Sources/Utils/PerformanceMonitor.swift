@@ -299,7 +299,7 @@ public final class PerformanceMonitor {
     }
 
     private func logSlowOperation(operation: String, duration: TimeInterval, metadata: [String: Any]?) {
-        var message = "⚠️ SLOW OPERATION: \(operation) took \(String(format: "%.2f", duration))s"
+        var message = "[WARN] SLOW OPERATION: \(operation) took \(String(format: "%.2f", duration))s"
 
         if let metadata = metadata {
             let metadataString = metadata.map { "\($0.key)=\($0.value)" }.joined(separator: ", ")

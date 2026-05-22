@@ -9,8 +9,8 @@ class CommandShowcaseViewController: UIViewController {
 
     private let clipboardLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 0
         label.text = "(empty)"
         return label
@@ -20,7 +20,7 @@ class CommandShowcaseViewController: UIViewController {
         let tf = UITextField()
         tf.placeholder = "Enter command to decode (JSON/Base64/URL scheme)"
         tf.borderStyle = .roundedRect
-        tf.font = ThemeTypography.current.body
+        tf.font = ThemeTokens.Typography.body
         tf.autocapitalizationType = .none
         tf.autocorrectionType = .no
         return tf
@@ -29,17 +29,17 @@ class CommandShowcaseViewController: UIViewController {
     private let resultTextView: UITextView = {
         let tv = UITextView()
         tv.isEditable = false
-        tv.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
-        tv.backgroundColor = ThemeColors.current.surface
-        tv.layer.cornerRadius = ThemeCornerRadius.default.md
+        tv.font = ThemeTokens.Typography.monospaceBody
+        tv.backgroundColor = ThemeTokens.Color.surface
+        tv.layer.cornerRadius = ThemeTokens.CornerRadius.md
         tv.text = "Parse result will appear here..."
         return tv
     }()
 
     private let routeLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 0
         label.text = "Route: (none)"
         return label
@@ -47,8 +47,8 @@ class CommandShowcaseViewController: UIViewController {
 
     private let isCommandLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.caption1
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeTokens.Color.textSecondary
         label.text = ""
         return label
     }()
@@ -56,7 +56,7 @@ class CommandShowcaseViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "口令"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
         readClipboard()
     }
@@ -68,7 +68,7 @@ class CommandShowcaseViewController: UIViewController {
 
     private func setupUI() {
         stackView.axis = .vertical
-        stackView.spacing = ThemeSpacing.default.md
+        stackView.spacing = ThemeTokens.Spacing.md
         stackView.alignment = .fill
 
         let clipboardHeader = makeHeader("Clipboard Content")
@@ -79,8 +79,8 @@ class CommandShowcaseViewController: UIViewController {
         isCommandStack.axis = .horizontal
         isCommandStack.spacing = 8
         let looksLikeLabel = UILabel()
-        looksLikeLabel.font = ThemeTypography.current.caption1
-        looksLikeLabel.textColor = ThemeColors.current.textSecondary
+        looksLikeLabel.font = ThemeTokens.Typography.caption1
+        looksLikeLabel.textColor = ThemeTokens.Color.textSecondary
         looksLikeLabel.text = "Looks like command:"
         isCommandStack.addArrangedSubview(looksLikeLabel)
         isCommandStack.addArrangedSubview(isCommandLabel)
@@ -133,10 +133,10 @@ class CommandShowcaseViewController: UIViewController {
         }
 
         stackView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(ThemeSpacing.default.md)
-            make.left.right.equalToSuperview().inset(ThemeSpacing.default.md)
-            make.bottom.equalToSuperview().offset(-ThemeSpacing.default.lg)
-            make.width.equalTo(scrollView).offset(-ThemeSpacing.default.md * 2)
+            make.top.equalToSuperview().offset(ThemeTokens.Spacing.md)
+            make.left.right.equalToSuperview().inset(ThemeTokens.Spacing.md)
+            make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.lg)
+            make.width.equalTo(scrollView).offset(-ThemeTokens.Spacing.md * 2)
         }
     }
 
@@ -145,7 +145,7 @@ class CommandShowcaseViewController: UIViewController {
             clipboardLabel.text = text
             let isCommand = ClipboardMonitor.shared.looksLikeCommand(text)
             isCommandLabel.text = isCommand ? "Yes" : "No"
-            isCommandLabel.textColor = isCommand ? ThemeColors.current.success : ThemeColors.current.textSecondary
+            isCommandLabel.textColor = isCommand ? ThemeTokens.Color.success : ThemeTokens.Color.textSecondary
         } else {
             clipboardLabel.text = "(clipboard is empty)"
             isCommandLabel.text = "N/A"
@@ -245,7 +245,7 @@ class CommandShowcaseViewController: UIViewController {
 
     private func makeDivider() -> UIView {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.divider
+        view.backgroundColor = ThemeTokens.Color.separator
         view.snp.makeConstraints { make in
             make.height.equalTo(1)
         }

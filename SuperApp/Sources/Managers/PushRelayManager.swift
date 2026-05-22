@@ -231,7 +231,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
                 #endif
             } else {
                 #if DEBUG
-                print("[PushRelay] ✅ Shown: \(content.title)")
+                print("[PushRelay] [OK] Shown: \(content.title)")
                 #endif
             }
         }

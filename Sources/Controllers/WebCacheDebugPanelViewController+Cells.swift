@@ -211,7 +211,7 @@ class RuleHeaderCell: UITableViewCell {
         expandButton.addTarget(self, action: #selector(expandTapped), for: .touchUpInside)
         containerView.addSubview(expandButton)
 
-        patternLabel.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        patternLabel.font = ThemeTokens.Typography.monospaceSmall
         patternLabel.textColor = ThemeTokens.Color.textSecondary
         patternLabel.numberOfLines = 2
         containerView.addSubview(patternLabel)
@@ -293,7 +293,7 @@ class RuleHeaderCell: UITableViewCell {
         isExpanded: Bool
     ) {
         titleLabel.text = rule.name
-        expandButton.setTitle(isExpanded ? "▼" : "▶", for: .normal)
+        expandButton.setTitle(isExpanded ? "▼" : "[PLAY]", for: .normal)
 
         let includeStr = rule.includePatterns.count == 1
             ? rule.includePatterns[0]
@@ -350,12 +350,12 @@ class ExcludePatternCell: UITableViewCell {
         containerView.layer.masksToBounds = true
         contentView.addSubview(containerView)
 
-        patternLabel.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        patternLabel.font = ThemeTokens.Typography.monospaceSmall
         patternLabel.textColor = ThemeTokens.Color.textSecondary
         patternLabel.numberOfLines = 1
         containerView.addSubview(patternLabel)
 
-        removeButton.setTitle("✗", for: .normal)
+        removeButton.setTitle("[EMOJI]", for: .normal)
         removeButton.setTitleColor(ThemeTokens.Color.error, for: .normal)
         removeButton.titleLabel?.font = .systemFont(ofSize: 14)
         removeButton.addTarget(self, action: #selector(removeTapped), for: .touchUpInside)
@@ -382,7 +382,7 @@ class ExcludePatternCell: UITableViewCell {
     }
 
     func configure(pattern: String) {
-        patternLabel.text = "✗ \(pattern)"
+        patternLabel.text = "[EMOJI] \(pattern)"
     }
 
     @objc private func removeTapped() {
@@ -425,14 +425,14 @@ class PageCell: UITableViewCell {
         contentView.addSubview(containerView)
 
         iconLabel.font = .systemFont(ofSize: 14)
-        iconLabel.text = "📄"
+        iconLabel.text = "[DOC]"
         containerView.addSubview(iconLabel)
 
         titleLabel.font = .systemFont(ofSize: 14, weight: .medium)
         titleLabel.textColor = ThemeTokens.Color.text
         containerView.addSubview(titleLabel)
 
-        urlLabel.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
+        urlLabel.font = ThemeTokens.Typography.monospaceMini
         urlLabel.textColor = ThemeTokens.Color.textSecondary
         urlLabel.numberOfLines = 1
         containerView.addSubview(urlLabel)
@@ -513,11 +513,11 @@ class PageCell: UITableViewCell {
         urlLabel.text = pageInfo.url
 
         if pageInfo.isExcluded {
-            iconLabel.text = "🚫"
+            iconLabel.text = "[BLOCK]"
             statsLabel.text = "已排除"
             statsLabel.textColor = ThemeTokens.Color.error
         } else {
-            iconLabel.text = "📄"
+            iconLabel.text = "[DOC]"
             statsLabel.text = "\(pageInfo.resourceCount) 资源 | \(pageInfo.formattedSize) | \(pageInfo.formattedCachedAt)"
             statsLabel.textColor = ThemeTokens.Color.textSecondary
         }
@@ -554,7 +554,7 @@ class SectionHeaderCell: UITableViewCell {
         selectionStyle = .none
 
         titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        titleLabel.text = "📋 缓存规则"
+        titleLabel.text = "[LIST] 缓存规则"
         contentView.addSubview(titleLabel)
 
         titleLabel.snp.makeConstraints { make in

@@ -20,7 +20,7 @@ class SegmentedCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
@@ -51,7 +51,7 @@ class SegmentedCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = ThemeColors.current.background
+        backgroundColor = ThemeTokens.Color.background
 
         contentView.addSubview(titleLabel)
         contentView.addSubview(segmentedControl)

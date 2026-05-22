@@ -23,7 +23,7 @@ class SubsystemStatCell: UITableViewCell {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .white
+        iv.tintColor = ThemeTokens.Color.textOnColor
         return iv
     }()
 
@@ -43,7 +43,7 @@ class SubsystemStatCell: UITableViewCell {
 
     private let entriesLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium)
+        l.font = ThemeTokens.Typography.monospaceMeta
         l.textColor = ThemeTokens.Color.text
         l.textAlignment = .right
         return l
@@ -51,7 +51,7 @@ class SubsystemStatCell: UITableViewCell {
 
     private let sizeLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        l.font = ThemeTokens.Typography.monospaceMeta
         l.textColor = ThemeTokens.Color.textSecondary
         l.textAlignment = .right
         return l
@@ -67,8 +67,8 @@ class SubsystemStatCell: UITableViewCell {
 
     private let hitRateLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
-        l.textColor = .white
+        l.font = ThemeTokens.Typography.monospaceMeta
+        l.textColor = ThemeTokens.Color.textOnColor
         l.textAlignment = .center
         return l
     }()

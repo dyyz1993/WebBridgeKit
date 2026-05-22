@@ -39,7 +39,7 @@ class AppDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("discover.detail.title")
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         navigationItem.largeTitleDisplayMode = .never
 
         view.addSubview(scrollView)
@@ -84,7 +84,7 @@ class AppDetailViewController: UIViewController {
 
         let icon = UIImageView()
         icon.contentMode = .scaleAspectFit
-        icon.tintColor = .white
+        icon.tintColor = ThemeTokens.Color.textOnColor
         icon.image = DiscoverViewController.iconForName(item.name).image(pointSize: 28)
         icon.accessibilityLabel = "应用图标"
         iconContainer.addSubview(icon)
@@ -103,13 +103,13 @@ class AppDetailViewController: UIViewController {
         textStack.spacing = ThemeTokens.Spacing.xs
 
         let nameLabel = UILabel()
-        nameLabel.font = .systemFont(ofSize: 20, weight: .bold)
-        nameLabel.textColor = ThemeColors.current.text
+        nameLabel.font = ThemeTokens.Typography.compactTitle
+        nameLabel.textColor = ThemeTokens.Color.text
         nameLabel.text = item.name
 
         let idLabel = UILabel()
-        idLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        idLabel.textColor = ThemeColors.current.textSecondary
+        idLabel.font = ThemeTokens.Typography.metadata
+        idLabel.textColor = ThemeTokens.Color.textSecondary
         idLabel.text = item.bundleID ?? "com.example.app"
 
         textStack.addArrangedSubview(nameLabel)
@@ -303,7 +303,7 @@ class AppDetailViewController: UIViewController {
 
     private func makeCardView() -> UIView {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         let shadow = ThemeTokens.Shadows.Card
         view.layer.shadowColor = UIColor.black.cgColor
@@ -315,8 +315,8 @@ class AppDetailViewController: UIViewController {
 
     private func makeSectionTitle(_ text: String) -> UILabel {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13, weight: .semibold)
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.metadata
+        label.textColor = ThemeTokens.Color.textSecondary
         label.text = text.uppercased()
         return label
     }
@@ -325,13 +325,13 @@ class AppDetailViewController: UIViewController {
         let container = UIView()
 
         let lb = UILabel()
-        lb.font = .systemFont(ofSize: 14, weight: .regular)
-        lb.textColor = ThemeColors.current.textSecondary
+        lb.font = ThemeTokens.Typography.body
+        lb.textColor = ThemeTokens.Color.textSecondary
         lb.text = label
 
         let vl = UILabel()
-        vl.font = mono ? .monospacedSystemFont(ofSize: 13, weight: .regular) : .systemFont(ofSize: 14, weight: .regular)
-        vl.textColor = valueColor ?? ThemeColors.current.text
+        vl.font = mono ? ThemeTokens.Typography.monospaceMeta : ThemeTokens.Typography.body
+        vl.textColor = valueColor ?? ThemeTokens.Color.text
         vl.textAlignment = .right
         vl.text = value
 
@@ -351,7 +351,7 @@ class AppDetailViewController: UIViewController {
 
         if !isLast {
             let sep = UIView()
-            sep.backgroundColor = ThemeColors.current.divider
+            sep.backgroundColor = ThemeTokens.Color.separator
             container.addSubview(sep)
             sep.snp.makeConstraints { make in
                 make.leading.trailing.bottom.equalToSuperview()
@@ -388,7 +388,7 @@ class AppDetailViewController: UIViewController {
 
         btn.backgroundColor = bgColor
         btn.setTitleColor(fgColor, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        btn.titleLabel?.font = ThemeTokens.Typography.button
         btn.setTitle(title, for: .normal)
         btn.setImage(icon.image(pointSize: 14), for: .normal)
         btn.tintColor = fgColor

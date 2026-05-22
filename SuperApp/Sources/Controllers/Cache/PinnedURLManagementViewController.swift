@@ -43,7 +43,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
 
     private let emptyIconLabel: UILabel = {
         let l = UILabel()
-        l.text = "📌"
+        l.text = "[PIN]"
         l.font = UIFont.preferredFont(forTextStyle: .largeTitle)
         return l
     }()
@@ -68,7 +68,7 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
 
     private lazy var addFromPresetButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("📚 从预设目录添加", for: .normal)
+        btn.setTitle("[BOOKS] 从预设目录添加", for: .normal)
         btn.titleLabel?.font = UIFont.preferredFont(forTextStyle: .subheadline)
         btn.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.md
@@ -136,9 +136,6 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         output.error
             .drive(onNext: { (error: String?) in
                 if let error, !error.isEmpty {
-                    #if DEBUG
-                    print("[PinnedURL] Error: \(error)")
-                    #endif
                 }
             })
             .disposed(by: rx)

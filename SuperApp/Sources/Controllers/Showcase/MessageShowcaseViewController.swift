@@ -19,7 +19,7 @@ class MessageShowcaseViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "消息"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.delegate = self
@@ -171,14 +171,14 @@ extension MessageShowcaseViewController: UITableViewDataSource, UITableViewDeleg
 private class MessageStatCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
     private let valueLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.headline
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeTokens.Color.text
         label.textAlignment = .right
         return label
     }()
@@ -209,21 +209,21 @@ private class MessageStatCell: UITableViewCell {
 private class MsgDetailCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.headline
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
     private let bodyLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 2
         return label
     }()
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.caption1
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .right
         return label
     }()

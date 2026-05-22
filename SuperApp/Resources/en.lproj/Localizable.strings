@@ -75,6 +75,9 @@
 "discover.title" = "Discover";
 "discover.empty.title" = "Discover Apps";
 "discover.empty.description" = "Cached apps will appear here";
+"discover.search.placeholder" = "Search apps or resources";
+"discover.search.no_result" = "No results found";
+"discover.search.no_result_desc" = "Try searching with different keywords";
 "discover.section.recent" = "Recently Used";
 "discover.section.cached" = "Cached Apps";
 "discover.badge.persistent" = "Persistent";

@@ -19,7 +19,7 @@ extension PersistentManifestLoader {
             throw LoaderError.invalidManifestFormat
         }
 
-        NSLog("🌐 [PersistentManifestLoader] 加载入口页面: %@", entryURL.absoluteString)
+        NSLog("[WEB] [PersistentManifestLoader] 加载入口页面: %@", entryURL.absoluteString)
 
         try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.main.async {

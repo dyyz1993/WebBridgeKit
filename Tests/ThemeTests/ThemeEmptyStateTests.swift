@@ -1,6 +1,15 @@
 import XCTest
 @testable import WebBridgeKit
 
+private func assertColorsEqual(_ actual: UIColor?, _ expected: UIColor?, file: StaticString = #file, line: UInt = #line) {
+    guard let actual = actual, let expected = expected else {
+        XCTAssertEqual(actual, expected, file: file, line: line)
+        return
+    }
+    let trait = UITraitCollection(userInterfaceStyle: .light)
+    XCTAssertEqual(actual.resolvedColor(with: trait), expected.resolvedColor(with: trait), file: file, line: line)
+}
+
 final class ThemeEmptyStateTests: XCTestCase {
 
     // MARK: - Initialization
@@ -133,7 +142,7 @@ final class ThemeEmptyStateTests: XCTestCase {
         let titleLabel = empty.subviews[1] as? UILabel
 
         XCTAssertNotNil(titleLabel)
-        XCTAssertEqual(titleLabel?.font, ThemeTypography.current.title2)
+        XCTAssertEqual(titleLabel?.font, ThemeTokens.Typography.title3)
     }
 
     func testTitleColor() {
@@ -141,7 +150,7 @@ final class ThemeEmptyStateTests: XCTestCase {
         let titleLabel = empty.subviews[1] as? UILabel
 
         XCTAssertNotNil(titleLabel)
-        XCTAssertEqual(titleLabel?.textColor, ThemeColors.current.text)
+        assertColorsEqual(titleLabel?.textColor, ThemeTokens.Color.text)
     }
 
     func testTitleTextAlignment() {
@@ -165,7 +174,7 @@ final class ThemeEmptyStateTests: XCTestCase {
         let descriptionLabel = empty.subviews[2] as? UILabel
 
         XCTAssertNotNil(descriptionLabel)
-        XCTAssertEqual(descriptionLabel?.font, ThemeTypography.current.body)
+        XCTAssertEqual(descriptionLabel?.font, ThemeTokens.Typography.body)
     }
 
     func testDescriptionColor() {
@@ -173,7 +182,7 @@ final class ThemeEmptyStateTests: XCTestCase {
         let descriptionLabel = empty.subviews[2] as? UILabel
 
         XCTAssertNotNil(descriptionLabel)
-        XCTAssertEqual(descriptionLabel?.textColor, ThemeColors.current.textSecondary)
+        assertColorsEqual(descriptionLabel?.textColor, ThemeTokens.Color.textSecondary)
     }
 
     func testDescriptionTextAlignment() {
@@ -209,7 +218,7 @@ final class ThemeEmptyStateTests: XCTestCase {
         let imageView = empty.subviews.first as? UIImageView
 
         XCTAssertNotNil(imageView)
-        XCTAssertEqual(imageView?.tintColor, ThemeColors.current.textSecondary)
+        assertColorsEqual(imageView?.tintColor, ThemeTokens.Color.textSecondary)
     }
 
     func testIconContentMode() {
@@ -314,13 +323,13 @@ final class ThemeEmptyStateTests: XCTestCase {
     func testTitleUsesThemeTypography() {
         let empty = ThemeEmptyState(frame: .zero)
         let titleLabel = empty.subviews[1] as? UILabel
-        XCTAssertEqual(titleLabel?.font, ThemeTypography.current.title2)
+        XCTAssertEqual(titleLabel?.font, ThemeTokens.Typography.title3)
     }
 
     func testDescriptionUsesThemeTypography() {
         let empty = ThemeEmptyState(frame: .zero)
         let descriptionLabel = empty.subviews[2] as? UILabel
-        XCTAssertEqual(descriptionLabel?.font, ThemeTypography.current.body)
+        XCTAssertEqual(descriptionLabel?.font, ThemeTokens.Typography.body)
     }
 
     func testAllTypographyElements() {
@@ -328,9 +337,9 @@ final class ThemeEmptyStateTests: XCTestCase {
         let titleLabel = empty.subviews[1] as? UILabel
         let descriptionLabel = empty.subviews[2] as? UILabel
 
-        XCTAssertEqual(titleLabel?.font, ThemeTypography.current.title2)
-        XCTAssertEqual(descriptionLabel?.font, ThemeTypography.current.body)
-        XCTAssertEqual(titleLabel?.textColor, ThemeColors.current.text)
-        XCTAssertEqual(descriptionLabel?.textColor, ThemeColors.current.textSecondary)
+        XCTAssertEqual(titleLabel?.font, ThemeTokens.Typography.title3)
+        XCTAssertEqual(descriptionLabel?.font, ThemeTokens.Typography.body)
+        assertColorsEqual(titleLabel?.textColor, ThemeTokens.Color.text)
+        assertColorsEqual(descriptionLabel?.textColor, ThemeTokens.Color.textSecondary)
     }
 }

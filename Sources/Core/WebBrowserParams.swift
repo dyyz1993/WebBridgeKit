@@ -77,8 +77,8 @@ public struct WebBrowserParams {
     public let showCloseButton: Bool
     public let hideNavigationBar: Bool
     public let hideStatusBar: Bool
-    public let hideTabBar: Bool           // 🔥 隐藏底部 Tab Bar
-    public let disableSwipeBack: Bool     // 🔥 禁用侧滑返回手势
+    public let hideTabBar: Bool           // [HOT] 隐藏底部 Tab Bar
+    public let disableSwipeBack: Bool     // [HOT] 禁用侧滑返回手势
     public let orientation: UIInterfaceOrientationMask
     public let allowJavaScriptClose: Bool
     public let customTitle: String?
@@ -99,8 +99,8 @@ public struct WebBrowserParams {
         showCloseButton: Bool = true,
         hideNavigationBar: Bool = false,
         hideStatusBar: Bool = false,
-        hideTabBar: Bool = false,         // 🔥 默认显示 Tab Bar
-        disableSwipeBack: Bool = false,   // 🔥 默认允许侧滑返回
+        hideTabBar: Bool = false,         // [HOT] 默认显示 Tab Bar
+        disableSwipeBack: Bool = false,   // [HOT] 默认允许侧滑返回
         orientation: UIInterfaceOrientationMask = .all,
         allowJavaScriptClose: Bool = true,
         customTitle: String? = nil,

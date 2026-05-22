@@ -103,7 +103,7 @@ public class WebOpenPageHandler: BaseWebNativeHandler {
             return
         }
 
-        WebBridgeLogger.shared.log(.info, "🚀 [OpenPage] Opening page with params: \(params)")
+        WebBridgeLogger.shared.log(.info, "[LAUNCH] [OpenPage] Opening page with params: \(params)")
 
         runOnMainThread { [weak self] in
             WebBrowserManager.shared.openBrowser(url: url, params: WebBrowserParams.from(url: url), from: self?.topViewController)

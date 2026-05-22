@@ -46,7 +46,7 @@ public class ManifestCacheManager: @unchecked Sendable {
     private init() {
         self.manifestStore = ManifestStore.shared
         self.resourceCache = ResourceCache.shared
-        NSLog("✅ [ManifestCache] Initialized with URL scheme: \(scheme)://")
+        NSLog("[OK] [ManifestCache] Initialized with URL scheme: \(scheme)://")
     }
 
     /// 计算当前总缓存大小（字节）
@@ -75,7 +75,7 @@ public class ManifestCacheManager: @unchecked Sendable {
                 webView.loadHTMLString(htmlString, baseURL: baseURL)
             }
 
-            NSLog("✅ [ManifestCache] Loaded HTML with baseURL: \(self.scheme)://")
+            NSLog("[OK] [ManifestCache] Loaded HTML with baseURL: \(self.scheme)://")
             NSLog("   - 相对路径会自动补全为: \(self.scheme)://[相对路径]")
         }
     }
@@ -92,7 +92,7 @@ public class ManifestCacheManager: @unchecked Sendable {
             // 从缓存获取 HTML
             guard let html = self.manifestStore.getHTML(for: pageKey) else {
                 let error = WebBridgeError.cacheLoadFailed(reason: "Page not found: \(pageKey)")
-                NSLog("❌ [ManifestCache] \(error.localizedDescription)")
+                NSLog("[FAIL] [ManifestCache] \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     completion?(.failure(error))
                 }
@@ -119,7 +119,7 @@ public class ManifestCacheManager: @unchecked Sendable {
                 completion?(.success(()))
             }
 
-            NSLog("✅ [ManifestCache] Loaded page: \(pageKey)")
+            NSLog("[OK] [ManifestCache] Loaded page: \(pageKey)")
             NSLog("   - Manifest entries: \(manifest.resources.count)")
         }
     }
@@ -144,7 +144,7 @@ public class ManifestCacheManager: @unchecked Sendable {
                         // 保存 manifest
                         self.manifestStore.saveManifest(manifest, for: pageKey)
 
-                        NSLog("✅ [ManifestCache] Saved page: \(pageKey)")
+                        NSLog("[OK] [ManifestCache] Saved page: \(pageKey)")
                         NSLog("   - HTML length: \(html.count) chars")
                         NSLog("   - Manifest entries: \(manifest.resources.count)")
                     }
@@ -158,7 +158,7 @@ public class ManifestCacheManager: @unchecked Sendable {
                         completion?(.success(()))
                     }
                 } catch {
-                    NSLog("❌ [ManifestCache] Failed to save page after retries: \(error.localizedDescription)")
+                    NSLog("[FAIL] [ManifestCache] Failed to save page after retries: \(error.localizedDescription)")
                     await MainActor.run {
                         completion?(.failure(WebBridgeError.cacheSaveFailed(underlying: error)))
                     }
@@ -190,7 +190,7 @@ public class ManifestCacheManager: @unchecked Sendable {
             self.manifestStore.removeHTML(for: pageKey)
             self.resourceCache.removeAll(for: pageKey)
 
-            NSLog("🗑️ [ManifestCache] Removed cache for: \(pageKey)")
+            NSLog("[DEL] [ManifestCache] Removed cache for: \(pageKey)")
         }
     }
 
@@ -229,15 +229,15 @@ public class ManifestCacheManager: @unchecked Sendable {
                 if FileManager.default.fileExists(atPath: persistentDir.path) {
                     do {
                         try FileManager.default.removeItem(at: persistentDir)
-                        NSLog("🗑️ [ManifestCache] Removed persistent cache directory for: \(pageKey)")
+                        NSLog("[DEL] [ManifestCache] Removed persistent cache directory for: \(pageKey)")
                     } catch {
                         Log.error("Failed to remove persistent cache directory for \(pageKey): \(error.localizedDescription)", category: .cache)
-                        NSLog("❌ [ManifestCache] Failed to remove persistent cache directory for: \(pageKey) - \(error.localizedDescription)")
+                        NSLog("[FAIL] [ManifestCache] Failed to remove persistent cache directory for: \(pageKey) - \(error.localizedDescription)")
                     }
                 }
             }
 
-            NSLog("🗑️ [ManifestCache] Removed \(matchingKeys.count) caches for AppID: \(appid)")
+            NSLog("[DEL] [ManifestCache] Removed \(matchingKeys.count) caches for AppID: \(appid)")
 
             // 完成后在主线程回调和发送通知
             DispatchQueue.main.async {
@@ -274,7 +274,7 @@ public class ManifestCacheManager: @unchecked Sendable {
             manifest.resources[relativePath] = url
             self.manifestStore.saveManifest(manifest, for: pageKey)
 
-            NSLog("✅ [ManifestCache] Updated mapping: \(relativePath) -> \(url)")
+            NSLog("[OK] [ManifestCache] Updated mapping: \(relativePath) -> \(url)")
         }
     }
 
@@ -294,7 +294,7 @@ public class ManifestCacheManager: @unchecked Sendable {
 
             self.manifestStore.saveManifest(manifest, for: pageKey)
 
-            NSLog("✅ [ManifestCache] Updated \(mappings.count) mappings for: \(pageKey)")
+            NSLog("[OK] [ManifestCache] Updated \(mappings.count) mappings for: \(pageKey)")
         }
     }
 
@@ -308,7 +308,7 @@ public class ManifestCacheManager: @unchecked Sendable {
             self.manifestStore.removeManifest(for: pageKey)
             self.resourceCache.removeResources(for: pageKey)
 
-            NSLog("🗑️ [ManifestCache] Cleared page: \(pageKey)")
+            NSLog("[DEL] [ManifestCache] Cleared page: \(pageKey)")
         }
     }
 
@@ -328,10 +328,10 @@ public class ManifestCacheManager: @unchecked Sendable {
             if FileManager.default.fileExists(atPath: persistentRootDir.path) {
                 do {
                     try FileManager.default.removeItem(at: persistentRootDir)
-                    NSLog("🗑️ [ManifestCache] Cleared all persistent cache directories")
+                    NSLog("[DEL] [ManifestCache] Cleared all persistent cache directories")
                 } catch {
                     Log.error("Failed to clear persistent cache directory: \(error.localizedDescription)", category: .cache)
-                    NSLog("❌ [ManifestCache] Failed to clear persistent cache directory: \(error.localizedDescription)")
+                    NSLog("[FAIL] [ManifestCache] Failed to clear persistent cache directory: \(error.localizedDescription)")
                 }
 
                 // Recreate the directory for future use
@@ -339,11 +339,11 @@ public class ManifestCacheManager: @unchecked Sendable {
                     try FileManager.default.createDirectory(at: persistentRootDir, withIntermediateDirectories: true)
                 } catch {
                     Log.error("Failed to recreate persistent cache directory: \(error.localizedDescription)", category: .cache)
-                    NSLog("❌ [ManifestCache] Failed to recreate persistent cache directory: \(error.localizedDescription)")
+                    NSLog("[FAIL] [ManifestCache] Failed to recreate persistent cache directory: \(error.localizedDescription)")
                 }
             }
 
-            NSLog("🗑️ [ManifestCache] Cleared all cache")
+            NSLog("[DEL] [ManifestCache] Cleared all cache")
 
             // 完成后在主线程回调和发送通知
             DispatchQueue.main.async {
@@ -388,7 +388,7 @@ public class ManifestCacheManager: @unchecked Sendable {
         queue.async { [weak self] in
             guard let self = self else { return }
             self.manifestStore.saveManifest(manifest, for: pageName)
-            NSLog("✅ [ManifestCache] Registered manifest for page: \(pageName)")
+            NSLog("[OK] [ManifestCache] Registered manifest for page: \(pageName)")
         }
     }
 
@@ -398,7 +398,7 @@ public class ManifestCacheManager: @unchecked Sendable {
         queue.async { [weak self] in
             guard let self = self else { return }
             self.manifestStore.removeManifest(for: pageName)
-            NSLog("🗑️ [ManifestCache] Unregistered manifest for page: \(pageName)")
+            NSLog("[DEL] [ManifestCache] Unregistered manifest for page: \(pageName)")
         }
     }
 

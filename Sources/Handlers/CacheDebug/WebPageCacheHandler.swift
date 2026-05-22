@@ -93,7 +93,7 @@ public class PageCacheManager {
 
     /// 处理内存警告
     @objc private func handleMemoryWarning() {
-        WebBridgeLogger.shared.log(.warning, "⚠️ [PageCache] Memory warning received, performing aggressive cleanup")
+        WebBridgeLogger.shared.log(.warning, "[WARN] [PageCache] Memory warning received, performing aggressive cleanup")
 
         lock.lock()
         defer { lock.unlock() }
@@ -122,13 +122,13 @@ public class PageCacheManager {
             pageCache.removeValue(forKey: page.pageName)
             freedMemory += pageSize
 
-            WebBridgeLogger.shared.log(.info, "🧹 [PageCache] Memory warning: evicted '\(page.pageName)' (\(pageSize)MB)")
+            WebBridgeLogger.shared.log(.info, "[CLEAN] [PageCache] Memory warning: evicted '\(page.pageName)' (\(pageSize)MB)")
         }
 
         // 更新当前内存使用量
         currentMemoryUsageMB = calculateCurrentMemoryUsage()
 
-        WebBridgeLogger.shared.log(.info, "🧹 [PageCache] Memory warning cleanup: freed \(freedMemory)MB, current usage: \(currentMemoryUsageMB)MB")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] [PageCache] Memory warning cleanup: freed \(freedMemory)MB, current usage: \(currentMemoryUsageMB)MB")
     }
 
     // MARK: - Public Methods
@@ -144,7 +144,7 @@ public class PageCacheManager {
         ) {
             // 检查是否已缓存
             if isCached(pageName: pageName) {
-                WebBridgeLogger.shared.log(.info, "✅ [PageCache] Page '\(pageName)' already cached")
+                WebBridgeLogger.shared.log(.info, "[OK] [PageCache] Page '\(pageName)' already cached")
                 return true
             }
 
@@ -155,7 +155,7 @@ public class PageCacheManager {
 
                 // 检查是否为蜂窝网络并发出警告
                 if NetworkMonitor.shared.warnIfCellular() {
-                    WebBridgeLogger.shared.log(.warning, "⚠️ [PageCache] Preloading '\(pageName)' over cellular network - data charges may apply")
+                    WebBridgeLogger.shared.log(.warning, "[WARN] [PageCache] Preloading '\(pageName)' over cellular network - data charges may apply")
                 }
 
                 // 加载 HTML 内容
@@ -182,7 +182,7 @@ public class PageCacheManager {
                     self.pageCache[pageName] = cachedPage
                     self.currentMemoryUsageMB = self.calculateCurrentMemoryUsage()
 
-                    WebBridgeLogger.shared.log(.info, "✅ [PageCache] Preloaded page '\(pageName)' (size: \(newPageSizeMB)MB, total: \(self.currentMemoryUsageMB)MB/\(self.maxMemorySizeMB)MB, count: \(self.pageCache.count))")
+                    WebBridgeLogger.shared.log(.info, "[OK] [PageCache] Preloaded page '\(pageName)' (size: \(newPageSizeMB)MB, total: \(self.currentMemoryUsageMB)MB/\(self.maxMemorySizeMB)MB, count: \(self.pageCache.count))")
                 }
                 return true
             }
@@ -200,7 +200,7 @@ public class PageCacheManager {
                 let success = try await preloadPage(named: pageName)
                 completion(success)
             } catch {
-                WebBridgeLogger.shared.log(.error, "❌ [PageCache] Failed to preload page '\(pageName)': \(error)")
+                WebBridgeLogger.shared.log(.error, "[FAIL] [PageCache] Failed to preload page '\(pageName)': \(error)")
                 completion(false)
             }
         }
@@ -221,7 +221,7 @@ public class PageCacheManager {
         page.hitCount += 1
         pageCache[pageName] = page
 
-        WebBridgeLogger.shared.log(.info, "♻️ [PageCache] Cache hit for '\(pageName)' (hits: \(page.hitCount))")
+        WebBridgeLogger.shared.log(.info, "[RECYCLE] [PageCache] Cache hit for '\(pageName)' (hits: \(page.hitCount))")
         return page
     }
 
@@ -244,7 +244,7 @@ public class PageCacheManager {
         currentMemoryUsageMB = 0
         lock.unlock()
 
-        WebBridgeLogger.shared.log(.info, "🧹 [PageCache] Cleared \(count) cached pages, freed \(memoryBefore)MB")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] [PageCache] Cleared \(count) cached pages, freed \(memoryBefore)MB")
     }
 
     /// 获取缓存信息
@@ -326,7 +326,7 @@ public class WebPageCacheHandler: BaseWebNativeHandler {
                     } catch let error as WebBridgeError {
                         WebBridgeLogger.shared.log(
                             .error,
-                            "❌ [PageCache] Preload failed for '\(pageName)': \(error.localizedDescription)"
+                            "[FAIL] [PageCache] Preload failed for '\(pageName)': \(error.localizedDescription)"
                         )
                         self.reject(
                             error: error.localizedDescription,
@@ -336,7 +336,7 @@ public class WebPageCacheHandler: BaseWebNativeHandler {
                     } catch {
                         WebBridgeLogger.shared.log(
                             .error,
-                            "❌ [PageCache] Unknown error preloading '\(pageName)': \(error.localizedDescription)"
+                            "[FAIL] [PageCache] Unknown error preloading '\(pageName)': \(error.localizedDescription)"
                         )
                         self.reject(
                             error: "Unknown error: \(error.localizedDescription)",

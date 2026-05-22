@@ -114,7 +114,7 @@ public class WebFileHandler: BaseWebNativeHandler {
                         "mimeType": getMimeType(for: url)
                     ])
                 } catch {
-                    StructuredLogger.shared.error("❌ [WebFileHandler] Error reading file: \(error.localizedDescription)", category: .handler)
+                    StructuredLogger.shared.error("[FAIL] [WebFileHandler] Error reading file: \(error.localizedDescription)", category: .handler)
                 }
             }
 

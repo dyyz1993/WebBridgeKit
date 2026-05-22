@@ -16,7 +16,7 @@ class ViewsShowcaseViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "视图"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
         loadViews()
     }
@@ -97,14 +97,14 @@ extension ViewsShowcaseViewController: UITableViewDataSource, UITableViewDelegat
 private class ViewCell: UITableViewCell {
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.headline
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
     private let descLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()
@@ -160,7 +160,7 @@ extension ViewsShowcaseViewController {
     }
 
     private func testTheme() {
-        let alert = UIAlertController(title: "Theme Test", message: "Current theme: \(ThemeColors.current.primary.toHexString())", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Theme Test", message: "Current theme: \(ThemeTokens.Color.primary.toHexString())", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }

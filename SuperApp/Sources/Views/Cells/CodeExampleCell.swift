@@ -19,7 +19,7 @@ class CodeExampleCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -28,7 +28,7 @@ class CodeExampleCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.headline
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -52,9 +52,9 @@ class CodeExampleCell: UITableViewCell {
 
     private let codeTextView: UITextView = {
         let textView = UITextView()
-        textView.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.textColor = ThemeColors.current.text
-        textView.backgroundColor = ThemeColors.current.surface
+        textView.font = ThemeTokens.Typography.monospaceBody
+        textView.textColor = ThemeTokens.Color.text
+        textView.backgroundColor = ThemeTokens.Color.surface
         textView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         textView.layer.masksToBounds = true
         textView.isEditable = false
@@ -66,7 +66,7 @@ class CodeExampleCell: UITableViewCell {
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()
@@ -81,7 +81,7 @@ class CodeExampleCell: UITableViewCell {
 
     private let separatorView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.divider
+        view.backgroundColor = ThemeTokens.Color.separator
         return view
     }()
 

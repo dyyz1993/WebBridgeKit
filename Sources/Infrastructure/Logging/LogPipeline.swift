@@ -18,7 +18,7 @@ public class ConsoleLogOutput: LogOutput {
 
     public func write(_ entry: LogEntry) {
         #if DEBUG
-        print(entry.consoleString)
+        NSLog("%@", entry.consoleString)
         #endif
     }
 

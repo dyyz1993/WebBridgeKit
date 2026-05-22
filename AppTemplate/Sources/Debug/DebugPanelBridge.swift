@@ -26,11 +26,11 @@ public class DebugPanelBridge {
     public func createAPIKeyManageViewController() -> UIViewController {
         let vc = UIViewController()
         vc.title = "AI Tools Config"
-        vc.view.backgroundColor = ThemeColors.current.background
+        vc.view.backgroundColor = ThemeTokens.Color.background
         let textView = UITextView()
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.backgroundColor = ThemeColors.current.surface
+        textView.font = ThemeTokens.Typography.monospaceBody
+        textView.backgroundColor = ThemeTokens.Color.surface
         textView.translatesAutoresizingMaskIntoConstraints = false
         vc.view.addSubview(textView)
         textView.snp.makeConstraints { make in
@@ -44,12 +44,12 @@ public class DebugPanelBridge {
     public func createTokenManageViewController() -> UIViewController {
         let vc = UIViewController()
         vc.title = "Push Token"
-        vc.view.backgroundColor = ThemeColors.current.background
+        vc.view.backgroundColor = ThemeTokens.Color.background
         let label = UILabel()
         label.text = "Push Token Management\n\nBark Key: test_key\nWebhook: port 8765\n\nUse the Message tab to send test pushes."
         label.textAlignment = .center
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         vc.view.addSubview(label)
         label.snp.makeConstraints { make in
@@ -66,11 +66,11 @@ public class DebugPanelBridge {
     public func createServerConfigViewController() -> UIViewController {
         let vc = UIViewController()
         vc.title = "AI Server"
-        vc.view.backgroundColor = ThemeColors.current.background
+        vc.view.backgroundColor = ThemeTokens.Color.background
         let textView = UITextView()
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.backgroundColor = ThemeColors.current.surface
+        textView.font = ThemeTokens.Typography.monospaceBody
+        textView.backgroundColor = ThemeTokens.Color.surface
         textView.translatesAutoresizingMaskIntoConstraints = false
         vc.view.addSubview(textView)
         textView.snp.makeConstraints { make in

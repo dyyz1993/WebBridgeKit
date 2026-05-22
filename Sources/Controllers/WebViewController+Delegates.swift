@@ -20,7 +20,7 @@ extension WebViewController {
         config.dataDetectorTypes = []
 
         ManifestURLSchemeHandler.register(to: config, scheme: "wb-resource")
-        StructuredLogger.shared.info("✅ [ManifestCache] Registered wb-resource:// URLSchemeHandler", category: .cache)
+        StructuredLogger.shared.info("[OK] [ManifestCache] Registered wb-resource:// URLSchemeHandler", category: .cache)
 
         webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
@@ -31,7 +31,7 @@ extension WebViewController {
             make.edges.equalToSuperview()
         }
 
-        StructuredLogger.shared.info("✅ [BarkWebVC] WebView initialized with Manifest cache support", category: .cache)
+        StructuredLogger.shared.info("[OK] [BarkWebVC] WebView initialized with Manifest cache support", category: .cache)
     }
 
     func setupBridge() {
@@ -41,7 +41,7 @@ extension WebViewController {
         let bridgeScript = """
         window.BarkBridge = {
             callNative: function(action, params) {
-                console.log('📤 [Bark] callNative:', action, params);
+                console.log('[SEND] [Bark] callNative:', action, params);
                 return new Promise((resolve, reject) => {
                     const id = ++window.BarkBridge._callbackId;
                     window.BarkBridge._callbacks[id] = { resolve, reject };
@@ -53,7 +53,7 @@ extension WebViewController {
                     try {
                         window.webkit.messageHandlers.barkBridge.postMessage(message);
                     } catch (error) {
-                        console.error('❌ [Bark] Failed:', error);
+                        console.error('[FAIL] [Bark] Failed:', error);
                         reject(error);
                     }
                 });
@@ -61,7 +61,7 @@ extension WebViewController {
             _callbackId: 0,
             _callbacks: {},
             receiveResult: function(result) {
-                console.log('📥 [Bark] Received result:', result);
+                console.log('[RECV] [Bark] Received result:', result);
                 const id = result.callbackId;
                 let callback = this._callbacks[id];
                 if (callback) {
@@ -74,7 +74,7 @@ extension WebViewController {
                 }
             },
             receiveEvent: function(event, data) {
-                console.log('🔔 [Bark] Received event:', event, data);
+                console.log('[NOTIF] [Bark] Received event:', event, data);
                 if (event === 'onAudioLevelChange' || event === 'onAudioLevel') {
                     if (window.onAudioLevel) window.onAudioLevel(data.level !== undefined ? data.level : data);
                     if (window.onAudioLevelChange) window.onAudioLevelChange(data.level !== undefined ? data.level : data);
@@ -90,7 +90,7 @@ extension WebViewController {
                 window.dispatchEvent(customEvent);
             }
         };
-        console.log('✅ [Bark] BarkBridge initialized');
+        console.log('[OK] [Bark] BarkBridge initialized');
         """
 
         let script = WKUserScript(source: bridgeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
@@ -105,14 +105,14 @@ extension WebViewController {
 
     func setupGestureInterceptor() {
         guard let gestureHandler = bridge.getHandler(for: "gesture") as? WebGestureHandler else {
-            StructuredLogger.shared.warning("⚠️ [BarkWebVC] WebGestureHandler not found, gesture interceptor not setup", category: .handler)
+            StructuredLogger.shared.warning("[WARN] [BarkWebVC] WebGestureHandler not found, gesture interceptor not setup", category: .handler)
             return
         }
 
         gestureHandler.setCurrentWebView(webView)
         gestureInterceptor = WebGestureInterceptor(webView: webView, gestureHandler: gestureHandler)
 
-        StructuredLogger.shared.info("✅ [BarkWebVC] Gesture interceptor setup completed", category: .ui)
+        StructuredLogger.shared.info("[OK] [BarkWebVC] Gesture interceptor setup completed", category: .ui)
     }
 
     func applyBrowserFeatures() {
@@ -125,7 +125,7 @@ extension WebViewController {
 
         webView.allowsBackForwardNavigationGestures = backForwardGesturesEnabled
 
-        StructuredLogger.shared.debug("🔒 [BarkWebVC] Browser features applied (all disabled by default)", category: .ui)
+        StructuredLogger.shared.debug("[LOCK] [BarkWebVC] Browser features applied (all disabled by default)", category: .ui)
     }
 
     func configureBrowserFeatures(params: WebBrowserParams) {
@@ -188,7 +188,7 @@ extension WebViewController {
     }
 
     func rotateTo(_ orientation: UIInterfaceOrientation) {
-        StructuredLogger.shared.debug("🔄 [BarkWebVC] Attempting to rotate to: \(orientation.rawValue)", category: .ui)
+        StructuredLogger.shared.debug("[SYNC] [BarkWebVC] Attempting to rotate to: \(orientation.rawValue)", category: .ui)
 
         UIDevice.current.setValue(orientation.rawValue, forKey: "orientation")
         UIViewController.attemptRotationToDeviceOrientation()
@@ -213,9 +213,9 @@ extension WebViewController {
 
                 let geometryPreferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: targetMask)
                 windowScene.requestGeometryUpdate(geometryPreferences) { error in
-                    StructuredLogger.shared.error("⚠️ [BarkWebVC] Geometry update error: \(error.localizedDescription)", category: .ui)
+                    StructuredLogger.shared.error("[WARN] [BarkWebVC] Geometry update error: \(error.localizedDescription)", category: .ui)
                 }
-                StructuredLogger.shared.info("✅ [BarkWebVC] Geometry update requested (iOS 16+)", category: .ui)
+                StructuredLogger.shared.info("[OK] [BarkWebVC] Geometry update requested (iOS 16+)", category: .ui)
                 break
             }
         }

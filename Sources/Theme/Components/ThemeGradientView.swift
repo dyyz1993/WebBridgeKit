@@ -19,7 +19,7 @@ public class ThemeGradientView: UIView {
 
     private func setupUI() {
         layer.insertSublayer(gradientLayer, at: 0)
-        layer.cornerRadius = ThemeCornerRadius.default.lg
+        layer.cornerRadius = ThemeTokens.CornerRadius.lg
         clipsToBounds = true
         updateColors()
     }
@@ -31,8 +31,8 @@ public class ThemeGradientView: UIView {
 
     private func updateColors() {
         gradientLayer.colors = [
-            ThemeColors.current.gradientStart.cgColor,
-            ThemeColors.current.gradientEnd.cgColor
+            ThemeTokens.Color.gradientStart.cgColor,
+            ThemeTokens.Color.gradientEnd.cgColor
         ]
     }
 

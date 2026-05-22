@@ -55,7 +55,7 @@ public class WebPageThumbnailGenerator {
             // 转换为JPEG数据
             let data = thumbnail.jpegData(compressionQuality: self.compressionQuality)
 
-            WebBridgeLogger.shared.log(.debug, "📸 Generated thumbnail: \(thumbnail.size), \(data?.count ?? 0) bytes")
+            WebBridgeLogger.shared.log(.debug, "[SNAP] Generated thumbnail: \(thumbnail.size), \(data?.count ?? 0) bytes")
 
             completion(data)
         }
@@ -104,7 +104,7 @@ public class WebPageThumbnailGenerator {
         let memoryMB = getMemoryUsage()
 
         if memoryMB > maxMemoryMB {
-            WebBridgeLogger.shared.log(.warning, category: .cache, message: "⚠️ Memory usage high: \(memoryMB)MB, cleaning old thumbnails")
+            WebBridgeLogger.shared.log(.warning, category: .cache, message: "[WARN] Memory usage high: \(memoryMB)MB, cleaning old thumbnails")
 
             // 清理旧的缩略图（保留最近100个）
             Task {

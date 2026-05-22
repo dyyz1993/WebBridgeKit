@@ -1,6 +1,15 @@
 import XCTest
 @testable import WebBridgeKit
 
+private func assertColorsEqual(_ actual: UIColor?, _ expected: UIColor?, file: StaticString = #file, line: UInt = #line) {
+    guard let actual = actual, let expected = expected else {
+        XCTAssertEqual(actual, expected, file: file, line: line)
+        return
+    }
+    let trait = UITraitCollection(userInterfaceStyle: .light)
+    XCTAssertEqual(actual.resolvedColor(with: trait), expected.resolvedColor(with: trait), file: file, line: line)
+}
+
 final class ThemeComponentIntegrationTests: XCTestCase {
 
     // MARK: - Card with Button Inside
@@ -57,7 +66,7 @@ final class ThemeComponentIntegrationTests: XCTestCase {
 
         XCTAssertTrue(card.innerContentView.subviews.contains(badge))
         XCTAssertTrue(card.innerContentView.subviews.contains(button))
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.success.withAlphaComponent(0.12))
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.success.withAlphaComponent(0.12))
     }
 
     func testCardWithMultipleBadges() {
@@ -205,10 +214,10 @@ final class ThemeComponentIntegrationTests: XCTestCase {
         card.layoutIfNeeded()
 
         XCTAssertEqual(primaryButton.style, .primary)
-        XCTAssertEqual(primaryButton.backgroundColor, ThemeColors.current.primary)
+        assertColorsEqual(primaryButton.backgroundColor, ThemeTokens.Color.primary)
 
         XCTAssertEqual(secondaryButton.style, .secondary)
-        XCTAssertEqual(secondaryButton.backgroundColor, ThemeColors.current.surface)
+        assertColorsEqual(secondaryButton.backgroundColor, ThemeTokens.Color.surface)
         XCTAssertEqual(secondaryButton.layer.borderWidth, 1)
 
         XCTAssertEqual(ghostButton.style, .ghost)
@@ -261,9 +270,9 @@ final class ThemeComponentIntegrationTests: XCTestCase {
 
         for (index, badge) in badges.enumerated() {
             let style = styles[index]
-            XCTAssertEqual(badge.backgroundColor, style.backgroundColor)
+            assertColorsEqual(badge.backgroundColor, style.backgroundColor)
             let label = badge.subviews.first as? UILabel
-            XCTAssertEqual(label?.textColor, style.textColor)
+            assertColorsEqual(label?.textColor, style.textColor)
         }
     }
 
@@ -309,13 +318,13 @@ final class ThemeComponentIntegrationTests: XCTestCase {
 
         let title = UILabel(frame: CGRect(x: 20, y: 55, width: 260, height: 24))
         title.text = "Card Title"
-        title.font = ThemeTypography.current.headline
+        title.font = ThemeTokens.Typography.headline
         card.addContent(title)
 
         let description = UILabel(frame: CGRect(x: 20, y: 85, width: 260, height: 40))
         description.text = "This is a description"
-        description.font = ThemeTypography.current.body
-        description.textColor = ThemeColors.current.textSecondary
+        description.font = ThemeTokens.Typography.body
+        description.textColor = ThemeTokens.Color.textSecondary
         card.addContent(description)
 
         let button = ThemeButton(frame: CGRect(x: 20, y: 140, width: 260, height: 44))
@@ -330,7 +339,7 @@ final class ThemeComponentIntegrationTests: XCTestCase {
     // MARK: - Theme Mode Changes Affecting All Components
 
     func testThemeColorsConsistency() {
-        let primaryColor = ThemeColors.current.primary
+        let primaryColor = ThemeTokens.Color.primary
 
         let badge = ThemeBadge(frame: CGRect(x: 0, y: 0, width: 60, height: 24))
         badge.configure(text: "Test", style: .info)
@@ -338,8 +347,8 @@ final class ThemeComponentIntegrationTests: XCTestCase {
         let button = ThemeButton(frame: .zero)
         button.configure(title: "Test", style: .primary)
 
-        XCTAssertEqual(button.backgroundColor, primaryColor)
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.info.withAlphaComponent(0.12))
+        assertColorsEqual(button.backgroundColor, primaryColor)
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.info.withAlphaComponent(0.12))
     }
 
     func testCornerRadiusConsistency() {
@@ -363,8 +372,8 @@ final class ThemeComponentIntegrationTests: XCTestCase {
         let titleLabel = header.subviews.first as? UILabel
         let emptyTitle = empty.subviews[1] as? UILabel
 
-        XCTAssertEqual(titleLabel?.font, ThemeTypography.current.title2)
-        XCTAssertEqual(emptyTitle?.font, ThemeTypography.current.title2)
+        XCTAssertEqual(titleLabel?.font, ThemeTokens.Typography.title3)
+        XCTAssertEqual(emptyTitle?.font, ThemeTokens.Typography.title3)
     }
 
     // MARK: - Layout Constraint Interactions
@@ -459,7 +468,7 @@ final class ThemeComponentIntegrationTests: XCTestCase {
 
         let nameLabel = UILabel(frame: CGRect(x: 95, y: 25, width: 185, height: 20))
         nameLabel.text = "John Doe"
-        nameLabel.font = ThemeTypography.current.headline
+        nameLabel.font = ThemeTokens.Typography.headline
         card.addContent(nameLabel)
 
         let badge = ThemeBadge(frame: CGRect(x: 95, y: 50, width: 60, height: 24))
@@ -468,8 +477,8 @@ final class ThemeComponentIntegrationTests: XCTestCase {
 
         let emailLabel = UILabel(frame: CGRect(x: 20, y: 90, width: 260, height: 20))
         emailLabel.text = "john@example.com"
-        emailLabel.font = ThemeTypography.current.body
-        emailLabel.textColor = ThemeColors.current.textSecondary
+        emailLabel.font = ThemeTokens.Typography.body
+        emailLabel.textColor = ThemeTokens.Color.textSecondary
         card.addContent(emailLabel)
 
         let editButton = ThemeButton(frame: CGRect(x: 20, y: 130, width: 260, height: 44))
@@ -506,7 +515,7 @@ final class ThemeComponentIntegrationTests: XCTestCase {
 
             let titleLabel = UILabel(frame: CGRect(x: 75, y: 20, width: 240, height: 20))
             titleLabel.text = title
-            titleLabel.font = ThemeTypography.current.headline
+            titleLabel.font = ThemeTokens.Typography.headline
             card.addContent(titleLabel)
 
             let button = ThemeButton(frame: CGRect(x: 20, y: 55, width: 295, height: 35))

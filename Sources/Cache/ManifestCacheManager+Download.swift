@@ -21,11 +21,11 @@ extension ManifestCacheManager {
 
             let fileName = (relativePath as NSString).lastPathComponent
 
-            NSLog("⬇️ [\(fileName)] 检查缓存...")
+            NSLog("[DOWN] [\(fileName)] 检查缓存...")
 
             if let cached = self.resourceCache.get(relativePath, for: pageKey) {
                 self.recordCacheHit()
-                NSLog("✅ [\(fileName)] 缓存命中 (大小: \(cached.data.count) bytes)")
+                NSLog("[OK] [\(fileName)] 缓存命中 (大小: \(cached.data.count) bytes)")
 
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(
@@ -40,17 +40,17 @@ extension ManifestCacheManager {
             }
 
             self.recordCacheMiss()
-            NSLog("❌ [\(fileName)] 缓存未命中，开始下载...")
+            NSLog("[FAIL] [\(fileName)] 缓存未命中，开始下载...")
 
             guard let manifest = self.manifestStore.getCurrentManifest(for: pageKey),
                   let urlString = manifest.resources[relativePath],
                   let url = URL(string: urlString) else {
-                NSLog("❌ [\(fileName)] Manifest 中未找到该资源")
+                NSLog("[FAIL] [\(fileName)] Manifest 中未找到该资源")
                 completion(.failure(ManifestCacheError.resourceNotFound(relativePath)))
                 return
             }
 
-            NSLog("📥 [\(fileName)] 正在下载...")
+            NSLog("[RECV] [\(fileName)] 正在下载...")
 
             Task {
                 do {
@@ -60,11 +60,11 @@ extension ManifestCacheManager {
 
                     self.resourceCache.set(resource, for: pageKey)
 
-                    NSLog("✅ [\(fileName)] 下载成功 (大小: \(resource.data.count) bytes)")
-                    NSLog("💾 [\(fileName)] 已缓存")
+                    NSLog("[OK] [\(fileName)] 下载成功 (大小: \(resource.data.count) bytes)")
+                    NSLog("[SAVE] [\(fileName)] 已缓存")
                     completion(.success(resource))
                 } catch {
-                    NSLog("❌ [\(fileName)] 下载失败: \(error.localizedDescription)")
+                    NSLog("[FAIL] [\(fileName)] 下载失败: \(error.localizedDescription)")
                     completion(.failure(WebBridgeError.networkRequestFailed(reason: error.localizedDescription)))
                 }
             }
@@ -84,7 +84,7 @@ extension ManifestCacheManager {
 
                 if NetworkMonitor.shared.warnIfCellular() {
                     let fileName = (relativePath as NSString).lastPathComponent
-                    WebBridgeLogger.shared.log(.warning, "⚠️ [ManifestCache] Downloading '\(fileName)' over cellular network - data charges may apply")
+                    WebBridgeLogger.shared.log(.warning, "[WARN] [ManifestCache] Downloading '\(fileName)' over cellular network - data charges may apply")
                 }
 
                 return try await self.performDownload(from: url, relativePath: relativePath)

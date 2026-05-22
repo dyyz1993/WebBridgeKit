@@ -19,11 +19,11 @@ public enum LogLevel: Int, Comparable, Codable {
 
     var emoji: String {
         switch self {
-        case .verbose: return "💬"
-        case .debug:   return "🐛"
-        case .info:    return "ℹ️"
-        case .warning: return "⚠️"
-        case .error:   return "❌"
+        case .verbose: return "[CHAT]"
+        case .debug:   return "[EMOJI]"
+        case .info:    return "[INFO]"
+        case .warning: return "[WARN]"
+        case .error:   return "[FAIL]"
         }
     }
 
@@ -55,18 +55,18 @@ public enum LogCategory: String, Codable, CaseIterable {
 
     var emoji: String {
         switch self {
-        case .general:     return "📌"
-        case .bridge:      return "🌉"
-        case .cache:       return "📦"
-        case .network:     return "🌐"
-        case .handler:     return "⚙️"
-        case .performance: return "⚡"
-        case .lifecycle:   return "🔄"
-        case .ui:          return "🎨"
-        case .permission:  return "🔐"
-        case .storage:     return "💾"
-        case .navigation:  return "🧭"
-        case .diagnostic:  return "🔍"
+        case .general:     return "[PIN]"
+        case .bridge:      return "[BRIDGE]"
+        case .cache:       return "[CACHE]"
+        case .network:     return "[WEB]"
+        case .handler:     return "[CONFIG]"
+        case .performance: return "[FAST]"
+        case .lifecycle:   return "[SYNC]"
+        case .ui:          return "[THEME]"
+        case .permission:  return "[AUTH]"
+        case .storage:     return "[SAVE]"
+        case .navigation:  return "[EMOJI]"
+        case .diagnostic:  return "[SEARCH]"
         }
     }
 }

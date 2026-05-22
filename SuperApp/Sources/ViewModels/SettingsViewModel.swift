@@ -94,30 +94,14 @@ class SettingsViewModel: ViewModel {
         let pt = ThemeTokens.Color.primary
         let eb = ThemeTokens.Color.error.withAlphaComponent(0.1)
         let et = ThemeTokens.Color.error
-        let pubg = UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 0.1)
-                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 0.1)
-        }
-        let put = UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)
-                : UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1)
-        }
+        let pubg = ThemeTokens.Color.gradientEnd.withAlphaComponent(0.1)
+        let put = ThemeTokens.Color.gradientEnd
         let sb = ThemeTokens.Color.success.withAlphaComponent(0.1)
         let st = ThemeTokens.Color.success
         let wb = ThemeTokens.Color.warning.withAlphaComponent(0.1)
         let wt = ThemeTokens.Color.warning
-        let tb = UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 0.1)
-                : UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 0.1)
-        }
-        let tt = UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 1)
-                : UIColor(red: 0.353, green: 0.784, blue: 0.98, alpha: 1)
-        }
+        let tb = ThemeTokens.Color.info.withAlphaComponent(0.1)
+        let tt = ThemeTokens.Color.info
         let ob = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         let ot = ThemeTokens.Color.primary
         let gb = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)

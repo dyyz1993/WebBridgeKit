@@ -23,7 +23,7 @@ public class CacheAppCell: UITableViewCell {
         view.backgroundColor = ThemeTokens.Color.surface
         view.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         view.layer.masksToBounds = false
-        let shadow = ThemeTokens.Shadows.Card
+        let shadow = ThemeTokens.Shadows.card
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = Float(shadow.opacity)
         view.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
@@ -46,7 +46,7 @@ public class CacheAppCell: UITableViewCell {
     /// AppID 标签（主要信息，大字体）
     private let appIDLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: .monospacedSystemFont(ofSize: 17, weight: .semibold))
+        label.font = ThemeTokens.Typography.monospaceLargeSemibold
         label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         return label
@@ -55,7 +55,7 @@ public class CacheAppCell: UITableViewCell {
     /// 应用名称（次要信息）
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
+        label.font = ThemeTokens.Typography.metadata
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         return label
@@ -64,7 +64,7 @@ public class CacheAppCell: UITableViewCell {
     /// 版本标签
     private let versionLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption1
+        label.font = ThemeTokens.Typography.caption
         label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         return label
@@ -73,8 +73,8 @@ public class CacheAppCell: UITableViewCell {
     /// 页面数量标签
     private let pageCountLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Color.gradientEnd
+        label.font = ThemeTokens.Typography.caption
+        label.textColor = ThemeTokens.Color.accent
         label.numberOfLines = 1
         return label
     }()
@@ -82,7 +82,7 @@ public class CacheAppCell: UITableViewCell {
     /// 缓存大小标签
     private let cacheSizeLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.subheadline
+        label.font = ThemeTokens.Typography.body
         label.textColor = ThemeTokens.Color.warning
         label.numberOfLines = 1
         return label
@@ -102,7 +102,7 @@ public class CacheAppCell: UITableViewCell {
         } else {
             button.setImage(LucideIcon.copy.templateImage(), for: .normal)
             button.setTitle("复制", for: .normal)
-            button.titleLabel?.font = ThemeTokens.Typography.footnote
+            button.titleLabel?.font = ThemeTokens.Typography.metadata
             button.tintColor = ThemeTokens.Color.primary
             button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
             button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
@@ -346,7 +346,7 @@ public class CacheAppCell: UITableViewCell {
 
         // 根据页面数量调整 AppID 背景颜色
         if pageCount > 5 {
-            appIDBackgroundView.backgroundColor = ThemeTokens.Color.gradientEnd.withAlphaComponent(0.1)
+            appIDBackgroundView.backgroundColor = ThemeTokens.Color.accent.withAlphaComponent(0.1)
         } else if pageCount > 1 {
             appIDBackgroundView.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
         } else {

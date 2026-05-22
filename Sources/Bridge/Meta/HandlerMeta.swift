@@ -39,18 +39,18 @@ public enum HandlerCategory: String, Codable, CaseIterable {
 
     public var emoji: String {
         switch self {
-        case .hardware:   return "🔧"
-        case .media:      return "🎬"
-        case .navigation: return "🧭"
-        case .system:     return "⚙️"
-        case .feedback:   return "📳"
-        case .sensor:     return "📡"
-        case .clipboard:  return "📋"
-        case .permission: return "🔐"
-        case .debug:      return "🐛"
-        case .cache:      return "📦"
-        case .file:       return "📁"
-        case .speech:     return "🗣️"
+        case .hardware:   return "[TOOL]"
+        case .media:      return "[VIDEO]"
+        case .navigation: return "[NAV]"
+        case .system:     return "[CONFIG]"
+        case .feedback:   return "[VIBRATE]"
+        case .sensor:     return "[SATELLITE]"
+        case .clipboard:  return "[LIST]"
+        case .permission: return "[AUTH]"
+        case .debug:      return "[BUG]"
+        case .cache:      return "[CACHE]"
+        case .file:       return "[DIR]"
+        case .speech:     return "[MIC]"
         }
     }
 }

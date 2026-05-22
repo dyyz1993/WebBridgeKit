@@ -92,11 +92,11 @@ extension ComponentCatalogViewController {
             let row = UIStackView()
             row.axis = .horizontal
             row.alignment = .center
-            row.spacing = ThemeSpacing.default.sm
+            row.spacing = ThemeTokens.Spacing.sm
 
             let nameLabel = UILabel()
             nameLabel.text = name
-            nameLabel.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .bold)
+            nameLabel.font = ThemeTokens.Typography.monospaceMetaBold
             nameLabel.textColor = ThemeTokens.Color.text
             nameLabel.setContentHuggingPriority(.required, for: .horizontal)
             nameLabel.snp.makeConstraints { make in
@@ -113,7 +113,7 @@ extension ComponentCatalogViewController {
 
             let valueLabel = UILabel()
             valueLabel.text = "\(Int(value))pt"
-            valueLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+            valueLabel.font = ThemeTokens.Typography.monospaceSmall
             valueLabel.textColor = ThemeTokens.Color.textSecondary
             valueLabel.setContentHuggingPriority(.required, for: .horizontal)
 
@@ -150,7 +150,7 @@ extension ComponentCatalogViewController {
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_CornerRadius"
         container.backgroundColor = ThemeTokens.Color.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let size: CGFloat = 56
         let innerSpacing: CGFloat = 16
@@ -175,7 +175,7 @@ extension ComponentCatalogViewController {
 
             let nameLabel = UILabel()
             nameLabel.text = name
-            nameLabel.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .medium)
+            nameLabel.font = ThemeTokens.Typography.monospaceMiniMedium
             nameLabel.textColor = ThemeTokens.Color.textSecondary
 
             itemStack.addArrangedSubview(box)
@@ -230,7 +230,7 @@ extension ComponentCatalogViewController {
             card.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
             card.layer.shadowRadius = shadow.radius
             card.layer.shadowOpacity = Float(shadow.opacity)
-            card.layer.cornerRadius = ThemeCornerRadius.default.md
+            card.layer.cornerRadius = ThemeTokens.CornerRadius.md
             card.snp.makeConstraints { make in
                 make.width.equalTo(60)
                 make.height.equalTo(80)
@@ -238,12 +238,12 @@ extension ComponentCatalogViewController {
 
             let nameLabel = UILabel()
             nameLabel.text = name
-            nameLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .medium)
+            nameLabel.font = ThemeTokens.Typography.monospaceSmallMedium
             nameLabel.textColor = ThemeTokens.Color.textSecondary
 
             let detailLabel = UILabel()
             detailLabel.text = "o:\(shadow.opacity) r:\(shadow.radius)"
-            detailLabel.font = UIFont.monospacedSystemFont(ofSize: 9, weight: .regular)
+            detailLabel.font = ThemeTokens.Typography.monospaceMicro
             detailLabel.textColor = ThemeTokens.Color.textTertiary
 
             itemStack.addArrangedSubview(card)
@@ -254,7 +254,7 @@ extension ComponentCatalogViewController {
 
         container.addSubview(row)
         row.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.sm)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.sm)
         }
 
         container.snp.makeConstraints { make in

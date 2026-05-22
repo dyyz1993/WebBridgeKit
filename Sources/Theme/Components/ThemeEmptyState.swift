@@ -5,14 +5,14 @@ public class ThemeEmptyState: UIView {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = ThemeColors.current.textSecondary
+        iv.tintColor = ThemeTokens.Color.textSecondary
         return iv
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.title2
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.title3
+        label.textColor = ThemeTokens.Color.text
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -20,8 +20,8 @@ public class ThemeEmptyState: UIView {
 
     public let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -48,12 +48,12 @@ public class ThemeEmptyState: UIView {
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(iconImageView.snp.bottom).offset(ThemeSpacing.default.md)
+            make.top.equalTo(iconImageView.snp.bottom).offset(ThemeTokens.Spacing.md)
             make.leading.trailing.equalToSuperview()
         }
 
         descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(ThemeSpacing.default.sm)
+            make.top.equalTo(titleLabel.snp.bottom).offset(ThemeTokens.Spacing.sm)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
         }

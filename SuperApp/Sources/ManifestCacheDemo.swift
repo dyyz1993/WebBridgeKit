@@ -28,7 +28,7 @@ class ManifestCacheDemo: UIViewController {
         super.viewDidLoad()
 
         title = "Manifest Cache Demo"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         setupWebView()
         setupManifest()
@@ -53,31 +53,16 @@ class ManifestCacheDemo: UIViewController {
     // MARK: - Setup
 
     private func setupWebView() {
-        #if DEBUG
-        print("📱 [Demo] Setting up WebView with Manifest Cache")
-        #endif
-
-        // Create WKWebViewConfiguration
         let configuration = WKWebViewConfiguration()
 
-        // Register the custom URL scheme handler
         ManifestURLSchemeHandler.register(to: configuration, scheme: "custom")
 
-        // Create WebView
         webView = WKWebView(frame: view.bounds, configuration: configuration)
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(webView)
-
-        #if DEBUG
-        print("✅ [Demo] WebView created with custom:// URL scheme")
-        #endif
     }
 
     private func setupManifest() {
-        #if DEBUG
-        print("📋 [Demo] Setting up manifest cache")
-        #endif
-
         manifestManager = ManifestCacheManager.shared
 
         // Create a manifest with resource mappings
@@ -104,78 +89,31 @@ class ManifestCacheDemo: UIViewController {
             html: loadDemoHTML(),
             manifest: manifest
         )
-
-        #if DEBUG
-        print("✅ [Demo] Manifest saved with \(manifest.resources.count) resource mappings")
-        #endif
-        #if DEBUG
-        print("   Mappings:")
-        #endif
-        for (relativePath, url) in manifest.resources {
-            #if DEBUG
-            print("   - \(relativePath) -> \(url)")
-            #endif
-        }
     }
 
     private func loadDemoPage() {
-        #if DEBUG
-        print("🚀 [Demo] Loading demo page")
-        #endif
-
-        // Load the page using manifest cache
-        // This will use loadHTMLString with baseURL = "custom://"
-        // Relative paths will auto-complete to custom:// URLs
         manifestManager.loadPage(pageKey: pageKey, into: webView)
-
-        #if DEBUG
-        print("✅ [Demo] Page loaded with custom:// baseURL")
-        #endif
-        #if DEBUG
-        print("   Relative paths will resolve to custom:// URLs")
-        #endif
-        #if DEBUG
-        print("   Example: src='logo.png' -> custom://logo.png")
-        #endif
     }
 
     // MARK: - Demo HTML
 
     private func loadDemoHTML() -> String {
-        // Try to load from test_resources directory
         if let path = Bundle.main.path(forResource: "manifest_cache_test", ofType: "html", inDirectory: "test_resources") {
             do {
                 let html = try String(contentsOfFile: path, encoding: .utf8)
-                #if DEBUG
-                print("✅ [Demo] Loaded HTML from test_resources/manifest_cache_test.html")
-                #endif
                 return html
             } catch {
-                #if DEBUG
-                print("⚠️ [Demo] Could not load HTML from test_resources: \(error)")
-                #endif
             }
         }
 
-        // Try to load from main bundle
         if let path = Bundle.main.path(forResource: "manifest_cache_test", ofType: "html") {
             do {
                 let html = try String(contentsOfFile: path, encoding: .utf8)
-                #if DEBUG
-                print("✅ [Demo] Loaded HTML from main bundle")
-                #endif
                 return html
             } catch {
-                #if DEBUG
-                print("⚠️ [Demo] Could not load HTML from bundle: \(error)")
-                #endif
             }
         }
 
-        // Fallback: Use simple inline HTML
-        #if DEBUG
-        print("⚠️ [Demo] Using fallback inline HTML")
-        #endif
         return getFallbackHTML()
     }
 
@@ -237,19 +175,19 @@ class ManifestCacheDemo: UIViewController {
         </head>
         <body>
             <div class="container">
-                <h1>🚀 Manifest Cache Demo</h1>
+                <h1>[LAUNCH] Manifest Cache Demo</h1>
                 <p class="subtitle">验证基于 Manifest 的资源缓存机制</p>
 
                 <div class="info success">
-                    <h3>✅ Success!</h3>
+                    <h3>[OK] Success!</h3>
                     <p>此页面使用 <strong>manifest cache system</strong> 和 <code>custom://</code> URL scheme 加载。</p>
                     <p>相对路径如 <code>src="logo.png"</code> 会自动解析为 <code>custom://logo.png</code> 并被 URL scheme handler 拦截！</p>
                 </div>
 
-                <h2>🧪 资源加载测试</h2>
+                <h2>[TEST] 资源加载测试</h2>
 
                 <div class="test-item" id="test-logo">
-                    <strong>📷 图片测试</strong><br>
+                    <strong>[EMOJI] 图片测试</strong><br>
                     路径: <code>logo.png</code> → <code>custom://logo.png</code><br>
                     真实 URL: https://via.placeholder.com/150<br>
                     <img src="logo.png" alt="Demo Logo"
@@ -258,7 +196,7 @@ class ManifestCacheDemo: UIViewController {
                 </div>
 
                 <div class="test-item" id="test-css">
-                    <strong>🎨 CSS 测试</strong><br>
+                    <strong>[THEME] CSS 测试</strong><br>
                     路径: <code>styles.css</code> → <code>custom://styles.css</code><br>
                     真实 URL: https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css<br>
                     <link rel="stylesheet" href="styles.css"
@@ -267,7 +205,7 @@ class ManifestCacheDemo: UIViewController {
                 </div>
 
                 <div class="test-item" id="test-js">
-                    <strong>📜 JavaScript 测试</strong><br>
+                    <strong>[EMOJI] JavaScript 测试</strong><br>
                     路径: <code>app.js</code> → <code>custom://app.js</code><br>
                     真实 URL: https://code.jquery.com/jquery-3.6.0.min.js<br>
                     <script src="app.js"
@@ -275,7 +213,7 @@ class ManifestCacheDemo: UIViewController {
                             onerror="document.getElementById('test-js').classList.add('error');"></script>
                 </div>
 
-                <h2>📋 工作流程</h2>
+                <h2>[LIST] 工作流程</h2>
                 <ol>
                     <li>HTML 使用相对路径: <code>&lt;img src="logo.png"&gt;</code></li>
                     <li>baseURL 设置为 <code>custom://</code></li>
@@ -286,17 +224,17 @@ class ManifestCacheDemo: UIViewController {
                 </ol>
 
                 <div class="info">
-                    <h3>💡 提示</h3>
+                    <h3>[TIP] 提示</h3>
                     <p>点击右上角的 "Stats" 按钮查看缓存统计信息。</p>
                     <p>点击 "刷新" 按钮重新加载页面（第二次加载应该命中缓存）。</p>
                 </div>
             </div>
 
             <script>
-                console.log('✅ JavaScript loaded successfully');
-                console.log('📊 Page working with custom:// URL scheme');
+                console.log('[OK] JavaScript loaded successfully');
+                console.log('[STATS] Page working with custom:// URL scheme');
                 document.addEventListener('DOMContentLoaded', () => {
-                    console.log('🎯 DOM fully loaded');
+                    console.log('[TARGET] DOM fully loaded');
                 });
             </script>
         </body>
@@ -307,9 +245,6 @@ class ManifestCacheDemo: UIViewController {
     // MARK: - Actions
 
     @objc private func refreshDemo() {
-        #if DEBUG
-        print("🔄 [Demo] Refreshing demo page")
-        #endif
         loadDemoPage()
 
         // Show alert after refresh
@@ -336,7 +271,7 @@ class ManifestCacheDemo: UIViewController {
         """
 
         let alert = UIAlertController(
-            title: "📊 缓存统计",
+            title: "[STATS] 缓存统计",
             message: message,
             preferredStyle: .alert
         )
@@ -374,98 +309,5 @@ extension ManifestCacheDemo {
 
     /// Example: How to use the manifest cache system in your app
     static func demonstrateUsage() {
-        #if DEBUG
-        print("📚 [Usage Guide] Manifest Cache System")
-        #endif
-        #if DEBUG
-        print("=====================================")
-        #endif
-        #if DEBUG
-        print("")
-        #endif
-        #if DEBUG
-        print("1. 注册 URL Scheme Handler:")
-        #endif
-        #if DEBUG
-        print("   let configuration = WKWebViewConfiguration()")
-        #endif
-        #if DEBUG
-        print("   ManifestURLSchemeHandler.register(to: configuration, scheme: \"custom\")")
-        #endif
-        #if DEBUG
-        print("")
-        #endif
-        #if DEBUG
-        print("2. 创建 Manifest:")
-        #endif
-        #if DEBUG
-        print("   let manifest = Manifest(resources: [")
-        #endif
-        #if DEBUG
-        print("       \"logo.png\": \"https://wbk.shanbox.19930810.xyz:8443/logo.png\",")
-        #endif
-        #if DEBUG
-        print("       \"styles.css\": \"https://wbk.shanbox.19930810.xyz:8443/styles.css\"")
-        #endif
-        #if DEBUG
-        print("   ])")
-        #endif
-        #if DEBUG
-        print("")
-        #endif
-        #if DEBUG
-        print("3. 保存页面及 Manifest:")
-        #endif
-        #if DEBUG
-        print("   ManifestCacheManager.shared.savePage(")
-        #endif
-        #if DEBUG
-        print("       pageKey: \"my-page\",")
-        #endif
-        #if DEBUG
-        print("       html: htmlString,")
-        #endif
-        #if DEBUG
-        print("       manifest: manifest")
-        #endif
-        #if DEBUG
-        print("   )")
-        #endif
-        #if DEBUG
-        print("")
-        #endif
-        #if DEBUG
-        print("4. 加载页面:")
-        #endif
-        #if DEBUG
-        print("   ManifestCacheManager.shared.loadPage(")
-        #endif
-        #if DEBUG
-        print("       pageKey: \"my-page\",")
-        #endif
-        #if DEBUG
-        print("       into: webView")
-        #endif
-        #if DEBUG
-        print("   )")
-        #endif
-        #if DEBUG
-        print("")
-        #endif
-        #if DEBUG
-        print("5. 查看统计:")
-        #endif
-        #if DEBUG
-        print("   let stats = ManifestCacheManager.shared.getStats()")
-        #endif
-        #if DEBUG
-        print("   print(\"Hit rate: \\(stats.formattedHitRate)\")")
-        #endif
-        #if DEBUG
-        print("")
-        #endif
-        #if DEBUG
-        print("✅ 就这样！系统会处理其余部分。")
-        #endif
     }
 }

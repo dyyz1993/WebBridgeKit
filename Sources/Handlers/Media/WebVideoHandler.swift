@@ -158,10 +158,10 @@ public class WebVideoHandler: BaseWebNativeHandler, AVCaptureVideoDataOutputSamp
     }
 
     private func startOverlay(params: [String: Any], completion: @escaping (Any) -> Void) {
-        StructuredLogger.shared.debug("🎬 [NativeVideo] startOverlay called with params: \(params)", category: .handler)
+        StructuredLogger.shared.debug("[VIDEO] [NativeVideo] startOverlay called with params: \(params)", category: .handler)
         runOnMainThread { [weak self] in
             guard let self = self, let webView = self.webView else {
-                StructuredLogger.shared.error("🎬 [NativeVideo] Error: WebView not available", category: .handler)
+                StructuredLogger.shared.error("[VIDEO] [NativeVideo] Error: WebView not available", category: .handler)
                 self?.reject(error: "WebView not available", completion: completion)
                 return
             }
@@ -176,7 +176,7 @@ public class WebVideoHandler: BaseWebNativeHandler, AVCaptureVideoDataOutputSamp
             let facingMode = params["facingMode"] as? String ?? "user"
             let isHidden = params["hidden"] as? Bool ?? false
 
-            StructuredLogger.shared.debug("🎬 [NativeVideo] Config: pos=(\(x),\(y)), size=\(width)x\(height), isHidden=\(isHidden)", category: .handler)
+            StructuredLogger.shared.debug("[VIDEO] [NativeVideo] Config: pos=(\(x),\(y)), size=\(width)x\(height), isHidden=\(isHidden)", category: .handler)
             self.currentCameraPosition = (facingMode == "environment") ? .back : .front
 
             let session = AVCaptureSession()
@@ -231,11 +231,11 @@ public class WebVideoHandler: BaseWebNativeHandler, AVCaptureVideoDataOutputSamp
             webView.scrollView.addSubview(container)
             webView.scrollView.bringSubviewToFront(container)
 
-            StructuredLogger.shared.debug("🎬 [NativeVideo] Starting AVCaptureSession...", category: .handler)
+            StructuredLogger.shared.debug("[VIDEO] [NativeVideo] Starting AVCaptureSession...", category: .handler)
             DispatchQueue.global(qos: .userInitiated).async {
                 session.startRunning()
                 self.runOnMainThread {
-                    StructuredLogger.shared.debug("🎬 [NativeVideo] AVCaptureSession is running", category: .handler)
+                    StructuredLogger.shared.debug("[VIDEO] [NativeVideo] AVCaptureSession is running", category: .handler)
                     self.captureSession = session
                     self.previewLayer = previewLayer
                     self.containerView = container
@@ -287,7 +287,7 @@ public class WebVideoHandler: BaseWebNativeHandler, AVCaptureVideoDataOutputSamp
 
     func sendNativeLogToJS(_ message: String) {
         runOnMainThread { [weak self] in
-            let script = "console.log('🍎 [NativeLog] \(message)');"
+            let script = "console.log('[EMOJI] [NativeLog] \(message)');"
             self?.webView?.evaluateJavaScript(script, completionHandler: nil)
         }
     }
@@ -326,7 +326,7 @@ public class WebVideoHandler: BaseWebNativeHandler, AVCaptureVideoDataOutputSamp
                 do {
                     try imageRequestHandler.perform(requests)
                 } catch {
-                    StructuredLogger.shared.error("❌ [NativeVision] Perform Error: \(error.localizedDescription)", category: .handler)
+                    StructuredLogger.shared.error("[FAIL] [NativeVision] Perform Error: \(error.localizedDescription)", category: .handler)
                     self.sendNativeLogToJS("Vision Perform Error: \(error.localizedDescription)")
                 }
             }

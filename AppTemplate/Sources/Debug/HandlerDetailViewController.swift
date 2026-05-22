@@ -46,19 +46,19 @@ class HandlerDetailViewController: UIViewController {
         let descLabel = UILabel()
         descLabel.text = meta.description
         descLabel.numberOfLines = 0
-        descLabel.textColor = .secondaryLabel
+        descLabel.textColor = ThemeTokens.Color.textSecondary
         stack.addArrangedSubview(descLabel)
         
         let infoLabel = UILabel()
-        infoLabel.text = "\(meta.category.emoji) \(meta.category.displayName) · action: \(meta.action)"
-        infoLabel.textColor = .tertiaryLabel
-        infoLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        infoLabel.text = "\(meta.category.displayName) · action: \(meta.action)"
+        infoLabel.textColor = ThemeTokens.Color.textTertiary
+        infoLabel.font = ThemeTokens.Typography.monospaceBody
         stack.addArrangedSubview(infoLabel)
         
         if !meta.requiredPermissions.isEmpty {
             let permLabel = UILabel()
-            permLabel.text = "🔐 Required: \(meta.requiredPermissions.joined(separator: ", "))"
-            permLabel.textColor = .systemOrange
+            permLabel.text = "Required: \(meta.requiredPermissions.joined(separator: ", "))"
+            permLabel.textColor = ThemeTokens.Color.warning
             stack.addArrangedSubview(permLabel)
         }
         
@@ -76,10 +76,10 @@ class HandlerDetailViewController: UIViewController {
         }
         
         let button = UIButton(type: .system)
-        button.setTitle("▶️ Execute", for: .normal)
+        button.setTitle("Execute", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        button.backgroundColor = .systemBlue
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.primary
+        button.setTitleColor(ThemeTokens.Color.textOnColor, for: .normal)
         button.layer.cornerRadius = 10
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
         button.addTarget(self, action: #selector(execute), for: .touchUpInside)
@@ -91,7 +91,7 @@ class HandlerDetailViewController: UIViewController {
         stack.addArrangedSubview(resultHeader)
         
         resultTextView.isEditable = false
-        resultTextView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        resultTextView.font = ThemeTokens.Typography.monospaceBody
         resultTextView.heightAnchor.constraint(equalToConstant: 200).isActive = true
         resultTextView.backgroundColor = .secondarySystemBackground
         resultTextView.layer.cornerRadius = 8
@@ -99,7 +99,7 @@ class HandlerDetailViewController: UIViewController {
         stack.addArrangedSubview(resultTextView)
         
         let copyButton = UIButton(type: .system)
-        copyButton.setTitle("📋 Copy Result", for: .normal)
+        copyButton.setTitle("Copy Result", for: .normal)
         copyButton.addTarget(self, action: #selector(copyResult), for: .touchUpInside)
         stack.addArrangedSubview(copyButton)
         
@@ -148,7 +148,7 @@ class HandlerDetailViewController: UIViewController {
             let optionsLabel = UILabel()
             optionsLabel.text = "Options: \(options.joined(separator: " | "))"
             optionsLabel.font = .systemFont(ofSize: 11, weight: .regular)
-            optionsLabel.textColor = .tertiaryLabel
+            optionsLabel.textColor = ThemeTokens.Color.textTertiary
             stack.addArrangedSubview(optionsLabel)
         }
         
@@ -171,9 +171,9 @@ class HandlerDetailViewController: UIViewController {
             guard let self = self else { return }
             
             let result = """
-            ✅ Handler: \(self.meta.action)
-            📋 Category: \(self.meta.category.displayName)
-            📥 Parameters: \(params)
+            Handler: \(self.meta.action)
+            Category: \(self.meta.category.displayName)
+            Parameters: \(params)
             
             Note: Full execution requires an active WebView context.
             This debug panel shows the handler metadata and parameter validation.

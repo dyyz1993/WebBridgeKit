@@ -1,6 +1,15 @@
 import XCTest
 @testable import WebBridgeKit
 
+private func assertColorsEqual(_ actual: UIColor?, _ expected: UIColor?, file: StaticString = #file, line: UInt = #line) {
+    guard let actual = actual, let expected = expected else {
+        XCTAssertEqual(actual, expected, file: file, line: line)
+        return
+    }
+    let trait = UITraitCollection(userInterfaceStyle: .light)
+    XCTAssertEqual(actual.resolvedColor(with: trait), expected.resolvedColor(with: trait), file: file, line: line)
+}
+
 final class ThemeSectionHeaderTests: XCTestCase {
 
     // MARK: - Initialization
@@ -197,7 +206,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         let titleLabel = header.subviews.first as? UILabel
 
         XCTAssertNotNil(titleLabel)
-        XCTAssertEqual(titleLabel?.font, ThemeTypography.current.title2)
+        XCTAssertEqual(titleLabel?.font, ThemeTokens.Typography.title3)
     }
 
     func testTitleColor() {
@@ -205,7 +214,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         let titleLabel = header.subviews.first as? UILabel
 
         XCTAssertNotNil(titleLabel)
-        XCTAssertEqual(titleLabel?.textColor, ThemeColors.current.text)
+        assertColorsEqual(titleLabel?.textColor, ThemeTokens.Color.text)
     }
 
     func testActionButtonFont() {
@@ -213,7 +222,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         let actionButton = header.subviews[1] as? UIButton
 
         XCTAssertNotNil(actionButton)
-        XCTAssertEqual(actionButton?.titleLabel?.font, ThemeTypography.current.caption1)
+        XCTAssertEqual(actionButton?.titleLabel?.font, ThemeTokens.Typography.caption1)
     }
 
     func testActionButtonColor() {
@@ -221,7 +230,7 @@ final class ThemeSectionHeaderTests: XCTestCase {
         let actionButton = header.subviews[1] as? UIButton
 
         XCTAssertNotNil(actionButton)
-        XCTAssertEqual(actionButton?.titleColor(for: .normal), ThemeColors.current.primary)
+        assertColorsEqual(actionButton?.titleColor(for: .normal), ThemeTokens.Color.primary)
     }
 
     func testAllTypographyElements() {
@@ -229,10 +238,10 @@ final class ThemeSectionHeaderTests: XCTestCase {
         let titleLabel = header.subviews.first as? UILabel
         let actionButton = header.subviews[1] as? UIButton
 
-        XCTAssertEqual(titleLabel?.font, ThemeTypography.current.title2)
-        XCTAssertEqual(titleLabel?.textColor, ThemeColors.current.text)
-        XCTAssertEqual(actionButton?.titleLabel?.font, ThemeTypography.current.caption1)
-        XCTAssertEqual(actionButton?.titleColor(for: .normal), ThemeColors.current.primary)
+        XCTAssertEqual(titleLabel?.font, ThemeTokens.Typography.title3)
+        assertColorsEqual(titleLabel?.textColor, ThemeTokens.Color.text)
+        XCTAssertEqual(actionButton?.titleLabel?.font, ThemeTokens.Typography.caption1)
+        assertColorsEqual(actionButton?.titleColor(for: .normal), ThemeTokens.Color.primary)
     }
 
     // MARK: - Layout Constraints
@@ -327,25 +336,25 @@ final class ThemeSectionHeaderTests: XCTestCase {
     func testTitleUsesThemeTypography() {
         let header = ThemeSectionHeader(frame: .zero)
         let titleLabel = header.subviews.first as? UILabel
-        XCTAssertEqual(titleLabel?.font, ThemeTypography.current.title2)
+        XCTAssertEqual(titleLabel?.font, ThemeTokens.Typography.title3)
     }
 
     func testActionButtonUsesThemeTypography() {
         let header = ThemeSectionHeader(frame: .zero)
         let actionButton = header.subviews[1] as? UIButton
-        XCTAssertEqual(actionButton?.titleLabel?.font, ThemeTypography.current.caption1)
+        XCTAssertEqual(actionButton?.titleLabel?.font, ThemeTokens.Typography.caption1)
     }
 
     func testTitleColorUsesTheme() {
         let header = ThemeSectionHeader(frame: .zero)
         let titleLabel = header.subviews.first as? UILabel
-        XCTAssertEqual(titleLabel?.textColor, ThemeColors.current.text)
+        assertColorsEqual(titleLabel?.textColor, ThemeTokens.Color.text)
     }
 
     func testActionButtonColorUsesTheme() {
         let header = ThemeSectionHeader(frame: .zero)
         let actionButton = header.subviews[1] as? UIButton
-        XCTAssertEqual(actionButton?.titleColor(for: .normal), ThemeColors.current.primary)
+        assertColorsEqual(actionButton?.titleColor(for: .normal), ThemeTokens.Color.primary)
     }
 
     // MARK: - Edge Cases

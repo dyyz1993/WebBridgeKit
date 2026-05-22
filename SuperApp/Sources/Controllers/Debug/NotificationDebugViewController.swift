@@ -72,7 +72,7 @@ class NotificationDebugViewController: UIViewController {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.layer.cornerRadius = ThemeTokens.CornerRadius.md
-        iv.backgroundColor = ThemeColors.current.surface
+        iv.backgroundColor = ThemeTokens.Color.surface
         return iv
     }()
 
@@ -88,15 +88,15 @@ class NotificationDebugViewController: UIViewController {
         let btn = UIButton(type: .system)
         btn.setTitle(L10n.tr("notif_debug.button.send"), for: .normal)
         btn.titleLabel?.font = ThemeTokens.Typography.title3
-        btn.backgroundColor = ThemeColors.current.primary
-        btn.setTitleColor(ThemeColors.current.surface, for: .normal)
+        btn.backgroundColor = ThemeTokens.Color.primary
+        btn.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return btn
     }()
 
     private let responseView: UITextView = {
         let tv = UITextView()
-        tv.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.font = ThemeTokens.Typography.monospaceMeta
         tv.isEditable = false
         tv.layer.borderColor = ThemeTokens.Color.border.cgColor
         tv.layer.borderWidth = 1
@@ -128,7 +128,7 @@ class NotificationDebugViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("notif_debug.title")
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
         setupPicker()
         setupTemplates()
@@ -205,12 +205,12 @@ class NotificationDebugViewController: UIViewController {
 
     private func addSection(title: String, views: [UIView]) {
         let card = UIView()
-        card.backgroundColor = ThemeColors.current.cardBackground
+        card.backgroundColor = ThemeTokens.Color.cardBackground
         card.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let header = UILabel()
         header.font = ThemeTokens.Typography.footnote
-        header.textColor = ThemeColors.current.textSecondary
+        header.textColor = ThemeTokens.Color.textSecondary
         header.text = title
 
         let stack = UIStackView(arrangedSubviews: views)
@@ -236,7 +236,7 @@ class NotificationDebugViewController: UIViewController {
         let lbl = UILabel()
         lbl.text = label
         lbl.font = ThemeTokens.Typography.subheadline
-        lbl.textColor = ThemeColors.current.text
+        lbl.textColor = ThemeTokens.Color.text
         lbl.setContentHuggingPriority(.required, for: .horizontal)
         lbl.widthAnchor.constraint(equalToConstant: 72).isActive = true
 
@@ -251,7 +251,7 @@ class NotificationDebugViewController: UIViewController {
         let lbl = UILabel()
         lbl.text = label
         lbl.font = ThemeTokens.Typography.subheadline
-        lbl.textColor = ThemeColors.current.text
+        lbl.textColor = ThemeTokens.Color.text
 
         let row = UIStackView(arrangedSubviews: [lbl, view])
         row.axis = .vertical
@@ -285,7 +285,7 @@ class NotificationDebugViewController: UIViewController {
                 btn.titleLabel?.font = ThemeTokens.Typography.footnote
                 btn.layer.cornerRadius = ThemeTokens.CornerRadius.sm
                 btn.layer.borderWidth = 1
-                btn.layer.borderColor = ThemeColors.current.primary.cgColor
+                btn.layer.borderColor = ThemeTokens.Color.primary.cgColor
                 btn.tag = j
                 btn.addTarget(self, action: #selector(applyTemplate(_:)), for: .touchUpInside)
                 btn.snp.makeConstraints { make in

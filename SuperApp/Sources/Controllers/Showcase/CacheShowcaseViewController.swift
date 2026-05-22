@@ -19,7 +19,7 @@ class CacheShowcaseViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "缓存"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.delegate = self
@@ -152,14 +152,14 @@ extension CacheShowcaseViewController: UITableViewDataSource, UITableViewDelegat
 private class StatCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
     private let valueLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.headline
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeTokens.Color.text
         label.textAlignment = .right
         return label
     }()
@@ -190,8 +190,8 @@ private class StatCell: UITableViewCell {
 private class ActivityCell: UITableViewCell {
     private let label: UILabel = {
         let label = UILabel()
-        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.monospaceMeta
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()

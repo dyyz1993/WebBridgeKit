@@ -69,7 +69,7 @@ public class TestLogger {
     /// - Parameter message: 日志消息
     public func logSuccess(_ message: String) {
         let timestamp = dateFormatter.string(from: Date())
-        let entry = "[\(timestamp)] ✅ \(message)"
+        let entry = "[\(timestamp)] [OK] \(message)"
         logEntries.append(entry)
         writeToLog(entry)
     }
@@ -78,7 +78,7 @@ public class TestLogger {
     /// - Parameter message: 日志消息
     public func logError(_ message: String) {
         let timestamp = dateFormatter.string(from: Date())
-        let entry = "[\(timestamp)] ❌ \(message)"
+        let entry = "[\(timestamp)] [FAIL] \(message)"
         logEntries.append(entry)
         writeToLog(entry)
     }
@@ -87,7 +87,7 @@ public class TestLogger {
     /// - Parameter message: 日志消息
     public func logWarning(_ message: String) {
         let timestamp = dateFormatter.string(from: Date())
-        let entry = "[\(timestamp)] ⚠️ \(message)"
+        let entry = "[\(timestamp)] [WARN] \(message)"
         logEntries.append(entry)
         writeToLog(entry)
     }
@@ -96,7 +96,7 @@ public class TestLogger {
     /// - Parameter message: 日志消息
     public func logInfo(_ message: String) {
         let timestamp = dateFormatter.string(from: Date())
-        let entry = "[\(timestamp)] ℹ️ \(message)"
+        let entry = "[\(timestamp)] [INFO] \(message)"
         logEntries.append(entry)
         writeToLog(entry)
     }
@@ -107,7 +107,7 @@ public class TestLogger {
     ///   - progress: 进度（0-100）
     public func logDownloadProgress(resource: String, progress: Int) {
         let timestamp = dateFormatter.string(from: Date())
-        let entry = "[\(timestamp)] 📥 [\(resource)] 下载进度: \(progress)%"
+        let entry = "[\(timestamp)] [RECV] [\(resource)] 下载进度: \(progress)%"
         logEntries.append(entry)
         writeToLog(entry)
     }
@@ -119,7 +119,7 @@ public class TestLogger {
     public func logCacheHit(resource: String, size: Int) {
         let timestamp = dateFormatter.string(from: Date())
         let sizeString = ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
-        let entry = "[\(timestamp)] 💾 [\(resource)] 缓存命中 (大小: \(sizeString))"
+        let entry = "[\(timestamp)] [SAVE] [\(resource)] 缓存命中 (大小: \(sizeString))"
         logEntries.append(entry)
         writeToLog(entry)
     }
@@ -182,7 +182,7 @@ public class TestLogger {
     public func save() {
         // 确保所有日志都写入磁盘
         logFooter()
-        StructuredLogger.shared.debug("📝 日志已保存到: \(logFileURL.path)", category: .general)
+        StructuredLogger.shared.debug("[NOTE] 日志已保存到: \(logFileURL.path)", category: .general)
     }
 
     /// 获取日志文件 URL
@@ -229,7 +229,7 @@ public class TestLogger {
                 try message.write(to: logFileURL, atomically: true, encoding: .utf8)
             }
         } catch {
-            StructuredLogger.shared.error("❌ 写入日志失败: \(error.localizedDescription)", category: .general)
+            StructuredLogger.shared.error("[FAIL] 写入日志失败: \(error.localizedDescription)", category: .general)
         }
     }
 
@@ -270,7 +270,7 @@ extension TestLogger {
             return files.filter { $0.pathExtension == "log" }
                 .sorted { $0.lastPathComponent > $1.lastPathComponent }
         } catch {
-            StructuredLogger.shared.error("❌ 读取日志目录失败: \(error.localizedDescription)", category: .general)
+            StructuredLogger.shared.error("[FAIL] 读取日志目录失败: \(error.localizedDescription)", category: .general)
             return []
         }
     }
@@ -294,9 +294,9 @@ extension TestLogger {
                 try FileManager.default.removeItem(at: file)
             }
 
-            StructuredLogger.shared.debug("🗑️ 所有测试日志已清空", category: .general)
+            StructuredLogger.shared.debug("[DEL] 所有测试日志已清空", category: .general)
         } catch {
-            StructuredLogger.shared.error("❌ 清空日志失败: \(error.localizedDescription)", category: .general)
+            StructuredLogger.shared.error("[FAIL] 清空日志失败: \(error.localizedDescription)", category: .general)
         }
     }
 
@@ -316,7 +316,7 @@ extension TestLogger {
         do {
             return try String(contentsOf: fileURL, encoding: .utf8)
         } catch {
-            StructuredLogger.shared.error("❌ 读取日志失败: \(error.localizedDescription)", category: .general)
+            StructuredLogger.shared.error("[FAIL] 读取日志失败: \(error.localizedDescription)", category: .general)
             return nil
         }
     }

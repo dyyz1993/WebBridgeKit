@@ -1,6 +1,15 @@
 import XCTest
 @testable import WebBridgeKit
 
+private func assertColorsEqual(_ actual: UIColor?, _ expected: UIColor?, file: StaticString = #file, line: UInt = #line) {
+    guard let actual = actual, let expected = expected else {
+        XCTAssertEqual(actual, expected, file: file, line: line)
+        return
+    }
+    let trait = UITraitCollection(userInterfaceStyle: .light)
+    XCTAssertEqual(actual.resolvedColor(with: trait), expected.resolvedColor(with: trait), file: file, line: line)
+}
+
 final class ThemeBadgeTests: XCTestCase {
 
     // MARK: - Initialization
@@ -24,7 +33,7 @@ final class ThemeBadgeTests: XCTestCase {
         let badge = ThemeBadge(frame: CGRect(x: 0, y: 0, width: 60, height: 24))
         badge.configure(text: "Success", style: .success)
 
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.success.withAlphaComponent(0.12))
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.success.withAlphaComponent(0.12))
         XCTAssertNotNil(badge.backgroundColor)
     }
 
@@ -32,7 +41,7 @@ final class ThemeBadgeTests: XCTestCase {
         let badge = ThemeBadge(frame: CGRect(x: 0, y: 0, width: 60, height: 24))
         badge.configure(text: "Warning", style: .warning)
 
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.warning.withAlphaComponent(0.12))
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.warning.withAlphaComponent(0.12))
         XCTAssertNotNil(badge.backgroundColor)
     }
 
@@ -40,7 +49,7 @@ final class ThemeBadgeTests: XCTestCase {
         let badge = ThemeBadge(frame: CGRect(x: 0, y: 0, width: 60, height: 24))
         badge.configure(text: "Error", style: .error)
 
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.error.withAlphaComponent(0.12))
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.error.withAlphaComponent(0.12))
         XCTAssertNotNil(badge.backgroundColor)
     }
 
@@ -48,7 +57,7 @@ final class ThemeBadgeTests: XCTestCase {
         let badge = ThemeBadge(frame: CGRect(x: 0, y: 0, width: 60, height: 24))
         badge.configure(text: "Info", style: .info)
 
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.info.withAlphaComponent(0.12))
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.info.withAlphaComponent(0.12))
         XCTAssertNotNil(badge.backgroundColor)
     }
 
@@ -56,7 +65,7 @@ final class ThemeBadgeTests: XCTestCase {
         let badge = ThemeBadge(frame: CGRect(x: 0, y: 0, width: 60, height: 24))
         badge.configure(text: "Default", style: .default)
 
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.badgeBackground)
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.badgeBackground)
         XCTAssertNotNil(badge.backgroundColor)
     }
 
@@ -108,28 +117,28 @@ final class ThemeBadgeTests: XCTestCase {
     }
 
     func testThemeBadgeStyleSuccessColors() {
-        XCTAssertEqual(ThemeBadgeStyle.success.backgroundColor, ThemeColors.current.success.withAlphaComponent(0.12))
-        XCTAssertEqual(ThemeBadgeStyle.success.textColor, ThemeColors.current.success)
+        assertColorsEqual(ThemeBadgeStyle.success.backgroundColor, ThemeTokens.Color.success.withAlphaComponent(0.12))
+        assertColorsEqual(ThemeBadgeStyle.success.textColor, ThemeTokens.Color.success)
     }
 
     func testThemeBadgeStyleWarningColors() {
-        XCTAssertEqual(ThemeBadgeStyle.warning.backgroundColor, ThemeColors.current.warning.withAlphaComponent(0.12))
-        XCTAssertEqual(ThemeBadgeStyle.warning.textColor, ThemeColors.current.warning)
+        assertColorsEqual(ThemeBadgeStyle.warning.backgroundColor, ThemeTokens.Color.warning.withAlphaComponent(0.12))
+        assertColorsEqual(ThemeBadgeStyle.warning.textColor, ThemeTokens.Color.warning)
     }
 
     func testThemeBadgeStyleErrorColors() {
-        XCTAssertEqual(ThemeBadgeStyle.error.backgroundColor, ThemeColors.current.error.withAlphaComponent(0.12))
-        XCTAssertEqual(ThemeBadgeStyle.error.textColor, ThemeColors.current.error)
+        assertColorsEqual(ThemeBadgeStyle.error.backgroundColor, ThemeTokens.Color.error.withAlphaComponent(0.12))
+        assertColorsEqual(ThemeBadgeStyle.error.textColor, ThemeTokens.Color.error)
     }
 
     func testThemeBadgeStyleInfoColors() {
-        XCTAssertEqual(ThemeBadgeStyle.info.backgroundColor, ThemeColors.current.info.withAlphaComponent(0.12))
-        XCTAssertEqual(ThemeBadgeStyle.info.textColor, ThemeColors.current.info)
+        assertColorsEqual(ThemeBadgeStyle.info.backgroundColor, ThemeTokens.Color.info.withAlphaComponent(0.12))
+        assertColorsEqual(ThemeBadgeStyle.info.textColor, ThemeTokens.Color.info)
     }
 
     func testThemeBadgeStyleDefaultColors() {
-        XCTAssertEqual(ThemeBadgeStyle.default.backgroundColor, ThemeColors.current.badgeBackground)
-        XCTAssertEqual(ThemeBadgeStyle.default.textColor, ThemeColors.current.badgeText)
+        assertColorsEqual(ThemeBadgeStyle.default.backgroundColor, ThemeTokens.Color.badgeBackground)
+        assertColorsEqual(ThemeBadgeStyle.default.textColor, ThemeTokens.Color.badgeText)
     }
 
     // MARK: - Label Properties
@@ -162,10 +171,10 @@ final class ThemeBadgeTests: XCTestCase {
         badge.configure(text: "Test", style: .success)
 
         let label = badge.subviews.first as? UILabel
-        XCTAssertEqual(label?.textColor, ThemeColors.current.success)
+        assertColorsEqual(label?.textColor, ThemeTokens.Color.success)
 
         badge.configure(text: "Test2", style: .error)
-        XCTAssertEqual(label?.textColor, ThemeColors.current.error)
+        assertColorsEqual(label?.textColor, ThemeTokens.Color.error)
     }
 
     // MARK: - Layout and Constraints
@@ -240,9 +249,9 @@ final class ThemeBadgeTests: XCTestCase {
         let badge = ThemeBadge(frame: CGRect(x: 0, y: 0, width: 60, height: 24))
         badge.configure(text: "Test", style: .default)
 
-        XCTAssertEqual(badge.backgroundColor, ThemeColors.current.badgeBackground)
+        assertColorsEqual(badge.backgroundColor, ThemeTokens.Color.badgeBackground)
 
         let label = badge.subviews.first as? UILabel
-        XCTAssertEqual(label?.textColor, ThemeColors.current.badgeText)
+        assertColorsEqual(label?.textColor, ThemeTokens.Color.badgeText)
     }
 }

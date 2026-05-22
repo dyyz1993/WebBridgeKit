@@ -47,7 +47,7 @@ actor FavoriteDatabaseActor {
             break
         }
         if let eid = existingId, let existing = realm.object(ofType: URLFavorite.self, forPrimaryKey: eid) {
-            WebBridgeLogger.shared.log(.debug, "⚠️ Favorite already exists: \(urlString)")
+            WebBridgeLogger.shared.log(.debug, "[WARN] Favorite already exists: \(urlString)")
             try realm.write {
                 if let title = title { existing.title = title }
                 if let favicon = favicon { existing.favicon = favicon }
@@ -68,7 +68,7 @@ actor FavoriteDatabaseActor {
             realm.add(favorite)
         }
 
-        WebBridgeLogger.shared.log(.info, "➕ Favorite added: \(urlString)")
+        WebBridgeLogger.shared.log(.info, "[PLUS] Favorite added: \(urlString)")
         return URLFavorite(value: favorite)
     }
 
@@ -78,7 +78,7 @@ actor FavoriteDatabaseActor {
         try realm.write {
             realm.add(favorite, update: .modified)
         }
-        WebBridgeLogger.shared.log(.debug, "♻️ Favorite updated: \(favorite.id)")
+        WebBridgeLogger.shared.log(.debug, "[RECYCLE] Favorite updated: \(favorite.id)")
     }
 
     // MARK: - Delete Operations
@@ -94,7 +94,7 @@ actor FavoriteDatabaseActor {
             realm.delete(favorite)
         }
 
-        WebBridgeLogger.shared.log(.info, "🗑️ Favorite deleted: \(id)")
+        WebBridgeLogger.shared.log(.info, "[DEL] Favorite deleted: \(id)")
     }
 
     /// Delete favorite by URL
@@ -183,7 +183,7 @@ actor FavoriteDatabaseActor {
             favorite.isPinned.toggle()
         }
 
-        WebBridgeLogger.shared.log(.info, favorite.isPinned ? "📌 Favorite pinned: \(id)" : "📍 Favorite unpinned: \(id)")
+        WebBridgeLogger.shared.log(.info, favorite.isPinned ? "[PIN] Favorite pinned: \(id)" : "[PIN] Favorite unpinned: \(id)")
         return favorite.isPinned
     }
 
@@ -198,7 +198,7 @@ actor FavoriteDatabaseActor {
             favorite.enableCacheMode = enabled
         }
 
-        WebBridgeLogger.shared.log(.info, "\(enabled ? "✅" : "❌") Cache mode \(enabled ? "enabled" : "disabled"): \(id)")
+        WebBridgeLogger.shared.log(.info, "\(enabled ? "[OK]" : "[FAIL]") Cache mode \(enabled ? "enabled" : "disabled"): \(id)")
     }
 
     /// Update sort order
@@ -209,7 +209,7 @@ actor FavoriteDatabaseActor {
                 favorite.sortOrder = index
             }
         }
-        WebBridgeLogger.shared.log(.debug, "♻️ Sort order updated")
+        WebBridgeLogger.shared.log(.debug, "[RECYCLE] Sort order updated")
     }
 }
 

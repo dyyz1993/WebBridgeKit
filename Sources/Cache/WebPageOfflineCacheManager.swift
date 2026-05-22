@@ -68,13 +68,13 @@ public class WebPageOfflineCacheManager {
                 progress(0.1)
 
                 // 2. 下载HTML
-                WebBridgeLogger.shared.log(.info, "📥 Downloading HTML from: \(history.url)")
+                WebBridgeLogger.shared.log(.info, "[RECV] Downloading HTML from: \(history.url)")
                 let html = try await downloader.downloadHTML(from: url)
                 progress(0.3)
 
                 // 3. 解析资源URL
                 let resources = parser.parseResources(html: html, baseURL: url)
-                WebBridgeLogger.shared.log(.info, "🔍 Found \(resources.count) resources")
+                WebBridgeLogger.shared.log(.info, "[SEARCH] Found \(resources.count) resources")
                 progress(0.4)
 
                 // 4. 下载资源（并发）
@@ -119,11 +119,11 @@ public class WebPageOfflineCacheManager {
                 }
 
                 progress(1.0)
-                WebBridgeLogger.shared.log(.info, "✅ Page cached successfully: \(history.url)")
+                WebBridgeLogger.shared.log(.info, "[OK] Page cached successfully: \(history.url)")
 
                 completion(.success(()))
             } catch {
-                WebBridgeLogger.shared.log(.error, "❌ Failed to cache page: \(error.localizedDescription)")
+                WebBridgeLogger.shared.log(.error, "[FAIL] Failed to cache page: \(error.localizedDescription)")
 
                 // 清理失败的缓存
                 try? FileManager.default.removeItem(at: cacheBaseDirectory.appendingPathComponent(history.id))
@@ -172,7 +172,7 @@ public class WebPageOfflineCacheManager {
             }
         }
 
-        WebBridgeLogger.shared.log(.info, "🗑️ Cache deleted for ID: \(historyId)")
+        WebBridgeLogger.shared.log(.info, "[DEL] Cache deleted for ID: \(historyId)")
     }
 
     /// 刷新缓存（重新下载）
@@ -201,7 +201,7 @@ public class WebPageOfflineCacheManager {
             }
         }
 
-        WebBridgeLogger.shared.log(.info, "🧹 All caches cleared")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] All caches cleared")
     }
 
     /// 获取缓存总大小
@@ -238,7 +238,7 @@ public class WebPageOfflineCacheManager {
                 }
             }
 
-            WebBridgeLogger.shared.log(.info, "🧹 LRU cleanup: removed \(toDelete.count) old caches")
+            WebBridgeLogger.shared.log(.info, "[CLEAN] LRU cleanup: removed \(toDelete.count) old caches")
         }
     }
 
@@ -342,7 +342,7 @@ extension WebPageOfflineCacheManager {
                         updatedRule.lastCachedAt = Date()
                         _ = PageCacheRuleManager.shared.updateRule(updatedRule)
 
-                        WebBridgeLogger.shared.info("✅ Page cached by rule '\(rule.name)': \(url.absoluteString)")
+                        WebBridgeLogger.shared.info("[OK] Page cached by rule '\(rule.name)': \(url.absoluteString)")
                         completion(.success(pageInfo))
 
                     case .failure(let error):

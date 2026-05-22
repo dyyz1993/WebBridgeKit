@@ -103,9 +103,9 @@ public struct CacheRule: Codable, Identifiable {
         let typePrefix: String
         switch resourceType {
         case .staticResource:
-            typePrefix = "📁 静态"
+            typePrefix = "[DIR] 静态"
         case .dynamicResource:
-            typePrefix = "🔄 动态"
+            typePrefix = "[SYNC] 动态"
         }
 
         switch type {

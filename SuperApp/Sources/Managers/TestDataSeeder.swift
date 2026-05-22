@@ -20,9 +20,6 @@ struct TestDataSeeder {
         let needsSeed = !UserDefaults.standard.bool(forKey: seededKey)
 
         if needsSeed {
-            #if DEBUG
-            print("[TestDataSeeder] 开始填充测试数据...")
-            #endif
 
             seedServerConfigs()
             seedAccessTokens()
@@ -36,13 +33,7 @@ struct TestDataSeeder {
 
             UserDefaults.standard.set(true, forKey: seededKey)
 
-            #if DEBUG
-            print("[TestDataSeeder] 测试数据填充完成")
-            #endif
         } else {
-            #if DEBUG
-            print("[TestDataSeeder] 已填充过，跳过")
-            #endif
         }
 
         seedManifestCaches()
@@ -113,13 +104,7 @@ struct TestDataSeeder {
                 invalidUrlConfig.updatedAt = date("2026-05-09T15:00:00Z")
                 realm.add(invalidUrlConfig)
             }
-            #if DEBUG
-            print("[TestDataSeeder] 服务器配置: 6 条")
-            #endif
         } catch {
-            #if DEBUG
-            print("[TestDataSeeder] 服务器配置填充失败: \(error)")
-            #endif
         }
     }
 
@@ -187,13 +172,7 @@ struct TestDataSeeder {
                 emptyToken.accessCount = 0
                 realm.add(emptyToken)
             }
-            #if DEBUG
-            print("[TestDataSeeder] 访问口令: 5 条")
-            #endif
         } catch {
-            #if DEBUG
-            print("[TestDataSeeder] 访问口令填充失败: \(error)")
-            #endif
         }
     }
 
@@ -209,9 +188,6 @@ struct TestDataSeeder {
         let fk = "TestDataSeeder_Favorites_Sealed"
         do {
             let config = URLFavoriteManager.shared.realmConfiguration
-            #if DEBUG
-            print("[TestDataSeeder] Favorites Realm config: \(config.fileURL?.path ?? "nil") schemaVersion=\(config.schemaVersion)")
-            #endif
 
             let realm = try Realm(configuration: config)
             // Use NSPredicate filter instead of object(ofType:forPrimaryKey:) to avoid
@@ -251,9 +227,6 @@ struct TestDataSeeder {
                 }
             }
             UserDefaults.standard.set(true, forKey: fk)
-            #if DEBUG
-            print("[TestDataSeeder] 收藏夹: 9 条 (total in realm: \(realm.objects(URLFavorite.self).count))")
-            #endif
 
             // 增量添加：192.168.0.4:5173 开发服务器(已存在种子数据时单独补充)
             let devServer = realm.objects(URLFavorite.self).filter("id == %@", "fav-dev-009").first
@@ -270,14 +243,8 @@ struct TestDataSeeder {
                     fav.createdAt = date("2026-05-14T00:00:00Z")
                     realm.add(fav)
                 }
-                #if DEBUG
-                print("[TestDataSeeder] 收藏夹: 增量添加 Dev Server (192.168.0.4:5173)")
-                #endif
             }
         } catch {
-            #if DEBUG
-            print("[TestDataSeeder] 收藏夹填充失败: \(error.localizedDescription)")
-            #endif
         }
     }
 
@@ -324,13 +291,7 @@ struct TestDataSeeder {
                     realm.add(hist)
                 }
             }
-            #if DEBUG
-            print("[TestDataSeeder] 访问历史: 16 条")
-            #endif
         } catch {
-            #if DEBUG
-            print("[TestDataSeeder] 访问历史填充失败: \(error)")
-            #endif
         }
     }
 
@@ -397,13 +358,7 @@ struct TestDataSeeder {
         do {
             let data = try JSONEncoder().encode(keys)
             defaults.set(data, forKey: storageKey)
-            #if DEBUG
-            print("[TestDataSeeder] API Key: \(keys.count) 条")
-            #endif
         } catch {
-            #if DEBUG
-            print("[TestDataSeeder] API Key 填充失败: \(error)")
-            #endif
         }
     }
 
@@ -463,9 +418,6 @@ struct TestDataSeeder {
         for rule in cacheRules {
             rules.addRule(rule)
         }
-        #if DEBUG
-        print("[TestDataSeeder] 缓存规则: \(cacheRules.count) 条")
-        #endif
     }
 
     // MARK: - Command Tokens
@@ -523,13 +475,7 @@ struct TestDataSeeder {
         do {
             let data = try JSONEncoder().encode(tokens)
             defaults.set(data, forKey: storageKey)
-            #if DEBUG
-            print("[TestDataSeeder] Command Token: \(tokens.count) 条")
-            #endif
         } catch {
-            #if DEBUG
-            print("[TestDataSeeder] Command Token 填充失败: \(error)")
-            #endif
         }
     }
 
@@ -590,9 +536,6 @@ struct TestDataSeeder {
         var addedCount = 0
         for rule in rules where manager.addRule(rule) { addedCount += 1 }
 
-        #if DEBUG
-        print("[TestDataSeeder] Page Cache Rule: \(addedCount) 条")
-        #endif
     }
 
     // MARK: - Manifest Caches (moved to TestDataSeeder+Entities.swift)

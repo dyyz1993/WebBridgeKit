@@ -58,7 +58,7 @@ class HandlerListViewController: UITableViewController {
         config.imageProperties.tintColor = .tertiarySystemFill
         
         if !handler.requiredPermissions.isEmpty {
-            config.secondaryText = "\(handler.action) 🔐"
+            config.secondaryText = "\(handler.action) [AUTH]"
         }
         
         cell.contentConfiguration = config

@@ -40,7 +40,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         let button = UIButton(type: .system)
         let image = LucideIcon.plus.templateImage(pointSize: 20, weight: .medium)
         button.setImage(image, for: .normal)
-        button.tintColor = ThemeColors.current.text
+        button.tintColor = ThemeTokens.Color.text
         button.snp.makeConstraints { make in
             make.width.height.equalTo(44)
         }
@@ -72,7 +72,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
     // MARK: - Setup UI
 
     private func setupUI() {
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         // Set accessibility identifiers
         tableView.accessibilityIdentifier = "favorite.tableView"
@@ -335,7 +335,7 @@ extension FavoriteViewController: UITableViewDelegate {
             completion(true)
         }
 
-        deleteAction.backgroundColor = ThemeColors.current.error
+        deleteAction.backgroundColor = ThemeTokens.Color.error
 
         return UISwipeActionsConfiguration(actions: [deleteAction])
     }

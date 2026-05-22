@@ -97,13 +97,13 @@ class WebPageHistoryViewController: BaseViewController<WebPageHistoryViewModel> 
         let label = UILabel()
         label.text = NSLocalizedString("No browsing history yet", comment: "")
         label.textColor = ThemeTokens.Color.textSecondary
-        label.font = ThemeTokens.Typography.callout
+        label.font = ThemeTokens.Typography.body
         label.textAlignment = .center
 
         let detailLabel = UILabel()
         detailLabel.text = NSLocalizedString("Visit a webpage to see it here", comment: "")
         detailLabel.textColor = ThemeTokens.Color.textSecondary
-        detailLabel.font = ThemeTokens.Typography.footnote
+        detailLabel.font = ThemeTokens.Typography.metadata
         detailLabel.textAlignment = .center
 
         view.addSubview(imageView)

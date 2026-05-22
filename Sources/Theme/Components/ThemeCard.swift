@@ -4,7 +4,7 @@ import SnapKit
 public class ThemeCard: UIView {
     private let contentView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = ThemeCornerRadius.default.lg
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
         view.layer.shadowRadius = 12
@@ -30,7 +30,7 @@ public class ThemeCard: UIView {
 
     public override func layoutSubviews() {
         super.layoutSubviews()
-        contentView.backgroundColor = ThemeColors.current.cardBackground
+        contentView.backgroundColor = ThemeTokens.Color.cardBackground
     }
 
     public func addContent(_ view: UIView) {

@@ -36,7 +36,7 @@ extension WebResourceCacheManager {
 
         updateManifestForResource(cacheID: cacheID, relativePath: relativePath, data: data, mimeType: mimeType)
 
-        StructuredLogger.shared.debug("💾 [WebResourceCacheManager] Stored resource", category: .cache)
+        StructuredLogger.shared.debug("[SAVE] [WebResourceCacheManager] Stored resource", category: .cache)
         StructuredLogger.shared.debug("   - Cache ID: \(cacheID)", category: .cache)
         StructuredLogger.shared.debug("   - Path: \(relativePath)", category: .cache)
         StructuredLogger.shared.debug("   - Size: \(data.count) bytes", category: .cache)
@@ -68,7 +68,7 @@ extension WebResourceCacheManager {
 
             return (data, mimeType)
         } catch {
-            StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to read resource: \(error.localizedDescription)", category: .cache)
+            StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to read resource: \(error.localizedDescription)", category: .cache)
             return nil
         }
     }
@@ -90,10 +90,10 @@ extension WebResourceCacheManager {
                     }
 
                     try self.fileManager.removeItem(at: resourcePath)
-                    StructuredLogger.shared.debug("🗑️ [WebResourceCacheManager] Removed resource: \(relativePath)", category: .cache)
+                    StructuredLogger.shared.debug("[DEL] [WebResourceCacheManager] Removed resource: \(relativePath)", category: .cache)
                 }
             } catch {
-                StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to remove resource: \(error.localizedDescription)", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to remove resource: \(error.localizedDescription)", category: .cache)
             }
         }
     }
@@ -108,9 +108,9 @@ extension WebResourceCacheManager {
             let data = try encoder.encode(manifest)
             try data.write(to: manifestPath)
 
-            StructuredLogger.shared.debug("💾 [WebResourceCacheManager] Saved manifest for: \(cacheID)", category: .cache)
+            StructuredLogger.shared.debug("[SAVE] [WebResourceCacheManager] Saved manifest for: \(cacheID)", category: .cache)
         } catch {
-            StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to save manifest: \(error.localizedDescription)", category: .cache)
+            StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to save manifest: \(error.localizedDescription)", category: .cache)
         }
     }
 
@@ -128,7 +128,7 @@ extension WebResourceCacheManager {
             let manifest = try decoder.decode(WebResourceManifest.self, from: data)
             return manifest
         } catch {
-            StructuredLogger.shared.error("❌ [WebResourceCacheManager] Failed to load manifest: \(error.localizedDescription)", category: .cache)
+            StructuredLogger.shared.error("[FAIL] [WebResourceCacheManager] Failed to load manifest: \(error.localizedDescription)", category: .cache)
             return nil
         }
     }

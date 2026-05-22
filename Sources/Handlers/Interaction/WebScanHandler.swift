@@ -96,7 +96,7 @@ private class QRScanViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .black
+        view.backgroundColor = ThemeTokens.Color.surface
 
         // 设置导航栏
         navigationItem.title = "扫描二维码"
@@ -198,7 +198,7 @@ private class QRScanViewController: UIViewController {
         // 添加提示文字
         let label = UILabel()
         label.text = "将二维码放入框内即可自动扫描"
-        label.textColor = .white
+        label.textColor = ThemeTokens.Color.onPrimary
         label.textAlignment = .center
         label.font = UIFont.preferredFont(forTextStyle: .subheadline)
         label.frame = CGRect(

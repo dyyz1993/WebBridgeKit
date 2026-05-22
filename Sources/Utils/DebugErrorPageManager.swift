@@ -137,17 +137,17 @@ public class DebugErrorPageManager {
         html += """
             <div class="container">
                 <div class="info-box">
-                    <h1>⚠️ 加载失败</h1>
+                    <h1>[WARN] 加载失败</h1>
                     <div class="subtitle">无法加载页面</div>
                 </div>
 
                 <div class="info-box">
-                    <h2>📋 请求地址</h2>
+                    <h2>[LIST] 请求地址</h2>
                     <div class="error-code">\(url.absoluteString)</div>
                 </div>
 
                 <div class="info-box">
-                    <h2>💬 错误原因</h2>
+                    <h2>[CHAT] 错误原因</h2>
                     <div class="error-code">\(errorMessage)</div>
                 </div>
         """
@@ -156,7 +156,7 @@ public class DebugErrorPageManager {
         if let debugInfo = debugInfo {
             html += """
                 <div class="debug-section">
-                    <h3>🔍 调试信息</h3>
+                    <h3>[SEARCH] 调试信息</h3>
                 """
 
             for (key, value) in debugInfo {

@@ -41,7 +41,7 @@ public class RequestDeduplicator {
             }
         }
 
-        NSLog("✅ [RequestDeduplicator] Initialized")
+        NSLog("[OK] [RequestDeduplicator] Initialized")
     }
 
     // MARK: - Public Methods
@@ -61,7 +61,7 @@ public class RequestDeduplicator {
         let existingTask = lock.withLock { pendingTasks[key] }
 
         if let existingTask = existingTask {
-            NSLog( "♻️ [RequestDeduplicator] Reusing existing task for key: \(key)")
+            NSLog( "[RECYCLE] [RequestDeduplicator] Reusing existing task for key: \(key)")
 
             do {
                 let result = try await existingTask.value
@@ -78,7 +78,7 @@ public class RequestDeduplicator {
             }
         }
 
-        NSLog( "🚀 [RequestDeduplicator] Creating new task for key: \(key)")
+        NSLog( "[LAUNCH] [RequestDeduplicator] Creating new task for key: \(key)")
 
         let task = Task(priority: priority) {
             return try await operation() as Any
@@ -129,7 +129,7 @@ public class RequestDeduplicator {
             task.cancel()
             pendingTasks.removeValue(forKey: key)
             taskTimestamps.removeValue(forKey: key)
-            NSLog( "🚫 [RequestDeduplicator] Cancelled task for key: \(key)")
+            NSLog( "[BLOCK] [RequestDeduplicator] Cancelled task for key: \(key)")
         }
     }
 
@@ -146,7 +146,7 @@ public class RequestDeduplicator {
         pendingTasks.removeAll()
         taskTimestamps.removeAll()
 
-        NSLog( "🚫 [RequestDeduplicator] Cancelled all \(count) pending tasks")
+        NSLog( "[BLOCK] [RequestDeduplicator] Cancelled all \(count) pending tasks")
     }
 
     /// Get statistics about pending requests
@@ -196,7 +196,7 @@ public class RequestDeduplicator {
         }
 
         if !staleKeys.isEmpty {
-            NSLog("🧹 [RequestDeduplicator] Cleaned up \(staleKeys.count) stale tasks")
+            NSLog("[CLEAN] [RequestDeduplicator] Cleaned up \(staleKeys.count) stale tasks")
         }
     }
 }

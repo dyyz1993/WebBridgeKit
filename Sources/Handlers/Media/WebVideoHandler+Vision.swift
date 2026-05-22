@@ -139,10 +139,10 @@ extension WebVideoHandler {
 
     @available(iOS 14.0, *)
     func setupHandDetection() {
-        StructuredLogger.shared.debug("✋ [NativeHand] Setting up VNDetectHumanHandPoseRequest...", category: .handler)
+        StructuredLogger.shared.debug("[EMOJI] [NativeHand] Setting up VNDetectHumanHandPoseRequest...", category: .handler)
         let request = VNDetectHumanHandPoseRequest { [weak self] request, error in
             if let error = error {
-                StructuredLogger.shared.error("✋ [NativeHand] Error: \(error.localizedDescription)", category: .handler)
+                StructuredLogger.shared.error("[EMOJI] [NativeHand] Error: \(error.localizedDescription)", category: .handler)
                 self?.sendNativeLogToJS("Hand Tracking Error: \(error.localizedDescription)")
                 return
             }

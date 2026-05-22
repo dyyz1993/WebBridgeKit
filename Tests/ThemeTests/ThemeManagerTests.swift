@@ -34,7 +34,7 @@ final class ThemeManagerTests: XCTestCase {
         let trait = UITraitCollection(userInterfaceStyle: .light)
         XCTAssertEqual(
             ThemeColors.default.primary.resolvedColor(with: trait),
-            ThemeColors.current.primary.resolvedColor(with: trait)
+            ThemeTokens.Color.primary.resolvedColor(with: trait)
         )
     }
 
@@ -57,7 +57,7 @@ final class ThemeManagerTests: XCTestCase {
         let fonts = ThemeFonts.default
         XCTAssertEqual(fonts.title.pointSize, 28)
         XCTAssertEqual(fonts.headline.pointSize, 17)
-        XCTAssertEqual(fonts.body.pointSize, 15)
+        XCTAssertEqual(fonts.body.pointSize, 17)
         XCTAssertEqual(fonts.caption.pointSize, 12)
         XCTAssertEqual(fonts.button.pointSize, 16)
     }
@@ -79,7 +79,7 @@ final class ThemeManagerTests: XCTestCase {
         let radius = ThemeCornerRadius.default
         XCTAssertEqual(radius.sm, 4)
         XCTAssertEqual(radius.md, 8)
-        XCTAssertEqual(radius.lg, 16)
+        XCTAssertEqual(radius.lg, 12)
         XCTAssertEqual(radius.full, 999)
     }
 

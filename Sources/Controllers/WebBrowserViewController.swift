@@ -31,10 +31,8 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 缓存状态标签
     let cacheStatusLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption2
-        label.textColor = .white
-        label.textAlignment = .center
-        label.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.6)
+        label.font = ThemeTokens.Typography.tabLabel
+        label.textColor = ThemeTokens.Color.onPrimary
         label.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         label.clipsToBounds = true
         label.text = "LIVE"
@@ -51,7 +49,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 标题标签
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.callout
+        label.font = ThemeTokens.Typography.body
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -139,16 +137,16 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     override init(viewModel: WebBrowserViewModel) {
         super.init(viewModel: viewModel)
         hidesBottomBarWhenPushed = true
-        WebBridgeLogger.shared.info("🔧 WebBrowserViewController init")
+        WebBridgeLogger.shared.info("[TOOL] WebBrowserViewController init")
     }
 
     /// 便捷初始化 - 支持加载 URL
     convenience init(url: URL) {
         self.init(viewModel: WebBrowserViewModel(url: url))
         webView.navigationDelegate = self
-        StructuredLogger.shared.debug("🔧 WebBrowserViewController init - URL: \(url.absoluteString)", category: .navigation)
-        StructuredLogger.shared.debug("🔧 navigationDelegate set", category: .navigation)
-        WebBridgeLogger.shared.info("🔧 WebBrowserViewController convenience init - navigationDelegate set")
+        StructuredLogger.shared.debug("[TOOL] WebBrowserViewController init - URL: \(url.absoluteString)", category: .navigation)
+        StructuredLogger.shared.debug("[TOOL] navigationDelegate set", category: .navigation)
+        WebBridgeLogger.shared.info("[TOOL] WebBrowserViewController convenience init - navigationDelegate set")
     }
 
     required init?(coder: NSCoder) {
@@ -158,7 +156,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     // MARK: - Setup UI
 
     public override func makeUI() {
-        StructuredLogger.shared.debug("🔧 [WebBrowserVC] makeUI called", category: .ui)
+        StructuredLogger.shared.debug("[TOOL] [WebBrowserVC] makeUI called", category: .ui)
         view.backgroundColor = ThemeTokens.Color.background
 
         configureNavigationBar()
@@ -204,7 +202,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             tabBarController.tabBar.isHidden = true
             tabBarController.view.setNeedsLayout()
             tabBarController.view.layoutIfNeeded()
-            StructuredLogger.shared.info("✅ [Browser] TabBar auto-hidden on webview entry", category: .ui)
+            StructuredLogger.shared.info("[OK] [Browser] TabBar auto-hidden on webview entry", category: .ui)
         }
     }
 
@@ -224,7 +222,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     /// 还原系统 NavigationBar
     private func restoreUIState() {
-        StructuredLogger.shared.debug("🔄 [Browser] Restoring UI state...", category: .ui)
+        StructuredLogger.shared.debug("[SYNC] [Browser] Restoring UI state...", category: .ui)
 
         UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
         UIViewController.attemptRotationToDeviceOrientation()
@@ -233,19 +231,19 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             tabBarController.tabBar.isHidden = false
             tabBarController.view.setNeedsLayout()
             tabBarController.view.layoutIfNeeded()
-            StructuredLogger.shared.info("✅ [Browser] TabBar restored", category: .ui)
+            StructuredLogger.shared.info("[OK] [Browser] TabBar restored", category: .ui)
         }
 
         if let navigationController = self.navigationController {
             navigationController.navigationBar.isHidden = false
             navigationController.setNavigationBarHidden(false, animated: false)
-            StructuredLogger.shared.info("✅ [Browser] NavigationBar restored", category: .navigation)
+            StructuredLogger.shared.info("[OK] [Browser] NavigationBar restored", category: .navigation)
         }
 
         view.backgroundColor = ThemeTokens.Color.background
         hideNavBar = false
 
-        StructuredLogger.shared.info("✅ [Browser] UI state fully restored", category: .ui)
+        StructuredLogger.shared.info("[OK] [Browser] UI state fully restored", category: .ui)
     }
 
     // MARK: - URL Loading
@@ -265,56 +263,56 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             webView.load(request)
         }
 
-        StructuredLogger.shared.debug("🌐 [Browser] 加载 URL: \(url.absoluteString)", category: .navigation)
+        StructuredLogger.shared.debug("[WEB] [Browser] 加载 URL: \(url.absoluteString)", category: .navigation)
     }
 
     /// 检查 URL 参数
     func checkURLParameters(_ url: URL) {
-        StructuredLogger.shared.debug("🔍 [WebBrowserVC] checkURLParameters called: \(url.absoluteString)", category: .navigation)
+        StructuredLogger.shared.debug("[SEARCH] [WebBrowserVC] checkURLParameters called: \(url.absoluteString)", category: .navigation)
 
         updateCacheStatus(source: "LIVE")
 
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let queryItems = components.queryItems else {
-            StructuredLogger.shared.warning("⚠️ [WebBrowserVC] No query items found - resetting UI state", category: .ui)
+            StructuredLogger.shared.warning("[WARN] [WebBrowserVC] No query items found - resetting UI state", category: .ui)
             resetUIState()
             return
         }
 
-        StructuredLogger.shared.info("✅ [WebBrowserVC] Found \(queryItems.count) query items", category: .ui)
+        StructuredLogger.shared.info("[OK] [WebBrowserVC] Found \(queryItems.count) query items", category: .ui)
 
         var shouldHideNavBar = false
         var shouldHideStatusBar = false
         var targetOrientation: UIInterfaceOrientation?
 
         for item in queryItems {
-            StructuredLogger.shared.debug("🔍 [WebBrowserVC] Processing query item: \(item.name) = \(item.value ?? "nil")", category: .ui)
+            StructuredLogger.shared.debug("[SEARCH] [WebBrowserVC] Processing query item: \(item.name) = \(item.value ?? "nil")", category: .ui)
 
             switch item.name.lowercased() {
             case "hidenavbar":
                 if let value = item.value, value == "1" || value.lowercased() == "true" {
-                    StructuredLogger.shared.info("✅ [WebBrowserVC] Hiding navigation bar (hidenavbar)", category: .navigation)
+                    StructuredLogger.shared.info("[OK] [WebBrowserVC] Hiding navigation bar (hidenavbar)", category: .navigation)
                     shouldHideNavBar = true
                 }
             case "hidestatusbar":
                 if let value = item.value, value == "1" || value.lowercased() == "true" {
-                    StructuredLogger.shared.info("✅ [WebBrowserVC] Hiding status bar (hidestatusbar)", category: .ui)
+                    StructuredLogger.shared.info("[OK] [WebBrowserVC] Hiding status bar (hidestatusbar)", category: .ui)
                     shouldHideStatusBar = true
                 }
             case "hidetabbar":
-                StructuredLogger.shared.warning("⚠️ [WebBrowserVC] hidetabbar parameter ignored (TabBar auto-hidden)", category: .ui)
+                StructuredLogger.shared.warning("[WARN] [WebBrowserVC] hidetabbar parameter ignored (TabBar auto-hidden)", category: .ui)
             case "mode":
                 if let value = item.value, value.lowercased() == "immersive" {
-                    StructuredLogger.shared.info("✅ [WebBrowserVC] Activating immersive mode (mode=immersive)", category: .ui)
+                    StructuredLogger.shared.info("[OK] [WebBrowserVC] Activating immersive mode (mode=immersive)", category: .ui)
                     shouldHideNavBar = true
                     shouldHideStatusBar = true
                 }
             case "orientation":
                 if let value = item.value, value.lowercased() == "landscape" {
-                    StructuredLogger.shared.info("✅ [WebBrowserVC] Forcing landscape orientation", category: .ui)
+                    StructuredLogger.shared.info("[OK] [WebBrowserVC] Forcing landscape orientation", category: .ui)
                     targetOrientation = .landscapeRight
                 } else if let value = item.value, value.lowercased() == "portrait" {
-                    StructuredLogger.shared.info("✅ [WebBrowserVC] Forcing portrait orientation", category: .ui)
+                    StructuredLogger.shared.info("[OK] [WebBrowserVC] Forcing portrait orientation", category: .ui)
                     targetOrientation = .portrait
                 }
             default:
@@ -332,18 +330,18 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             updateOrientation(orientation)
         }
 
-        StructuredLogger.shared.info("✅ [WebBrowserVC] checkURLParameters completed", category: .navigation)
+        StructuredLogger.shared.info("[OK] [WebBrowserVC] checkURLParameters completed", category: .navigation)
     }
 
     /// 重置UI状态（当URL没有参数时调用）
     private func resetUIState() {
-        StructuredLogger.shared.debug("🔄 [Browser] Resetting UI state to default...", category: .ui)
+        StructuredLogger.shared.debug("[SYNC] [Browser] Resetting UI state to default...", category: .ui)
 
         setNavigationBarHidden(false)
         setStatusBarHidden(false)
         updateOrientation(.portrait)
 
-        StructuredLogger.shared.info("✅ [Browser] UI state reset to default", category: .ui)
+        StructuredLogger.shared.info("[OK] [Browser] UI state reset to default", category: .ui)
     }
 
     /// 更新屏幕方向
@@ -355,20 +353,20 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 设置 TabBar 隐藏状态（动态）
     private func setTabBarHidden(_ hidden: Bool) {
         guard let tabBarController = self.tabBarController else {
-            StructuredLogger.shared.warning("⚠️ [Browser] No TabBarController found", category: .ui)
+            StructuredLogger.shared.warning("[WARN] [Browser] No TabBarController found", category: .ui)
             return
         }
 
-        StructuredLogger.shared.debug("🎛️ [Browser] setTabBarHidden called: hidden=\(hidden)", category: .ui)
+        StructuredLogger.shared.debug("[CTRL] [Browser] setTabBarHidden called: hidden=\(hidden)", category: .ui)
 
         tabBarController.tabBar.isHidden = hidden
 
         tabBarController.view.setNeedsLayout()
         tabBarController.view.layoutIfNeeded()
 
-        StructuredLogger.shared.debug("🎛️ [Browser] TabBar isHidden: \(tabBarController.tabBar.isHidden)", category: .ui)
-        StructuredLogger.shared.debug("🎛️ [Browser] TabBar frame: \(tabBarController.tabBar.frame)", category: .ui)
-        StructuredLogger.shared.debug("🎛️ [Browser] ViewController frame: \(self.view.frame)", category: .ui)
+        StructuredLogger.shared.debug("[CTRL] [Browser] TabBar isHidden: \(tabBarController.tabBar.isHidden)", category: .ui)
+        StructuredLogger.shared.debug("[CTRL] [Browser] TabBar frame: \(tabBarController.tabBar.frame)", category: .ui)
+        StructuredLogger.shared.debug("[CTRL] [Browser] ViewController frame: \(self.view.frame)", category: .ui)
     }
 
     /// 设置导航栏隐藏状态
@@ -409,7 +407,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             self.webView.scrollView.contentInsetAdjustmentBehavior = .never
 
             if hidden {
-                self.view.backgroundColor = .black
+                self.view.backgroundColor = ThemeTokens.Color.surface
                 self.webView.backgroundColor = .clear
                 self.webView.scrollView.backgroundColor = .clear
             } else {
@@ -420,7 +418,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
             self.view.layoutIfNeeded()
 
-            StructuredLogger.shared.debug("🎛️ [Browser] System NavigationBar: \(hidden ? "隐藏" : "显示")", category: .navigation)
+            StructuredLogger.shared.debug("[CTRL] [Browser] System NavigationBar: \(hidden ? "隐藏" : "显示")", category: .navigation)
         }
     }
 
@@ -428,7 +426,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     func setStatusBarHidden(_ hidden: Bool) {
         isStatusBarHidden = hidden
         setNeedsStatusBarAppearanceUpdate()
-        StructuredLogger.shared.debug("📱 [Browser] 状态栏: \(hidden ? "隐藏" : "显示")", category: .ui)
+        StructuredLogger.shared.debug("[MOBILE] [Browser] 状态栏: \(hidden ? "隐藏" : "显示")", category: .ui)
     }
 
     func dismissOrPop() {
@@ -445,7 +443,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     public override func bindViewModel() {
         webView.navigationDelegate = self
-        WebBridgeLogger.shared.info("🔧 bindViewModel - navigationDelegate set")
+        WebBridgeLogger.shared.info("[TOOL] bindViewModel - navigationDelegate set")
 
         let output = viewModel.transform(input: WebBrowserViewModel.Input(
             loadURL: .empty(),
@@ -530,7 +528,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
 
             self.webView.customUserAgent = customUA
-            StructuredLogger.shared.debug("📱 [WebBrowserVC] Custom UA configured: \(customUA)", category: .ui)
+            StructuredLogger.shared.debug("[MOBILE] [WebBrowserVC] Custom UA configured: \(customUA)", category: .ui)
         }
     }
 
@@ -553,6 +551,6 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
         isViewModelBinded = false
 
-        StructuredLogger.shared.debug("🧹 [WebBrowserVC] Cleaned up with proper memory management", category: .ui)
+        StructuredLogger.shared.debug("[CLEAN] [WebBrowserVC] Cleaned up with proper memory management", category: .ui)
     }
 }

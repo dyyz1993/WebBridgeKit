@@ -4,15 +4,15 @@ import SnapKit
 public class ThemeSectionHeader: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.title2
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.title3
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
     private let actionButton: UIButton = {
         let button = UIButton(type: .system)
-        button.titleLabel?.font = ThemeTypography.current.caption1
-        button.setTitleColor(ThemeColors.current.primary, for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.caption1
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         button.isHidden = true
         return button
     }()

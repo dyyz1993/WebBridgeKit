@@ -86,12 +86,12 @@ public struct EnvironmentInfo {
     /// 可读的摘要信息
     public var summary: String {
         """
-        📱 \(appName) v\(appVersion) (\(buildNumber))
-        📱 \(deviceModel) / \(systemName) \(systemVersion)
-        📺 \(String(format: "%.0f×%.0f @%.0fx", screenBounds.width, screenBounds.height, screenScale))
-        💾 Memory: \(formatBytes(freeMemory)) / \(formatBytes(physicalMemory))
-        💽 Disk: \(formatBytes(freeDiskSpace)) / \(formatBytes(totalDiskSpace))
-        🌐 Network: \(networkType) (\(isConnected ? "connected" : "disconnected"))
+        [MOBILE] \(appName) v\(appVersion) (\(buildNumber))
+        [MOBILE] \(deviceModel) / \(systemName) \(systemVersion)
+        [EMOJI] \(String(format: "%.0f×%.0f @%.0fx", screenBounds.width, screenBounds.height, screenScale))
+        [SAVE] Memory: \(formatBytes(freeMemory)) / \(formatBytes(physicalMemory))
+        [EMOJI] Disk: \(formatBytes(freeDiskSpace)) / \(formatBytes(totalDiskSpace))
+        [WEB] Network: \(networkType) (\(isConnected ? "connected" : "disconnected"))
         """
     }
 

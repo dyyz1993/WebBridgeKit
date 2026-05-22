@@ -45,8 +45,8 @@ class TokenCardDemoView: UIView {
         layer.cornerRadius = ThemeTokens.CornerRadius.xl
         clipsToBounds = true
         gradientLayer.colors = [
-            ThemeColors.current.gradientStart.cgColor,
-            ThemeColors.current.gradientEnd.cgColor
+            ThemeTokens.Color.gradientStart.cgColor,
+            ThemeTokens.Color.gradientEnd.cgColor
         ]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
@@ -68,8 +68,8 @@ class TokenCardDemoView: UIView {
         super.traitCollectionDidChange(previousTraitCollection)
         if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
             gradientLayer.colors = [
-                ThemeColors.current.gradientStart.cgColor,
-                ThemeColors.current.gradientEnd.cgColor
+                ThemeTokens.Color.gradientStart.cgColor,
+                ThemeTokens.Color.gradientEnd.cgColor
             ]
         }
     }
@@ -82,19 +82,19 @@ class TokenCardDemoView: UIView {
 
         let urlLabel = UILabel()
         urlLabel.text = "wbk.shanbox.19930810.xyz:8443"
-        urlLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        urlLabel.font = ThemeTokens.Typography.monospaceSmall
         urlLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.85)
         urlLabel.numberOfLines = 1
 
         let tokenLabel = UILabel()
         tokenLabel.text = "Device: a1b2c3d4e5f6..."
-        tokenLabel.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .regular)
+        tokenLabel.font = ThemeTokens.Typography.monospaceMini
         tokenLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.7)
 
         let copyButton = UIButton(type: .system)
         copyButton.setImage(LucideIcon.copy.templateImage(pointSize: 16, weight: .semibold), for: .normal)
         copyButton.tintColor = ThemeTokens.Color.background
-        copyButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        copyButton.backgroundColor = ThemeTokens.Color.overlaySoft
         copyButton.layer.cornerRadius = ThemeTokens.CornerRadius.xl
 
         addSubview(titleLabel)

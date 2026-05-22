@@ -36,14 +36,14 @@ class MessageInboxViewController: UIViewController {
         table.rowHeight = UITableView.automaticDimension
         table.estimatedRowHeight = 100
         table.tableFooterView = UIView()
-        table.backgroundColor = ThemeColors.current.background
+        table.backgroundColor = ThemeTokens.Color.background
         return table
     }()
 
     private lazy var emptyLabel: UILabel = {
         let label = UILabel()
         label.text = L10n.tr("message.inbox.empty")
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.isHidden = true
         return label
     }()
@@ -84,7 +84,7 @@ class MessageInboxViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         title = L10n.tr("message.inbox.title")
 
         navigationItem.titleView = segmentedControl
@@ -210,38 +210,38 @@ class MessageCell: UITableViewCell {
         backgroundColor = .clear
 
         let cardView = UIView()
-        cardView.backgroundColor = ThemeColors.current.cardBackground
+        cardView.backgroundColor = ThemeTokens.Color.cardBackground
         cardView.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         contentView.addSubview(cardView)
 
         iconContainer.layer.cornerRadius = ThemeTokens.CornerRadius.md
-        iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+        iconContainer.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = ThemeColors.current.primary
+        iconImageView.tintColor = ThemeTokens.Color.primary
 
         titleLabel.font = ThemeTokens.Typography.headline
         titleLabel.numberOfLines = 2
         titleLabel.lineBreakMode = .byTruncatingTail
         bodyLabel.font = ThemeTokens.Typography.footnote
-        bodyLabel.textColor = ThemeColors.current.textSecondary
+        bodyLabel.textColor = ThemeTokens.Color.textSecondary
         bodyLabel.numberOfLines = 2
         bodyLabel.lineBreakMode = .byTruncatingTail
 
         timeLabel.font = ThemeTokens.Typography.caption2
-        timeLabel.textColor = ThemeColors.current.textSecondary
+        timeLabel.textColor = ThemeTokens.Color.textSecondary
         timeLabel.numberOfLines = 1
 
-        sourceBadge.backgroundColor = ThemeColors.current.textSecondary.withAlphaComponent(0.1)
+        sourceBadge.backgroundColor = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)
         sourceBadge.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         sourceLabel.font = ThemeTokens.Typography.caption2
-        sourceLabel.textColor = ThemeColors.current.textSecondary
+        sourceLabel.textColor = ThemeTokens.Color.textSecondary
         sourceLabel.numberOfLines = 1
 
-        unreadDot.backgroundColor = ThemeColors.current.error
+        unreadDot.backgroundColor = ThemeTokens.Color.error
         unreadDot.layer.cornerRadius = ThemeTokens.CornerRadius.sm
 
         actionImageView.image = LucideIcon.chevronRight.templateImage()
-        actionImageView.tintColor = ThemeColors.current.textSecondary
+        actionImageView.tintColor = ThemeTokens.Color.textSecondary
         actionImageView.contentMode = .scaleAspectFit
 
         cardView.addSubview(iconContainer)
@@ -321,8 +321,8 @@ class MessageCell: UITableViewCell {
         sourceLabel.text = nil
         unreadDot.isHidden = true
         iconImageView.image = nil
-        iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
-        iconImageView.tintColor = ThemeColors.current.primary
+        iconContainer.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+        iconImageView.tintColor = ThemeTokens.Color.primary
         actionImageView.isHidden = true
     }
 
@@ -342,12 +342,12 @@ class MessageCell: UITableViewCell {
             iconImageView.tintColor = ThemeTokens.Color.info
         } else if message.payload.targetURL != nil {
             iconImageView.image = LucideIcon.link.templateImage()
-            iconContainer.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
-            iconImageView.tintColor = ThemeColors.current.primary
+            iconContainer.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeTokens.Color.primary
         } else {
             iconImageView.image = LucideIcon.bell.templateImage()
-            iconContainer.backgroundColor = ThemeColors.current.warning.withAlphaComponent(0.1)
-            iconImageView.tintColor = ThemeColors.current.warning
+            iconContainer.backgroundColor = ThemeTokens.Color.warning.withAlphaComponent(0.1)
+            iconImageView.tintColor = ThemeTokens.Color.warning
         }
 
         actionImageView.isHidden = (message.payload.targetURL == nil && message.payload.targetAppId == nil)

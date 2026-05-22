@@ -18,14 +18,14 @@ class SettingsHeaderView: UIView {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeColors.current.primary
+        imageView.tintColor = ThemeTokens.Color.primary
         return imageView
     }()
 
     private let appNameLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.title3
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.textAlignment = .center
         return label
     }()
@@ -33,7 +33,7 @@ class SettingsHeaderView: UIView {
     private let versionLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         return label
     }()
@@ -49,8 +49,8 @@ class SettingsHeaderView: UIView {
 
     private let deviceIDLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.monospaceMeta
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 1
         label.adjustsFontSizeToFitWidth = true
@@ -62,7 +62,7 @@ class SettingsHeaderView: UIView {
         let button = UIButton(type: .system)
         let image = LucideIcon.copy.templateImage(pointSize: 14, weight: .medium)
         button.setImage(image, for: .normal)
-        button.tintColor = ThemeColors.current.primary
+        button.tintColor = ThemeTokens.Color.primary
         return button
     }()
 
@@ -91,7 +91,7 @@ class SettingsHeaderView: UIView {
     // MARK: - Setup
 
     private func setupUI() {
-        backgroundColor = ThemeColors.current.background
+        backgroundColor = ThemeTokens.Color.background
 
         addSubview(iconImageView)
         addSubview(appNameLabel)

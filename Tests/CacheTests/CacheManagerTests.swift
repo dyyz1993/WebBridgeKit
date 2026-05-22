@@ -73,23 +73,34 @@ final class CacheManagerTests: XCTestCase {
     }
     
     func testGetOrSet() async throws {
-        var callCount = 0
+        actor CallCounter {
+            private(set) var value = 0
+
+            func increment() {
+                value += 1
+            }
+        }
+
+        let callCount = CallCounter()
+        let cacheKey = "key_get_or_set_\(UUID().uuidString)"
         
-        let value1 = try await CacheManager.shared.getOrSet(for: "key1_gos", expiration: 3600) {
-            callCount += 1
+        let value1 = try await CacheManager.shared.getOrSet(for: cacheKey, expiration: 3600) {
+            await callCount.increment()
             return "computed value"
         }
         
         XCTAssertEqual(value1, "computed value")
-        XCTAssertEqual(callCount, 1)
+        let firstCallCount = await callCount.value
+        XCTAssertEqual(firstCallCount, 1)
         
-        let value2 = try await CacheManager.shared.getOrSet(for: "key1_gos", expiration: 3600) {
-            callCount += 1
+        let value2 = try await CacheManager.shared.getOrSet(for: cacheKey, expiration: 3600) {
+            await callCount.increment()
             return "computed value"
         }
         
         XCTAssertEqual(value2, "computed value")
-        XCTAssertEqual(callCount, 1, "Factory should not be called again")
+        let secondCallCount = await callCount.value
+        XCTAssertEqual(secondCallCount, 1, "Factory should not be called again")
     }
     
     func testStatistics() async throws {

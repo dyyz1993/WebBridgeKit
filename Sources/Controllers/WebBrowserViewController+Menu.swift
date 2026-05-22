@@ -18,16 +18,16 @@ extension WebBrowserViewController {
             preferredStyle: .actionSheet
         )
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("🔄 Refresh", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[SYNC] Refresh", comment: ""), style: .default) { [weak self] _ in
             self?.webView.reload()
         })
 
-        let toggleTitle = hideNavBar ? "📌 显示导航栏" : "🎯 隐藏导航栏"
+        let toggleTitle = hideNavBar ? "[PIN] 显示导航栏" : "[TARGET] 隐藏导航栏"
         alertController.addAction(UIAlertAction(title: NSLocalizedString(toggleTitle, comment: ""), style: .default) { [weak self] _ in
             self?.setNavigationBarHidden(!(self?.hideNavBar ?? false))
         })
 
-        let statusBarToggleTitle = isStatusBarHidden ? "📊 显示状态栏" : "📱 隐藏状态栏"
+        let statusBarToggleTitle = isStatusBarHidden ? "[STATS] 显示状态栏" : "[MOBILE] 隐藏状态栏"
         alertController.addAction(UIAlertAction(title: NSLocalizedString(statusBarToggleTitle, comment: ""), style: .default) { [weak self] _ in
             self?.setStatusBarHidden(!(self?.isStatusBarHidden ?? false))
         })
@@ -35,7 +35,7 @@ extension WebBrowserViewController {
         if let url = webView.url {
             let favoriteService = ServiceLocator.favorite
             let isFavorited = favoriteService.findFavorite(url: url) != nil
-            let favoriteTitle = isFavorited ? "⭐ 取消收藏" : "☆ 收藏页面"
+            let favoriteTitle = isFavorited ? "[STAR] 取消收藏" : "[EMOJI] 收藏页面"
 
             alertController.addAction(UIAlertAction(title: NSLocalizedString(favoriteTitle, comment: ""), style: .default) { [weak self] _ in
                 guard let self = self else { return }
@@ -49,39 +49,39 @@ extension WebBrowserViewController {
             })
         }
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("📚 Bookmarks", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[BOOKS] Bookmarks", comment: ""), style: .default) { [weak self] _ in
             self?.showBookmarks()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("🌉 JS Bridge Test", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[BRIDGE] JS Bridge Test", comment: ""), style: .default) { [weak self] _ in
             self?.loadJSBridgeTestPage()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("🎮 Voice Game", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[EMOJI] Voice Game", comment: ""), style: .default) { [weak self] _ in
             self?.loadGamePage()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("🔐 Permissions", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[AUTH] Permissions", comment: ""), style: .default) { [weak self] _ in
             self?.loadPermissionsPage()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("💾 Cache Statistics", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[SAVE] Cache Statistics", comment: ""), style: .default) { [weak self] _ in
             self?.showSystemCacheStatistics()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("🗂️ Cache Debug", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[FOLDER] Cache Debug", comment: ""), style: .default) { [weak self] _ in
             self?.showCacheDebugPanel()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("📊 Performance Info", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[STATS] Performance Info", comment: ""), style: .default) { [weak self] _ in
             self?.showPerformanceInfo()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("🔍 Debug Info", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[SEARCH] Debug Info", comment: ""), style: .default) { [weak self] _ in
             self?.showDebugInfo()
         })
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("🏠 Welcome Page", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("[HOME] Welcome Page", comment: ""), style: .default) { [weak self] _ in
             self?.loadWelcomePage()
         })
 
@@ -145,20 +145,20 @@ extension WebBrowserViewController {
 
     private func showDebugInfo() {
         let info = [
-            "📱 当前 URL": webView.url?.absoluteString ?? "None",
-            "📄 页面标题": webView.title ?? "None",
-            "⬅️ 可以后退": webView.canGoBack ? "是" : "否",
-            "➡️ 可以前进": webView.canGoForward ? "是" : "否",
-            "🔄 加载中": webView.isLoading ? "是" : "否",
-            "📊 加载进度": String(format: "%.1f%%", webView.estimatedProgress * 100),
-            "🎛️ 导航栏": hideNavBar ? "隐藏" : "显示",
-            "📊 状态栏": isStatusBarHidden ? "隐藏" : "显示"
+            "[MOBILE] 当前 URL": webView.url?.absoluteString ?? "None",
+            "[DOC] 页面标题": webView.title ?? "None",
+            "[BACK] 可以后退": webView.canGoBack ? "是" : "否",
+            "[NEXT] 可以前进": webView.canGoForward ? "是" : "否",
+            "[SYNC] 加载中": webView.isLoading ? "是" : "否",
+            "[STATS] 加载进度": String(format: "%.1f%%", webView.estimatedProgress * 100),
+            "[CTRL] 导航栏": hideNavBar ? "隐藏" : "显示",
+            "[STATS] 状态栏": isStatusBarHidden ? "隐藏" : "显示"
         ]
 
         let message = info.map { "\($0.key): \($0.value)" }.joined(separator: "\n")
 
         let alert = UIAlertController(
-            title: "🔍 调试信息",
+            title: "[SEARCH] 调试信息",
             message: message,
             preferredStyle: .alert
         )

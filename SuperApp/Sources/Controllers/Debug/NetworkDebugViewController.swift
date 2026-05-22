@@ -112,7 +112,7 @@ final class NetworkRequestCell: UITableViewCell {
 
     private func setupUI() {
         stackView.axis = .horizontal
-        stackView.spacing = 8
+        stackView.spacing = ThemeTokens.Spacing.sm
         stackView.alignment = .center
 
         methodLabel.font = UIFont.preferredFont(forTextStyle: .caption2)

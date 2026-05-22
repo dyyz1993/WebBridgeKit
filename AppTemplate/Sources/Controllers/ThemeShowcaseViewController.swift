@@ -12,7 +12,7 @@ class ThemeShowcaseViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "主题"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
         Task { @MainActor in
             currentMode = await ThemeManager.shared.getMode()
@@ -22,7 +22,7 @@ class ThemeShowcaseViewController: UIViewController {
 
     private func setupUI() {
         stackView.axis = .vertical
-        stackView.spacing = ThemeSpacing.default.md
+        stackView.spacing = ThemeTokens.Spacing.md
         stackView.alignment = .fill
 
         setupModeSelector()
@@ -41,10 +41,10 @@ class ThemeShowcaseViewController: UIViewController {
         }
 
         stackView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(ThemeSpacing.default.md)
-            make.left.right.equalToSuperview().inset(ThemeSpacing.default.md)
-            make.bottom.equalToSuperview().offset(-ThemeSpacing.default.lg)
-            make.width.equalTo(scrollView).offset(-ThemeSpacing.default.md * 2)
+            make.top.equalToSuperview().offset(ThemeTokens.Spacing.md)
+            make.left.right.equalToSuperview().inset(ThemeTokens.Spacing.md)
+            make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.lg)
+            make.width.equalTo(scrollView).offset(-ThemeTokens.Spacing.md * 2)
         }
     }
 
@@ -85,11 +85,11 @@ class ThemeShowcaseViewController: UIViewController {
         let cardContent = UILabel()
         cardContent.text = "ThemeCard with sample content\nSecond line of content"
         cardContent.numberOfLines = 0
-        cardContent.font = ThemeTypography.current.body
-        cardContent.textColor = ThemeColors.current.text
+        cardContent.font = ThemeTokens.Typography.body
+        cardContent.textColor = ThemeTokens.Color.text
         card.addContent(cardContent)
         cardContent.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
         card.snp.makeConstraints { make in
             make.height.equalTo(80)
@@ -98,7 +98,7 @@ class ThemeShowcaseViewController: UIViewController {
 
         let badgesStack = UIStackView()
         badgesStack.axis = .horizontal
-        badgesStack.spacing = ThemeSpacing.default.sm
+        badgesStack.spacing = ThemeTokens.Spacing.sm
         badgesStack.distribution = .fill
 
         let badgeStyles: [(String, ThemeBadgeStyle)] = [
@@ -152,32 +152,32 @@ class ThemeShowcaseViewController: UIViewController {
         stackView.addArrangedSubview(header)
 
         let colors: [(String, UIColor)] = [
-            ("primary", ThemeColors.current.primary),
-            ("secondary", ThemeColors.current.secondary),
-            ("background", ThemeColors.current.background),
-            ("surface", ThemeColors.current.surface),
-            ("text", ThemeColors.current.text),
-            ("textSecondary", ThemeColors.current.textSecondary),
-            ("border", ThemeColors.current.border),
-            ("success", ThemeColors.current.success),
-            ("warning", ThemeColors.current.warning),
-            ("error", ThemeColors.current.error),
-            ("info", ThemeColors.current.info),
-            ("cardBackground", ThemeColors.current.cardBackground),
-            ("gradientStart", ThemeColors.current.gradientStart),
-            ("gradientEnd", ThemeColors.current.gradientEnd),
-            ("badgeBackground", ThemeColors.current.badgeBackground),
-            ("badgeText", ThemeColors.current.badgeText),
-            ("divider", ThemeColors.current.divider),
-            ("fabBackground", ThemeColors.current.fabBackground),
-            ("navBarBg", ThemeColors.current.navigationBarBackground),
-            ("navBarTitle", ThemeColors.current.navigationBarTitle),
-            ("tabBarBg", ThemeColors.current.tabBarBackground)
+            ("primary", ThemeTokens.Color.primary),
+            ("secondary", ThemeTokens.Color.secondary),
+            ("background", ThemeTokens.Color.background),
+            ("surface", ThemeTokens.Color.surface),
+            ("text", ThemeTokens.Color.text),
+            ("textSecondary", ThemeTokens.Color.textSecondary),
+            ("border", ThemeTokens.Color.border),
+            ("success", ThemeTokens.Color.success),
+            ("warning", ThemeTokens.Color.warning),
+            ("error", ThemeTokens.Color.error),
+            ("info", ThemeTokens.Color.info),
+            ("cardBackground", ThemeTokens.Color.cardBackground),
+            ("gradientStart", ThemeTokens.Color.gradientStart),
+            ("gradientEnd", ThemeTokens.Color.gradientEnd),
+            ("badgeBackground", ThemeTokens.Color.badgeBackground),
+            ("badgeText", ThemeTokens.Color.badgeText),
+            ("divider", ThemeTokens.Color.separator),
+            ("fabBackground", ThemeTokens.Color.fabBackground),
+            ("navBarBg", ThemeTokens.Color.navigationBarBackground),
+            ("navBarTitle", ThemeTokens.Color.navigationBarTitle),
+            ("tabBarBg", ThemeTokens.Color.tabBarBackground)
         ]
 
         let flowLayout = UICollectionViewFlowLayout()
-        flowLayout.minimumInteritemSpacing = ThemeSpacing.default.sm
-        flowLayout.minimumLineSpacing = ThemeSpacing.default.sm
+        flowLayout.minimumInteritemSpacing = ThemeTokens.Spacing.sm
+        flowLayout.minimumLineSpacing = ThemeTokens.Spacing.sm
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -202,20 +202,20 @@ class ThemeShowcaseViewController: UIViewController {
         stackView.addArrangedSubview(header)
 
         let fonts: [(String, UIFont)] = [
-            ("largeTitle (28pt bold)", ThemeTypography.current.largeTitle),
-            ("title1 (22pt bold)", ThemeTypography.current.title1),
-            ("title2 (20pt semibold)", ThemeTypography.current.title2),
-            ("headline (17pt semibold)", ThemeTypography.current.headline),
-            ("body (15pt regular)", ThemeTypography.current.body),
-            ("caption1 (13pt regular)", ThemeTypography.current.caption1),
-            ("caption2 (11pt regular)", ThemeTypography.current.caption2)
+            ("largeTitle (28pt bold)", ThemeTokens.Typography.largeTitle),
+            ("title1 (22pt bold)", ThemeTokens.Typography.title1),
+            ("title2 (20pt semibold)", ThemeTokens.Typography.title2),
+            ("headline (17pt semibold)", ThemeTokens.Typography.headline),
+            ("body (15pt regular)", ThemeTokens.Typography.body),
+            ("caption1 (13pt regular)", ThemeTokens.Typography.caption1),
+            ("caption2 (11pt regular)", ThemeTokens.Typography.caption2)
         ]
 
         for (name, font) in fonts {
             let label = UILabel()
             label.text = name
             label.font = font
-            label.textColor = ThemeColors.current.text
+            label.textColor = ThemeTokens.Color.text
             stackView.addArrangedSubview(label)
         }
     }
@@ -236,7 +236,7 @@ class ThemeShowcaseViewController: UIViewController {
             let col = index % cols
             let imgView = UIImageView()
             imgView.image = icon.templateImage(pointSize: 20, weight: .regular)
-            imgView.tintColor = ThemeColors.current.text
+            imgView.tintColor = ThemeTokens.Color.text
             imgView.contentMode = .scaleAspectFit
             iconGrid.addSubview(imgView)
             imgView.snp.makeConstraints { make in
@@ -260,7 +260,7 @@ class ThemeShowcaseViewController: UIViewController {
 
     private func makeDivider() -> UIView {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.divider
+        view.backgroundColor = ThemeTokens.Color.separator
         view.snp.makeConstraints { make in
             make.height.equalTo(1)
         }
@@ -281,7 +281,7 @@ extension ThemeShowcaseViewController: UICollectionViewDelegateFlowLayout, UICol
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.frame.width - ThemeSpacing.default.sm * 2) / 3.0
+        let width = (collectionView.frame.width - ThemeTokens.Spacing.sm * 2) / 3.0
         return CGSize(width: width > 0 ? width : 100, height: 48)
     }
 }
@@ -290,17 +290,17 @@ private class ColorCell: UICollectionViewCell {
     private let colorView = UIView()
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.caption1
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.caption1
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         return label
     }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        colorView.layer.cornerRadius = ThemeCornerRadius.default.sm
+        colorView.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         colorView.layer.borderWidth = 1
-        colorView.layer.borderColor = ThemeColors.current.border.cgColor
+        colorView.layer.borderColor = ThemeTokens.Color.border.cgColor
         contentView.addSubview(colorView)
         contentView.addSubview(nameLabel)
         colorView.snp.makeConstraints { make in

@@ -44,12 +44,12 @@ class TabBarController: UITabBarController {
     }
 
     private func setupAppearance() {
-        tabBar.backgroundColor = ThemeColors.current.tabBarBackground
+        tabBar.backgroundColor = ThemeTokens.Color.tabBarBackground
 
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = ThemeColors.current.tabBarBackground
+            appearance.backgroundColor = ThemeTokens.Color.tabBarBackground
             tabBar.standardAppearance = appearance
             tabBar.scrollEdgeAppearance = appearance
         }
@@ -63,14 +63,14 @@ class TabBarController: UITabBarController {
 
     private func configureNavigationBar(_ navigationBar: UINavigationBar) {
         navigationBar.prefersLargeTitles = true
-        navigationBar.backgroundColor = ThemeColors.current.navigationBarBackground
+        navigationBar.backgroundColor = ThemeTokens.Color.navigationBarBackground
 
         if #available(iOS 15.0, *) {
             let appearance = UINavigationBarAppearance()
             appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = ThemeColors.current.navigationBarBackground
-            appearance.largeTitleTextAttributes = [.foregroundColor: ThemeColors.current.navigationBarTitle]
-            appearance.titleTextAttributes = [.foregroundColor: ThemeColors.current.navigationBarTitle]
+            appearance.backgroundColor = ThemeTokens.Color.navigationBarBackground
+            appearance.largeTitleTextAttributes = [.foregroundColor: ThemeTokens.Color.navigationBarTitle]
+            appearance.titleTextAttributes = [.foregroundColor: ThemeTokens.Color.navigationBarTitle]
             navigationBar.standardAppearance = appearance
             navigationBar.scrollEdgeAppearance = appearance
             navigationBar.compactAppearance = appearance

@@ -76,7 +76,7 @@ public class WebScreenHandler: BaseWebNativeHandler {
 
             // 创建全屏黑色遮罩
             let overlay = UIView(frame: UIScreen.main.bounds)
-            overlay.backgroundColor = .black
+            overlay.backgroundColor = ThemeTokens.Color.overlay
             overlay.isUserInteractionEnabled = true
 
             // 添加长按手势用于解锁

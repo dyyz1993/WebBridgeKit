@@ -265,7 +265,7 @@ class DetailHeaderView: UIView {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .white
+        iv.tintColor = ThemeTokens.Color.textOnColor
         return iv
     }()
     private let nameLabel: UILabel = {
@@ -289,7 +289,7 @@ class DetailHeaderView: UIView {
     private let statusLabel: UILabel = {
         let l = UILabel()
         l.font = ThemeTokens.Typography.caption2
-        l.textColor = .white
+        l.textColor = ThemeTokens.Color.textOnColor
         return l
     }()
 
@@ -371,7 +371,7 @@ class DetailMetricCell: UITableViewCell {
     }()
     private let valueLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont.monospacedDigitSystemFont(ofSize: 15, weight: .medium)
+        l.font = ThemeTokens.Typography.monospaceMeta
         l.textColor = ThemeTokens.Color.text
         l.textAlignment = .right
         return l

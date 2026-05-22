@@ -27,7 +27,7 @@ class WebPageHistoryCell: UITableViewCell {
     /// 标题标签
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.callout
+        label.font = ThemeTokens.Typography.body
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 2
         return label
@@ -36,7 +36,7 @@ class WebPageHistoryCell: UITableViewCell {
     /// URL 标签
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption1
+        label.font = ThemeTokens.Typography.caption
         label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
@@ -44,7 +44,7 @@ class WebPageHistoryCell: UITableViewCell {
     /// 访问信息标签
     private let visitInfoLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption2
+        label.font = ThemeTokens.Typography.tabLabel
         label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
@@ -52,7 +52,7 @@ class WebPageHistoryCell: UITableViewCell {
     /// 缓存大小标签
     private let cacheSizeLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption2
+        label.font = ThemeTokens.Typography.tabLabel
         label.textColor = ThemeTokens.Color.info
         label.layer.borderColor = ThemeTokens.Color.info.cgColor
         label.layer.borderWidth = 1

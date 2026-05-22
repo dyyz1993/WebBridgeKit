@@ -41,7 +41,7 @@ public class CacheResourceCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.subheadline
+        label.font = ThemeTokens.Typography.body
         label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 2
         return label
@@ -49,14 +49,14 @@ public class CacheResourceCell: UITableViewCell {
 
     private let sizeLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
+        label.font = ThemeTokens.Typography.metadata
         label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption1
+        label.font = ThemeTokens.Typography.caption
         label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
@@ -71,7 +71,7 @@ public class CacheResourceCell: UITableViewCell {
 
     private let typeBadgeLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption2
+        label.font = ThemeTokens.Typography.tabLabel
         label.textColor = ThemeTokens.Color.primary
         return label
     }()

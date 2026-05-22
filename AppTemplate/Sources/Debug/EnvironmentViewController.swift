@@ -17,14 +17,14 @@ class EnvironmentViewController: UIViewController {
         view.backgroundColor = .systemBackground
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "📋 Copy",
+            title: "[LIST] Copy",
             style: .plain,
             target: self,
             action: #selector(copyInfo)
         )
         
         textView.isEditable = false
-        textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        textView.font = ThemeTokens.Typography.monospaceBody
         textView.backgroundColor = .secondarySystemBackground
         textView.translatesAutoresizingMaskIntoConstraints = false
         

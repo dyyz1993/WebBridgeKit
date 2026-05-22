@@ -31,7 +31,7 @@ class MessageDetailViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.title2
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 0
         return label
     }()
@@ -48,14 +48,14 @@ class MessageDetailViewController: UIViewController {
     private let bodyLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()
 
     private let metaCard: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.md
         return view
     }()
@@ -86,7 +86,7 @@ class MessageDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("message.detail.title")
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
         configure()
     }
@@ -212,7 +212,7 @@ class MessageDetailViewController: UIViewController {
         let valueLabel = UILabel()
         valueLabel.text = value
         valueLabel.font = ThemeTokens.Typography.footnote
-        valueLabel.textColor = ThemeColors.current.textSecondary
+        valueLabel.textColor = ThemeTokens.Color.textSecondary
         valueLabel.numberOfLines = 0
 
         container.addSubview(labelLabel)
@@ -239,7 +239,7 @@ class MessageDetailViewController: UIViewController {
             config.image = icon.templateImage(pointSize: 16)
             config.imagePadding = 8
             config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
-            config.baseBackgroundColor = ThemeColors.current.cardBackground
+            config.baseBackgroundColor = ThemeTokens.Color.cardBackground
             if isDestructive {
                 config.baseForegroundColor = ThemeTokens.Color.error
             }
@@ -255,7 +255,7 @@ class MessageDetailViewController: UIViewController {
         button.contentHorizontalAlignment = .leading
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.clipsToBounds = true
-        button.backgroundColor = ThemeColors.current.cardBackground
+        button.backgroundColor = ThemeTokens.Color.cardBackground
 
         button.addAction(UIAction { _ in handler() }, for: .touchUpInside)
 

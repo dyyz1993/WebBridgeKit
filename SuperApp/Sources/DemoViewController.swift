@@ -17,7 +17,7 @@ class DemoViewController: UIViewController {
     private let contentStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 24
+        stack.spacing = ThemeTokens.Spacing.xxl
         return stack
     }()
 
@@ -32,7 +32,7 @@ class DemoViewController: UIViewController {
 
     private func setupUI() {
         title = "WebBridgeKit Demo"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         view.addSubview(scrollView)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -61,29 +61,29 @@ class DemoViewController: UIViewController {
 
     private func addHeaderSection() {
         let headerView = UIView()
-        headerView.backgroundColor = ThemeColors.current.cardBackground
+        headerView.backgroundColor = ThemeTokens.Color.cardBackground
         headerView.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         headerView.layer.masksToBounds = true
 
         let titleLabel = UILabel()
-        titleLabel.text = "🌉 WebBridgeKit"
+        titleLabel.text = "[BRIDGE] WebBridgeKit"
         titleLabel.font = ThemeTokens.Typography.largeTitle
-        titleLabel.textColor = ThemeColors.current.text
+        titleLabel.textColor = ThemeTokens.Color.text
 
         let subtitleLabel = UILabel()
         subtitleLabel.text = "Native-Web 桥接框架"
         subtitleLabel.font = ThemeTokens.Typography.footnote
-        subtitleLabel.textColor = ThemeColors.current.textSecondary
+        subtitleLabel.textColor = ThemeTokens.Color.textSecondary
 
         let versionLabel = UILabel()
         versionLabel.text = "支持 32 个 Native Handler"
         versionLabel.font = ThemeTokens.Typography.caption1
-        versionLabel.textColor = ThemeColors.current.info
+        versionLabel.textColor = ThemeTokens.Color.info
         versionLabel.textAlignment = .center
 
         let stackView = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, versionLabel])
         stackView.axis = .vertical
-        stackView.spacing = 8
+        stackView.spacing = ThemeTokens.Spacing.sm
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
         headerView.addSubview(stackView)
@@ -101,20 +101,20 @@ class DemoViewController: UIViewController {
 
     private func addMainActionsSection() {
         let containerView = UIView()
-        containerView.backgroundColor = ThemeColors.current.cardBackground
+        containerView.backgroundColor = ThemeTokens.Color.cardBackground
         containerView.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         containerView.layer.masksToBounds = true
 
-        let sectionLabel = createSectionLabel(title: "快速开始", icon: "🚀")
+        let sectionLabel = createSectionLabel(title: "快速开始", icon: "[LAUNCH]")
 
         let actionsStackView = UIStackView()
         actionsStackView.axis = .vertical
-        actionsStackView.spacing = 12
+        actionsStackView.spacing = ThemeTokens.Spacing.md
 
         let openTestsButton = createActionButton(
             title: "打开测试页面",
             subtitle: "测试所有 32 个 Native Handler",
-            icon: "🧪",
+            icon: "[TEST]",
             color: ThemeTokens.Color.primary,
             action: #selector(openTestPage)
         )
@@ -122,7 +122,7 @@ class DemoViewController: UIViewController {
         let openRemoteButton = createActionButton(
             title: "打开远程网页",
             subtitle: "浏览任意网站",
-            icon: "🌐",
+            icon: "[WEB]",
             color: ThemeTokens.Color.success,
             action: #selector(openRemotePage)
         )
@@ -130,7 +130,7 @@ class DemoViewController: UIViewController {
         let systemInfoButton = createActionButton(
             title: "系统信息",
             subtitle: "查看设备和应用信息",
-            icon: "📱",
+            icon: "[MOBILE]",
             color: ThemeTokens.Color.error,
             action: #selector(showSystemInfo)
         )
@@ -138,7 +138,7 @@ class DemoViewController: UIViewController {
         let cacheDebugButton = createActionButton(
             title: "缓存调试",
             subtitle: "查看和管理压缩缓存",
-            icon: "🗂️",
+            icon: "[FOLDER]",
             color: ThemeTokens.Color.info,
             action: #selector(openCacheDebug)
         )
@@ -172,11 +172,11 @@ class DemoViewController: UIViewController {
 
     private func addAboutSection() {
         let containerView = UIView()
-        containerView.backgroundColor = ThemeColors.current.cardBackground
+        containerView.backgroundColor = ThemeTokens.Color.cardBackground
         containerView.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         containerView.layer.masksToBounds = true
 
-        let sectionLabel = createSectionLabel(title: "关于", icon: "ℹ️")
+        let sectionLabel = createSectionLabel(title: "关于", icon: "[INFO]")
 
         let infoLabel = UILabel()
         infoLabel.text = """
@@ -190,12 +190,12 @@ class DemoViewController: UIViewController {
         • 离线缓存支持
         """
         infoLabel.font = ThemeTokens.Typography.footnote
-        infoLabel.textColor = ThemeColors.current.textSecondary
+        infoLabel.textColor = ThemeTokens.Color.textSecondary
         infoLabel.numberOfLines = 0
 
         let stackView = UIStackView(arrangedSubviews: [sectionLabel, infoLabel])
         stackView.axis = .vertical
-        stackView.spacing = 12
+        stackView.spacing = ThemeTokens.Spacing.md
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
         containerView.addSubview(stackView)
@@ -216,7 +216,7 @@ class DemoViewController: UIViewController {
         let label = UILabel()
         label.text = "\(icon) \(title)"
         label.font = ThemeTokens.Typography.title3
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }
 
@@ -233,20 +233,20 @@ class DemoViewController: UIViewController {
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = ThemeTokens.Typography.headline
-        titleLabel.textColor = ThemeColors.current.text
+        titleLabel.textColor = ThemeTokens.Color.text
 
         let subtitleLabel = UILabel()
         subtitleLabel.text = subtitle
         subtitleLabel.font = ThemeTokens.Typography.footnote
-        subtitleLabel.textColor = ThemeColors.current.textSecondary
+        subtitleLabel.textColor = ThemeTokens.Color.textSecondary
 
         let textStackView = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
         textStackView.axis = .vertical
-        textStackView.spacing = 4
+        textStackView.spacing = ThemeTokens.Spacing.xs
 
         let horizontalStackView = UIStackView(arrangedSubviews: [iconLabel, textStackView])
         horizontalStackView.axis = .horizontal
-        horizontalStackView.spacing = 12
+        horizontalStackView.spacing = ThemeTokens.Spacing.md
         horizontalStackView.alignment = .center
 
         horizontalStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -270,7 +270,7 @@ class DemoViewController: UIViewController {
 
     private func createSeparator() -> UIView {
         let separator = UIView()
-        separator.backgroundColor = ThemeColors.current.divider
+        separator.backgroundColor = ThemeTokens.Color.separator
         separator.translatesAutoresizingMaskIntoConstraints = false
         separator.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
         return separator
@@ -291,7 +291,7 @@ class DemoViewController: UIViewController {
 
         // 查找 test.html 文件（在 bundle 根目录）
         if let testURL = Bundle.main.url(forResource: "test", withExtension: "html") {
-            os_log("✅ 找到测试页面: %@", log: OSLog.default, type: .info, testURL.absoluteString)
+            os_log("[OK] 找到测试页面: %@", log: OSLog.default, type: .info, testURL.absoluteString)
 
             // 直接打开测试页面（移除了人为延迟）
             WebBrowserManager.shared.openBrowser(
@@ -300,7 +300,7 @@ class DemoViewController: UIViewController {
                 from: self
             )
         } else {
-            os_log("❌ 找不到测试页面文件", log: OSLog.default, type: .error)
+            os_log("[FAIL] 找不到测试页面文件", log: OSLog.default, type: .error)
             let bundlePath = Bundle.main.bundlePath
             showAlert(title: "错误", message: "找不到测试页面文件\n\nBundle路径：\(bundlePath)")
         }
