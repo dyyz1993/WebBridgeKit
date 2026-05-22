@@ -16,7 +16,7 @@ extension ManifestCacheTestViewController {
 
     /// 测试持久化加载
     private func testPersistentLoad(url: URL) {
-        addLog("📥 持久化模式：")
+        addLog("[RECV] 持久化模式：")
 
         // ✅ 创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
@@ -28,7 +28,7 @@ extension ManifestCacheTestViewController {
         // 首先检查是否已有缓存
         let isCached = PersistentManifestLoader.shared.isCached(url: url)
         if isCached {
-            addLog("💡 检测到已有缓存，直接从缓存加载")
+            addLog("[TIP] 检测到已有缓存，直接从缓存加载")
             addLog("   1. 读取缓存文件")
             addLog("   2. 加载到 WebView")
 
@@ -46,19 +46,19 @@ extension ManifestCacheTestViewController {
 
                     switch result {
                     case .success:
-                        self.addLog("✅ 从缓存加载成功")
+                        self.addLog("[OK] 从缓存加载成功")
                         self.updateStats()
 
                     case .failure(let error):
-                        self.addLog("❌ 缓存加载失败: \(error.localizedDescription)")
+                        self.addLog("[FAIL] 缓存加载失败: \(error.localizedDescription)")
                         // 如果缓存加载失败，尝试重新下载
-                        self.addLog("⚠️ 缓存加载失败，尝试重新下载...")
+                        self.addLog("[WARN] 缓存加载失败，尝试重新下载...")
                         self.downloadAndCache(url: url)
                     }
                 }
             }
         } else {
-            addLog("📥 首次加载，将下载所有资源：")
+            addLog("[RECV] 首次加载，将下载所有资源：")
             addLog("   1. 下载 manifest.json")
             addLog("   2. 检查 persistent 字段")
             addLog("   3. 下载所有资源")
@@ -69,7 +69,7 @@ extension ManifestCacheTestViewController {
 
     /// 下载并缓存
     private func downloadAndCache(url: URL) {
-        addLog("📥 持久化模式：显示全屏进度条")
+        addLog("[RECV] 持久化模式：显示全屏进度条")
 
         // ✅ 创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
@@ -104,7 +104,7 @@ extension ManifestCacheTestViewController {
 
                         switch result {
                         case .success:
-                            self.addLog("✅ 持久化加载成功")
+                            self.addLog("[OK] 持久化加载成功")
                             self.updateStats()
 
                             // 打开全屏 WebView 展示页面
@@ -115,7 +115,7 @@ extension ManifestCacheTestViewController {
                             self.present(displayVC, animated: true)
 
                         case .failure(let error):
-                            self.addLog("❌ 持久化加载失败!")
+                            self.addLog("[FAIL] 持久化加载失败!")
                             self.addLog("   错误类型: \(type(of: error))")
                             self.addLog("   错误描述: \(error.localizedDescription)")
                             self.addLog("   完整错误: \(error)")
@@ -149,7 +149,7 @@ extension ManifestCacheTestViewController {
 
     /// 测试懒加载
     private func testLazyLoad(url: URL) {
-        addLog("⚡ 懒加载模式：立即打开全屏页面")
+        addLog("[FAST] 懒加载模式：立即打开全屏页面")
 
         // ✅ 创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
@@ -160,43 +160,43 @@ extension ManifestCacheTestViewController {
 
         // 创建新的全屏页面展示器
         let displayVC = WebViewDisplayViewController(webView: tempWebView) { [weak self] in
-            self?.addLog("✅ 全屏页面已关闭")
+            self?.addLog("[OK] 全屏页面已关闭")
             self?.dismiss(animated: true)
         }
 
         displayVC.modalPresentationStyle = .fullScreen
-        addLog("📱 准备打开全屏页面...")
+        addLog("[MOBILE] 准备打开全屏页面...")
 
         // Delay presentation to next run loop to ensure UI is ready
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
             #if DEBUG
-            print("🔍 [DEBUG] navigationController = \(String(describing: self.navigationController))")
+            print("[SEARCH] [DEBUG] navigationController = \(String(describing: self.navigationController))")
             #endif
             #if DEBUG
-            print("🔍 [DEBUG] tabBarController = \(String(describing: self.tabBarController))")
+            print("[SEARCH] [DEBUG] tabBarController = \(String(describing: self.tabBarController))")
             #endif
             #if DEBUG
-            print("🔍 [DEBUG] presentingViewController = \(String(describing: self.presentingViewController))")
+            print("[SEARCH] [DEBUG] presentingViewController = \(String(describing: self.presentingViewController))")
             #endif
             #if DEBUG
-            print("🔍 [DEBUG] view.window = \(String(describing: self.view.window))")
+            print("[SEARCH] [DEBUG] view.window = \(String(describing: self.view.window))")
             #endif
             #if DEBUG
-            print("🔍 [DEBUG] isViewLoaded = \(self.isViewLoaded)")
+            print("[SEARCH] [DEBUG] isViewLoaded = \(self.isViewLoaded)")
             #endif
 
             // Try push instead of present for better reliability
             if let navController = self.navigationController {
-                self.addLog("🔄 使用 Navigation Push 打开全屏页面")
+                self.addLog("[SYNC] 使用 Navigation Push 打开全屏页面")
                 navController.pushViewController(displayVC, animated: true)
-                self.addLog("✅ 全屏页面已打开")
+                self.addLog("[OK] 全屏页面已打开")
             } else {
                 // Fallback to present
                 let presentingVC = self
                 presentingVC.present(displayVC, animated: true) {
-                    self.addLog("✅ 全屏页面已打开")
+                    self.addLog("[OK] 全屏页面已打开")
                 }
             }
         }
@@ -220,15 +220,15 @@ extension ManifestCacheTestViewController {
 
                 switch result {
                 case .success:
-                    self.addLog("✅ 懒加载启动成功")
-                    self.addLog("🔄 资源正在后台下载中...")
+                    self.addLog("[OK] 懒加载启动成功")
+                    self.addLog("[SYNC] 资源正在后台下载中...")
                     self.updateStats()
 
                     // 监控后台下载进度
                     self.monitorBackgroundDownload(url: url)
 
                 case .failure(let error):
-                    self.addLog("❌ 懒加载失败: \(error.localizedDescription)")
+                    self.addLog("[FAIL] 懒加载失败: \(error.localizedDescription)")
                     // 关闭全屏页面并显示错误
                     displayVC.dismiss(animated: true) {
                         self.showAlert(title: "测试失败", message: error.localizedDescription)
@@ -240,7 +240,7 @@ extension ManifestCacheTestViewController {
 
     /// 测试智能加载（根据 manifest.persistent 自动选择模式）
     func testSmartLoad(url: URL) {
-        addLog("🤖 智能模式：自动根据 manifest.json 的 persistent 字段选择加载器")
+        addLog("[BOT] 智能模式：自动根据 manifest.json 的 persistent 字段选择加载器")
 
         // ✅ 创建临时 WebView 用于测试
         let config = WKWebViewConfiguration()
@@ -250,9 +250,9 @@ extension ManifestCacheTestViewController {
         let tempWebView = WKWebView(frame: .zero, configuration: config)
 
         // ✅ 先创建 WebView 展示页面（先 present，这样进度页面可以覆盖在上面）
-        addLog("📱 准备 WebView 展示页面...")
+        addLog("[MOBILE] 准备 WebView 展示页面...")
         let displayVC = WebViewDisplayViewController(webView: tempWebView) { [weak self] in
-            self?.addLog("✅ 全屏页面已关闭")
+            self?.addLog("[OK] 全屏页面已关闭")
             // 只关闭 WebView 展示页面，不要关闭测试页面
         }
         displayVC.modalPresentationStyle = .fullScreen
@@ -261,17 +261,17 @@ extension ManifestCacheTestViewController {
         present(displayVC, animated: true) { [weak self] in
             guard let self = self else { return }
 
-            self.addLog("✅ WebView 展示页面已打开")
+            self.addLog("[OK] WebView 展示页面已打开")
 
             // 然后在展示页面上调用 smartLoad
             // 如果是持久化模式，进度页面会覆盖在展示页面上
             // 下载完成后，进度页面关闭，WebView 就显示出来了
-            self.addLog("📥 正在检查 manifest.json...")
+            self.addLog("[RECV] 正在检查 manifest.json...")
 
             LazyManifestLoader.smartLoad(
                 url: url,
                 in: tempWebView,
-                from: displayVC  // ✅ 从展示页面上显示进度页面
+                from: displayVC  // [OK] 从展示页面上显示进度页面
             ) { [weak self] result in
                 // ✅ FIX: URLSession 回调在后台线程，必须切换到主线程更新 UI
                 DispatchQueue.main.async { [weak self] in
@@ -285,19 +285,19 @@ extension ManifestCacheTestViewController {
                     case .success:
                         // ✅ 展示页面已经打开了，不需要再 present
                         // 进度页面会自动关闭，WebView 就显示出来了
-                        self.addLog("✅ 智能加载成功")
-                        self.addLog("📱 WebView 已准备就绪")
+                        self.addLog("[OK] 智能加载成功")
+                        self.addLog("[MOBILE] WebView 已准备就绪")
                         self.updateStats()
 
                     case .failure(let error):
-                        self.addLog("❌ 智能加载失败: \(error.localizedDescription)")
+                        self.addLog("[FAIL] 智能加载失败: \(error.localizedDescription)")
 
                         // 加载失败，关闭展示页面
                         displayVC.dismiss(animated: true) {
                             // 检查是否是持久化模式错误
                             if error.localizedDescription.contains("persistentModeDisabled") {
-                                self.addLog("⚠️ manifest.json 的 persistent 字段为 false")
-                                self.addLog("💡 建议：在 manifest.json 中设置 \"persistent\": true 以使用持久化模式")
+                                self.addLog("[WARN] manifest.json 的 persistent 字段为 false")
+                                self.addLog("[TIP] 建议：在 manifest.json 中设置 \"persistent\": true 以使用持久化模式")
                             }
 
                             self.showAlert(title: "测试失败", message: error.localizedDescription)
@@ -324,10 +324,10 @@ extension ManifestCacheTestViewController {
 
          if let state = LazyManifestLoader.shared.getLoadingState(for: url) {
          let progress = Int(state.progress * 100)
-         self.addLog("⬇️ 下载进度: \(progress)% (\(state.downloadedResources)/\(state.totalResources))")
+         self.addLog("[DOWN] 下载进度: \(progress)% (\(state.downloadedResources)/\(state.totalResources))")
 
          if state.isCompleted {
-         self.addLog("✅ 后台下载完成")
+         self.addLog("[OK] 后台下载完成")
          self.updateStats()
          timer.invalidate()
          }

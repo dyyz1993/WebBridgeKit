@@ -16,7 +16,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "testSignal", let body = message.body as? String {
-            NSLog("📱 [JS -> Native] Received test signal (len=%d): %@", body.count, body)
+            NSLog("[MOBILE] [JS -> Native] Received test signal (len=%d): %@", body.count, body)
             NotificationCenter.default.post(name: .updateDebugLabel, object: nil, userInfo: ["text": body])
         }
     }
@@ -315,7 +315,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
             name: "33. 资源加载错误演示",
             description: "加载一个不存在的 custom:// 协议地址，演示自定义错误页面的显示。",
             manifestFileName: "error_demo",
-            manifestURL: URL(string: "custom://nonexistent-page/index.html")!  // 🔥 直接使用完整URL，不用 deletingLastPathComponent
+            manifestURL: URL(string: "custom://nonexistent-page/index.html")!  // [HOT] 直接使用完整URL，不用 deletingLastPathComponent
         ))
 
         return cases
@@ -452,7 +452,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
         logger.logSeparator()
         logger.log("步骤 1: 使用 WebBrowserManager 打开页面")
         #if DEBUG
-        print("🚀 [ViewModel] executeTest using WebBrowserManager for: \(testCase.name)")
+        print("[LAUNCH] [ViewModel] executeTest using WebBrowserManager for: \(testCase.name)")
         #endif
 
         // 在主线程操作 UI

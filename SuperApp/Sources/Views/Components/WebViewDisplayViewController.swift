@@ -24,7 +24,7 @@ public class WebViewDisplayViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("webview.close"), for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.callout
-        button.backgroundColor = ThemeColors.current.background
+        button.backgroundColor = ThemeTokens.Color.background
         button.layer.cornerRadius = ThemeTokens.CornerRadius.xl
         let shadow = ThemeTokens.Shadows.Fab
         button.layer.shadowColor = UIColor.black.cgColor
@@ -41,7 +41,7 @@ public class WebViewDisplayViewController: UIViewController {
         label.text = L10n.tr("webview.render_label")
         label.font = ThemeTokens.Typography.subheadline
         label.textColor = ThemeTokens.Color.background
-        label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        label.backgroundColor = ThemeTokens.Color.overlayStrong
         label.textAlignment = .center
         label.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         label.layer.masksToBounds = true
@@ -69,7 +69,7 @@ public class WebViewDisplayViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         view.accessibilityIdentifier = "WebViewDisplayViewController"
 
         setupUI()
@@ -83,7 +83,7 @@ public class WebViewDisplayViewController: UIViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         #if DEBUG
-        print("✅ [WebViewDisplayVC] Full screen view did appear - presentation successful!")
+        print("[OK] [WebViewDisplayVC] Full screen view did appear - presentation successful!")
         #endif
     }
 
@@ -106,7 +106,7 @@ public class WebViewDisplayViewController: UIViewController {
             // 移除 WebView，让它返回到原控制器
             if webView.superview == self.view {
                 #if DEBUG
-                print("🔧 [WebViewDisplayVC] 准备返回，移除 WebView")
+                print("[TOOL] [WebViewDisplayVC] 准备返回，移除 WebView")
                 #endif
                 webView.removeFromSuperview()
             }

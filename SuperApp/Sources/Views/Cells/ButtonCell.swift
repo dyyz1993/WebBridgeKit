@@ -32,7 +32,7 @@ class ButtonCell: UITableViewCell {
 
         var color: UIColor {
             switch self {
-            case .test: return ThemeColors.current.primary
+            case .test: return ThemeTokens.Color.primary
             case .save: return ThemeTokens.Color.success
             case .reset: return ThemeTokens.Color.error
             }
@@ -40,7 +40,7 @@ class ButtonCell: UITableViewCell {
 
         var backgroundColor: UIColor {
             switch self {
-            case .test: return ThemeColors.current.primary.withAlphaComponent(0.1)
+            case .test: return ThemeTokens.Color.primary.withAlphaComponent(0.1)
             case .save: return ThemeTokens.Color.success.withAlphaComponent(0.1)
             case .reset: return ThemeTokens.Color.error.withAlphaComponent(0.1)
             }
@@ -52,7 +52,7 @@ class ButtonCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
@@ -92,7 +92,7 @@ class ButtonCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = ThemeColors.current.background
+        backgroundColor = ThemeTokens.Color.background
 
         contentView.addSubview(titleLabel)
         contentView.addSubview(actionButton)
@@ -125,7 +125,7 @@ class ButtonCell: UITableViewCell {
             actionButton.backgroundColor = buttonType.backgroundColor
         } else {
             actionButton.setTitleColor(ThemeTokens.Color.textTertiary, for: .normal)
-            actionButton.backgroundColor = ThemeColors.current.surface
+            actionButton.backgroundColor = ThemeTokens.Color.surface
         }
     }
 
@@ -148,7 +148,7 @@ class ButtonCell: UITableViewCell {
             actionButton.backgroundColor = buttonType.backgroundColor
         } else {
             actionButton.setTitleColor(ThemeTokens.Color.textTertiary, for: .normal)
-            actionButton.backgroundColor = ThemeColors.current.surface
+            actionButton.backgroundColor = ThemeTokens.Color.surface
         }
     }
 

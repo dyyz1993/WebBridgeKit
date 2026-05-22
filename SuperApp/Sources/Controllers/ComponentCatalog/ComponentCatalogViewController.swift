@@ -28,7 +28,7 @@ class ComponentCatalogViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "UI Component Catalog"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
         buildSections()
     }
@@ -43,8 +43,8 @@ class ComponentCatalogViewController: UIViewController {
 
         contentStackView.snp.makeConstraints { make in
             make.top.bottom.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(ThemeSpacing.default.md)
-            make.width.equalTo(scrollView).offset(-ThemeSpacing.default.md * 2)
+            make.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.md)
+            make.width.equalTo(scrollView).offset(-ThemeTokens.Spacing.md * 2)
         }
     }
 
@@ -78,15 +78,15 @@ class ComponentCatalogViewController: UIViewController {
             let label = UILabel()
             label.text = title
             label.font = ThemeTokens.Typography.title3
-            label.textColor = ThemeColors.current.text
+            label.textColor = ThemeTokens.Color.text
             return label
         }()
 
         let subtitleLabel: UILabel = {
             let label = UILabel()
             label.text = tokenInfo
-            label.font = ThemeTypography.current.caption1
-            label.textColor = ThemeColors.current.textSecondary
+            label.font = ThemeTokens.Typography.caption1
+            label.textColor = ThemeTokens.Color.textSecondary
             return label
         }()
 
@@ -104,7 +104,7 @@ class ComponentCatalogViewController: UIViewController {
         let wrapper = UIView()
         wrapper.addSubview(container)
         container.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: ThemeSpacing.default.md, left: 0, bottom: ThemeSpacing.default.sm, right: 0))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: ThemeTokens.Spacing.md, left: 0, bottom: ThemeTokens.Spacing.sm, right: 0))
         }
         return wrapper
     }
@@ -112,7 +112,7 @@ class ComponentCatalogViewController: UIViewController {
     func addSection(_ headerView: UIView, _ contentView: UIView) {
         contentStackView.addArrangedSubview(headerView)
         contentStackView.addArrangedSubview(contentView)
-        addSpacer(height: ThemeSpacing.default.lg)
+        addSpacer(height: ThemeTokens.Spacing.lg)
     }
 
     func addSpacer(height: CGFloat) {

@@ -30,8 +30,8 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let pushURLCard = TokenManageViewController.makeCard()
     private let pushURLLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .medium)
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.monospaceBodyMedium
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 0
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -45,7 +45,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             config.imagePadding = 4
             config.baseForegroundColor = ThemeTokens.Color.background
             let button = UIButton(configuration: config)
-            button.backgroundColor = ThemeColors.current.primary
+            button.backgroundColor = ThemeTokens.Color.primary
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
@@ -56,7 +56,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             let button = UIButton(type: .system)
             button.setImage(LucideIcon.copy.image(pointSize: 16), for: .normal)
             button.setTitle(L10n.tr("common.copy"), for: .normal)
-            button.backgroundColor = ThemeColors.current.primary
+            button.backgroundColor = ThemeTokens.Color.primary
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
@@ -74,7 +74,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             config.imagePadding = 4
             config.baseForegroundColor = ThemeTokens.Color.text
             let button = UIButton(configuration: config)
-            button.backgroundColor = ThemeColors.current.surface
+            button.backgroundColor = ThemeTokens.Color.surface
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
@@ -85,7 +85,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
             let button = UIButton(type: .system)
             button.setImage(LucideIcon.share.image(pointSize: 16), for: .normal)
             button.setTitle(L10n.tr("common.share"), for: .normal)
-            button.backgroundColor = ThemeColors.current.surface
+            button.backgroundColor = ThemeTokens.Color.surface
             button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
             button.layer.masksToBounds = true
             button.titleLabel?.font = ThemeTokens.Typography.subheadline
@@ -108,8 +108,8 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let tokenCard = TokenManageViewController.makeCard()
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.monospaceSmall
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         label.lineBreakMode = .byCharWrapping
         return label
@@ -119,14 +119,14 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private let statsLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()
 
     private static func makeCard() -> UIView {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }
@@ -134,7 +134,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     private static func makeCardHeader(_ text: String) -> UILabel {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.text = text
         return label
     }
@@ -147,7 +147,7 @@ class TokenManageViewController: BaseViewController<TokenManageViewModel> {
     }
 
     private func setupUI() {
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         view.addSubview(scrollView)
         scrollView.addSubview(stackView)

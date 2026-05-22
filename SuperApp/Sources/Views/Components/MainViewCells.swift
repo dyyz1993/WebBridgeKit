@@ -52,7 +52,7 @@ class PushTokenCardCell: UICollectionViewCell {
 
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .medium)
+        label.font = ThemeTokens.Typography.monospaceBodyMedium
         label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
@@ -65,7 +65,7 @@ class PushTokenCardCell: UICollectionViewCell {
         button.titleLabel?.font = ThemeTokens.Typography.caption1
         button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         button.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
-        button.layer.cornerRadius = 14
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.card
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         return button
     }()
@@ -242,7 +242,7 @@ class QuickActionCell: UICollectionViewCell {
 
         let iconContainer = UIView()
         iconContainer.backgroundColor = bgColor
-        iconContainer.layer.cornerRadius = 24
+        iconContainer.layer.cornerRadius = ThemeTokens.CornerRadius.avatar
         iconContainer.clipsToBounds = true
 
         let iconView = UIImageView()
@@ -292,7 +292,7 @@ class SectionHeaderView: UICollectionReusableView {
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.font = ThemeTokens.Typography.metadata
         label.textColor = ThemeTokens.Color.textTertiary
         return label
     }()
@@ -352,7 +352,7 @@ class CommandBannerView: UIView {
 
     private func setupUI() {
         backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.08)
-        layer.cornerRadius = 22
+        layer.cornerRadius = ThemeTokens.CornerRadius.avatar
         clipsToBounds = true
 
         addSubview(iconView)

@@ -23,21 +23,21 @@ class SwitchCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()
 
     let switchControl: UISwitch = {
         let switchControl = UISwitch()
-        switchControl.onTintColor = ThemeColors.current.primary
+        switchControl.onTintColor = ThemeTokens.Color.primary
         return switchControl
     }()
 
@@ -65,7 +65,7 @@ class SwitchCell: UITableViewCell {
 
     private func setupUI() {
         selectionStyle = .none
-        backgroundColor = ThemeColors.current.background
+        backgroundColor = ThemeTokens.Color.background
 
         contentView.addSubview(titleLabel)
         contentView.addSubview(descriptionLabel)

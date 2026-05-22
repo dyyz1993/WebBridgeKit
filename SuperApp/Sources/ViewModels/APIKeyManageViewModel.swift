@@ -183,7 +183,7 @@ class APIKeyManageViewModel: ViewModel {
         }
 
         #if DEBUG
-        print("🚀 [APIKey] Sending test push: \(urlString)")
+        print("[LAUNCH] [APIKey] Sending test push: \(urlString)")
         #endif
 
         URLSession.shared.dataTask(with: url) { [weak self] _, response, error in

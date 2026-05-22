@@ -123,7 +123,7 @@ class APIKeyManager {
             UserDefaults.standard.set(data, forKey: storageKey)
         } catch {
             #if DEBUG
-            print("❌ [APIKeyManager] Failed to save keys: \(error)")
+            print("[FAIL] [APIKeyManager] Failed to save keys: \(error)")
             #endif
         }
     }
@@ -138,7 +138,7 @@ class APIKeyManager {
             keysRelay.accept(decoded)
         } catch {
             #if DEBUG
-            print("❌ [APIKeyManager] Failed to load keys: \(error)")
+            print("[FAIL] [APIKeyManager] Failed to load keys: \(error)")
             #endif
         }
     }

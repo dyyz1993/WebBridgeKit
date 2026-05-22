@@ -75,6 +75,9 @@
 "discover.title" = "发现";
 "discover.empty.title" = "发现应用";
 "discover.empty.description" = "缓存的应用会显示在这里";
+"discover.search.placeholder" = "搜索应用或资源";
+"discover.search.no_result" = "未找到结果";
+"discover.search.no_result_desc" = "尝试使用不同的关键词搜索";
 "discover.section.recent" = "最近使用";
 "discover.section.cached" = "已缓存应用";
 "discover.badge.persistent" = "持久化";

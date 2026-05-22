@@ -9,7 +9,7 @@ class ShowcaseTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "框架展示"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         setupControllers()
         setupTabBarAppearance()
@@ -49,17 +49,17 @@ class ShowcaseTabBarController: UITabBarController {
     private func setupTabBarAppearance() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = ThemeColors.current.navigationBarBackground
+        appearance.backgroundColor = ThemeTokens.Color.navigationBarBackground
 
-        appearance.stackedLayoutAppearance.normal.iconColor = ThemeColors.current.textSecondary
+        appearance.stackedLayoutAppearance.normal.iconColor = ThemeTokens.Color.textSecondary
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .foregroundColor: ThemeColors.current.textSecondary,
-            .font: ThemeTypography.current.caption1
+            .foregroundColor: ThemeTokens.Color.textSecondary,
+            .font: ThemeTokens.Typography.caption1
         ]
-        appearance.stackedLayoutAppearance.selected.iconColor = ThemeColors.current.primary
+        appearance.stackedLayoutAppearance.selected.iconColor = ThemeTokens.Color.primary
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .foregroundColor: ThemeColors.current.primary,
-            .font: ThemeTypography.current.caption1
+            .foregroundColor: ThemeTokens.Color.primary,
+            .font: ThemeTokens.Typography.caption1
         ]
 
         tabBar.standardAppearance = appearance

@@ -40,7 +40,7 @@ class TokenManager {
         let token = String(content[range])
 
         #if DEBUG
-        print("🔍 [TokenManager] Found token: \(token)")
+        print("[SEARCH] [TokenManager] Found token: \(token)")
         #endif
         resolveToken(token)
     }
@@ -60,7 +60,7 @@ class TokenManager {
             let mockURL = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
 
             #if DEBUG
-            print("✅ [TokenManager] Token resolved: \(mockAppID) -> \(mockURL)")
+            print("[OK] [TokenManager] Token resolved: \(mockAppID) -> \(mockURL)")
             #endif
 
             self.handleResolvedResult(appId: mockAppID, urlString: mockURL)

@@ -39,13 +39,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 #if DEBUG
-                print("🗑️ [AppDelegate] Triggering global cache clearing...")
+                print("[DEL] [AppDelegate] Triggering global cache clearing...")
                 #endif
                 WebCacheManager.shared.clearAll()
             }
         } else {
             #if DEBUG
-            print("🧪 [AppDelegate] Skipping clearAll during UI testing")
+            print("[TEST] [AppDelegate] Skipping clearAll during UI testing")
             #endif
         }
 
@@ -53,7 +53,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // UI 测试时禁用 WebBridgeKit 预热，减少主线程压力和 WebKit 进程消耗
         if ProcessInfo.processInfo.arguments.contains("-UITesting") {
             #if DEBUG
-            print("🧪 [AppDelegate] UI Testing detected, disabling WebBridgeKit warmup")
+            print("[TEST] [AppDelegate] UI Testing detected, disabling WebBridgeKit warmup")
             #endif
             // 仅记录初始化，不调用池预热
             WebBridgeLogger.shared.info("WebBridgeKit initialized (warmup skipped for UI testing)")
@@ -99,7 +99,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // 🔥 Support automated testing via launch arguments
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
             #if DEBUG
-            print("🧪 [AppDelegate] Automated testing triggered via launch argument")
+            print("[TEST] [AppDelegate] Automated testing triggered via launch argument")
             #endif
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if let tabBarController = self.window?.rootViewController as? UITabBarController {
@@ -139,7 +139,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         #if DEBUG
-        print("🔗 [AppDelegate] openURL called: \(url.absoluteString)")
+        print("[LINK] [AppDelegate] openURL called: \(url.absoluteString)")
         #endif
 
         // 如果是 webbridgekit:// 协议，则在 App 内部打开
@@ -195,7 +195,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     private func registerForPushNotifications(_ application: UIApplication) {
         if ProcessInfo.processInfo.arguments.contains("-UITesting") {
             #if DEBUG
-            print("🧪 [AppDelegate] Skipping push registration during UI testing")
+            print("[TEST] [AppDelegate] Skipping push registration during UI testing")
             #endif
             return
         }
@@ -206,7 +206,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, _ in
             #if DEBUG
-            print("🔔 [AppDelegate] Push authorization granted: \(granted)")
+            print("[NOTIF] [AppDelegate] Push authorization granted: \(granted)")
             #endif
             if granted {
                 DispatchQueue.main.async {
@@ -221,7 +221,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         let token = tokenParts.joined()
         #if DEBUG
-        print("🔔 [AppDelegate] Device Token: \(token)")
+        print("[NOTIF] [AppDelegate] Device Token: \(token)")
         #endif
 
         // 将 Token 发送给服务器
@@ -230,7 +230,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         #if DEBUG
-        print("❌ [AppDelegate] Failed to register for remote notifications: \(error)")
+        print("[FAIL] [AppDelegate] Failed to register for remote notifications: \(error)")
         #endif
     }
 
@@ -252,7 +252,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
         #if DEBUG
-        print("🔔 [AppDelegate] Did receive notification tap, userInfo: \(userInfo)")
+        print("[NOTIF] [AppDelegate] Did receive notification tap, userInfo: \(userInfo)")
         #endif
 
         Task {

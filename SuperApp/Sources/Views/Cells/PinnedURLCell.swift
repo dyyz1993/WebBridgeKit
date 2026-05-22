@@ -23,7 +23,7 @@ class PinnedURLCell: UITableViewCell {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .white
+        iv.tintColor = ThemeTokens.Color.textOnColor
         return iv
     }()
 
@@ -45,14 +45,14 @@ class PinnedURLCell: UITableViewCell {
     private let detailStack: UIStackView = {
         let sv = UIStackView()
         sv.axis = .horizontal
-        sv.spacing = 8
+        sv.spacing = ThemeTokens.Spacing.sm
         sv.alignment = .center
         return sv
     }()
 
     private let urlLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+        l.font = ThemeTokens.Typography.monospaceMeta
         l.textColor = ThemeTokens.Color.textSecondary
         l.numberOfLines = 1
         return l
@@ -68,7 +68,7 @@ class PinnedURLCell: UITableViewCell {
     private let typeLabel: UILabel = {
         let l = UILabel()
         l.font = ThemeTokens.Typography.caption2
-        l.textColor = .white
+        l.textColor = ThemeTokens.Color.textOnColor
         return l
     }()
 

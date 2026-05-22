@@ -18,13 +18,13 @@ class ActionSheetView: UIView {
 
     private let backgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        view.backgroundColor = ThemeTokens.Color.scrim
         return view
     }()
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -33,7 +33,7 @@ class ActionSheetView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         return label
     }()
@@ -42,14 +42,14 @@ class ActionSheetView: UIView {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = ThemeTokens.Spacing.xs
-        stack.backgroundColor = ThemeColors.current.border
+        stack.backgroundColor = ThemeTokens.Color.border
         return stack
     }()
 
     private let cancelButton: UIButton = {
         let button = UIButton(type: .system)
         button.titleLabel?.font = ThemeTokens.Typography.title3
-        button.backgroundColor = ThemeColors.current.background
+        button.backgroundColor = ThemeTokens.Color.background
         return button
     }()
 
@@ -137,18 +137,18 @@ class ActionSheetView: UIView {
         for action in actions {
             let button = UIButton(type: .system)
             button.titleLabel?.font = ThemeTokens.Typography.title3
-            button.backgroundColor = ThemeColors.current.background
+            button.backgroundColor = ThemeTokens.Color.background
             button.setTitle(action.title, for: .normal)
             button.tag = actions.firstIndex(where: { $0.title == action.title }) ?? 0
 
             // 根据样式设置颜色
             switch action.style {
             case .destructive:
-                button.setTitleColor(ThemeColors.current.error, for: .normal)
+                button.setTitleColor(ThemeTokens.Color.error, for: .normal)
             case .cancel:
-                button.setTitleColor(ThemeColors.current.primary, for: .normal)
+                button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
             default:
-                button.setTitleColor(ThemeColors.current.primary, for: .normal)
+                button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
             }
 
             // Set accessibility identifier for testing

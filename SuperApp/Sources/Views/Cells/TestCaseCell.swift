@@ -19,7 +19,7 @@ class TestCaseCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -29,14 +29,14 @@ class TestCaseCell: UITableViewCell {
         let imageView = UIImageView()
         imageView.image = LucideIcon.docTextFill.image(pointSize: 24)
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeColors.current.primary
+        imageView.tintColor = ThemeTokens.Color.primary
         return imageView
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         label.accessibilityIdentifier = "testCaseCell.titleLabel"
         return label
@@ -45,7 +45,7 @@ class TestCaseCell: UITableViewCell {
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 2
         return label
     }()
@@ -61,7 +61,7 @@ class TestCaseCell: UITableViewCell {
     private let statusLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption2
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.text = "待运行"
         return label
     }()
@@ -70,8 +70,8 @@ class TestCaseCell: UITableViewCell {
         let button = UIButton(type: .system)
         button.setTitle("运行", for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.footnote
-        button.tintColor = ThemeColors.current.primary
-        button.backgroundColor = ThemeColors.current.primary.withAlphaComponent(0.1)
+        button.tintColor = ThemeTokens.Color.primary
+        button.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         button.accessibilityIdentifier = "testCaseCell.runButton"
@@ -169,7 +169,7 @@ class TestCaseCell: UITableViewCell {
             descriptionLabel.text = ""
             statusLabel.text = "待运行"
             statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
-            statusLabel.textColor = ThemeColors.current.textSecondary
+            statusLabel.textColor = ThemeTokens.Color.textSecondary
             return
         }
 
@@ -180,7 +180,7 @@ class TestCaseCell: UITableViewCell {
         case .pending:
             statusLabel.text = "待运行"
             statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
-            statusLabel.textColor = ThemeColors.current.textSecondary
+            statusLabel.textColor = ThemeTokens.Color.textSecondary
         case .running:
             statusLabel.text = "运行中..."
             statusBadge.backgroundColor = ThemeTokens.Color.primary.withAlphaComponent(0.1)
@@ -212,7 +212,7 @@ class TestCaseCell: UITableViewCell {
         descriptionLabel.text = nil
         statusLabel.text = "待运行"
             statusBadge.backgroundColor = ThemeTokens.Color.textTertiary
-            statusLabel.textColor = ThemeColors.current.textSecondary
+            statusLabel.textColor = ThemeTokens.Color.textSecondary
     }
 }
 

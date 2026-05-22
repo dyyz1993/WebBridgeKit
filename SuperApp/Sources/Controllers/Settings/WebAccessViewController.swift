@@ -36,7 +36,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private let statusBarView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.surface
+        view.backgroundColor = ThemeTokens.Color.surface
         return view
     }()
 
@@ -44,7 +44,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("web_access.cache_count_zero"), for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.footnote
-        button.setTitleColor(ThemeColors.current.primary, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
             config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
@@ -57,7 +57,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private let separatorView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.divider
+        view.backgroundColor = ThemeTokens.Color.separator
         return view
     }()
 
@@ -76,7 +76,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         super.viewDidLoad()
 
         title = L10n.tr("web_access.title")
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         setupUI()
         setupGestures()
@@ -115,7 +115,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         // 初始检查网络状态
         if !NetworkMonitor.shared.isConnected {
             #if DEBUG
-            print("⚠️ [WebAccessVC] Network is currently offline")
+            print("[WARN] [WebAccessVC] Network is currently offline")
             #endif
         }
     }
@@ -293,7 +293,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     func loadTargetURL(_ url: URL) {
         #if DEBUG
-        print("🔵 [WebAccessVC] loadURL called: \(url.absoluteString)")
+        print("[BLUE] [WebAccessVC] loadURL called: \(url.absoluteString)")
         #endif
         currentURL = url
 
@@ -302,7 +302,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
             UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
             UserDefaults.standard.synchronize()
             #if DEBUG
-            print("💾 [WebAccessVC] Saved LastOpenedURL: \(url.absoluteString)")
+            print("[SAVE] [WebAccessVC] Saved LastOpenedURL: \(url.absoluteString)")
             #endif
         }
 
@@ -310,11 +310,11 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         checkURLParameters(url)
 
         #if DEBUG
-        print("🔵 [WebAccessVC] Loading URL in WebView...")
+        print("[BLUE] [WebAccessVC] Loading URL in WebView...")
         #endif
         webView.load(URLRequest(url: url))
         #if DEBUG
-        print("🔵 [WebAccessVC] webView.load() called successfully")
+        print("[BLUE] [WebAccessVC] webView.load() called successfully")
         #endif
     }
 
@@ -357,13 +357,13 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
     private func setTabBarHidden(_ hidden: Bool) {
         guard let tabBarController = self.tabBarController else {
             #if DEBUG
-            print("⚠️ [WebAccessVC] No TabBarController found")
+            print("[WARN] [WebAccessVC] No TabBarController found")
             #endif
             return
         }
 
         #if DEBUG
-        print("🎛️ [WebAccessVC] setTabBarHidden: \(hidden)")
+        print("[CTRL] [WebAccessVC] setTabBarHidden: \(hidden)")
         #endif
 
         // Use DispatchQueue.main to avoid threading issues
@@ -377,7 +377,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         // Use non-animated for UI testing stability
         navigationController?.setNavigationBarHidden(hidden, animated: false)
         #if DEBUG
-        print("🎛️ [WebAccessVC] NavigationBar hidden: \(hidden)")
+        print("[CTRL] [WebAccessVC] NavigationBar hidden: \(hidden)")
         #endif
     }
 
@@ -392,7 +392,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
             self.statusBarView.isHidden = hidden
         }
         #if DEBUG
-        print("🎛️ [WebAccessVC] URLInputView and StatusBarView hidden: \(hidden)")
+        print("[CTRL] [WebAccessVC] URLInputView and StatusBarView hidden: \(hidden)")
         #endif
     }
 
@@ -401,7 +401,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         isStatusBarHidden = hidden
         setNeedsStatusBarAppearanceUpdate()
         #if DEBUG
-        print("🎛️ [WebAccessVC] StatusBar hidden: \(hidden)")
+        print("[CTRL] [WebAccessVC] StatusBar hidden: \(hidden)")
         #endif
     }
 
@@ -415,7 +415,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
 
     private func loadWebView(url: URL) {
         #if DEBUG
-        print("🟢 [WebAccessVC] loadWebView called: \(url.absoluteString)")
+        print("[GREEN] [WebAccessVC] loadWebView called: \(url.absoluteString)")
         #endif
 
         // ============================================================
@@ -424,7 +424,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         // WKWebView 会自动使用 URLCache.shared 处理缓存
         // ============================================================
         #if DEBUG
-        print("🟢 [WebAccessVC] Loading with System URLCache")
+        print("[GREEN] [WebAccessVC] Loading with System URLCache")
         #endif
         webView.load(URLRequest(url: url))
 
@@ -441,7 +441,7 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
         // }
 
         #if DEBUG
-        print("🟢 [WebAccessVC] WebView load initiated")
+        print("[GREEN] [WebAccessVC] WebView load initiated")
         #endif
     }
 
@@ -494,7 +494,7 @@ extension WebAccessViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         #if DEBUG
-        print("⚠️ [WebAccessVC] WebView didStartProvisionalNavigation")
+        print("[WARN] [WebAccessVC] WebView didStartProvisionalNavigation")
         #endif
         // 通知 ViewModel 页面开始加载
         viewModel.notifyPageDidStartLoading()
@@ -502,7 +502,7 @@ extension WebAccessViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         #if DEBUG
-        print("✅ [WebAccessVC] WebView didFinish navigation - URL: \(webView.url?.absoluteString ?? "nil")")
+        print("[OK] [WebAccessVC] WebView didFinish navigation - URL: \(webView.url?.absoluteString ?? "nil")")
         #endif
         // 更新历史记录
         if let url = webView.url {
@@ -516,7 +516,7 @@ extension WebAccessViewController: WKNavigationDelegate {
                 UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
                 UserDefaults.standard.synchronize()
                 #if DEBUG
-                print("💾 [WebAccess] 记忆上次应用 URL: \(url.absoluteString)")
+                print("[SAVE] [WebAccess] 记忆上次应用 URL: \(url.absoluteString)")
                 #endif
             }
         }
@@ -527,7 +527,7 @@ extension WebAccessViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         #if DEBUG
-        print("❌ [WebAccessVC] Navigation failed: \(error.localizedDescription)")
+        print("[FAIL] [WebAccessVC] Navigation failed: \(error.localizedDescription)")
         #endif
 
         // 检查是否为网络错误
@@ -553,7 +553,7 @@ extension WebAccessViewController: WKNavigationDelegate {
         isShowingOfflineState = true
 
         #if DEBUG
-        print("⚠️ [WebAccessVC] Showing offline state")
+        print("[WARN] [WebAccessVC] Showing offline state")
         #endif
 
         let emptyState = ThemeEmptyState(frame: .zero)
@@ -591,7 +591,7 @@ extension WebAccessViewController: WKNavigationDelegate {
         isShowingOfflineState = false
 
         #if DEBUG
-        print("✅ [WebAccessVC] Hiding offline state")
+        print("[OK] [WebAccessVC] Hiding offline state")
         #endif
 
         offlineStateView?.removeFromSuperview()
@@ -609,8 +609,8 @@ extension WebAccessViewController: WKNavigationDelegate {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("web_access.retry"), for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.callout
-        button.backgroundColor = ThemeColors.current.primary
-        button.setTitleColor(ThemeColors.current.background, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.primary
+        button.setTitleColor(ThemeTokens.Color.background, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.addTarget(self, action: #selector(handleRetry), for: .touchUpInside)
         return button
@@ -618,7 +618,7 @@ extension WebAccessViewController: WKNavigationDelegate {
 
     @objc private func handleRetry() {
         #if DEBUG
-        print("🔄 [WebAccessVC] Retry tapped")
+        print("[SYNC] [WebAccessVC] Retry tapped")
         #endif
 
         // 检查网络状态
@@ -639,7 +639,7 @@ extension WebAccessViewController: WKNavigationDelegate {
                 if let cachedHistory = try? await WebPageHistoryManager.shared.findHistory(url: url),
                    cachedHistory.isCached {
                     #if DEBUG
-                    print("📦 [WebAccessVC] Loading cached page: \(url.absoluteString)")
+                    print("[CACHE] [WebAccessVC] Loading cached page: \(url.absoluteString)")
                     #endif
 
                     let cachedPageVC = CacheResourceViewController(url: url)

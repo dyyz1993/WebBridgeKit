@@ -89,7 +89,7 @@ class DistributionChartView: UIView {
 
         private let percentLabel: UILabel = {
             let l = UILabel()
-            l.font = UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+            l.font = ThemeTokens.Typography.monospaceMeta
             l.textColor = ThemeTokens.Color.textSecondary
             l.textAlignment = .right
             l.setContentHuggingPriority(.required, for: .horizontal)

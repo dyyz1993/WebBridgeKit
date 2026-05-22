@@ -25,7 +25,7 @@ class PresetURLCell: UICollectionViewCell {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .white
+        iv.tintColor = ThemeTokens.Color.textOnColor
         return iv
     }()
 
@@ -55,14 +55,14 @@ class PresetURLCell: UICollectionViewCell {
     private let metaStack: UIStackView = {
         let sv = UIStackView()
         sv.axis = .horizontal
-        sv.spacing = 6
+        sv.spacing = ThemeTokens.Spacing.xs
         sv.alignment = .center
         return sv
     }()
 
     private let urlLabel: UILabel = {
         let l = UILabel()
-        l.font = UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+        l.font = ThemeTokens.Typography.monospaceMeta
         l.textColor = ThemeTokens.Color.textSecondary
         l.numberOfLines = 1
         return l
@@ -78,7 +78,7 @@ class PresetURLCell: UICollectionViewCell {
     private let typeLabel: UILabel = {
         let l = UILabel()
         l.font = ThemeTokens.Typography.caption2
-        l.textColor = .white
+        l.textColor = ThemeTokens.Color.textOnColor
         return l
     }()
 
@@ -93,7 +93,7 @@ class PresetURLCell: UICollectionViewCell {
     private let recommendedLabel: UILabel = {
         let l = UILabel()
         l.font = ThemeTokens.Typography.caption2
-        l.textColor = .white
+        l.textColor = ThemeTokens.Color.textOnColor
         l.text = "推荐"
         return l
     }()

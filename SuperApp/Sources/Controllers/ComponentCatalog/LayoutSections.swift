@@ -32,7 +32,7 @@ extension ComponentCatalogViewController {
 
         let stack = UIStackView(arrangedSubviews: [smallGradient, largeGradient])
         stack.axis = .vertical
-        stack.spacing = ThemeSpacing.default.md
+        stack.spacing = ThemeTokens.Spacing.md
 
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
@@ -55,8 +55,8 @@ extension ComponentCatalogViewController {
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_SectionHeaders"
-        container.backgroundColor = ThemeColors.current.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let withAction = ThemeSectionHeader()
         withAction.configure(title: "Recent Activity", actionTitle: "See All")
@@ -66,11 +66,11 @@ extension ComponentCatalogViewController {
 
         let stack = UIStackView(arrangedSubviews: [withAction, withoutAction])
         stack.axis = .vertical
-        stack.spacing = ThemeSpacing.default.md
+        stack.spacing = ThemeTokens.Spacing.md
 
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
 
         container.snp.makeConstraints { make in
@@ -92,8 +92,8 @@ extension ComponentCatalogViewController {
 
         func createMessageCell(isUnread: Bool) -> UIView {
             let cell = UIView()
-            cell.backgroundColor = ThemeColors.current.cardBackground
-            cell.layer.cornerRadius = ThemeCornerRadius.default.lg
+            cell.backgroundColor = ThemeTokens.Color.cardBackground
+            cell.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
             let unreadDot = UIView()
             unreadDot.backgroundColor = ThemeTokens.Color.unreadDot
@@ -104,13 +104,13 @@ extension ComponentCatalogViewController {
             let titleLabel = UILabel()
             titleLabel.text = isUnread ? "New Feature Released" : "Weekly Digest"
             titleLabel.font = isUnread ? ThemeTokens.Typography.headline : ThemeTokens.Typography.callout
-            titleLabel.textColor = ThemeColors.current.text
+            titleLabel.textColor = ThemeTokens.Color.text
             cell.addSubview(titleLabel)
 
             let sourceLabel = UILabel()
             sourceLabel.text = "APNS"
             sourceLabel.font = ThemeTokens.Typography.caption2
-            sourceLabel.textColor = ThemeColors.current.info
+            sourceLabel.textColor = ThemeTokens.Color.info
             cell.addSubview(sourceLabel)
 
             let timeLabel = UILabel()
@@ -123,7 +123,7 @@ extension ComponentCatalogViewController {
             let bodyLabel = UILabel()
             bodyLabel.text = "Check out the latest updates and improvements to your app experience..."
             bodyLabel.font = ThemeTokens.Typography.subheadline
-            bodyLabel.textColor = ThemeColors.current.textSecondary
+            bodyLabel.textColor = ThemeTokens.Color.textSecondary
             bodyLabel.numberOfLines = 2
             cell.addSubview(bodyLabel)
 
@@ -162,7 +162,7 @@ extension ComponentCatalogViewController {
 
         let stack = UIStackView(arrangedSubviews: [unreadCell, readCell])
         stack.axis = .vertical
-        stack.spacing = ThemeSpacing.default.sm
+        stack.spacing = ThemeTokens.Spacing.sm
 
         container.addSubview(stack)
         stack.snp.makeConstraints { make in

@@ -12,7 +12,12 @@ enum MainSection: Int, CaseIterable {
 
 class MainViewController: BaseViewController<MainViewModel> {
 
-    private var collectionView: UICollectionView!
+    private let scaffold = WBKScreenScaffold(style: .scrollable)
+
+    private let serverStatusBlock = ServerStatusBlock()
+    private let actionTileGrid = ActionTileGrid()
+    private let favoritesSection = ResourceListSection()
+    private let recentSection = ResourceListSection()
 
     private let emptyStateView: EmptyStateView = {
         let view = EmptyStateView()
@@ -20,14 +25,14 @@ class MainViewController: BaseViewController<MainViewModel> {
         return view
     }()
 
-    private let loadingView = LoadingView()
+    let loadingView = LoadingView()
 
     private lazy var storageInfoButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.titleLabel?.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .medium)
+        btn.titleLabel?.font = ThemeTokens.Typography.metadata
         btn.setTitleColor(ThemeTokens.Color.textSecondary, for: .normal)
         btn.backgroundColor = ThemeTokens.Color.cardBackground
-        btn.layer.cornerRadius = 14
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.card
         btn.clipsToBounds = true
         btn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
         btn.addTarget(self, action: #selector(clearCacheTapped), for: .touchUpInside)
@@ -37,9 +42,6 @@ class MainViewController: BaseViewController<MainViewModel> {
         btn.setTitle("0 MB", for: .normal)
         return btn
     }()
-
-    let pushTokenCardCellId = "PushTokenCardCell"
-    let quickActionCellId = "QuickActionCell"
 
     var pushURL: String {
         if let activeURL = ServerConfigManager.shared.getActiveBaseURL() {
@@ -60,13 +62,6 @@ class MainViewController: BaseViewController<MainViewModel> {
         return PushNotificationManager.shared.deviceToken != nil
     }
 
-    let quickActions: [(icon: LucideIcon, title: String, tintColor: UIColor, bgColor: UIColor)] = [
-        (.scan, L10n.tr("home.quick_action.scan"), ThemeTokens.Color.primary, ThemeTokens.Color.primary.withAlphaComponent(0.12)),
-        (.clipboard, L10n.tr("home.quick_action.paste"), ThemeTokens.Color.warning, ThemeTokens.Color.warning.withAlphaComponent(0.12)),
-        (.inbox, L10n.tr("home.quick_action.inbox"), ThemeTokens.Color.gradientEnd, ThemeTokens.Color.gradientEnd.withAlphaComponent(0.12)),
-        (.ellipsis, L10n.tr("home.quick_action.more"), ThemeTokens.Color.success, ThemeTokens.Color.success.withAlphaComponent(0.12))
-    ]
-
     private lazy var commandBanner: CommandBannerView = {
         let banner = CommandBannerView()
         banner.isHidden = true
@@ -81,13 +76,111 @@ class MainViewController: BaseViewController<MainViewModel> {
 
     private var pendingCommandTitle: String?
 
+    private var currentSections: [WebPageHistorySection] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
         Log.debug("viewDidLoad called", category: .ui)
-        setupUI()
+        setupNavigationBar()
+        setupScaffold()
+        setupOverlays()
         setupGestures()
         setupNotifications()
         WebCacheManager.shared.performAutoCleanup()
+    }
+
+    private func setupNavigationBar() {
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationItem.largeTitleDisplayMode = .never
+        navigationItem.title = L10n.tr("tab.home")
+        navigationController?.navigationBar.titleTextAttributes = [
+            .foregroundColor: ThemeTokens.Color.text,
+            .font: ThemeTokens.Typography.screenTitle
+        ]
+
+        let scanButton: UIButton = {
+            let btn = UIButton(type: .system)
+            btn.setImage(LucideIcon.qrCode.image(pointSize: 20, weight: .medium), for: .normal)
+            btn.tintColor = ThemeTokens.Color.text
+            btn.addTarget(self, action: #selector(openScanner), for: .touchUpInside)
+            btn.accessibilityLabel = "扫描二维码"
+            btn.snp.makeConstraints { make in
+                make.width.height.equalTo(44)
+            }
+            return btn
+        }()
+        let scanItem = UIBarButtonItem(customView: scanButton)
+        scanItem.accessibilityIdentifier = "main.scanButton"
+        navigationItem.leftBarButtonItem = scanItem
+
+        let storageItem = UIBarButtonItem(customView: storageInfoButton)
+        storageItem.accessibilityIdentifier = "main.clearCacheButton"
+        navigationItem.rightBarButtonItems = [storageItem]
+    }
+
+    private func setupScaffold() {
+        view.addSubview(scaffold)
+        scaffold.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        scaffold.addSection(serverStatusBlock, spacing: ThemeTokens.Spacing.section)
+        scaffold.addSection(actionTileGrid, spacing: ThemeTokens.Spacing.section)
+        scaffold.addSection(favoritesSection, spacing: ThemeTokens.Spacing.section)
+        scaffold.addSection(recentSection)
+
+        serverStatusBlock.configure(
+            serverURL: pushURL,
+            deviceToken: deviceToken,
+            isRegistered: isTokenRegistered,
+            onCopy: { [weak self] in
+                UIPasteboard.general.string = self?.pushURL ?? ""
+                HUDService.shared.showSuccess(withStatus: L10n.tr("home.token_card.copy_token"))
+            },
+            onRegister: { [weak self] in
+                guard self != nil else { return }
+                PushNotificationManager.shared.registerForPushNotifications()
+            }
+        )
+
+        actionTileGrid.configure(actions: [
+            (.scan, L10n.tr("home.quick_action.scan"), .primary),
+            (.clipboard, L10n.tr("home.quick_action.paste"), .warning),
+            (.inbox, L10n.tr("home.quick_action.inbox"), .default),
+            (.ellipsis, L10n.tr("home.quick_action.more"), .success)
+        ], onTap: { [weak self] index in
+            self?.handleQuickAction(index: index)
+        })
+
+        favoritesSection.isHidden = true
+        recentSection.isHidden = true
+
+        emptyStateView.configure(
+            icon: "square.grid.2x2.fill",
+            title: L10n.tr("home.empty.title"),
+            description: L10n.tr("home.empty.description"),
+            actionTitle: nil
+        )
+    }
+
+    private func setupOverlays() {
+        view.addSubview(emptyStateView)
+        view.addSubview(loadingView)
+        view.addSubview(commandBanner)
+
+        emptyStateView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        loadingView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        commandBanner.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.screenHorizontal)
+            make.height.equalTo(44)
+        }
+        commandBanner.alpha = 0
+        commandBanner.transform = CGAffineTransform(translationX: 0, y: -44)
     }
 
     private func setupNotifications() {
@@ -106,69 +199,6 @@ class MainViewController: BaseViewController<MainViewModel> {
                 self?.viewModel.refreshData()
             })
             .disposed(by: rx)
-    }
-
-    private func handleScannedResult(url: URL?, rawString: String?) {
-        Log.debug("Handling scanned result - URL: \(url?.absoluteString ?? "nil"), Raw: \(rawString ?? "nil")", category: .ui)
-        if let url = url {
-            if url.scheme == "wb-app" {
-                handleCustomProtocol(url)
-                return
-            }
-            if url.pathExtension == "json" || url.absoluteString.contains("manifest") {
-                loadAndCacheManifest(url)
-            } else {
-                openURL(url)
-            }
-            return
-        }
-        if let raw = rawString {
-            if raw.starts(with: "wb-app://") {
-                if let customUrl = URL(string: raw) {
-                    handleCustomProtocol(customUrl)
-                } else {
-                    showAlert(title: L10n.tr("home.alert.protocol_error"), message: L10n.tr("home.alert.protocol_error_message", raw))
-                }
-            } else {
-                showAlert(title: L10n.tr("home.alert.invalid_content"), message: L10n.tr("home.alert.invalid_content_message", raw))
-            }
-        }
-    }
-
-    private func handleCustomProtocol(_ url: URL) {
-        Log.debug("Handling custom protocol: \(url.absoluteString)", category: .ui)
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
-        if url.host == "load" {
-            if let targetUrlString = components.queryItems?.first(where: { $0.name == "url" })?.value,
-               let targetUrl = URL(string: targetUrlString) {
-                handleScannedResult(url: targetUrl, rawString: targetUrlString)
-            }
-        } else if url.host == "open" {
-            if let targetUrlString = components.queryItems?.first(where: { $0.name == "url" })?.value,
-               let targetUrl = URL(string: targetUrlString) {
-                openURL(targetUrl)
-            }
-        }
-    }
-
-    private func loadAndCacheManifest(_ url: URL) {
-        loadingView.startLoading(message: L10n.tr("home.manifest.loading"))
-        Task {
-            do {
-                let manifest = try await PersistentManifestLoader.shared.fetchManifest(from: url)
-                await MainActor.run {
-                    self.loadingView.stopLoading()
-                    self.showAlert(title: L10n.tr("home.manifest.success_title"), message: L10n.tr("home.manifest.success_message_format", manifest.name ?? L10n.tr("common.unknown")))
-                    self.viewModel.refreshData()
-                }
-            } catch {
-                await MainActor.run {
-                    self.loadingView.stopLoading()
-                    Log.error("Failed to load manifest: \(error)", category: .ui)
-                    self.openURL(url)
-                }
-            }
-        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -277,163 +307,31 @@ class MainViewController: BaseViewController<MainViewModel> {
         }
     }
 
-    private func setupUI() {
-        view.backgroundColor = ThemeTokens.Color.background
-        navigationController?.navigationBar.prefersLargeTitles = false
-        navigationItem.largeTitleDisplayMode = .never
-
-        let layout = createCompositionalLayout()
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .clear
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 20, right: 0)
-        collectionView.register(URLGridCell.self, forCellWithReuseIdentifier: URLGridCell.identifier)
-        collectionView.register(PushTokenCardCell.self, forCellWithReuseIdentifier: pushTokenCardCellId)
-        collectionView.register(QuickActionCell.self, forCellWithReuseIdentifier: quickActionCellId)
-        collectionView.register(SectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SectionHeaderView.identifier)
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.dataSource = self
-        collectionView.delegate = self
-
-        view.addSubview(collectionView)
-        view.addSubview(emptyStateView)
-        view.addSubview(loadingView)
-
-        collectionView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        collectionView.accessibilityIdentifier = "MainCollectionView"
-
-        emptyStateView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        loadingView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        view.addSubview(commandBanner)
-        commandBanner.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
-            make.leading.trailing.equalToSuperview().inset(16)
-            make.height.equalTo(44)
-        }
-        commandBanner.alpha = 0
-        commandBanner.transform = CGAffineTransform(translationX: 0, y: -44)
-
-        let scanButton: UIButton = {
-            let btn = UIButton(type: .system)
-            btn.setImage(LucideIcon.qrCode.image(pointSize: 20, weight: .medium), for: .normal)
-            btn.tintColor = ThemeTokens.Color.text
-            btn.addTarget(self, action: #selector(openScanner), for: .touchUpInside)
-            btn.accessibilityLabel = "扫描二维码"
-            btn.snp.makeConstraints { make in
-                make.width.height.equalTo(40)
-            }
-            return btn
-        }()
-        let scanItem = UIBarButtonItem(customView: scanButton)
-        scanItem.accessibilityIdentifier = "main.scanButton"
-        navigationItem.leftBarButtonItem = scanItem
-
-        let storageItem = UIBarButtonItem(customView: storageInfoButton)
-        storageItem.accessibilityIdentifier = "main.clearCacheButton"
-        navigationItem.rightBarButtonItems = [storageItem]
-
-        navigationItem.title = L10n.tr("tab.home")
-        navigationController?.navigationBar.titleTextAttributes = [
-            .foregroundColor: ThemeTokens.Color.text,
-            .font: UIFont.systemFont(ofSize: 28, weight: .bold)
-        ]
-
-        emptyStateView.configure(
-            icon: "square.grid.2x2.fill",
-            title: L10n.tr("home.empty.title"),
-            description: L10n.tr("home.empty.description"),
-            actionTitle: nil
-        )
-    }
-
-    @objc private func openScanner() {
-        let config = QRScannerViewController.Configuration(
-            showScanRegionOverlay: true,
-            showCloseButton: true,
-            tipText: L10n.tr("home.scanner.tip"),
-            enableBase64Decoding: true,
-            autoDismiss: false
-        )
-        let scannerVC = QRScannerViewController(configuration: config)
-        scannerVC.scannerDidSuccess
-            .subscribe(onNext: { [weak self, weak scannerVC] result in
-                guard let self = self else { return }
-                let url = URL(string: result)
-                if let scanner = scannerVC, let nav = self.navigationController, nav.viewControllers.contains(scanner) {
-                    CATransaction.begin()
-                    CATransaction.setCompletionBlock {
-                        self.handleScannedResult(url: url, rawString: result)
-                    }
-                    nav.popViewController(animated: true)
-                    CATransaction.commit()
-                } else {
-                    scannerVC?.dismiss(animated: true) {
-                        self.handleScannedResult(url: url, rawString: result)
-                    }
-                }
-            })
-            .disposed(by: rx)
-        navigationController?.pushViewController(scannerVC, animated: true)
-    }
-
     private func setupGestures() {
-        let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
-        collectionView.refreshControl = refreshControl
+        // pull-to-refresh not needed with scaffold; kept for refreshData
     }
 
     override func bindViewModel() {
         Log.debug("bindViewModel called", category: .ui)
 
-        let refreshTrigger = Driver.merge(
-            collectionView.refreshControl!.rx.controlEvent(.valueChanged).asDriver(onErrorJustReturn: ()),
-            rx.methodInvoked(#selector(UIViewController.viewWillAppear(_:))).map { _ in () }.asDriver(onErrorJustReturn: ())
-        )
+        let viewWillAppearTrigger = rx.methodInvoked(#selector(UIViewController.viewWillAppear(_:)))
+            .map { _ in () }
+            .asDriver(onErrorJustReturn: ())
 
-        let itemSelect = collectionView.rx.itemSelected
-            .do(onNext: { indexPath in
-                Log.debug("Cell tapped at indexPath: \(indexPath)", category: .ui)
-            })
-            .asDriver(onErrorDriveWith: .empty())
-
-        let scanButtonTap = Driver<Void>.empty()
-
-        let itemLongPressRelay = PublishRelay<IndexPath>()
-
-        let longPressGesture = UILongPressGestureRecognizer()
-        collectionView.addGestureRecognizer(longPressGesture)
-        longPressGesture.rx.event
-            .filter { $0.state == .began }
-            .subscribe(onNext: { [weak self] gesture in
-                guard let self = self else { return }
-                let point = gesture.location(in: self.collectionView)
-                if let indexPath = self.collectionView.indexPathForItem(at: point) {
-                    if indexPath.section >= MainSection.appGrid.rawValue {
-                        itemLongPressRelay.accept(indexPath)
-                    }
-                }
-            })
-            .disposed(by: rx)
+        let refreshTrigger = Driver.merge(viewWillAppearTrigger)
 
         let input = MainViewModel.Input(
             refresh: refreshTrigger,
-            itemSelect: itemSelect,
-            itemLongPress: itemLongPressRelay.asDriver(onErrorJustReturn: IndexPath(item: 0, section: 0)),
-            scanButtonTap: scanButtonTap
+            itemSelect: Driver.empty(),
+            itemLongPress: Driver.empty(),
+            scanButtonTap: Driver.empty()
         )
 
         let output = viewModel.transform(input: input)
 
         output.histories
             .drive(onNext: { [weak self] sections in
-                self?.updateCollectionView(sections: sections)
+                self?.updateSections(sections)
             })
             .disposed(by: rx)
 
@@ -443,13 +341,13 @@ class MainViewController: BaseViewController<MainViewModel> {
                 if isEmpty {
                     self.view.bringSubviewToFront(self.emptyStateView)
                     self.emptyStateView.isHidden = false
-                    self.collectionView.isHidden = true
-                    self.collectionView.alpha = 0
+                    self.scaffold.isHidden = true
+                    self.scaffold.alpha = 0
                 } else {
                     self.emptyStateView.isHidden = true
-                    self.collectionView.isHidden = false
-                    self.collectionView.alpha = 1
-                    self.view.bringSubviewToFront(self.collectionView)
+                    self.scaffold.isHidden = false
+                    self.scaffold.alpha = 1
+                    self.view.bringSubviewToFront(self.scaffold)
                 }
             })
             .disposed(by: rx)
@@ -473,10 +371,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             .disposed(by: rx)
 
         output.loading
-            .drive(onNext: { [weak self] (loading: Bool) in
-                if !loading {
-                    self?.collectionView.refreshControl?.endRefreshing()
-                }
+            .drive(onNext: { _ in
             })
             .disposed(by: rx)
 
@@ -488,15 +383,98 @@ class MainViewController: BaseViewController<MainViewModel> {
             .disposed(by: rx)
     }
 
-    private func updateCollectionView(sections: [WebPageHistorySection]) {
-        Log.debug("updateCollectionView called with \(sections.count) sections", category: .ui)
-        DispatchQueue.main.async { [weak self] in
-            self?.collectionView.reloadData()
+    private func updateSections(_ sections: [WebPageHistorySection]) {
+        currentSections = sections
+
+        var favoritesItems: [WebPageHistorySectionItem] = []
+        var recentItems: [WebPageHistorySectionItem] = []
+
+        for section in sections {
+            let isFavorite = section.header.contains("收藏")
+            if isFavorite {
+                favoritesItems.append(contentsOf: section.items)
+            } else {
+                recentItems.append(contentsOf: section.items)
+            }
         }
+
+        if favoritesItems.isEmpty {
+            favoritesSection.isHidden = true
+        } else {
+            favoritesSection.isHidden = false
+            let header = WBKSectionHeader(title: L10n.tr("home.section.favorites"), style: .withCount)
+            header.setCount(favoritesItems.count)
+            let cards = favoritesItems.map { item -> WBKResourceCard in
+                makeResourceCard(from: item)
+            }
+            favoritesSection.configure(header: header, cards: cards)
+        }
+
+        if recentItems.isEmpty {
+            recentSection.isHidden = true
+        } else {
+            recentSection.isHidden = false
+            let header = WBKSectionHeader(title: L10n.tr("home.section.recent_visits"), style: .withCount)
+            header.setCount(recentItems.count)
+            let cards = recentItems.map { item -> WBKResourceCard in
+                makeResourceCard(from: item)
+            }
+            recentSection.configure(header: header, cards: cards)
+        }
+
+        serverStatusBlock.configure(
+            serverURL: pushURL,
+            deviceToken: deviceToken,
+            isRegistered: isTokenRegistered,
+            onCopy: { [weak self] in
+                UIPasteboard.general.string = self?.pushURL ?? ""
+                HUDService.shared.showSuccess(withStatus: L10n.tr("home.token_card.copy_token"))
+            },
+            onRegister: { [weak self] in
+                guard self != nil else { return }
+                PushNotificationManager.shared.registerForPushNotifications()
+            }
+        )
+    }
+
+    private func makeResourceCard(from item: WebPageHistorySectionItem) -> WBKResourceCard {
+        let history = item.history
+        let title = history.title ?? history.url
+        let card = WBKResourceCard(title: title, style: .compact)
+
+        if let url = URL(string: history.url) {
+            card.metadata = url.host
+        }
+
+        if history.isCached {
+            card.status = .cached
+        }
+
+        let cacheSize = ByteCountFormatter.string(fromByteCount: max(0, history.cachedSize), countStyle: .file)
+        if history.cachedSize > 0 {
+            card.subtitle = cacheSize
+        }
+
+        card.onTap = { [weak self] in
+            guard let self = self, let url = URL(string: history.url) else { return }
+            self.openURL(url)
+        }
+
+        let longPress = UILongPressGestureRecognizer()
+        card.addGestureRecognizer(longPress)
+        longPress.rx.event
+            .filter { $0.state == .began }
+            .subscribe(onNext: { [weak self] _ in
+                guard let self = self, let url = URL(string: history.url) else { return }
+                self.showActionSheet(url: url)
+            })
+            .disposed(by: rx)
+
+        return card
     }
 
     @objc private func refreshData() {
-        Log.debug("refreshData (Pull-to-refresh) triggered", category: .ui)
+        Log.debug("refreshData triggered", category: .ui)
     }
 
     func openURL(_ url: URL) {
@@ -518,74 +496,5 @@ class MainViewController: BaseViewController<MainViewModel> {
         )
     }
 
-    private func showActionSheet(url: URL) {
-        let history = viewModel.getHistory(url: url)
-        let alert = UIAlertController(
-            title: history?.title ?? url.host ?? url.absoluteString,
-            message: """
-                \(L10n.tr("home.action_sheet.domain")): \(url.host ?? L10n.tr("common.unknown"))
-                \(L10n.tr("home.action_sheet.cache_size")): \(history?.formattedSize ?? "0 KB")
-                \(L10n.tr("home.action_sheet.visit_count_format", "\(history?.visitCount ?? 0)"))
-                """,
-            preferredStyle: .actionSheet
-        )
-        alert.addAction(UIAlertAction(title: L10n.tr("home.action_sheet.open"), style: .default, handler: { [weak self] _ in
-            self?.openURL(url)
-        }))
-        let isPinned = viewModel.isPinned(url: url)
-        alert.addAction(UIAlertAction(title: isPinned ? L10n.tr("home.action_sheet.unpin") : L10n.tr("home.action_sheet.pin"), style: .default, handler: { [weak self] _ in
-            self?.viewModel.togglePin(url: url)
-            self?.viewModel.refreshData()
-        }))
-        alert.addAction(UIAlertAction(title: L10n.tr("home.action_sheet.favorite"), style: .default, handler: { [weak self] _ in
-            self?.viewModel.addToFavorites(url: url)
-            self?.showAlert(title: L10n.tr("common.success"), message: L10n.tr("home.action_sheet.favorited_message"))
-            self?.viewModel.refreshData()
-        }))
-        alert.addAction(UIAlertAction(title: L10n.tr("home.action_sheet.clear_cache"), style: .destructive, handler: { [weak self] _ in
-            self?.viewModel.clearCache(url: url)
-            self?.viewModel.refreshData()
-        }))
-        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
-        if let popoverController = alert.popoverPresentationController {
-            popoverController.sourceView = self.view
-            popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
-            popoverController.permittedArrowDirections = []
-        }
-        present(alert, animated: true)
-    }
 
-    func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: L10n.tr("common.ok"), style: .default))
-        present(alert, animated: true)
-    }
-
-    @objc private func clearCacheTapped() {
-        let alert = UIAlertController(
-            title: "确认清理缓存",
-            message: "将清除所有本地缓存数据，此操作不可撤销",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
-        alert.addAction(UIAlertAction(title: "清理", style: .destructive) { [weak self] _ in
-            WebCacheManager.shared.clearAll()
-            self?.viewModel.refreshData()
-            HUDService.shared.showSuccess(withStatus: "缓存已清理")
-        })
-        present(alert, animated: true)
-    }
-
-    func handleQuickAction(index: Int) {
-        switch index {
-        case 0: openScanner()
-        case 1: CommandHandler.shared.checkClipboardOnForeground()
-        case 2:
-            if let tabBarController = self.tabBarController {
-                tabBarController.selectedIndex = 1
-            }
-        case 3: break
-        default: break
-        }
-    }
 }
