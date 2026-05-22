@@ -42,8 +42,8 @@ struct DesignTokens: Codable {
     let shadows: [String: ShadowToken]
     let opacity: [String: Double]
     let animation: [String: AnimationToken]
-    let icons: IconsSection
-    let breakpoints: [String: Double]
+    let icon: [String: Double]
+    let componentContracts: [String: [String: ContractValue]]?
 
     struct ColorsSection: Codable {
         let light: [String: String]
@@ -57,7 +57,7 @@ struct DesignTokens: Codable {
     }
 
     struct ShadowToken: Codable {
-        let color: String
+        let color: String?
         let opacity: Double
         let offsetX: Double
         let offsetY: Double
@@ -69,10 +69,56 @@ struct DesignTokens: Codable {
         let curve: String
         let damping: Double?
     }
+}
 
-    struct IconsSection: Codable {
-        let sizes: [String: Double]
-        let weights: [String: String]
+enum ContractValue: Codable, Equatable {
+    case doubleValue(Double)
+    case boolValue(Bool)
+    case intValue(Int)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let b = try? container.decode(Bool.self) {
+            self = .boolValue(b)
+        } else if let d = try? container.decode(Double.self) {
+            self = .doubleValue(d)
+        } else if let i = try? container.decode(Int.self) {
+            self = .intValue(i)
+        } else {
+            self = .doubleValue(0)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .doubleValue(let v): try container.encode(v)
+        case .boolValue(let v): try container.encode(v)
+        case .intValue(let v): try container.encode(v)
+        }
+    }
+
+    var swiftLiteral: String {
+        switch self {
+        case .doubleValue(let v): return String(v)
+        case .boolValue(let v): return v ? "true" : "false"
+        case .intValue(let v): return String(v)
+        }
+    }
+
+    var swiftType: String {
+        switch self {
+        case .boolValue: return "Bool"
+        default: return "CGFloat"
+        }
+    }
+
+    var cssLiteral: String {
+        switch self {
+        case .doubleValue(let v): return "\(Int(v))px"
+        case .boolValue: return "" // bools don't become CSS vars
+        case .intValue(let v): return "\(v)px"
+        }
     }
 }
 
@@ -161,6 +207,25 @@ func weightToSwift(_ w: String) -> String {
     }
 }
 
+let typographyTextStyleMap: [String: String] = [
+    "screenTitle": ".largeTitle",
+    "compactTitle": ".title1",
+    "sectionTitle": ".headline",
+    "rowTitle": ".body",
+    "cardTitle": ".subheadline",
+    "body": ".body",
+    "metadata": ".footnote",
+    "caption": ".caption1",
+    "badge": ".caption2",
+    "tabLabel": ".caption2",
+    "button": ".body",
+    "buttonMedium": ".body",
+]
+
+func textStyleForKey(_ key: String) -> String {
+    return typographyTextStyleMap[key] ?? ".body"
+}
+
 func capitalizeFirst(_ s: String) -> String {
     guard let first = s.first else { return s }
     return String(first).uppercased() + s.dropFirst()
@@ -216,6 +281,18 @@ func generateSwift(_ tokens: DesignTokens) -> String {
     lines.append("        public static var navigationBarTitle: UIColor { text }")
     lines.append("        public static var iconBackground: UIColor { primary.withAlphaComponent(0.1) }")
     lines.append("        public static var dimOverlay: UIColor { overlay }")
+    lines.append("        public static var secondary: UIColor { textSecondary }")
+    lines.append("        public static var textOnColor: UIColor { dynamicColor(light: .white, dark: .white) }")
+    lines.append("        public static var onPrimary: UIColor { textOnColor }")
+    lines.append("        public static var badgeBackground: UIColor { dynamicColor(light: Colors.Light.primarySoft, dark: Colors.Dark.primarySoft) }")
+    lines.append("        public static var badgeText: UIColor { textSecondary }")
+    lines.append("        public static var fabBackground: UIColor { primary }")
+    lines.append("        public static var gradientEnd: UIColor { dynamicColor(light: UIColor(red: 0.6, green: 0.302, blue: 0.749, alpha: 0.85), dark: UIColor(red: 0.4, green: 0.2, blue: 0.502, alpha: 0.9)) }")
+    lines.append("        public static var gradientStart: UIColor { dynamicColor(light: UIColor(red: 0.251, green: 0.451, blue: 0.949, alpha: 0.85), dark: UIColor(red: 0.2, green: 0.302, blue: 0.6, alpha: 0.9)) }")
+    lines.append("        public static var unreadDot: UIColor { primary }")
+    lines.append("        public static var scrim: UIColor { overlay }")
+    lines.append("        public static var overlayStrong: UIColor { dynamicColor(light: UIColor(red: 0.067, green: 0.094, blue: 0.153, alpha: 0.7), dark: UIColor(red: 0, green: 0, blue: 0, alpha: 0.8)) }")
+    lines.append("        public static var overlaySoft: UIColor { dynamicColor(light: UIColor(red: 0.067, green: 0.094, blue: 0.153, alpha: 0.2), dark: UIColor(red: 0, green: 0, blue: 0, alpha: 0.3)) }")
     lines.append("")
     lines.append("        private static func dynamicColor(light: UIColor, dark: UIColor) -> UIColor {")
     lines.append("            UIColor { trait in")
@@ -231,8 +308,40 @@ func generateSwift(_ tokens: DesignTokens) -> String {
     for key in typoKeys {
         let t = tokens.typography[key]!
         let w = weightToSwift(t.weight)
-        lines.append("        public static let \(key) = UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: \(Int(t.size)), weight: \(w)))")
+        let textStyle = textStyleForKey(key)
+        lines.append("        public static let \(key) = UIFontMetrics(forTextStyle: \(textStyle)).scaledFont(for: .systemFont(ofSize: \(Int(t.size)), weight: \(w)))")
     }
+    // Extra typography tokens used by existing components
+    lines.append("        public static let buttonMedium = UIFontMetrics(forTextStyle: .body).scaledFont(for: .systemFont(ofSize: 15, weight: .medium))")
+    lines.append("        public static let badge = UIFontMetrics(forTextStyle: .caption2).scaledFont(for: .systemFont(ofSize: 10, weight: .bold))")
+    lines.append("")
+    lines.append("        // Monospace variants")
+    lines.append("        public static let monospaceMetaBold = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 12, weight: .bold))")
+    lines.append("        public static let monospaceBody = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 13, weight: .regular))")
+    lines.append("        public static let monospaceBodyMedium = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 13, weight: .medium))")
+    lines.append("        public static let monospaceSmall = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 11, weight: .regular))")
+    lines.append("        public static let monospaceSmallMedium = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 11, weight: .medium))")
+    lines.append("        public static let monospaceMini = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular))")
+    lines.append("        public static let monospaceMiniMedium = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 10, weight: .medium))")
+    lines.append("        public static let monospaceMicro = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 9, weight: .regular))")
+    lines.append("        public static let monospaceLarge = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 14, weight: .regular))")
+    lines.append("        public static let monospaceLargeMedium = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 14, weight: .medium))")
+    lines.append("        public static let monospaceLargeSemibold = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 17, weight: .semibold))")
+    lines.append("        public static let monospaceTitle = UIFontMetrics(forTextStyle: .title3).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 18, weight: .bold))")
+    lines.append("        public static let monospaceDisplay = UIFontMetrics(forTextStyle: .title2).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 20, weight: .bold))")
+    lines.append("        public static let monospaceDisplaySemibold = UIFontMetrics(forTextStyle: .title2).scaledFont(for: UIFont.monospacedSystemFont(ofSize: 20, weight: .semibold))")
+    lines.append("")
+    lines.append("        // Legacy Apple text style aliases")
+    lines.append("        public static let largeTitle = UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: .systemFont(ofSize: 28, weight: .bold))")
+    lines.append("        public static let title1 = UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: .systemFont(ofSize: 28, weight: .bold))")
+    lines.append("        public static let title2 = UIFontMetrics(forTextStyle: .title1).scaledFont(for: .systemFont(ofSize: 24, weight: .bold))")
+    lines.append("        public static let title3 = UIFontMetrics(forTextStyle: .subheadline).scaledFont(for: .systemFont(ofSize: 16, weight: .semibold))")
+    lines.append("        public static let headline = UIFontMetrics(forTextStyle: .headline).scaledFont(for: .systemFont(ofSize: 17, weight: .semibold))")
+    lines.append("        public static let subheadline = UIFontMetrics(forTextStyle: .body).scaledFont(for: .systemFont(ofSize: 15, weight: .regular))")
+    lines.append("        public static let callout = UIFontMetrics(forTextStyle: .body).scaledFont(for: .systemFont(ofSize: 15, weight: .regular))")
+    lines.append("        public static let footnote = UIFontMetrics(forTextStyle: .footnote).scaledFont(for: .systemFont(ofSize: 13, weight: .regular))")
+    lines.append("        public static let caption1 = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: .systemFont(ofSize: 12, weight: .regular))")
+    lines.append("        public static let caption2 = UIFontMetrics(forTextStyle: .caption2).scaledFont(for: .systemFont(ofSize: 11, weight: .medium))")
     lines.append("    }")
     lines.append("")
 
@@ -253,16 +362,26 @@ func generateSwift(_ tokens: DesignTokens) -> String {
         let val = tokens.cornerRadius[key]!
         lines.append("        public static let \(key): CGFloat = \(val)")
     }
+    // Legacy aliases
+    lines.append("        public static let lg: CGFloat = 12.0")
+    lines.append("        public static let xl: CGFloat = 16.0")
+    lines.append("        public static let xxl: CGFloat = 20.0")
+    lines.append("        public static let avatar: CGFloat = 22.0")
+    lines.append("        public static let pill: CGFloat = 28.0")
     lines.append("    }")
-    lines.append("")
-
-    // Shadows
     lines.append("    public enum Shadows {")
     let shadowKeys = tokens.shadows.keys.sorted()
     for key in shadowKeys {
         let s = tokens.shadows[key]!
-        lines.append("        public static let \(capitalizeFirst(key)) = ShadowValues(opacity: \(s.opacity), offsetX: \(s.offsetX), offsetY: \(s.offsetY), radius: \(s.radius))")
+        lines.append("        public static let \(key) = ShadowValues(opacity: \(s.opacity), offsetX: \(s.offsetX), offsetY: \(s.offsetY), radius: \(s.radius))")
     }
+    // Legacy PascalCase aliases
+    lines.append("        public static let Card = ShadowValues(opacity: 1, offsetX: 0, offsetY: 2, radius: 8)")
+    lines.append("        public static let Fab = ShadowValues(opacity: 1, offsetX: 0, offsetY: 8, radius: 18)")
+    lines.append("        public static let Modal = ShadowValues(opacity: 1, offsetX: 0, offsetY: 12, radius: 28)")
+    lines.append("        public static let NavBar = ShadowValues(opacity: 0, offsetX: 0, offsetY: 0, radius: 0)")
+    lines.append("        public static let SearchBar = ShadowValues(opacity: 0, offsetX: 0, offsetY: 0, radius: 0)")
+    lines.append("        public static let Tooltip = ShadowValues(opacity: 0, offsetX: 0, offsetY: 0, radius: 0)")
     lines.append("    }")
     lines.append("")
 
@@ -273,6 +392,11 @@ func generateSwift(_ tokens: DesignTokens) -> String {
         let val = tokens.opacity[key]!
         lines.append("        public static let \(key): CGFloat = \(val)")
     }
+    // Legacy aliases
+    lines.append("        public static let badge: CGFloat = 0.14")
+    lines.append("        public static let overlay: CGFloat = 0.42")
+    lines.append("        public static let hover: CGFloat = 0.72")
+    lines.append("        public static let placeholder: CGFloat = 0.36")
     lines.append("    }")
     lines.append("")
 
@@ -289,29 +413,54 @@ func generateSwift(_ tokens: DesignTokens) -> String {
         }
         lines.append("        public static let \(key) = AnimationValues(duration: \(a.duration)\(dampingSuffix))")
     }
+    // Legacy aliases
+    lines.append("        public static let modal = AnimationValues(duration: 0.36, damping: 0.88)")
+    lines.append("        public static let slow = AnimationValues(duration: 0.22)")
     lines.append("    }")
     lines.append("")
 
     // Icons
     lines.append("    public enum Icons {")
     lines.append("        public enum Sizes {")
-    let sizeKeys = tokens.icons.sizes.keys.sorted()
-    for key in sizeKeys {
-        let val = tokens.icons.sizes[key]!
+    let iconKeys = tokens.icon.keys.sorted()
+    for key in iconKeys {
+        let val = tokens.icon[key]!
         lines.append("            public static let \(key): CGFloat = \(val)")
     }
+    // Legacy aliases
+    lines.append("            public static let xxl: CGFloat = 48.0")
+    lines.append("            public static let xl: CGFloat = 24.0")
     lines.append("        }")
     lines.append("    }")
     lines.append("")
 
-    // Breakpoints
+    // Breakpoints (hardcoded since not in JSON)
     lines.append("    public enum Breakpoints {")
-    let bpKeys = tokens.breakpoints.keys.sorted()
-    for key in bpKeys {
-        let val = tokens.breakpoints[key]!
-        lines.append("        public static let \(key): CGFloat = \(val)")
-    }
+    lines.append("        public static let compact: CGFloat = 320.0")
+    lines.append("        public static let regular: CGFloat = 375.0")
+    lines.append("        public static let large: CGFloat = 428.0")
     lines.append("    }")
+    lines.append("")
+
+    // Component Contracts
+    if let contracts = tokens.componentContracts {
+        lines.append("    public enum ComponentContract {")
+        let contractKeys = contracts.keys.sorted()
+        for contractName in contractKeys {
+            let pascalName = capitalizeFirst(contractName)
+            lines.append("        public enum \(pascalName) {")
+            let props = contracts[contractName]!
+            let propKeys = props.keys.sorted()
+            for propKey in propKeys {
+                let val = props[propKey]!
+                lines.append("            public static let \(propKey): \(val.swiftType) = \(val.swiftLiteral)")
+            }
+            lines.append("        }")
+        }
+        lines.append("    }")
+        lines.append("")
+    }
+
     lines.append("}")
 
     // Supporting types
@@ -382,9 +531,25 @@ func generateCSS(_ tokens: DesignTokens) -> String {
         lines.append("  --shadow-\(key): 0 \(Int(s.offsetY))px \(Int(s.radius))px rgba(0,0,0,\(s.opacity));")
     }
     lines.append("")
-    let bpKeys = tokens.breakpoints.keys.sorted()
-    for key in bpKeys {
-        lines.append("  --breakpoint-\(key): \(Int(tokens.breakpoints[key]!))px;")
+    let iconKeys = tokens.icon.keys.sorted()
+    for key in iconKeys {
+        let val = tokens.icon[key]!
+        lines.append("  --icon-\(key): \(Int(val))px;")
+    }
+    lines.append("")
+    if let contracts = tokens.componentContracts {
+        let contractKeys = contracts.keys.sorted()
+        for contractName in contractKeys {
+            let props = contracts[contractName]!
+            let propKeys = props.keys.sorted()
+            for propKey in propKeys {
+                let val = props[propKey]!
+                let cssVal = val.cssLiteral
+                if !cssVal.isEmpty {
+                    lines.append("  --contract-\(contractName)-\(propKey): \(cssVal);")
+                }
+            }
+        }
     }
     lines.append("}")
     lines.append("")
@@ -427,9 +592,9 @@ func printValidationReport(_ tokens: DesignTokens) {
     let shadowCount = tokens.shadows.count
     let opacityCount = tokens.opacity.count
     let animCount = tokens.animation.count
-    let iconSizeCount = tokens.icons.sizes.count
-    let bpCount = tokens.breakpoints.count
-    let total = colorCount + typoCount + spacingCount + radiusCount + shadowCount + opacityCount + animCount + iconSizeCount + bpCount
+    let iconSizeCount = tokens.icon.count
+    let contractCount = tokens.componentContracts?.reduce(0) { $0 + $1.value.count } ?? 0
+    let total = colorCount + typoCount + spacingCount + radiusCount + shadowCount + opacityCount + animCount + iconSizeCount + contractCount
 
     print("  Tokens by category:")
     print("    Colors:       \(colorCount) (\(tokens.colors.light.count) light + \(tokens.colors.dark.count) dark)")
@@ -440,7 +605,7 @@ func printValidationReport(_ tokens: DesignTokens) {
     print("    Opacity:      \(opacityCount)")
     print("    Animation:    \(animCount)")
     print("    Icon sizes:   \(iconSizeCount)")
-    print("    Breakpoints:  \(bpCount)")
+    print("    Contracts:    \(contractCount)")
     print("    ────────────────────")
     print("    TOTAL:        \(total)")
     print("")

@@ -132,3 +132,4 @@ TestResults_*/*
 .opencode/
 .ui-tester/
 .xcodebuildmcp/
+docs/design-tokens-v2-backup.json

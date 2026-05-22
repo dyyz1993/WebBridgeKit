@@ -19,17 +19,17 @@ extension ComponentCatalogViewController {
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_Buttons"
-        container.backgroundColor = ThemeColors.current.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = ThemeSpacing.default.sm
+        stack.spacing = ThemeTokens.Spacing.sm
         stack.alignment = .fill
 
         let normalLabel = UILabel()
         normalLabel.text = "Normal State"
-        normalLabel.font = ThemeTypography.current.caption2
+        normalLabel.font = ThemeTokens.Typography.caption2
         normalLabel.textColor = ThemeTokens.Color.textTertiary
         stack.addArrangedSubview(normalLabel)
 
@@ -44,7 +44,7 @@ extension ComponentCatalogViewController {
 
         let disabledLabel = UILabel()
         disabledLabel.text = "Disabled State (alpha 0.3)"
-        disabledLabel.font = ThemeTypography.current.caption2
+        disabledLabel.font = ThemeTokens.Typography.caption2
         disabledLabel.textColor = ThemeTokens.Color.textTertiary
         stack.addArrangedSubview(disabledLabel)
 
@@ -61,7 +61,7 @@ extension ComponentCatalogViewController {
 
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
 
         container.snp.makeConstraints { make in
@@ -80,12 +80,12 @@ extension ComponentCatalogViewController {
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_Badges"
-        container.backgroundColor = ThemeColors.current.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = ThemeSpacing.default.sm
+        stack.spacing = ThemeTokens.Spacing.sm
         stack.alignment = .center
         stack.distribution = .equalSpacing
 
@@ -106,7 +106,7 @@ extension ComponentCatalogViewController {
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
 
         container.snp.makeConstraints { make in
@@ -128,7 +128,7 @@ extension ComponentCatalogViewController {
 
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = ThemeSpacing.default.md
+        stack.spacing = ThemeTokens.Spacing.md
 
         let emptyCard = ThemeCard()
         emptyCard.snp.makeConstraints { make in
@@ -140,11 +140,11 @@ extension ComponentCatalogViewController {
         let cardLabel = UILabel()
         cardLabel.text = "Card with content inside\nSecond line of text"
         cardLabel.numberOfLines = 0
-        cardLabel.font = ThemeTypography.current.body
-        cardLabel.textColor = ThemeColors.current.text
+        cardLabel.font = ThemeTokens.Typography.body
+        cardLabel.textColor = ThemeTokens.Color.text
         contentCard.addContent(cardLabel)
         cardLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
         contentCard.snp.makeConstraints { make in
             make.height.equalTo(80)
@@ -159,11 +159,11 @@ extension ComponentCatalogViewController {
         shadowCard.innerContentView.layer.shadowRadius = shadow.radius
         let shadowLabel = UILabel()
         shadowLabel.text = "Card with enhanced shadow"
-        shadowLabel.font = ThemeTypography.current.body
-        shadowLabel.textColor = ThemeColors.current.text
+        shadowLabel.font = ThemeTokens.Typography.body
+        shadowLabel.textColor = ThemeTokens.Color.text
         shadowCard.addContent(shadowLabel)
         shadowLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
         shadowCard.snp.makeConstraints { make in
             make.height.equalTo(80)
@@ -191,8 +191,8 @@ extension ComponentCatalogViewController {
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_EmptyStates"
-        container.backgroundColor = ThemeColors.current.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let defaultEmpty = ThemeEmptyState()
         defaultEmpty.configure(icon: .inbox, title: "No Messages", description: "Your inbox is empty. Messages will appear here.")
@@ -208,11 +208,11 @@ extension ComponentCatalogViewController {
 
         let stack = UIStackView(arrangedSubviews: [defaultEmpty, customEmpty])
         stack.axis = .vertical
-        stack.spacing = ThemeSpacing.default.md
+        stack.spacing = ThemeTokens.Spacing.md
 
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
 
         container.snp.makeConstraints { make in

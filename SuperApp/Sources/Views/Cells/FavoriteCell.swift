@@ -19,7 +19,7 @@ class FavoriteCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         view.layer.masksToBounds = true
         return view
@@ -28,8 +28,8 @@ class FavoriteCell: UITableViewCell {
     private let faviconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeColors.current.primary
-        imageView.backgroundColor = ThemeColors.current.surface
+        imageView.tintColor = ThemeTokens.Color.primary
+        imageView.backgroundColor = ThemeTokens.Color.surface
         imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
         imageView.clipsToBounds = true
@@ -39,7 +39,7 @@ class FavoriteCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -48,7 +48,7 @@ class FavoriteCell: UITableViewCell {
     private let urlLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
         return label
@@ -58,7 +58,7 @@ class FavoriteCell: UITableViewCell {
         let button = UIButton(type: .system)
         let image = LucideIcon.pin.image(pointSize: 16)
         button.setImage(image, for: .normal)
-        button.tintColor = ThemeColors.current.warning
+        button.tintColor = ThemeTokens.Color.warning
         button.accessibilityLabel = "置顶"
         return button
     }()
@@ -74,15 +74,15 @@ class FavoriteCell: UITableViewCell {
     private let cacheModeSwitch: UISwitch = {
         let switchControl = UISwitch()
         switchControl.isOn = false
-        switchControl.tintColor = ThemeColors.current.success
-        switchControl.onTintColor = ThemeColors.current.success
+        switchControl.tintColor = ThemeTokens.Color.success
+        switchControl.onTintColor = ThemeTokens.Color.success
         return switchControl
     }()
 
     private let cacheModeLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         label.text = L10n.tr("favorite.cache_mode")
         return label
     }()
@@ -216,7 +216,7 @@ class FavoriteCell: UITableViewCell {
 
         // 置顶状态
         pinButton.isHidden = false
-            pinButton.tintColor = favorite.isPinned ? ThemeColors.current.warning : ThemeTokens.Color.textTertiary
+            pinButton.tintColor = favorite.isPinned ? ThemeTokens.Color.warning : ThemeTokens.Color.textTertiary
 
         // 收藏图标
         favoriteIconView.isHidden = false
@@ -251,6 +251,6 @@ class FavoriteCell: UITableViewCell {
         pinButton.isHidden = true
         favoriteIconView.isHidden = true
         cacheModeSwitch.isOn = false
-        faviconImageView.backgroundColor = ThemeColors.current.surface
+        faviconImageView.backgroundColor = ThemeTokens.Color.surface
     }
 }

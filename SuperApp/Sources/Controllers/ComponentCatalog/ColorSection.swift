@@ -23,8 +23,8 @@ extension ComponentCatalogViewController {
 
         let gridContainer = UIView()
         gridContainer.accessibilityIdentifier = "CatalogSection_Colors"
-        gridContainer.backgroundColor = ThemeColors.current.surface
-        gridContainer.layer.cornerRadius = ThemeCornerRadius.default.lg
+        gridContainer.backgroundColor = ThemeTokens.Color.surface
+        gridContainer.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let colors: [(String, UIColor)] = [
             ("background", ThemeTokens.Color.background),
@@ -69,7 +69,7 @@ extension ComponentCatalogViewController {
             circle.accessibilityIdentifier = "ColorSwatch_\(name)"
             gridContainer.addSubview(circle)
 
-            let colWidth = (UIScreen.main.bounds.width - ThemeSpacing.default.md * 2 - ThemeSpacing.default.md * 2 - itemSpacing * CGFloat(cols - 1)) / CGFloat(cols)
+            let colWidth = (UIScreen.main.bounds.width - ThemeTokens.Spacing.md * 2 - ThemeTokens.Spacing.md * 2 - itemSpacing * CGFloat(cols - 1)) / CGFloat(cols)
             circle.snp.makeConstraints { make in
                 make.width.height.equalTo(circleSize)
                 make.top.equalToSuperview().offset(CGFloat(row) * (circleSize + itemSpacing + 28) + itemSpacing)
@@ -78,8 +78,8 @@ extension ComponentCatalogViewController {
 
             let nameLabel = UILabel()
             nameLabel.text = name
-            nameLabel.font = ThemeTypography.current.caption2
-            nameLabel.textColor = ThemeColors.current.text
+            nameLabel.font = ThemeTokens.Typography.caption2
+            nameLabel.textColor = ThemeTokens.Color.text
             nameLabel.textAlignment = .center
             gridContainer.addSubview(nameLabel)
             nameLabel.snp.makeConstraints { make in
@@ -89,7 +89,7 @@ extension ComponentCatalogViewController {
 
             let hexLabel = UILabel()
             hexLabel.text = hexString(from: color)
-            hexLabel.font = UIFont.monospacedSystemFont(ofSize: 9, weight: .regular)
+            hexLabel.font = ThemeTokens.Typography.monospaceMicro
             hexLabel.textColor = ThemeTokens.Color.textTertiary
             hexLabel.textAlignment = .center
             gridContainer.addSubview(hexLabel)
@@ -102,7 +102,7 @@ extension ComponentCatalogViewController {
         let totalHeight = CGFloat(rows) * (circleSize + itemSpacing + 28) + itemSpacing + 40
         let sectionContent = UIStackView(arrangedSubviews: [modeControl, gridContainer])
         sectionContent.axis = .vertical
-        sectionContent.spacing = ThemeSpacing.default.sm
+        sectionContent.spacing = ThemeTokens.Spacing.sm
         gridContainer.snp.makeConstraints { make in
             make.height.equalTo(totalHeight)
         }

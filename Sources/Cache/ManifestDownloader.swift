@@ -341,7 +341,7 @@ public class ManifestDownloader: @unchecked Sendable {
 
                 // 处理网络错误
                 if let error = error {
-                    NSLog("❌ [ManifestDownloader] Network error fetching manifest: \(url.absoluteString)")
+                    NSLog("[FAIL] [ManifestDownloader] Network error fetching manifest: \(url.absoluteString)")
                     NSLog("   - Error: \(error.localizedDescription)")
                     continuation.resume(throwing: ManifestDownloaderError.networkError(error))
                     return
@@ -349,17 +349,17 @@ public class ManifestDownloader: @unchecked Sendable {
 
                 // 验证响应
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    NSLog("❌ [ManifestDownloader] Invalid response from: \(url.absoluteString)")
+                    NSLog("[FAIL] [ManifestDownloader] Invalid response from: \(url.absoluteString)")
                     continuation.resume(throwing: ManifestDownloaderError.emptyResponse)
                     return
                 }
 
                 // 记录 HTTP 状态码（用于调试）
-                NSLog("📡 [ManifestDownloader] HTTP \(httpResponse.statusCode) from: \(url.absoluteString)")
+                NSLog("[SATELLITE] [ManifestDownloader] HTTP \(httpResponse.statusCode) from: \(url.absoluteString)")
 
                 guard httpResponse.statusCode == 200 else {
                     let statusText = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
-                    NSLog("❌ [ManifestDownloader] HTTP \(httpResponse.statusCode) (\(statusText)) from: \(url.absoluteString)")
+                    NSLog("[FAIL] [ManifestDownloader] HTTP \(httpResponse.statusCode) (\(statusText)) from: \(url.absoluteString)")
 
                     // 5xx 错误提供更友好的错误信息
                     if httpResponse.statusCode >= 500 {
@@ -380,12 +380,12 @@ public class ManifestDownloader: @unchecked Sendable {
 
                 // 验证数据
                 guard let data = data, !data.isEmpty else {
-                    NSLog("❌ [ManifestDownloader] Empty response from: \(url.absoluteString)")
+                    NSLog("[FAIL] [ManifestDownloader] Empty response from: \(url.absoluteString)")
                     continuation.resume(throwing: ManifestDownloaderError.emptyResponse)
                     return
                 }
 
-                NSLog("✅ [ManifestDownloader] Successfully fetched manifest: \(data.count) bytes from: \(url.absoluteString)")
+                NSLog("[OK] [ManifestDownloader] Successfully fetched manifest: \(data.count) bytes from: \(url.absoluteString)")
 
                 // 解析 JSON
                 do {
@@ -394,10 +394,10 @@ public class ManifestDownloader: @unchecked Sendable {
                 } catch let manifestError as ManifestDownloaderError {
                     continuation.resume(throwing: manifestError)
                 } catch let decodingError as DecodingError {
-                    NSLog("❌ [ManifestDownloader] JSON decode error: \(decodingError.localizedDescription)")
+                    NSLog("[FAIL] [ManifestDownloader] JSON decode error: \(decodingError.localizedDescription)")
                     continuation.resume(throwing: ManifestDownloaderError.invalidJSON(decodingError))
                 } catch {
-                    NSLog("❌ [ManifestDownloader] Unknown error parsing manifest: \(error.localizedDescription)")
+                    NSLog("[FAIL] [ManifestDownloader] Unknown error parsing manifest: \(error.localizedDescription)")
                     continuation.resume(throwing: ManifestDownloaderError.invalidJSON(error))
                 }
             }
@@ -594,7 +594,7 @@ public class ManifestDownloader: @unchecked Sendable {
         }
 
         if !errors.isEmpty {
-            NSLog("❌ [ManifestDownloader] Manifest validation failed with \(errors.count) errors:")
+            NSLog("[FAIL] [ManifestDownloader] Manifest validation failed with \(errors.count) errors:")
             for error in errors {
                 NSLog("   - \(error)")
             }

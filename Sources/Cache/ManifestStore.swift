@@ -30,7 +30,7 @@ public class ManifestStore: ManifestCacheManaging {
     struct ManifestCacheEntry {
         let manifest: Manifest
         let timestamp: Date
-        let contentHash: String  // 🔒 Security: SHA-256 hash for tamper detection
+        let contentHash: String  // [LOCK] Security: SHA-256 hash for tamper detection
 
         var isExpired: Bool {
             let expirationDays = 7
@@ -370,7 +370,7 @@ public class ResourceCache {
 
         try? FileManager.default.createDirectory(at: diskCacheDirectory, withIntermediateDirectories: true)
 
-        StructuredLogger.shared.info("✅ [ResourceCache] Initialized with disk cache: \(diskCacheDirectory.path)", category: .cache)
+        StructuredLogger.shared.info("[OK] [ResourceCache] Initialized with disk cache: \(diskCacheDirectory.path)", category: .cache)
     }
 
     // MARK: - Cache Operations
@@ -437,13 +437,13 @@ public class ResourceCache {
                 self.memoryCache[key] = resource
                 self.currentMemorySize += resourceSize
 
-                StructuredLogger.shared.info("✅ [ResourceCache] Cached: \(resource.relativePath) (\(resource.data.count) bytes)", category: .cache)
+                StructuredLogger.shared.info("[OK] [ResourceCache] Cached: \(resource.relativePath) (\(resource.data.count) bytes)", category: .cache)
 
                 DispatchQueue.main.async {
                     NotificationCenter.default.post(name: .manifestCacheDidUpdate, object: nil)
                 }
             } catch {
-                StructuredLogger.shared.error("❌ [ResourceCache] Failed to cache: \(error.localizedDescription)", category: .cache)
+                StructuredLogger.shared.error("[FAIL] [ResourceCache] Failed to cache: \(error.localizedDescription)", category: .cache)
             }
         }
     }
@@ -519,7 +519,7 @@ public class ResourceCache {
                 }
             }
 
-            StructuredLogger.shared.debug("🗑️ [ResourceCache] Removed all resources for pageKey: \(pageKey)", category: .cache)
+            StructuredLogger.shared.debug("[DEL] [ResourceCache] Removed all resources for pageKey: \(pageKey)", category: .cache)
         }
     }
 

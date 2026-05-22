@@ -28,7 +28,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             return
         }
 
-        NSLog("🔍 [SchemeHandler] Intercepted: %@", url.absoluteString)
+        NSLog("[SEARCH] [SchemeHandler] Intercepted: %@", url.absoluteString)
 
         // 检测是否是持久化缓存请求 (wb-resource://{cacheID}/{path})
         let absoluteString = url.absoluteString
@@ -62,7 +62,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
             switch result {
             case .success(let resource):
-                NSLog("   ✅ Delivered: %@", relativePath)
+                NSLog("   [OK] Delivered: %@", relativePath)
                 self.deliverResource(resource, to: urlSchemeTask, originalURL: url)
                 self.removeTask(forID: taskID)
 
@@ -76,7 +76,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
                 }
 
             case .failure(let error):
-                NSLog("   ❌ Failed: %@, error: %@", relativePath, error.localizedDescription)
+                NSLog("   [FAIL] Failed: %@, error: %@", relativePath, error.localizedDescription)
 
                 // 🔥 优化：如果是 HTML 页面或主请求失败，显示错误提示页，而不是白屏
                 let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
@@ -107,7 +107,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
         guard FileManager.default.fileExists(atPath: resourcePath.path) else {
             let error = ManifestCacheError.resourceNotFound(relativePath)
-            NSLog("❌ [SchemeHandler] Resource not found in cache: %@", relativePath)
+            NSLog("[FAIL] [SchemeHandler] Resource not found in cache: %@", relativePath)
 
             // 🔥 优化：如果是 HTML 页面失败，显示错误提示页
             let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
@@ -140,7 +140,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             urlSchemeTask.didReceive(data)
             urlSchemeTask.didFinish()
 
-            NSLog("✅ [SchemeHandler] Served from persistent cache: %@", relativePath)
+            NSLog("[OK] [SchemeHandler] Served from persistent cache: %@", relativePath)
 
             // 发送通知用于 UI 更新
             DispatchQueue.main.async {
@@ -151,7 +151,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
                 )
             }
         } catch {
-            NSLog("❌ [SchemeHandler] Failed to read resource: %@", error.localizedDescription)
+            NSLog("[FAIL] [SchemeHandler] Failed to read resource: %@", error.localizedDescription)
             urlSchemeTask.didFailWithError(error)
         }
     }
@@ -190,7 +190,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             removeTask(forID: taskID)
         }
 
-        NSLog("⏹️ [SchemeHandler] Stopped task for: %@", urlSchemeTask.request.url?.absoluteString ?? "unknown")
+        NSLog("[STOP] [SchemeHandler] Stopped task for: %@", urlSchemeTask.request.url?.absoluteString ?? "unknown")
     }
 
     // MARK: - Page Key Management
@@ -203,7 +203,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         let webViewID = getWebViewID(for: webView)
         currentPageKeys[webViewID] = pageKey
 
-        NSLog("📋 [SchemeHandler] Set pageKey '%@' for WebView", pageKey)
+        NSLog("[LIST] [SchemeHandler] Set pageKey '%@' for WebView", pageKey)
     }
 
     /// 获取 WebView 对应的 pageKey
@@ -237,7 +237,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         urlSchemeTask.didReceive(resource.data)
         urlSchemeTask.didFinish()
 
-        NSLog("   ✅ Delivered resource: %@ (%d bytes)", resource.relativePath, resource.data.count)
+        NSLog("   [OK] Delivered resource: %@ (%d bytes)", resource.relativePath, resource.data.count)
 
         // 发送通知用于 UI 更新
         NotificationCenter.default.post(
@@ -285,7 +285,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         urlSchemeTask.didReceive(data)
         urlSchemeTask.didFinish()
 
-        NSLog("⚠️ [SchemeHandler] Delivered error page for: %@", url.absoluteString)
+        NSLog("[WARN] [SchemeHandler] Delivered error page for: %@", url.absoluteString)
     }
 
     private func generateErrorHTML(url: URL, error: Error) -> String {
@@ -316,7 +316,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         </head>
         <body>
             <div class="container">
-                <h1><span class="icon">🚫</span>WebBridge 资源加载失败</h1>
+                <h1><span class="icon">[BLOCK]</span>WebBridge 资源加载失败</h1>
                 <p>在处理自定义协议请求时遇到了错误，无法加载目标资源。</p>
 
                 <div class="info-box">
@@ -388,7 +388,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         let webViewID = getWebViewID(for: webView)
         currentPageKeys.removeValue(forKey: webViewID)
 
-        NSLog("🗑️ [SchemeHandler] Cleaned up page for WebView")
+        NSLog("[DEL] [SchemeHandler] Cleaned up page for WebView")
     }
 
     // MARK: - Manifest Registration
@@ -400,14 +400,14 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
     public func registerManifest(forPage pageName: String, manifest: [String: String]) {
         let manifestObj = Manifest(resources: manifest, version: nil, lastUpdated: nil)
         ManifestCacheManager.shared.registerManifest(manifestObj, forPage: pageName)
-        NSLog("✅ [SchemeHandler] Registered manifest for page: %@ with %d resources", pageName, manifest.count)
+        NSLog("[OK] [SchemeHandler] Registered manifest for page: %@ with %d resources", pageName, manifest.count)
     }
 
     /// 注销页面的 Manifest
     /// - Parameter pageName: 页面名称
     public func unregisterManifest(forPage pageName: String) {
         ManifestCacheManager.shared.unregisterManifest(forPage: pageName)
-        NSLog("🗑️ [SchemeHandler] Unregistered manifest for page: %@", pageName)
+        NSLog("[DEL] [SchemeHandler] Unregistered manifest for page: %@", pageName)
     }
 }
 
@@ -422,6 +422,6 @@ public extension ManifestURLSchemeHandler {
     static func register(to configuration: WKWebViewConfiguration, scheme: String = "custom") {
         let handler = ManifestURLSchemeHandler()
         configuration.setURLSchemeHandler(handler, forURLScheme: scheme)
-        NSLog("✅ [SchemeHandler] Registered for scheme: %@://", scheme)
+        NSLog("[OK] [SchemeHandler] Registered for scheme: %@://", scheme)
     }
 }

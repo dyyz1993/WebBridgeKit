@@ -1,140 +1,214 @@
 {
   "$schema": "design-tokens.schema.json",
-  "version": "2.0.0",
-  "description": "WebBridgeKit Design Tokens — Single Source of Truth. All UI values must come from here.",
+  "version": "3.0.0",
+  "description": "WebBridgeKit Design Tokens v3 — Single Source of Truth. All UI values must come from here.",
+  "principles": {
+    "productTone": "quiet developer tool",
+    "density": "compact but readable",
+    "icons": "Lucide only",
+    "colorPolicy": "semantic tokens only; no UIKit system colors in feature UI",
+    "radiusPolicy": "controlled radius; cards max 12pt, rows 10pt, pills full"
+  },
 
   "colors": {
     "light": {
-      "primary": "#007AFF",
-      "secondary": "#8E8E93",
-      "background": "#F2F2F7",
+      "background": "#F6F7F9",
       "surface": "#FFFFFF",
+      "surfaceElevated": "#FFFFFF",
       "cardBackground": "#FFFFFF",
-      "text": "#000000",
-      "textSecondary": "#8E8E93",
-      "textTertiary": "#C7C7CC",
-      "border": "#C6C6C8",
-      "separator": "#C6C6C8",
-      "success": "#34C759",
-      "warning": "#FF9500",
-      "error": "#FF3B30",
-      "info": "#007AFF",
-      "gradientStart": "rgba(64,115,242,0.85)",
-      "gradientEnd": "rgba(153,77,191,0.85)",
-      "badgeBackground": "#F2F2F7",
-      "badgeText": "#636366",
-      "fabBackground": "#007AFF",
-      "unreadDot": "#007AFF",
+      "text": "#111827",
+      "textSecondary": "#5B6472",
+      "textTertiary": "#8B94A3",
+      "placeholder": "#A5ADBA",
+      "border": "#D8DEE8",
+      "separator": "#E6EAF0",
+      "primary": "#2563EB",
+      "primaryPressed": "#1D4ED8",
+      "primarySoft": "#EAF1FF",
+      "accent": "#7C3AED",
+      "accentSoft": "#F1EAFF",
+      "success": "#16A34A",
+      "successSoft": "#EAF8EF",
+      "warning": "#D97706",
+      "warningSoft": "#FFF4E5",
+      "error": "#DC2626",
+      "errorSoft": "#FEECEC",
+      "info": "#0F766E",
+      "infoSoft": "#E7F6F4",
+      "offline": "#64748B",
+      "offlineSoft": "#EEF2F6",
       "navigationBarBackground": "#FFFFFF",
       "tabBarBackground": "#FFFFFF",
-      "overlay": "rgba(0,0,0,0.4)"
+      "overlay": "rgba(17,24,39,0.42)",
+      "shadow": "rgba(17,24,39,0.10)"
     },
     "dark": {
-      "primary": "#0A84FF",
-      "secondary": "#8E8E93",
-      "background": "#000000",
-      "surface": "#1C1C1E",
-      "cardBackground": "#26262B",
-      "text": "#FFFFFF",
-      "textSecondary": "#8E8E93",
-      "textTertiary": "#48484A",
-      "border": "#38383A",
-      "separator": "#38383A",
-      "success": "#30D158",
-      "warning": "#FF9F0A",
-      "error": "#FF453A",
-      "info": "#0A84FF",
-      "gradientStart": "rgba(51,77,153,0.90)",
-      "gradientEnd": "rgba(102,51,128,0.90)",
-      "badgeBackground": "#333340",
-      "badgeText": "#EBEBF5",
-      "fabBackground": "#0A84FF",
-      "unreadDot": "#0A84FF",
-      "navigationBarBackground": "#000000",
-      "tabBarBackground": "#000000",
-      "overlay": "rgba(0,0,0,0.6)"
+      "background": "#0B0D10",
+      "surface": "#13171D",
+      "surfaceElevated": "#191E26",
+      "cardBackground": "#171C23",
+      "text": "#F4F7FB",
+      "textSecondary": "#A8B1C0",
+      "textTertiary": "#727D8E",
+      "placeholder": "#667085",
+      "border": "#2A323D",
+      "separator": "#232A34",
+      "primary": "#60A5FA",
+      "primaryPressed": "#3B82F6",
+      "primarySoft": "rgba(96,165,250,0.14)",
+      "accent": "#A78BFA",
+      "accentSoft": "rgba(167,139,250,0.14)",
+      "success": "#4ADE80",
+      "successSoft": "rgba(74,222,128,0.13)",
+      "warning": "#FBBF24",
+      "warningSoft": "rgba(251,191,36,0.14)",
+      "error": "#F87171",
+      "errorSoft": "rgba(248,113,113,0.14)",
+      "info": "#2DD4BF",
+      "infoSoft": "rgba(45,212,191,0.13)",
+      "offline": "#94A3B8",
+      "offlineSoft": "rgba(148,163,184,0.13)",
+      "navigationBarBackground": "#0B0D10",
+      "tabBarBackground": "#10141A",
+      "overlay": "rgba(0,0,0,0.58)",
+      "shadow": "rgba(0,0,0,0.30)"
     }
   },
 
   "typography": {
-    "largeTitle": { "size": 28, "weight": "bold", "tracking": 0 },
-    "title1":     { "size": 28, "weight": "bold", "tracking": 0 },
-    "title2":     { "size": 22, "weight": "bold", "tracking": 0 },
-    "title3":     { "size": 20, "weight": "semibold", "tracking": 0 },
-    "headline":   { "size": 17, "weight": "semibold", "tracking": -0.4 },
-    "body":       { "size": 17, "weight": "regular", "tracking": -0.4 },
-    "callout":    { "size": 16, "weight": "regular", "tracking": -0.3 },
-    "subheadline":{ "size": 15, "weight": "regular", "tracking": -0.2 },
-    "footnote":   { "size": 13, "weight": "regular", "tracking": -0.1 },
-    "caption1":   { "size": 12, "weight": "regular", "tracking": 0 },
-    "caption2":   { "size": 11, "weight": "regular", "tracking": 0.1 }
+    "screenTitle": { "size": 28, "weight": "bold", "tracking": 0, "maxLines": 1 },
+    "compactTitle": { "size": 24, "weight": "bold", "tracking": 0, "maxLines": 1 },
+    "sectionTitle": { "size": 17, "weight": "semibold", "tracking": 0, "maxLines": 1 },
+    "rowTitle": { "size": 17, "weight": "regular", "tracking": 0, "maxLines": 1 },
+    "cardTitle": { "size": 16, "weight": "semibold", "tracking": 0, "maxLines": 2 },
+    "body": { "size": 15, "weight": "regular", "tracking": 0, "maxLines": 3 },
+    "metadata": { "size": 13, "weight": "regular", "tracking": 0, "maxLines": 1 },
+    "caption": { "size": 12, "weight": "regular", "tracking": 0, "maxLines": 1 },
+    "tabLabel": { "size": 11, "weight": "medium", "tracking": 0, "maxLines": 1 },
+    "button": { "size": 15, "weight": "semibold", "tracking": 0, "maxLines": 1 },
+    "monospaceMeta": { "size": 12, "weight": "regular", "tracking": 0, "maxLines": 1 }
   },
 
   "spacing": {
+    "xxs": 2,
     "xs": 4,
     "sm": 8,
-    "md": 16,
-    "lg": 24,
-    "xl": 32,
-    "xxl": 48
+    "md": 12,
+    "lg": 16,
+    "xl": 20,
+    "xxl": 24,
+    "section": 32,
+    "screenHorizontal": 16,
+    "screenTop": 12,
+    "screenBottom": 24
   },
 
   "cornerRadius": {
-    "xs": 2,
-    "sm": 4,
+    "xs": 4,
+    "sm": 6,
     "md": 8,
-    "lg": 12,
-    "xl": 16,
-    "xxl": 20,
+    "row": 10,
+    "card": 12,
+    "sheet": 16,
     "full": 999
   },
 
-  "shadows": {
-    "card":    { "color": "black", "opacity": 0.08, "offsetX": 0, "offsetY": 4, "radius": 12 },
-    "fab":     { "color": "black", "opacity": 0.30, "offsetX": 0, "offsetY": 4, "radius": 8 },
-    "navBar":  { "color": "black", "opacity": 0.03, "offsetX": 0, "offsetY": 2, "radius": 8 },
-    "modal":   { "color": "black", "opacity": 0.15, "offsetX": 0, "offsetY": 8, "radius": 24 },
-    "tooltip": { "color": "black", "opacity": 0.12, "offsetX": 0, "offsetY": 2, "radius": 4 }
+  "icon": {
+    "xs": 14,
+    "sm": 16,
+    "md": 20,
+    "lg": 24,
+    "empty": 48,
+    "tab": 23,
+    "settings": 20,
+    "quickAction": 22,
+    "chevron": 16
   },
 
-  "opacity": {
-    "disabled": 0.3,
-    "hover": 0.8,
-    "pressed": 0.6,
-    "placeholder": 0.4,
-    "badge": 0.12,
-    "overlay": 0.4
-  },
-
-  "animation": {
-    "fast":   { "duration": 0.15, "curve": "easeInOut" },
-    "normal": { "duration": 0.25, "curve": "easeInOut" },
-    "slow":   { "duration": 0.35, "curve": "easeInOut" },
-    "spring": { "duration": 0.30, "damping": 0.8, "curve": "spring" },
-    "modal":  { "duration": 0.50, "curve": "easeInOut" }
-  },
-
-  "icons": {
-    "sizes": {
-      "xs": 12,
-      "sm": 16,
-      "md": 20,
-      "lg": 24,
-      "xl": 32,
-      "xxl": 48
+  "componentContracts": {
+    "screen": {
+      "horizontalInset": 16,
+      "interSectionSpacing": 24,
+      "safeAreaRequired": true
     },
-    "weights": {
-      "light": "light",
-      "regular": "regular",
-      "medium": "medium",
-      "semibold": "semibold",
-      "bold": "bold"
+    "tabBar": {
+      "height": 56,
+      "iconSize": 23,
+      "labelSize": 11,
+      "contentTopPadding": 6,
+      "mustNotOverlapScrollContent": true
+    },
+    "settingsRow": {
+      "minHeight": 52,
+      "maxHeight": 60,
+      "iconBox": 32,
+      "iconSize": 20,
+      "chevronSize": 16,
+      "horizontalPadding": 16,
+      "titleMaxLines": 1
+    },
+    "searchField": {
+      "height": 42,
+      "cornerRadius": 10,
+      "iconSize": 18,
+      "horizontalPadding": 12
+    },
+    "filterPill": {
+      "height": 32,
+      "horizontalPadding": 14,
+      "minWidth": 56
+    },
+    "actionTile": {
+      "height": 72,
+      "minWidth": 72,
+      "iconSize": 22,
+      "titleMaxLines": 1
+    },
+    "resourceCard": {
+      "minHeight": 92,
+      "maxHeight": 116,
+      "iconSize": 22,
+      "titleMaxLines": 2,
+      "metadataMaxLines": 1
+    },
+    "messageCell": {
+      "minHeight": 72,
+      "maxHeight": 96,
+      "titleMaxLines": 1,
+      "bodyMaxLines": 2
+    },
+    "emptyState": {
+      "iconSize": 48,
+      "titleSize": 17,
+      "bodySize": 13,
+      "maxWidth": 280,
+      "requiresPrimaryAction": true
+    },
+    "tapTarget": {
+      "minimumWidth": 44,
+      "minimumHeight": 44
     }
   },
 
-  "breakpoints": {
-    "compact": 320,
-    "regular": 375,
-    "large": 428
+  "shadows": {
+    "none": { "opacity": 0, "offsetX": 0, "offsetY": 0, "radius": 0 },
+    "card": { "color": "shadow", "opacity": 1, "offsetX": 0, "offsetY": 2, "radius": 8 },
+    "floatingAction": { "color": "shadow", "opacity": 1, "offsetX": 0, "offsetY": 8, "radius": 18 },
+    "sheet": { "color": "shadow", "opacity": 1, "offsetX": 0, "offsetY": 12, "radius": 28 }
+  },
+
+  "opacity": {
+    "disabled": 0.36,
+    "pressed": 0.72,
+    "separator": 0.72,
+    "badgeFill": 0.14,
+    "scrim": 0.42
+  },
+
+  "animation": {
+    "fast": { "duration": 0.12, "curve": "easeInOut" },
+    "normal": { "duration": 0.22, "curve": "easeInOut" },
+    "spring": { "duration": 0.32, "damping": 0.84, "curve": "spring" },
+    "sheet": { "duration": 0.36, "damping": 0.88, "curve": "spring" }
   }
 }

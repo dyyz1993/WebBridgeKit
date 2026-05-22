@@ -23,13 +23,13 @@ public final class EngineBootstrap {
         isInitialized = true
 
         #if DEBUG
-        print("🚀 [EngineBootstrap] Starting engine initialization...")
+        print("[LAUNCH] [EngineBootstrap] Starting engine initialization...")
         #endif
 
         await bootstrapTheme(in: window)
 
         #if DEBUG
-        print("  ✅ Cache Engine: using WebBridgeKit CacheManager")
+        print("  [OK] Cache Engine: using WebBridgeKit CacheManager")
         #endif
 
         await bootstrapMessage()
@@ -41,11 +41,11 @@ public final class EngineBootstrap {
         await bootstrapCommandParser()
 
         #if DEBUG
-        print("  ✅ Bridge Engine: using WebBridgeKit HandlerRegistry")
+        print("  [OK] Bridge Engine: using WebBridgeKit HandlerRegistry")
         #endif
 
         #if DEBUG
-        print("🚀 [EngineBootstrap] All engines initialized!")
+        print("[LAUNCH] [EngineBootstrap] All engines initialized!")
         #endif
     }
 
@@ -67,7 +67,7 @@ public final class EngineBootstrap {
         }
 
         #if DEBUG
-        print("  ✅ Theme Engine: initialized with '\(theme.name)' theme")
+        print("  [OK] Theme Engine: initialized with '\(theme.name)' theme")
         #endif
     }
 
@@ -79,7 +79,7 @@ public final class EngineBootstrap {
         let persistentStore = UserDefaultsMessageStore(key: "SuperCache_Messages")
         await engine.setStore(persistentStore)
         #if DEBUG
-        print("  ✅ Message Engine: UserDefaults persistent store configured")
+        print("  [OK] Message Engine: UserDefaults persistent store configured")
         #endif
 
         let barkServerURL = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
@@ -89,18 +89,18 @@ public final class EngineBootstrap {
             let barkChannel = BarkChannel(serverURL: barkServerURL, key: barkKey)
             await engine.registerChannel(barkChannel)
             #if DEBUG
-            print("  ✅ Message Engine: Bark channel registered (server: \(barkServerURL))")
+            print("  [OK] Message Engine: Bark channel registered (server: \(barkServerURL))")
             #endif
         } else {
             #if DEBUG
-            print("  ⚠️ Message Engine: Bark channel skipped (no key configured)")
+            print("  [WARN] Message Engine: Bark channel skipped (no key configured)")
             #endif
         }
 
         let webhookChannel = WebhookChannel()
         await engine.registerChannel(webhookChannel)
         #if DEBUG
-        print("  ✅ Message Engine: Webhook channel registered")
+        print("  [OK] Message Engine: Webhook channel registered")
         #endif
 
         let pipeline = MessageProcessorPipeline()
@@ -112,7 +112,7 @@ public final class EngineBootstrap {
         await pipeline.register(MuteProcessor())
         await engine.setPipeline(pipeline)
         #if DEBUG
-        print("  ✅ Message Engine: Processor pipeline configured (6 processors)")
+        print("  [OK] Message Engine: Processor pipeline configured (6 processors)")
         #endif
 
         await engine.setOnMessageReceived { storedMessage in
@@ -142,7 +142,7 @@ public final class EngineBootstrap {
 
         let channelCount = await engine.getRegisteredChannels().count
         #if DEBUG
-        print("  ✅ Message Engine: initialized with \(channelCount) channels")
+        print("  [OK] Message Engine: initialized with \(channelCount) channels")
         #endif
     }
 
@@ -163,11 +163,11 @@ public final class EngineBootstrap {
         do {
             try await server.start()
             #if DEBUG
-            print("  ✅ AI Engine: HTTP server started on port 8765")
+            print("  [OK] AI Engine: HTTP server started on port 8765")
             #endif
         } catch {
             #if DEBUG
-            print("  ⚠️ AI Engine: Failed to start HTTP server: \(error)")
+            print("  [WARN] AI Engine: Failed to start HTTP server: \(error)")
             #endif
         }
     }
@@ -182,17 +182,17 @@ public final class EngineBootstrap {
             // AgentSchema now delegates to SkillRegistry.shared
             let capabilities = await AgentSchema.shared.getFullSchema()
             #if DEBUG
-            print("  ✅ Skills: \(capabilities.count) framework capabilities registered (via SkillRegistry)")
+            print("  [OK] Skills: \(capabilities.count) framework capabilities registered (via SkillRegistry)")
             #endif
 
             let categories = await AgentSchema.shared.getCategories()
             let tags = await AgentSchema.shared.getTags()
             #if DEBUG
-            print("  ✅ Skills: \(categories.count) categories, \(tags.count) tags indexed")
+            print("  [OK] Skills: \(categories.count) categories, \(tags.count) tags indexed")
             #endif
         } catch {
             #if DEBUG
-            print("  ⚠️ Skills: Failed to register capabilities - \(error)")
+            print("  [WARN] Skills: Failed to register capabilities - \(error)")
             #endif
         }
     }
@@ -209,7 +209,7 @@ public final class EngineBootstrap {
         )
         await CommandParser.shared.setConfiguration(config)
         #if DEBUG
-        print("  ✅ CommandParser Engine: initialized (clipboard monitoring active)")
+        print("  [OK] CommandParser Engine: initialized (clipboard monitoring active)")
         #endif
     }
 
@@ -258,7 +258,7 @@ public final class EngineBootstrap {
         let engine = MessageEngine.shared
         await engine.stopAll()
         #if DEBUG
-        print("🛑 [EngineBootstrap] All engines stopped")
+        print("[EMOJI] [EngineBootstrap] All engines stopped")
         #endif
     }
 }

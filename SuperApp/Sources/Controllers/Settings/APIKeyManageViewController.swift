@@ -60,7 +60,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
 
     private let permanentKeyValue: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium)
+        label.font = ThemeTokens.Typography.monospaceLargeMedium
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.adjustsFontSizeToFitWidth = true
@@ -169,7 +169,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let barkKeyTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = L10n.tr("apikey.manage.bark_key_placeholder")
-        tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        tf.font = ThemeTokens.Typography.monospaceLarge
         tf.borderStyle = .none
         tf.backgroundColor = ThemeTokens.Color.background
         tf.layer.cornerRadius = ThemeTokens.CornerRadius.md
@@ -182,7 +182,7 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
     private let barkServerTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = L10n.tr("apikey.manage.bark_server_placeholder")
-        tf.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        tf.font = ThemeTokens.Typography.monospaceLarge
         tf.borderStyle = .none
         tf.backgroundColor = ThemeTokens.Color.background
         tf.layer.cornerRadius = ThemeTokens.CornerRadius.md

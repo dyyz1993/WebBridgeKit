@@ -53,7 +53,7 @@ public class DebugPanelViewController: UIViewController {
     // MARK: - UI Setup
 
     private func setupUI() {
-        title = "🧠 Handlers"
+        title = "[BRAIN] Handlers"
         view.backgroundColor = ThemeTokens.Color.background
 
         view.addSubview(tableView)
@@ -148,7 +148,7 @@ extension DebugPanelViewController: UITableViewDataSource {
         config.imageProperties.tintColor = ThemeTokens.Color.textTertiary
 
         if !handler.requiredPermissions.isEmpty {
-            config.secondaryText = "\(handler.action) 🔐"
+            config.secondaryText = "\(handler.action) [AUTH]"
         }
 
         cell.contentConfiguration = config

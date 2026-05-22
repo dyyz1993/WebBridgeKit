@@ -147,14 +147,14 @@ public class LazyManifestLoader: NSObject {
             let isOffline = !NetworkMonitor.shared.isConnected
 
             if isOffline && !forceRefresh {
-                shared.postLog("📡 [离线检测] 设备离线，尝试从本地缓存加载")
+                shared.postLog("[SATELLITE] [离线检测] 设备离线，尝试从本地缓存加载")
 
                 let loaded = shared.tryLoadFromCache(url: url, in: webView) { result in
                     completion(result)
                 }
 
                 if !loaded {
-                    shared.postLog("❌ [离线检测] 未找到本地缓存，显示离线提示页")
+                    shared.postLog("[FAIL] [离线检测] 未找到本地缓存，显示离线提示页")
                     DispatchQueue.main.async {
                         shared.loadOfflineErrorPage(url: url, in: webView)
                     }
@@ -165,17 +165,17 @@ public class LazyManifestLoader: NSObject {
 
             do {
                 if forceRefresh {
-                    shared.postLog("🔄 [强制刷新] 绕过缓存，重新下载所有内容")
+                    shared.postLog("[SYNC] [强制刷新] 绕过缓存，重新下载所有内容")
                 }
-                shared.postLog("🔍 [智能加载] 正在检查 manifest.json...")
+                shared.postLog("[SEARCH] [智能加载] 正在检查 manifest.json...")
                 let manifest = try await shared.fetchManifestSync(from: url)
-                shared.postLog("📋 [智能加载] Manifest 已加载")
+                shared.postLog("[LIST] [智能加载] Manifest 已加载")
                 shared.postLog("   版本: \(manifest.version ?? "无")")
                 shared.postLog("   持久化: \(manifest.persistent)")
                 shared.postLog("   资源数量: \(manifest.resources.count)")
 
                 if manifest.persistent {
-                    shared.postLog("💾 [智能加载] 选择持久化模式")
+                    shared.postLog("[SAVE] [智能加载] 选择持久化模式")
                     guard let viewController = viewController else {
                         completion(.failure(LazyLoadError.manifestDownloadFailed(NSError(
                             domain: "LazyManifestLoader",
@@ -192,18 +192,18 @@ public class LazyManifestLoader: NSObject {
                         completion(result)
                     }
                 } else {
-                    shared.postLog("⚡ [智能加载] 选择懒加载模式")
+                    shared.postLog("[FAST] [智能加载] 选择懒加载模式")
                     shared.loadInternal(url: url, in: webView, manifest: manifest, forceRefresh: forceRefresh, completion: completion)
                 }
             } catch {
-                shared.postLog("⚠️ [智能加载] 未找到 manifest.json，尝试本地缓存")
+                shared.postLog("[WARN] [智能加载] 未找到 manifest.json，尝试本地缓存")
 
                 let loaded = shared.tryLoadFromCache(url: url, in: webView) { result in
                     completion(result)
                 }
 
                 if !loaded {
-                    shared.postLog("⚠️ [智能加载] 本地也无缓存，回退到普通 WebView 加载")
+                    shared.postLog("[WARN] [智能加载] 本地也无缓存，回退到普通 WebView 加载")
                     DispatchQueue.main.async {
                         if url.isFileURL {
                             webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
@@ -244,10 +244,10 @@ public class LazyManifestLoader: NSObject {
     ) {
         let initialCacheID = generateCacheID(for: url)
 
-        postLog("🔄 [加载流程] URL: \(url.absoluteString)")
+        postLog("[SYNC] [加载流程] URL: \(url.absoluteString)")
         postLog("   Initial Cache ID: \(initialCacheID)")
         if forceRefresh {
-            postLog("   🔄 强制刷新模式：绕过缓存")
+            postLog("   [SYNC] 强制刷新模式：绕过缓存")
         }
 
         let handleManifest: (WebManifest) -> Void = { [weak self] manifest in
@@ -256,7 +256,7 @@ public class LazyManifestLoader: NSObject {
                 return
             }
 
-            self.postLog("📋 [Manifest] 版本: \(manifest.version ?? "无"), 资源数: \(manifest.resources.count), 持久化: \(manifest.persistent)")
+            self.postLog("[LIST] [Manifest] 版本: \(manifest.version ?? "无"), 资源数: \(manifest.resources.count), 持久化: \(manifest.persistent)")
 
             // 使用 AppID 生成最终的 cache ID
             let cacheID = self.generateCacheID(for: url, manifest: manifest)
@@ -270,10 +270,10 @@ public class LazyManifestLoader: NSObject {
                 let currentVersion = manifest.resolvedVersion
                 let cachedVersion = cachedManifest?.version ?? "unknown"
 
-                self.postLog("🔍 [缓存检查] 发现缓存 HTML (版本: \(cachedVersion))")
+                self.postLog("[SEARCH] [缓存检查] 发现缓存 HTML (版本: \(cachedVersion))")
 
                 if currentVersion != cachedVersion {
-                    self.postLog("🔄 [版本变化] \(cachedVersion) -> \(currentVersion), 清除旧缓存重新下载")
+                    self.postLog("[SYNC] [版本变化] \(cachedVersion) -> \(currentVersion), 清除旧缓存重新下载")
                     // 清除旧缓存
                     self.manifestCacheManager.removeCache(for: cacheID)
                     // 继续下载新的 HTML
@@ -283,7 +283,7 @@ public class LazyManifestLoader: NSObject {
 
                 // 检查缓存 HTML 的大小
                 let cachedSize = cachedHTML.count
-                self.postLog("♻️ [缓存命中] 使用缓存 HTML (版本: \(currentVersion), 大小: \(cachedSize) chars)")
+                self.postLog("[RECYCLE] [缓存命中] 使用缓存 HTML (版本: \(currentVersion), 大小: \(cachedSize) chars)")
 
                 // 从缓存加载
                 self.manifestCacheManager.loadHTML(cachedHTML, into: webView)
@@ -300,9 +300,9 @@ public class LazyManifestLoader: NSObject {
                 // ✅ FIX: 从缓存加载时也需要设置 pageKey
                 if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: self.scheme) as? ManifestURLSchemeHandler {
                     schemeHandler.setPageKey(cacheID, for: webView)
-                    self.postLog("✅ [pageKey] 已设置 '\(cacheID)'")
+                    self.postLog("[OK] [pageKey] 已设置 '\(cacheID)'")
                 } else {
-                    self.postLog("⚠️ [pageKey] ManifestURLSchemeHandler 未找到")
+                    self.postLog("[WARN] [pageKey] ManifestURLSchemeHandler 未找到")
                 }
 
                 completion(.success(()))
@@ -310,20 +310,20 @@ public class LazyManifestLoader: NSObject {
             }
 
             if forceRefresh {
-                self.postLog("🔄 [强制刷新] 清除旧缓存，重新下载")
+                self.postLog("[SYNC] [强制刷新] 清除旧缓存，重新下载")
                 self.manifestCacheManager.removeCache(for: cacheID)
             } else {
-                self.postLog("📭 [缓存未命中] 无缓存 HTML，开始下载")
+                self.postLog("[EMOJI] [缓存未命中] 无缓存 HTML，开始下载")
             }
 
             // 3. 根据 persistent 决定加载策略
             if !manifest.persistent {
                 // 懒加载模式：立即加载 HTML，后台下载资源
-                self.postLog("⚡ [加载模式] 懒加载（立即显示 HTML）")
+                self.postLog("[FAST] [加载模式] 懒加载（立即显示 HTML）")
                 self.lazyLoad(url: url, manifest: manifest, cacheID: cacheID, webView: webView, completion: completion)
             } else {
                 // 持久化模式：等待所有资源下载完成
-                self.postLog("💾 [加载模式] 持久化（等待资源下载）")
+                self.postLog("[SAVE] [加载模式] 持久化（等待资源下载）")
                 self.persistentLoad(url: url, manifest: manifest, cacheID: cacheID, webView: webView, completion: completion)
             }
         }
@@ -337,7 +337,7 @@ public class LazyManifestLoader: NSObject {
                 case .success(let manifest):
                     handleManifest(manifest)
                 case .failure(let error):
-                    NSLog("❌ [LazyManifestLoader] Failed to download manifest: %@", error.localizedDescription)
+                    NSLog("[FAIL] [LazyManifestLoader] Failed to download manifest: %@", error.localizedDescription)
                     completion(.failure(error))
                 }
             }
@@ -356,11 +356,11 @@ public class LazyManifestLoader: NSObject {
 
         let persistentLoader = PersistentManifestLoader.shared
         if persistentLoader.isCached(url: url) {
-            postLog("♻️ [离线回退] 发现本地持久化缓存: \(cacheID)")
+            postLog("[RECYCLE] [离线回退] 发现本地持久化缓存: \(cacheID)")
             persistentLoader.loadFromCache(url: url, in: webView) { [weak self] result in
                 switch result {
                 case .success:
-                    self?.postLog("✅ [离线回退] 从本地缓存加载成功")
+                    self?.postLog("[OK] [离线回退] 从本地缓存加载成功")
                     DispatchQueue.main.async {
                         NotificationCenter.default.post(
                             name: .manifestCacheHit,
@@ -370,7 +370,7 @@ public class LazyManifestLoader: NSObject {
                     }
                     completion(.success(()))
                 case .failure(let error):
-                    self?.postLog("❌ [离线回退] 本地缓存加载失败: \(error.localizedDescription)")
+                    self?.postLog("[FAIL] [离线回退] 本地缓存加载失败: \(error.localizedDescription)")
                     completion(.failure(error))
                 }
             }
@@ -378,7 +378,7 @@ public class LazyManifestLoader: NSObject {
         }
 
         if let cachedHTML = manifestCacheManager.getCachedHTML(for: cacheID) {
-            postLog("♻️ [离线回退] 发现内存缓存: \(cacheID)")
+            postLog("[RECYCLE] [离线回退] 发现内存缓存: \(cacheID)")
             manifestCacheManager.loadHTML(cachedHTML, into: webView)
             if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: scheme) as? ManifestURLSchemeHandler {
                 schemeHandler.setPageKey(cacheID, for: webView)
@@ -439,7 +439,7 @@ public class LazyManifestLoader: NSObject {
     }
 
     private func postLog(_ message: String) {
-        NSLog("🌐 [LazyLoader] %@", message)
+        NSLog("[WEB] [LazyLoader] %@", message)
         DispatchQueue.main.async {
             NotificationCenter.default.post(
                 name: .resourceLogNotification,
@@ -457,16 +457,16 @@ public class LazyManifestLoader: NSObject {
         }
 
         let manifestURL = baseURL.appendingPathComponent(manifestFileName)
-        NSLog("🌐 [LazyLoader] 正在尝试下载 Manifest: %@", manifestURL.absoluteString)
+        NSLog("[WEB] [LazyLoader] 正在尝试下载 Manifest: %@", manifestURL.absoluteString)
         do {
             let (data, response) = try await urlSession.data(from: manifestURL)
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-                NSLog("❌ [LazyLoader] Manifest 下载失败，状态码: %d", httpResponse.statusCode)
+                NSLog("[FAIL] [LazyLoader] Manifest 下载失败，状态码: %d", httpResponse.statusCode)
                 throw LazyLoadError.manifestDownloadFailed(NSError(domain: "LazyManifestLoader", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(httpResponse.statusCode)"]))
             }
             return try JSONDecoder().decode(WebManifest.self, from: data)
         } catch {
-            NSLog("❌ [LazyLoader] Manifest 处理失败: %@", error.localizedDescription)
+            NSLog("[FAIL] [LazyLoader] Manifest 处理失败: %@", error.localizedDescription)
             throw error
         }
     }
@@ -559,7 +559,7 @@ public class LazyManifestLoader: NSObject {
                 let mimeType = response.mimeType ?? "application/octet-stream"
                 let resource = ResourceData(relativePath: relativePath, data: data, mimeType: mimeType)
                 ResourceCache.shared.set(resource, for: pageKey)
-                self.postLog("✅ [资源下载] 已缓存: \(relativePath)")
+                self.postLog("[OK] [资源下载] 已缓存: \(relativePath)")
 
                 // ✅ 资源下载完成后通知 UI 刷新，以便更新缓存大小显示
                 DispatchQueue.main.async {

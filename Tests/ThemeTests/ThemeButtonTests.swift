@@ -1,6 +1,15 @@
 import XCTest
 @testable import WebBridgeKit
 
+private func assertColorsEqual(_ actual: UIColor?, _ expected: UIColor?, file: StaticString = #file, line: UInt = #line) {
+    guard let actual = actual, let expected = expected else {
+        XCTAssertEqual(actual, expected, file: file, line: line)
+        return
+    }
+    let trait = UITraitCollection(userInterfaceStyle: .light)
+    XCTAssertEqual(actual.resolvedColor(with: trait), expected.resolvedColor(with: trait), file: file, line: line)
+}
+
 final class ThemeButtonTests: XCTestCase {
 
     // MARK: - Initialization
@@ -25,7 +34,7 @@ final class ThemeButtonTests: XCTestCase {
         button.configure(title: "Primary", style: .primary)
 
         XCTAssertEqual(button.style, .primary)
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.primary)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.primary)
         XCTAssertEqual(button.titleColor(for: .normal), .white)
         XCTAssertEqual(button.layer.borderWidth, 0, "Primary style should have no border")
     }
@@ -35,8 +44,8 @@ final class ThemeButtonTests: XCTestCase {
         button.configure(title: "Secondary", style: .secondary)
 
         XCTAssertEqual(button.style, .secondary)
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.surface)
-        XCTAssertEqual(button.titleColor(for: .normal), ThemeColors.current.text)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.surface)
+        assertColorsEqual(button.titleColor(for: .normal), ThemeTokens.Color.text)
         XCTAssertEqual(button.layer.borderWidth, 1, "Secondary style should have border")
         XCTAssertNotNil(button.layer.borderColor)
     }
@@ -47,7 +56,7 @@ final class ThemeButtonTests: XCTestCase {
 
         XCTAssertEqual(button.style, .ghost)
         XCTAssertEqual(button.backgroundColor, .clear)
-        XCTAssertEqual(button.titleColor(for: .normal), ThemeColors.current.primary)
+        assertColorsEqual(button.titleColor(for: .normal), ThemeTokens.Color.primary)
         XCTAssertEqual(button.layer.borderWidth, 1, "Ghost style should have border")
         XCTAssertNotNil(button.layer.borderColor)
     }
@@ -116,7 +125,7 @@ final class ThemeButtonTests: XCTestCase {
         button.configure(icon: .check, style: .primary)
 
         XCTAssertNotNil(button.image(for: .normal))
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.primary)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.primary)
     }
 
     func testConfigureIconWithSecondaryStyle() {
@@ -124,7 +133,7 @@ final class ThemeButtonTests: XCTestCase {
         button.configure(icon: .plus, style: .secondary)
 
         XCTAssertNotNil(button.image(for: .normal))
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.surface)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.surface)
     }
 
     // MARK: - Border Configuration
@@ -142,7 +151,8 @@ final class ThemeButtonTests: XCTestCase {
 
         XCTAssertEqual(button.layer.borderWidth, 1)
         XCTAssertNotNil(button.layer.borderColor)
-        XCTAssertEqual(button.layer.borderColor, ThemeColors.current.border.cgColor)
+        let trait = UITraitCollection(userInterfaceStyle: .light)
+        XCTAssertEqual(button.layer.borderColor, ThemeTokens.Color.border.resolvedColor(with: trait).cgColor)
     }
 
     func testGhostStyleHasBorder() {
@@ -151,7 +161,8 @@ final class ThemeButtonTests: XCTestCase {
 
         XCTAssertEqual(button.layer.borderWidth, 1)
         XCTAssertNotNil(button.layer.borderColor)
-        XCTAssertEqual(button.layer.borderColor, ThemeColors.current.primary.withAlphaComponent(0.3).cgColor)
+        let trait = UITraitCollection(userInterfaceStyle: .light)
+        XCTAssertEqual(button.layer.borderColor, ThemeTokens.Color.primary.withAlphaComponent(0.3).resolvedColor(with: trait).cgColor)
     }
 
     func testBorderRemovesOnStyleChangeToPrimary() {
@@ -203,13 +214,13 @@ final class ThemeButtonTests: XCTestCase {
     func testSecondaryStyleTextColor() {
         let button = ThemeButton(frame: .zero)
         button.configure(title: "Test", style: .secondary)
-        XCTAssertEqual(button.titleColor(for: .normal), ThemeColors.current.text)
+        assertColorsEqual(button.titleColor(for: .normal), ThemeTokens.Color.text)
     }
 
     func testGhostStyleTextColor() {
         let button = ThemeButton(frame: .zero)
         button.configure(title: "Test", style: .ghost)
-        XCTAssertEqual(button.titleColor(for: .normal), ThemeColors.current.primary)
+        assertColorsEqual(button.titleColor(for: .normal), ThemeTokens.Color.primary)
     }
 
     // MARK: - Background Color
@@ -217,13 +228,13 @@ final class ThemeButtonTests: XCTestCase {
     func testPrimaryStyleBackgroundColor() {
         let button = ThemeButton(frame: .zero)
         button.configure(title: "Test", style: .primary)
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.primary)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.primary)
     }
 
     func testSecondaryStyleBackgroundColor() {
         let button = ThemeButton(frame: .zero)
         button.configure(title: "Test", style: .secondary)
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.surface)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.surface)
     }
 
     func testGhostStyleBackgroundColor() {
@@ -270,11 +281,11 @@ final class ThemeButtonTests: XCTestCase {
 
         button.style = .ghost
         XCTAssertEqual(button.backgroundColor, .clear)
-        XCTAssertEqual(button.titleColor(for: .normal), ThemeColors.current.primary)
+        assertColorsEqual(button.titleColor(for: .normal), ThemeTokens.Color.primary)
         XCTAssertEqual(button.layer.borderWidth, 1)
 
         button.style = .primary
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.primary)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.primary)
         XCTAssertEqual(button.titleColor(for: .normal), .white)
         XCTAssertEqual(button.layer.borderWidth, 0)
     }
@@ -297,12 +308,12 @@ final class ThemeButtonTests: XCTestCase {
 
     func testSecondaryStyleBorderColorNotNil() {
         XCTAssertNotNil(ThemeButtonStyle.secondary.borderColor, "Secondary style should have border color")
-        XCTAssertEqual(ThemeButtonStyle.secondary.borderColor, ThemeColors.current.border)
+        assertColorsEqual(ThemeButtonStyle.secondary.borderColor, ThemeTokens.Color.border)
     }
 
     func testGhostStyleBorderColorNotNil() {
         XCTAssertNotNil(ThemeButtonStyle.ghost.borderColor, "Ghost style should have border color")
-        XCTAssertEqual(ThemeButtonStyle.ghost.borderColor, ThemeColors.current.primary.withAlphaComponent(0.3))
+        assertColorsEqual(ThemeButtonStyle.ghost.borderColor, ThemeTokens.Color.primary.withAlphaComponent(0.3))
     }
 
     // MARK: - Edge Cases
@@ -338,6 +349,6 @@ final class ThemeButtonTests: XCTestCase {
     func testButtonPrimaryColorMatchesTheme() {
         let button = ThemeButton(frame: .zero)
         button.configure(title: "Test", style: .primary)
-        XCTAssertEqual(button.backgroundColor, ThemeColors.current.primary)
+        assertColorsEqual(button.backgroundColor, ThemeTokens.Color.primary)
     }
 }

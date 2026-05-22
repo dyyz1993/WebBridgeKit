@@ -44,7 +44,7 @@ public class ServerConfigManager {
             }
         } catch {
             #if DEBUG
-            print("⚠️ [ServerConfigManager] Failed to ensure default config: \(error)")
+            print("[WARN] [ServerConfigManager] Failed to ensure default config: \(error)")
             #endif
         }
     }
@@ -81,7 +81,7 @@ public class ServerConfigManager {
             realm?.add(config, update: .modified)
         }
 
-        WebBridgeLogger.shared.log(.info, "💾 Server config saved: \(config.serverType)")
+        WebBridgeLogger.shared.log(.info, "[SAVE] Server config saved: \(config.serverType)")
     }
 
     /// 获取当前激活的配置
@@ -104,7 +104,7 @@ public class ServerConfigManager {
             targetConfig?.updatedAt = Date()
         }
 
-        WebBridgeLogger.shared.log(.info, "✅ Config activated: \(id)")
+        WebBridgeLogger.shared.log(.info, "[OK] Config activated: \(id)")
     }
 
     /// 重置为默认配置
@@ -129,7 +129,7 @@ public class ServerConfigManager {
             realm.add(defaultConfig)
         }
 
-        WebBridgeLogger.shared.log(.info, "🔄 Reset to default server config")
+        WebBridgeLogger.shared.log(.info, "[SYNC] Reset to default server config")
     }
 
     /// 删除配置
@@ -138,7 +138,7 @@ public class ServerConfigManager {
 
         // 不允许删除默认配置
         if id == "default" {
-            WebBridgeLogger.shared.log(.warning, "⚠️ Cannot delete default config")
+            WebBridgeLogger.shared.log(.warning, "[WARN] Cannot delete default config")
             return
         }
 
@@ -148,7 +148,7 @@ public class ServerConfigManager {
             realm?.delete(config)
         }
 
-        WebBridgeLogger.shared.log(.info, "🗑️ Config deleted: \(id)")
+        WebBridgeLogger.shared.log(.info, "[DEL] Config deleted: \(id)")
     }
 
     /// 获取所有配置
@@ -182,7 +182,7 @@ public class ServerConfigManager {
         let task = URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    WebBridgeLogger.shared.log(.error, "❌ Connection test failed: \(error.localizedDescription)")
+                    WebBridgeLogger.shared.log(.error, "[FAIL] Connection test failed: \(error.localizedDescription)")
                     completion(false)
                     return
                 }
@@ -190,7 +190,7 @@ public class ServerConfigManager {
                 if let httpResponse = response as? HTTPURLResponse {
                     // 只要返回 200~399 范围内的状态码，认为服务是存活的
                     let isSuccess = (200...399).contains(httpResponse.statusCode)
-                    WebBridgeLogger.shared.log(.info, "🔍 Connection test result for \(url.absoluteString): \(isSuccess) (Status: \(httpResponse.statusCode))")
+                    WebBridgeLogger.shared.log(.info, "[SEARCH] Connection test result for \(url.absoluteString): \(isSuccess) (Status: \(httpResponse.statusCode))")
                     completion(isSuccess)
                 } else {
                     completion(false)
@@ -199,7 +199,7 @@ public class ServerConfigManager {
         }
         task.resume()
 
-        WebBridgeLogger.shared.log(.info, "🔍 Testing real connection: \(url.absoluteString)")
+        WebBridgeLogger.shared.log(.info, "[SEARCH] Testing real connection: \(url.absoluteString)")
     }
 
     /// 测试当前激活的服务器连接

@@ -20,14 +20,14 @@ class URLGridCell: UICollectionViewCell {
 
     private let iconContainer: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 22
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.avatar
         v.layer.masksToBounds = true
         return v
     }()
 
     private let iconGradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
-        layer.cornerRadius = 22
+        layer.cornerRadius = ThemeTokens.CornerRadius.avatar
         layer.startPoint = CGPoint(x: 0, y: 0)
         layer.endPoint = CGPoint(x: 1, y: 1)
         return layer
@@ -36,13 +36,13 @@ class URLGridCell: UICollectionViewCell {
     private let faviconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .white
+        iv.tintColor = ThemeTokens.Color.textOnColor
         return iv
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        label.font = ThemeTokens.Typography.cardTitle
         label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
@@ -51,7 +51,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let statusDot: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 3.5
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
         v.backgroundColor = ThemeTokens.Color.success
         return v
     }()
@@ -89,7 +89,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let tokenLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .medium)
+        label.font = ThemeTokens.Typography.monospaceMeta
         label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         return label
@@ -97,7 +97,7 @@ class URLGridCell: UICollectionViewCell {
 
     private let cacheTypeDot: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 3.5
+        v.layer.cornerRadius = ThemeTokens.CornerRadius.xs
         v.isHidden = true
         return v
     }()

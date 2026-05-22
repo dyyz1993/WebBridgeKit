@@ -130,7 +130,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             let error = "Command not allowed: \(action)"
             Log.error(error, category: .general)
             WebBridgeLogger.shared.log(.error, "[JS Bridge] \(error)")
-            StructuredLogger.shared.error("❌ [JS Bridge] Blocked unknown command: \(action)", category: .bridge)
+            StructuredLogger.shared.error("[FAIL] [JS Bridge] Blocked unknown command: \(action)", category: .bridge)
 
             // 添加到历史记录（标记为失败）
             let trace = CommandTraceEntry(
@@ -161,12 +161,6 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 添加到历史记录
         addCommandToHistory(trace)
 
-        // 输出到控制台
-        #if DEBUG
-        print("🌉 [JS Bridge] Received action: \(action), callbackId: \(callbackId ?? "nil")")
-        #endif
-
-        // 使用 getHandler 实现懒加载
         guard let handler = getHandler(for: action) else {
             WebBridgeLogger.shared.error("Unsupported action: \(action)")
             sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
@@ -300,7 +294,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 本地通知（非 APNs）
         handlerFactories["showNotification"] = { WebShowNotificationHandler() }
 
-        StructuredLogger.shared.debug("🌉 [JS Bridge] 已注册 \(handlerFactories.count) 个 Handler 工厂（懒加载模式）", category: .handler)
+        StructuredLogger.shared.debug("[BRIDGE] [JS Bridge] 已注册 \(handlerFactories.count) 个 Handler 工厂（懒加载模式）", category: .handler)
         StructuredLogger.shared.debug("   工厂列表: \(Array(handlerFactories.keys).sorted())", category: .handler)
     }
 
@@ -333,13 +327,10 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             if let webView = self.webView {
                 baseHandler.webView = webView
             } else {
-                #if DEBUG
-                print("⚠️ [JS Bridge] Warning: webView is nil when creating handler \(action). It will be set later in setWebView().")
-                #endif
             }
         }
 
-        StructuredLogger.shared.debug("♻️ [JS Bridge] 懒加载创建 Handler: \(action)", category: .handler)
+        StructuredLogger.shared.debug("[RECYCLE] [JS Bridge] 懒加载创建 Handler: \(action)", category: .handler)
         return handler
     }
 
@@ -364,11 +355,6 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         if let callbackId = callbackId {
             resultDict["callbackId"] = callbackId
         } else {
-            // 如果没有 callbackId，可能是主动推送或旧版兼容
-            // 在调试模式下记录
-            #if DEBUG
-            print("🌉 [JS Bridge] No callbackId for result: \(resultDict.keys)")
-            #endif
         }
 
         let script: String
@@ -450,7 +436,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             }
         }
 
-        StructuredLogger.shared.debug("🔗 [JS Bridge] WebView 已设置，已创建 \(createdHandlers.count) 个 Handler", category: .handler)
+        StructuredLogger.shared.debug("[LINK] [JS Bridge] WebView 已设置，已创建 \(createdHandlers.count) 个 Handler", category: .handler)
     }
 
     // MARK: - Command Trace History Management
@@ -468,7 +454,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             commandHistory.removeFirst()
         }
 
-        NSLog("📝 [JS Bridge] Added command to history: \(trace.action) (total: \(commandHistory.count))")
+        NSLog("[NOTE] [JS Bridge] Added command to history: \(trace.action) (total: \(commandHistory.count))")
     }
 
     /// 更新命令状态
@@ -493,13 +479,13 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             let logMessage: String
             switch status {
             case .succeeded:
-                logMessage = "✅ Command succeeded: \(action)"
+                logMessage = "[OK] Command succeeded: \(action)"
             case .failed:
-                logMessage = "❌ Command failed: \(action) - \(error ?? "Unknown error")"
+                logMessage = "[FAIL] Command failed: \(action) - \(error ?? "Unknown error")"
             case .executing:
                 logMessage = "⏳ Command executing: \(action)"
             case .received:
-                logMessage = "📥 Command received: \(action)"
+                logMessage = "[RECV] Command received: \(action)"
             }
 
             NSLog(logMessage)
@@ -523,7 +509,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         defer { historyLock.unlock() }
 
         commandHistory.removeAll()
-        NSLog("🗑️ [JS Bridge] Cleared command history")
+        NSLog("[DEL] [JS Bridge] Cleared command history")
     }
 
     /// 按操作名称筛选命令历史

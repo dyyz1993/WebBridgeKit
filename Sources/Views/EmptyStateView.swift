@@ -30,7 +30,7 @@ public class EmptyStateView: UIView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.headline
+        label.font = ThemeTokens.Typography.sectionTitle
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -40,7 +40,7 @@ public class EmptyStateView: UIView {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.subheadline
+        label.font = ThemeTokens.Typography.body
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -50,7 +50,7 @@ public class EmptyStateView: UIView {
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
+        label.font = ThemeTokens.Typography.metadata
         label.textColor = ThemeTokens.Color.textSecondary
         label.textAlignment = .center
         label.numberOfLines = 0

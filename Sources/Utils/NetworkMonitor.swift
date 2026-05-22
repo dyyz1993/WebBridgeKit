@@ -64,7 +64,7 @@ public class NetworkMonitor {
         defer { lock.unlock() }
 
         pathMonitor.start(queue: monitorQueue)
-        NSLog("🌐 [NetworkMonitor] Started monitoring network status")
+        NSLog("[WEB] [NetworkMonitor] Started monitoring network status")
     }
 
     /// Stop monitoring network status
@@ -73,7 +73,7 @@ public class NetworkMonitor {
         defer { lock.unlock() }
 
         pathMonitor.cancel()
-        NSLog( "🌐 [NetworkMonitor] Stopped monitoring network status")
+        NSLog( "[WEB] [NetworkMonitor] Stopped monitoring network status")
     }
 
     /// Add a callback for network status changes
@@ -86,7 +86,7 @@ public class NetworkMonitor {
         defer { lock.unlock() }
 
         statusChangeCallbacks.append(callback)
-        NSLog( "🌐 [NetworkMonitor] Added status change callback (total: \(statusChangeCallbacks.count))")
+        NSLog( "[WEB] [NetworkMonitor] Added status change callback (total: \(statusChangeCallbacks.count))")
     }
 
     /// Remove a specific callback
@@ -107,7 +107,7 @@ public class NetworkMonitor {
         defer { lock.unlock() }
 
         statusChangeCallbacks.removeAll()
-        NSLog( "🌐 [NetworkMonitor] Removed all status change callbacks")
+        NSLog( "[WEB] [NetworkMonitor] Removed all status change callbacks")
     }
 
     /// Check if currently on cellular network
@@ -171,7 +171,7 @@ public class NetworkMonitor {
                 // Log the change
                 let statusText = newIsConnected ? "Connected" : "Disconnected"
                 let typeText = self.getConnectionTypeText(newConnectionType)
-                NSLog( "🌐 [NetworkMonitor] Status changed: \(statusText) (\(typeText))")
+                NSLog( "[WEB] [NetworkMonitor] Status changed: \(statusText) (\(typeText))")
             }
             self.lock.unlock()
 
@@ -189,7 +189,7 @@ public class NetworkMonitor {
 
         let statusText = isConnected ? "Connected" : "Disconnected"
         let typeText = getConnectionTypeText(connectionType)
-        NSLog("🌐 [NetworkMonitor] Initial status: \(statusText) (\(typeText))")
+        NSLog("[WEB] [NetworkMonitor] Initial status: \(statusText) (\(typeText))")
     }
 
     /// Determine connection type from NWPath
@@ -252,7 +252,7 @@ public class NetworkMonitor {
             }
         }
 
-        NSLog( "🌐 [NetworkMonitor] Notified \(callbacks.count) callbacks")
+        NSLog( "[WEB] [NetworkMonitor] Notified \(callbacks.count) callbacks")
     }
 }
 
@@ -283,7 +283,7 @@ extension NetworkMonitor {
         }
 
         // Log connection type for tracking
-        NSLog( "🌐 [NetworkMonitor] Network check passed (type: \(getConnectionTypeText(type)))")
+        NSLog( "[WEB] [NetworkMonitor] Network check passed (type: \(getConnectionTypeText(type)))")
     }
 
     /// Check if cellular network and warn about data usage
@@ -292,7 +292,7 @@ extension NetworkMonitor {
         let isCellularConnection = isCellular()
 
         if isCellularConnection {
-            NSLog( "⚠️ [NetworkMonitor] Using cellular network - data charges may apply")
+            NSLog( "[WARN] [NetworkMonitor] Using cellular network - data charges may apply")
         }
 
         return isCellularConnection

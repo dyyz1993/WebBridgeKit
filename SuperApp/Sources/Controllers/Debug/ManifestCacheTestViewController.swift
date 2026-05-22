@@ -30,7 +30,7 @@ class ManifestCacheTestViewController: UIViewController {
     /// URL 输入容器
     private let urlInputContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }()
@@ -39,7 +39,7 @@ class ManifestCacheTestViewController: UIViewController {
         let label = UILabel()
         label.text = "测试 URL"
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
@@ -67,7 +67,7 @@ class ManifestCacheTestViewController: UIViewController {
         let label = UILabel()
         label.text = "缓存模式"
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.textSecondary
+        label.textColor = ThemeTokens.Color.textSecondary
         return label
     }()
 
@@ -83,8 +83,8 @@ class ManifestCacheTestViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("开始测试", for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.headline
-        button.backgroundColor = ThemeColors.current.primary
-        button.setTitleColor(ThemeColors.current.surface, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.primary
+        button.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
         button.accessibilityIdentifier = "manifest_test.start_button"
@@ -95,8 +95,8 @@ class ManifestCacheTestViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("清除缓存", for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.footnote
-        button.backgroundColor = ThemeColors.current.cardBackground
-        button.setTitleColor(ThemeColors.current.error, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.cardBackground
+        button.setTitleColor(ThemeTokens.Color.error, for: .normal)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.md
         button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
         button.accessibilityIdentifier = "manifest_test.clear_cache_button"
@@ -106,7 +106,7 @@ class ManifestCacheTestViewController: UIViewController {
     /// 统计信息
     private let statsContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }()
@@ -115,15 +115,15 @@ class ManifestCacheTestViewController: UIViewController {
         let label = UILabel()
         label.text = "缓存统计"
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
     private let statsLabel: UILabel = {
         let label = UILabel()
         label.text = "暂无数据"
-        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.monospaceMeta
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()
@@ -131,7 +131,7 @@ class ManifestCacheTestViewController: UIViewController {
     /// 日志输出
     private let logContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = ThemeColors.current.cardBackground
+        view.backgroundColor = ThemeTokens.Color.cardBackground
         view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return view
     }()
@@ -140,15 +140,15 @@ class ManifestCacheTestViewController: UIViewController {
         let label = UILabel()
         label.text = "操作日志"
         label.font = ThemeTokens.Typography.footnote
-        label.textColor = ThemeColors.current.text
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
 
     private let logTextView: UITextView = {
         let textView = UITextView()
-        textView.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
-        textView.textColor = ThemeColors.current.text
-        textView.backgroundColor = ThemeColors.current.background
+        textView.font = ThemeTokens.Typography.monospaceSmall
+        textView.textColor = ThemeTokens.Color.text
+        textView.backgroundColor = ThemeTokens.Color.background
         textView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         textView.isEditable = false
@@ -158,9 +158,9 @@ class ManifestCacheTestViewController: UIViewController {
 
     private let copyLogButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("📋 复制", for: .normal)
+        button.setTitle("复制", for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.caption1
-        button.setTitleColor(ThemeColors.current.primary, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
         button.accessibilityIdentifier = "manifest_test.copy_log_button"
         return button
@@ -168,9 +168,9 @@ class ManifestCacheTestViewController: UIViewController {
 
     private let clearLogButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("🗑️ 清空", for: .normal)
+        button.setTitle("清空", for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.caption1
-        button.setTitleColor(ThemeColors.current.error, for: .normal)
+        button.setTitleColor(ThemeTokens.Color.error, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
         button.accessibilityIdentifier = "manifest_test.clear_log_button"
         return button
@@ -192,7 +192,7 @@ class ManifestCacheTestViewController: UIViewController {
         super.viewDidLoad()
 
         title = "Manifest 缓存测试"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
 
         setupUI()
         setupActions()
@@ -206,8 +206,8 @@ class ManifestCacheTestViewController: UIViewController {
         urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
         #endif
 
-        addLog("📱 Manifest 缓存测试页面已加载")
-        addLog("🔧 支持两种模式：")
+        addLog("Manifest 缓存测试页面已加载")
+        addLog("支持两种模式：")
         addLog("   - 懒加载：立即加载 HTML，后台下载资源")
         addLog("   - 持久化：等待所有资源下载完成后加载")
 
@@ -407,11 +407,11 @@ class ManifestCacheTestViewController: UIViewController {
         case 0:
             // Manifest 测试
             urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
-            addLog("🔄 已选择: Manifest 测试 URL")
+            addLog("[SYNC] 已选择: Manifest 测试 URL")
         case 1:
             // 百度
             urlTextField.text = "https://www.baidu.com"
-            addLog("🔄 已选择: 百度（无 manifest，将回退到普通加载）")
+            addLog("[SYNC] 已选择: 百度（无 manifest，将回退到普通加载）")
         default:
             break
         }
@@ -438,41 +438,41 @@ class ManifestCacheTestViewController: UIViewController {
         startButton.setTitle("测试中...", for: .normal)
 
         addLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        addLog("🚀 开始测试")
-        addLog("📍 URL: \(url.absoluteString)")
+        addLog("[LAUNCH] 开始测试")
+        addLog("[PIN] URL: \(url.absoluteString)")
 
         // ✅ FIX: 使用 smartLoad 自动根据 manifest.persistent 选择模式
         // 不管用户选择什么，都以 manifest.json 的 persistent 字段为准
         let userSelectedMode = modeSegment.selectedSegmentIndex == 1 ? "持久化" : "懒加载"
-        addLog("📦 用户选择: \(userSelectedMode)")
-        addLog("📋 实际模式将根据 manifest.json 的 persistent 字段自动选择")
+        addLog("[CACHE] 用户选择: \(userSelectedMode)")
+        addLog("[LIST] 实际模式将根据 manifest.json 的 persistent 字段自动选择")
 
         // 使用 smartLoad 让系统自动选择正确的加载器
         testSmartLoad(url: url)
     }
 
     @objc private func clearCache() {
-        addLog("🗑️ 清除所有缓存...")
+        addLog("[DEL] 清除所有缓存...")
 
         // 0. 取消所有正在进行的下载
         LazyManifestLoader.shared.cancelAllDownloads()
-        addLog("   ⏸️ 已取消正在进行的下载")
+        addLog("   [PAUSE] 已取消正在进行的下载")
 
         // 1. 清除 Manifest 缓存
         manifestCacheManager.clearAll()
-        addLog("   ✅ Manifest 缓存已清除")
+        addLog("   [OK] Manifest 缓存已清除")
 
         // 2. 清除持久化缓存
         PersistentManifestLoader.shared.clearAllCache()
-        addLog("   ✅ 持久化缓存已清除")
+        addLog("   [OK] 持久化缓存已清除")
 
         // 3. 清除 WKWebView 系统缓存（关键！）
         let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
         WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: Date.distantPast) {
             DispatchQueue.main.async { [weak self] in
-                self?.addLog("   ✅ WKWebView 缓存已清除")
-                self?.addLog("✅ 所有缓存已清除")
-                self?.addLog("💡 提示：下次加载时会重新下载所有内容")
+                self?.addLog("   [OK] WKWebView 缓存已清除")
+                self?.addLog("[OK] 所有缓存已清除")
+                self?.addLog("[TIP] 提示：下次加载时会重新下载所有内容")
                 self?.updateStats()
             }
         }
@@ -490,10 +490,10 @@ class ManifestCacheTestViewController: UIViewController {
         }
 
         UIPasteboard.general.string = logText
-        addLog("✅ 日志已复制到剪贴板")
+        addLog("[OK] 日志已复制到剪贴板")
 
         // 显示简短提示
-        let alert = UIAlertController(title: "✅", message: "日志已复制", preferredStyle: .alert)
+        let alert = UIAlertController(title: nil, message: "日志已复制", preferredStyle: .alert)
         present(alert, animated: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             alert.dismiss(animated: true)
@@ -537,10 +537,6 @@ class ManifestCacheTestViewController: UIViewController {
                     self.logTextView.setContentOffset(bottomOffset, animated: false)
                 }
             }
-
-            #if DEBUG
-            print(logLine)
-            #endif
         }
 
         if Thread.isMainThread {

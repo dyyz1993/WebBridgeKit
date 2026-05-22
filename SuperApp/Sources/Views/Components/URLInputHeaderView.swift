@@ -20,7 +20,7 @@ class URLInputHeaderView: UICollectionReusableView {
     private let containerStack: UIStackView = {
         let sv = UIStackView()
         sv.axis = .horizontal
-        sv.spacing = 10
+        sv.spacing = ThemeTokens.Spacing.sm
         sv.alignment = .center
         sv.isLayoutMarginsRelativeArrangement = true
         sv.layoutMargins = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
@@ -55,7 +55,7 @@ class URLInputHeaderView: UICollectionReusableView {
     private let typeLabel: UILabel = {
         let l = UILabel()
         l.font = ThemeTokens.Typography.caption2
-        l.textColor = .white
+        l.textColor = ThemeTokens.Color.textOnColor
         l.textAlignment = .center
         l.numberOfLines = 1
         return l

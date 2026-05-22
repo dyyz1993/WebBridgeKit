@@ -109,7 +109,7 @@ class WebPermissionsViewController: UIViewController {
             </style>
         </head>
         <body>
-            <h1>😕 加载失败</h1>
+            <h1>[EMOJI] 加载失败</h1>
             <p>权限管理页面文件未找到</p>
         </body>
         </html>
@@ -135,7 +135,7 @@ class WebPermissionsViewController: UIViewController {
         // 🔒 Remove from superview
         webView?.removeFromSuperview()
 
-        StructuredLogger.shared.debug("🧹 [WebPermissionsVC] Cleaned up with proper memory management", category: .ui)
+        StructuredLogger.shared.debug("[CLEAN] [WebPermissionsVC] Cleaned up with proper memory management", category: .ui)
     }
 }
 

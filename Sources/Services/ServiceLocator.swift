@@ -64,7 +64,7 @@ public class ServiceLocator {
         _favoriteService = RealmFavoriteService.shared
         currentMode = .production
 
-        WebBridgeLogger.shared.log(.info, "🔧 ServiceLocator: Production services configured")
+        WebBridgeLogger.shared.log(.info, "[TOOL] ServiceLocator: Production services configured")
     }
 
     /// 设置 Mock 服务并添加示例数据（用于开发/演示）
@@ -82,7 +82,7 @@ public class ServiceLocator {
             ])
             // 验证数据是否添加成功
             let count = historyService.getTotalCount()
-            StructuredLogger.shared.debug("🔍 [ServiceLocator] Mock history count: \(count)", category: .general)
+            StructuredLogger.shared.debug("[SEARCH] [ServiceLocator] Mock history count: \(count)", category: .general)
         }
 
         if let favoriteService = _favoriteService as? MockFavoriteService {
@@ -93,10 +93,10 @@ public class ServiceLocator {
             ])
             // 验证数据是否添加成功
             let count = favoriteService.getTotalCount()
-            StructuredLogger.shared.debug("🔍 [ServiceLocator] Mock favorite count: \(count)", category: .general)
+            StructuredLogger.shared.debug("[SEARCH] [ServiceLocator] Mock favorite count: \(count)", category: .general)
         }
 
-        WebBridgeLogger.shared.log(.info, "🎨 ServiceLocator: Mock services with sample data configured")
+        WebBridgeLogger.shared.log(.info, "[THEME] ServiceLocator: Mock services with sample data configured")
     }
 
     /// 设置 Mock 服务（使用内存数据，用于测试/开发）
@@ -105,7 +105,7 @@ public class ServiceLocator {
         _favoriteService = MockFavoriteService(useInMemoryRealm: useInMemoryRealm)
         currentMode = .mock
 
-        WebBridgeLogger.shared.log(.info, "🧪 ServiceLocator: Mock services configured (useInMemoryRealm: \(useInMemoryRealm))")
+        WebBridgeLogger.shared.log(.info, "[TEST] ServiceLocator: Mock services configured (useInMemoryRealm: \(useInMemoryRealm))")
     }
 
     /// 注册自定义服务实现
@@ -124,7 +124,7 @@ public class ServiceLocator {
             _favoriteService = favoriteService
         }
 
-        WebBridgeLogger.shared.log(.info, "🔧 ServiceLocator: Custom services registered")
+        WebBridgeLogger.shared.log(.info, "[TOOL] ServiceLocator: Custom services registered")
     }
 
     /// 注册管理器实现（可选覆盖，不传则保持默认 .shared 单例）
@@ -141,7 +141,7 @@ public class ServiceLocator {
         if let m = cacheManager { _cacheManager = m }
         if let m = messageEngine { _messageEngine = m }
 
-        WebBridgeLogger.shared.log(.info, "🔧 ServiceLocator: Manager services registered")
+        WebBridgeLogger.shared.log(.info, "[TOOL] ServiceLocator: Manager services registered")
     }
 
     // MARK: - 服务访问
@@ -198,7 +198,7 @@ public class ServiceLocator {
         _cacheManager = nil
         _messageEngine = nil
 
-        WebBridgeLogger.shared.log(.info, "🧹 ServiceLocator: All services cleared")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] ServiceLocator: All services cleared")
     }
 }
 

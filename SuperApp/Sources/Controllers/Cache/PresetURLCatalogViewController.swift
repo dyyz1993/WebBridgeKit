@@ -165,7 +165,7 @@ class PresetURLCatalogViewController: BaseViewController<PresetURLCatalogViewMod
         emptyView.backgroundColor = .clear
 
         let iconLabel = UILabel()
-        iconLabel.text = "📚"
+        iconLabel.text = "[BOOKS]"
         iconLabel.font = UIFont.preferredFont(forTextStyle: .largeTitle)
         iconLabel.textAlignment = .center
 

@@ -70,12 +70,12 @@ public class WebViewPool {
             pool.removeFirst()
             hitCount += 1
             trackAccess(instance)
-            WebBridgeLogger.shared.log(.info, "♻️ [WebViewPool] Acquired from pool (hit rate: \(hitRate)%, size: \(pool.count))")
+            WebBridgeLogger.shared.log(.info, "[RECYCLE] [WebViewPool] Acquired from pool (hit rate: \(hitRate)%, size: \(pool.count))")
             return instance
         }
 
         missCount += 1
-        WebBridgeLogger.shared.log(.info, "🆕 [WebViewPool] Pool empty (hit rate: \(hitRate)%)")
+        WebBridgeLogger.shared.log(.info, "[NEW] [WebViewPool] Pool empty (hit rate: \(hitRate)%)")
         return nil
     }
 
@@ -93,7 +93,7 @@ public class WebViewPool {
             var mutableInstance = instance
             mutableInstance.lastUsedAt = Date()
             pool.append(mutableInstance)
-            WebBridgeLogger.shared.log(.info, "♻️ [WebViewPool] Recycled to pool (size: \(pool.count))")
+            WebBridgeLogger.shared.log(.info, "[RECYCLE] [WebViewPool] Recycled to pool (size: \(pool.count))")
         } else {
             // 池已满，使用 LRU 替换最旧的实例
             if let oldestIndex = pool.indices.min(by: { pool[$0].lastUsedAt < pool[$1].lastUsedAt }) {
@@ -101,7 +101,7 @@ public class WebViewPool {
                 var mutableInstance = instance
                 mutableInstance.lastUsedAt = Date()
                 pool.append(mutableInstance)
-                WebBridgeLogger.shared.log(.info, "♻️ [WebViewPool] Replaced oldest instance")
+                WebBridgeLogger.shared.log(.info, "[RECYCLE] [WebViewPool] Replaced oldest instance")
             }
         }
     }
@@ -113,7 +113,7 @@ public class WebViewPool {
     public func warmup(completion: (() -> Void)? = nil) {
         // 避免重复预热
         guard !isWarmedUp else {
-            WebBridgeLogger.shared.log(.warning, "⚠️ [WebViewPool] Already warmed up")
+            WebBridgeLogger.shared.log(.warning, "[WARN] [WebViewPool] Already warmed up")
             completion?()
             return
         }
@@ -146,7 +146,7 @@ public class WebViewPool {
             self.isWarmedUp = true
             self.lock.unlock()
 
-            WebBridgeLogger.shared.log(.info, "✅ [WebViewPool] Warmed up 1 instance with bridge script")
+            WebBridgeLogger.shared.log(.info, "[OK] [WebViewPool] Warmed up 1 instance with bridge script")
             completion?()
         }
     }
@@ -156,7 +156,7 @@ public class WebViewPool {
         let bridgeScript = """
         window.BarkBridge = {
             callNative: function(action, params) {
-                console.log('📤 [Bark] callNative:', action, params);
+                console.log('[SEND] [Bark] callNative:', action, params);
                 return new Promise((resolve, reject) => {
                     const id = ++window.BarkBridge._callbackId;
                     window.BarkBridge._callbacks[id] = { resolve, reject };
@@ -168,7 +168,7 @@ public class WebViewPool {
                     try {
                         window.webkit.messageHandlers.barkBridge.postMessage(message);
                     } catch (error) {
-                        console.error('❌ [Bark] Failed:', error);
+                        console.error('[FAIL] [Bark] Failed:', error);
                         reject(error);
                     }
                 });
@@ -176,7 +176,7 @@ public class WebViewPool {
             _callbackId: 0,
             _callbacks: {},
             receiveResult: function(result) {
-                console.log('📥 [Bark] Received result:', result);
+                console.log('[RECV] [Bark] Received result:', result);
                 const id = result.callbackId;
                 let callback = this._callbacks[id];
                 if (callback) {
@@ -189,7 +189,7 @@ public class WebViewPool {
                 }
             },
             receiveEvent: function(event, data) {
-                console.log('🔔 [Bark] Received event:', event, data);
+                console.log('[NOTIF] [Bark] Received event:', event, data);
                 // 兼容旧的音频回调
                 if (event === 'onAudioLevelChange' || event === 'onAudioLevel') {
                     if (window.onAudioLevel) window.onAudioLevel(data.level !== undefined ? data.level : data);
@@ -208,12 +208,12 @@ public class WebViewPool {
                 window.dispatchEvent(customEvent);
             }
         };
-        console.log('✅ [Bark] BarkBridge initialized');
+        console.log('[OK] [Bark] BarkBridge initialized');
         """
 
         let script = WKUserScript(source: bridgeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         webView.configuration.userContentController.addUserScript(script)
-        WebBridgeLogger.shared.log(.info, "📝 [WebViewPool] Bridge script injected to pre-warmed WebView")
+        WebBridgeLogger.shared.log(.info, "[NOTE] [WebViewPool] Bridge script injected to pre-warmed WebView")
     }
 
     // MARK: - 内存管理
@@ -226,7 +226,7 @@ public class WebViewPool {
         isWarmedUp = false
         lock.unlock()
 
-        WebBridgeLogger.shared.log(.warning, "🧹 [WebViewPool] Cleared \(count) instances due to memory warning")
+        WebBridgeLogger.shared.log(.warning, "[CLEAN] [WebViewPool] Cleared \(count) instances due to memory warning")
     }
 
     /// 进入后台时清理
@@ -237,7 +237,7 @@ public class WebViewPool {
             let removed = pool.count - 1
             pool = Array(pool.prefix(1))
             lock.unlock()
-            WebBridgeLogger.shared.log(.info, "🧹 [WebViewPool] Reduced pool to 1 instance (removed \(removed))")
+            WebBridgeLogger.shared.log(.info, "[CLEAN] [WebViewPool] Reduced pool to 1 instance (removed \(removed))")
         } else {
             lock.unlock()
         }
@@ -250,7 +250,7 @@ public class WebViewPool {
         lock.unlock()
 
         if poolEmpty && !isWarmedUp {
-            WebBridgeLogger.shared.log(.info, "🔄 [WebViewPool] Pool empty after returning from foreground, warming up...")
+            WebBridgeLogger.shared.log(.info, "[SYNC] [WebViewPool] Pool empty after returning from foreground, warming up...")
             warmup()
         }
     }
@@ -304,7 +304,7 @@ public class WebViewPool {
 
     private func trackAccess(_ instance: WebViewInstance) {
         // 由于是 struct，这里仅作记录，实际修改在 recycle 中进行
-        WebBridgeLogger.shared.log(.info, "📊 [WebViewPool] Instance accessed, age: \(Int(Date().timeIntervalSince(instance.createdAt)))s")
+        WebBridgeLogger.shared.log(.info, "[STATS] [WebViewPool] Instance accessed, age: \(Int(Date().timeIntervalSince(instance.createdAt)))s")
     }
 
     private var hitRate: Int {

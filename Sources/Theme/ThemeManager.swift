@@ -49,7 +49,7 @@ public actor ThemeManager {
 
     @MainActor
     public static func applyMode(_ mode: ThemeMode, to window: UIWindow) {
-        window.tintColor = ThemeColors.current.primary
+        window.tintColor = ThemeTokens.Color.primary
         switch mode {
         case .light:
             window.overrideUserInterfaceStyle = .light
@@ -61,16 +61,16 @@ public actor ThemeManager {
 
         let navAppearance = UINavigationBarAppearance()
         navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = ThemeColors.current.navigationBarBackground
-        navAppearance.titleTextAttributes = [.foregroundColor: ThemeColors.current.navigationBarTitle]
-        navAppearance.largeTitleTextAttributes = [.foregroundColor: ThemeColors.current.navigationBarTitle]
+        navAppearance.backgroundColor = ThemeTokens.Color.navigationBarBackground
+        navAppearance.titleTextAttributes = [.foregroundColor: ThemeTokens.Color.text]
+        navAppearance.largeTitleTextAttributes = [.foregroundColor: ThemeTokens.Color.text]
 
         UINavigationBar.appearance().standardAppearance = navAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
 
         let tabAppearance = UITabBarAppearance()
         tabAppearance.configureWithOpaqueBackground()
-        tabAppearance.backgroundColor = ThemeColors.current.tabBarBackground
+        tabAppearance.backgroundColor = ThemeTokens.Color.tabBarBackground
 
         UITabBar.appearance().standardAppearance = tabAppearance
         if #available(iOS 15.0, *) {
@@ -85,209 +85,103 @@ public actor ThemeManager {
     }
 }
 
-// MARK: - Theme Colors (Dynamic)
+// MARK: - Theme Colors (Deprecated — delegates to ThemeTokens.Color)
 
+@available(*, deprecated, message: "Use ThemeTokens.Color.* instead. ThemeColors is kept for backward compatibility and now delegates to ThemeTokens.Color.")
 public struct ThemeColors: Sendable {
-    public let primary: UIColor
-    public let secondary: UIColor
-    public let background: UIColor
-    public let surface: UIColor
-    public let text: UIColor
-    public let textSecondary: UIColor
-    public let border: UIColor
-    public let navigationBarBackground: UIColor
-    public let navigationBarTitle: UIColor
-    public let tabBarBackground: UIColor
-    public let success: UIColor
-    public let warning: UIColor
-    public let error: UIColor
-    public let info: UIColor
-    public let cardBackground: UIColor
-    public let gradientStart: UIColor
-    public let gradientEnd: UIColor
-    public let badgeBackground: UIColor
-    public let badgeText: UIColor
-    public let divider: UIColor
-    public let fabBackground: UIColor
+    public var primary: UIColor { ThemeTokens.Color.primary }
+    public var secondary: UIColor { ThemeTokens.Color.secondary }
+    public var background: UIColor { ThemeTokens.Color.background }
+    public var surface: UIColor { ThemeTokens.Color.surface }
+    public var text: UIColor { ThemeTokens.Color.text }
+    public var textSecondary: UIColor { ThemeTokens.Color.textSecondary }
+    public var border: UIColor { ThemeTokens.Color.border }
+    public var navigationBarBackground: UIColor { ThemeTokens.Color.navigationBarBackground }
+    public var navigationBarTitle: UIColor { ThemeTokens.Color.navigationBarTitle }
+    public var tabBarBackground: UIColor { ThemeTokens.Color.tabBarBackground }
+    public var success: UIColor { ThemeTokens.Color.success }
+    public var warning: UIColor { ThemeTokens.Color.warning }
+    public var error: UIColor { ThemeTokens.Color.error }
+    public var info: UIColor { ThemeTokens.Color.info }
+    public var cardBackground: UIColor { ThemeTokens.Color.cardBackground }
+    public var gradientStart: UIColor { ThemeTokens.Color.gradientStart }
+    public var gradientEnd: UIColor { ThemeTokens.Color.gradientEnd }
+    public var badgeBackground: UIColor { ThemeTokens.Color.badgeBackground }
+    public var badgeText: UIColor { ThemeTokens.Color.badgeText }
+    public var divider: UIColor { ThemeTokens.Color.divider }
+    public var fabBackground: UIColor { ThemeTokens.Color.fabBackground }
 
-    public init(
-        primary: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.35, green: 0.47, blue: 0.95, alpha: 1) : UIColor(red: 0.24, green: 0.47, blue: 0.95, alpha: 1) },
-        secondary: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.6, alpha: 1) : UIColor(white: 0.4, alpha: 1) },
-        background: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1) : .white },
-        surface: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.15, green: 0.15, blue: 0.17, alpha: 1) : UIColor(red: 0.97, green: 0.97, blue: 0.97, alpha: 1) },
-        text: UIColor = UIColor { $0.userInterfaceStyle == .dark ? .white : .black },
-        textSecondary: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.6, alpha: 1) : UIColor(white: 0.4, alpha: 1) },
-        border: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.25, alpha: 1) : UIColor(white: 0.85, alpha: 1) },
-        navigationBarBackground: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1) : .white },
-        navigationBarTitle: UIColor = UIColor { $0.userInterfaceStyle == .dark ? .white : .black },
-        tabBarBackground: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1) : .white },
-        success: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.3, green: 0.78, blue: 0.49, alpha: 1) : UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 1) },
-        warning: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 1.0, green: 0.72, blue: 0.23, alpha: 1) : UIColor(red: 1.0, green: 0.62, blue: 0.15, alpha: 1) },
-        error: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.95, green: 0.35, blue: 0.35, alpha: 1) : UIColor(red: 0.9, green: 0.25, blue: 0.2, alpha: 1) },
-        info: UIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.35, green: 0.47, blue: 0.95, alpha: 1) : UIColor(red: 0.24, green: 0.47, blue: 0.95, alpha: 1) },
-        cardBackground: UIColor? = nil,
-        gradientStart: UIColor? = nil,
-        gradientEnd: UIColor? = nil,
-        badgeBackground: UIColor? = nil,
-        badgeText: UIColor? = nil,
-        divider: UIColor? = nil,
-        fabBackground: UIColor? = nil
-    ) {
-        self.primary = primary
-        self.secondary = secondary
-        self.background = background
-        self.surface = surface
-        self.text = text
-        self.textSecondary = textSecondary
-        self.border = border
-        self.navigationBarBackground = navigationBarBackground
-        self.navigationBarTitle = navigationBarTitle
-        self.tabBarBackground = tabBarBackground
-        self.success = success
-        self.warning = warning
-        self.error = error
-        self.info = info
-        self.cardBackground = cardBackground ?? UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.15, green: 0.15, blue: 0.17, alpha: 1)
-                : .white
-        }
-        self.gradientStart = gradientStart ?? UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.2, green: 0.3, blue: 0.6, alpha: 0.9)
-                : UIColor(red: 0.25, green: 0.45, blue: 0.95, alpha: 0.85)
-        }
-        self.gradientEnd = gradientEnd ?? UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.4, green: 0.2, blue: 0.5, alpha: 0.9)
-                : UIColor(red: 0.6, green: 0.3, blue: 0.75, alpha: 0.85)
-        }
-        self.badgeBackground = badgeBackground ?? UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 1)
-                : UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1)
-        }
-        self.badgeText = badgeText ?? UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? .lightText
-                : .darkGray
-        }
-        self.divider = divider ?? UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(white: 0.25, alpha: 1)
-                : UIColor(white: 0.85, alpha: 1)
-        }
-        self.fabBackground = fabBackground ?? primary
-    }
+    public init() {}
 
+    @available(*, deprecated, message: "Use ThemeTokens.Color.current (singleton) instead")
     public static let current = ThemeColors()
+
+    @available(*, deprecated, message: "Use ThemeTokens.Color.current (singleton) instead")
     public static let `default` = ThemeColors()
 }
 
-// MARK: - Theme Typography
+// MARK: - Theme Typography (Deprecated — delegates to ThemeTokens.Typography)
 
+@available(*, deprecated, message: "Use ThemeTokens.Typography.* instead")
 public struct ThemeTypography: Sendable {
-    public let largeTitle: UIFont
-    public let title1: UIFont
-    public let title2: UIFont
-    public let headline: UIFont
-    public let body: UIFont
-    public let caption1: UIFont
-    public let caption2: UIFont
+    public var largeTitle: UIFont { ThemeTokens.Typography.largeTitle }
+    public var title1: UIFont { ThemeTokens.Typography.title1 }
+    public var title2: UIFont { ThemeTokens.Typography.title3 }
+    public var headline: UIFont { ThemeTokens.Typography.headline }
+    public var body: UIFont { ThemeTokens.Typography.body }
+    public var caption1: UIFont { ThemeTokens.Typography.caption1 }
+    public var caption2: UIFont { ThemeTokens.Typography.caption2 }
 
-    public init(
-        largeTitle: UIFont? = nil,
-        title1: UIFont? = nil,
-        title2: UIFont? = nil,
-        headline: UIFont? = nil,
-        body: UIFont? = nil,
-        caption1: UIFont? = nil,
-        caption2: UIFont? = nil
-    ) {
-        self.largeTitle = largeTitle ?? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 28, weight: .bold))
-        self.title1 = title1 ?? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 22, weight: .bold))
-        self.title2 = title2 ?? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 20, weight: .semibold))
-        self.headline = headline ?? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 17, weight: .semibold))
-        self.body = body ?? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 15, weight: .regular))
-        self.caption1 = caption1 ?? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 13, weight: .regular))
-        self.caption2 = caption2 ?? UIFontMetrics.default.scaledFont(for: .systemFont(ofSize: 11, weight: .regular))
-    }
+    public init() {}
 
+    @available(*, deprecated, message: "Use ThemeTokens.Typography.* instead")
     public static let current = ThemeTypography()
 }
 
-// MARK: - Legacy Theme Fonts
+// MARK: - Legacy Theme Fonts (Deprecated — delegates to ThemeTokens.Typography)
 
+@available(*, deprecated, message: "Use ThemeTokens.Typography.* instead")
 public struct ThemeFonts: Sendable {
-    public let title: UIFont
-    public let headline: UIFont
-    public let body: UIFont
-    public let caption: UIFont
-    public let button: UIFont
+    public var title: UIFont { ThemeTokens.Typography.largeTitle }
+    public var headline: UIFont { ThemeTokens.Typography.headline }
+    public var body: UIFont { ThemeTokens.Typography.body }
+    public var caption: UIFont { ThemeTokens.Typography.caption1 }
+    public var button: UIFont { ThemeTokens.Typography.callout }
 
-    public init(
-        title: UIFont = .systemFont(ofSize: 28, weight: .bold),
-        headline: UIFont = .systemFont(ofSize: 17, weight: .semibold),
-        body: UIFont = .systemFont(ofSize: 15, weight: .regular),
-        caption: UIFont = .systemFont(ofSize: 12, weight: .regular),
-        button: UIFont = .systemFont(ofSize: 16, weight: .medium)
-    ) {
-        self.title = title
-        self.headline = headline
-        self.body = body
-        self.caption = caption
-        self.button = button
-    }
+    public init() {}
 
+    @available(*, deprecated, message: "Use ThemeTokens.Typography.* instead")
     public static let `default` = ThemeFonts()
 }
 
-// MARK: - Theme Spacing
+// MARK: - Theme Spacing (Deprecated — delegates to ThemeTokens.Spacing)
 
+@available(*, deprecated, message: "Use ThemeTokens.Spacing.* instead")
 public struct ThemeSpacing: Sendable {
-    public let xs: CGFloat
-    public let sm: CGFloat
-    public let md: CGFloat
-    public let lg: CGFloat
-    public let xl: CGFloat
+    public var xs: CGFloat { ThemeTokens.Spacing.xs }
+    public var sm: CGFloat { ThemeTokens.Spacing.sm }
+    public var md: CGFloat { ThemeTokens.Spacing.md }
+    public var lg: CGFloat { ThemeTokens.Spacing.lg }
+    public var xl: CGFloat { ThemeTokens.Spacing.xl }
 
-    public init(
-        xs: CGFloat = 4,
-        sm: CGFloat = 8,
-        md: CGFloat = 16,
-        lg: CGFloat = 24,
-        xl: CGFloat = 32
-    ) {
-        self.xs = xs
-        self.sm = sm
-        self.md = md
-        self.lg = lg
-        self.xl = xl
-    }
+    public init() {}
 
+    @available(*, deprecated, message: "Use ThemeTokens.Spacing.* instead")
     public static let `default` = ThemeSpacing()
 }
 
-// MARK: - Theme CornerRadius
+// MARK: - Theme CornerRadius (Deprecated — delegates to ThemeTokens.CornerRadius)
 
+@available(*, deprecated, message: "Use ThemeTokens.CornerRadius.* instead")
 public struct ThemeCornerRadius: Sendable {
-    public let sm: CGFloat
-    public let md: CGFloat
-    public let lg: CGFloat
-    public let full: CGFloat
+    public var sm: CGFloat { ThemeTokens.CornerRadius.sm }
+    public var md: CGFloat { ThemeTokens.CornerRadius.md }
+    public var lg: CGFloat { ThemeTokens.CornerRadius.lg }
+    public var full: CGFloat { ThemeTokens.CornerRadius.full }
 
-    public init(
-        sm: CGFloat = 4,
-        md: CGFloat = 8,
-        lg: CGFloat = 16,
-        full: CGFloat = 999
-    ) {
-        self.sm = sm
-        self.md = md
-        self.lg = lg
-        self.full = full
-    }
+    public init() {}
 
+    @available(*, deprecated, message: "Use ThemeTokens.CornerRadius.* instead")
     public static let `default` = ThemeCornerRadius()
 }
 
@@ -325,25 +219,25 @@ public enum ThemeAnimation {
 public struct Theme: Sendable {
     public let name: String
     public let isDark: Bool
-    public let colors: ThemeColors
-    public let fonts: ThemeFonts
-    public let spacing: ThemeSpacing
-    public let cornerRadius: ThemeCornerRadius
+
+    @available(*, deprecated, message: "Use ThemeTokens.Color.* instead")
+    public var colors: ThemeColors { ThemeColors() }
+
+    @available(*, deprecated, message: "Use ThemeTokens.Typography.* instead")
+    public var fonts: ThemeFonts { ThemeFonts() }
+
+    @available(*, deprecated, message: "Use ThemeTokens.Spacing.* instead")
+    public var spacing: ThemeSpacing { ThemeSpacing() }
+
+    @available(*, deprecated, message: "Use ThemeTokens.CornerRadius.* instead")
+    public var cornerRadius: ThemeCornerRadius { ThemeCornerRadius() }
 
     public init(
         name: String,
-        isDark: Bool = false,
-        colors: ThemeColors = .current,
-        fonts: ThemeFonts = .default,
-        spacing: ThemeSpacing = .default,
-        cornerRadius: ThemeCornerRadius = .default
+        isDark: Bool = false
     ) {
         self.name = name
         self.isDark = isDark
-        self.colors = colors
-        self.fonts = fonts
-        self.spacing = spacing
-        self.cornerRadius = cornerRadius
     }
 
     public static let `default` = Theme(name: "default")

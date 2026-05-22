@@ -125,48 +125,48 @@ extension WebBrowserViewController {
         </head>
         <body>
             <div class="container">
-                <h1>🌐 Bark 浏览器</h1>
+                <h1>[WEB] Bark 浏览器</h1>
                 <p class="subtitle">沉浸式全屏浏览 - 快速、简洁、智能</p>
 
                 <div class="section">
-                    <div class="section-title">📚 快速访问</div>
+                    <div class="section-title">[BOOKS] 快速访问</div>
                     <ul class="link-list">
-                        <li><a href="https://www.baidu.com">🔍 百度 - 搜索引擎</a></li>
-                        <li><a href="https://github.com">🐙 GitHub - 代码托管</a></li>
-                        <li><a href="https://www.apple.com">🍎 Apple - 官方网站</a></li>
+                        <li><a href="https://www.baidu.com">[SEARCH] 百度 - 搜索引擎</a></li>
+                        <li><a href="https://github.com">[EMOJI] GitHub - 代码托管</a></li>
+                        <li><a href="https://www.apple.com">[EMOJI] Apple - 官方网站</a></li>
                     </ul>
                 </div>
 
                 <div class="section">
-                    <div class="section-title">✨ 功能特性</div>
+                    <div class="section-title">[SPARKLE] 功能特性</div>
                     <div class="feature-list">
                         <div class="feature-item">
-                            <div class="feature-icon">📱</div>
+                            <div class="feature-icon">[MOBILE]</div>
                             <div class="feature-text">全屏沉浸</div>
                         </div>
                         <div class="feature-item">
-                            <div class="feature-icon">⚡</div>
+                            <div class="feature-icon">[FAST]</div>
                             <div class="feature-text">快速加载</div>
                         </div>
                         <div class="feature-item">
-                            <div class="feature-icon">🔖</div>
+                            <div class="feature-icon">[BOOKMARK]</div>
                             <div class="feature-text">收藏管理</div>
                         </div>
                         <div class="feature-item">
-                            <div class="feature-icon">🔒</div>
+                            <div class="feature-icon">[LOCK]</div>
                             <div class="feature-text">安全浏览</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <div class="section-title">🔧 调试工具</div>
+                    <div class="section-title">[TOOL] 调试工具</div>
                     <button class="debug-btn" onclick="showDebugInfo()">查看调试信息</button>
                     <div id="debugInfo"></div>
                 </div>
 
                 <div class="section">
-                    <div class="section-title">🎛️ URL 参数测试</div>
+                    <div class="section-title">[CTRL] URL 参数测试</div>
                     <ul class="link-list">
                         <li><a href="https://www.baidu.com?hideNavBar=1">隐藏导航栏打开百度</a></li>
                         <li><a href="https://www.baidu.com?hideStatusBar=1">隐藏状态栏打开百度</a></li>
@@ -188,11 +188,11 @@ extension WebBrowserViewController {
                         'JS Bridge': typeof window.webkit !== 'undefined' && typeof window.webkit.messageHandlers !== 'undefined' ? 'Available' : 'Not Available'
                     };
 
-                    let html = '<strong>🔍 浏览器状态</strong><br><br>';
+                    let html = '<strong>[SEARCH] 浏览器状态</strong><br><br>';
                     for (const [key, value] of Object.entries(info)) {
                         html += `<div style='margin:4px 0;'><strong>${key}:</strong> ${value}</div>`;
                     }
-                    html += '<br><strong>✅ 页面加载完成</strong>';
+                    html += '<br><strong>[OK] 页面加载完成</strong>';
 
                     debugDiv.innerHTML = html;
                     debugDiv.style.display = 'block';
@@ -240,17 +240,17 @@ extension WebBrowserViewController {
             </style>
         </head>
         <body>
-            <h1>🌉 Bark JS Bridge</h1>
+            <h1>[BRIDGE] Bark JS Bridge</h1>
             <div id="statusBar" class="status-bar">检测中...</div>
 
             <div class="test-section">
-                <h3>📤 基础功能</h3>
+                <h3>[SEND] 基础功能</h3>
                 <button class="btn-share" onclick="callNative('share', {text: '来自 Bark 的分享', url: 'https://github.com/Finb/Bark'})">分享</button>
                 <button class="btn-location" onclick="callNative('getLocation')">获取位置</button>
             </div>
 
             <div class="test-section">
-                <h3>📱 系统信息</h3>
+                <h3>[MOBILE] 系统信息</h3>
                 <div class="btn-grid">
                     <button class="btn-system" onclick="callNative('getSystemInfo')">系统信息</button>
                     <button class="btn-network" onclick="callNative('getNetworkInfo')">网络状态</button>
@@ -258,7 +258,7 @@ extension WebBrowserViewController {
             </div>
 
             <div class="test-section">
-                <h3>🎨 交互反馈</h3>
+                <h3>[THEME] 交互反馈</h3>
                 <div class="btn-grid">
                     <button class="btn-haptic" onclick="callNative('haptic')">触觉反馈</button>
                     <button class="btn-vibrate" onclick="callNative('vibrate')">震动</button>
@@ -288,11 +288,11 @@ extension WebBrowserViewController {
                     var statusBar = document.getElementById('statusBar');
                     if (hasBridge) {
                         statusBar.className = 'status-bar ok';
-                        statusBar.textContent = '✅ JS Bridge 可用';
+                        statusBar.textContent = '[OK] JS Bridge 可用';
                         addLog('success', 'JS Bridge 检测成功');
                     } else {
                         statusBar.className = 'status-bar error';
-                        statusBar.textContent = '❌ JS Bridge 不可用';
+                        statusBar.textContent = '[FAIL] JS Bridge 不可用';
                         addLog('error', 'JS Bridge 不可用');
                     }
                     return hasBridge;
@@ -325,7 +325,7 @@ extension WebBrowserViewController {
         """
 
         webView.loadHTMLString(testHTML, baseURL: nil)
-        StructuredLogger.shared.debug("🌉 [Browser] 加载 JS 桥接测试页面", category: .ui)
+        StructuredLogger.shared.debug("[BRIDGE] [Browser] 加载 JS 桥接测试页面", category: .ui)
     }
 
     // MARK: - Permissions Page
@@ -365,7 +365,7 @@ extension WebBrowserViewController {
             </style>
         </head>
         <body>
-            <h1>🔐 权限管理</h1>
+            <h1>[AUTH] 权限管理</h1>
 
             <div id="loading" class="loading">正在检测权限状态...</div>
 
@@ -409,15 +409,15 @@ extension WebBrowserViewController {
                 function getStatusBadge(status) {
                     switch(status) {
                         case 'authorized':
-                            return '<span class="status-badge status-authorized">✅ 已授权</span>';
+                            return '<span class="status-badge status-authorized">[OK] 已授权</span>';
                         case 'denied':
-                            return '<span class="status-badge status-denied">❌ 已拒绝</span>';
+                            return '<span class="status-badge status-denied">[FAIL] 已拒绝</span>';
                         case 'notDetermined':
-                            return '<span class="status-badge status-notDetermined">⚠️ 未请求</span>';
+                            return '<span class="status-badge status-notDetermined">[WARN] 未请求</span>';
                         case 'limited':
-                            return '<span class="status-badge status-limited">⚡️ 部分授权</span>';
+                            return '<span class="status-badge status-limited">[FAST] 部分授权</span>';
                         default:
-                            return '<span class="status-badge status-notDetermined">❓ 未知</span>';
+                            return '<span class="status-badge status-notDetermined">[?] 未知</span>';
                     }
                 }
 
@@ -462,7 +462,7 @@ extension WebBrowserViewController {
         """
 
         webView.loadHTMLString(permissionsHTML, baseURL: nil)
-        StructuredLogger.shared.debug("🔐 [Browser] 加载权限管理页面", category: .ui)
+        StructuredLogger.shared.debug("[AUTH] [Browser] 加载权限管理页面", category: .ui)
     }
 
     // MARK: - Voice Jump Game
@@ -472,13 +472,13 @@ extension WebBrowserViewController {
             do {
                 let htmlHTML = try String(contentsOfFile: htmlPath)
                 webView.loadHTMLString(htmlHTML, baseURL: Bundle.main.bundleURL)
-                StructuredLogger.shared.debug("🎮 [Browser] 加载语音控制游戏页面", category: .ui)
+                StructuredLogger.shared.debug("[EMOJI] [Browser] 加载语音控制游戏页面", category: .ui)
             } catch {
-                StructuredLogger.shared.error("❌ [Browser] 游戏文件加载失败: \(error)", category: .ui)
+                StructuredLogger.shared.error("[FAIL] [Browser] 游戏文件加载失败: \(error)", category: .ui)
                 showErrorPage(message: "游戏文件加载失败")
             }
         } else {
-            StructuredLogger.shared.error("❌ [Browser] 未找到游戏文件", category: .ui)
+            StructuredLogger.shared.error("[FAIL] [Browser] 未找到游戏文件", category: .ui)
             showErrorPage(message: "未找到游戏文件")
         }
     }
@@ -497,7 +497,7 @@ extension WebBrowserViewController {
             </style>
         </head>
         <body>
-            <h1>😕 加载失败</h1>
+            <h1>[EMOJI] 加载失败</h1>
             <p>\(message)</p>
         </body>
         </html>

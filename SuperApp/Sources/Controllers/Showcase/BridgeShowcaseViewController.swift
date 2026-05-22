@@ -16,7 +16,7 @@ class BridgeShowcaseViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "桥接"
-        view.backgroundColor = ThemeColors.current.background
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
         loadHandlers()
     }
@@ -97,14 +97,14 @@ extension BridgeShowcaseViewController: UITableViewDataSource, UITableViewDelega
 private class HandlerCell: UITableViewCell {
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.headline
-        label.textColor = ThemeColors.current.text
+        label.font = ThemeTokens.Typography.headline
+        label.textColor = ThemeTokens.Color.text
         return label
     }()
     private let descLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTypography.current.body
-        label.textColor = ThemeColors.current.textSecondary
+        label.font = ThemeTokens.Typography.body
+        label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
         return label
     }()

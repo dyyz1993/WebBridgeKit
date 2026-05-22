@@ -92,7 +92,7 @@ public class WebBrowserManager: WebBrowserManaging {
         // Ensure all UI operations happen on main thread
         DispatchQueue.main.async { [weak self] in
             guard let self = self else {
-                os_log("❌ WebBrowserManager 已被释放", log: OSLog.default, type: .error)
+                os_log("[FAIL] WebBrowserManager 已被释放", log: OSLog.default, type: .error)
                 completion?(.failure(WebBridgeError.browserOpenFailed(reason: "WebBrowserManager deallocated")))
                 return
             }
@@ -116,11 +116,11 @@ public class WebBrowserManager: WebBrowserManaging {
     /// 从通知打开浏览器（供 AppDelegate 调用）
     public func openBrowser(from notification: Notification) {
         guard let pageName = notification.userInfo?["page"] as? String else {
-            StructuredLogger.shared.error("❌ [WebBrowserManager] BarkOpenWebPage notification missing page name", category: .bridge)
+            StructuredLogger.shared.error("[FAIL] [WebBrowserManager] BarkOpenWebPage notification missing page name", category: .bridge)
             return
         }
 
-        StructuredLogger.shared.debug("📱 [WebBrowserManager] Opening web page: \(pageName)", category: .bridge)
+        StructuredLogger.shared.debug("[MOBILE] [WebBrowserManager] Opening web page: \(pageName)", category: .bridge)
 
         // 构建内部 URL
         var components = URLComponents(string: "webbridgekit://internal")
@@ -143,8 +143,8 @@ public class WebBrowserManager: WebBrowserManaging {
         os_log("=== openNormalBrowser ===", log: OSLog.default, type: .info)
 
         guard let navController = getNavigationController(from: sourceViewController) else {
-            os_log("❌ 找不到 NavigationController", log: OSLog.default, type: .error)
-            StructuredLogger.shared.error("❌ [WebBrowserManager] No navigation controller found", category: .bridge)
+            os_log("[FAIL] 找不到 NavigationController", log: OSLog.default, type: .error)
+            StructuredLogger.shared.error("[FAIL] [WebBrowserManager] No navigation controller found", category: .bridge)
 
             // 尝试获取顶层的 view controller
             if let topVC = getTopViewController() {
@@ -153,7 +153,7 @@ public class WebBrowserManager: WebBrowserManaging {
             return
         }
 
-        os_log("✅ 找到 NavigationController", log: OSLog.default, type: .info)
+        os_log("[OK] 找到 NavigationController", log: OSLog.default, type: .info)
         let webVC = createWebViewController(for: url, params: params)
         addToNavigationStack(webVC, url: url, params: params)
 
@@ -165,8 +165,8 @@ public class WebBrowserManager: WebBrowserManaging {
             browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
         }
 
-        os_log("✅ 已推送浏览器到导航栈", log: OSLog.default, type: .info)
-        StructuredLogger.shared.info("✅ [WebBrowserManager] Pushed normal browser to navigation stack", category: .bridge)
+        os_log("[OK] 已推送浏览器到导航栈", log: OSLog.default, type: .info)
+        StructuredLogger.shared.info("[OK] [WebBrowserManager] Pushed normal browser to navigation stack", category: .bridge)
     }
 
     private func openImmersiveBrowser(
@@ -179,12 +179,12 @@ public class WebBrowserManager: WebBrowserManaging {
         os_log("=== openImmersiveBrowser ===", log: OSLog.default, type: .info)
 
         guard let navController = getNavigationController(from: sourceViewController) else {
-            os_log("❌ 找不到 NavigationController", log: OSLog.default, type: .error)
-            StructuredLogger.shared.error("❌ [WebBrowserManager] No navigation controller found", category: .bridge)
+            os_log("[FAIL] 找不到 NavigationController", log: OSLog.default, type: .error)
+            StructuredLogger.shared.error("[FAIL] [WebBrowserManager] No navigation controller found", category: .bridge)
             return
         }
 
-        os_log("✅ 找到 NavigationController", log: OSLog.default, type: .info)
+        os_log("[OK] 找到 NavigationController", log: OSLog.default, type: .info)
         let webVC = createWebViewController(for: url, params: params)
         addToNavigationStack(webVC, url: url, params: params)
 
@@ -196,8 +196,8 @@ public class WebBrowserManager: WebBrowserManaging {
             browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
         }
 
-        os_log("✅ 已推送沉浸式浏览器到导航栈", log: OSLog.default, type: .info)
-        StructuredLogger.shared.info("✅ [WebBrowserManager] Pushed immersive browser to navigation stack", category: .bridge)
+        os_log("[OK] 已推送沉浸式浏览器到导航栈", log: OSLog.default, type: .info)
+        StructuredLogger.shared.info("[OK] [WebBrowserManager] Pushed immersive browser to navigation stack", category: .bridge)
     }
 
     private func openModalBrowser(
@@ -208,7 +208,7 @@ public class WebBrowserManager: WebBrowserManaging {
         animated: Bool = true
     ) {
         guard let presentingVC = sourceViewController ?? getTopViewController() else {
-            StructuredLogger.shared.error("❌ [WebBrowserManager] No view controller to present modal", category: .bridge)
+            StructuredLogger.shared.error("[FAIL] [WebBrowserManager] No view controller to present modal", category: .bridge)
             return
         }
 
@@ -236,7 +236,7 @@ public class WebBrowserManager: WebBrowserManaging {
         currentModal = modalVC
         presentingVC.present(modalVC, animated: animated)
 
-        StructuredLogger.shared.info("✅ [WebBrowserManager] Presented modal browser (animated: \(animated))", category: .bridge)
+        StructuredLogger.shared.info("[OK] [WebBrowserManager] Presented modal browser (animated: \(animated))", category: .bridge)
     }
 
     // MARK: - Close Browser
@@ -259,7 +259,7 @@ public class WebBrowserManager: WebBrowserManaging {
             // 关闭正常的浏览器页面
             guard let navController = self.getNavigationController(),
                   navController.viewControllers.count > 1 else {
-                StructuredLogger.shared.warning("⚠️ [WebBrowserManager] Cannot close - only one page in stack", category: .bridge)
+                StructuredLogger.shared.warning("[WARN] [WebBrowserManager] Cannot close - only one page in stack", category: .bridge)
                 return
             }
 
@@ -287,7 +287,7 @@ public class WebBrowserManager: WebBrowserManaging {
 
             self.currentBrowser = navController.topViewController
 
-            StructuredLogger.shared.info("✅ [WebBrowserManager] Closed browser, reason: \(reason)", category: .bridge)
+            StructuredLogger.shared.info("[OK] [WebBrowserManager] Closed browser, reason: \(reason)", category: .bridge)
         }
     }
 
@@ -323,7 +323,7 @@ public class WebBrowserManager: WebBrowserManaging {
 
     private func executeGoBack(steps: Int) -> Bool {
         guard let navController = getNavigationController() else {
-            StructuredLogger.shared.warning("⚠️ [WebBrowserManager] Cannot go back - no navigation controller", category: .bridge)
+            StructuredLogger.shared.warning("[WARN] [WebBrowserManager] Cannot go back - no navigation controller", category: .bridge)
             return false
         }
 
@@ -349,10 +349,10 @@ public class WebBrowserManager: WebBrowserManaging {
                 self._currentIndex = max(0, min(actualCount - 1, self.navigationStack.count))
             }
 
-            StructuredLogger.shared.info("✅ [WebBrowserManager] Went back \(steps) steps", category: .bridge)
+            StructuredLogger.shared.info("[OK] [WebBrowserManager] Went back \(steps) steps", category: .bridge)
             return true
         } else {
-            StructuredLogger.shared.warning("⚠️ [WebBrowserManager] Cannot go back - at beginning of stack", category: .bridge)
+            StructuredLogger.shared.warning("[WARN] [WebBrowserManager] Cannot go back - at beginning of stack", category: .bridge)
             return false
         }
     }
@@ -384,12 +384,12 @@ public class WebBrowserManager: WebBrowserManaging {
         }
 
         guard let item = item else {
-            StructuredLogger.shared.warning("⚠️ [WebBrowserManager] Cannot go forward - at end of stack", category: .bridge)
+            StructuredLogger.shared.warning("[WARN] [WebBrowserManager] Cannot go forward - at end of stack", category: .bridge)
             return false
         }
 
         guard let navController = getNavigationController() else {
-            StructuredLogger.shared.warning("⚠️ [WebBrowserManager] Cannot go forward - no navigation controller", category: .bridge)
+            StructuredLogger.shared.warning("[WARN] [WebBrowserManager] Cannot go forward - no navigation controller", category: .bridge)
             return false
         }
 
@@ -401,7 +401,7 @@ public class WebBrowserManager: WebBrowserManaging {
             self?._currentBrowser = item.viewController
         }
 
-        StructuredLogger.shared.info("✅ [WebBrowserManager] Went forward \(steps) steps", category: .bridge)
+        StructuredLogger.shared.info("[OK] [WebBrowserManager] Went forward \(steps) steps", category: .bridge)
         return true
     }
 
@@ -415,9 +415,9 @@ public class WebBrowserManager: WebBrowserManaging {
     // MARK: - Helper Methods
 
     private func createWebViewController(for url: URL, params: WebBrowserParams) -> UIViewController {
-        StructuredLogger.shared.debug("🔧 [WebBrowserManager] createWebViewController called for URL: \(url.absoluteString)", category: .bridge)
-        StructuredLogger.shared.debug("🔧 [WebBrowserManager] params.hideTabBar: \(params.hideTabBar)", category: .bridge)
-        StructuredLogger.shared.debug("🔧 [WebBrowserManager] params.displayMode: \(params.displayMode)", category: .bridge)
+        StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] createWebViewController called for URL: \(url.absoluteString)", category: .bridge)
+        StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.hideTabBar: \(params.hideTabBar)", category: .bridge)
+        StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.displayMode: \(params.displayMode)", category: .bridge)
 
         // 🔥 关键：必须在创建时就设置 hidesBottomBarWhenPushed（在 push 之前）
         // 使用 WebBrowserViewController 以支持页面自动缓存功能
@@ -425,11 +425,11 @@ public class WebBrowserManager: WebBrowserManaging {
         if isLocalURL(url) {
             // 对于本地URL，需要特殊处理
             let pageName = getPageName(from: url)
-            StructuredLogger.shared.debug("🔧 [WebBrowserManager] Creating WebBrowserViewController for local URL: \(pageName)", category: .bridge)
+            StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] Creating WebBrowserViewController for local URL: \(pageName)", category: .bridge)
             webVC = WebBrowserViewController(url: url)  // 使用便捷初始化
             webVC.title = params.customTitle ?? pageName
         } else {
-            StructuredLogger.shared.debug("🔧 [WebBrowserManager] Creating WebBrowserViewController for remote URL", category: .bridge)
+            StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] Creating WebBrowserViewController for remote URL", category: .bridge)
             webVC = WebBrowserViewController(url: url)  // 使用便捷初始化
 
             // 🔥 优化：如果是 localhost，不作为标题显示
@@ -440,7 +440,7 @@ public class WebBrowserManager: WebBrowserManaging {
             Task {
                 try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: webVC.title)
             }
-            StructuredLogger.shared.debug("📝 [WebBrowserManager] Added to history: \(url.absoluteString)", category: .bridge)
+            StructuredLogger.shared.debug("[NOTE] [WebBrowserManager] Added to history: \(url.absoluteString)", category: .bridge)
         }
 
         // 🔥 必须在 push 之前设置 hidesBottomBarWhenPushed
@@ -449,7 +449,7 @@ public class WebBrowserManager: WebBrowserManaging {
         // 添加 accessibility identifier
         webVC.view.accessibilityIdentifier = "browserManager.container"
 
-        StructuredLogger.shared.info("✅ [WebBrowserManager] WebBrowserViewController created successfully", category: .bridge)
+        StructuredLogger.shared.info("[OK] [WebBrowserManager] WebBrowserViewController created successfully", category: .bridge)
 
         return webVC
     }
@@ -510,7 +510,7 @@ public class WebBrowserManager: WebBrowserManaging {
         var current: UIViewController? = viewController
         while let parent = current?.parent {
             if let navController = parent as? UINavigationController {
-                os_log("✅ 通过 parent 找到 NavigationController", log: OSLog.default, type: .info)
+                os_log("[OK] 通过 parent 找到 NavigationController", log: OSLog.default, type: .info)
                 return navController
             }
             current = parent
@@ -548,7 +548,7 @@ public class WebBrowserManager: WebBrowserManaging {
             }
         }
 
-        os_log("❌ findNavigationController 未找到 NavigationController", log: OSLog.default, type: .error)
+        os_log("[FAIL] findNavigationController 未找到 NavigationController", log: OSLog.default, type: .error)
         return nil
     }
 

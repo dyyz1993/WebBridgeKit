@@ -1,6 +1,15 @@
 import XCTest
 @testable import WebBridgeKit
 
+private func assertColorsEqual(_ actual: UIColor?, _ expected: UIColor?, file: StaticString = #file, line: UInt = #line) {
+    guard let actual = actual, let expected = expected else {
+        XCTAssertEqual(actual, expected, file: file, line: line)
+        return
+    }
+    let trait = UITraitCollection(userInterfaceStyle: .light)
+    XCTAssertEqual(actual.resolvedColor(with: trait), expected.resolvedColor(with: trait), file: file, line: line)
+}
+
 final class ThemeGradientViewTests: XCTestCase {
 
     // MARK: - Initialization
@@ -61,8 +70,13 @@ final class ThemeGradientViewTests: XCTestCase {
         }
 
         XCTAssertEqual(gradientLayer.colors?.count, 2)
-        XCTAssertEqual(gradientLayer.colors?[0] as! CGColor, ThemeColors.current.gradientStart.cgColor)
-        XCTAssertEqual(gradientLayer.colors?[1] as! CGColor, ThemeColors.current.gradientEnd.cgColor)
+        let trait = UITraitCollection(userInterfaceStyle: .light)
+        let resolvedStart = ThemeTokens.Color.gradientStart.resolvedColor(with: trait).cgColor
+        let resolvedEnd = ThemeTokens.Color.gradientEnd.resolvedColor(with: trait).cgColor
+        let resolvedActual0 = UIColor(cgColor: gradientLayer.colors?[0] as! CGColor).resolvedColor(with: trait).cgColor
+        let resolvedActual1 = UIColor(cgColor: gradientLayer.colors?[1] as! CGColor).resolvedColor(with: trait).cgColor
+        XCTAssertEqual(resolvedActual0, resolvedStart)
+        XCTAssertEqual(resolvedActual1, resolvedEnd)
     }
 
     // MARK: - Gradient Direction (Start/End Points)
@@ -189,7 +203,7 @@ final class ThemeGradientViewTests: XCTestCase {
             return
         }
         let actual = UIColor(cgColor: actualCGColor as! CGColor)
-        let expected = ThemeColors.current.gradientStart
+        let expected = ThemeTokens.Color.gradientStart
         var r1: CGFloat = 0; var g1: CGFloat = 0; var b1: CGFloat = 0; var a1: CGFloat = 0
         var r2: CGFloat = 0; var g2: CGFloat = 0; var b2: CGFloat = 0; var a2: CGFloat = 0
         actual.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
@@ -213,7 +227,7 @@ final class ThemeGradientViewTests: XCTestCase {
             return
         }
         let actual = UIColor(cgColor: actualCGColor as! CGColor)
-        let expected = ThemeColors.current.gradientEnd
+        let expected = ThemeTokens.Color.gradientEnd
         var r1: CGFloat = 0; var g1: CGFloat = 0; var b1: CGFloat = 0; var a1: CGFloat = 0
         var r2: CGFloat = 0; var g2: CGFloat = 0; var b2: CGFloat = 0; var a2: CGFloat = 0
         actual.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)

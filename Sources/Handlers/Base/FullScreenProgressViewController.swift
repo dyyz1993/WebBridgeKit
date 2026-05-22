@@ -21,7 +21,7 @@ public class FullScreenProgressViewController: UIViewController {
         label.font = UIFont.preferredFont(forTextStyle: .caption1)
         label.textColor = ThemeTokens.Color.success
         label.textAlignment = .center
-        label.text = "✅ 已修改 2025-02-04 Sources/Handlers/FullScreenProgressViewController.swift"
+        label.text = "Sources/Handlers/FullScreenProgressViewController.swift"
         label.backgroundColor = ThemeTokens.Color.background
         return label
     }()

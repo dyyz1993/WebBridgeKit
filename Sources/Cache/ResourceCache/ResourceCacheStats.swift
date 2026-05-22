@@ -13,7 +13,7 @@ extension WebResourceCacheManager {
     var cacheStats: WebCacheStatistics? {
         if Thread.isMainThread {
             #if DEBUG
-            print("⚠️ [WebResourceCacheManager] Warning: Accessing cacheStats on main thread may cause hitches")
+            print("[WARN] [WebResourceCacheManager] Warning: Accessing cacheStats on main thread may cause hitches")
             #endif
         }
         let realm = getRealm()
@@ -38,7 +38,7 @@ extension WebResourceCacheManager {
 
         if Thread.isMainThread {
             #if DEBUG
-            print("⚠️ [WebResourceCacheManager] getCacheStats called on Main Thread. This may cause UI lag.")
+            print("[WARN] [WebResourceCacheManager] getCacheStats called on Main Thread. This may cause UI lag.")
             #endif
         }
 
@@ -102,7 +102,7 @@ extension WebResourceCacheManager {
             removeCacheSpace(cacheID: cacheID)
         }
 
-        StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Evicted \(toRemove.count) cache spaces using policy: \(policy)", category: .cache)
+        StructuredLogger.shared.debug("[CLEAN] [WebResourceCacheManager] Evicted \(toRemove.count) cache spaces using policy: \(policy)", category: .cache)
 
         return toRemove
     }
@@ -132,7 +132,7 @@ extension WebResourceCacheManager {
             currentSize -= size
         }
 
-        StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Evicted \(removed.count) cache spaces to fit size limit", category: .cache)
+        StructuredLogger.shared.debug("[CLEAN] [WebResourceCacheManager] Evicted \(removed.count) cache spaces to fit size limit", category: .cache)
 
         return removed
     }
@@ -149,7 +149,7 @@ extension WebResourceCacheManager {
             removeCacheSpace(cacheID: cacheID)
         }
 
-        StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Evicted \(toRemove.count) old cache spaces (older than \(maxAge)s)", category: .cache)
+        StructuredLogger.shared.debug("[CLEAN] [WebResourceCacheManager] Evicted \(toRemove.count) old cache spaces (older than \(maxAge)s)", category: .cache)
 
         return toRemove
     }
@@ -176,7 +176,7 @@ extension WebResourceCacheManager {
             self.saveCacheIndex()
             self.updateTotalCacheSize()
 
-            StructuredLogger.shared.debug("🗑️ [WebResourceCacheManager] Cleared all cache spaces (async)", category: .cache)
+            StructuredLogger.shared.debug("[DEL] [WebResourceCacheManager] Cleared all cache spaces (async)", category: .cache)
         }
     }
 
@@ -192,7 +192,7 @@ extension WebResourceCacheManager {
             }
 
             if !expiredIDs.isEmpty {
-                StructuredLogger.shared.debug("🧹 [WebResourceCacheManager] Cleaned up \(expiredIDs.count) expired cache spaces", category: .cache)
+                StructuredLogger.shared.debug("[CLEAN] [WebResourceCacheManager] Cleaned up \(expiredIDs.count) expired cache spaces", category: .cache)
             }
         }
     }

@@ -169,7 +169,7 @@ extension WebLocationHandler: CLLocationManagerDelegate {
      * 获取位置失败的回调
      */
     public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        StructuredLogger.shared.error("📍 [Location] Error: \(error.localizedDescription)", category: .handler)
+        StructuredLogger.shared.error("[PIN] [Location] Error: \(error.localizedDescription)", category: .handler)
         if let completion = completionCallback {
             reject(error: "Failed to get location: \(error.localizedDescription)", completion: completion)
             completionCallback = nil

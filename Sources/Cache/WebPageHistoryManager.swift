@@ -53,7 +53,7 @@ actor HistoryDatabaseActor {
                 try realm.write {
                     realm.add(history)
                 }
-                WebBridgeLogger.shared.log(.debug, "➕ History added: \(urlString)")
+                WebBridgeLogger.shared.log(.debug, "[PLUS] History added: \(urlString)")
                 return
             }
 
@@ -68,7 +68,7 @@ actor HistoryDatabaseActor {
                     existing.favicon = favicon
                 }
             }
-            WebBridgeLogger.shared.log(.debug, "♻️ History updated: \(urlString)")
+            WebBridgeLogger.shared.log(.debug, "[RECYCLE] History updated: \(urlString)")
         }
     }
 
@@ -89,7 +89,7 @@ actor HistoryDatabaseActor {
             realm.delete(history)
         }
 
-        WebBridgeLogger.shared.log(.info, "🗑️ History deleted: \(id)")
+        WebBridgeLogger.shared.log(.info, "[DEL] History deleted: \(id)")
     }
 
     /// Clear all history (preserves favorites and pinned items)
@@ -107,7 +107,7 @@ actor HistoryDatabaseActor {
             realm.delete(itemsToDelete)
         }
 
-        WebBridgeLogger.shared.log(.info, "🗑️ Non-favorite/pinned history cleared")
+        WebBridgeLogger.shared.log(.info, "[DEL] Non-favorite/pinned history cleared")
     }
 
     /// Clean up low-frequency items (only non-favorite and non-pinned)
@@ -137,7 +137,7 @@ actor HistoryDatabaseActor {
             }
         }
 
-        WebBridgeLogger.shared.log(.info, "🧹 Cleaned up \(toDeleteCount) low-frequency history items (protected favorites/pinned)")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] Cleaned up \(toDeleteCount) low-frequency history items (protected favorites/pinned)")
     }
 
     // MARK: - Query Operations
@@ -268,7 +268,7 @@ actor HistoryDatabaseActor {
             }
         }
 
-        WebBridgeLogger.shared.log(.info, "🧹 Cleaned \(toClean.count) old thumbnails")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] Cleaned \(toClean.count) old thumbnails")
     }
 }
 

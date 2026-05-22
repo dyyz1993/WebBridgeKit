@@ -67,7 +67,7 @@ public class WebBridgePool {
             self.warmBridge = bridge
             self.lock.unlock()
 
-            WebBridgeLogger.shared.log(.info, "✅ [WebBridgePool] Bridge warmed up with \(commonHandlers.count) common handlers")
+            WebBridgeLogger.shared.log(.info, "[OK] [WebBridgePool] Bridge warmed up with \(commonHandlers.count) common handlers")
             completion?()
         }
     }
@@ -107,7 +107,7 @@ public class WebBridgePool {
         self.preheatedUserScript = script
         self.warmConfiguration = config
 
-        WebBridgeLogger.shared.log(.info, "✅ [WebBridgePool] Configuration warmed up with System URLCache (no HTML modification needed)")
+        WebBridgeLogger.shared.log(.info, "[OK] [WebBridgePool] Configuration warmed up with System URLCache (no HTML modification needed)")
     }
 
     // MARK: - 获取和回收
@@ -121,11 +121,11 @@ public class WebBridgePool {
         lock.unlock()
 
         if let bridge = bridge {
-            WebBridgeLogger.shared.log(.info, "♻️ [WebBridgePool] Acquired warm bridge")
+            WebBridgeLogger.shared.log(.info, "[RECYCLE] [WebBridgePool] Acquired warm bridge")
             return bridge
         }
 
-        WebBridgeLogger.shared.log(.info, "🆕 [WebBridgePool] Created new bridge")
+        WebBridgeLogger.shared.log(.info, "[NEW] [WebBridgePool] Created new bridge")
         return WebJavaScriptBridge()
     }
 
@@ -136,9 +136,9 @@ public class WebBridgePool {
         // 只保留一个预热实例
         if warmBridge == nil {
             warmBridge = bridge
-            WebBridgeLogger.shared.log(.info, "♻️ [WebBridgePool] Recycled bridge")
+            WebBridgeLogger.shared.log(.info, "[RECYCLE] [WebBridgePool] Recycled bridge")
         } else {
-            WebBridgeLogger.shared.log(.warning, "⚠️ [WebBridgePool] Pool full, bridge not recycled")
+            WebBridgeLogger.shared.log(.warning, "[WARN] [WebBridgePool] Pool full, bridge not recycled")
         }
         lock.unlock()
     }
@@ -160,7 +160,7 @@ public class WebBridgePool {
         lock.lock()
         warmBridge = nil
         lock.unlock()
-        WebBridgeLogger.shared.log(.warning, "🧹 [WebBridgePool] Cleared warm bridge due to memory warning")
+        WebBridgeLogger.shared.log(.warning, "[CLEAN] [WebBridgePool] Cleared warm bridge due to memory warning")
     }
 
     /// 清空所有缓存
@@ -170,7 +170,7 @@ public class WebBridgePool {
         warmConfiguration = nil
         preheatedUserScript = nil
         lock.unlock()
-        WebBridgeLogger.shared.log(.info, "🧹 [WebBridgePool] All cache cleared")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] [WebBridgePool] All cache cleared")
     }
 
     // MARK: - Helper
@@ -180,7 +180,7 @@ public class WebBridgePool {
         return """
         window.BarkBridge = {
             callNative: function(action, params) {
-                console.log('📤 [Bark] callNative:', action, params);
+                console.log('[SEND] [Bark] callNative:', action, params);
                 return new Promise((resolve, reject) => {
                     const id = ++window.BarkBridge._callbackId;
                     window.BarkBridge._callbacks[id] = { resolve, reject };
@@ -192,7 +192,7 @@ public class WebBridgePool {
                     try {
                         window.webkit.messageHandlers.barkBridge.postMessage(message);
                     } catch (error) {
-                        console.error('❌ [Bark] Failed:', error);
+                        console.error('[FAIL] [Bark] Failed:', error);
                         reject(error);
                     }
                 });
@@ -200,7 +200,7 @@ public class WebBridgePool {
             _callbackId: 0,
             _callbacks: {},
             receiveResult: function(result) {
-                console.log('📥 [Bark] Received result:', result);
+                console.log('[RECV] [Bark] Received result:', result);
                 const id = result.callbackId;
                 let callback = this._callbacks[id];
                 if (callback) {
@@ -213,7 +213,7 @@ public class WebBridgePool {
                 }
             },
             receiveEvent: function(event, data) {
-                console.log('🔔 [Bark] Received event:', event, data);
+                console.log('[NOTIF] [Bark] Received event:', event, data);
 
                 // 兼容旧的音频回调
                 if (event === 'onAudioLevelChange' || event === 'onAudioLevel') {
@@ -233,7 +233,7 @@ public class WebBridgePool {
                 window.dispatchEvent(customEvent);
             }
         };
-        console.log('✅ [Bark] BarkBridge initialized');
+        console.log('[OK] [Bark] BarkBridge initialized');
         """
     }
 }

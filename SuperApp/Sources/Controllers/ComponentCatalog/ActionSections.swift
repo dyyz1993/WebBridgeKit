@@ -18,16 +18,16 @@ extension ComponentCatalogViewController {
         )
 
         let actions: [(icon: String, title: String, color: UIColor)] = [
-            ("qrcode.viewfinder", "Scan", ThemeColors.current.primary),
-            ("doc.on.clipboard", "Paste", ThemeColors.current.warning),
+            ("qrcode.viewfinder", "Scan", ThemeTokens.Color.primary),
+            ("doc.on.clipboard", "Paste", ThemeTokens.Color.warning),
             ("text.badge.star", "Token", ThemeTokens.Color.gradientEnd),
-            ("ladybug", "Debug", ThemeColors.current.success)
+            ("ladybug", "Debug", ThemeTokens.Color.success)
         ]
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_QuickActions"
-        container.backgroundColor = ThemeColors.current.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let stack = UIStackView()
         stack.axis = .horizontal
@@ -36,7 +36,7 @@ extension ComponentCatalogViewController {
 
         for action in actions {
             let btn = UIButton(type: .system)
-            btn.backgroundColor = ThemeColors.current.surface
+            btn.backgroundColor = ThemeTokens.Color.surface
             btn.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
             let iconView = UIImageView()
@@ -65,7 +65,7 @@ extension ComponentCatalogViewController {
 
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.sm)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.sm)
         }
 
         container.snp.makeConstraints { make in
@@ -86,8 +86,8 @@ extension ComponentCatalogViewController {
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_FilterPills"
-        container.backgroundColor = ThemeColors.current.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
 
         let stack = UIStackView()
         stack.axis = .horizontal
@@ -98,7 +98,7 @@ extension ComponentCatalogViewController {
             let button: UIButton
             if #available(iOS 15.0, *) {
                 var config = UIButton.Configuration.filled()
-                config.baseBackgroundColor = isSelected ? ThemeColors.current.primary : ThemeTokens.Color.surface
+                config.baseBackgroundColor = isSelected ? ThemeTokens.Color.primary : ThemeTokens.Color.surface
                 config.baseForegroundColor = isSelected ? ThemeTokens.Color.background : ThemeTokens.Color.textSecondary
                 config.cornerStyle = .capsule
                 config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
@@ -111,7 +111,7 @@ extension ComponentCatalogViewController {
             } else {
                 button = UIButton(type: .system)
                 button.titleLabel?.font = ThemeTokens.Typography.footnote
-                button.backgroundColor = isSelected ? ThemeColors.current.primary : ThemeTokens.Color.surface
+                button.backgroundColor = isSelected ? ThemeTokens.Color.primary : ThemeTokens.Color.surface
                 button.setTitleColor(isSelected ? ThemeTokens.Color.background : ThemeTokens.Color.textSecondary, for: .normal)
                 button.layer.cornerRadius = ThemeTokens.CornerRadius.xl
                 button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
@@ -123,7 +123,7 @@ extension ComponentCatalogViewController {
         container.addSubview(stack)
         stack.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.edges.equalToSuperview().inset(ThemeSpacing.default.md)
+            make.edges.equalToSuperview().inset(ThemeTokens.Spacing.md)
         }
 
         container.snp.makeConstraints { make in
@@ -145,7 +145,7 @@ extension ComponentCatalogViewController {
 
         let fab = UIButton(type: .system)
         fab.setImage(LucideIcon.bell.image(pointSize: 22, weight: .semibold), for: .normal)
-        fab.backgroundColor = ThemeColors.current.fabBackground
+        fab.backgroundColor = ThemeTokens.Color.fabBackground
         fab.tintColor = ThemeTokens.Color.background
         fab.layer.cornerRadius = ThemeTokens.CornerRadius.full
         fab.layer.shadowColor = UIColor.black.cgColor
@@ -177,18 +177,18 @@ extension ComponentCatalogViewController {
 
         let container = UIView()
         container.accessibilityIdentifier = "CatalogSection_MenuItems"
-        container.backgroundColor = ThemeColors.current.surface
-        container.layer.cornerRadius = ThemeCornerRadius.default.lg
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         container.clipsToBounds = true
 
         func makeRow(icon: String?, title: String, value: String?, showChevron: Bool, showSwitch: Bool = false, showBadge: Bool = false) -> UIView {
             let row = UIView()
-            row.backgroundColor = ThemeColors.current.cardBackground
+            row.backgroundColor = ThemeTokens.Color.cardBackground
 
             let iconIV = UIImageView()
             if let icon = icon {
                 iconIV.image = UIImage(systemName: icon)
-                iconIV.tintColor = ThemeColors.current.primary
+                iconIV.tintColor = ThemeTokens.Color.primary
                 iconIV.contentMode = .scaleAspectFit
             }
             row.addSubview(iconIV)
@@ -196,13 +196,13 @@ extension ComponentCatalogViewController {
             let titleLbl = UILabel()
             titleLbl.text = title
             titleLbl.font = ThemeTokens.Typography.callout
-            titleLbl.textColor = ThemeColors.current.text
+            titleLbl.textColor = ThemeTokens.Color.text
             row.addSubview(titleLbl)
 
             let valueLbl = UILabel()
             valueLbl.text = value
             valueLbl.font = ThemeTokens.Typography.subheadline
-            valueLbl.textColor = ThemeColors.current.textSecondary
+            valueLbl.textColor = ThemeTokens.Color.textSecondary
             valueLbl.textAlignment = .right
             valueLbl.isHidden = value == nil
             row.addSubview(valueLbl)
@@ -216,7 +216,7 @@ extension ComponentCatalogViewController {
 
             let toggle = UISwitch()
             toggle.isOn = showSwitch
-            toggle.onTintColor = ThemeColors.current.primary
+            toggle.onTintColor = ThemeTokens.Color.primary
             toggle.isHidden = !showSwitch
             row.addSubview(toggle)
 

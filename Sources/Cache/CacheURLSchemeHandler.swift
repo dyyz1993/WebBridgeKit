@@ -45,7 +45,7 @@ public class CacheURLSchemeHandler: NSObject, WKURLSchemeHandler {
             return
         }
 
-        WebBridgeLogger.shared.log(.debug, "📦 CacheScheme: \(url.absoluteString)")
+        WebBridgeLogger.shared.log(.debug, "[CACHE] CacheScheme: \(url.absoluteString)")
 
         // 记录访问
         recordAccess(for: url)
@@ -67,10 +67,10 @@ public class CacheURLSchemeHandler: NSObject, WKURLSchemeHandler {
             updateHitStats(for: key)
 
             deliverResponse(data: data, mimeType: mimeType, url: url, urlSchemeTask: urlSchemeTask)
-            WebBridgeLogger.shared.log(.debug, "✅ Served from compressed cache: \(key)")
+            WebBridgeLogger.shared.log(.debug, "[OK] Served from compressed cache: \(key)")
         } else {
             // 未找到，尝试离线缓存
-            WebBridgeLogger.shared.log(.warning, "⚠️ Not in compressed cache, trying offline cache")
+            WebBridgeLogger.shared.log(.warning, "[WARN] Not in compressed cache, trying offline cache")
             serveFromOfflineCache(uuid: key, resourcePath: "/index.html", url: url, urlSchemeTask: urlSchemeTask)
         }
     }
@@ -86,9 +86,9 @@ public class CacheURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
             deliverResponse(data: fileData, mimeType: mimeType, url: url, urlSchemeTask: urlSchemeTask)
 
-            WebBridgeLogger.shared.log(.debug, "✅ Served cached resource: \(resourcePath)")
+            WebBridgeLogger.shared.log(.debug, "[OK] Served cached resource: \(resourcePath)")
         } catch {
-            WebBridgeLogger.shared.log(.error, "❌ Failed to read cached resource: \(localPath.path) - \(error.localizedDescription)")
+            WebBridgeLogger.shared.log(.error, "[FAIL] Failed to read cached resource: \(localPath.path) - \(error.localizedDescription)")
             urlSchemeTask.didFailWithError(error)
         }
     }

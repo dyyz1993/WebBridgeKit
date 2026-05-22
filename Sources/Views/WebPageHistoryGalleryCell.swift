@@ -41,8 +41,8 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     /// 网站首字母图标
     private let fallbackIconLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.largeTitle
-        label.textColor = .white
+        label.font = ThemeTokens.Typography.screenTitle
+        label.textColor = ThemeTokens.Color.onPrimary
         label.textAlignment = .center
         label.backgroundColor = ThemeTokens.Color.info
         label.layer.cornerRadius = ThemeTokens.CornerRadius.lg
@@ -54,7 +54,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     private let cacheBadgeView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .white
+        imageView.tintColor = ThemeTokens.Color.onPrimary
         imageView.backgroundColor = ThemeTokens.Color.success
         imageView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         imageView.layer.masksToBounds = true
@@ -65,7 +65,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     /// 标题标签
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.footnote
+        label.font = ThemeTokens.Typography.metadata
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 2
         label.textAlignment = .center
@@ -75,7 +75,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
     /// URL 标签
     private let urlLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.caption2
+        label.font = ThemeTokens.Typography.tabLabel
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 1
         label.textAlignment = .center
@@ -198,7 +198,7 @@ class WebPageHistoryGalleryCell: UICollectionViewCell {
             ThemeTokens.Color.info,
             ThemeTokens.Color.success,
             ThemeTokens.Color.warning,
-            ThemeTokens.Color.gradientEnd,
+            ThemeTokens.Color.accent,
             ThemeTokens.Color.error,
             ThemeTokens.Color.info
         ]

@@ -63,13 +63,13 @@ extension PageCacheManager {
                     throw WebBridgeError.cacheLoadFailed(reason: "Failed to decode HTML as UTF-8")
                 }
 
-                WebBridgeLogger.shared.log(.info, "📥 [PageCache] Loaded from test_resources: \(pageName)")
+                WebBridgeLogger.shared.log(.info, "[RECV] [PageCache] Loaded from test_resources: \(pageName)")
                 return html
 
             } catch let error as WebBridgeError {
                 throw error
             } catch {
-                WebBridgeLogger.shared.log(.error, "❌ [PageCache] Failed to load from test_resources: \(error)")
+                WebBridgeLogger.shared.log(.error, "[FAIL] [PageCache] Failed to load from test_resources: \(error)")
                 throw WebBridgeError.networkRequestFailed(reason: error.localizedDescription)
             }
         }
@@ -86,10 +86,10 @@ extension PageCacheManager {
 
             do {
                 let html = try String(contentsOfFile: path, encoding: .utf8)
-                WebBridgeLogger.shared.log(.info, "📦 [PageCache] Loaded from bundle: \(pageName)")
+                WebBridgeLogger.shared.log(.info, "[CACHE] [PageCache] Loaded from bundle: \(pageName)")
                 return html
             } catch {
-                WebBridgeLogger.shared.log(.error, "❌ [PageCache] Failed to load from bundle: \(error)")
+                WebBridgeLogger.shared.log(.error, "[FAIL] [PageCache] Failed to load from bundle: \(error)")
                 return nil
             }
         }
@@ -150,7 +150,7 @@ extension PageCacheManager {
         if let toEvict = sortedPages.first {
             let evictedSize = toEvict.estimatedSizeKB / 1024
             pageCache.removeValue(forKey: toEvict.pageName)
-            WebBridgeLogger.shared.log(.info, "🧹 [PageCache] Evicted '\(toEvict.pageName)' (hitCount: \(toEvict.hitCount), size: \(evictedSize)MB) due to count limit")
+            WebBridgeLogger.shared.log(.info, "[CLEAN] [PageCache] Evicted '\(toEvict.pageName)' (hitCount: \(toEvict.hitCount), size: \(evictedSize)MB) due to count limit")
         }
     }
 
@@ -173,10 +173,10 @@ extension PageCacheManager {
             pageCache.removeValue(forKey: page.pageName)
             freedMB += pageSizeMB
 
-            WebBridgeLogger.shared.log(.info, "🧹 [PageCache] Evicted '\(page.pageName)' (hitCount: \(page.hitCount), size: \(pageSizeMB)MB) to free memory")
+            WebBridgeLogger.shared.log(.info, "[CLEAN] [PageCache] Evicted '\(page.pageName)' (hitCount: \(page.hitCount), size: \(pageSizeMB)MB) to free memory")
         }
 
-        WebBridgeLogger.shared.log(.info, "🧹 [PageCache] Memory eviction: freed \(freedMB)MB")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] [PageCache] Memory eviction: freed \(freedMB)MB")
     }
 
     func calculateEvictionScore(for page: CachedPage) -> Double {

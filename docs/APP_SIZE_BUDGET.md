@@ -1,17 +1,18 @@
 # App Size Budget
 
-## Current Measurements (Debug, iphonesimulator arm64)
+## Current Measurements
 
 | Component | Size |
 |-----------|------|
 | SuperApp.app (Debug) | 56 MB |
-| SuperApp.app (Release/Archive) | **27 MB** |
+| SuperApp.app (Release/Archive) | **26 MB** |
 | WebBridgeKit.framework (Debug) | 45 MB |
+| WebBridgeKit.framework (Release) | 22 MB |
 | WBKMessage.framework | 1.9 MB |
 | Assets.car | 465 KB |
 | SuperApp.debug.dylib | 7.0 MB |
 | Lucide icons | 73 imagesets |
-| Archive (.xcarchive) | 123 MB |
+| Archive (.xcarchive) | 122 MB |
 
 ### Framework Breakdown
 
@@ -31,16 +32,17 @@
 | Lucide imagesets | < 100 | 73 | ✅ PASS |
 | Non-Lucide icon resources | 0 | 0 | ✅ PASS |
 | Hardcoded color violations | 0 | 0 | ✅ PASS |
-| Embedded HTML test files | < 200 KB | ~250 KB | ⚠️ WARN |
-| Framework total (Release) | < 30 MB | ~27 MB | ✅ PASS |
+| Embedded HTML test/debug resources in Release | 0 files | 0 files | ✅ PASS |
+| Framework total (Release) | < 30 MB | ~23.4 MB | ✅ PASS |
 
 ### Release Verified
 
 | Metric | Debug | Release |
 |--------|-------|---------|
-| SuperApp.app total | 56 MB | **27 MB** |
-| Frameworks | 48 MB | TBD |
-| Assets.car | 465 KB | ~350 KB (est.) |
+| SuperApp.app total | 56 MB | **26 MB** |
+| Frameworks | 48 MB | **~23.4 MB** |
+| Assets.car | 465 KB | 465 KB |
+| Test/debug HTML/JS resources | Debug only | **0 files** |
 
 ## How to Measure
 
@@ -59,7 +61,9 @@ find Sources/Theme/icons.xcassets -mindepth 1 -maxdepth 1 -name '*.imageset' | w
 du -sh "$APP/Frameworks/"*.framework
 
 # Hardcoded color violations
-grep -rn 'UIColor(red:' Sources/ SuperApp/ --include='*.swift' | grep -v ThemeTokens | grep -v ThemeManager | grep -v Test
+rg 'UIColor\(red:|\.systemBlue|\.secondaryLabel|\.tertiaryLabel|\.systemOrange' \
+  Sources/ SuperApp/ AppTemplate/Sources --glob '*.swift' \
+  | grep -v ThemeTokens.swift | grep -v ThemeManager.swift
 
 # Archive build (Release, for accurate sizing)
 xcodebuild archive \
@@ -73,7 +77,7 @@ xcodebuild archive \
 
 ## Recommendations
 
-1. **Remove embedded HTML test files from bundle** — ~250 KB of test HTML/JS/CSS files are included in the app bundle. These should be excluded from Release builds via `EXCLUDED_SOURCE_FILE_NAMES` or moved to a test-only target.
-2. **Measure Release build** — Debug numbers include symbols. Archive with Release config for accurate App Store sizing.
-3. **Monitor Lucide icons** — Currently at 73/100 budget. Adding more icons requires audit.
-4. **Consider On-Demand Resources** — If app grows beyond 50 MB Release, consider ODR for test HTML resources.
+1. **Keep Release strip script covered by output dependencies** — `project.yml` and `WebBridgeKit.xcodeproj` both record `$(DERIVED_FILE_DIR)/strip-test-resources.stamp`.
+2. **Monitor Lucide icons** — Currently at 73/100 budget. Adding more icons requires audit.
+3. **Track Release size per PR** — Re-run the archive command above when adding frameworks, media, or bundled web resources.
+4. **Consider On-Demand Resources** — If app grows beyond 50 MB Release, consider ODR for optional demo/prototype assets.

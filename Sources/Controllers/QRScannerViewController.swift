@@ -56,7 +56,7 @@ public class QRScannerViewController: UIViewController {
 
     private let previewView: UIView = {
         let view = UIView()
-        view.backgroundColor = .black
+        view.backgroundColor = ThemeTokens.Color.surface
         return view
     }()
 
@@ -71,15 +71,15 @@ public class QRScannerViewController: UIViewController {
     private lazy var closeButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(LucideIcon.xmarkCircle.templateImage(pointSize: 24, weight: .medium), for: .normal)
-        button.tintColor = .white
+        button.tintColor = ThemeTokens.Color.textOnColor
         return button
     }()
 
     private lazy var tipLabel: UILabel = {
         let label = UILabel()
         label.text = configuration.tipText
-        label.textColor = .white
-        label.font = ThemeTokens.Typography.footnote
+        label.textColor = ThemeTokens.Color.textOnColor
+        label.font = ThemeTokens.Typography.metadata
         label.textAlignment = .center
         return label
     }()
@@ -122,7 +122,7 @@ public class QRScannerViewController: UIViewController {
     // MARK: - Setup
 
     private func setupUI() {
-        view.backgroundColor = .black
+        view.backgroundColor = ThemeTokens.Color.surface
         view.addSubview(previewView)
         previewView.snp.makeConstraints { make in
             make.edges.equalToSuperview()

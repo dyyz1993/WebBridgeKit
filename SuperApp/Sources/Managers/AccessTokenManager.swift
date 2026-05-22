@@ -62,7 +62,7 @@ public class AccessTokenManager {
             realm?.add(token)
         }
 
-        WebBridgeLogger.shared.log(.info, "🔑 Token generated: \(token.token)")
+        WebBridgeLogger.shared.log(.info, "[KEY] Token generated: \(token.token)")
         return token
     }
 
@@ -112,7 +112,7 @@ public class AccessTokenManager {
             realm?.delete(token)
         }
 
-        WebBridgeLogger.shared.log(.info, "🗑️ Token deleted: \(id)")
+        WebBridgeLogger.shared.log(.info, "[DEL] Token deleted: \(id)")
     }
 
     /// 获取所有口令
@@ -173,7 +173,7 @@ public class AccessTokenManager {
             realm?.delete(expired)
         }
 
-        WebBridgeLogger.shared.log(.info, "🧹 Cleaned up \(expired.count) expired tokens")
+        WebBridgeLogger.shared.log(.info, "[CLEAN] Cleaned up \(expired.count) expired tokens")
     }
 
     // MARK: - 私有方法

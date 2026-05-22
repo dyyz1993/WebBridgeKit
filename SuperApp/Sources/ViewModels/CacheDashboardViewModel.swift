@@ -142,10 +142,10 @@ class CacheDashboardViewModel: ViewModel {
 
                 var sections: [SectionModel<String, SubsystemStatItemModel>] = []
                 if !activeItems.isEmpty {
-                    sections.append(SectionModel(model: "🟢 活跃", items: activeItems))
+                    sections.append(SectionModel(model: "[GREEN] 活跃", items: activeItems))
                 }
                 if !inactiveItems.isEmpty {
-                    sections.append(SectionModel(model: "⚪ 空闲", items: inactiveItems))
+                    sections.append(SectionModel(model: "[WHITE] 空闲", items: inactiveItems))
                 }
                 return sections
             }
