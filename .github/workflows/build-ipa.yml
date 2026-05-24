@@ -15,6 +15,9 @@ on:
           - Release
           - Debug
 
+permissions:
+  contents: write
+
 jobs:
   build-ipa:
     name: Build IPA
