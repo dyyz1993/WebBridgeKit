@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SwiftUI
 import SnapKit
 import RxSwift
 import RxCocoa
@@ -319,7 +320,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func navigateToHistory() {
-        let vc = RecentAccessHistoryViewController()
+        let vc = UIHostingController(rootView: RecentAccessHistoryView())
+        vc.title = "最近访问"
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -329,7 +331,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func navigateToAbout() {
-        let vc = AboutViewController()
+        let vc = UIHostingController(rootView: AboutView())
+        vc.title = L10n.tr("about.title")
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -343,8 +346,14 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     #endif
 
     private func navigateToCacheDashboard() {
-        let vc = CacheDashboardViewController(viewModel: CacheDashboardViewModel())
-        navigationController?.pushViewController(vc, animated: true)
+        let dashboardView = CacheDashboardView(onNavigateToSubsystem: { [weak self] subsystemID in
+            guard let self else { return }
+            let detailVC = CacheSubsystemDetailViewController(subsystemID: subsystemID)
+            self.navigationController?.pushViewController(detailVC, animated: true)
+        })
+        let hostingVC = UIHostingController(rootView: dashboardView)
+        hostingVC.title = "缓存仪表盘"
+        navigationController?.pushViewController(hostingVC, animated: true)
     }
 
     private func openNotificationSettings() {
@@ -355,7 +364,8 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
 
     private func handleExportDiagnostics() {
         #if DEBUG
-        let vc = DiagnosticsViewController()
+        let vc = UIHostingController(rootView: DiagnosticsView())
+        vc.title = L10n.tr("settings.diagnostics.title")
         navigationController?.pushViewController(vc, animated: true)
         #else
         let alert = UIAlertController(

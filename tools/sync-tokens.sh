@@ -3,25 +3,37 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "╔══════════════════════════════════════════╗"
-echo "║  WebBridgeKit — Design Token Sync        ║"
-echo "╚══════════════════════════════════════════╝"
+echo "=========================================================="
+echo "  WebBridgeKit — Design Token Sync"
+echo "=========================================================="
 echo ""
 
-# Validate JSON exists
 if [ ! -f "docs/design-tokens.json" ]; then
-    echo "❌ Missing docs/design-tokens.json"
+    echo "ERROR Missing docs/design-tokens.json"
     exit 1
 fi
 
-# Validate schema exists
 if [ ! -f "docs/design-tokens.schema.json" ]; then
-    echo "⚠️  Missing docs/design-tokens.schema.json (validation skipped)"
+    echo "WARN  Missing docs/design-tokens.schema.json (validation skipped)"
 fi
 
-# Run sync
 echo "Running sync script..."
-swift tools/sync-design-tokens.swift
+if [ -d "tools/TokenGenerators" ]; then
+    echo "  Using modular TokenGenerators/ (multi-file compilation)"
+    swiftc -parse-as-library \
+        tools/TokenGenerators/TokenModel.swift \
+        tools/TokenGenerators/SwiftGenerator.swift \
+        tools/TokenGenerators/CSSGenerator.swift \
+        tools/TokenGenerators/KotlinGenerator.swift \
+        tools/TokenGenerators/ValidationReport.swift \
+        tools/sync-design-tokens.swift \
+        -o /tmp/wbk-token-sync
+    /tmp/wbk-token-sync
+    rm -f /tmp/wbk-token-sync
+else
+    echo "  Using single-file mode"
+    swift tools/sync-design-tokens.swift
+fi
 
 echo ""
 echo "Validating JSON against schema..."
@@ -30,11 +42,13 @@ if command -v ajv &>/dev/null; then
 elif command -v check-jsonschema &>/dev/null; then
     check-jsonschema --schemafile docs/design-tokens.schema.json docs/design-tokens.json
 else
-    echo "⚠️  No JSON Schema validator found (ajv or check-jsonschema). Schema validation skipped."
+    echo "WARN  No JSON Schema validator found (ajv or check-jsonschema). Schema validation skipped."
 fi
 
 echo ""
-echo "✅ Token sync complete."
+echo "Token sync complete."
 echo "   Source:  docs/design-tokens.json"
 echo "   Outputs: Sources/Theme/ThemeTokens.swift"
-echo "           docs/prototype/design-tokens.css"
+echo "            docs/prototype/design-tokens.css"
+echo "            tools/output/android/ThemeTokens.kt"
+echo "            tools/output/android/res/"

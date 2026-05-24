@@ -83,6 +83,19 @@ check "No SF Symbols in feature code" \
 check "No buttons with height < 40pt" \
     'rg "height.*equalTo\(([2-3][0-9]|[0-9])\)" Sources/ SuperApp/ --glob "*.swift" -n | grep -i "button\|tap\|click" || true'
 
+# 14. Design system lint (comprehensive)
+echo ""
+echo "=== Design System Lint (comprehensive) ==="
+bash tools/design-lint.sh --ci
+DESIGN_LINT_EXIT=$?
+if [ "$DESIGN_LINT_EXIT" -ne 0 ]; then
+    echo "  FAIL  Design system lint"
+    ((FAIL++)) || true
+else
+    echo "  PASS  Design system lint"
+    ((PASS++)) || true
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 

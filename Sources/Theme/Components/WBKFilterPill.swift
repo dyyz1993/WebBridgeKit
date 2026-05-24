@@ -66,8 +66,8 @@ public final class WBKFilterPill: UIView {
             countWidth = 0
         }
 
-        let contentWidth = iconWidth + titleWidth + countWidth + 28
-        return CGSize(width: max(contentWidth, 56), height: 32)
+        let contentWidth = iconWidth + titleWidth + countWidth + ThemeTokens.ComponentContract.FilterPill.horizontalPadding * 2
+        return CGSize(width: max(contentWidth, ThemeTokens.ComponentContract.FilterPill.minWidth), height: ThemeTokens.ComponentContract.FilterPill.height)
     }
 
     private func setupUI(title: String, style: Style) {
@@ -100,13 +100,13 @@ public final class WBKFilterPill: UIView {
             iconView.image = icon.templateImage(pointSize: 14)
 
             iconView.snp.makeConstraints { make in
-                make.leading.equalToSuperview().offset(14)
+                make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
                 make.centerY.equalToSuperview()
                 make.width.height.equalTo(14)
             }
             titleLabel.snp.makeConstraints { make in
-                make.leading.equalTo(iconView.snp.trailing).offset(4)
-                make.trailing.equalToSuperview().offset(-14)
+                make.leading.equalTo(iconView.snp.trailing).offset(ThemeTokens.Spacing.xs)
+                make.trailing.equalToSuperview().offset(-ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
                 make.centerY.equalToSuperview()
             }
 
@@ -116,32 +116,32 @@ public final class WBKFilterPill: UIView {
                 countLabel.text = "\(count)"
 
                 titleLabel.snp.makeConstraints { make in
-                    make.leading.equalToSuperview().offset(14)
+                    make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
                     make.centerY.equalToSuperview()
                 }
                 countLabel.snp.makeConstraints { make in
-                    make.leading.equalTo(titleLabel.snp.trailing).offset(4)
-                    make.trailing.equalToSuperview().offset(-14)
+                    make.leading.equalTo(titleLabel.snp.trailing).offset(ThemeTokens.Spacing.xs)
+                    make.trailing.equalToSuperview().offset(-ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
                     make.centerY.equalToSuperview()
                 }
             } else {
                 titleLabel.snp.makeConstraints { make in
-                    make.leading.equalToSuperview().offset(14)
-                    make.trailing.equalToSuperview().offset(-14)
+                    make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
+                    make.trailing.equalToSuperview().offset(-ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
                     make.centerY.equalToSuperview()
                 }
             }
 
         default:
             titleLabel.snp.makeConstraints { make in
-                make.leading.equalToSuperview().offset(14)
-                make.trailing.equalToSuperview().offset(-14)
+                make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
+                make.trailing.equalToSuperview().offset(-ThemeTokens.ComponentContract.FilterPill.horizontalPadding)
                 make.centerY.equalToSuperview()
             }
         }
 
         snp.makeConstraints { make in
-            make.height.equalTo(32)
+            make.height.equalTo(ThemeTokens.ComponentContract.FilterPill.height)
         }
 
         updateAppearance()

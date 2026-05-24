@@ -54,18 +54,19 @@ public final class WBKMessageCell: UIView {
         didSet {
             if isLoading {
                 containerView.alpha = 0
-                skeletonView.isHidden = false
-                skeletonView.alpha = 1
-                UIView.animate(
-                    withDuration: 1.0,
-                    delay: 0,
-                    options: [.repeat, .autoreverse],
-                    animations: { self.skeletonView.alpha = 0.4 }
-                )
+                shimmerSkeleton.isHidden = false
+                shimmerSkeleton.configure(shapes: [
+                    .roundedRect(
+                        frame: bounds.isEmpty
+                            ? CGRect(x: 0, y: 0, width: 300, height: ThemeTokens.ComponentContract.MessageCell.minHeight)
+                            : CGRect(x: 0, y: 0, width: bounds.width, height: ThemeTokens.ComponentContract.MessageCell.minHeight),
+                        cornerRadius: ThemeTokens.CornerRadius.card
+                    )
+                ])
+                shimmerSkeleton.startShimmer()
             } else {
                 containerView.alpha = 1
-                skeletonView.isHidden = true
-                skeletonView.layer.removeAllAnimations()
+                shimmerSkeleton.stopShimmer()
             }
         }
     }
@@ -73,7 +74,7 @@ public final class WBKMessageCell: UIView {
     public var onTap: (() -> Void)?
 
     private let containerView = UIView()
-    private let skeletonView = UIView()
+    private let shimmerSkeleton = WBKSkeletonView()
     private let unreadDotView = UIView()
     private let avatarView = UIView()
     private let avatarLabel = UILabel()
@@ -101,7 +102,7 @@ public final class WBKMessageCell: UIView {
 
     private func setupUI() {
         addSubview(containerView)
-        addSubview(skeletonView)
+        addSubview(shimmerSkeleton)
         containerView.addSubview(unreadDotView)
         containerView.addSubview(avatarView)
         avatarView.addSubview(avatarLabel)
@@ -111,12 +112,10 @@ public final class WBKMessageCell: UIView {
 
         backgroundColor = .clear
 
-        skeletonView.backgroundColor = ThemeTokens.Color.border
-        skeletonView.layer.cornerRadius = ThemeTokens.CornerRadius.card
-        skeletonView.isHidden = true
-        skeletonView.snp.makeConstraints { make in
+        shimmerSkeleton.isHidden = true
+        shimmerSkeleton.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
-            make.height.equalTo(80)
+            make.height.equalTo(ThemeTokens.ComponentContract.MessageCell.minHeight)
         }
 
         containerView.backgroundColor = ThemeTokens.Color.surface
@@ -128,7 +127,7 @@ public final class WBKMessageCell: UIView {
         unreadDotView.backgroundColor = ThemeTokens.Color.unreadDot
         unreadDotView.layer.cornerRadius = 4
         unreadDotView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(ThemeTokens.Spacing.lg)
             make.top.equalToSuperview().offset(18)
             make.width.height.equalTo(8)
         }
@@ -137,7 +136,7 @@ public final class WBKMessageCell: UIView {
         avatarView.layer.cornerRadius = 20
         avatarView.isHidden = true
         avatarView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(ThemeTokens.Spacing.lg)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(40)
         }
@@ -154,7 +153,7 @@ public final class WBKMessageCell: UIView {
         iconImageView.tintColor = ThemeTokens.Color.textTertiary
         iconImageView.isHidden = true
         iconImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(ThemeTokens.Spacing.lg)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(ThemeTokens.Icons.Sizes.md)
         }
@@ -193,21 +192,21 @@ public final class WBKMessageCell: UIView {
 
         textStack.snp.makeConstraints { make in
             make.leading.equalTo(containerView.snp.leading).offset(40)
-            make.top.equalToSuperview().offset(12)
-            make.bottom.equalToSuperview().offset(-12).priority(.high)
-            make.trailing.equalToSuperview().offset(-16)
+            make.top.equalToSuperview().offset(ThemeTokens.Spacing.md)
+            make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.md).priority(.high)
+            make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.lg)
         }
 
         separatorView.backgroundColor = ThemeTokens.Color.separator
         separatorView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(ThemeTokens.Spacing.lg)
             make.trailing.bottom.equalToSuperview()
             make.height.equalTo(0.5)
         }
 
         snp.makeConstraints { make in
-            make.height.greaterThanOrEqualTo(72)
-            make.height.lessThanOrEqualTo(96)
+            make.height.greaterThanOrEqualTo(ThemeTokens.ComponentContract.MessageCell.minHeight)
+            make.height.lessThanOrEqualTo(ThemeTokens.ComponentContract.MessageCell.maxHeight)
         }
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
@@ -257,10 +256,10 @@ public final class WBKMessageCell: UIView {
         }
 
         textStack.snp.remakeConstraints { make in
-            make.leading.equalTo(leadingView.snp.trailing).offset(12)
-            make.top.equalToSuperview().offset(12)
-            make.bottom.equalToSuperview().offset(-12).priority(.high)
-            make.trailing.equalToSuperview().offset(-16)
+            make.leading.equalTo(leadingView.snp.trailing).offset(ThemeTokens.Spacing.md)
+            make.top.equalToSuperview().offset(ThemeTokens.Spacing.md)
+            make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.md).priority(.high)
+            make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.lg)
         }
     }
 
@@ -270,13 +269,13 @@ public final class WBKMessageCell: UIView {
 
         if hideBody {
             textStack.snp.updateConstraints { make in
-                make.top.equalToSuperview().offset(16)
-                make.bottom.equalToSuperview().offset(-16).priority(.high)
+                make.top.equalToSuperview().offset(ThemeTokens.Spacing.lg)
+                make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.lg).priority(.high)
             }
         } else {
             textStack.snp.updateConstraints { make in
-                make.top.equalToSuperview().offset(12)
-                make.bottom.equalToSuperview().offset(-12).priority(.high)
+                make.top.equalToSuperview().offset(ThemeTokens.Spacing.md)
+                make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.md).priority(.high)
             }
         }
     }

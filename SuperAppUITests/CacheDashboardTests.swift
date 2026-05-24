@@ -51,13 +51,11 @@ final class CacheDashboardTests: XCTestCase {
         navigateToTab("设置")
         saveScreenshot("01-settings-tab")
 
-        let settingsTable = app.tables.firstMatch
-        XCTAssertTrue(settingsTable.waitForExistence(timeout: 5), "Settings table should exist")
-
-        // Find cache dashboard entry
+        // Settings 使用 WBKScreenScaffold (UIScrollView + UIStackView)，不是 UITableView
+        // 直接通过 staticText 查找缓存仪表盘入口
         var found = false
         let dashboardLabel = app.staticTexts["缓存仪表盘"]
-        if dashboardLabel.waitForExistence(timeout: 3) {
+        if dashboardLabel.waitForExistence(timeout: 5) {
             dashboardLabel.tap()
             found = true
             print("[✅] Found '缓存仪表盘'")
@@ -65,7 +63,7 @@ final class CacheDashboardTests: XCTestCase {
 
         if !found {
             let dashboardEn = app.staticTexts["Cache Dashboard"]
-            if dashboardEn.waitForExistence(timeout: 2) {
+            if dashboardEn.waitForExistence(timeout: 3) {
                 dashboardEn.tap()
                 found = true
                 print("[✅] Found 'Cache Dashboard'")
@@ -73,19 +71,20 @@ final class CacheDashboardTests: XCTestCase {
         }
 
         if !found {
-            for cell in settingsTable.cells.allElementsBoundByIndex {
-                let labels = cell.staticTexts.allElementsBoundByIndex.map(\.label)
-                let combined = labels.joined(separator: " ").lowercased()
-                if combined.contains("缓存") || combined.contains("cache") || combined.contains("仪表") {
-                    cell.tap()
+            // UIScrollView + UIStackView fallback: scan all static texts
+            let allTexts = app.staticTexts.allElementsBoundByIndex
+            for text in allTexts {
+                let label = text.label.lowercased()
+                if label.contains("缓存") || label.contains("cache") {
+                    text.tap()
                     found = true
-                    print("[✅] Found cache entry by cell scan")
+                    print("[✅] Found cache entry by text scan: \(text.label)")
                     break
                 }
             }
         }
 
-        XCTAssertTrue(found, "Should find cache dashboard entry")
+        XCTAssertTrue(found, "Should find cache dashboard entry in Settings")
         sleep(2)
 
         saveScreenshot("02-cache-dashboard")

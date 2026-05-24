@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SwiftUI
 import SnapKit
 import WebBridgeKit
 
@@ -35,7 +36,14 @@ class DebugPanelViewController: UIViewController {
     private lazy var notificationVC = NotificationDebugViewController()
     private lazy var logViewerVC = LogDebugViewController()
     private lazy var environmentVC = EnvironmentDebugViewController()
-    private lazy var cacheDashboardVC = CacheDashboardViewController(viewModel: CacheDashboardViewModel())
+    private lazy var cacheDashboardVC: UIHostingController<CacheDashboardView> = {
+        let view = CacheDashboardView(onNavigateToSubsystem: { [weak self] subsystemID in
+            guard let self else { return }
+            let detailVC = CacheSubsystemDetailViewController(subsystemID: subsystemID)
+            self.navigationController?.pushViewController(detailVC, animated: true)
+        })
+        return UIHostingController(rootView: view)
+    }()
     private lazy var networkVC = NetworkDebugViewController()
 
     override func viewDidLoad() {

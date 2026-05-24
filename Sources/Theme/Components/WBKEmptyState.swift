@@ -98,14 +98,14 @@ public final class WBKEmptyState: UIView {
         actionButton.titleLabel?.font = ThemeTokens.Typography.button
         actionButton.setTitleColor(ThemeTokens.Color.surface, for: .normal)
         actionButton.backgroundColor = ThemeTokens.Color.primary
-        actionButton.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        actionButton.layer.cornerRadius = ThemeTokens.ComponentContract.Button.cornerRadius
         actionButton.clipsToBounds = true
         actionButton.setTitle(actionTitle, for: .normal)
         actionButton.isHidden = actionTitle == nil
         actionButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
         actionButton.addTarget(self, action: #selector(actionTapped), for: .touchUpInside)
         actionButton.snp.makeConstraints { make in
-            make.height.equalTo(44)
+            make.height.equalTo(ThemeTokens.ComponentContract.Button.height)
         }
 
         let iconContainer = UIView()
@@ -113,32 +113,32 @@ public final class WBKEmptyState: UIView {
             iconContainer.addSubview(activityIndicator)
             activityIndicator.snp.makeConstraints { make in
                 make.edges.equalToSuperview()
-                make.width.height.equalTo(48)
+                make.width.height.equalTo(ThemeTokens.ComponentContract.EmptyState.iconSize)
             }
         } else {
             iconContainer.addSubview(iconImageView)
             iconImageView.snp.makeConstraints { make in
                 make.edges.equalToSuperview()
-                make.width.height.equalTo(48)
+                make.width.height.equalTo(ThemeTokens.ComponentContract.EmptyState.iconSize)
             }
         }
         iconContainer.snp.makeConstraints { make in
-            make.width.height.equalTo(48)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.EmptyState.iconSize)
         }
 
         let titleSpacer = UIView()
         titleSpacer.snp.makeConstraints { make in
-            make.height.equalTo(16)
+            make.height.equalTo(ThemeTokens.Spacing.lg)
         }
 
         let messageSpacer = UIView()
         messageSpacer.snp.makeConstraints { make in
-            make.height.equalTo(8)
+            make.height.equalTo(ThemeTokens.Spacing.sm)
         }
 
         let buttonSpacer = UIView()
         buttonSpacer.snp.makeConstraints { make in
-            make.height.equalTo(20)
+            make.height.equalTo(ThemeTokens.Spacing.xl)
         }
 
         stack.addArrangedSubview(iconContainer)
@@ -161,7 +161,7 @@ public final class WBKEmptyState: UIView {
             make.centerY.equalToSuperview().priority(.medium)
             make.leading.greaterThanOrEqualToSuperview().offset(ThemeTokens.Spacing.xl)
             make.trailing.lessThanOrEqualToSuperview().offset(-ThemeTokens.Spacing.xl)
-            make.width.lessThanOrEqualTo(280)
+            make.width.lessThanOrEqualTo(ThemeTokens.ComponentContract.EmptyState.maxWidth)
         }
 
         updateIcon()
@@ -177,7 +177,7 @@ public final class WBKEmptyState: UIView {
         default:
             iconColor = ThemeTokens.Color.textTertiary
         }
-        iconImageView.image = icon.templateImage(pointSize: 48, weight: .light)
+        iconImageView.image = icon.templateImage(pointSize: ThemeTokens.ComponentContract.EmptyState.iconSize, weight: .light)
         iconImageView.tintColor = iconColor
     }
 

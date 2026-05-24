@@ -44,7 +44,7 @@ public class ThemeEmptyState: UIView {
         iconImageView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.top.equalToSuperview()
-            make.width.height.equalTo(64)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.EmptyState.iconSize)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -60,13 +60,13 @@ public class ThemeEmptyState: UIView {
     }
 
     public func configure(icon: LucideIcon, title: String, description: String) {
-        iconImageView.image = icon.templateImage(pointSize: 48, weight: .light)
+        iconImageView.image = icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.empty, weight: .light)
         titleLabel.text = title
         descriptionLabel.text = description
     }
 
     public func configure(icon: String, title: String, description: String) {
-        iconImageView.image = LucideIcon.fallbackTemplateImage(sfName: icon, pointSize: 48, weight: .light)
+        iconImageView.image = LucideIcon.fallbackTemplateImage(sfName: icon, pointSize: ThemeTokens.Icons.Sizes.empty, weight: .light)
         titleLabel.text = title
         descriptionLabel.text = description
     }

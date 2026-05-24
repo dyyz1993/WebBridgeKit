@@ -18,8 +18,8 @@ public final class WBKIconButton: UIView {
 
         var boxSize: CGFloat {
             switch self {
-            case .small: return 32
-            case .medium: return 44
+            case .small: return ThemeTokens.ComponentContract.TapTarget.minimumHeight
+            case .medium: return ThemeTokens.ComponentContract.TapTarget.minimumWidth
             case .large: return 52
             }
         }

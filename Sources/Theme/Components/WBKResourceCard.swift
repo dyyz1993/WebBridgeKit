@@ -60,18 +60,19 @@ public final class WBKResourceCard: UIView {
         didSet {
             if isLoading {
                 cardView.alpha = 0
-                skeletonView.isHidden = false
-                skeletonView.alpha = 1
-                UIView.animate(
-                    withDuration: 1.0,
-                    delay: 0,
-                    options: [.repeat, .autoreverse],
-                    animations: { self.skeletonView.alpha = 0.4 }
-                )
+                shimmerSkeleton.isHidden = false
+                shimmerSkeleton.configure(shapes: [
+                    .roundedRect(
+                        frame: bounds.isEmpty
+                            ? CGRect(x: 0, y: 0, width: 300, height: ThemeTokens.ComponentContract.ResourceCard.minHeight)
+                            : bounds,
+                        cornerRadius: ThemeTokens.ComponentContract.ResourceCard.cornerRadius
+                    )
+                ])
+                shimmerSkeleton.startShimmer()
             } else {
                 cardView.alpha = 1
-                skeletonView.isHidden = true
-                skeletonView.layer.removeAllAnimations()
+                shimmerSkeleton.stopShimmer()
             }
         }
     }
@@ -79,7 +80,7 @@ public final class WBKResourceCard: UIView {
     public var onTap: (() -> Void)?
 
     private let cardView = UIView()
-    private let skeletonView = UIView()
+    private let shimmerSkeleton = WBKSkeletonView()
     private let iconImageView = UIImageView()
     private let textStack = UIStackView()
     private let titleLabel = UILabel()
@@ -107,7 +108,7 @@ public final class WBKResourceCard: UIView {
 
     private func setupUI() {
         addSubview(cardView)
-        addSubview(skeletonView)
+        addSubview(shimmerSkeleton)
         cardView.addSubview(iconImageView)
 
         textStack.axis = .vertical
@@ -125,26 +126,24 @@ public final class WBKResourceCard: UIView {
             make.edges.equalToSuperview()
         }
 
-        skeletonView.backgroundColor = ThemeTokens.Color.border
-        skeletonView.layer.cornerRadius = ThemeTokens.CornerRadius.card
-        skeletonView.isHidden = true
-        skeletonView.snp.makeConstraints { make in
+        shimmerSkeleton.isHidden = true
+        shimmerSkeleton.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
 
         cardView.backgroundColor = ThemeTokens.Color.cardBackground
-        cardView.layer.cornerRadius = ThemeTokens.CornerRadius.card
+        cardView.layer.cornerRadius = ThemeTokens.ComponentContract.ResourceCard.cornerRadius
         cardView.layer.shadowColor = UIColor.black.cgColor
-        cardView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        cardView.layer.shadowRadius = 8
-        cardView.layer.shadowOpacity = 0.08
+        cardView.layer.shadowOffset = CGSize(width: ThemeTokens.Shadows.card.offsetX, height: ThemeTokens.Shadows.card.offsetY)
+        cardView.layer.shadowRadius = ThemeTokens.Shadows.card.radius
+        cardView.layer.shadowOpacity = Float(ThemeTokens.Shadows.card.opacity)
 
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.tintColor = ThemeTokens.Color.primary
         iconImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.ResourceCard.padding)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(22)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.ResourceCard.iconSize)
         }
 
         titleLabel.font = ThemeTokens.Typography.cardTitle
@@ -166,25 +165,25 @@ public final class WBKResourceCard: UIView {
         subtitleLabel.isHidden = true
 
         textStack.snp.makeConstraints { make in
-            make.leading.equalTo(iconImageView.snp.trailing).offset(12)
-            make.top.equalToSuperview().offset(12)
-            make.bottom.equalToSuperview().offset(-12)
-            make.trailing.lessThanOrEqualTo(badgeContainer.snp.leading).offset(-8)
+            make.leading.equalTo(iconImageView.snp.trailing).offset(ThemeTokens.Spacing.md)
+            make.top.equalToSuperview().offset(ThemeTokens.Spacing.md)
+            make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.md)
+            make.trailing.lessThanOrEqualTo(badgeContainer.snp.leading).offset(-ThemeTokens.Spacing.sm)
         }
 
         badgeContainer.snp.makeConstraints { make in
-            make.trailing.equalTo(style == .withAction ? actionButton.snp.leading : cardView.snp.trailing).offset(-12)
+            make.trailing.equalTo(style == .withAction ? actionButton.snp.leading : cardView.snp.trailing).offset(-ThemeTokens.Spacing.md)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(0)
         }
 
         actionButton.isHidden = style != .withAction
-        actionButton.setImage(LucideIcon.chevronRight.templateImage(pointSize: 16), for: .normal)
+        actionButton.setImage(LucideIcon.chevronRight.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm), for: .normal)
         actionButton.tintColor = ThemeTokens.Color.textTertiary
         actionButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-12)
+            make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.md)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(32)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.TapTarget.minimumWidth)
         }
         actionButton.addTarget(self, action: #selector(actionTapped), for: .touchUpInside)
 
@@ -242,13 +241,13 @@ public final class WBKResourceCard: UIView {
             }
             badgeContainer.snp.remakeConstraints { make in
                 let trailingAnchor = style == .withAction ? actionButton.snp.leading : cardView.snp.trailing
-                make.trailing.equalTo(trailingAnchor).offset(-12)
+                make.trailing.equalTo(trailingAnchor).offset(-ThemeTokens.Spacing.md)
                 make.centerY.equalToSuperview()
             }
         } else {
             badgeContainer.snp.remakeConstraints { make in
                 let trailingAnchor = style == .withAction ? actionButton.snp.leading : cardView.snp.trailing
-                make.trailing.equalTo(trailingAnchor).offset(-12)
+                make.trailing.equalTo(trailingAnchor).offset(-ThemeTokens.Spacing.md)
                 make.centerY.equalToSuperview()
                 make.width.height.equalTo(0)
             }
@@ -257,12 +256,12 @@ public final class WBKResourceCard: UIView {
 
     @objc private func handleTap() {
         UIView.animate(
-            withDuration: 0.1,
+            withDuration: ThemeTokens.Animation.fast.duration,
             animations: {
                 self.alpha = ThemeTokens.Opacity.pressed
             },
             completion: { _ in
-                UIView.animate(withDuration: 0.1) {
+                UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
                     self.alpha = 1.0
                 }
             }

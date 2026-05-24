@@ -156,57 +156,57 @@ public final class WBKListRow: UIView {
         }
 
         iconBoxView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.SettingsRow.horizontalPadding)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(32)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.SettingsRow.iconBox)
         }
 
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.SettingsRow.iconSize)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalTo(iconBoxView.snp.trailing).offset(12)
+            make.leading.equalTo(iconBoxView.snp.trailing).offset(ThemeTokens.Spacing.md)
             make.top.equalToSuperview().offset(14)
-            make.trailing.lessThanOrEqualTo(trailingLabel.snp.leading).offset(-8).priority(.high)
-            make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-8).priority(.high)
-            make.trailing.lessThanOrEqualTo(toggleSwitch.snp.leading).offset(-8).priority(.high)
+            make.trailing.lessThanOrEqualTo(trailingLabel.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
+            make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
+            make.trailing.lessThanOrEqualTo(toggleSwitch.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
         }
 
         subtitleLabel.snp.makeConstraints { make in
             make.leading.equalTo(titleLabel)
-            make.top.equalTo(titleLabel.snp.bottom).offset(2)
+            make.top.equalTo(titleLabel.snp.bottom).offset(ThemeTokens.Spacing.xxs)
             make.trailing.lessThanOrEqualTo(titleLabel)
             make.bottom.equalToSuperview().offset(-14).priority(.high)
         }
 
         trailingLabel.snp.makeConstraints { make in
-            make.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
+            make.trailing.equalTo(chevronImageView.snp.leading).offset(-ThemeTokens.Spacing.sm)
             make.centerY.equalToSuperview()
             make.width.lessThanOrEqualTo(120)
         }
 
         chevronImageView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-16)
+            make.trailing.equalToSuperview().offset(-ThemeTokens.ComponentContract.SettingsRow.horizontalPadding)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(16)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.SettingsRow.chevronSize)
         }
 
         toggleSwitch.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-12)
+            make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.md)
             make.centerY.equalToSuperview()
         }
 
         separatorView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.SettingsRow.horizontalPadding)
             make.trailing.bottom.equalToSuperview()
             make.height.equalTo(0.5)
         }
 
         snp.makeConstraints { make in
-            make.height.greaterThanOrEqualTo(52)
-            make.height.lessThanOrEqualTo(60)
+            make.height.greaterThanOrEqualTo(ThemeTokens.ComponentContract.SettingsRow.minHeight)
+            make.height.lessThanOrEqualTo(ThemeTokens.ComponentContract.SettingsRow.maxHeight)
         }
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
@@ -246,7 +246,7 @@ public final class WBKListRow: UIView {
         case .none:
             chevronImageView.isHidden = true
             trailingLabel.snp.remakeConstraints { make in
-                make.trailing.equalToSuperview().offset(-16)
+                make.trailing.equalToSuperview().offset(-ThemeTokens.ComponentContract.SettingsRow.horizontalPadding)
                 make.centerY.equalToSuperview()
                 make.width.lessThanOrEqualTo(120)
             }
@@ -254,7 +254,7 @@ public final class WBKListRow: UIView {
             chevronImageView.isHidden = (style == .toggle)
             chevronImageView.image = LucideIcon.chevronRight.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm)
             trailingLabel.snp.remakeConstraints { make in
-                make.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
+                make.trailing.equalTo(chevronImageView.snp.leading).offset(-ThemeTokens.Spacing.sm)
                 make.centerY.equalToSuperview()
                 make.width.lessThanOrEqualTo(120)
             }
@@ -262,7 +262,7 @@ public final class WBKListRow: UIView {
             chevronImageView.isHidden = (style == .toggle)
             chevronImageView.image = LucideIcon.info.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm)
             trailingLabel.snp.remakeConstraints { make in
-                make.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
+                make.trailing.equalTo(chevronImageView.snp.leading).offset(-ThemeTokens.Spacing.sm)
                 make.centerY.equalToSuperview()
                 make.width.lessThanOrEqualTo(120)
             }
@@ -271,11 +271,11 @@ public final class WBKListRow: UIView {
             customAccessoryView = view
             containerView.addSubview(view)
             view.snp.makeConstraints { make in
-                make.trailing.equalToSuperview().offset(-12)
+                make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.md)
                 make.centerY.equalToSuperview()
             }
             trailingLabel.snp.remakeConstraints { make in
-                make.trailing.equalTo(view.snp.leading).offset(-8)
+                make.trailing.equalTo(view.snp.leading).offset(-ThemeTokens.Spacing.sm)
                 make.centerY.equalToSuperview()
                 make.width.lessThanOrEqualTo(120)
             }
@@ -286,26 +286,26 @@ public final class WBKListRow: UIView {
         if subtitle != nil {
             subtitleLabel.isHidden = false
             titleLabel.snp.remakeConstraints { make in
-                make.leading.equalTo(iconBoxView.snp.trailing).offset(12)
+                make.leading.equalTo(iconBoxView.snp.trailing).offset(ThemeTokens.Spacing.md)
                 make.top.equalToSuperview().offset(10)
-                make.trailing.lessThanOrEqualTo(trailingLabel.snp.leading).offset(-8).priority(.high)
-                make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-8).priority(.high)
-                make.trailing.lessThanOrEqualTo(toggleSwitch.snp.leading).offset(-8).priority(.high)
+                make.trailing.lessThanOrEqualTo(trailingLabel.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
+                make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
+                make.trailing.lessThanOrEqualTo(toggleSwitch.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
             }
             subtitleLabel.snp.remakeConstraints { make in
                 make.leading.equalTo(titleLabel)
-                make.top.equalTo(titleLabel.snp.bottom).offset(2)
+                make.top.equalTo(titleLabel.snp.bottom).offset(ThemeTokens.Spacing.xxs)
                 make.trailing.lessThanOrEqualTo(titleLabel)
                 make.bottom.equalToSuperview().offset(-10)
             }
         } else {
             titleLabel.snp.remakeConstraints { make in
-                make.leading.equalTo(iconBoxView.snp.trailing).offset(12)
+                make.leading.equalTo(iconBoxView.snp.trailing).offset(ThemeTokens.Spacing.md)
                 make.top.equalToSuperview().offset(14)
                 make.bottom.equalToSuperview().offset(-14)
-                make.trailing.lessThanOrEqualTo(trailingLabel.snp.leading).offset(-8).priority(.high)
-                make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-8).priority(.high)
-                make.trailing.lessThanOrEqualTo(toggleSwitch.snp.leading).offset(-8).priority(.high)
+                make.trailing.lessThanOrEqualTo(trailingLabel.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
+                make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
+                make.trailing.lessThanOrEqualTo(toggleSwitch.snp.leading).offset(-ThemeTokens.Spacing.sm).priority(.high)
             }
         }
     }
@@ -358,7 +358,7 @@ public final class WBKListRow: UIView {
     }
 
     public func setIcon(_ lucideIcon: LucideIcon) {
-        iconImageView.image = lucideIcon.templateImage(pointSize: 20)
+        iconImageView.image = lucideIcon.templateImage(pointSize: ThemeTokens.ComponentContract.SettingsRow.iconSize)
     }
 
     public func setIconBoxBackgroundColor(_ color: UIColor) {

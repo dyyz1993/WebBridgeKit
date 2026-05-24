@@ -93,22 +93,22 @@ public final class WBKActionTile: UIView {
 
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.width.greaterThanOrEqualTo(72)
-            make.height.equalTo(72)
+            make.width.greaterThanOrEqualTo(ThemeTokens.ComponentContract.ActionTile.minWidth)
+            make.height.equalTo(ThemeTokens.ComponentContract.ActionTile.height)
         }
 
         containerView.layer.cornerRadius = ThemeTokens.CornerRadius.card
         containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        containerView.layer.shadowRadius = 8
-        containerView.layer.shadowOpacity = 0.08
+        containerView.layer.shadowOffset = CGSize(width: ThemeTokens.Shadows.card.offsetX, height: ThemeTokens.Shadows.card.offsetY)
+        containerView.layer.shadowRadius = ThemeTokens.Shadows.card.radius
+        containerView.layer.shadowOpacity = Float(ThemeTokens.Shadows.card.opacity)
         containerView.clipsToBounds = false
 
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.top.equalToSuperview().offset(14)
-            make.width.height.equalTo(22)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.ActionTile.iconSize)
         }
 
         titleLabel.font = ThemeTokens.Typography.caption1
@@ -178,7 +178,7 @@ public final class WBKActionTile: UIView {
     }
 
     private func updateIcon() {
-        iconImageView.image = icon.templateImage(pointSize: 22)
+        iconImageView.image = icon.templateImage(pointSize: ThemeTokens.ComponentContract.ActionTile.iconSize)
     }
 
     private func updateBadge() {
@@ -205,13 +205,13 @@ public final class WBKActionTile: UIView {
         generator.impactOccurred()
 
         UIView.animate(
-            withDuration: 0.1,
+            withDuration: ThemeTokens.Animation.fast.duration,
             animations: {
                 self.transform = CGAffineTransform(scaleX: 0.97, y: 0.97)
                 self.alpha = ThemeTokens.Opacity.pressed
             },
             completion: { _ in
-                UIView.animate(withDuration: 0.1) {
+                UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
                     self.transform = .identity
                     self.alpha = 1.0
                 }

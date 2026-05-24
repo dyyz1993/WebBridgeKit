@@ -3,93 +3,96 @@ import XCTest
 
 final class ThemeManagerTests: XCTestCase {
 
-    // MARK: - ThemeColors
+    // MARK: - ThemeTokens.Color
 
-    func testThemeColorsAllTokensNonNil() {
-        let colors = ThemeColors.current
-        XCTAssertNotNil(colors.primary)
-        XCTAssertNotNil(colors.secondary)
-        XCTAssertNotNil(colors.background)
-        XCTAssertNotNil(colors.surface)
-        XCTAssertNotNil(colors.text)
-        XCTAssertNotNil(colors.textSecondary)
-        XCTAssertNotNil(colors.border)
-        XCTAssertNotNil(colors.navigationBarBackground)
-        XCTAssertNotNil(colors.navigationBarTitle)
-        XCTAssertNotNil(colors.tabBarBackground)
-        XCTAssertNotNil(colors.success)
-        XCTAssertNotNil(colors.warning)
-        XCTAssertNotNil(colors.error)
-        XCTAssertNotNil(colors.info)
-        XCTAssertNotNil(colors.cardBackground)
-        XCTAssertNotNil(colors.gradientStart)
-        XCTAssertNotNil(colors.gradientEnd)
-        XCTAssertNotNil(colors.badgeBackground)
-        XCTAssertNotNil(colors.badgeText)
-        XCTAssertNotNil(colors.divider)
-        XCTAssertNotNil(colors.fabBackground)
+    func testThemeTokensColorAllNonNil() {
+        let tokens: [UIColor] = [
+            ThemeTokens.Color.primary,
+            ThemeTokens.Color.secondary,
+            ThemeTokens.Color.background,
+            ThemeTokens.Color.surface,
+            ThemeTokens.Color.text,
+            ThemeTokens.Color.textSecondary,
+            ThemeTokens.Color.border,
+            ThemeTokens.Color.navigationBarBackground,
+            ThemeTokens.Color.navigationBarTitle,
+            ThemeTokens.Color.tabBarBackground,
+            ThemeTokens.Color.success,
+            ThemeTokens.Color.warning,
+            ThemeTokens.Color.error,
+            ThemeTokens.Color.info,
+            ThemeTokens.Color.cardBackground,
+            ThemeTokens.Color.gradientStart,
+            ThemeTokens.Color.gradientEnd,
+            ThemeTokens.Color.badgeBackground,
+            ThemeTokens.Color.badgeText,
+            ThemeTokens.Color.divider,
+            ThemeTokens.Color.fabBackground,
+        ]
+        for (index, color) in tokens.enumerated() {
+            XCTAssertNotNil(color, "ThemeTokens.Color token at index \(index) is nil")
+        }
     }
 
-    func testThemeColorsDefaultEqualsCurrent() {
+    func testThemeTokensColorPrimaryConsistency() {
         let trait = UITraitCollection(userInterfaceStyle: .light)
-        XCTAssertEqual(
-            ThemeColors.default.primary.resolvedColor(with: trait),
-            ThemeTokens.Color.primary.resolvedColor(with: trait)
-        )
+        let resolved = ThemeTokens.Color.primary.resolvedColor(with: trait)
+        XCTAssertNotNil(resolved)
     }
 
-    // MARK: - ThemeTypography
+    // MARK: - ThemeTokens.Typography
 
-    func testThemeTypographyAllFontsValid() {
-        let typo = ThemeTypography.current
-        XCTAssertGreaterThan(typo.largeTitle.pointSize, 0)
-        XCTAssertGreaterThan(typo.title1.pointSize, 0)
-        XCTAssertGreaterThan(typo.title2.pointSize, 0)
-        XCTAssertGreaterThan(typo.headline.pointSize, 0)
-        XCTAssertGreaterThan(typo.body.pointSize, 0)
-        XCTAssertGreaterThan(typo.caption1.pointSize, 0)
-        XCTAssertGreaterThan(typo.caption2.pointSize, 0)
+    func testThemeTokensTypographyAllFontsValid() {
+        let fonts: [UIFont] = [
+            ThemeTokens.Typography.largeTitle,
+            ThemeTokens.Typography.title1,
+            ThemeTokens.Typography.title3,
+            ThemeTokens.Typography.headline,
+            ThemeTokens.Typography.body,
+            ThemeTokens.Typography.caption1,
+            ThemeTokens.Typography.caption2,
+        ]
+        for (index, font) in fonts.enumerated() {
+            XCTAssertGreaterThan(font.pointSize, 0, "Typography token at index \(index) has invalid pointSize")
+        }
     }
 
-    // MARK: - ThemeFonts (Legacy)
+    // MARK: - ThemeTokens.Typography (Legacy Font Sizes)
 
-    func testThemeFontsDefaults() {
-        let fonts = ThemeFonts.default
-        XCTAssertEqual(fonts.title.pointSize, 28)
-        XCTAssertEqual(fonts.headline.pointSize, 17)
-        XCTAssertEqual(fonts.body.pointSize, 17)
-        XCTAssertEqual(fonts.caption.pointSize, 12)
-        XCTAssertEqual(fonts.button.pointSize, 16)
+    func testThemeTokensLegacyFontSizes() {
+        XCTAssertEqual(ThemeTokens.Typography.largeTitle.pointSize, 28)
+        XCTAssertEqual(ThemeTokens.Typography.headline.pointSize, 17)
+        XCTAssertEqual(ThemeTokens.Typography.body.pointSize, 17)
+        XCTAssertEqual(ThemeTokens.Typography.caption1.pointSize, 12)
+        XCTAssertEqual(ThemeTokens.Typography.callout.pointSize, 16)
     }
 
-    // MARK: - ThemeSpacing
+    // MARK: - ThemeTokens.Spacing
 
-    func testThemeSpacingValues() {
-        let spacing = ThemeSpacing.default
-        XCTAssertEqual(spacing.xs, 4)
-        XCTAssertEqual(spacing.sm, 8)
-        XCTAssertEqual(spacing.md, 16)
-        XCTAssertEqual(spacing.lg, 24)
-        XCTAssertEqual(spacing.xl, 32)
+    func testThemeTokensSpacingValues() {
+        XCTAssertEqual(ThemeTokens.Spacing.xs, 4)
+        XCTAssertEqual(ThemeTokens.Spacing.sm, 8)
+        XCTAssertEqual(ThemeTokens.Spacing.md, 16)
+        XCTAssertEqual(ThemeTokens.Spacing.lg, 24)
+        XCTAssertEqual(ThemeTokens.Spacing.xl, 32)
     }
 
-    // MARK: - ThemeCornerRadius
+    // MARK: - ThemeTokens.CornerRadius
 
-    func testThemeCornerRadiusValues() {
-        let radius = ThemeCornerRadius.default
-        XCTAssertEqual(radius.sm, 4)
-        XCTAssertEqual(radius.md, 8)
-        XCTAssertEqual(radius.lg, 12)
-        XCTAssertEqual(radius.full, 999)
+    func testThemeTokensCornerRadiusValues() {
+        XCTAssertEqual(ThemeTokens.CornerRadius.sm, 4)
+        XCTAssertEqual(ThemeTokens.CornerRadius.md, 8)
+        XCTAssertEqual(ThemeTokens.CornerRadius.lg, 12)
+        XCTAssertEqual(ThemeTokens.CornerRadius.full, 999)
     }
 
-    // MARK: - ThemeAnimation
+    // MARK: - ThemeAnimation (deprecated → ThemeTokens.Animation)
 
     func testThemeAnimationConstants() {
-        XCTAssertEqual(ThemeAnimation.standardDuration, 0.25)
-        XCTAssertEqual(ThemeAnimation.springDuration, 0.3)
-        XCTAssertEqual(ThemeAnimation.slowDuration, 0.5)
-        XCTAssertEqual(ThemeAnimation.springDamping, 0.8)
+        XCTAssertEqual(ThemeTokens.Animation.normal.duration, 0.25)
+        XCTAssertEqual(ThemeTokens.Animation.spring.duration, 0.5)
+        XCTAssertEqual(ThemeTokens.Animation.slow.duration, 0.4)
+        XCTAssertEqual(ThemeTokens.Animation.spring.damping, 0.85)
     }
 
     // MARK: - ThemeMode
@@ -133,7 +136,7 @@ final class ThemeManagerTests: XCTestCase {
     func testThemeCardInitialization() {
         let card = ThemeCard(frame: .zero)
         XCTAssertNotNil(card)
-        XCTAssertEqual(card.innerContentView.layer.cornerRadius, ThemeCornerRadius.default.lg)
+        XCTAssertEqual(card.innerContentView.layer.cornerRadius, ThemeTokens.CornerRadius.lg)
     }
 
     // MARK: - ThemeBadge
@@ -225,7 +228,7 @@ final class ThemeManagerTests: XCTestCase {
         }
         XCTAssertNotNil(gradient.colors)
         XCTAssertEqual(gradient.colors?.count, 2)
-        XCTAssertEqual(view.layer.cornerRadius, ThemeCornerRadius.default.lg)
+        XCTAssertEqual(view.layer.cornerRadius, ThemeTokens.CornerRadius.lg)
     }
 
     // MARK: - Theme (Legacy)

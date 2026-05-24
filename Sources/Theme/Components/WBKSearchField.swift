@@ -85,24 +85,24 @@ public final class WBKSearchField: UIView {
         container.addSubview(iconImageView)
         container.addSubview(textField)
 
-        container.backgroundColor = ThemeTokens.Color.background
-        container.layer.cornerRadius = ThemeTokens.CornerRadius.row
+        container.backgroundColor = ThemeTokens.Color.backgroundSecondary
+        container.layer.cornerRadius = ThemeTokens.ComponentContract.SearchField.cornerRadius
         container.layer.borderWidth = 0
         container.layer.borderColor = ThemeTokens.Color.primary.cgColor
         container.clipsToBounds = true
 
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.tintColor = ThemeTokens.Color.textTertiary
-        iconImageView.image = LucideIcon.search.templateImage(pointSize: 18)
+        iconImageView.image = LucideIcon.search.templateImage(pointSize: ThemeTokens.ComponentContract.SearchField.iconSize)
 
         clearButton.setImage(
-            LucideIcon.xmark.templateImage(pointSize: 18),
+            LucideIcon.xmark.templateImage(pointSize: ThemeTokens.ComponentContract.SearchField.iconSize),
             for: .normal
         )
         clearButton.tintColor = ThemeTokens.Color.textTertiary
         clearButton.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
         clearButton.snp.makeConstraints { make in
-            make.width.height.equalTo(32)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.TapTarget.minimumWidth)
         }
 
         textField.font = ThemeTokens.Typography.body
@@ -116,18 +116,18 @@ public final class WBKSearchField: UIView {
 
         container.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.height.equalTo(42)
+            make.height.equalTo(ThemeTokens.ComponentContract.SearchField.height)
         }
 
         iconImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(ThemeTokens.ComponentContract.SearchField.horizontalPadding)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(18)
+            make.width.height.equalTo(ThemeTokens.ComponentContract.SearchField.iconSize)
         }
 
         textField.snp.makeConstraints { make in
-            make.leading.equalTo(iconImageView.snp.trailing).offset(8)
-            make.trailing.equalToSuperview().offset(-12)
+            make.leading.equalTo(iconImageView.snp.trailing).offset(ThemeTokens.Spacing.sm)
+            make.trailing.equalToSuperview().offset(-ThemeTokens.ComponentContract.SearchField.horizontalPadding)
             make.top.bottom.equalToSuperview()
         }
     }

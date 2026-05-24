@@ -10,10 +10,10 @@ public enum ThemeBadgeStyle {
 
     public var backgroundColor: UIColor {
         switch self {
-        case .success: return ThemeTokens.Color.success.withAlphaComponent(0.12)
-        case .warning: return ThemeTokens.Color.warning.withAlphaComponent(0.12)
-        case .error: return ThemeTokens.Color.error.withAlphaComponent(0.12)
-        case .info: return ThemeTokens.Color.info.withAlphaComponent(0.12)
+        case .success: return ThemeTokens.Color.success.withAlphaComponent(ThemeTokens.Opacity.badge)
+        case .warning: return ThemeTokens.Color.warning.withAlphaComponent(ThemeTokens.Opacity.badge)
+        case .error: return ThemeTokens.Color.error.withAlphaComponent(ThemeTokens.Opacity.badge)
+        case .info: return ThemeTokens.Color.info.withAlphaComponent(ThemeTokens.Opacity.badge)
         case .default: return ThemeTokens.Color.primarySoft
         }
     }
@@ -51,7 +51,7 @@ public class ThemeBadge: UIView {
         clipsToBounds = true
         addSubview(label)
         label.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: ThemeTokens.Spacing.xxs, left: ThemeTokens.Spacing.sm, bottom: ThemeTokens.Spacing.xxs, right: ThemeTokens.Spacing.sm))
         }
     }
 
@@ -64,6 +64,6 @@ public class ThemeBadge: UIView {
     public func configure(text: String, color: UIColor) {
         label.text = text
         label.textColor = color
-        backgroundColor = color.withAlphaComponent(0.12)
+        backgroundColor = color.withAlphaComponent(ThemeTokens.Opacity.badge)
     }
 }
