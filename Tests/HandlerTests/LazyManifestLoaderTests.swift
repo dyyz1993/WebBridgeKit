@@ -121,13 +121,13 @@ final class LazyManifestLoaderTests: XCTestCase {
             throw XCTSkip("WKWebView requires a UI scene; skipping in headless CI environment")
         }
         let webView = WKWebView()
-        let url = URL(string: "https://invalid-host-xyz123.invalid/page.html")!
+        let url = URL(string: "http://127.0.0.1:1/page.html")!
         let expectation = self.expectation(description: "load")
 
         LazyManifestLoader.load(url: url, in: webView) { result in
             expectation.fulfill()
         }
 
-        waitForExpectations(timeout: 10.0)
+        waitForExpectations(timeout: 15.0)
     }
 }

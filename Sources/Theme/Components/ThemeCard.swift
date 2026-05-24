@@ -4,11 +4,11 @@ import SnapKit
 public class ThemeCard: UIView {
     private let contentView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        view.layer.cornerRadius = ThemeTokens.CornerRadius.card
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.08
+        view.layer.shadowOffset = CGSize(width: ThemeTokens.Shadows.card.offsetX, height: ThemeTokens.Shadows.card.offsetY)
+        view.layer.shadowRadius = ThemeTokens.Shadows.card.radius
+        view.layer.shadowOpacity = Float(ThemeTokens.Shadows.card.opacity)
         return view
     }()
 

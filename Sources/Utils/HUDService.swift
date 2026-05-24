@@ -15,7 +15,7 @@ public final class HUDService {
     private var hudView: HUDContainerView?
     private var dismissWorkItem: DispatchWorkItem?
 
-    private let animationDuration: TimeInterval = 0.25
+    private let animationDuration: TimeInterval = ThemeTokens.Animation.normal.duration
     private let successDisplayDuration: TimeInterval = 1.5
 
     private init() {}

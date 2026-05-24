@@ -499,7 +499,10 @@ public class LazyManifestLoader: NSObject {
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         downloadHTML(from: url) { [weak self] result in
-            guard let self = self else { return }
+            guard let self = self else {
+                completion(.failure(LazyLoadError.managerDeallocated))
+                return
+            }
             switch result {
             case .success(let html):
                 // 1. 保存 HTML

@@ -352,17 +352,19 @@ final class ThemeComponentIntegrationTests: XCTestCase {
     }
 
     func testCornerRadiusConsistency() {
-        let cornerRadius = ThemeCornerRadius.default
+        let sm = ThemeTokens.CornerRadius.sm
+        let md = ThemeTokens.CornerRadius.md
+        let lg = ThemeTokens.CornerRadius.lg
 
         let badge = ThemeBadge(frame: .zero)
         let button = ThemeButton(frame: .zero)
         let card = ThemeCard(frame: .zero)
         let gradientView = ThemeGradientView(frame: .zero)
 
-        XCTAssertEqual(badge.layer.cornerRadius, cornerRadius.sm)
-        XCTAssertEqual(button.layer.cornerRadius, cornerRadius.md)
-        XCTAssertEqual(card.innerContentView.layer.cornerRadius, cornerRadius.lg)
-        XCTAssertEqual(gradientView.layer.cornerRadius, cornerRadius.lg)
+        XCTAssertEqual(badge.layer.cornerRadius, sm)
+        XCTAssertEqual(button.layer.cornerRadius, md)
+        XCTAssertEqual(card.innerContentView.layer.cornerRadius, lg)
+        XCTAssertEqual(gradientView.layer.cornerRadius, lg)
     }
 
     func testTypographyConsistency() {

@@ -121,13 +121,6 @@ public final class WBKScreenScaffold: UIView {
     }
 
     private func resolveBackgroundColor() -> UIColor {
-        switch style {
-        case .standard:
-            return ThemeTokens.Color.background
-        case .grouped:
-            return ThemeTokens.Color.background
-        case .scrollable:
-            return ThemeTokens.Color.background
-        }
+        ThemeTokens.Color.background
     }
 }

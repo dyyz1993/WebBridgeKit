@@ -110,7 +110,8 @@ class URLInputView: UIView {
             make.height.equalTo(52)
         }
 
-        // URL 输入框
+        let isCompact = UIScreen.main.bounds.width <= ThemeTokens.Breakpoints.compact
+
         urlTextField.snp.makeConstraints { make in
             make.left.equalToSuperview().offset(12)
             make.right.equalTo(cacheSwitchContainer.snp.left).offset(-8)
@@ -118,36 +119,39 @@ class URLInputView: UIView {
             make.height.equalTo(36)
         }
 
-        // 缓存开关容器
         cacheSwitchContainer.snp.makeConstraints { make in
             make.right.equalTo(cacheButton.snp.left).offset(-8)
             make.centerY.equalToSuperview()
-            make.width.equalTo(70)
+            make.width.equalTo(isCompact ? 52 : 70)
             make.height.equalTo(36)
         }
 
         cacheSwitchContainer.addSubview(cacheLabel)
         cacheSwitchContainer.addSubview(cacheSwitch)
 
-        cacheLabel.snp.makeConstraints { make in
-            make.left.equalToSuperview().offset(6)
-            make.centerY.equalToSuperview()
+        if isCompact {
+            cacheLabel.isHidden = true
+            cacheSwitch.snp.makeConstraints { make in
+                make.center.equalToSuperview()
+            }
+        } else {
+            cacheLabel.snp.makeConstraints { make in
+                make.left.equalToSuperview().offset(6)
+                make.centerY.equalToSuperview()
+            }
+            cacheSwitch.snp.makeConstraints { make in
+                make.right.equalToSuperview().offset(-6)
+                make.centerY.equalToSuperview()
+            }
         }
 
-        cacheSwitch.snp.makeConstraints { make in
-            make.right.equalToSuperview().offset(-6)
-            make.centerY.equalToSuperview()
-        }
-
-        // 缓存按钮
         cacheButton.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-12)
             make.centerY.equalToSuperview()
-            make.width.equalTo(60)
+            make.width.equalTo(isCompact ? 44 : 60)
             make.height.equalTo(36)
         }
 
-        // 分隔线
         separatorView.snp.makeConstraints { make in
             make.left.right.bottom.equalToSuperview()
             make.height.equalTo(0.5)

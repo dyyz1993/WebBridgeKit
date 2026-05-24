@@ -30,9 +30,10 @@ public class ThemeGradientView: UIView {
     }
 
     private func updateColors() {
+        let gradient = ThemeTokens.Gradients.brand
         gradientLayer.colors = [
-            ThemeTokens.Color.gradientStart.cgColor,
-            ThemeTokens.Color.gradientEnd.cgColor
+            gradient.start.cgColor,
+            gradient.end.cgColor
         ]
     }
 

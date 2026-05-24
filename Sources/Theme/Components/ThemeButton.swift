@@ -46,7 +46,7 @@ public class ThemeButton: UIButton {
     }
 
     private func setupUI() {
-        layer.cornerRadius = ThemeTokens.CornerRadius.md
+        layer.cornerRadius = ThemeTokens.ComponentContract.Button.cornerRadius
         titleLabel?.font = ThemeTokens.Typography.buttonMedium
         updateStyle()
     }

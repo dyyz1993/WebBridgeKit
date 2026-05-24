@@ -1,0 +1,28 @@
+name: Architecture Lint
+
+on:
+  pull_request:
+    paths:
+      - 'Sources/**/*.swift'
+      - 'SuperApp/Sources/**/*.swift'
+      - 'Tests/**/*.swift'
+      - 'SuperAppUITests/**/*.swift'
+      - 'tools/architecture-lint.sh'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  architecture-lint:
+    name: Architecture Lint
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Architecture Lint
+        run: bash tools/architecture-lint.sh --ci

@@ -195,9 +195,9 @@ public class FullScreenProgressViewController: UIViewController {
             self.containerView.transform = .identity
         } else {
             UIView.animate(
-                withDuration: 0.3,
+                withDuration: ThemeTokens.Animation.spring.duration,
                 delay: 0,
-                usingSpringWithDamping: 0.8,
+                usingSpringWithDamping: ThemeTokens.Animation.spring.damping,
                 initialSpringVelocity: 0,
                 options: .curveEaseOut
             ) {
@@ -206,8 +206,8 @@ public class FullScreenProgressViewController: UIViewController {
             }
 
             UIView.animate(
-                withDuration: 1.0,
-                delay: 0.3,
+                withDuration: ThemeTokens.Animation.slow.duration,
+                delay: 0,
                 options: [.repeat, .autoreverse]
             ) {
                 self.iconImageView.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
@@ -221,7 +221,7 @@ public class FullScreenProgressViewController: UIViewController {
             completion()
         } else {
             UIView.animate(
-                withDuration: 0.25,
+                withDuration: ThemeTokens.Animation.normal.duration,
                 delay: 0,
                 options: .curveEaseIn
             ) {

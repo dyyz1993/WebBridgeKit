@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SwiftUI
 import WebBridgeKit
 import RxSwift
 import RxCocoa
@@ -16,6 +17,7 @@ class TabBarController: UITabBarController {
     private let disposeBag = DisposeBag()
 
     private let separatorView = UIView()
+    private var previousSelectedIndex: Int?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -174,14 +176,82 @@ class TabBarController: UITabBarController {
         return DiscoverViewController()
     }
 
-    private func createSettingsViewController() -> SettingsViewController {
-        let viewModel = SettingsViewModel()
-        return SettingsViewController(viewModel: viewModel)
+    private func createSettingsViewController() -> UIViewController {
+        let settingsView = SettingsView { [weak self] destination in
+            self?.handleSettingsNavigation(destination)
+        }
+        let hostingVC = UIHostingController(rootView: settingsView)
+        hostingVC.title = L10n.tr("tab.settings")
+        return hostingVC
+    }
+
+    private func handleSettingsNavigation(_ destination: SettingsView.Destination) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch destination {
+        case .serverConfig:
+            nav.pushViewController(ServerConfigViewController(viewModel: ServerConfigViewModel()), animated: true)
+        case .tokenManage:
+            nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
+        case .apiKeyManage:
+            nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+        case .cacheManagement:
+            nav.pushViewController(ManagementViewController(), animated: true)
+        case .favorites:
+            nav.pushViewController(FavoriteViewController(viewModel: FavoriteViewModel()), animated: true)
+        case .history:
+            let vc = UIHostingController(rootView: RecentAccessHistoryView())
+            vc.title = "最近访问"
+            nav.pushViewController(vc, animated: true)
+        case .notificationSettings:
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        case .appearance:
+            break
+        case .debugPanel:
+            #if DEBUG
+            let debugPanel = DebugPanelViewController()
+            let debugNav = UINavigationController(rootViewController: debugPanel)
+            debugNav.modalPresentationStyle = .fullScreen
+            nav.present(debugNav, animated: true)
+            #endif
+        case .exportDiagnostics:
+            #if DEBUG
+            let vc = UIHostingController(rootView: DiagnosticsView())
+            vc.title = L10n.tr("settings.diagnostics.title")
+            nav.pushViewController(vc, animated: true)
+            #endif
+        case .cacheDashboard:
+            nav.pushViewController(CacheDashboardViewController(viewModel: CacheDashboardViewModel()), animated: true)
+        case .about:
+            let vc = UIHostingController(rootView: AboutView())
+            vc.title = L10n.tr("about.title")
+            nav.pushViewController(vc, animated: true)
+        }
     }
 }
 
 extension TabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
         UISelectionFeedbackGenerator().selectionChanged()
+
+        guard let previousIndex = previousSelectedIndex,
+              previousIndex != tabBarController.selectedIndex,
+              let fromView = tabBarController.viewControllers?[previousIndex].view,
+              let toView = viewController.view,
+              fromView !== toView else {
+            previousSelectedIndex = tabBarController.selectedIndex
+            return
+        }
+
+        UIView.transition(
+            from: fromView,
+            to: toView,
+            duration: ThemeTokens.Animation.normal.duration,
+            options: .transitionCrossDissolve
+        )
+
+        previousSelectedIndex = tabBarController.selectedIndex
     }
 }

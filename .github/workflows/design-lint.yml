@@ -1,0 +1,26 @@
+name: Design Lint
+
+on:
+  pull_request:
+    paths:
+      - 'Sources/**/*.swift'
+      - 'SuperApp/Sources/**/*.swift'
+      - 'tools/design-lint.sh'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  design-lint:
+    name: Design System Lint
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Design Lint
+        run: bash tools/design-lint.sh --ci --verbose
