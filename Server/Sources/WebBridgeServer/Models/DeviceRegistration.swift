@@ -8,7 +8,7 @@ struct DeviceRegistration: Codable, Sendable {
     let appVersion: String?
     let createdAt: String
 
-    private static let isoFormatter: ISO8601DateFormatter = {
+    nonisolated(unsafe) private static let isoFormatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         return f
     }()
@@ -27,7 +27,7 @@ struct DeviceRegistration: Codable, Sendable {
         self.createdAt = createdAt ?? Self.isoFormatter.string(from: Date())
     }
 
-    init(from decoder: Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         deviceToken = try container.decode(String.self, forKey: .deviceToken)
         key = try container.decode(String.self, forKey: .key)

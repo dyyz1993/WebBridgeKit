@@ -152,6 +152,9 @@ class ManifestCacheTestViewController: UIViewController {
         textView.layer.cornerRadius = ThemeTokens.CornerRadius.md
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         textView.isEditable = false
+        textView.isScrollEnabled = true
+        textView.alwaysBounceHorizontal = true
+        textView.showsHorizontalScrollIndicator = true
         textView.accessibilityIdentifier = "manifest_test.log_view"
         return textView
     }()
@@ -196,6 +199,9 @@ class ManifestCacheTestViewController: UIViewController {
 
         setupUI()
         setupActions()
+
+        logTextView.textContainer.widthTracksTextView = false
+        logTextView.textContainer.lineBreakMode = .byClipping
 
         updateStats()
 
@@ -345,7 +351,7 @@ class ManifestCacheTestViewController: UIViewController {
             make.top.equalTo(statsContainer.snp.bottom).offset(20)
             make.left.equalToSuperview().offset(20)
             make.right.equalToSuperview().offset(-20)
-            make.height.equalTo(200)
+            make.height.equalTo(300)
         }
 
         logTitleLabel.snp.makeConstraints { make in

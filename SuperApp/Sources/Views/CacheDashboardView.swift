@@ -321,13 +321,29 @@ final class CacheDashboardViewModelObservable: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        let timeoutWorkItem = DispatchWorkItem { [weak self] in
+            guard let self, self.isLoading else { return }
+            self.isLoading = false
+            self.errorMessage = "加载超时，请重试"
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: timeoutWorkItem)
+
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
-            let data = CacheStatsAggregator.shared.syncAggregate()
-            DispatchQueue.main.async {
-                self.dashboardData = data
-                self.applyData(data)
-                self.isLoading = false
+            do {
+                let data = CacheStatsAggregator.shared.syncAggregate()
+                timeoutWorkItem.cancel()
+                DispatchQueue.main.async {
+                    self.dashboardData = data
+                    self.applyData(data)
+                    self.isLoading = false
+                }
+            } catch {
+                timeoutWorkItem.cancel()
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.errorMessage = "加载失败: \(error.localizedDescription)"
+                }
             }
         }
     }
@@ -362,6 +378,10 @@ final class CacheDashboardViewModelObservable: ObservableObject {
         }
         if !inactiveItems.isEmpty {
             result.append(SectionGroup(title: "[WHITE] 空闲", items: inactiveItems))
+        }
+        if result.isEmpty {
+            let allItems = data.subsystems.map { SubsystemSectionItem(from: $0) }
+            result.append(SectionGroup(title: "[WHITE] 缓存子系统", items: allItems))
         }
         sections = result
     }

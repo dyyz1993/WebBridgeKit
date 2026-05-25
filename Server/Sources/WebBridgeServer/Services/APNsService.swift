@@ -1,14 +1,17 @@
 import Foundation
 import Hummingbird
 import NIOCore
+import AsyncHTTPClient
 
 final class APNsService: Sendable {
     private let configuration: ServerConfiguration
     private let tokenStore: TokenStore
+    private let httpClient: HTTPClient
 
-    init(configuration: ServerConfiguration, tokenStore: TokenStore) {
+    init(configuration: ServerConfiguration, tokenStore: TokenStore, httpClient: HTTPClient = .shared) {
         self.configuration = configuration
         self.tokenStore = tokenStore
+        self.httpClient = httpClient
     }
 
     func sendPush(key: String, payload: PushPayload) async throws -> PushResponse {
@@ -50,17 +53,21 @@ final class APNsService: Sendable {
         let host = configuration.apnsEnvironment == "production"
             ? "api.push.apple.com"
             : "api.sandbox.push.apple.com"
-        let url = URL(string: "https://\(host)/3/device/\(deviceToken)")!
+        let urlString = "https://\(host)/3/device/\(deviceToken)"
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: apnsPayload)
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: apnsPayload) else { return }
+
+        guard var request = try? HTTPClient.Request(
+            url: urlString,
+            method: .POST,
+            body: .data(bodyData)
+        ) else { return }
+        request.headers.add(name: "Content-Type", value: "application/json")
 
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-                print("APNs error: \(httpResponse.statusCode)")
+            let response = try await httpClient.execute(request: request).get()
+            if response.status.code != 200 {
+                print("APNs error: \(response.status.code)")
             }
         } catch {
             print("APNs send error: \(error)")

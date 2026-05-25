@@ -251,7 +251,7 @@ public class CacheAppCell: UITableViewCell {
         rightButtonStackView.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
-            make.width.equalTo(60)
+            make.width.greaterThanOrEqualTo(80)
         }
 
         deleteButton.snp.makeConstraints { make in

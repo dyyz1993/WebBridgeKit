@@ -42,12 +42,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-        // 初始化 WebBridgeKit
+        // 初始化 WebBridgeKit（异步执行，避免偶尔阻塞主线程导致卡 loading）
         // UI 测试时禁用 WebBridgeKit 预热，减少主线程压力和 WebKit 进程消耗
-        if ProcessInfo.processInfo.arguments.contains("-UITesting") {
-            WebBridgeLogger.shared.info("WebBridgeKit initialized (warmup skipped for UI testing)")
+        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+            DispatchQueue.global(qos: .userInitiated).async {
+                WebBridgeKitManager.shared.initialize()
+            }
         } else {
-            WebBridgeKitManager.shared.initialize()
+            WebBridgeLogger.shared.info("WebBridgeKit initialized (warmup skipped for UI testing)")
         }
 
         let messageStore = UserDefaultsMessageStore(key: "SuperCache_Messages")
@@ -99,7 +101,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
-            PushRelayManager.shared.connect()
+            DispatchQueue.global(qos: .utility).async {
+                PushRelayManager.shared.connect()
+            }
         }
 
         let duration = Date().timeIntervalSince(start)
