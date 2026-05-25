@@ -114,13 +114,15 @@ class MenuCell: UITableViewCell {
     let copyTokenButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
+        btn.titleLabel?.lineBreakMode = .byTruncatingTail
+        btn.titleLabel?.adjustsFontSizeToFitWidth = true
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         btn.clipsToBounds = true
         btn.backgroundColor = ThemeTokens.Color.primary
         btn.setTitleColor(ThemeTokens.Color.background, for: .normal)
         btn.isHidden = true
         btn.accessibilityLabel = "复制令牌"
-        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 10, bottom: 12, right: 10)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
         return btn
     }()
 
@@ -241,7 +243,9 @@ class MenuCell: UITableViewCell {
 
         copyTokenButton.snp.makeConstraints { make in
             make.left.equalTo(heroTitleLabel)
+            make.right.lessThanOrEqualToSuperview().offset(-16)
             make.top.equalTo(heroSubtitleLabel.snp.bottom).offset(8)
+            make.height.equalTo(28)
         }
 
         let gradient = CAGradientLayer()

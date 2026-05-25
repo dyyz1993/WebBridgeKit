@@ -35,10 +35,7 @@ struct ManifestRoutes {
 
 // MARK: - HTTP Error Helpers
 
-extension HTTPURLResponse {
-    /// 获取用户友好的 HTTP 状态描述
-    /// - Parameter statusCode: HTTP 状态码
-    /// - Returns: 用户友好的描述文本
+enum HTTPStatusHelper {
     static func localizedString(forStatusCode statusCode: Int) -> String {
         switch statusCode {
         case 400...499:

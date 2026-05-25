@@ -55,7 +55,7 @@ class ManifestTestCasesViewController: UIViewController {
     }()
 
     private lazy var headerView: UIView = {
-        let view = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 80))
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 80))
         view.backgroundColor = .clear
 
         let infoLabel = UILabel()
