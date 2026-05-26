@@ -257,7 +257,7 @@ final class ThemeEmptyStateTests: XCTestCase {
 
         let titleLabel = empty.subviews[1] as? UILabel
         XCTAssertNotNil(titleLabel)
-        XCTAssertEqual(titleLabel?.frame.minY ?? 0, 64 + ThemeSpacing.default.md, accuracy: 1, "Title should be below icon with md spacing")
+        XCTAssertEqual(titleLabel?.frame.minY ?? 0, 64 + ThemeTokens.Spacing.md, accuracy: 1, "Title should be below icon with md spacing")
     }
 
     func testDescriptionConstraints() {
@@ -269,7 +269,7 @@ final class ThemeEmptyStateTests: XCTestCase {
         let descriptionLabel = empty.subviews[2] as? UILabel
         XCTAssertNotNil(descriptionLabel)
 
-        let expectedMinY = (titleLabel?.frame.maxY ?? 0) + ThemeSpacing.default.sm
+        let expectedMinY = (titleLabel?.frame.maxY ?? 0) + ThemeTokens.Spacing.sm
         XCTAssertEqual(descriptionLabel?.frame.minY ?? 0, expectedMinY, accuracy: 1, "Description should be below title with sm spacing")
     }
 

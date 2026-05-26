@@ -31,6 +31,10 @@ target 'WebBridgeKit' do
     inherit! :complete
   end
 
+  target 'AI' do
+    inherit! :search_paths
+  end
+
   target 'AITests' do
     inherit! :complete
   end
