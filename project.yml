@@ -260,6 +260,8 @@ targets:
       LIBRARY_SEARCH_PATHS:
         - $(inherited)
       SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    dependencies:
+      - target: WebBridgeKit
 
   AITests:
     type: bundle.unit-test
