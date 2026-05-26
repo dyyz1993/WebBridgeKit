@@ -45,34 +45,51 @@ extension PersistentManifestLoader {
 
 extension PersistentManifestLoader {
 
-    /// Web Manifest 结构
     public struct WebManifest: Codable {
-        /// 是否启用持久化缓存
         public let persistent: Bool
-
-        /// 资源映射：相对路径 -> 真实 URL
         public let resources: [String: String]
-
-        /// 版本号（默认 "0.0.1"）
         public let version: String?
-
-        /// 应用标识符（可选，用于缓存路径和清理）
-        /// 如果不提供，将使用域名作为 AppID
         public let appid: String?
-
-        /// 应用名称（可选，用于显示）
-        /// 如果不提供，将从 HTML title 提取
         public let name: String?
-
-        /// 应用图标 URL（可选，用于显示）
-        /// 如果不提供，将生成默认圆形图标
         public let icon: String?
-
-        /// 最后更新时间（可选，用于兼容性）
         public let updatedAt: String?
-
-        /// 描述信息（可选，用于兼容性）
         public let description: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case persistent, resources, version, appid, name, icon, updatedAt, description
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            persistent = try container.decodeIfPresent(Bool.self, forKey: .persistent) ?? false
+            version = try container.decodeIfPresent(String.self, forKey: .version)
+            appid = try container.decodeIfPresent(String.self, forKey: .appid)
+            name = try container.decodeIfPresent(String.self, forKey: .name)
+            icon = try container.decodeIfPresent(String.self, forKey: .icon)
+            updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+            description = try container.decodeIfPresent(String.self, forKey: .description)
+            resources = try Self.decodeResources(from: container)
+        }
+
+        private static func decodeResources(from container: KeyedDecodingContainer<CodingKeys>) throws -> [String: String] {
+            if let flat = try? container.decode([String: String].self, forKey: .resources) {
+                return flat
+            }
+            if let nested = try? container.decode([String: [String: AnyCodableValue]].self, forKey: .resources) {
+                var flat: [String: String] = [:]
+                for (_, entries) in nested {
+                    for (path, value) in entries {
+                        if let obj = value.objectValue, let url = obj["url"]?.stringValue {
+                            flat[path] = url
+                        } else if let str = value.stringValue {
+                            flat[path] = str
+                        }
+                    }
+                }
+                return flat
+            }
+            return [:]
+        }
 
         public init(
             persistent: Bool,
@@ -94,9 +111,36 @@ extension PersistentManifestLoader {
             self.description = description
         }
 
-        /// 获取版本号，如果没有则返回默认值
         public var resolvedVersion: String {
             return version ?? "0.0.1"
+        }
+    }
+}
+
+private struct AnyCodableValue: Codable {
+    let stringValue: String?
+    let objectValue: [String: AnyCodableValue]?
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            stringValue = str
+            objectValue = nil
+        } else if let obj = try? container.decode([String: AnyCodableValue].self) {
+            stringValue = nil
+            objectValue = obj
+        } else {
+            stringValue = nil
+            objectValue = nil
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        if let str = stringValue {
+            try container.encode(str)
+        } else if let obj = objectValue {
+            try container.encode(obj)
         }
     }
 }
