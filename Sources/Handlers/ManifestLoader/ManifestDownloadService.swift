@@ -78,19 +78,23 @@ extension PersistentManifestLoader {
 
     /// 下载 HTML
     func downloadHTML(from url: URL) async throws -> String {
+        NSLog("[WEB] [PersistentLoader] downloadHTML 开始: %@", url.absoluteString)
         return try await withCheckedThrowingContinuation { continuation in
-            let task = urlSession.dataTask(with: url) { data, _, error in
+            let task = urlSession.dataTask(with: url) { data, response, error in
                 if let error = error {
+                    NSLog("[WEB] [PersistentLoader] downloadHTML 失败: %@", error.localizedDescription)
                     continuation.resume(throwing: LoaderError.htmlDownloadFailed(error))
                     return
                 }
 
                 guard let data = data,
                       let html = String(data: data, encoding: .utf8) else {
+                    NSLog("[WEB] [PersistentLoader] downloadHTML: 数据为空或非 UTF-8")
                     continuation.resume(throwing: LoaderError.htmlDownloadFailed(LoaderError.invalidManifestFormat))
                     return
                 }
 
+                NSLog("[WEB] [PersistentLoader] downloadHTML 成功: %d bytes, 前200字符: %@", html.count, String(html.prefix(200)))
                 continuation.resume(returning: html)
             }
 
@@ -108,6 +112,7 @@ extension PersistentManifestLoader {
     ) async throws {
         let resources = Array(manifest.resources.enumerated())
         let total = resources.count
+        NSLog("[WEB] [PersistentLoader] downloadAllResources: %d 资源, baseURL: %@", total, baseURL.absoluteString)
 
         let progressLock = NSLock()
         var completedCount = 0

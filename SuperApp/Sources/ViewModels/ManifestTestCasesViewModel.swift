@@ -48,7 +48,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
     // 公开访问 Relay，供 View Controller 使用
     var testCases: BehaviorRelay<[ManifestTestCase]> { return testCasesRelay }
 
-    private let baseURL = "http://localhost:8080/test_resources/cases/"
+    private let baseURL = "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/cases/"
 
     // 预定义的测试用例
     private lazy var defaultTestCases: [ManifestTestCase] = {

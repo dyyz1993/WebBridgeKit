@@ -130,6 +130,8 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['ENABLE_BITCODE'] = 'NO'
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      config.build_settings['DEVELOPMENT_TEAM'] = 'B45VZCNYU3'
+      config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Development'
 
       if target.name.include?('Realm')
         config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'gnu++20'

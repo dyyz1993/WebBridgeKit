@@ -169,7 +169,6 @@ class ManifestTestCasesViewController: UIViewController {
             .drive(onNext: { [weak self] isRunning in
                 if isRunning {
                     self?.navigationItem.rightBarButtonItem?.isEnabled = false
-                    HUDService.shared.showInfo(withStatus: "测试运行中...")
                 } else {
                     self?.navigationItem.rightBarButtonItem?.isEnabled = true
                     HUDService.shared.dismiss()

@@ -97,7 +97,7 @@ public class LazyManifestLoader: NSObject {
 
     // MARK: - Properties
 
-    private let urlSession: URLSession
+    private var urlSession: URLSession!
     private let manifestCacheManager: ManifestCacheManager
     public let scheme = "custom"
     private let manifestFileName = "manifest.json"
@@ -109,13 +109,12 @@ public class LazyManifestLoader: NSObject {
     // MARK: - Initialization
 
     private override init() {
-        // 配置 URLSession
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 15
         config.httpMaximumConnectionsPerHost = 10
-        self.urlSession = URLSession(configuration: config)
         self.manifestCacheManager = ManifestCacheManager.shared
         super.init()
+        self.urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
     }
 
     // MARK: - Public API
@@ -163,6 +162,44 @@ public class LazyManifestLoader: NSObject {
                 return
             }
 
+            if !forceRefresh && PersistentManifestLoader.shared.isCached(url: url) {
+                shared.postLog("[FAST] [智能加载] 缓存命中，秒开（零网络请求）")
+                PersistentManifestLoader.shared.loadFromCache(url: url, in: webView) { cacheResult in
+                    switch cacheResult {
+                    case .success:
+                        completion(.success(()))
+                    case .failure(let error):
+                        shared.postLog("[WARN] [智能加载] loadFromCache 失败: \(error.localizedDescription)，降级到网络加载")
+                        Self.performOnlineLoad(
+                            url: url,
+                            in: webView,
+                            from: viewController,
+                            forceRefresh: false,
+                            completion: completion
+                        )
+                    }
+                }
+                return
+            }
+
+            Self.performOnlineLoad(
+                url: url,
+                in: webView,
+                from: viewController,
+                forceRefresh: forceRefresh,
+                completion: completion
+            )
+        }
+    }
+
+    private static func performOnlineLoad(
+        url: URL,
+        in webView: WKWebView,
+        from viewController: UIViewController?,
+        forceRefresh: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        Task {
             do {
                 if forceRefresh {
                     shared.postLog("[SYNC] [强制刷新] 绕过缓存，重新下载所有内容")
@@ -585,5 +622,26 @@ public class LazyManifestLoader: NSObject {
             name: webManifest.name,
             icon: webManifest.icon
         )
+    }
+}
+
+// MARK: - URLSessionDelegate (SSL Trust for Development)
+extension LazyManifestLoader: URLSessionDelegate {
+    public func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let serverTrust = challenge.protectionSpace.serverTrust {
+            #if DEBUG
+            NSLog("[WEB] [LazyLoader] Trusting SSL cert for: %@", challenge.protectionSpace.host)
+            completionHandler(.useCredential, URLCredential(trust: serverTrust))
+            #else
+            completionHandler(.performDefaultHandling, nil)
+            #endif
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
     }
 }

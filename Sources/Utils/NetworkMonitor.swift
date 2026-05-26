@@ -34,7 +34,7 @@ public class NetworkMonitor {
     private(set) public var connectionType: ConnectionType = .none
 
     /// Network path monitor
-    private let pathMonitor: NWPathMonitor
+    private var pathMonitor: NWPathMonitor
 
     /// Queue for monitoring network changes
     private let monitorQueue = DispatchQueue(label: "com.webbridgekit.network.monitor")
@@ -50,6 +50,7 @@ public class NetworkMonitor {
     private init() {
         pathMonitor = NWPathMonitor()
         setupMonitoring()
+        pathMonitor.start(queue: monitorQueue)
     }
 
     deinit {
@@ -59,12 +60,13 @@ public class NetworkMonitor {
     // MARK: - Public Methods
 
     /// Start monitoring network status
+    /// Monitoring starts automatically at init time. This method is kept for
+    /// backward compatibility and can be used to restart after a stop.
     public func startMonitoring() {
         lock.lock()
         defer { lock.unlock() }
 
-        pathMonitor.start(queue: monitorQueue)
-        NSLog("[WEB] [NetworkMonitor] Started monitoring network status")
+        NSLog("[WEB] [NetworkMonitor] startMonitoring() called (monitoring auto-starts at init)")
     }
 
     /// Stop monitoring network status

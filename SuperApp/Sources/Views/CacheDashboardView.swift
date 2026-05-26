@@ -54,23 +54,32 @@ struct CacheDashboardView: View {
 
     private func errorView(_ message: String) -> some View {
         VStack(spacing: ThemeTokens.Spacing.lg) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 52, weight: .medium))
                 .foregroundColor(Color.appError)
+            Text("加载失败")
+                .font(Font(ThemeTokens.Typography.sectionTitle))
+                .foregroundColor(Color.appText)
             Text(message)
-                .font(Font(ThemeTokens.Typography.body))
+                .font(Font(ThemeTokens.Typography.subheadline))
                 .foregroundColor(Color.appError)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, ThemeTokens.Spacing.xl)
+                .lineLimit(3)
+                .minimumScaleFactor(0.7)
             Button(action: { viewModel.refresh() }) {
-                Text("重试")
-                    .font(Font(ThemeTokens.Typography.subheadline))
-                    .foregroundColor(Color(ThemeTokens.Color.onPrimary))
-                    .padding(.horizontal, ThemeTokens.Spacing.xl)
-                    .padding(.vertical, ThemeTokens.Spacing.sm)
-                    .background(Color.appPrimary)
-                    .cornerRadius(ThemeTokens.CornerRadius.md)
+                HStack(spacing: ThemeTokens.Spacing.sm) {
+                    Image(systemName: "arrow.clockwise")
+                    Text("重试")
+                }
+                .font(Font(ThemeTokens.Typography.subheadline))
+                .foregroundColor(Color(ThemeTokens.Color.onPrimary))
+                .padding(.horizontal, ThemeTokens.Spacing.xxl)
+                .padding(.vertical, ThemeTokens.Spacing.md)
+                .background(Color.appPrimary)
+                .cornerRadius(ThemeTokens.CornerRadius.md)
             }
+            .accessibilityIdentifier("cacheDashboard.retryButton")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBackground)
@@ -82,17 +91,16 @@ struct CacheDashboardView: View {
             Spacer()
             Image(systemName: "internaldrive")
                 .font(.system(size: 60, weight: .light))
-                .foregroundColor(Color.appTextSecondary)
+                .foregroundColor(Color.appTextTertiary)
                 .padding(.bottom, ThemeTokens.Spacing.sm)
             Text("暂无缓存数据")
                 .font(Font(ThemeTokens.Typography.sectionTitle))
                 .foregroundColor(Color.appTextSecondary)
-            Text("缓存数据加载后将显示在这里")
+            Text("请确保后端服务已启动，或访问页面后再查看")
                 .font(Font(ThemeTokens.Typography.body))
                 .foregroundColor(Color.appTextTertiary)
-            Text("下拉或点击按钮刷新")
-                .font(Font(ThemeTokens.Typography.metadata))
-                .foregroundColor(Color.appTextTertiary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, ThemeTokens.Spacing.xl)
             Button(action: { viewModel.refresh() }) {
                 HStack(spacing: ThemeTokens.Spacing.xs) {
                     Image(systemName: "arrow.clockwise")
@@ -324,9 +332,10 @@ final class CacheDashboardViewModelObservable: ObservableObject {
         let timeoutWorkItem = DispatchWorkItem { [weak self] in
             guard let self, self.isLoading else { return }
             self.isLoading = false
-            self.errorMessage = "加载超时，请重试"
+            self.errorMessage = "加载超时（8s），请检查网络或服务状态后重试"
+            self.applyFallbackData()
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: timeoutWorkItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8, execute: timeoutWorkItem)
 
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
@@ -342,10 +351,37 @@ final class CacheDashboardViewModelObservable: ObservableObject {
                 timeoutWorkItem.cancel()
                 DispatchQueue.main.async {
                     self.isLoading = false
-                    self.errorMessage = "加载失败: \(error.localizedDescription)"
+                    self.errorMessage = "同步失败: \(error.localizedDescription)"
+                    self.applyFallbackData()
                 }
             }
         }
+    }
+
+    private func applyFallbackData() {
+        let allSubsystemIDs = SubsystemID.allCases
+        let fallbackItems = allSubsystemIDs.map { id -> SubsystemSectionItem in
+            SubsystemSectionItem(
+                id: id.rawValue,
+                nameZh: id.nameZh,
+                iconName: id.iconName,
+                entries: "--",
+                size: "--",
+                hitRate: nil,
+                statusText: "未连接",
+                statusColorName: "default",
+                hasData: false
+            )
+        }
+        sections = [SectionGroup(title: "[WHITE] 缓存子系统", items: fallbackItems)]
+        summaryValues = SummaryValues(
+            totalSize: "--",
+            totalEntries: "--",
+            pinnedCount: "--",
+            activeSystems: "0/\(allSubsystemIDs.count)",
+            activeRatio: 0
+        )
+        summaryText = "服务不可用 | 显示 \(allSubsystemIDs.count) 个子系统状态"
     }
 
     func refresh() {
@@ -410,6 +446,18 @@ struct SubsystemSectionItem: Identifiable {
         self.statusText = stats.status.displayText
         self.statusColorName = stats.status.statusColorName
         self.hasData = stats.hasData
+    }
+
+    init(id: String, nameZh: String, iconName: String, entries: String, size: String, hitRate: String?, statusText: String, statusColorName: String, hasData: Bool) {
+        self.id = id
+        self.nameZh = nameZh
+        self.iconName = iconName
+        self.entries = entries
+        self.size = size
+        self.hitRate = hitRate
+        self.statusText = statusText
+        self.statusColorName = statusColorName
+        self.hasData = hasData
     }
 }
 

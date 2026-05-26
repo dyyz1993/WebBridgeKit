@@ -186,7 +186,7 @@ class CommandShowcaseViewController: UIViewController {
     private func loadTestJSON() {
         let testPayload: [String: Any] = [
             "appid": "com.example.testapp",
-            "url": "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html",
+            "url": "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html",
             "title": "Test Page",
             "icon": "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
             "token": "test-token-123",
