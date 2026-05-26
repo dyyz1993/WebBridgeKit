@@ -119,8 +119,64 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
         ))
 
         cases.append(ManifestTestCase(
+            id: "test_persistent_offline",
+            name: "9. 离线加载验证",
+            description: "persistent: true，首次在线加载后杀 App + 飞行模式仍能从缓存加载。",
+            manifestFileName: "manifest.json",
+            manifestURL: URL(string: "\(baseURL)persistent_offline/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "test_persistent_missing_resource",
+            name: "10. 资源 404 处理",
+            description: "manifest 声明了 res/missing.css 但文件不存在，验证框架优雅降级。",
+            manifestFileName: "manifest.json",
+            manifestURL: URL(string: "\(baseURL)persistent_missing_resource/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "test_persistent_incremental_v1",
+            name: "11. 增量更新 V1",
+            description: "V1 缓存 common.js + v1only.js，后续 V2 增量更新测试的基础。",
+            manifestFileName: "manifest.json",
+            manifestURL: URL(string: "\(baseURL)persistent_incremental_v1/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "test_persistent_incremental_v2",
+            name: "12. 增量更新 V2",
+            description: "V2 保留 common.js，移除 v1only.js，新增 v2new.js，验证增量资源变化。",
+            manifestFileName: "manifest.json",
+            manifestURL: URL(string: "\(baseURL)persistent_incremental_v2/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "test_persistent_large",
+            name: "13. 大资源集下载",
+            description: "10 个资源文件的批量下载完整性验证，测试下载中断恢复。",
+            manifestFileName: "manifest.json",
+            manifestURL: URL(string: "\(baseURL)persistent_large/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "test_persistent_conflict_a",
+            name: "14. AppID 冲突测试 A",
+            description: "appid=com.test.conflict，与冲突测试 B 共享 appid，验证缓存隔离。",
+            manifestFileName: "manifest.json",
+            manifestURL: URL(string: "\(baseURL)persistent_conflict_a/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
+            id: "test_persistent_conflict_b",
+            name: "15. AppID 冲突测试 B",
+            description: "appid=com.test.conflict（与 A 相同），验证后加载者覆盖行为。",
+            manifestFileName: "manifest.json",
+            manifestURL: URL(string: "\(baseURL)persistent_conflict_b/manifest.json")!
+        ))
+
+        cases.append(ManifestTestCase(
             id: "jsbridge_test",
-            name: "9. JSBridge 综合功能测试",
+            name: "16. JSBridge 综合功能测试",
             description: "加载本地 test.html，测试定位、扫码、分享等所有 Bridge 接口。",
             manifestFileName: "test.html",
             manifestURL: Bundle.main.url(forResource: "test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -128,7 +184,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_comprehensive",
-            name: "10. Bridge 核心接口测试",
+            name: "17. Bridge 核心接口测试",
             description: "加载 js_bridge_test.html，验证 Bark 风格的 Bridge 调用。",
             manifestFileName: "js_bridge_test.html",
             manifestURL: Bundle.main.url(forResource: "js_bridge_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -136,7 +192,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_haptic",
-            name: "11. 触觉反馈测试",
+            name: "18. 触觉反馈测试",
             description: "加载 trigger_haptic.html，测试震动和触感反馈。",
             manifestFileName: "trigger_haptic.html",
             manifestURL: Bundle.main.url(forResource: "trigger_haptic", withExtension: "html") ?? URL(string: "about:blank")!
@@ -144,7 +200,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_network",
-            name: "12. 网络请求测试",
+            name: "19. 网络请求测试",
             description: "加载 execute_network_test.html，测试通过 Bridge 发送网络请求。",
             manifestFileName: "execute_network_test.html",
             manifestURL: Bundle.main.url(forResource: "execute_network_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -152,7 +208,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_navigation",
-            name: "13. 导航控制测试",
+            name: "20. 导航控制测试",
             description: "加载 navigation_test.html，测试页面跳转和返回控制。",
             manifestFileName: "navigation_test.html",
             manifestURL: Bundle.main.url(forResource: "navigation_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -160,7 +216,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_permissions",
-            name: "14. 权限申请测试",
+            name: "21. 权限申请测试",
             description: "加载 permissions_ui.html，测试位置、相机等权限申请。",
             manifestFileName: "permissions_ui.html",
             manifestURL: Bundle.main.url(forResource: "permissions_ui", withExtension: "html") ?? URL(string: "about:blank")!
@@ -168,7 +224,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_main",
-            name: "15. 综合测试大厅",
+            name: "22. 综合测试大厅",
             description: "加载 main_test.html，包含所有功能的导航入口。",
             manifestFileName: "main_test.html",
             manifestURL: Bundle.main.url(forResource: "main_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -176,7 +232,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_performance",
-            name: "16. 性能基准测试",
+            name: "23. 性能基准测试",
             description: "加载 test_performance.html，测试 Bridge 调用性能和资源加载速度。",
             manifestFileName: "test_performance.html",
             manifestURL: Bundle.main.url(forResource: "test_performance", withExtension: "html") ?? URL(string: "about:blank")!
@@ -184,7 +240,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_image_cache",
-            name: "17. 图片缓存测试",
+            name: "24. 图片缓存测试",
             description: "加载 image_cache_test.html，验证图片资源缓存逻辑。",
             manifestFileName: "image_cache_test.html",
             manifestURL: Bundle.main.url(forResource: "image_cache_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -192,7 +248,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_tab_cache",
-            name: "18. Tab 缓存测试",
+            name: "25. Tab 缓存测试",
             description: "加载 tab_cache_test.html，验证多 Tab 场景下的资源缓存。",
             manifestFileName: "tab_cache_test.html",
             manifestURL: Bundle.main.url(forResource: "tab_cache_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -200,7 +256,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_image_loading",
-            name: "19. 图片加载测试",
+            name: "26. 图片加载测试",
             description: "加载 test_image_loading.html，测试多种格式图片的加载。",
             manifestFileName: "test_image_loading.html",
             manifestURL: Bundle.main.url(forResource: "test_image_loading", withExtension: "html") ?? URL(string: "about:blank")!
@@ -208,7 +264,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_manifest_cache_test",
-            name: "20. Manifest 缓存验证",
+            name: "27. Manifest 缓存验证",
             description: "加载 manifest_cache_test.html，验证 Manifest 资源的缓存状态。",
             manifestFileName: "manifest_cache_test.html",
             manifestURL: Bundle.main.url(forResource: "manifest_cache_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -216,7 +272,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_manifest_test",
-            name: "21. Manifest 功能验证",
+            name: "28. Manifest 功能验证",
             description: "加载 manifest_test.html，验证 Manifest 解析和资源映射。",
             manifestFileName: "manifest_test.html",
             manifestURL: Bundle.main.url(forResource: "manifest_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -224,7 +280,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_manifest_cache_demo",
-            name: "22. 缓存策略演示",
+            name: "29. 缓存策略演示",
             description: "加载 manifest_cache_demo.html，演示不同的资源缓存策略。",
             manifestFileName: "manifest_cache_demo.html",
             manifestURL: Bundle.main.url(forResource: "manifest_cache_demo", withExtension: "html") ?? URL(string: "about:blank")!
@@ -232,7 +288,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_manifest_demo",
-            name: "23. 综合演示页面",
+            name: "30. 综合演示页面",
             description: "加载 manifest_demo.html，展示框架的综合能力。",
             manifestFileName: "manifest_demo.html",
             manifestURL: Bundle.main.url(forResource: "manifest_demo", withExtension: "html") ?? URL(string: "about:blank")!
@@ -240,7 +296,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_error_page",
-            name: "24. 错误处理测试",
+            name: "31. 错误处理测试",
             description: "加载 error_page.html，验证框架对异常情况的处理。",
             manifestFileName: "error_page.html",
             manifestURL: Bundle.main.url(forResource: "error_page", withExtension: "html") ?? URL(string: "about:blank")!
@@ -248,7 +304,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_welcome",
-            name: "25. 欢迎引导页",
+            name: "32. 欢迎引导页",
             description: "加载 welcome.html，测试精美的欢迎引导界面。",
             manifestFileName: "welcome.html",
             manifestURL: Bundle.main.url(forResource: "welcome", withExtension: "html") ?? URL(string: "about:blank")!
@@ -256,7 +312,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_permission_test",
-            name: "26. 详细权限测试",
+            name: "33. 详细权限测试",
             description: "加载 permission-test.html，逐项测试 iOS 权限回调。",
             manifestFileName: "permission-test.html",
             manifestURL: Bundle.main.url(forResource: "permission-test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -264,7 +320,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_static_test",
-            name: "27. 静态资源测试",
+            name: "34. 静态资源测试",
             description: "加载 static_test.html，验证 CSS/JS 等静态资源的加载。",
             manifestFileName: "static_test.html",
             manifestURL: Bundle.main.url(forResource: "static_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -272,7 +328,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_slow_1s",
-            name: "28. 慢加载测试 (1s)",
+            name: "35. 慢加载测试 (1s)",
             description: "加载 slow_resource_1s.html，验证页面加载超时处理。",
             manifestFileName: "slow_resource_1s.html",
             manifestURL: Bundle.main.url(forResource: "slow_resource_1s", withExtension: "html") ?? URL(string: "about:blank")!
@@ -280,7 +336,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_slow_3s",
-            name: "29. 慢加载测试 (3s)",
+            name: "36. 慢加载测试 (3s)",
             description: "加载 slow_resource_3s.html，验证页面加载超时处理。",
             manifestFileName: "slow_resource_3s.html",
             manifestURL: Bundle.main.url(forResource: "slow_resource_3s", withExtension: "html") ?? URL(string: "about:blank")!
@@ -288,7 +344,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_slow_5s",
-            name: "30. 慢加载测试 (5s)",
+            name: "37. 慢加载测试 (5s)",
             description: "加载 slow_resource_5s.html，验证页面加载超时处理。",
             manifestFileName: "slow_resource_5s.html",
             manifestURL: Bundle.main.url(forResource: "slow_resource_5s", withExtension: "html") ?? URL(string: "about:blank")!
@@ -296,7 +352,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_hub",
-            name: "31. 测试索引页 (Hub)",
+            name: "38. 测试索引页 (Hub)",
             description: "加载 test_hub.html，快速访问所有测试用例的入口。",
             manifestFileName: "test_hub.html",
             manifestURL: Bundle.main.url(forResource: "test_hub", withExtension: "html") ?? URL(string: "about:blank")!
@@ -304,7 +360,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_ua_test",
-            name: "32. User-Agent 检测",
+            name: "39. User-Agent 检测",
             description: "加载 ua_test.html，验证自定义 UA（版本、屏幕尺寸、倍率）是否生效。",
             manifestFileName: "ua_test.html",
             manifestURL: Bundle.main.url(forResource: "ua_test", withExtension: "html") ?? URL(string: "about:blank")!
@@ -312,7 +368,7 @@ class ManifestTestCasesViewModel: ViewModel, WKScriptMessageHandler {
 
         cases.append(ManifestTestCase(
             id: "jsbridge_custom_error_test",
-            name: "33. 资源加载错误演示",
+            name: "40. 资源加载错误演示",
             description: "加载一个不存在的 custom:// 协议地址，演示自定义错误页面的显示。",
             manifestFileName: "error_demo",
             manifestURL: URL(string: "custom://nonexistent-page/index.html")!  // [HOT] 直接使用完整URL，不用 deletingLastPathComponent
