@@ -11,6 +11,34 @@ import WebKit
 import UIKit
 import CryptoKit
 
+private struct AnyCodableValue: Codable {
+    let stringValue: String?
+    let objectValue: [String: AnyCodableValue]?
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            stringValue = str
+            objectValue = nil
+        } else if let obj = try? container.decode([String: AnyCodableValue].self) {
+            stringValue = nil
+            objectValue = obj
+        } else {
+            stringValue = nil
+            objectValue = nil
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        if let str = stringValue {
+            try container.encode(str)
+        } else if let obj = objectValue {
+            try container.encode(obj)
+        }
+    }
+}
+
 /// 懒加载 Manifest 加载器
 /// 实现懒加载缓存模式：
 /// 1. 检查 manifest.json 的 persistent 字段
@@ -43,31 +71,51 @@ public class LazyManifestLoader: NSObject {
         }
     }
 
-    /// Web Manifest 结构
     public struct WebManifest: Codable {
-        /// 是否启用持久化缓存
         public let persistent: Bool
-
-        /// 资源映射：相对路径 -> 真实 URL
         public let resources: [String: String]
-
-        /// 版本号（默认 "0.0.1"）
         public let version: String?
-
-        /// 应用标识符（可选，用于缓存路径和清理）
         public let appid: String?
-
-        /// 应用名称（可选，用于显示）
         public let name: String?
-
-        /// 应用图标 URL（可选，用于显示）
         public let icon: String?
-
-        /// 最后更新时间（可选，用于兼容性）
         public let updatedAt: String?
-
-        /// 描述信息（可选，用于兼容性）
         public let description: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case persistent, resources, version, appid, name, icon, updatedAt, description
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            persistent = try container.decodeIfPresent(Bool.self, forKey: .persistent) ?? false
+            version = try container.decodeIfPresent(String.self, forKey: .version)
+            appid = try container.decodeIfPresent(String.self, forKey: .appid)
+            name = try container.decodeIfPresent(String.self, forKey: .name)
+            icon = try container.decodeIfPresent(String.self, forKey: .icon)
+            updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+            description = try container.decodeIfPresent(String.self, forKey: .description)
+            resources = try Self.decodeResources(from: container)
+        }
+
+        private static func decodeResources(from container: KeyedDecodingContainer<CodingKeys>) throws -> [String: String] {
+            if let flat = try? container.decode([String: String].self, forKey: .resources) {
+                return flat
+            }
+            if let nested = try? container.decode([String: [String: AnyCodableValue]].self, forKey: .resources) {
+                var flat: [String: String] = [:]
+                for (_, entries) in nested {
+                    for (path, value) in entries {
+                        if let obj = value.objectValue, let url = obj["url"]?.stringValue {
+                            flat[path] = url
+                        } else if let str = value.stringValue {
+                            flat[path] = str
+                        }
+                    }
+                }
+                return flat
+            }
+            return [:]
+        }
 
         public init(
             persistent: Bool,
@@ -89,7 +137,6 @@ public class LazyManifestLoader: NSObject {
             self.description = description
         }
 
-        /// 获取版本号，如果没有则返回默认值
         public var resolvedVersion: String {
             return version ?? "0.0.1"
         }
@@ -144,8 +191,10 @@ public class LazyManifestLoader: NSObject {
     ) {
         Task {
             let isOffline = !NetworkMonitor.shared.isConnected
+            NSLog("[DIAG-SMART] smartLoad url=\(url.absoluteString) isOffline=\(isOffline) forceRefresh=\(forceRefresh)")
 
             if isOffline && !forceRefresh {
+                NSLog("[WEB-DIAG] smartLoad: isOffline=true, URL=\(url.absoluteString)")
                 shared.postLog("[SATELLITE] [离线检测] 设备离线，尝试从本地缓存加载")
 
                 let loaded = shared.tryLoadFromCache(url: url, in: webView) { result in
@@ -163,6 +212,7 @@ public class LazyManifestLoader: NSObject {
             }
 
             if !forceRefresh && PersistentManifestLoader.shared.isCached(url: url) {
+                NSLog("[WEB-DIAG] smartLoad: 在线但缓存命中, URL=\(url.absoluteString)")
                 shared.postLog("[FAST] [智能加载] 缓存命中，秒开（零网络请求）")
                 PersistentManifestLoader.shared.loadFromCache(url: url, in: webView) { cacheResult in
                     switch cacheResult {
@@ -182,6 +232,7 @@ public class LazyManifestLoader: NSObject {
                 return
             }
 
+            NSLog("[DIAG-SMART] BRANCH: calling performOnlineLoad (no cache hit)")
             Self.performOnlineLoad(
                 url: url,
                 in: webView,
@@ -200,20 +251,25 @@ public class LazyManifestLoader: NSObject {
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         Task {
+            NSLog("[DIAG-PERFORM] performOnlineLoad START url=\(url.absoluteString) forceRefresh=\(forceRefresh) hasVC=\(viewController != nil)")
             do {
                 if forceRefresh {
                     shared.postLog("[SYNC] [强制刷新] 绕过缓存，重新下载所有内容")
                 }
                 shared.postLog("[SEARCH] [智能加载] 正在检查 manifest.json...")
+                NSLog("[DIAG-PERFORM] fetching manifest...")
                 let manifest = try await shared.fetchManifestSync(from: url)
+                NSLog("[DIAG-PERFORM] manifest decoded OK: persistent=\(manifest.persistent) resources=\(manifest.resources.count) version=\(manifest.version ?? "nil")")
                 shared.postLog("[LIST] [智能加载] Manifest 已加载")
                 shared.postLog("   版本: \(manifest.version ?? "无")")
                 shared.postLog("   持久化: \(manifest.persistent)")
                 shared.postLog("   资源数量: \(manifest.resources.count)")
 
                 if manifest.persistent {
+                    NSLog("[DIAG-PERFORM] BRANCH: persistent=true, checking viewController...")
                     shared.postLog("[SAVE] [智能加载] 选择持久化模式")
                     guard let viewController = viewController else {
+                        NSLog("[DIAG-PERFORM] FAIL: viewController is nil, cannot use persistent mode")
                         completion(.failure(LazyLoadError.manifestDownloadFailed(NSError(
                             domain: "LazyManifestLoader",
                             code: -1,
@@ -221,18 +277,22 @@ public class LazyManifestLoader: NSObject {
                         ))))
                         return
                     }
+                    NSLog("[DIAG-PERFORM] CALLING PersistentManifestLoader.load url=\(url.absoluteString)")
                     PersistentManifestLoader.load(
                         url: url,
                         in: webView,
                         from: viewController
                     ) { result in
+                        NSLog("[DIAG-PERFORM] PersistentManifestLoader.load completed: \(result)")
                         completion(result)
                     }
                 } else {
+                    NSLog("[DIAG-PERFORM] BRANCH: persistent=false, using lazy-load")
                     shared.postLog("[FAST] [智能加载] 选择懒加载模式")
                     shared.loadInternal(url: url, in: webView, manifest: manifest, forceRefresh: forceRefresh, completion: completion)
                 }
             } catch {
+                NSLog("[DIAG-PERFORM] CATCH: fetchManifestSync failed: \(error)")
                 shared.postLog("[WARN] [智能加载] 未找到 manifest.json，尝试本地缓存")
 
                 let loaded = shared.tryLoadFromCache(url: url, in: webView) { result in
@@ -240,6 +300,7 @@ public class LazyManifestLoader: NSObject {
                 }
 
                 if !loaded {
+                    NSLog("[DIAG-PERFORM] FALLBACK: no cache, loading plain WebView")
                     shared.postLog("[WARN] [智能加载] 本地也无缓存，回退到普通 WebView 加载")
                     DispatchQueue.main.async {
                         if url.isFileURL {
@@ -391,8 +452,11 @@ public class LazyManifestLoader: NSObject {
     ) -> Bool {
         let cacheID = generateCacheID(for: url)
 
+        NSLog("[WEB-DIAG] tryLoadFromCache URL: \(url.absoluteString), cacheID: \(cacheID)")
         let persistentLoader = PersistentManifestLoader.shared
-        if persistentLoader.isCached(url: url) {
+        let isCachedResult = persistentLoader.isCached(url: url)
+        NSLog("[WEB-DIAG] tryLoadFromCache PersistentManifestLoader.isCached: \(isCachedResult)")
+        if isCachedResult {
             postLog("[RECYCLE] [离线回退] 发现本地持久化缓存: \(cacheID)")
             persistentLoader.loadFromCache(url: url, in: webView) { [weak self] result in
                 switch result {
@@ -497,11 +561,18 @@ public class LazyManifestLoader: NSObject {
         NSLog("[WEB] [LazyLoader] 正在尝试下载 Manifest: %@", manifestURL.absoluteString)
         do {
             let (data, response) = try await urlSession.data(from: manifestURL)
+            NSLog("[DIAG-FETCH] manifest data size: \(data.count) bytes")
+            if let httpResponse = response as? HTTPURLResponse {
+                NSLog("[DIAG-FETCH] HTTP status: \(httpResponse.statusCode)")
+            }
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
                 NSLog("[FAIL] [LazyLoader] Manifest 下载失败，状态码: %d", httpResponse.statusCode)
                 throw LazyLoadError.manifestDownloadFailed(NSError(domain: "LazyManifestLoader", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(httpResponse.statusCode)"]))
             }
-            return try JSONDecoder().decode(WebManifest.self, from: data)
+            NSLog("[DIAG-FETCH] raw JSON: \(String(data: data.prefix(500), encoding: .utf8) ?? "nil")")
+            let decoded = try JSONDecoder().decode(WebManifest.self, from: data)
+            NSLog("[DIAG-FETCH] decoded OK: persistent=\(decoded.persistent) resources.count=\(decoded.resources.count)")
+            return decoded
         } catch {
             NSLog("[FAIL] [LazyLoader] Manifest 处理失败: %@", error.localizedDescription)
             throw error
@@ -556,7 +627,8 @@ public class LazyManifestLoader: NSObject {
                 completion(.success(()))
 
                 // 3. 后台异步下载所有资源
-                self.downloadAllResources(manifest: manifest, baseURL: url.deletingLastPathComponent(), pageKey: cacheID)
+                let resourceBaseURL = (url.pathExtension.isEmpty || url.hasDirectoryPath) ? url : url.deletingLastPathComponent()
+                self.downloadAllResources(manifest: manifest, baseURL: resourceBaseURL, pageKey: cacheID)
 
             case .failure(let error):
                 completion(.failure(error))
