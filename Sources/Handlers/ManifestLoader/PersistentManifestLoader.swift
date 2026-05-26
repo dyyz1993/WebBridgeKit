@@ -121,12 +121,9 @@ public class PersistentManifestLoader: NSObject {
             diagnose("缓存迁移: Caches → Application Support 完成")
         }
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleClearAllCaches),
-            name: .clearAllCaches,
-            object: nil
-        )
+        // NOTE: 不监听 .clearAllCaches 通知。
+        // PersistentCache 是持久化离线缓存，不应被 WebCacheManager.clearAll() 或 AppDelegate 启动清理删除。
+        // 仅通过用户显式操作（如 ManifestCacheTestViewController 中的按钮）调用 clearAllCache()。
     }
 
     @objc private func handleClearAllCaches() {
@@ -587,13 +584,19 @@ public class PersistentManifestLoader: NSObject {
 
     public func isCached(url: URL) -> Bool {
         diagnose("isCached 检查 URL: \(url.absoluteString)")
+        diagnose("isCached cacheDirectory: \(cacheDirectory.path)")
+        diagnose("isCached cacheDirectory exists: \(FileManager.default.fileExists(atPath: cacheDirectory.path))")
         if let savedCacheID = getCacheIDForURL(url) {
             diagnose("isCached UserDefaults映射命中, cacheID: \(savedCacheID)")
             let cacheDir = cacheDirectory.appendingPathComponent(savedCacheID)
             let htmlPath = cacheDir.appendingPathComponent("index.html")
+            diagnose("isCached htmlPath: \(htmlPath.path), exists: \(FileManager.default.fileExists(atPath: htmlPath.path))")
             if FileManager.default.fileExists(atPath: htmlPath.path) {
                 NSLog("[WEB] [PersistentLoader] isCached: UserDefaults映射命中, cacheID: %@", savedCacheID)
                 return true
+            } else {
+                let dirContents = (try? FileManager.default.contentsOfDirectory(atPath: cacheDir.path)) ?? []
+                diagnose("isCached 目录内容: \(dirContents.joined(separator: ", "))")
             }
         }
 

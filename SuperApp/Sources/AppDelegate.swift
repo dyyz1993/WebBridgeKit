@@ -36,12 +36,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-        //  Clear cache on background to avoid blocking main thread (does NOT clear favorites/history)
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                WebCacheManager.shared.clearAll()
-            }
-        }
+        // Removed startup clearAll() — it was deleting PersistentCache files that should survive app restarts.
+        // Cache cleanup is now handled by WebCacheManager.scheduleAutoCleanup() which respects persistence.
 
         // 初始化 WebBridgeKit（异步执行，避免偶尔阻塞主线程导致卡 loading）
         // UI 测试时禁用 WebBridgeKit 预热，减少主线程压力和 WebKit 进程消耗
