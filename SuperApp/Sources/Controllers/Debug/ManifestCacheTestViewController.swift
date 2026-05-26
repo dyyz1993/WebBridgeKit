@@ -19,7 +19,7 @@ import WebBridgeKit
 /// 4. 资源缓存测试
 /// 5. WebView 加载展示
 /// 6. 日志输出和统计信息
-class ManifestCacheTestViewController: UIViewController {
+class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDelegate, UIScrollViewDelegate {
 
     // MARK: - UI Components
 
@@ -200,6 +200,11 @@ class ManifestCacheTestViewController: UIViewController {
         setupUI()
         setupActions()
 
+        NetworkMonitor.shared.startMonitoring()
+
+        scrollView.delegate = self
+        scrollView.showsHorizontalScrollIndicator = false
+
         logTextView.textContainer.widthTracksTextView = false
         logTextView.textContainer.lineBreakMode = .byClipping
 
@@ -207,15 +212,19 @@ class ManifestCacheTestViewController: UIViewController {
 
         // 设置默认 URL - 指向本地测试服务器（使用实际 IP）
         #if DEBUG
-        urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
+        urlTextField.text = "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
         #else
-        urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
+        urlTextField.text = "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
         #endif
 
         addLog("Manifest 缓存测试页面已加载")
         addLog("支持两种模式：")
         addLog("   - 懒加载：立即加载 HTML，后台下载资源")
         addLog("   - 持久化：等待所有资源下载完成后加载")
+
+        DispatchQueue.main.async { [weak self] in
+            self?.updateLogTextContainerSize()
+        }
 
         // 监听 LazyManifestLoader 的资源加载日志通知
         NotificationCenter.default.addObserver(
@@ -412,7 +421,7 @@ class ManifestCacheTestViewController: UIViewController {
         switch urlPresetSegment.selectedSegmentIndex {
         case 0:
             // Manifest 测试
-            urlTextField.text = "https://wbk.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
+            urlTextField.text = "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
             addLog("[SYNC] 已选择: Manifest 测试 URL")
         case 1:
             // 百度
@@ -521,7 +530,6 @@ class ManifestCacheTestViewController: UIViewController {
     }
 
     func addLog(_ message: String) {
-        //  FIX: 简化 log 方法，避免复杂的 text range 计算
         let logAction = { [weak self] in
             guard let self = self else { return }
 
@@ -533,10 +541,10 @@ class ManifestCacheTestViewController: UIViewController {
 
             let logLine = "[\(timestamp)] \(message)\n"
 
-            // 简单的文本追加
             self.logTextView.text += logLine
 
-            // 使用 setContentOffset 更安全的滚动方式
+            self.updateLogTextContainerSize()
+
             if !self.logTextView.text.isEmpty {
                 let bottomOffset = CGPoint(x: 0, y: self.logTextView.contentSize.height - self.logTextView.bounds.height)
                 if bottomOffset.y > 0 {
@@ -574,6 +582,42 @@ class ManifestCacheTestViewController: UIViewController {
             alert.addAction(UIAlertAction(title: "确定", style: .default))
             self?.present(alert, animated: true)
         }
+    }
+
+    // MARK: - UIScrollViewDelegate (prevent parent from eating horizontal scrolls)
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        if scrollView == self.scrollView {
+            self.scrollView.showsHorizontalScrollIndicator = false
+        }
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer.view == logTextView || otherGestureRecognizer.view == logTextView {
+            return true
+        }
+        return false
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let panGesture = gestureRecognizer as? UIPanGestureRecognizer,
+              panGesture.view == scrollView else { return true }
+
+        let velocity = panGesture.velocity(in: view)
+        if abs(velocity.x) > abs(velocity.y) {
+            let location = panGesture.location(in: view)
+            if logContainer.frame.contains(location) {
+                return false
+            }
+        }
+        return true
+    }
+
+    // MARK: - Log text container sizing for horizontal scroll
+
+    private func updateLogTextContainerSize() {
+        let maxWidth = max(logTextView.bounds.width, 600)
+        logTextView.textContainer.size = CGSize(width: maxWidth, height: .greatestFiniteMagnitude)
     }
 }
 

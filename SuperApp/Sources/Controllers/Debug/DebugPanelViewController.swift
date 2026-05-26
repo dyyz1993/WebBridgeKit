@@ -96,7 +96,7 @@ class DebugPanelViewController: UIViewController {
         tabScrollView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(4)
             make.left.right.equalToSuperview()
-            make.height.equalTo(40)
+            make.height.equalTo(36)
         }
 
         tabStack.snp.makeConstraints { make in
@@ -121,14 +121,14 @@ class DebugPanelViewController: UIViewController {
         let button = UIButton(type: .custom)
         button.tag = index
 
-        let iconImage = icon.templateImage(pointSize: 14)
+        let iconImage = icon.templateImage(pointSize: 12)
         button.setImage(iconImage, for: .normal)
 
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: .systemFont(ofSize: 13, weight: .medium))
-        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -4)
+        button.titleLabel?.font = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: .systemFont(ofSize: 11, weight: .medium))
+        button.contentEdgeInsets = UIEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 0)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -2)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.accessibilityLabel = title
         button.accessibilityIdentifier = "debugPanel.tab.\(index)"
@@ -138,7 +138,7 @@ class DebugPanelViewController: UIViewController {
         button.addTarget(self, action: #selector(tabTapped(_:)), for: .touchUpInside)
 
         button.snp.makeConstraints { make in
-            make.height.equalTo(32)
+            make.height.equalTo(28)
         }
 
         return button

@@ -28,7 +28,7 @@ public class PersistentManifestLoader: NSObject {
 
     // MARK: - Properties
 
-    let urlSession: URLSession
+    private(set) var urlSession: URLSession!
     let cacheDirectory: URL
     public let scheme = "wb-resource"
     let manifestFileName = "manifest.json"
@@ -57,12 +57,13 @@ public class PersistentManifestLoader: NSObject {
         config.httpAdditionalHeaders = [
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
         ]
-        self.urlSession = URLSession(configuration: config)
 
         let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         self.cacheDirectory = cachesDir.appendingPathComponent("WebBridgeKit/PersistentCache")
 
         super.init()
+
+        self.urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
 
         NotificationCenter.default.addObserver(
             self,
@@ -285,6 +286,7 @@ public class PersistentManifestLoader: NSObject {
 
             // 10. 保存 HTML 和 manifest 到临时目录（不更新 ManifestStore）
             try saveHTML(html, to: tempDir)
+            NSLog("[WEB] [PersistentLoader] HTML 已保存到临时目录, 大小: %d bytes", html.count)
             try saveManifest(manifest, to: tempDir)
 
             // 11. 原子交换: old → .old, temp → current, delete .old
@@ -565,16 +567,43 @@ public class PersistentManifestLoader: NSObject {
             Task { @MainActor in
                 await registerManifest(manifest, for: cacheID, in: webView)
 
-                guard let baseURL = URL(string: "\(scheme)://\(cacheID)/") else {
-                    completion(.failure(LoaderError.invalidManifestFormat))
-                    return
+                let indexFile = cacheDir.appendingPathComponent("index.html")
+                if FileManager.default.fileExists(atPath: indexFile.path) {
+                    NSLog("[WEB] [loadFromCache] loadFileURL: %@", indexFile.path)
+                    webView.loadFileURL(indexFile, allowingReadAccessTo: cacheDir)
+                } else {
+                    NSLog("[WEB] [loadFromCache] ⚠️ index.html not found, falling back to loadHTMLString")
+                    guard let baseURL = URL(string: "\(self.scheme)://\(cacheID)/") else {
+                        completion(.failure(LoaderError.invalidManifestFormat))
+                        return
+                    }
+                    webView.loadHTMLString(html, baseURL: baseURL)
                 }
-
-                webView.loadHTMLString(html, baseURL: baseURL)
                 completion(.success(()))
             }
         } catch {
             completion(.failure(error))
+        }
+    }
+}
+
+// MARK: - URLSessionDelegate (SSL Trust for Development)
+extension PersistentManifestLoader: URLSessionDelegate {
+    public func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let serverTrust = challenge.protectionSpace.serverTrust {
+            #if DEBUG
+            NSLog("[WEB] [PersistentLoader] Trusting SSL cert for: %@", challenge.protectionSpace.host)
+            completionHandler(.useCredential, URLCredential(trust: serverTrust))
+            #else
+            completionHandler(.performDefaultHandling, nil)
+            #endif
+        } else {
+            completionHandler(.performDefaultHandling, nil)
         }
     }
 }

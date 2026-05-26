@@ -88,25 +88,11 @@ public class CacheAppCell: UITableViewCell {
         return label
     }()
 
-    /// 复制 AppID 按钮
+    /// 复制 AppID 按钮（仅图标，紧凑尺寸）
     private lazy var copyButton: UIButton = {
         let button = UIButton(type: .system)
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.plain()
-            config.image = LucideIcon.copy.templateImage()
-            config.imagePlacement = .leading
-            config.imagePadding = 4
-            config.title = "复制"
-            config.baseForegroundColor = ThemeTokens.Color.primary
-            button.configuration = config
-        } else {
-            button.setImage(LucideIcon.copy.templateImage(), for: .normal)
-            button.setTitle("复制", for: .normal)
-            button.titleLabel?.font = ThemeTokens.Typography.metadata
-            button.tintColor = ThemeTokens.Color.primary
-            button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
-            button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
-        }
+        button.setImage(LucideIcon.copy.templateImage(), for: .normal)
+        button.tintColor = ThemeTokens.Color.primary
         button.accessibilityLabel = "复制AppID"
         return button
     }()
@@ -228,9 +214,8 @@ public class CacheAppCell: UITableViewCell {
         bottomInfoStackView.addArrangedSubview(pageCountLabel)
         bottomInfoStackView.addArrangedSubview(cacheSizeLabel)
 
-        // 添加右侧按钮
+        // 添加右侧按钮（仅删除，复制通过长按触发）
         rightButtonStackView.addArrangedSubview(deleteButton)
-        rightButtonStackView.addArrangedSubview(copyButton)
 
         // 布局
         containerView.snp.makeConstraints { make in
@@ -251,15 +236,11 @@ public class CacheAppCell: UITableViewCell {
         rightButtonStackView.snp.makeConstraints { make in
             make.right.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
-            make.width.greaterThanOrEqualTo(80)
+            make.width.equalTo(44)
         }
 
         deleteButton.snp.makeConstraints { make in
-            make.height.equalTo(44)
-        }
-
-        copyButton.snp.makeConstraints { make in
-            make.height.equalTo(32)
+            make.width.height.equalTo(44)
         }
 
         containerView.addSubview(iconImageView)
@@ -287,14 +268,16 @@ public class CacheAppCell: UITableViewCell {
 
         // 按钮事件
         deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
-        copyButton.addTarget(self, action: #selector(copyButtonTapped), for: .touchUpInside)
     }
 
     private func setupGestures() {
-        // 添加点击手势
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(cellTapped))
         tapGesture.cancelsTouchesInView = false
         contentView.addGestureRecognizer(tapGesture)
+
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(cellLongPressed(_:)))
+        longPressGesture.minimumPressDuration = 0.5
+        contentView.addGestureRecognizer(longPressGesture)
     }
 
     // MARK: - Update UI
@@ -356,6 +339,18 @@ public class CacheAppCell: UITableViewCell {
 
     // MARK: - Actions
 
+    @objc private func cellLongPressed(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began, let appInfo = currentAppInfo else { return }
+        onCopy?(appInfo.appID)
+        UIPasteboard.general.string = appInfo.appID
+
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.prepare()
+        generator.impactOccurred()
+
+        UIMenuController.shared.showMenu(from: contentView, rect: contentView.bounds)
+    }
+
     @objc private func deleteButtonTapped() {
         guard let appInfo = currentAppInfo else { return }
         onDelete?(appInfo.appID)
@@ -364,41 +359,12 @@ public class CacheAppCell: UITableViewCell {
     @objc private func copyButtonTapped() {
         guard let appInfo = currentAppInfo else { return }
         onCopy?(appInfo.appID)
-
-        // 复制到剪贴板
         UIPasteboard.general.string = appInfo.appID
-
-        // 显示反馈动画
-        showCopyFeedback()
     }
 
     @objc private func cellTapped() {
         guard let appInfo = currentAppInfo else { return }
         onTap?(appInfo)
-    }
-
-    private func showCopyFeedback() {
-        if !UIAccessibility.isReduceMotionEnabled {
-            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: {
-                self.copyButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-            }, completion: { _ in
-                UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
-                    self.copyButton.transform = .identity
-                }
-            })
-        }
-
-        if #available(iOS 15.0, *) {
-            let originalConfig = copyButton.configuration
-            var newConfig = originalConfig
-            newConfig?.title = "已复制"
-            newConfig?.baseForegroundColor = ThemeTokens.Color.success
-            copyButton.configuration = newConfig
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                self?.copyButton.configuration = originalConfig
-            }
-        }
     }
 
     // MARK: - Reuse

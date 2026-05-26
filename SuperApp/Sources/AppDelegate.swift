@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let start = Date()
 
         CrashLogManager.shared.initialize()
+        NetworkMonitor.shared.startMonitoring()
 
         if let serverURL = ServerConfigManager.shared.getActiveBaseURL() {
             CrashLogManager.shared.serverBaseURL = serverURL

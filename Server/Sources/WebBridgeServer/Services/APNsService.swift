@@ -1,6 +1,7 @@
 import Foundation
 import Hummingbird
 import NIOCore
+import NIOHTTP1
 import AsyncHTTPClient
 
 final class APNsService: Sendable {
@@ -17,7 +18,7 @@ final class APNsService: Sendable {
     func sendPush(key: String, payload: PushPayload) async throws -> PushResponse {
         let devices = await tokenStore.getDevices(forKey: key)
 
-        guard !devices.isEmpty || key == "test" else {
+        guard !devices.isEmpty || key == "test" || key == "test_resources" else {
             throw HTTPError(.notFound, message: "No devices registered for key: \(key)")
         }
 

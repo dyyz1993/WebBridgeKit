@@ -13,19 +13,26 @@ import UIKit
 
 extension PersistentManifestLoader {
 
-    /// 加载 HTML 到 WebView
+    /// 加载 HTML 到 WebView - 使用 loadFileURL 直接加载本地缓存文件
     func loadHTML(_ html: String, cacheID: String, in webView: WKWebView) async throws {
-        guard let entryURL = URL(string: "\(scheme)://\(cacheID)/index.html") else {
-            throw LoaderError.invalidManifestFormat
+        let cacheDir = cacheDirectory.appendingPathComponent(cacheID)
+        let indexFile = cacheDir.appendingPathComponent("index.html")
+
+        NSLog("[WEB] [ProgressUI] loadFileURL: %@, readAccessTo: %@", indexFile.path, cacheDir.path)
+
+        guard FileManager.default.fileExists(atPath: indexFile.path) else {
+            NSLog("[WEB] [ProgressUI] ⚠️ index.html NOT FOUND at: %@, falling back to loadHTMLString", indexFile.path)
+            guard let baseURL = URL(string: "\(scheme)://\(cacheID)/") else {
+                throw LoaderError.invalidManifestFormat
+            }
+            try await MainActor.run {
+                webView.loadHTMLString(html, baseURL: baseURL)
+            }
+            return
         }
 
-        NSLog("[WEB] [PersistentManifestLoader] 加载入口页面: %@", entryURL.absoluteString)
-
-        try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.main.async {
-                webView.load(URLRequest(url: entryURL))
-                continuation.resume()
-            }
+        try await MainActor.run {
+            webView.loadFileURL(indexFile, allowingReadAccessTo: cacheDir)
         }
     }
 
