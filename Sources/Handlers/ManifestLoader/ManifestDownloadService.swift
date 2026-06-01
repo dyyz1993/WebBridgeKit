@@ -80,7 +80,7 @@ extension PersistentManifestLoader {
     func downloadHTML(from url: URL) async throws -> String {
         NSLog("[WEB] [PersistentLoader] downloadHTML 开始: %@", url.absoluteString)
         return try await withCheckedThrowingContinuation { continuation in
-            let task = urlSession.dataTask(with: url) { data, response, error in
+            let task = urlSession.dataTask(with: url) { data, _, error in
                 if let error = error {
                     NSLog("[WEB] [PersistentLoader] downloadHTML 失败: %@", error.localizedDescription)
                     continuation.resume(throwing: LoaderError.htmlDownloadFailed(error))

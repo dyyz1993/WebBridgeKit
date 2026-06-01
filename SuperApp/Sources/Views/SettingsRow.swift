@@ -6,13 +6,13 @@ struct SettingsRow: View {
     let iconBackgroundColor: UIColor
     let iconTintColor: UIColor
     let title: String
-    var trailingText: String? = nil
+    var trailingText: String?
     var showChevron: Bool = true
     var isToggle: Bool = false
     @Binding var isToggleOn: Bool
     var isDestructive: Bool = false
-    var badge: String? = nil
-    var onTap: (() -> Void)? = nil
+    var badge: String?
+    var onTap: (() -> Void)?
 
     @State private var isPressed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

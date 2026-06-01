@@ -16,9 +16,7 @@ extension Color {
         if #available(iOS 15.0, *) {
             self.init(uiColor: uiColor)
         } else {
-            self.init(UIColor { trait in
-                uiColor.resolvedColor(with: trait)
-            })
+            self = Color(uiColor.resolvedColor(with: UITraitCollection.current).cgColor)
         }
     }
 }
@@ -35,15 +33,7 @@ struct AppBackgroundModifier: ViewModifier {
 
 extension Font {
     static func app(_ uiFont: UIFont) -> Font {
-        let textStyle: UIFont.TextStyle
         let size = uiFont.pointSize
-        if size >= 28 { textStyle = .largeTitle }
-        else if size >= 22 { textStyle = .title1 }
-        else if size >= 17 { textStyle = .headline }
-        else if size >= 15 { textStyle = .body }
-        else if size >= 13 { textStyle = .footnote }
-        else if size >= 12 { textStyle = .caption1 }
-        else { textStyle = .caption2 }
         return Font.system(size: size, design: .default)
     }
 }

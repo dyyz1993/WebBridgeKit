@@ -30,10 +30,10 @@ struct CacheDashboardView: View {
         .navigationTitle("缓存仪表盘")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { viewModel.refresh() }) {
+                Button(action: { viewModel.refresh() }, label: {
                     Image(systemName: "arrow.clockwise")
                         .foregroundColor(Color.appPrimary)
-                }
+                })
                 .accessibilityLabel("刷新缓存数据")
             }
         }
@@ -67,7 +67,7 @@ struct CacheDashboardView: View {
                 .padding(.horizontal, ThemeTokens.Spacing.xl)
                 .lineLimit(3)
                 .minimumScaleFactor(0.7)
-            Button(action: { viewModel.refresh() }) {
+            Button(action: { viewModel.refresh() }, label: {
                 HStack(spacing: ThemeTokens.Spacing.sm) {
                     Image(systemName: "arrow.clockwise")
                     Text("重试")
@@ -78,7 +78,7 @@ struct CacheDashboardView: View {
                 .padding(.vertical, ThemeTokens.Spacing.md)
                 .background(Color.appPrimary)
                 .cornerRadius(ThemeTokens.CornerRadius.md)
-            }
+            })
             .accessibilityIdentifier("cacheDashboard.retryButton")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -101,7 +101,7 @@ struct CacheDashboardView: View {
                 .foregroundColor(Color.appTextTertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, ThemeTokens.Spacing.xl)
-            Button(action: { viewModel.refresh() }) {
+            Button(action: { viewModel.refresh() }, label: {
                 HStack(spacing: ThemeTokens.Spacing.xs) {
                     Image(systemName: "arrow.clockwise")
                     Text("刷新")
@@ -112,7 +112,7 @@ struct CacheDashboardView: View {
                 .padding(.vertical, ThemeTokens.Spacing.sm)
                 .background(Color.appPrimary)
                 .cornerRadius(ThemeTokens.CornerRadius.md)
-            }
+            })
             .padding(.top, ThemeTokens.Spacing.lg)
             Spacer()
         }
@@ -211,7 +211,7 @@ struct CacheDashboardView: View {
         Button(action: {
             guard let sid = SubsystemID(rawValue: item.id) else { return }
             onNavigateToSubsystem?(sid)
-        }) {
+        }, label: {
             HStack(spacing: ThemeTokens.Spacing.md) {
                 subsystemIcon(item)
                 subsystemInfo(item)
@@ -219,7 +219,7 @@ struct CacheDashboardView: View {
                 subsystemMetrics(item)
             }
             .padding(.vertical, ThemeTokens.Spacing.sm)
-        }
+        })
         .buttonStyle(PlainButtonStyle())
     }
 

@@ -55,6 +55,11 @@ final class DebugCenterViewModel: ObservableObject {
         resultDetail = command
     }
 
+    func showCrashScanGuide() {
+        resultState = .success("崩溃扫描说明")
+        resultDetail = "在项目根目录执行 bash scripts/scan-crash-logs.sh --json，要求 total 为 0。"
+    }
+
     func copyDiagnosticSummary() {
         let summary = """
         {

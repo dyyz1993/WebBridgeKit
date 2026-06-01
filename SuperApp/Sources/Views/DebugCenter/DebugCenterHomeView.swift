@@ -125,7 +125,7 @@ struct DebugCenterHomeView: View {
 
             HStack(spacing: ThemeTokens.Spacing.md) {
                 Button(
-                    action: { onAction(.showCrashScanGuide) },
+                    action: viewModel.showCrashScanGuide,
                     label: {
                         Text("崩溃扫描说明")
                             .font(Font.app(ThemeTokens.Typography.button))
