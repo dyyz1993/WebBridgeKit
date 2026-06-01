@@ -55,7 +55,7 @@ run_gate "Visual static checks" "bash tools/visual-checks.sh"
 run_gate "Crash scan" "bash scripts/scan-crash-logs.sh --json | grep '\"total\": 0'"
 
 if xcrun simctl list devices booted 2>/dev/null | grep -q "Booted"; then
-    run_gate "Screenshot capture" "bash tools/capture-screenshots.sh"
+    run_gate "Screenshot capture" "bash tools/capture-screenshots.sh --build"
     run_gate "Visual regression" "bash tools/run-visual-regression.sh"
 else
     record "Screenshot capture" "FAIL" "No booted simulator"

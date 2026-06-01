@@ -48,6 +48,8 @@ class SettingsViewModel: ViewModel {
         case rememberLastApp
         case appearance
         case debugPanel
+        case debugCenter
+        case deepLinks
         case cacheDashboard
         case exportDiagnostics
         case about
@@ -213,11 +215,27 @@ class SettingsViewModel: ViewModel {
                     SettingsItem(
                         icon: nil,
                         lucideIcon: .bug,
-                        title: L10n.tr("settings.debug.panel"),
-                        action: .debugPanel,
+                        title: "调试中心",
+                        action: .debugCenter,
                         iconBackgroundColor: gb,
                         iconTintColor: gt,
                         badge: L10n.tr("settings.debug.badge")
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .terminal,
+                        title: L10n.tr("settings.debug.panel"),
+                        action: .debugPanel,
+                        iconBackgroundColor: gb,
+                        iconTintColor: gt
+                    ),
+                    SettingsItem(
+                        icon: nil,
+                        lucideIcon: .link,
+                        title: "协议跳转工具",
+                        action: .deepLinks,
+                        iconBackgroundColor: pb,
+                        iconTintColor: pt
                     ),
                     SettingsItem(
                         icon: nil,
@@ -320,6 +338,7 @@ class SettingsViewModel: ViewModel {
                 case .rememberLastApp: break
                 case .appearance: self.navigateToAppearanceRelay.accept(())
                 case .debugPanel: self.navigateToDebugPanelRelay.accept(())
+                case .debugCenter, .deepLinks: break
                 case .cacheDashboard: self.navigateToCacheDashboardRelay.accept(())
                 case .exportDiagnostics: self.exportDiagnosticsRelay.accept(())
                 case .about: self.navigateToAboutRelay.accept(())

@@ -9,7 +9,12 @@ struct DeepLinkHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xxl) {
-                ModuleHeaderView(tab: .links)
+                ModuleHeaderView(
+                    title: "Links",
+                    subtitle: "协议跳转、URL 参数与命令路由",
+                    icon: .link,
+                    accessibilityIdentifier: "moduleHeader.links"
+                )
                 ServiceStatusStrip(items: viewModel.serviceItems)
                 templateSection
                 builderSection

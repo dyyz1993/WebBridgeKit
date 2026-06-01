@@ -64,17 +64,11 @@ final class AppShellViewModel: ObservableObject {
                 AppShellStatusItem(title: "Push", value: "device", tone: .warning),
                 AppShellStatusItem(title: "Payload", value: "json", tone: .neutral)
             ]
-        case .debug:
+        case .settings:
             return [
-                AppShellStatusItem(title: "Crash", value: "scan", tone: .neutral),
-                AppShellStatusItem(title: "Network", value: "inspect", tone: .neutral),
-                AppShellStatusItem(title: "Export", value: "redact", tone: .success)
-            ]
-        case .links:
-            return [
-                AppShellStatusItem(title: "Scheme", value: "webbridgekit", tone: .success),
-                AppShellStatusItem(title: "Params", value: "visible", tone: .neutral),
-                AppShellStatusItem(title: "History", value: "planned", tone: .warning)
+                AppShellStatusItem(title: "Tools", value: "moved", tone: .success),
+                AppShellStatusItem(title: "Debug", value: "settings", tone: .neutral),
+                AppShellStatusItem(title: "Links", value: "settings", tone: .neutral)
             ]
         }
     }
@@ -146,38 +140,14 @@ final class AppShellViewModel: ObservableObject {
                     accessibilityIdentifier: "tokenPush.notificationDebug"
                 )
             ]
-        case .debug:
+        case .settings:
             return [
                 AppShellActionCard(
-                    title: "Debug Panel",
-                    subtitle: "打开旧调试面板，后续迁移为 Debug Center",
-                    icon: .bug,
-                    action: .openDebugPanel,
-                    accessibilityIdentifier: "debug.openPanel"
-                ),
-                AppShellActionCard(
-                    title: "诊断导出",
-                    subtitle: "查看环境、日志和诊断包导出入口",
-                    icon: .download,
+                    title: "设置",
+                    subtitle: "配置服务、安全、缓存、调试和协议工具",
+                    icon: .settings,
                     action: .openDiagnostics,
-                    accessibilityIdentifier: "debug.openDiagnostics"
-                )
-            ]
-        case .links:
-            return [
-                AppShellActionCard(
-                    title: "协议跳转模板",
-                    subtitle: "查看 webbridgekit://open 与 command URL 示例",
-                    icon: .link,
-                    action: .openDeepLinkExamples,
-                    accessibilityIdentifier: "links.examples"
-                ),
-                AppShellActionCard(
-                    title: "命令路由说明",
-                    subtitle: "后续在此编辑参数、执行并保留历史",
-                    icon: .clipboard,
-                    action: .openCommandExamples,
-                    accessibilityIdentifier: "links.commandExamples"
+                    accessibilityIdentifier: "settings.open"
                 )
             ]
         }

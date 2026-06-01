@@ -22,6 +22,8 @@ struct SettingsView: View {
         case debugPanel
         case exportDiagnostics
         case cacheDashboard
+        case debugCenter
+        case deepLinks
         case about
     }
 
@@ -105,17 +107,20 @@ struct SettingsView: View {
 
             Spacer()
 
-            Button(action: {
-                UIPasteboard.general.string = "abcd1234efgh5678"
-                showCopiedAlert = true
-            }) {
-                Image(uiImage: LucideIcon.copy.templateImage(
-                    pointSize: ThemeTokens.Icons.Sizes.sm
-                ) ?? UIImage())
-                    .renderingMode(.template)
-                    .foregroundColor(Color.appPrimary)
-                    .frame(width: 44, height: 44)
-            }
+            Button(
+                action: {
+                    UIPasteboard.general.string = "abcd1234efgh5678"
+                    showCopiedAlert = true
+                },
+                label: {
+                    Image(uiImage: LucideIcon.copy.templateImage(
+                        pointSize: ThemeTokens.Icons.Sizes.sm
+                    ) ?? UIImage())
+                        .renderingMode(.template)
+                        .foregroundColor(Color.appPrimary)
+                        .frame(width: 44, height: 44)
+                }
+            )
             .accessibilityLabel(L10n.tr("settings.hero.copied_title"))
             .buttonStyle(PlainButtonStyle())
         }
@@ -167,6 +172,8 @@ struct SettingsView: View {
         case .debugPanel: onNavigate(.debugPanel)
         case .cacheDashboard: onNavigate(.cacheDashboard)
         case .exportDiagnostics: onNavigate(.exportDiagnostics)
+        case .debugCenter: onNavigate(.debugCenter)
+        case .deepLinks: onNavigate(.deepLinks)
         case .about: onNavigate(.about)
         }
     }

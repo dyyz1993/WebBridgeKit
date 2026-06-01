@@ -84,8 +84,8 @@ struct TokenPushHomeView: View {
             )
 
             ActionRow(
-                title: "API Key",
-                subtitle: "管理永久密钥、临时密钥和测试推送",
+                title: "Bark API / API Key",
+                subtitle: "兼容 Bark 推送 API，管理永久密钥、临时密钥和测试消息",
                 icon: .key,
                 accessibilityIdentifier: "tokenPush.openAPIKeyManager",
                 badge: viewModel.apiKeyCount,
@@ -94,8 +94,8 @@ struct TokenPushHomeView: View {
             )
 
             ActionRow(
-                title: "推送调试",
-                subtitle: "打开通知调试台，验证 payload、权限和本地通知",
+                title: "Bark 推送调试",
+                subtitle: "打开通知调试台，验证 Bark payload、权限和本地通知",
                 icon: .bell,
                 accessibilityIdentifier: "tokenPush.openNotificationDebug",
                 badge: "DEBUG",
@@ -141,7 +141,7 @@ struct TokenPushHomeView: View {
     private var payloadSection: some View {
         VStack(alignment: .leading, spacing: ThemeTokens.Spacing.md) {
             HStack {
-                Text("Payload 校验")
+                Text("Bark Payload 校验")
                     .font(Font.app(ThemeTokens.Typography.sectionTitle))
                     .foregroundColor(Color.appText)
                 Spacer()
@@ -164,7 +164,7 @@ struct TokenPushHomeView: View {
             Button(
                 action: viewModel.validatePayload,
                 label: {
-                    Text("校验 Payload")
+                    Text("校验 Bark Payload")
                         .font(Font.app(ThemeTokens.Typography.button))
                         .foregroundColor(Color(ThemeTokens.Color.onPrimary))
                         .frame(maxWidth: .infinity, minHeight: 44)

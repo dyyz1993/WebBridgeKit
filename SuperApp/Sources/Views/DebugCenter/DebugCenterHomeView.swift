@@ -14,7 +14,12 @@ struct DebugCenterHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xxl) {
-                ModuleHeaderView(tab: .debug)
+                ModuleHeaderView(
+                    title: "Debug",
+                    subtitle: "日志、网络、缓存、崩溃与诊断导出",
+                    icon: .bug,
+                    accessibilityIdentifier: "moduleHeader.debug"
+                )
                 ServiceStatusStrip(items: viewModel.serviceItems)
                 metricSection
                 actionSection

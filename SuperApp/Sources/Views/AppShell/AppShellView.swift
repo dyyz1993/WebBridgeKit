@@ -126,10 +126,8 @@ private struct AppShellMigrationNotice: View {
             return "当前先接入旧 Bridge Showcase，下一步替换为可执行 Bridge Lab。"
         case .tokenPush:
             return "当前集中 Token 和推送入口，下一步补 payload composer。"
-        case .debug:
-            return "当前复用 Debug Panel，下一步整理为 Logs/Network/Cache/Crash 分区。"
-        case .links:
-            return "当前提供协议模板说明，下一步补参数编辑器和执行历史。"
+        case .settings:
+            return "Debug 和协议工具已收纳到设置页，底部主导航只保留核心能力。"
         }
     }
 }
