@@ -172,6 +172,12 @@ class TabBarController: UITabBarController {
                     self?.handleTokenPushAction(action)
                 }
             )
+        } else if tab == .debug {
+            view = AnyView(
+                DebugCenterHomeView { [weak self] action in
+                    self?.handleDebugCenterAction(action)
+                }
+            )
         } else {
             view = AnyView(
                 AppShellView(tab: tab) { [weak self] action in
@@ -235,6 +241,52 @@ class TabBarController: UITabBarController {
             #else
             showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
             #endif
+        }
+    }
+
+    private func handleDebugCenterAction(_ action: DebugCenterAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openDebugPanel:
+            #if DEBUG
+            let debugPanel = DebugPanelViewController()
+            let debugNav = UINavigationController(rootViewController: debugPanel)
+            debugNav.modalPresentationStyle = .fullScreen
+            nav.present(debugNav, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
+            #endif
+        case .openDiagnostics:
+            #if DEBUG
+            let vc = UIHostingController(rootView: DiagnosticsView())
+            vc.title = L10n.tr("settings.diagnostics.title")
+            nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Diagnostics", message: "Diagnostics are available in DEBUG builds.")
+            #endif
+        case .openNetworkInspector:
+            #if DEBUG
+            nav.pushViewController(NetworkDebugViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Network", message: "Network inspector is available in DEBUG builds.")
+            #endif
+        case .openCacheDashboard:
+            nav.pushViewController(
+                CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
+                animated: true
+            )
+        case .openManifestCacheTests:
+            #if DEBUG
+            nav.pushViewController(ManifestCacheTestViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Manifest", message: "Manifest cache tests are available in DEBUG builds.")
+            #endif
+        case .showCrashScanGuide:
+            showAppShellInfo(
+                title: "崩溃扫描",
+                message: "在项目根目录执行 bash scripts/scan-crash-logs.sh --json，要求 total 为 0。"
+            )
         }
     }
 
