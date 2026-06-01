@@ -28,7 +28,7 @@ The UI v4 direction is to rebuild the product shell around the real capabilities
 | CI design lint | PASS | `bash tools/ci-lint.sh` reported 16 PASS, 0 FAIL; comprehensive design lint still reports 5 warnings |
 | Visual static checks | WARN | `bash tools/visual-checks.sh` reported 6 PASS, 4 WARN, 0 FAIL |
 | Crash scan | PASS | `bash scripts/scan-crash-logs.sh --json` returned `{"diagnostic_reports": 0, "app_crash_logs": 0, "total": 0}` |
-| Screenshot capture | BLOCKED | `bash tools/capture-screenshots.sh` failed because no booted simulator exists |
+| Screenshot capture | BLOCKED | `bash tools/capture-screenshots.sh` failed because no booted simulator exists; two simulator boot attempts also failed/hung |
 | UI v4 regression entrypoint | FAIL | `bash tools/run-ui-v4-regression.sh` generated reports with 5 PASS, 2 FAIL because no simulator is booted |
 
 ## SwiftLint warnings
@@ -127,6 +127,11 @@ Current summary after removing the blocking UI emoji:
 ## Missing baseline evidence
 
 Screenshots were not captured because no simulator is currently booted.
+
+Attempts:
+
+- `iPhone 16 Pro UI Test` on iOS 18.3 failed with `launchd_sim` startup/bind error.
+- `iPhone 16 Pro 26.5` did not complete `simctl bootstatus` in a reasonable time and was stopped.
 
 Required refresh command after booting a simulator:
 
