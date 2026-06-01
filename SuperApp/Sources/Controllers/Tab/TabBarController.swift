@@ -160,6 +160,12 @@ class TabBarController: UITabBarController {
                     self?.handleWebCacheAction(action)
                 }
             )
+        } else if tab == .bridge {
+            view = AnyView(
+                BridgeLabHomeView { [weak self] action in
+                    self?.handleBridgeLabAction(action)
+                }
+            )
         } else {
             view = AnyView(
                 AppShellView(tab: tab) { [weak self] action in
@@ -184,6 +190,28 @@ class TabBarController: UITabBarController {
             )
         case .openCacheManagement:
             nav.pushViewController(ManagementViewController(), animated: true)
+        }
+    }
+
+    private func handleBridgeLabAction(_ action: BridgeLabAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openLegacyShowcase:
+            #if DEBUG
+            nav.pushViewController(BridgeShowcaseViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Bridge", message: "Bridge Showcase is available in DEBUG builds.")
+            #endif
+        case .openDebugLogs:
+            #if DEBUG
+            let debugPanel = DebugPanelViewController()
+            let debugNav = UINavigationController(rootViewController: debugPanel)
+            debugNav.modalPresentationStyle = .fullScreen
+            nav.present(debugNav, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
+            #endif
         }
     }
 
