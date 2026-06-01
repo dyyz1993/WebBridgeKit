@@ -97,45 +97,12 @@ class TabBarController: UITabBarController {
     // MARK: - Setup
 
     private func setupTabs() {
-        let mainVC = createMainViewController()
-        let inboxVC = createInboxViewController()
-        let discoverVC = createDiscoverViewController()
-        let settingsVC = createSettingsViewController()
-
-        mainVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.home"),
-            image: LucideIcon.home.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.home.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        mainVC.tabBarItem.accessibilityIdentifier = "tab.home"
-
-        inboxVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.inbox"),
-            image: LucideIcon.inbox.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.inbox.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        inboxVC.tabBarItem.accessibilityIdentifier = "tab.inbox"
-
-        discoverVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.discover"),
-            image: LucideIcon.compass.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.compass.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        discoverVC.tabBarItem.accessibilityIdentifier = "tab.discover"
-
-        settingsVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.settings"),
-            image: LucideIcon.settings.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.settings.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        settingsVC.tabBarItem.accessibilityIdentifier = "tab.settings"
-
-        viewControllers = [
-            UINavigationController(rootViewController: mainVC),
-            UINavigationController(rootViewController: inboxVC),
-            UINavigationController(rootViewController: discoverVC),
-            UINavigationController(rootViewController: settingsVC)
-        ]
+        viewControllers = AppTab.allCases.map { tab in
+            let root = createAppShellViewController(tab: tab)
+            let nav = UINavigationController(rootViewController: root)
+            nav.tabBarItem = tab.makeTabBarItem()
+            return nav
+        }
     }
 
     private func setupAppearance() {
@@ -183,6 +150,92 @@ class TabBarController: UITabBarController {
         let hostingVC = UIHostingController(rootView: settingsView)
         hostingVC.title = L10n.tr("tab.settings")
         return hostingVC
+    }
+
+    private func createAppShellViewController(tab: AppTab) -> UIViewController {
+        let view = AppShellView(tab: tab) { [weak self] action in
+            self?.handleAppShellAction(action)
+        }
+        let hostingVC = UIHostingController(rootView: view)
+        hostingVC.title = tab.title
+        hostingVC.tabBarItem = tab.makeTabBarItem()
+        return hostingVC
+    }
+
+    private func handleAppShellAction(_ action: AppShellAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openWebCatalog:
+            nav.pushViewController(
+                PresetURLCatalogViewController(viewModel: PresetURLCatalogViewModel()),
+                animated: true
+            )
+        case .openCacheDashboard:
+            nav.pushViewController(
+                CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
+                animated: true
+            )
+        case .openCacheManagement:
+            nav.pushViewController(ManagementViewController(), animated: true)
+        case .openBridgeShowcase:
+            #if DEBUG
+            nav.pushViewController(BridgeShowcaseViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Bridge", message: "Bridge Showcase is available in DEBUG builds.")
+            #endif
+        case .openTokenManager:
+            nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
+        case .openAPIKeyManager:
+            nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+        case .openNotificationDebug:
+            #if DEBUG
+            nav.pushViewController(NotificationDebugViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
+            #endif
+        case .openDebugPanel:
+            #if DEBUG
+            let debugPanel = DebugPanelViewController()
+            let debugNav = UINavigationController(rootViewController: debugPanel)
+            debugNav.modalPresentationStyle = .fullScreen
+            nav.present(debugNav, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
+            #endif
+        case .openDiagnostics:
+            #if DEBUG
+            let vc = UIHostingController(rootView: DiagnosticsView())
+            vc.title = L10n.tr("settings.diagnostics.title")
+            nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Diagnostics", message: "Diagnostics are available in DEBUG builds.")
+            #endif
+        case .openDeepLinkExamples:
+            showDeepLinkExamples()
+        case .openCommandExamples:
+            showAppShellInfo(
+                title: "UI v4",
+                message: "This entry is reserved for the next module pass. The detailed implementation contract is in docs/ui-v4/SCREEN_SPECS.md."
+            )
+        }
+    }
+
+    private func showDeepLinkExamples() {
+        showAppShellInfo(
+            title: "协议跳转模板",
+            message: """
+            webbridgekit://open?url=https%3A%2F%2Fexample.com
+            webbridgekit://tab?index=0
+            webbridgekit://command/<token>
+            """
+        )
+    }
+
+    private func showAppShellInfo(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "知道了", style: .default))
+        selectedViewController?.present(alert, animated: true)
     }
 
     private func handleSettingsNavigation(_ destination: SettingsView.Destination) {
