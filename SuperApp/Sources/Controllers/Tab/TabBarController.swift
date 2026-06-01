@@ -153,13 +153,38 @@ class TabBarController: UITabBarController {
     }
 
     private func createAppShellViewController(tab: AppTab) -> UIViewController {
-        let view = AppShellView(tab: tab) { [weak self] action in
-            self?.handleAppShellAction(action)
+        let view: AnyView
+        if tab == .web {
+            view = AnyView(
+                WebCacheHomeView { [weak self] action in
+                    self?.handleWebCacheAction(action)
+                }
+            )
+        } else {
+            view = AnyView(
+                AppShellView(tab: tab) { [weak self] action in
+                    self?.handleAppShellAction(action)
+                }
+            )
         }
         let hostingVC = UIHostingController(rootView: view)
         hostingVC.title = tab.title
         hostingVC.tabBarItem = tab.makeTabBarItem()
         return hostingVC
+    }
+
+    private func handleWebCacheAction(_ action: WebCacheHomeAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openCacheDashboard:
+            nav.pushViewController(
+                CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
+                animated: true
+            )
+        case .openCacheManagement:
+            nav.pushViewController(ManagementViewController(), animated: true)
+        }
     }
 
     private func handleAppShellAction(_ action: AppShellAction) {
