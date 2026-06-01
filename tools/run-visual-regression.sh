@@ -103,6 +103,7 @@ if [[ "$CAPTURE" == true ]]; then
     fi
 fi
 
+rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
 OVERALL_EXIT=0
@@ -157,10 +158,6 @@ fi
 
 if [[ -d "$BASELINE_DIR/dark" ]]; then
     run_diff "$BASELINE_DIR/dark" "$BASELINE_DIR/dark" "dark"
-fi
-
-if [[ -d "$BASELINE_DIR/light" ]] && [[ -d "$BASELINE_DIR/dark" ]]; then
-    run_diff "$BASELINE_DIR/light" "$BASELINE_DIR/dark" "light-vs-dark"
 fi
 
 echo ""
@@ -292,7 +289,7 @@ html += '''
   </table>
 
   <p style="margin-top:24px;color:#86868b;font-size:13px;">
-    Suites: light, dark, light-vs-dark &nbsp;|&nbsp;
+    Suites: light, dark &nbsp;|&nbsp;
     To update baselines: cp -r /tmp/wbk-screenshots-capture/ docs/screenshots/
   </p>
 </div>

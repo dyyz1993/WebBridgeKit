@@ -50,7 +50,7 @@ def compare_images(ref_path, act_path, threshold):
     if total_pixels == 0:
         return 0.0, diff.convert("RGB"), "PASS"
 
-    sum_diff = sum(i * v for i, v in enumerate(histogram))
+    sum_diff = sum((i % 256) * v for i, v in enumerate(histogram))
     diff_pct = (sum_diff / (total_pixels * 255 * 3)) * 100
 
     # Generate visual diff with red highlight on differences
@@ -308,3 +308,7 @@ HTMLEOF
 echo ""
 echo "Report saved to: $OUTPUT_DIR/index.html"
 echo "Results JSON:   $OUTPUT_DIR/results.json"
+
+if [ "${DIFF_FAILED:-false}" = "true" ]; then
+    exit 1
+fi
