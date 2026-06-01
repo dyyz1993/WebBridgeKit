@@ -178,6 +178,12 @@ class TabBarController: UITabBarController {
                     self?.handleDebugCenterAction(action)
                 }
             )
+        } else if tab == .links {
+            view = AnyView(
+                DeepLinkHomeView { [weak self] action in
+                    self?.handleDeepLinkAction(action)
+                }
+            )
         } else {
             view = AnyView(
                 AppShellView(tab: tab) { [weak self] action in
@@ -287,6 +293,23 @@ class TabBarController: UITabBarController {
                 title: "崩溃扫描",
                 message: "在项目根目录执行 bash scripts/scan-crash-logs.sh --json，要求 total 为 0。"
             )
+        }
+    }
+
+    private func handleDeepLinkAction(_ action: DeepLinkAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openTarget(let url, let mode):
+            WebBrowserManager.shared.openBrowser(
+                url: url,
+                params: WebBrowserParams(displayMode: mode),
+                from: nav
+            )
+        case .openScheme(let url):
+            UIApplication.shared.open(url)
+        case .switchTab(let index):
+            selectedIndex = max(0, min(index, AppTab.allCases.count - 1))
         }
     }
 
