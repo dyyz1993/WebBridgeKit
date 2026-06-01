@@ -10,7 +10,7 @@ FAIL=0
 check() {
     local name="$1"
     local result
-    result=$(eval "$2" 2>&1)
+    result=$(eval "$2" 2>&1 || true)
     if [ -z "$result" ]; then
         echo "  PASS  $name"
         ((PASS++)) || true
