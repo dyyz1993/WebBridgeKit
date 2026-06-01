@@ -339,21 +339,12 @@ final class CacheDashboardViewModelObservable: ObservableObject {
 
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
-            do {
-                let data = CacheStatsAggregator.shared.syncAggregate()
-                timeoutWorkItem.cancel()
-                DispatchQueue.main.async {
-                    self.dashboardData = data
-                    self.applyData(data)
-                    self.isLoading = false
-                }
-            } catch {
-                timeoutWorkItem.cancel()
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                    self.errorMessage = "同步失败: \(error.localizedDescription)"
-                    self.applyFallbackData()
-                }
+            let data = CacheStatsAggregator.shared.syncAggregate()
+            timeoutWorkItem.cancel()
+            DispatchQueue.main.async {
+                self.dashboardData = data
+                self.applyData(data)
+                self.isLoading = false
             }
         }
     }
