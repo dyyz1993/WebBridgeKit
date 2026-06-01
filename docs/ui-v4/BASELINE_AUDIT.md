@@ -25,11 +25,11 @@ The UI v4 direction is to rebuild the product shell around the real capabilities
 |---|---|---|
 | Services | PASS | `bash scripts/services.sh start && bash scripts/services.sh verify` reported 3/3 healthy |
 | SwiftLint | WARN | `swiftlint --quiet` produced 15 style warnings |
-| CI design lint | FAIL | `bash tools/ci-lint.sh` failed on one UI emoji in Swift code |
+| CI design lint | PASS | `bash tools/ci-lint.sh` reported 16 PASS, 0 FAIL; comprehensive design lint still reports 5 warnings |
 | Visual static checks | WARN | `bash tools/visual-checks.sh` reported 6 PASS, 4 WARN, 0 FAIL |
 | Crash scan | PASS | `bash scripts/scan-crash-logs.sh --json` returned `{"diagnostic_reports": 0, "app_crash_logs": 0, "total": 0}` |
 | Screenshot capture | BLOCKED | `bash tools/capture-screenshots.sh` failed because no booted simulator exists |
-| UI v4 regression entrypoint | FAIL | `bash tools/run-ui-v4-regression.sh` generated reports with 4 PASS, 3 FAIL |
+| UI v4 regression entrypoint | FAIL | `bash tools/run-ui-v4-regression.sh` generated reports with 5 PASS, 2 FAIL because no simulator is booted |
 
 ## SwiftLint warnings
 
@@ -53,9 +53,9 @@ Current warning count: 15.
 | `SuperApp/Sources/Views/SwiftUIHelpers.swift:44` | statement position |
 | `SuperApp/Sources/Views/SwiftUIHelpers.swift:45` | statement position |
 
-## CI design lint failure
+## CI design lint status
 
-Failure:
+Previous failure:
 
 ```text
 Sources/Handlers/ManifestLoader/ManifestProgressUI.swift:24
@@ -64,8 +64,10 @@ NSLog("[WEB] [ProgressUI] ...")
 
 Reason:
 
-- The current `tools/ci-lint.sh` blocks UI emoji in Swift code.
-- This is a low-risk cleanup and should be fixed before final UI v4 release gate.
+- `tools/ci-lint.sh` blocks UI emoji in Swift code.
+- The blocking emoji was removed from the log message.
+- `tools/ci-lint.sh` now passes.
+- The comprehensive design lint still reports 5 warnings for hardcoded fonts and deprecated ThemeBadge usage. These are warnings, not current blockers.
 
 ## Visual static warnings
 
@@ -85,13 +87,13 @@ The new `tools/run-ui-v4-regression.sh` entrypoint runs and emits:
 - `build/reports/ui-v4-regression.json`
 - `build/reports/ui-v4-regression.md`
 
-Current summary:
+Current summary after removing the blocking UI emoji:
 
 | Gate | Result |
 |---|---|
 | Services start and verify | PASS |
 | SwiftLint | PASS |
-| Design lint | FAIL |
+| Design lint | PASS |
 | Visual static checks | PASS |
 | Crash scan | PASS |
 | Screenshot capture | FAIL, no booted simulator |
@@ -146,7 +148,7 @@ docs/screenshots/ui-v4/baseline/
 | UI shell does not match product modules | High | Users cannot discover or validate framework capabilities cleanly |
 | UI tests are spread across old generic tabs | High | Regressions can pass while real module flows are broken |
 | Screenshot capture depends on booted simulator | Medium | Agents may report UI complete without visual evidence |
-| `ci-lint` currently fails | Medium | Release gate cannot be trusted until fixed |
+| Screenshot capture requires a booted simulator | Medium | Visual evidence cannot be generated until simulator is available |
 | Legacy UIKit and new SwiftUI coexist without shell contract | Medium | Layout and state behavior can drift |
 
 ## Recommended next action
@@ -154,6 +156,5 @@ docs/screenshots/ui-v4/baseline/
 Start Task 0.2 and Task 1 only after this audit is committed:
 
 1. Finish regression script entrypoints.
-2. Fix the single `ci-lint` failure or explicitly track it as a release-gate blocker.
-3. Boot simulator and capture baseline screenshots.
-4. Implement the UI v4 App Shell with placeholder module pages.
+2. Boot simulator and capture baseline screenshots.
+3. Implement the UI v4 App Shell with placeholder module pages.
