@@ -166,6 +166,12 @@ class TabBarController: UITabBarController {
                     self?.handleBridgeLabAction(action)
                 }
             )
+        } else if tab == .tokenPush {
+            view = AnyView(
+                TokenPushHomeView { [weak self] action in
+                    self?.handleTokenPushAction(action)
+                }
+            )
         } else {
             view = AnyView(
                 AppShellView(tab: tab) { [weak self] action in
@@ -211,6 +217,23 @@ class TabBarController: UITabBarController {
             nav.present(debugNav, animated: true)
             #else
             showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
+            #endif
+        }
+    }
+
+    private func handleTokenPushAction(_ action: TokenPushAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openTokenManager:
+            nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
+        case .openAPIKeyManager:
+            nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+        case .openNotificationDebug:
+            #if DEBUG
+            nav.pushViewController(NotificationDebugViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
             #endif
         }
     }
