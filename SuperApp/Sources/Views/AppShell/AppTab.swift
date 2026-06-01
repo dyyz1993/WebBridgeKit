@@ -3,10 +3,9 @@ import WebBridgeKit
 
 enum AppTab: String, CaseIterable, Identifiable {
     case web
-    case bridge
     case tokenPush
-    case debug
-    case links
+    case bridge
+    case settings
 
     var id: String { rawValue }
 
@@ -17,11 +16,9 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .bridge:
             return "Bridge"
         case .tokenPush:
-            return "Token/Push"
-        case .debug:
-            return "Debug"
-        case .links:
-            return "Links"
+            return "Push"
+        case .settings:
+            return L10n.tr("tab.settings")
         }
     }
 
@@ -32,11 +29,9 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .bridge:
             return "JSBridge 命令、参数、回调与错误"
         case .tokenPush:
-            return "口令、Token、设备 Token 与推送测试"
-        case .debug:
-            return "日志、网络、缓存、崩溃与诊断导出"
-        case .links:
-            return "协议跳转、URL 参数与命令路由"
+            return "Bark 推送、API 兼容、设备 Token 与消息路由"
+        case .settings:
+            return "配置、调试工具、协议模板与关于"
         }
     }
 
@@ -47,11 +42,9 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .bridge:
             return .terminal
         case .tokenPush:
-            return .key
-        case .debug:
-            return .bug
-        case .links:
-            return .link
+            return .bell
+        case .settings:
+            return .settings
         }
     }
 
@@ -62,11 +55,9 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .bridge:
             return "tab.bridge"
         case .tokenPush:
-            return "tab.tokenPush"
-        case .debug:
-            return "tab.debug"
-        case .links:
-            return "tab.links"
+            return "tab.push"
+        case .settings:
+            return "tab.settings"
         }
     }
 

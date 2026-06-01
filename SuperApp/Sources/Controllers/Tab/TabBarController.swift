@@ -172,16 +172,10 @@ class TabBarController: UITabBarController {
                     self?.handleTokenPushAction(action)
                 }
             )
-        } else if tab == .debug {
+        } else if tab == .settings {
             view = AnyView(
-                DebugCenterHomeView { [weak self] action in
-                    self?.handleDebugCenterAction(action)
-                }
-            )
-        } else if tab == .links {
-            view = AnyView(
-                DeepLinkHomeView { [weak self] action in
-                    self?.handleDeepLinkAction(action)
+                SettingsView { [weak self] destination in
+                    self?.handleSettingsNavigation(destination)
                 }
             )
         } else {
@@ -428,6 +422,22 @@ class TabBarController: UITabBarController {
             #endif
         case .cacheDashboard:
             nav.pushViewController(CacheDashboardViewController(viewModel: CacheDashboardViewModel()), animated: true)
+        case .debugCenter:
+            let vc = UIHostingController(
+                rootView: DebugCenterHomeView { [weak self] action in
+                    self?.handleDebugCenterAction(action)
+                }
+            )
+            vc.title = "Debug"
+            nav.pushViewController(vc, animated: true)
+        case .deepLinks:
+            let vc = UIHostingController(
+                rootView: DeepLinkHomeView { [weak self] action in
+                    self?.handleDeepLinkAction(action)
+                }
+            )
+            vc.title = "Links"
+            nav.pushViewController(vc, animated: true)
         case .about:
             let vc = UIHostingController(rootView: AboutView())
             vc.title = L10n.tr("about.title")

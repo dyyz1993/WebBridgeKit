@@ -27,9 +27,9 @@ final class TokenPushHomeViewModel: ObservableObject {
 
     var serviceItems: [AppShellStatusItem] {
         [
-            AppShellStatusItem(title: "APNs", value: deviceTokenState, tone: deviceTokenState == "已注册" ? .success : .warning),
             AppShellStatusItem(title: "Bark", value: barkKeyState, tone: barkKeyState == "已配置" ? .success : .warning),
-            AppShellStatusItem(title: "Payload", value: "JSON", tone: .neutral)
+            AppShellStatusItem(title: "APNs", value: deviceTokenState, tone: deviceTokenState == "已注册" ? .success : .warning),
+            AppShellStatusItem(title: "API", value: "Bark", tone: .success)
         ]
     }
 
@@ -95,9 +95,10 @@ final class TokenPushHomeViewModel: ObservableObject {
         }
 
         let payload = PushPayload(userInfo: object)
-        resultState = payload.hasRoute ? .success("payload 可以路由") : .warning("payload 合法，但没有 appid 或 url")
+        resultState = payload.hasRoute ? .success("Bark payload 可以路由") : .warning("Bark payload 合法，但没有 appid 或 url")
         resultDetail = """
         {
+          "barkCompatible": true,
           "title": "\(payload.title ?? "")",
           "body": "\(payload.body ?? "")",
           "mode": "\(payload.mode.rawValue)",
@@ -142,6 +143,9 @@ final class TokenPushHomeViewModel: ObservableObject {
       "body": "打开缓存页面",
       "url": "http://localhost:8081/test_resources/cache-demo.html",
       "mode": "normal",
+      "group": "WebBridgeKit",
+      "sound": "default",
+      "level": "active",
       "params": {
         "source": "token-push"
       }

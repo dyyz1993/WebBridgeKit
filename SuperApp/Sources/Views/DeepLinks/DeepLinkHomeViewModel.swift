@@ -187,10 +187,10 @@ final class DeepLinkHomeViewModel: ObservableObject {
                 tabIndex: nil
             ),
             DeepLinkTemplate(
-                id: "tab-debug",
-                title: "切到 Debug",
-                subtitle: "生成 webbridgekit://tab?index=3",
-                icon: .bug,
+                id: "tab-settings",
+                title: "切到 Settings",
+                subtitle: "生成 webbridgekit://tab?index=3，Debug/Links 已收纳到这里",
+                icon: .settings,
                 targetURL: "http://localhost:8081/test_resources/cache-demo.html",
                 mode: .normal,
                 tabIndex: 3
