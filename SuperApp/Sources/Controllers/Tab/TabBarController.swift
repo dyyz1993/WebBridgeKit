@@ -77,10 +77,12 @@ class TabBarController: UITabBarController {
         if Static.hasChecked { return }
         Static.hasChecked = true
 
-        let isEnabled = UserDefaults.standard.bool(forKey: "EnableLastAppMemory")
+        SettingsPreferenceKeys.migrateLegacyValuesIfNeeded()
+
+        let isEnabled = UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp)
 
         if isEnabled,
-           let lastURLString = UserDefaults.standard.string(forKey: "LastOpenedURL"),
+           let lastURLString = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.lastOpenedURL),
            let url = URL(string: lastURLString) {
 
             if let mainNav = viewControllers?.first as? UINavigationController {
@@ -404,7 +406,9 @@ class TabBarController: UITabBarController {
         case .notificationSettings:
             NotificationSettingsOpener.open()
         case .appearance:
-            break
+            let vc = UIHostingController(rootView: AppearanceSettingsView())
+            vc.title = L10n.tr("settings.appearance")
+            nav.pushViewController(vc, animated: true)
         case .debugPanel:
             #if DEBUG
             let debugPanel = DebugPanelViewController()

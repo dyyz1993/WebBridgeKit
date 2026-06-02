@@ -41,6 +41,13 @@ def record(condition, name, expected, actual, evidence):
         failed += 1
 
 
+def row_containing(marker):
+    for line in doc.splitlines():
+        if line.startswith("|") and marker in line:
+            return line
+    return ""
+
+
 doc = availability.read_text(encoding="utf-8")
 settings_source = settings_vm.read_text(encoding="utf-8")
 tab_source = tab_controller.read_text(encoding="utf-8")
@@ -104,7 +111,9 @@ for action in settings_actions:
     record(identifier in doc, f"Settings action documented: {action}", f"`{identifier}` appears in report", "present" if identifier in doc else "missing", availability)
 
 appearance_is_break = "case .appearance:\n            break" in tab_source
-appearance_marked_unavailable = "settings.cell.appearance" in doc and "Appearance" in doc and "Unavailable" in doc
+appearance_row = row_containing("settings.cell.appearance")
+appearance_marked_unavailable = "Unavailable" in appearance_row
+appearance_marked_available = "Available" in appearance_row and "Unavailable" not in appearance_row
 record(
     not appearance_is_break or appearance_marked_unavailable,
     "Appearance destination availability truthfulness",
@@ -112,10 +121,19 @@ record(
     "break+marked" if appearance_is_break and appearance_marked_unavailable else ("implemented" if not appearance_is_break else "break+not marked"),
     tab_controller,
 )
+record(
+    appearance_is_break or appearance_marked_available,
+    "Appearance destination implemented report status",
+    "if implementation is not break, report marks it available",
+    "break" if appearance_is_break else ("implemented+available" if appearance_marked_available else "implemented+not available"),
+    availability,
+)
 
 settings_key = '"settings.rememberLastApp"' in settings_source
 legacy_key = '"EnableLastAppMemory"' in tab_source
-remember_marked_unavailable = "settings.cell.rememberLastApp" in doc and "EnableLastAppMemory" in doc and "Unavailable" in doc
+remember_row = row_containing("settings.cell.rememberLastApp")
+remember_marked_unavailable = "Unavailable" in remember_row
+remember_marked_available = "Available" in remember_row and "Unavailable" not in remember_row
 record(
     not (settings_key and legacy_key) or remember_marked_unavailable,
     "Remember-last-app key mismatch truthfulness",
@@ -123,12 +141,17 @@ record(
     "mismatch+marked" if settings_key and legacy_key and remember_marked_unavailable else ("consistent" if not (settings_key and legacy_key) else "mismatch+not marked"),
     tab_controller,
 )
+record(
+    (settings_key and legacy_key) or remember_marked_available,
+    "Remember-last-app implemented report status",
+    "if keys are aligned, report marks restore available",
+    "mismatch" if settings_key and legacy_key else ("aligned+available" if remember_marked_available else "aligned+not available"),
+    availability,
+)
 
 known_unavailable_markers = [
     "APNs entitlement is missing",
     "Node admin console is not deployed behind `wbk.shanbox`",
-    "Settings appearance entry has no implemented destination",
-    "Remember last app restore reads a stale key",
 ]
 for marker in known_unavailable_markers:
     record(marker in doc, f"Known unavailable marker: {marker}", "marker exists", "present" if marker in doc else "missing", availability)

@@ -155,6 +155,11 @@
 "settings.remember.last.app" = "记住上次应用";
 "settings.appearance" = "外观";
 "settings.appearance.system" = "跟随系统";
+"settings.appearance.light" = "浅色";
+"settings.appearance.dark" = "深色";
+"settings.appearance.system.description" = "跟随 iOS 系统外观自动切换浅色或深色模式。";
+"settings.appearance.light.description" = "固定使用浅色模式，便于在明亮环境下阅读。";
+"settings.appearance.dark.description" = "固定使用深色模式，便于夜间或弱光环境使用。";
 "settings.debug.panel" = "调试面板";
 "settings.debug.badge" = "DEBUG";
 "settings.export.diagnostics" = "导出诊断";
