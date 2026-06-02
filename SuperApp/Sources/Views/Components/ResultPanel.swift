@@ -23,6 +23,7 @@ struct ResultPanel: View {
                     .font(Font.app(ThemeTokens.Typography.sectionTitle))
                     .foregroundColor(Color.appText)
                     .lineLimit(1)
+                    .accessibilityIdentifier("resultPanel.title")
                 Spacer()
                 if let copyAction {
                     Button(action: copyAction) {
@@ -40,6 +41,7 @@ struct ResultPanel: View {
                 .foregroundColor(Color.appTextSecondary)
                 .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("resultPanel.message")
 
             if let detail, !detail.isEmpty {
                 CodeBlockView(title: nil, text: detail, maxHeight: 180)
@@ -54,6 +56,7 @@ struct ResultPanel: View {
                 .stroke(Color.appSeparator, lineWidth: 1)
         )
         .accessibilityIdentifier("resultPanel")
+        .accessibilityValue(accessibilityValue)
     }
 
     private var badgeTitle: String {
@@ -96,5 +99,12 @@ struct ResultPanel: View {
              .failure(let message):
             return message
         }
+    }
+
+    private var accessibilityValue: String {
+        guard let detail, !detail.isEmpty else {
+            return message
+        }
+        return "\(message)\n\(detail)"
     }
 }

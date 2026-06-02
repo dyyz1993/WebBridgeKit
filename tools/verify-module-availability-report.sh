@@ -154,8 +154,6 @@ known_unavailable_markers = [
     "Push Notifications provisioning profile is unavailable",
     "Bark/APNs end-to-end delivery is unavailable",
     "Bridge real WebView execution not fully available/proven",
-    "Clipboard copy content not asserted",
-    "Deep Link validation result text not asserted",
     "Physical iOS Settings handoff not proven on real device",
 ]
 for marker in known_unavailable_markers:
