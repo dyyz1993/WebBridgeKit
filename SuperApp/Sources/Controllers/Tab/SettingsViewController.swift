@@ -357,9 +357,7 @@ class SettingsViewController: BaseViewController<SettingsViewModel> {
     }
 
     private func openNotificationSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-        }
+        NotificationSettingsOpener.open()
     }
 
     private func handleExportDiagnostics() {
