@@ -60,6 +60,11 @@ final class CommandDecoderTests: XCTestCase {
         XCTAssertTrue(decoder.canDecode("wbsk://command?data=dGVzdA=="))
     }
 
+    func testURLSchemeCanDecodeAppCommandURL() {
+        let decoder = URLSchemeCommandDecoder()
+        XCTAssertTrue(decoder.canDecode("webbridgekit://command/id.payload"))
+    }
+
     func testURLSchemeCannotDecodeOther() {
         let decoder = URLSchemeCommandDecoder()
         XCTAssertFalse(decoder.canDecode("https://example.com"))
@@ -81,6 +86,22 @@ final class CommandDecoderTests: XCTestCase {
     func testURLSchemeDecodeMissingData() {
         let decoder = URLSchemeCommandDecoder()
         XCTAssertThrowsError(try decoder.decode("wbsk://command?sig=abc"))
+    }
+
+    func testURLSchemeDecodeAppCommandTokenPayload() throws {
+        let decoder = URLSchemeCommandDecoder()
+        let payload: [String: Any] = [
+            "type": "urlScheme",
+            "data": "https://example.com/cache-showcase.html",
+            "format": "urlScheme"
+        ]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        let token = "test-id.\(Self.base64URLEncodedString(data))"
+
+        let result = try decoder.decode("webbridgekit://command/\(token)")
+        XCTAssertEqual(result.json["appid"] as? String, "")
+        XCTAssertEqual(result.json["url"] as? String, "https://example.com/cache-showcase.html")
+        XCTAssertEqual(result.json["title"] as? String, "Command")
     }
 
     // MARK: - PlainTextCommandDecoder
@@ -130,6 +151,13 @@ final class CommandDecoderTests: XCTestCase {
         XCTAssertEqual(decoder?.format, .urlScheme)
     }
 
+    func testRegistryFindsAppCommandURLDecoder() {
+        let registry = CommandDecoderRegistry.shared
+        let decoder = registry.findDecoder(for: "webbridgekit://command/id.payload")
+        XCTAssertNotNil(decoder)
+        XCTAssertEqual(decoder?.format, .urlScheme)
+    }
+
     func testRegistryFindsPlainTextDecoder() {
         let registry = CommandDecoderRegistry.shared
         let decoder = registry.findDecoder(for: "【WebBridgeKit】dGVzdA==")
@@ -148,5 +176,12 @@ final class CommandDecoderTests: XCTestCase {
         XCTAssertNotNil(registry.getDecoder(format: .base64))
         XCTAssertNotNil(registry.getDecoder(format: .urlScheme))
         XCTAssertNotNil(registry.getDecoder(format: .plainText))
+    }
+
+    private static func base64URLEncodedString(_ data: Data) -> String {
+        data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
     }
 }

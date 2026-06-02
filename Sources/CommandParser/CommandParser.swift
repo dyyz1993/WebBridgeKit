@@ -101,21 +101,23 @@ public actor CommandParser {
     private func validateAndBuildPayload(from raw: CommandRawPayload) throws -> CommandPayload {
         let json = raw.json
 
-        guard let appid = json["appid"] as? String, !appid.isEmpty else {
-            throw CommandError.invalidPayload(reason: "Missing or empty 'appid' field")
+        let appid = json["appid"] as? String ?? ""
+        let url = json["url"] as? String
+
+        guard !appid.isEmpty || !(url ?? "").isEmpty else {
+            throw CommandError.invalidPayload(reason: "Missing command route target")
         }
 
-        guard isValidAppid(appid) else {
+        guard appid.isEmpty || isValidAppid(appid) else {
             throw CommandError.invalidAppid(appid)
         }
 
-        if let url = json["url"] as? String, !url.isEmpty {
+        if let url, !url.isEmpty {
             guard isValidURL(url) else {
                 throw CommandError.invalidURL(url)
             }
         }
 
-        let url = json["url"] as? String
         let title = json["title"] as? String
         let icon = json["icon"] as? String
         let token = json["token"] as? String
