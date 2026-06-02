@@ -93,6 +93,32 @@ final class ModuleAvailabilityTests: XCTestCase {
         tapElement("bridge.executeButton")
     }
 
+    func testRealWebViewBridgePromiseResolves() {
+        assertTab("tab.web", opens: "webCache.home")
+
+        tapLabeledControl("在线")
+        replaceText(
+            in: "webCache.urlInput",
+            with: "http://localhost:8081/test_resources/bridge-promise-smoke.html?v=2"
+        )
+        tapElement("webCache.openButton")
+
+        XCTAssertTrue(
+            app.buttons["browserManager.closeButton"].waitForExistence(timeout: 12),
+            "Opening the bridge smoke fixture should present the real WebBrowser."
+        )
+        XCTAssertTrue(
+            element("browserManager.webView").waitForExistence(timeout: 8),
+            "The browser should expose a concrete WKWebView for UI automation."
+        )
+        XCTAssertTrue(
+            app.staticTexts["Bridge Promise OK"].waitForExistence(timeout: 15),
+            "BarkBridge.callNative('getSystemInfo') should resolve and update the fixture DOM."
+        )
+
+        tapElement("browserManager.closeButton")
+    }
+
     func testSettingsDebugCenterAndDeepLinksAreReachable() {
         assertTab("tab.settings", opens: "SettingsViewController")
 
@@ -121,7 +147,7 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("deepLink.tabIndexInput")
     }
 
-    func testSettingsOperationalRowsAreReachable() {
+    func testSettingsCoreRowsAreReachable() {
         assertTab("tab.settings", opens: "SettingsViewController")
 
         let rows = [
@@ -130,24 +156,23 @@ final class ModuleAvailabilityTests: XCTestCase {
             "settings.cell.apiKeyManage",
             "settings.cell.cacheManager",
             "settings.cell.favorites",
-            "settings.cell.history",
+            "settings.cell.history"
+        ]
+
+        assertSettingsRowsNavigate(rows)
+    }
+
+    func testSettingsDebugAndSupportRowsAreReachable() {
+        assertTab("tab.settings", opens: "SettingsViewController")
+
+        let rows = [
             "settings.cell.appearance",
             "settings.cell.debugPanel",
             "settings.cell.exportDiagnostics",
-            "settings.cell.cacheDashboard",
-            "settings.cell.about"
+            "settings.cell.cacheDashboard"
         ]
 
-        for row in rows {
-            assertTab("tab.settings", opens: "SettingsViewController")
-            tapElement(row)
-            XCTAssertTrue(
-                app.navigationBars.firstMatch.waitForExistence(timeout: 3)
-                    || app.sheets.firstMatch.waitForExistence(timeout: 3),
-                "\(row) should navigate to a concrete screen."
-            )
-            dismissCurrentPresentation()
-        }
+        assertSettingsRowsNavigate(rows)
     }
 
     func testSettingsPreferencesAreUsable() {
@@ -267,6 +292,28 @@ final class ModuleAvailabilityTests: XCTestCase {
             return
         }
         element(label).tap()
+    }
+
+    private func replaceText(in identifier: String, with text: String, timeout: TimeInterval = 8) {
+        let input = tapElement(identifier, timeout: timeout)
+        input.tap()
+
+        let deleteCount = max((input.value as? String ?? "").count, 120)
+        input.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: deleteCount))
+        input.typeText(text)
+    }
+
+    private func assertSettingsRowsNavigate(_ rows: [String]) {
+        for row in rows {
+            assertTab("tab.settings", opens: "SettingsViewController")
+            tapElement(row)
+            XCTAssertTrue(
+                app.navigationBars.firstMatch.waitForExistence(timeout: 3)
+                    || app.sheets.firstMatch.waitForExistence(timeout: 3),
+                "\(row) should navigate to a concrete screen."
+            )
+            dismissCurrentPresentation()
+        }
     }
 
     private func makeVisible(_ identifier: String, timeout: TimeInterval) -> Bool {

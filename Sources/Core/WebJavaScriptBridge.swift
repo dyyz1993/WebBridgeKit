@@ -133,21 +133,23 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             StructuredLogger.shared.error("[FAIL] [JS Bridge] Blocked unknown command: \(action)", category: .bridge)
 
             // 添加到历史记录（标记为失败）
+            let callbackId = body["callbackId"] as? String ?? body["messageId"] as? String
             let trace = CommandTraceEntry(
                 action: action,
                 input: body,
                 timestamp: Date(),
-                callbackId: body["callbackId"] as? String,
+                callbackId: callbackId,
                 status: .failed
             )
             addCommandToHistory(trace)
 
-            sendErrorToJS(error, callbackId: body["callbackId"] as? String)
+            sendErrorToJS(error, callbackId: callbackId)
             return
         }
 
-        // 获取 callbackId，避免并发时被覆盖
-        let callbackId = body["callbackId"] as? String
+        // 获取 callbackId，避免并发时被覆盖。旧版 WebBridge.js 使用 messageId，
+        // 这里保留兼容，避免真实 WKWebView Promise 回调无法 resolve。
+        let callbackId = body["callbackId"] as? String ?? body["messageId"] as? String
 
         // 创建命令跟踪条目
         let trace = CommandTraceEntry(
@@ -354,6 +356,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 设置 callbackId（关键！）
         if let callbackId = callbackId {
             resultDict["callbackId"] = callbackId
+            resultDict["messageId"] = callbackId
         } else {
         }
 

@@ -162,6 +162,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         configureNavigationBar()
 
         view.addSubview(progressView)
+        webView.accessibilityIdentifier = "browserManager.webView"
         view.addSubview(webView)
 
         setupConstraints()

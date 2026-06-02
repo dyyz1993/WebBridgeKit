@@ -155,8 +155,8 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 |------------------|---------|-------------|-------|
 | `bash tools/run-cache-regression.sh` | Cache module regression: services, `CacheTests`, cache handler tests, cache dashboard UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
 | `bash tools/run-jsbridge-regression.sh` | JSBridge regression: core bridge tests, `BridgeTests`, handler tests, functional UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
-| `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 9 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, `Settings`, Debug Center, Deep Links, About/Legal, appearance preferences, remember-last-app, iOS Settings handoff |
-| `bash tools/verify-module-availability-report.sh` | Guards `docs/verification/module-availability-verification.md` coverage: required sections, core modules, all `SettingsAction` entries, and known unavailable markers | `51 passed, 0 failed` | Run after changing Settings navigation, module IA, availability docs, or known unavailable status |
+| `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 11 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, real WebView JSBridge Promise execution, `Settings`, Debug Center, Deep Links, About/Legal, appearance preferences, remember-last-app, iOS Settings handoff |
+| `bash tools/verify-module-availability-report.sh` | Guards `docs/verification/module-availability-verification.md` coverage: required sections, core modules, all `SettingsAction` entries, real WebView JSBridge evidence, and known unavailable markers | `61 passed, 0 failed` | Run after changing Settings navigation, module IA, availability docs, or known unavailable status |
 | `cd Server && swift test` | Swift Hummingbird backend route semantics | All `Manifest Routes`, `Push Routes`, `Command Routes` tests pass | Does not prove public shanbox deployment or APNs delivery |
 
 ### UI And Visual Gates
@@ -257,6 +257,7 @@ bash scripts/scan-crash-logs.sh --fix
 
 | 日期 | 类型 | 原因 | 定位 | 修复 |
 |------|------|------|------|------|
+| 2026-06-02 | SIGSEGV | `ModuleAvailabilityTests` 旧版单个超长 Settings row 用例产生大量 XCUITest snapshot/log 查询，`XCTAutomationSupport` 触发 high logging volume quarantine，CrashLogManager 记录为 SIGSEGV | SuperAppUITests/ModuleAvailabilityTests.swift:testSettingsOperationalRowsAreReachable; crash stack top: `XCTAutomationSupport runtime_issue_os_log_fault_callback` | 拆分为 `testSettingsCoreRowsAreReachable` 与 `testSettingsDebugAndSupportRowsAreReachable`，About 保留独立 deep-drill；完整 ModuleAvailabilityTests 11/11 通过，crash scan 回到 `total: 0` |
 | 2026-05-20 | SIGTRAP | Notification Debug section header 未加入 card 视图层级就使用 SnapKit `equalToSuperview()`，触发 assertionFailure | SuperApp/Sources/Controllers/Debug/NotificationDebugViewController.swift:219 | 在约束 header 前补 `card.addSubview(header)` |
 
 ## Command History Access

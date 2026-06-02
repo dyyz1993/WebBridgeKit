@@ -142,6 +142,7 @@ public class PersistentManifestLoader: NSObject {
         url: URL,
         in webView: WKWebView,
         from viewController: UIViewController? = nil,
+        forceRefresh: Bool = false,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         Task { @MainActor in
@@ -149,7 +150,8 @@ public class PersistentManifestLoader: NSObject {
                 try await shared.loadPersistentPage(
                     url: url,
                     in: webView,
-                    from: viewController
+                    from: viewController,
+                    forceRefresh: forceRefresh
                 )
                 completion(.success(()))
             } catch {
@@ -200,11 +202,13 @@ public class PersistentManifestLoader: NSObject {
     private func loadPersistentPage(
         url: URL,
         in webView: WKWebView,
-        from viewController: UIViewController?
+        from viewController: UIViewController?,
+        forceRefresh: Bool = false
     ) async throws {
         diagnose("loadPersistentPage 开始, URL: \(url.absoluteString)")
         NSLog("[SYNC] [PersistentManifestLoader] 开始加载持久化页面")
         NSLog("   URL: %@", url.absoluteString)
+        NSLog("   forceRefresh: %@", forceRefresh ? "true" : "false")
         updateState(.fetchingManifest)
 
         // 1. 下载 manifest.json
@@ -251,7 +255,8 @@ public class PersistentManifestLoader: NSObject {
         let htmlPath = cacheDir.appendingPathComponent("index.html")
         let manifestPath = cacheDir.appendingPathComponent("manifest.json")
 
-        if FileManager.default.fileExists(atPath: htmlPath.path),
+        if !forceRefresh,
+           FileManager.default.fileExists(atPath: htmlPath.path),
            FileManager.default.fileExists(atPath: manifestPath.path) {
             diagnose("缓存已存在, cacheID: \(cacheID), htmlPath: \(htmlPath.path)")
             NSLog("[RECYCLE] [PersistentManifestLoader] 发现完整缓存，跳过下载")
@@ -303,6 +308,10 @@ public class PersistentManifestLoader: NSObject {
                 NSLog("[OK] [PersistentManifestLoader] 从缓存加载完成")
                 return
             }
+        }
+        if forceRefresh {
+            diagnose("forceRefresh=true，跳过已有持久化缓存并重新下载")
+            NSLog("[SYNC] [PersistentManifestLoader] forceRefresh=true，跳过已有缓存")
         }
 
         // 6. 没有缓存，显示进度页面

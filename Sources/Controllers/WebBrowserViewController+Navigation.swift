@@ -12,9 +12,23 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 处理导航策略，防止系统弹窗和外部跳转
     public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        decisionHandler(navigationPolicy(for: navigationAction, in: webView))
+    }
+
+    @available(iOS 13.0, *)
+    public func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        preferences: WKWebpagePreferences,
+        decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void
+    ) {
+        preferences.allowsContentJavaScript = true
+        decisionHandler(navigationPolicy(for: navigationAction, in: webView), preferences)
+    }
+
+    private func navigationPolicy(for navigationAction: WKNavigationAction, in webView: WKWebView) -> WKNavigationActionPolicy {
         guard let url = navigationAction.request.url else {
-            decisionHandler(.allow)
-            return
+            return .allow
         }
 
         //  Security: Block dangerous URL schemes
@@ -25,26 +39,23 @@ extension WebBrowserViewController: WKNavigationDelegate {
             if blockedSchemes.contains(scheme) {
                 Log.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
                 StructuredLogger.shared.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .navigation)
-                decisionHandler(.cancel)
-                return
+                return .cancel
             }
 
             if !allowedSchemes.contains(scheme) {
                 Log.warning("Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
                 StructuredLogger.shared.warning("Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)", category: .navigation)
-                decisionHandler(.cancel)
-                return
+                return .cancel
             }
         }
 
         if navigationAction.targetFrame == nil {
             webView.load(navigationAction.request)
-            decisionHandler(.cancel)
-            return
+            return .cancel
         }
 
         StructuredLogger.shared.debug("Allowed navigation: \(url.absoluteString)", category: .navigation)
-        decisionHandler(.allow)
+        return .allow
     }
 
     public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
