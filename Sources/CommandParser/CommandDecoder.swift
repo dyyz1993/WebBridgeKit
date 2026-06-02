@@ -107,17 +107,23 @@ public final class Base64CommandDecoder: CommandDecoderProtocol {
 public final class URLSchemeCommandDecoder: CommandDecoderProtocol {
     public let format: CommandFormat = .urlScheme
 
-    private let schemePrefix = "wbsk://command"
+    private let legacySchemePrefix = "wbsk://command"
+    private let appCommandSchemePrefix = "webbridgekit://command"
 
     public init() {}
 
     public func canDecode(_ input: String) -> Bool {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.lowercased().hasPrefix(schemePrefix)
+        let lowercased = trimmed.lowercased()
+        return lowercased.hasPrefix(legacySchemePrefix)
+            || lowercased.hasPrefix(appCommandSchemePrefix)
     }
 
     public func decode(_ input: String) throws -> CommandRawPayload {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.lowercased().hasPrefix(appCommandSchemePrefix) {
+            return try decodeAppCommandURL(trimmed)
+        }
 
         guard let url = URLComponents(string: trimmed),
               let queryItems = url.queryItems else {
@@ -155,6 +161,79 @@ public final class URLSchemeCommandDecoder: CommandDecoderProtocol {
         }
 
         return CommandRawPayload(data: data, json: json, signature: signature)
+    }
+
+    private func decodeAppCommandURL(_ input: String) throws -> CommandRawPayload {
+        guard let components = URLComponents(string: input),
+              components.scheme?.lowercased() == "webbridgekit",
+              components.host?.lowercased() == "command" else {
+            throw CommandError.decodingFailed(reason: "Invalid app command URL")
+        }
+
+        let token = components.percentEncodedPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !token.isEmpty else {
+            throw CommandError.decodingFailed(reason: "Missing command token")
+        }
+
+        let parts = token.split(separator: ".", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else {
+            throw CommandError.decodingFailed(reason: "Command token must contain id and payload")
+        }
+
+        let payloadBase64 = parts[1]
+        let data = try decodeBase64URL(payloadBase64)
+
+        guard let jsonObject = try? JSONSerialization.jsonObject(with: data),
+              let json = jsonObject as? [String: Any] else {
+            throw CommandError.decodingFailed(reason: "Command token payload is not valid JSON")
+        }
+
+        let normalizedJSON = try normalizeServerCommandPayload(json)
+        return CommandRawPayload(data: data, json: normalizedJSON, signature: nil)
+    }
+
+    private func normalizeServerCommandPayload(_ json: [String: Any]) throws -> [String: Any] {
+        if json["appid"] != nil || json["url"] != nil {
+            return json
+        }
+
+        guard let type = json["type"] as? String,
+              let data = json["data"] as? String else {
+            throw CommandError.decodingFailed(reason: "Missing command payload fields")
+        }
+
+        var normalized: [String: Any] = [
+            "appid": "",
+            "title": "Command"
+        ]
+
+        switch type {
+        case "urlScheme":
+            normalized["url"] = data
+        case "plainText", "json", "base64":
+            normalized["extra"] = [
+                "type": type,
+                "data": data,
+                "format": (json["format"] as? String) ?? ""
+            ]
+        default:
+            throw CommandError.decodingFailed(reason: "Unsupported command type: \(type)")
+        }
+
+        return normalized
+    }
+
+    private func decodeBase64URL(_ input: String) throws -> Data {
+        let base64String = input
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let paddingLength = (4 - base64String.count % 4) % 4
+        let padded = base64String + String(repeating: "=", count: paddingLength)
+
+        guard let data = Data(base64Encoded: padded) else {
+            throw CommandError.decodingFailed(reason: "Base64URL decoding failed")
+        }
+        return data
     }
 }
 
