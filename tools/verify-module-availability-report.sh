@@ -150,7 +150,7 @@ record(
 )
 
 known_unavailable_markers = [
-    "APNs entitlement is missing",
+    "Push Notifications provisioning profile is unavailable",
     "Node admin console is not deployed behind `wbk.shanbox`",
 ]
 for marker in known_unavailable_markers:

@@ -1,9 +1,9 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 21:06 CST
-Commit under test: `efb31b9` plus current settings preference and appearance fixes
+Date: 2026-06-02 21:18 CST
+Commit under test: `64ae986` plus current APNs entitlement/provisioning verification changes
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
-Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `unavailable` to Xcode CoreDevice
+Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `available (paired)` to Xcode CoreDevice
 
 ## Summary
 
@@ -21,8 +21,8 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
-| Physical device install and launch | Unavailable in current run | `xcrun devicectl list devices` shows the paired iPhone as `unavailable`; `bash tools/run-real-device-smoke.sh` -> 0 passed, 1 failed |
-| Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 4 passed, 4 failed, 4 manual; blockers are unavailable iPhone, missing APNs entitlement, and no signed app entitlement evidence |
+| Physical device install and launch | Unavailable for push-capable build in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `available (paired)`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications |
+| Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual; `project.yml` now points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
 | shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed, report date 2026-06-02 21:00 CST |
 | shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS via supervisord, report date 2026-06-02 20:16 CST |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
@@ -37,7 +37,7 @@ xcrun devicectl list devices
 # Result:
 # Name: 许映洲的iPhone
 # Identifier: F38FECA2-2A43-5554-B65D-9990CEEAB0EA
-# State: unavailable
+# State: available (paired)
 # Model: iPhone 13 (iPhone14,5)
 ```
 
@@ -122,29 +122,32 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 "$URL"
 
 ```bash
 bash tools/run-real-device-smoke.sh
-# Result: 0 passed, 1 failed, exit 1
+# Result: 1 passed, 2 failed, exit 1
 # Gates:
-# - Device discovery failed because no available paired iPhone was discovered
+# - Device discovery passed
+# - Build for device failed because Personal Development Teams do not support Push Notifications
+# - SuperApp.app was not produced under /tmp/wbk-dd-device-smoke
 # Report: build/reports/real-device-smoke.md
 ```
 
 ```bash
 bash tools/verify-real-device-push-readiness.sh
-# Result: 4 passed, 4 failed, 4 manual, exit 1
-# Date: 2026-06-02 20:16 CST
+# Result: 6 passed, 3 failed, 4 manual, exit 1
+# Date: 2026-06-02 21:18 CST
 # Report: build/reports/real-device-push-readiness.md
 #
 # Passed:
+# - Paired iPhone available
 # - shanbox backend routes
 # - shanbox backend supervision
+# - APNs entitlement configured in project
 # - APNs token forwarded to PushNotificationManager
 # - Default Bark server is shanbox
 #
 # Failed:
-# - No available paired iPhone discovered
-# - Real-device build/install/launch skipped because no paired iPhone was discovered
-# - project.yml does not point SuperApp to an entitlements file containing aps-environment
-# - SuperApp.app not found under /tmp/wbk-dd-device-smoke, so signed APNs entitlement cannot be proven
+# - Real-device build/install/launch failed because the current Personal Development Team/provisioning profile does not support Push Notifications
+# - Provisioning profile does not support Push Notifications / aps-environment
+# - Signed app APNs entitlement cannot be proven because the push-capable real-device build failed before producing SuperApp.app
 #
 # Manual:
 # - Observe notification permission prompt on iPhone
@@ -256,7 +259,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Push/Bark | shanbox health and JSON push route | External `https://wbk.shanbox.19930810.xyz:8443` | `Server/Sources/WebBridgeServer/Routes/HealthRoutes.swift`, `PushRoutes.swift` | `tools/verify-shanbox-backend.sh`: `/health`, `/register`, `/push`, JSON response code assertions | Available for route-level checks | This uses a fake device token, so APNs delivery is not proven |
 | Push/Bark | shanbox Bark-compatible URL | External `/{key}/{title}/{body}` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/PushRoutesTests` verify GET, POST, encoded Chinese title/body, and query parameters | Available for route-level checks | Uses service test key; real APNs delivery still requires a real registered token |
 | Push/Bark | shanbox test endpoint | External `POST /test` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh` asserts `success == true`; `Server/PushRoutesTests.testPushEndpointReportsSuccess` | Available | Route-level semantic success verified; APNs delivery still requires real token |
-| Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift`, `AppDelegate.swift`, project entitlements | `tools/verify-real-device-push-readiness.sh`: APNs entitlement checks fail | Unavailable | Token forwarding is fixed, but the project and signed app do not contain `aps-environment`, so APNs cannot be marked ready |
+| Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift`, `AppDelegate.swift`, project entitlements | `tools/verify-real-device-push-readiness.sh`: project entitlement passes, provisioning profile and signed-app entitlement fail | Unavailable | Token forwarding is fixed and `SuperApp/SuperApp.entitlements` contains `aps-environment`; current Personal Development Team/provisioning profile rejects Push Notifications, so APNs cannot be marked ready |
 | Bridge | Primary tab loads | Bottom tab `Bridge` | `BridgeLabHomeView.swift` | UI test verifies `bridgeLab.home`, groups, command list, parameter editor | Available | |
 | Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Available | Real WebView execution remains future wiring per current UI copy |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
@@ -328,7 +331,8 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Push test endpoint logs used dynamic strings as NSLog format strings | Percent-encoded URLs such as `%3A%2F%2F` were mangled in server logs, weakening debug evidence | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` |
 | shanbox WebBridgeServer supervision was assumed from a stale systemd unit file | Replaced the manual backend process with a supervisord-managed `webbridgeserver` program and made verification check the actual supervisor | `tools/verify-shanbox-supervision.sh`, `build/reports/shanbox-supervision-verification.md`, `AGENTS.md`, remote `/etc/supervisor/supervisord.conf` |
 | AppDelegate discarded real APNs device tokens | Push UI could remain `未注册` even if APNs registration succeeded, and Bark server registration would not run through `PushNotificationManager` | `SuperApp/Sources/AppDelegate.swift`, `tools/verify-real-device-push-readiness.sh` |
-| Real-device APNs readiness was tracked as manual-only | Automatic evidence now shows hard blockers: no project `aps-environment` entitlement and no signed APNs entitlement in the real-device app | `tools/verify-real-device-push-readiness.sh`, `build/reports/real-device-push-readiness.md` |
+| Real-device APNs readiness was tracked as manual-only | Automatic evidence now shows hard blockers separately: project entitlement presence, provisioning profile Push capability, signed app entitlements, and manual notification observation | `tools/verify-real-device-push-readiness.sh`, `build/reports/real-device-push-readiness.md` |
+| Project had no APNs entitlement file | Push readiness could not even request the Push Notifications capability | `SuperApp/SuperApp.entitlements`, `project.yml`; current blocker moved to Apple Developer Team/provisioning profile support |
 | Real-device smoke could reuse a stale `SuperApp.app` after build failure | Install/launch rows could look green even when the current build failed | `tools/run-real-device-smoke.sh` now clears DerivedData before build and skips install/launch if build fails |
 | Command token custom-scheme payloads were rejected | `webbridgekit://command/<token>` with payload `webbridgekit://tab?index=2` failed as `invalidURL` before the App command parser allowlist included `webbridgekit`; `CommandHandler` now applies the App command parser config before parsing and EngineBootstrap reuses the same config | `SuperApp/Sources/Managers/CommandHandler.swift`, `SuperApp/Sources/Managers/EngineBootstrap.swift`, `Tests/CommandParserTests/CommandParserTests.swift` |
 
@@ -342,11 +346,11 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/Showcase/ThemeShowcaseViewController.swift:114` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
-| APNs entitlement is missing | `tools/verify-real-device-push-readiness.sh` confirms no `aps-environment` in project config and no APNs entitlement in the signed real-device app; production readiness also needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/`, signed `SuperApp.app` entitlements |
+| Push Notifications provisioning profile is unavailable | `tools/verify-real-device-push-readiness.sh` confirms `SuperApp/SuperApp.entitlements` is configured, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment`; production readiness needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/SuperApp.entitlements`, Apple Developer Team/App ID/provisioning profile |
 | Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
 
 ## Current Availability Verdict
 
 No confirmed unavailable in-app UI module is currently listed after this pass.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
+The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: Push-capable Apple Developer Team/provisioning profile, signed APNs entitlement proof, APNs registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.

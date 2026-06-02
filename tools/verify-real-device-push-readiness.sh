@@ -73,6 +73,8 @@ else
     record "Real-device build install launch" "FAIL" "Skipped because no paired iPhone was discovered"
 fi
 
+BUILD_LOG="$REPORT_DIR/build-for-device.log"
+
 ENTITLEMENTS_PATH="$(
     awk -F': *' '/CODE_SIGN_ENTITLEMENTS:/ {
         gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
@@ -89,6 +91,21 @@ else
     record "APNs entitlement configured in project" "FAIL" "project.yml does not point SuperApp to an entitlements file containing aps-environment"
 fi
 
+if [ -n "$ENTITLEMENTS_PATH" ] &&
+   [ -f "$ENTITLEMENTS_PATH" ] &&
+   rg -q "aps-environment|com.apple.developer.aps-environment" "$ENTITLEMENTS_PATH"; then
+    if [ -f "$BUILD_LOG" ] &&
+       rg -q "do not support the Push Notifications capability|doesn't include the Push Notifications capability|doesn't include the aps-environment entitlement" "$BUILD_LOG"; then
+        record "Provisioning profile supports Push Notifications" "FAIL" "$BUILD_LOG"
+    elif [ -f "$BUILD_LOG" ] && rg -q "\\*\\* BUILD FAILED \\*\\*" "$BUILD_LOG"; then
+        record "Provisioning profile supports Push Notifications" "FAIL" "$BUILD_LOG"
+    else
+        record "Provisioning profile supports Push Notifications" "PASS" "No Push Notifications provisioning rejection found in build log"
+    fi
+else
+    record "Provisioning profile supports Push Notifications" "FAIL" "APNs entitlement is not configured, so provisioning support cannot be proven"
+fi
+
 if [ -d "$DERIVED_DATA" ]; then
     APP_PATH="$(find "$DERIVED_DATA" -name 'SuperApp.app' -maxdepth 6 2>/dev/null | head -1 || true)"
 else
@@ -103,7 +120,11 @@ if [ -n "$APP_PATH" ]; then
         record "Signed app contains APNs entitlement" "FAIL" "$ENTITLEMENTS_LOG"
     fi
 else
-    record "Signed app contains APNs entitlement" "FAIL" "SuperApp.app not found under $DERIVED_DATA"
+    if [ -f "$BUILD_LOG" ]; then
+        record "Signed app contains APNs entitlement" "FAIL" "SuperApp.app not found under $DERIVED_DATA; see $BUILD_LOG"
+    else
+        record "Signed app contains APNs entitlement" "FAIL" "SuperApp.app not found under $DERIVED_DATA"
+    fi
 fi
 
 if rg -q "PushNotificationManager\\.shared\\.didRegisterForRemoteNotifications\\(withDeviceToken:[[:space:]]*deviceToken\\)" \
