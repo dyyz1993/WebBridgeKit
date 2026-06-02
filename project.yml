@@ -72,6 +72,7 @@ targets:
         - $(inherited)
       CODE_SIGN_STYLE: Automatic
       DEVELOPMENT_TEAM: "B45VZCNYU3"
+      CODE_SIGN_ENTITLEMENTS: SuperApp/SuperApp.entitlements
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
       INFOPLIST_KEY_NSAppTransportSecurity: YES
