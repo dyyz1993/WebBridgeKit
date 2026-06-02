@@ -20,6 +20,7 @@ Do **not** replace the local services above with the public URL. They serve diff
 | Local test HTTP | http://localhost:8081 | Static fixtures for cache tests and offline/cache HTML validation | Production/Bark route checks |
 | Local prototype | http://localhost:8083 | HTML design prototype comparison | Backend/API validation |
 | Public shanbox Swift backend | https://wbk.shanbox.19930810.xyz:8443 | Real-phone/server config, Bark-compatible route checks, public `/health`, `/register`, `/push`, `/test`, `/api/v1/commands` verification | Local fixture tests, prototype viewing, APNs delivery proof by itself |
+| Local Node admin console | http://127.0.0.1:{dynamic-port} | Source-level admin console checks for `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` | Proving the Node admin console is deployed on public shanbox |
 
 Use the public URL when validating the deployed backend or configuring the app on a physical iPhone:
 
@@ -27,9 +28,12 @@ Use the public URL when validating the deployed backend or configuring the app o
 bash tools/verify-shanbox-backend.sh
 WBK_SHANBOX_URL=https://wbk.shanbox.19930810.xyz:8443 bash tools/verify-shanbox-backend.sh
 bash tools/verify-shanbox-supervision.sh
+bash tools/verify-node-admin-local.sh
 ```
 
 The public shanbox backend check is route-level evidence only. It does not prove APNs registration, real Bark delivery, lock-screen/background notification behavior, phone LAN behavior, or process supervision. Use `tools/verify-shanbox-supervision.sh` for SSH-level process supervision evidence.
+
+`tools/verify-node-admin-local.sh` starts `Server/node/server.js` on a temporary local port and verifies the Node admin console routes locally. Passing this script proves the Node admin source can serve its routes; it does **not** prove those routes are deployed behind `https://wbk.shanbox.19930810.xyz:8443`.
 
 ### Management
 
@@ -157,6 +161,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 |--------|---------|-------------|-------|
 | `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, and encoded Bark query paths | `16 passed, 0 failed`; Node admin paths currently tracked as unavailable | Route-level only; fake device token does not prove APNs delivery |
 | `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` process and whether it is supervised by systemd, PM2, or supervisord | `process=PASS, supervision=PASS` | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; exits 1 if the process is missing or supervision is missing |
+| `bash tools/verify-node-admin-local.sh` | Starts local `Server/node/server.js` and verifies Node admin, admin API, WebSocket status, messages, and packages routes | `11 passed, 0 failed` | Source/local evidence only; public shanbox still needs separate deployment evidence |
 | `bash tools/run-real-device-smoke.sh` | Auto-discovers paired/available iPhone, builds for device, installs, launches `com.webbridgekit.superapp` | `4 passed, 0 failed` | Proves physical build/install/launch only, not APNs/Bark delivery |
 | `bash tools/verify-real-device-push-readiness.sh` | Verifies real-device push prerequisites: iPhone availability, backend/supervision, app install/launch, APNs entitlement, token forwarding, default Bark server | `0 failed`; manual notification receipt items must still be observed | Current project is expected to fail until APNs entitlement is configured |
 | `bash tools/run-release-gate.sh` | Release readiness: services, SwiftLint, design lint, Debug build, crash scan, Release archive, no test HTML in app bundle | `Summary: ... failed` must be 0 | Use before release/archive handoff |
@@ -167,6 +172,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 - Do not mark APNs registration, Bark end-to-end delivery, lock-screen/background notification behavior, or phone-specific LAN reachability as fully available from simulator-only evidence.
 - iOS Settings handoff can be simulator-verified by proving `UIApplication.openSettingsURLString` opens `com.apple.Preferences`; require a physical confirmation only when release criteria explicitly demand a real-device Settings handoff check.
 - `tools/verify-shanbox-backend.sh` proves public route behavior only. It intentionally marks Node admin routes (`/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages`) as unavailable on the current Swift backend deployment.
+- `tools/verify-node-admin-local.sh` proves local/source Node admin route availability only. Do not use it to mark public shanbox Node admin deployment available.
 - `tools/verify-shanbox-supervision.sh` proves whether the public Swift backend has restart supervision. Current shanbox evidence is `process=PASS, supervision=PASS` via supervisord; route checks and supervision checks should both stay green for production handoff.
 - `tools/run-real-device-smoke.sh` proves the app can build, install, and launch on a paired iPhone. It does not prove notification permission, APNs token registration, or notification receipt.
 - `tools/verify-real-device-push-readiness.sh` proves automatic APNs/Bark prerequisites and separates real iPhone notification observation into MANUAL rows. Do not mark APNs/Bark end-to-end available while this script has FAIL rows.
