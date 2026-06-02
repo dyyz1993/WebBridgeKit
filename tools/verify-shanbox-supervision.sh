@@ -11,12 +11,14 @@ REMOTE_BINARY="${WBK_SHANBOX_WEBBRIDGE_BINARY:-/root/WebBridgeKit/Server/.build/
 REMOTE_PORT="${WBK_SHANBOX_WEBBRIDGE_PORT:-8080}"
 SERVICE_NAME="${WBK_SHANBOX_SERVICE_NAME:-webbridgeserver.service}"
 SUPERVISOR_PROGRAM="${WBK_SHANBOX_SUPERVISOR_PROGRAM:-webbridgeserver}"
+NODE_ADMIN_PORT="${WBK_SHANBOX_NODE_ADMIN_PORT:-8765}"
+NODE_ADMIN_SUPERVISOR_PROGRAM="${WBK_SHANBOX_NODE_ADMIN_SUPERVISOR_PROGRAM:-webbridge-node-admin}"
 
 mkdir -p "$REPORT_DIR"
 
 REMOTE_OUTPUT="$(
     ssh -o BatchMode=yes -o ConnectTimeout=8 "$SSH_HOST" \
-        "REMOTE_BINARY='$REMOTE_BINARY' REMOTE_PORT='$REMOTE_PORT' SERVICE_NAME='$SERVICE_NAME' SUPERVISOR_PROGRAM='$SUPERVISOR_PROGRAM' bash -s" <<'REMOTE'
+        "REMOTE_BINARY='$REMOTE_BINARY' REMOTE_PORT='$REMOTE_PORT' SERVICE_NAME='$SERVICE_NAME' SUPERVISOR_PROGRAM='$SUPERVISOR_PROGRAM' NODE_ADMIN_PORT='$NODE_ADMIN_PORT' NODE_ADMIN_SUPERVISOR_PROGRAM='$NODE_ADMIN_SUPERVISOR_PROGRAM' bash -s" <<'REMOTE'
 set -euo pipefail
 
 value() {
@@ -49,6 +51,23 @@ if (ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null || true) | grep -q ":${REM
     value listen_port "yes"
 else
     value listen_port "no"
+fi
+
+node_admin_pid="$(pgrep -f "/root/WebBridgeKit/Server/node/server.js" | head -1 || true)"
+value node_admin_port "$NODE_ADMIN_PORT"
+value node_admin_process_pid "${node_admin_pid:-none}"
+if [ -n "$node_admin_pid" ]; then
+    value node_admin_process_state "$(ps -o stat= -p "$node_admin_pid" 2>/dev/null | tr -d '[:space:]' || echo unknown)"
+    value node_admin_process_parent "$(ps -o ppid= -p "$node_admin_pid" 2>/dev/null | tr -d '[:space:]' || echo unknown)"
+else
+    value node_admin_process_state "missing"
+    value node_admin_process_parent "none"
+fi
+
+if (ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null || true) | grep -q ":${NODE_ADMIN_PORT}.*node"; then
+    value node_admin_listen_port "yes"
+else
+    value node_admin_listen_port "no"
 fi
 
 if [ "$pid1" = "systemd" ]; then
@@ -134,9 +153,15 @@ if command -v supervisorctl >/dev/null 2>&1; then
         supervisor_status="unavailable"
     fi
     value supervisor_program "$supervisor_status"
+    node_admin_supervisor_status="$(supervisorctl status "$NODE_ADMIN_SUPERVISOR_PROGRAM" 2>/dev/null || true)"
+    if [ -z "$node_admin_supervisor_status" ]; then
+        node_admin_supervisor_status="unavailable"
+    fi
+    value node_admin_supervisor_program "$node_admin_supervisor_status"
 else
     value supervisorctl_available "no"
     value supervisor_program "unavailable"
+    value node_admin_supervisor_program "unavailable"
 fi
 REMOTE
 )"
@@ -157,10 +182,20 @@ systemd_active="$(get_value systemd_active)"
 systemd_enabled="$(get_value systemd_enabled)"
 pm2_webbridge="$(get_value pm2_webbridge)"
 supervisor_program="$(get_value supervisor_program)"
+node_admin_process_pid="$(get_value node_admin_process_pid)"
+node_admin_listen_port="$(get_value node_admin_listen_port)"
+node_admin_supervisor_program="$(get_value node_admin_supervisor_program)"
 
 process_result="FAIL"
 if [ "$process_pid" != "none" ] && [ "$listen_port" = "yes" ]; then
     process_result="PASS"
+fi
+
+node_admin_result="FAIL"
+if [ "$node_admin_process_pid" != "none" ] &&
+   [ "$node_admin_listen_port" = "yes" ] &&
+   printf '%s' "$node_admin_supervisor_program" | grep -Eq "^${NODE_ADMIN_SUPERVISOR_PROGRAM}[[:space:]]+RUNNING"; then
+    node_admin_result="PASS"
 fi
 
 supervision_result="FAIL"
@@ -183,6 +218,7 @@ fi
     echo "- Remote host: \`${host:-unknown}\`"
     echo "- Binary: \`$REMOTE_BINARY\`"
     echo "- Port: \`$REMOTE_PORT\`"
+    echo "- Node admin port: \`$NODE_ADMIN_PORT\`"
     echo ""
     echo "| Check | Result | Evidence |"
     echo "|---|---|---|"
@@ -192,8 +228,9 @@ fi
     echo "| systemd active/enabled | $([ "$systemd_active" = "active" ] && [ "$systemd_enabled" = "enabled" ] && echo PASS || echo FAIL) | active=\`$systemd_active\`, enabled=\`$systemd_enabled\` |"
     echo "| PM2 supervises WebBridgeServer | $(printf '%s' "$pm2_webbridge" | grep -q ':online:' && echo PASS || echo FAIL) | \`$pm2_webbridge\` |"
     echo "| supervisord supervises WebBridgeServer | $(printf '%s' "$supervisor_program" | grep -Eq "^${SUPERVISOR_PROGRAM}[[:space:]]+RUNNING" && echo PASS || echo FAIL) | \`$supervisor_program\` |"
+    echo "| Node admin running/listening/supervised | $node_admin_result | pid=\`$node_admin_process_pid\`, listen_port=\`$node_admin_listen_port\`, parent=\`$(get_value node_admin_process_parent)\`, supervisor=\`$node_admin_supervisor_program\` |"
     echo ""
-    echo "Summary: process=$process_result, supervision=$supervision_result."
+    echo "Summary: process=$process_result, supervision=$supervision_result, node_admin=$node_admin_result."
     echo ""
     echo "Raw remote facts:"
     echo '```'
@@ -202,8 +239,8 @@ fi
 } >"$REPORT"
 
 echo "Report: $REPORT"
-echo "Summary: process=$process_result, supervision=$supervision_result"
+echo "Summary: process=$process_result, supervision=$supervision_result, node_admin=$node_admin_result"
 
-if [ "$process_result" != "PASS" ] || [ "$supervision_result" != "PASS" ]; then
+if [ "$process_result" != "PASS" ] || [ "$supervision_result" != "PASS" ] || [ "$node_admin_result" != "PASS" ]; then
     exit 1
 fi

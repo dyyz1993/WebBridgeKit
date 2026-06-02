@@ -151,7 +151,6 @@ record(
 
 known_unavailable_markers = [
     "Push Notifications provisioning profile is unavailable",
-    "Node admin console is not deployed behind `wbk.shanbox`",
 ]
 for marker in known_unavailable_markers:
     record(marker in doc, f"Known unavailable marker: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
