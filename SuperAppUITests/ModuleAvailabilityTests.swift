@@ -76,8 +76,10 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertNavigationTitleContains(["通知", "Push", "Debug"])
         goBack()
 
-        tapElement("tokenPush.copyPushURLButton")
+        tapButton("tokenPush.copyPushURLButton")
         assertExists("tokenPush.home")
+        assertElementValue("resultPanel", contains: "推送地址已复制")
+        assertElementValue("resultPanel", contains: "https://wbk.shanbox.19930810.xyz:8443")
 
         tapElement("tokenPush.validatePayloadButton")
         assertExists("tokenPush.home")
@@ -113,6 +115,8 @@ final class ModuleAvailabilityTests: XCTestCase {
         tapLabeledControl("Immersive")
         tapElement("deepLink.validateOpenButton")
         assertExists("deepLink.home")
+        assertElementValue("resultPanel", contains: "协议链接合法")
+        assertElementValue("resultPanel", contains: "cache-showcase.html")
         assertExists("deepLink.commandTokenInput")
         assertExists("deepLink.tabIndexInput")
     }
@@ -215,6 +219,22 @@ final class ModuleAvailabilityTests: XCTestCase {
         )
     }
 
+    private func assertElementValue(_ identifier: String, contains expectedText: String, timeout: TimeInterval = 6) {
+        let deadline = Date().addingTimeInterval(timeout)
+        let target = element(identifier)
+        var actual = "\(target.label) \(target.value as? String ?? "")"
+
+        while Date() < deadline {
+            actual = "\(target.label) \(target.value as? String ?? "")"
+            if actual.contains(expectedText) {
+                return
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+
+        XCTAssertTrue(actual.contains(expectedText), "Expected \(identifier) to contain '\(expectedText)', got '\(actual)'.")
+    }
+
     @discardableResult
     private func tapElement(_ identifier: String, timeout: TimeInterval = 8) -> XCUIElement {
         XCTAssertTrue(makeVisible(identifier, timeout: timeout), "Expected tappable element: \(identifier)")
@@ -225,6 +245,13 @@ final class ModuleAvailabilityTests: XCTestCase {
             target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         }
         return target
+    }
+
+    private func tapButton(_ identifier: String, timeout: TimeInterval = 8) {
+        XCTAssertTrue(makeVisible(identifier, timeout: timeout), "Expected button: \(identifier)")
+        let button = app.buttons[identifier]
+        XCTAssertTrue(button.waitForExistence(timeout: 2), "Expected concrete button: \(identifier)")
+        button.tap()
     }
 
     private func tapLabeledControl(_ label: String, timeout: TimeInterval = 8) {

@@ -124,12 +124,15 @@ struct TokenPushHomeView: View {
                         Image(uiImage: LucideIcon.copy.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
                             .renderingMode(.template)
                             .foregroundColor(Color.appText)
-                            .frame(width: 52, height: 44)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color(ThemeTokens.Color.surface))
                             .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
                     }
                 )
+                .frame(width: 52, height: 44)
+                .contentShape(Rectangle())
                 .buttonStyle(PressScaleButtonStyle())
+                .accessibilityLabel("复制推送地址")
                 .accessibilityIdentifier("tokenPush.copyPushURLButton")
             }
 

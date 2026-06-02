@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 22:24 CST
-Commit under test: `1ce1c2b` with functional evidence refreshed through `98033ee`
+Date: 2026-06-02 22:41 CST
+Commit under test: `3e890e5` plus current ResultPanel/copy-button verification changes
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `available (paired)` to Xcode CoreDevice
 
@@ -14,7 +14,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
 | Module UI availability | Available | `ModuleAvailabilityTests`: 9 tests, 0 failures |
-| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 57 passed, 0 failed; all `SettingsAction` entries are represented in the report and known partial/unavailable markers are enforced |
+| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 55 passed, 0 failed; all `SettingsAction` entries are represented in the report and known partial/unavailable markers are enforced |
 | Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
 | Settings Appearance entry | Available | `settings.cell.appearance` now opens `AppearanceSettingsView`; `ThemeMode` selection is persisted to `settings.appearanceMode` and applied through `ThemeManager` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
@@ -260,7 +260,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Push/Bark | Access token manager | `Push` -> `访问口令` | `TokenManageViewController.swift` | UI test opens screen | Available | |
 | Push/Bark | Bark API/API key manager | `Push` -> `Bark API / API Key` | `APIKeyManageViewController.swift` | UI test opens screen | Available | |
 | Push/Bark | Notification debug entry | `Push` -> `Bark 推送调试` | `NotificationDebugViewController.swift` | UI test opens screen in Debug build | Available | Debug-only in non-Debug builds |
-| Push/Bark | Copy Bark-compatible push URL | `Push` -> copy icon beside push URL | `TokenPushHomeViewModel.copyPushURL()` | UI test taps control without crash; MessageTests cover routing/payload semantics | Entry available; clipboard content not fully proven | Clipboard content is not asserted in XCUITest, so this is not yet full copy-semantics evidence |
+| Push/Bark | Copy Bark-compatible push URL | `Push` -> copy icon beside push URL | `TokenPushHomeViewModel.copyPushURL()` | `ModuleAvailabilityTests.testTokenPushAndBarkControlsAreUsable` taps the concrete Button and asserts ResultPanel value contains `推送地址已复制` and `https://wbk.shanbox.19930810.xyz:8443`; MessageTests cover routing/payload semantics | Available | XCUITest cannot reliably read the app process pasteboard, so the deterministic evidence is the app-visible copied URL result |
 | Push/Bark | Bark payload validation | `Push` -> `校验 Bark Payload` | `TokenPushHomeViewModel.validatePayload()`, `PushPayload.swift` | UI test taps control; `MessageTests` validates Bark/push payload behavior | Available | |
 | Push/Bark | shanbox health and JSON push route | External `https://wbk.shanbox.19930810.xyz:8443` | `Server/Sources/WebBridgeServer/Routes/HealthRoutes.swift`, `PushRoutes.swift` | `tools/verify-shanbox-backend.sh`: `/health`, `/register`, `/push`, JSON response code assertions | Available for route-level checks | This uses a fake device token, so APNs delivery is not proven |
 | Push/Bark | shanbox Bark-compatible URL | External `/{key}/{title}/{body}` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/PushRoutesTests` verify GET, POST, encoded Chinese title/body, and query parameters | Available for route-level checks | Uses service test key; real APNs delivery still requires a real registered token |
@@ -297,7 +297,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Deep Links | Links tool opens | `设置` -> `协议跳转工具` | `DeepLinkHomeView.swift` | UI test opens `deepLink.home` | Available | |
 | Deep Links | Open URL builder | `Links` -> target URL / mode / generated scheme | `DeepLinkHomeViewModel.swift` | UI test verifies URL input, generated scheme, mode picker; default local target `/test_resources/cache-showcase.html` returns 200 | Available | Default template now points to an existing cache showcase page |
 | Deep Links | Mode switching | `Links` -> `Immersive` | `DeepLinkHomeView.swift` | UI test taps visible label `Immersive` | Available | |
-| Deep Links | Validate open scheme | `Links` -> `校验` | `DeepLinkHomeViewModel.validateOpenScheme()` | UI test taps control and remains on Links page | Entry available; validation result text not fully proven | Deep Link validation result text not asserted because the long-page ResultPanel is fragile in XCUITest |
+| Deep Links | Validate open scheme | `Links` -> `校验` | `DeepLinkHomeViewModel.validateOpenScheme()` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` taps validate and asserts ResultPanel value contains `协议链接合法` and `cache-showcase.html` | Available | ResultPanel now exposes stable accessibility value for message/detail |
 | Deep Links | External tab scheme | External `webbridgekit://tab?index=2` | `SuperApp/Sources/AppDelegate.swift` | `xcrun simctl openurl`; after first-open confirmation, XcodeBuildMCP snapshot showed Bridge heading and `bridge.group.cache/navigation` controls | Available on simulator | First open may show the iOS confirmation dialog before the app receives the URL |
 | Deep Links | External open URL scheme | External `webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fcache-showcase.html` | `SuperApp/Sources/AppDelegate.swift`, `WebBrowserManager.openBrowser` | `xcrun simctl openurl`; XcodeBuildMCP snapshot showed `browserManager.closeButton`; screenshot showed Cache Showcase page | Available on simulator | `localhost` target depends on the local test HTTP service being reachable |
 | Deep Links | Command scheme field | External `webbridgekit://command/<id>.<base64url-json>` plus `Links` generated command field | `DeepLinkHomeView.swift`, `AppDelegate.application(_:open:)`, `CommandHandler`, `CommandDecoder`, `CommandParser`, `Server/Sources/WebBridgeServer/Services/CommandService.swift` | Unit tests cover URL-safe server token generation, app command URL decoding, and explicit `webbridgekit` scheme parsing; local backend generated real command URLs; `xcrun simctl openurl` showed `口令识别`; tapping `打开` opened Cache Showcase for HTTP payload and switched to Bridge for `webbridgekit://tab?index=2` payload | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | First run after install may require iOS paste permission; allow paste then re-trigger URL if the permission dialog interrupts parsing |
@@ -342,6 +342,8 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Project had no APNs entitlement file | Push readiness could not even request the Push Notifications capability | `SuperApp/SuperApp.entitlements`, `project.yml`; current blocker moved to Apple Developer Team/provisioning profile support |
 | Real-device smoke could reuse a stale `SuperApp.app` after build failure | Install/launch rows could look green even when the current build failed | `tools/run-real-device-smoke.sh` now clears DerivedData before build and skips install/launch if build fails |
 | Command token custom-scheme payloads were rejected | `webbridgekit://command/<token>` with payload `webbridgekit://tab?index=2` failed as `invalidURL` before the App command parser allowlist included `webbridgekit`; `CommandHandler` now applies the App command parser config before parsing and EngineBootstrap reuses the same config | `SuperApp/Sources/Managers/CommandHandler.swift`, `SuperApp/Sources/Managers/EngineBootstrap.swift`, `Tests/CommandParserTests/CommandParserTests.swift` |
+| Token Push copy URL button was not reliably tappable under XCUITest | The UI test could find the icon control but tapping it left ResultPanel in `Idle`, so the copy action was not proven | `TokenPushHomeView.swift` now keeps the icon-only control as a concrete Button with a 52x44 hit target, content shape, accessibility label, and direct UI assertion |
+| ResultPanel message/detail were not stable accessibility evidence | Long-page SwiftUI Text identifiers were not reliably discoverable, so result semantics could not be asserted | `ResultPanel.swift` now exposes message/detail through the panel accessibility value; `ModuleAvailabilityTests` asserts Push copy and Deep Link validation result content |
 
 ## Remaining Unavailable And Manual-Only Items
 
@@ -350,8 +352,6 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Push Notifications provisioning profile is unavailable | Unavailable | Use a paid Apple Developer Program team/App ID with Push Notifications enabled, regenerate provisioning profile, rebuild for device, and verify signed app contains `aps-environment` |
 | Bark/APNs end-to-end delivery is unavailable | Unavailable | After APNs signing passes, register a real iPhone token to shanbox, send a Bark-compatible request, verify notification receipt and tap routing |
 | Bridge real WebView execution not fully available/proven | Partially available | Add or enable a real WebView-backed Bridge execution path and assert JS -> native -> result output on simulator and, ideally, physical device |
-| Clipboard copy content not asserted | Partial evidence | Add a deterministic copy-result assertion or a focused unit/integration test around `UIPasteboard` where platform restrictions allow it |
-| Deep Link validation result text not asserted | Partial evidence | Give the ResultPanel stable identifiers for title/body and assert expected validation text in XCUITest |
 | Physical iOS Settings handoff not proven on real device | Manual-only | On iPhone, tap `设置` -> `通知设置` and verify iOS opens the SuperApp notification settings page or documented fallback |
 
 ## Remaining Non-Blocking Debt
@@ -363,7 +363,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ComponentSections.swift:101` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/Showcase/ThemeShowcaseViewController.swift:114` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
-| Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
+| Some long-page ResultPanel message assertions remain fragile in XCUITest because nested SwiftUI ScrollViews stay in the hierarchy | Push copy and Deep Link validate now assert ResultPanel accessibility values; Bridge lab semantics remain covered by unit tests until real WebView execution is added | `BridgeLabHomeView.swift` |
 
 ## Current Availability Verdict
 
@@ -379,6 +379,4 @@ The items not marked fully available are real-device/system-level flows, Push/Ba
 - Background/lock-screen notification behavior
 - Phone-specific backend reachability and LAN/firewall/VPN differences outside simulator
 - Bridge lab real WebView execution
-- Bark push URL clipboard content
-- Deep Link validation ResultPanel text
 - Debug Center diagnostics/network/manifest inner debug flows not replayed one by one in this report
