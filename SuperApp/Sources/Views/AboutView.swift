@@ -29,6 +29,7 @@ struct AboutView: View {
         .appListStyle()
         .listStyle(InsetGroupedListStyle())
         .navigationTitle(L10n.tr("about.title"))
+        .accessibilityIdentifier("about.root")
         .onAppear { appeared = true }
     }
 
@@ -93,10 +94,11 @@ struct AboutView: View {
     private var licenseSection: some View {
         Section(header: Text(L10n.tr("about.section.license")).font(Font.app(ThemeTokens.Typography.headline))) {
             NavigationLink(destination: ThirdPartyLicensesWrapperView()) {
-                Text("MIT License")
+                Text(L10n.tr("about.third_party_licenses"))
                     .font(Font.app(ThemeTokens.Typography.callout))
                     .foregroundColor(Color.appPrimary)
             }
+            .accessibilityIdentifier("about.cell.license.0")
             .listRowBackground(Color.appCardBackground)
         }
     }

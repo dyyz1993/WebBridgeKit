@@ -18,6 +18,26 @@ struct SettingsRow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        Group {
+            if isToggle {
+                rowContent
+            } else {
+                Button(
+                    action: { onTap?() },
+                    label: { rowContent }
+                )
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityAddTraits(.isButton)
+            }
+        }
+        .scaleEffect(reduceMotion ? 1.0 : (isPressed ? 0.97 : 1.0))
+        .animation(reduceMotion ? .none : .easeOut(duration: ThemeTokens.Animation.fast.duration), value: isPressed)
+        .onLongPressGesture(minimumDuration: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
+    }
+
+    private var rowContent: some View {
         HStack(spacing: ThemeTokens.Spacing.md) {
             SettingsIconBox(
                 image: icon,
@@ -59,14 +79,6 @@ struct SettingsRow: View {
         }
         .padding(.vertical, ThemeTokens.Spacing.sm)
         .contentShape(Rectangle())
-        .scaleEffect(reduceMotion ? 1.0 : (isPressed ? 0.97 : 1.0))
-        .animation(reduceMotion ? .none : .easeOut(duration: ThemeTokens.Animation.fast.duration), value: isPressed)
-        .onTapGesture {
-            if !isToggle { onTap?() }
-        }
-        .onLongPressGesture(minimumDuration: .infinity, pressing: { pressing in
-            isPressed = pressing
-        }, perform: {})
     }
 }
 

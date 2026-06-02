@@ -142,6 +142,26 @@ final class ModuleAvailabilityTests: XCTestCase {
         }
     }
 
+    func testSettingsAboutLegalDeepDrillIsReachable() {
+        assertTab("tab.settings", opens: "SettingsViewController")
+
+        tapElement("settings.cell.about")
+        assertExists("about.root")
+
+        tapElement("about.cell.license.0")
+        assertExists("licenses.root")
+        assertExists("licenses.tableView")
+
+        tapElement("licenses.cell.alamofire")
+        assertExists("licenseDetail.root")
+        assertExists("licenseDetail.textView")
+
+        goBack()
+        goBack()
+        goBack()
+        assertExists("SettingsViewController")
+    }
+
     // MARK: - Helpers
 
     private func assertTab(_ identifier: String, opens rootIdentifier: String) {
@@ -195,7 +215,7 @@ final class ModuleAvailabilityTests: XCTestCase {
 
         while Date() < deadline {
             let target = element(identifier)
-            if target.exists, target.frame != .zero {
+            if isVisibleOnScreen(target) {
                 return true
             }
 
@@ -208,11 +228,19 @@ final class ModuleAvailabilityTests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.25))
         }
 
-        return element(identifier).exists
+        return isVisibleOnScreen(element(identifier))
     }
 
     private func element(_ identifier: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
+    private func isVisibleOnScreen(_ target: XCUIElement) -> Bool {
+        guard target.exists, target.frame != .zero else {
+            return false
+        }
+        let windowFrame = app.windows.firstMatch.frame
+        return windowFrame.intersects(target.frame)
     }
 
     private func scrollContainer(rootIdentifier: String? = nil) -> XCUIElement {
