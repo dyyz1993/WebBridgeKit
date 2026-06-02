@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 20:28 CST
-Commit under test: `32450ba`
+Date: 2026-06-02 20:36 CST
+Commit under test: `3f5cede` plus current module-report guard changes
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `unavailable` to Xcode CoreDevice
 
@@ -14,6 +14,9 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
 | Module UI availability | Available | `ModuleAvailabilityTests`: 8 tests, 0 failures |
+| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 52 passed, 0 failed; all `SettingsAction` entries are represented in the report |
+| Settings remember-last-app restore | Unavailable | `SettingsView` writes `settings.rememberLastApp`, but `TabBarController.checkAndRestoreLastApp()` reads `EnableLastAppMemory`; restore cannot be marked available until the keys and saved URL path are aligned |
+| Settings Appearance entry | Unavailable | `settings.cell.appearance` is present, but `TabBarController.handleSettingsNavigation(.appearance)` is currently `break` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
@@ -82,6 +85,18 @@ xcodebuild test -workspace WebBridgeKit.xcworkspace -scheme MessageTests \
 cd Server && swift test
 # Result: Test run with 16 tests in 3 suites passed
 # Suites: Manifest Routes, Push Routes, Command Routes
+```
+
+```bash
+bash tools/verify-module-availability-report.sh
+# Result: 52 passed, 0 failed
+# Report: build/reports/module-availability-report-check.md
+#
+# Scope:
+# - Verifies required report sections and core module rows are present.
+# - Extracts all 15 `SettingsAction` cases from `SettingsViewModel.swift`.
+# - Requires every Settings action to appear as a `settings.cell.*` row in the module report.
+# - Requires known unavailable markers for APNs, Node Admin public deployment, Appearance, and remember-last-app restore.
 ```
 
 ```bash
@@ -247,18 +262,24 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Commands | shanbox command generation | External `POST /api/v1/commands` | `Server/Sources/WebBridgeServer/Routes/CommandRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/CommandRoutesTests` | Available | Public endpoint returns a signed command token |
 | Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=PASS | Available | Process is running, listening, and supervised by supervisord |
 | Settings | Primary tab loads | Bottom tab `设置` | `SettingsView.swift`, `SettingsViewModel.swift` | UI test verifies top rows and all operational rows | Available | |
-| Settings | Server config | `设置` -> `服务器配置` | `ServerConfigViewController.swift` | UI test opens screen | Available | |
-| Settings | Token manager | `设置` -> `口令管理` | `TokenManageViewController.swift` | UI test opens screen | Available | |
-| Settings | API key manager | `设置` -> `密钥管理` | `APIKeyManageViewController.swift` | UI test opens screen | Available | |
-| Settings | Cache manager | `设置` -> `缓存管理` | `ManagementViewController.swift` | UI test opens screen | Available | |
-| Settings | Favorites | `设置` -> `收藏夹` | `FavoriteViewController.swift` | UI test opens screen | Available | |
-| Settings | Recent history | `设置` -> `最近访问` | `RecentAccessHistoryView.swift` | UI test opens screen | Available | |
-| Settings | Cache dashboard | `设置` -> `缓存仪表盘` | `CacheDashboardViewController.swift` | UI test opens screen | Available | |
-| Settings | About/legal | `设置` -> `关于` -> `第三方开源许可` -> `Alamofire` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift`, `LicenseDetailViewController.swift` | `ModuleAvailabilityTests.testSettingsAboutLegalDeepDrillIsReachable` opens About, license list, and license detail | Available | Deep drill now asserted with accessibility identifiers |
-| Settings | Notification settings entry | `设置` -> `通知设置` | `NotificationSettingsOpener.open()` using `UIApplication.openNotificationSettingsURLString` on iOS 16+ and app Settings fallback below iOS 16 | `ModuleAvailabilityTests.testNotificationSettingsEntryIsWiredWithoutCrashing` taps the row and verifies either iOS Settings foregrounds or the app remains stable in foreground | Entry available; system handoff not proven in current simulator | The UI entry is wired and non-crashing. Current simulator did not foreground `com.apple.Preferences`, so real iOS Settings handoff still requires physical/manual confirmation |
-| Debug Center | Debug home | `设置` -> `调试中心` | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
-| Debug Center | Global debug panel | `调试中心` -> `全局调试面板` | `DebugPanelViewController.swift` | Entry exists in UI test | Available | Modal content covered by existing DebugPanel tests, not reopened here |
-| Debug Center | Diagnostics export | `调试中心` -> `诊断导出` | `DiagnosticsView.swift` | Entry exists in UI test | Available | |
+| Settings | Server config | `设置` -> `服务器配置` (`settings.cell.serverConfig`) | `ServerConfigViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | Token manager | `设置` -> `口令管理` (`settings.cell.tokenManager`) | `TokenManageViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | API key manager | `设置` -> `密钥管理` (`settings.cell.apiKeyManage`) | `APIKeyManageViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | Cache manager | `设置` -> `缓存管理` (`settings.cell.cacheManager`) | `ManagementViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | Favorites | `设置` -> `收藏夹` (`settings.cell.favorites`) | `FavoriteViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | Recent history | `设置` -> `最近访问` (`settings.cell.history`) | `RecentAccessHistoryView.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | Remember last app toggle and restore | `设置` -> `记住上次打开` (`settings.cell.rememberLastApp`) | `SettingsView.swift`, `TabBarController.checkAndRestoreLastApp()` | Static source check: `SettingsView` writes `settings.rememberLastApp`, while `TabBarController` reads `EnableLastAppMemory` | Unavailable for restore | Toggle UI is present, but restore behavior cannot work until the persisted keys and saved URL path are aligned |
+| Settings | Appearance | `设置` -> `外观` (`settings.cell.appearance`) | `SettingsView.swift`, `TabBarController.handleSettingsNavigation(_:)` | Static source check: `case .appearance: break` | Unavailable | Entry exists but has no implemented destination |
+| Settings | Debug panel direct entry | `设置` -> `调试面板` (`settings.cell.debugPanel`) | `DebugPanelViewController.swift`, `TabBarController.handleSettingsNavigation(_:)` | Source pushes/presents `DebugPanelViewController`; Debug Center path also asserts `debugCenter.openDebugPanel` | Available in DEBUG with indirect UI evidence | Direct row is not separately tapped by `ModuleAvailabilityTests` |
+| Settings | Debug Center | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `debugCenter.home` | Available | |
+| Settings | Deep Links | `设置` -> `协议跳转工具` (`settings.cell.deepLinks`) | `DeepLinkHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `deepLink.home` | Available | |
+| Settings | Export diagnostics direct entry | `设置` -> `诊断导出` (`settings.cell.exportDiagnostics`) | `DiagnosticsView.swift`, `TabBarController.handleSettingsNavigation(_:)` | Source pushes `DiagnosticsView`; Debug Center path also asserts `debugCenter.openDiagnostics` | Available in DEBUG with indirect UI evidence | Direct row is not separately tapped by `ModuleAvailabilityTests` |
+| Settings | Cache dashboard | `设置` -> `缓存仪表盘` (`settings.cell.cacheDashboard`) | `CacheDashboardViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | About/legal | `设置` -> `关于` (`settings.cell.about`) -> `第三方开源许可` -> `Alamofire` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift`, `LicenseDetailViewController.swift` | `ModuleAvailabilityTests.testSettingsAboutLegalDeepDrillIsReachable` opens About, license list, and license detail | Available | Deep drill now asserted with accessibility identifiers |
+| Settings | Notification settings entry | `设置` -> `通知设置` (`settings.cell.notificationSettings`) | `NotificationSettingsOpener.open()` using `UIApplication.openNotificationSettingsURLString` on iOS 16+ and app Settings fallback below iOS 16 | `ModuleAvailabilityTests.testNotificationSettingsEntryIsWiredWithoutCrashing` taps the row and verifies either iOS Settings foregrounds or the app remains stable in foreground | Entry available; system handoff not proven in current simulator | The UI entry is wired and non-crashing. Current simulator did not foreground `com.apple.Preferences`, so real iOS Settings handoff still requires physical/manual confirmation |
+| Debug Center | Debug home | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
+| Debug Center | Global debug panel | `调试中心` -> `全局调试面板` (`debugCenter.openDebugPanel`) | `DebugPanelViewController.swift` | Entry exists in UI test | Available | Modal content covered by existing DebugPanel tests, not reopened here |
+| Debug Center | Diagnostics export | `调试中心` -> `诊断导出` (`debugCenter.openDiagnostics`) | `DiagnosticsView.swift` | Entry exists in UI test | Available | |
 | Debug Center | Network inspector | `调试中心` -> `网络请求` | `NetworkDebugViewController.swift` | Entry exists in UI test | Available | |
 | Debug Center | Manifest cache cases | `调试中心` -> `Manifest 缓存用例` | `ManifestCacheTestViewController.swift` | Entry exists in UI test; CacheTests validate manifest semantics | Available | |
 | Debug Center | Crash scan guide | `调试中心` -> `崩溃扫描说明` | `DebugCenterViewModel.showCrashScanGuide()` | UI test taps control and remains on Debug Center | Available | Changed from delegated UIKit alert to ResultPanel update |
@@ -321,10 +342,12 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
 | APNs entitlement is missing | `tools/verify-real-device-push-readiness.sh` confirms no `aps-environment` in project config and no APNs entitlement in the signed real-device app; production readiness also needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/`, signed `SuperApp.app` entitlements |
+| Remember last app restore reads a stale key | `SettingsView` persists `settings.rememberLastApp`, but `TabBarController.checkAndRestoreLastApp()` reads `EnableLastAppMemory`; the setting cannot restore the last opened URL in the current app path | `SuperApp/Sources/Views/SettingsView.swift`, `SuperApp/Sources/Controllers/Tab/TabBarController.swift` |
+| Settings appearance entry has no implemented destination | `settings.cell.appearance` exists, but `TabBarController.handleSettingsNavigation(.appearance)` is `break`, so tapping the row does not open a functional appearance screen | `SuperApp/Sources/Views/SettingsView.swift`, `SuperApp/Sources/Controllers/Tab/TabBarController.swift` |
 | Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
 
 ## Current Availability Verdict
 
-No confirmed unavailable in-app UI module was found in automated verification.
+Two in-app Settings functions are currently marked unavailable from source evidence: remember-last-app restore and the Appearance destination.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
+The other items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.

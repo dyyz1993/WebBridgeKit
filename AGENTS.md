@@ -143,6 +143,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 | `bash tools/run-cache-regression.sh` | Cache module regression: services, `CacheTests`, cache handler tests, cache dashboard UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
 | `bash tools/run-jsbridge-regression.sh` | JSBridge regression: core bridge tests, `BridgeTests`, handler tests, functional UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
 | `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 8 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, `Settings`, Debug Center, Deep Links, About/Legal, iOS Settings handoff |
+| `bash tools/verify-module-availability-report.sh` | Guards `docs/verification/module-availability-verification.md` coverage: required sections, core modules, all `SettingsAction` entries, and known unavailable markers | `52 passed, 0 failed` | Run after changing Settings navigation, module IA, availability docs, or known unavailable status |
 | `cd Server && swift test` | Swift Hummingbird backend route semantics | All `Manifest Routes`, `Push Routes`, `Command Routes` tests pass | Does not prove public shanbox deployment or APNs delivery |
 
 ### UI And Visual Gates
@@ -177,6 +178,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 - `tools/run-real-device-smoke.sh` proves the app can build, install, and launch on a paired iPhone. It does not prove notification permission, APNs token registration, or notification receipt.
 - `tools/verify-real-device-push-readiness.sh` proves automatic APNs/Bark prerequisites and separates real iPhone notification observation into MANUAL rows. Do not mark APNs/Bark end-to-end available while this script has FAIL rows.
 - When updating `docs/verification/module-availability-verification.md`, cite the exact command, pass/fail count, and report/log path.
+- After updating `docs/verification/module-availability-verification.md`, run `bash tools/verify-module-availability-report.sh`. It intentionally fails if any `SettingsAction` exists in source without a corresponding `settings.cell.*` row in the report.
 
 ## Prototypes
 
