@@ -147,6 +147,36 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("deepLink.tabIndexInput")
     }
 
+    func testDebugCenterGlobalDebugPanelEntryOpensPanel() {
+        openDebugCenter()
+
+        tapElement("debugCenter.openDebugPanel")
+        assertExists("debugPanel.root")
+        assertExists("debugPanel.tab.0")
+        assertExists("debugPanel.handlers.tableView")
+
+        dismissCurrentPresentation()
+        assertExists("debugCenter.home")
+    }
+
+    func testDebugCenterChildToolEntriesOpenConcreteScreens() {
+        openDebugCenter()
+
+        let rows: [(entry: String, title: String, expected: String)] = [
+            ("debugCenter.openDiagnostics", "诊断导出", "diagnostics.root"),
+            ("debugCenter.openNetworkInspector", "网络请求", "networkDebug.tableView"),
+            ("debugCenter.openCacheDashboard", "缓存仪表盘", "cacheDashboard.root"),
+            ("debugCenter.openManifestCacheTests", "Manifest 缓存用例", "manifestCacheTest.root")
+        ]
+
+        for row in rows {
+            assertExists("debugCenter.home")
+            tapActionRow(identifier: row.entry, title: row.title)
+            assertExists(row.expected)
+            goBack()
+        }
+    }
+
     func testSettingsCoreRowsAreReachable() {
         assertTab("tab.settings", opens: "SettingsViewController")
 
@@ -272,6 +302,29 @@ final class ModuleAvailabilityTests: XCTestCase {
         return target
     }
 
+    private func tapActionRow(identifier: String, title: String, timeout: TimeInterval = 8) {
+        XCTAssertTrue(makeVisible(identifier, timeout: timeout), "Expected action row: \(identifier)")
+
+        for _ in 0..<3 {
+            let button = app.buttons[identifier]
+            if button.exists, button.isHittable {
+                button.tap()
+                return
+            }
+
+            let titleText = app.staticTexts[title]
+            if titleText.exists, titleText.isHittable {
+                titleText.tap()
+                return
+            }
+
+            scrollContainer(rootIdentifier: "debugCenter.home").swipeUp()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        }
+
+        element(identifier).coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+    }
+
     private func tapButton(_ identifier: String, timeout: TimeInterval = 8) {
         XCTAssertTrue(makeVisible(identifier, timeout: timeout), "Expected button: \(identifier)")
         let button = app.buttons[identifier]
@@ -316,6 +369,12 @@ final class ModuleAvailabilityTests: XCTestCase {
         }
     }
 
+    private func openDebugCenter() {
+        assertTab("tab.settings", opens: "SettingsViewController")
+        tapElement("settings.cell.debugCenter")
+        assertExists("debugCenter.home")
+    }
+
     private func makeVisible(_ identifier: String, timeout: TimeInterval) -> Bool {
         makeVisible(identifier, timeout: timeout, inRoot: nil)
     }
@@ -350,8 +409,13 @@ final class ModuleAvailabilityTests: XCTestCase {
         guard target.exists, target.frame != .zero else {
             return false
         }
+        if target.isHittable {
+            return true
+        }
+
         let windowFrame = app.windows.firstMatch.frame
-        return windowFrame.intersects(target.frame)
+        let targetCenter = CGPoint(x: target.frame.midX, y: target.frame.midY)
+        return windowFrame.contains(targetCenter)
     }
 
     private func scrollContainer(rootIdentifier: String? = nil) -> XCUIElement {
@@ -362,34 +426,24 @@ final class ModuleAvailabilityTests: XCTestCase {
             }
         }
 
-        let scrollViews = app.scrollViews.allElementsBoundByIndex
-        if let visibleScrollView = scrollViews.last(where: { $0.exists && $0.isHittable }) {
-            return visibleScrollView
-        }
+        let scrollView = app.scrollViews.firstMatch
+        if scrollView.exists { return scrollView }
 
-        let collectionViews = app.collectionViews.allElementsBoundByIndex
-        if let visibleCollectionView = collectionViews.last(where: { $0.exists && $0.isHittable }) {
-            return visibleCollectionView
-        }
+        let collectionView = app.collectionViews.firstMatch
+        if collectionView.exists { return collectionView }
 
-        let tables = app.tables.allElementsBoundByIndex
-        if let visibleTable = tables.last(where: { $0.exists && $0.isHittable }) {
-            return visibleTable
-        }
+        let table = app.tables.firstMatch
+        if table.exists { return table }
 
         return app.windows.firstMatch
     }
 
     private func goBack() {
-        let navigationBars = app.navigationBars
-        for index in 0..<navigationBars.count {
-            let bar = navigationBars.element(boundBy: index)
-            let backButton = bar.buttons.element(boundBy: 0)
-            if backButton.exists, backButton.isHittable {
-                backButton.tap()
-                RunLoop.current.run(until: Date().addingTimeInterval(0.6))
-                return
-            }
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        if backButton.exists, backButton.isHittable {
+            backButton.tap()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+            return
         }
 
         if app.buttons["返回"].exists {

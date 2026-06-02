@@ -169,6 +169,26 @@ bridge_smoke_markers = [
 for marker in bridge_smoke_markers:
     record(marker in doc, f"Real WebView JSBridge evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
 
+module_ui_markers = [
+    "13 tests, 0 failures",
+    "Test-SuperApp-2026.06.03_00-19-52-+0800.xcresult",
+    "testDebugCenterGlobalDebugPanelEntryOpensPanel",
+    "testDebugCenterChildToolEntriesOpenConcreteScreens",
+]
+for marker in module_ui_markers:
+    record(marker in doc, f"Module UI suite evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
+
+debug_center_markers = [
+    "debugPanel.root",
+    "debugPanel.handlers.tableView",
+    "diagnostics.root",
+    "networkDebug.tableView",
+    "cacheDashboard.root",
+    "manifestCacheTest.root",
+]
+for marker in debug_center_markers:
+    record(marker in doc, f"Debug Center concrete screen evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
+
 record(
     "Bridge real WebView execution not fully available/proven" not in doc,
     "Real WebView JSBridge obsolete unavailable marker removed",

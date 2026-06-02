@@ -54,6 +54,7 @@ struct ActionRow: View {
             .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
             .background(Color.appCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card))
+            .contentShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card))
             .overlay(
                 RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card)
                     .stroke(Color.appSeparator, lineWidth: 1)

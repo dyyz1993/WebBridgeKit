@@ -19,10 +19,12 @@ class NetworkDebugViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "网络请求"
+        view.accessibilityIdentifier = "networkDebug.root"
         view.backgroundColor = ThemeTokens.Color.background
 
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.accessibilityIdentifier = "networkDebug.tableView"
         tableView.register(NetworkRequestCell.self, forCellReuseIdentifier: "RequestCell")
         tableView.contentInsetAdjustmentBehavior = .never
 
