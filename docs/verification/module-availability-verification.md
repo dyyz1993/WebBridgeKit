@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 21:32 CST
-Commit under test: `1127ede` plus current shanbox Node admin deployment verification changes
+Date: 2026-06-02 22:24 CST
+Commit under test: `1ce1c2b` with functional evidence refreshed through `98033ee`
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `available (paired)` to Xcode CoreDevice
 
@@ -14,7 +14,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
 | Module UI availability | Available | `ModuleAvailabilityTests`: 9 tests, 0 failures |
-| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 51 passed, 0 failed; all `SettingsAction` entries are represented in the report |
+| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 57 passed, 0 failed; all `SettingsAction` entries are represented in the report and known partial/unavailable markers are enforced |
 | Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
 | Settings Appearance entry | Available | `settings.cell.appearance` now opens `AppearanceSettingsView`; `ThemeMode` selection is persisted to `settings.appearanceMode` and applied through `ThemeManager` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
@@ -23,8 +23,8 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Unavailable for push-capable build in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `available (paired)`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications |
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual; `project.yml` now points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
-| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-02 21:32 CST |
-| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-02 21:32 CST |
+| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-02 22:28 CST |
+| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-02 22:28 CST |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Available | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` all return 200; `webbridge-node-admin` is supervised on remote port `8765` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
@@ -159,7 +159,7 @@ bash tools/verify-real-device-push-readiness.sh
 ```bash
 bash tools/verify-shanbox-backend.sh
 # Result: 26 passed, 0 failed, 0 unavailable/needs deployment
-# Date: 2026-06-02 21:32 CST
+# Date: 2026-06-02 22:28 CST
 # Report: build/reports/shanbox-backend-verification.md
 #
 # Required-available routes:
@@ -196,7 +196,7 @@ bash tools/verify-shanbox-backend.sh
 ```bash
 bash tools/verify-shanbox-supervision.sh
 # Result: process=PASS, supervision=PASS, node_admin=PASS
-# Date: 2026-06-02 21:32 CST
+# Date: 2026-06-02 22:28 CST
 # Report: build/reports/shanbox-supervision-verification.md
 #
 # Evidence:
@@ -260,14 +260,15 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Push/Bark | Access token manager | `Push` -> `访问口令` | `TokenManageViewController.swift` | UI test opens screen | Available | |
 | Push/Bark | Bark API/API key manager | `Push` -> `Bark API / API Key` | `APIKeyManageViewController.swift` | UI test opens screen | Available | |
 | Push/Bark | Notification debug entry | `Push` -> `Bark 推送调试` | `NotificationDebugViewController.swift` | UI test opens screen in Debug build | Available | Debug-only in non-Debug builds |
-| Push/Bark | Copy Bark-compatible push URL | `Push` -> copy icon beside push URL | `TokenPushHomeViewModel.copyPushURL()` | UI test taps control without crash; MessageTests cover routing/payload semantics | Available | Clipboard content is not asserted in XCUITest |
+| Push/Bark | Copy Bark-compatible push URL | `Push` -> copy icon beside push URL | `TokenPushHomeViewModel.copyPushURL()` | UI test taps control without crash; MessageTests cover routing/payload semantics | Entry available; clipboard content not fully proven | Clipboard content is not asserted in XCUITest, so this is not yet full copy-semantics evidence |
 | Push/Bark | Bark payload validation | `Push` -> `校验 Bark Payload` | `TokenPushHomeViewModel.validatePayload()`, `PushPayload.swift` | UI test taps control; `MessageTests` validates Bark/push payload behavior | Available | |
 | Push/Bark | shanbox health and JSON push route | External `https://wbk.shanbox.19930810.xyz:8443` | `Server/Sources/WebBridgeServer/Routes/HealthRoutes.swift`, `PushRoutes.swift` | `tools/verify-shanbox-backend.sh`: `/health`, `/register`, `/push`, JSON response code assertions | Available for route-level checks | This uses a fake device token, so APNs delivery is not proven |
 | Push/Bark | shanbox Bark-compatible URL | External `/{key}/{title}/{body}` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/PushRoutesTests` verify GET, POST, encoded Chinese title/body, and query parameters | Available for route-level checks | Uses service test key; real APNs delivery still requires a real registered token |
-| Push/Bark | shanbox test endpoint | External `POST /test` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh` asserts `success == true`; `Server/PushRoutesTests.testPushEndpointReportsSuccess` | Available | Route-level semantic success verified; APNs delivery still requires real token |
+| Push/Bark | shanbox test endpoint | External `POST /test` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh` asserts `success == true`; `Server/PushRoutesTests.testPushEndpointReportsSuccess` | Available for route-level checks | Route-level semantic success verified; APNs delivery still requires real token |
 | Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift`, `AppDelegate.swift`, project entitlements | `tools/verify-real-device-push-readiness.sh`: project entitlement passes, provisioning profile and signed-app entitlement fail | Unavailable | Token forwarding is fixed and `SuperApp/SuperApp.entitlements` contains `aps-environment`; current Personal Development Team/provisioning profile rejects Push Notifications, so APNs cannot be marked ready |
+| Push/Bark | Bark/APNs end-to-end delivery | Bark-compatible request -> shanbox -> APNs -> iPhone notification -> tap action | `PushNotificationManager.swift`, `BarkChannel`, `PushRoutes.swift`, APNs provisioning | `tools/verify-real-device-push-readiness.sh` marks Bark delivery as MANUAL and APNs signing as failed | Unavailable in current signing environment | Bark/APNs end-to-end delivery is unavailable until a Push-capable Apple Developer Program team/profile signs the app and a real device token is registered |
 | Bridge | Primary tab loads | Bottom tab `Bridge` | `BridgeLabHomeView.swift` | UI test verifies `bridgeLab.home`, groups, command list, parameter editor | Available | |
-| Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Available | Real WebView execution remains future wiring per current UI copy |
+| Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Partially available | Bridge real WebView execution not fully available/proven; current evidence covers command registry, parameter editing, and lab validation entry, while real WebView execution remains future wiring per current UI copy |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
 | Commands | shanbox command generation | External `POST /api/v1/commands` | `Server/Sources/WebBridgeServer/Routes/CommandRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/CommandRoutesTests` | Available | Public endpoint returns a signed command token |
 | Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=PASS | Available | Process is running, listening, and supervised by supervisord |
@@ -280,23 +281,23 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Settings | Recent history | `设置` -> `最近访问` (`settings.cell.history`) | `RecentAccessHistoryView.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
 | Settings | Remember last app toggle and restore | `设置` -> `记住上次打开` (`settings.cell.rememberLastApp`, `settings.toggle.rememberLastApp`) | `SettingsView.swift`, `SettingsPreferenceKeys.swift`, `TabBarController.checkAndRestoreLastApp()` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable`; source uses shared `SettingsPreferenceKeys.rememberLastApp` and `SettingsPreferenceKeys.lastOpenedURL` with legacy migration | Available | Toggle is UI-test reachable; restore reads the same key written by Web open flows |
 | Settings | Appearance | `设置` -> `外观` (`settings.cell.appearance`) | `AppearanceSettingsView.swift`, `TabBarController.handleSettingsNavigation(_:)`, `ThemeManager` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable` opens `appearance.root`, verifies `appearance.modePicker`, and toggles `浅色/深色/跟随系统` | Available | Selection persists to `settings.appearanceMode` and is re-applied during theme bootstrap |
-| Settings | Debug panel direct entry | `设置` -> `调试面板` (`settings.cell.debugPanel`) | `DebugPanelViewController.swift`, `TabBarController.handleSettingsNavigation(_:)` | Source pushes/presents `DebugPanelViewController`; Debug Center path also asserts `debugCenter.openDebugPanel` | Available in DEBUG with indirect UI evidence | Direct row is not separately tapped by `ModuleAvailabilityTests` |
+| Settings | Debug panel direct entry | `设置` -> `调试面板` (`settings.cell.debugPanel`) | `DebugPanelViewController.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` taps direct row; `DebugPanelTests` cover panel tabs | Available in DEBUG | Direct entry is reachable; DEBUG-only surface |
 | Settings | Debug Center | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `debugCenter.home` | Available | |
 | Settings | Deep Links | `设置` -> `协议跳转工具` (`settings.cell.deepLinks`) | `DeepLinkHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `deepLink.home` | Available | |
-| Settings | Export diagnostics direct entry | `设置` -> `诊断导出` (`settings.cell.exportDiagnostics`) | `DiagnosticsView.swift`, `TabBarController.handleSettingsNavigation(_:)` | Source pushes `DiagnosticsView`; Debug Center path also asserts `debugCenter.openDiagnostics` | Available in DEBUG with indirect UI evidence | Direct row is not separately tapped by `ModuleAvailabilityTests` |
+| Settings | Export diagnostics direct entry | `设置` -> `诊断导出` (`settings.cell.exportDiagnostics`) | `DiagnosticsView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` taps direct row and verifies concrete presentation | Available in DEBUG | Direct entry is reachable; DEBUG-only surface |
 | Settings | Cache dashboard | `设置` -> `缓存仪表盘` (`settings.cell.cacheDashboard`) | `CacheDashboardViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
 | Settings | About/legal | `设置` -> `关于` (`settings.cell.about`) -> `第三方开源许可` -> `Alamofire` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift`, `LicenseDetailViewController.swift` | `ModuleAvailabilityTests.testSettingsAboutLegalDeepDrillIsReachable` opens About, license list, and license detail | Available | Deep drill now asserted with accessibility identifiers |
 | Settings | Notification settings entry | `设置` -> `通知设置` (`settings.cell.notificationSettings`) | `NotificationSettingsOpener.open()` using `UIApplication.openNotificationSettingsURLString` on iOS 16+ and app Settings fallback below iOS 16 | `ModuleAvailabilityTests.testNotificationSettingsEntryIsWiredWithoutCrashing` taps the row and verifies either iOS Settings foregrounds or the app remains stable in foreground | Entry available; system handoff not proven in current simulator | The UI entry is wired and non-crashing. Current simulator did not foreground `com.apple.Preferences`, so real iOS Settings handoff still requires physical/manual confirmation |
 | Debug Center | Debug home | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
-| Debug Center | Global debug panel | `调试中心` -> `全局调试面板` (`debugCenter.openDebugPanel`) | `DebugPanelViewController.swift` | Entry exists in UI test | Available | Modal content covered by existing DebugPanel tests, not reopened here |
-| Debug Center | Diagnostics export | `调试中心` -> `诊断导出` (`debugCenter.openDiagnostics`) | `DiagnosticsView.swift` | Entry exists in UI test | Available | |
-| Debug Center | Network inspector | `调试中心` -> `网络请求` | `NetworkDebugViewController.swift` | Entry exists in UI test | Available | |
-| Debug Center | Manifest cache cases | `调试中心` -> `Manifest 缓存用例` | `ManifestCacheTestViewController.swift` | Entry exists in UI test; CacheTests validate manifest semantics | Available | |
+| Debug Center | Global debug panel | `调试中心` -> `全局调试面板` (`debugCenter.openDebugPanel`) | `DebugPanelViewController.swift` | `ModuleAvailabilityTests` verifies entry exists; `DebugPanelTests` cover panel tabs | Entry available; panel content covered by separate tests | This report does not retap the Debug Center entry itself |
+| Debug Center | Diagnostics export | `调试中心` -> `诊断导出` (`debugCenter.openDiagnostics`) | `DiagnosticsView.swift` | `ModuleAvailabilityTests` verifies entry exists; direct Settings row opens diagnostics | Entry available | Export payload/content is not deeply asserted here |
+| Debug Center | Network inspector | `调试中心` -> `网络请求` | `NetworkDebugViewController.swift` | Entry exists in UI test | Entry available | Network capture content is not deeply asserted here |
+| Debug Center | Manifest cache cases | `调试中心` -> `Manifest 缓存用例` | `ManifestCacheTestViewController.swift` | Entry exists in UI test; CacheTests validate manifest semantics | Entry available; semantics covered by CacheTests | Individual debug case WebView runs are not all replayed in this report |
 | Debug Center | Crash scan guide | `调试中心` -> `崩溃扫描说明` | `DebugCenterViewModel.showCrashScanGuide()` | UI test taps control and remains on Debug Center | Available | Changed from delegated UIKit alert to ResultPanel update |
 | Deep Links | Links tool opens | `设置` -> `协议跳转工具` | `DeepLinkHomeView.swift` | UI test opens `deepLink.home` | Available | |
 | Deep Links | Open URL builder | `Links` -> target URL / mode / generated scheme | `DeepLinkHomeViewModel.swift` | UI test verifies URL input, generated scheme, mode picker; default local target `/test_resources/cache-showcase.html` returns 200 | Available | Default template now points to an existing cache showcase page |
 | Deep Links | Mode switching | `Links` -> `Immersive` | `DeepLinkHomeView.swift` | UI test taps visible label `Immersive` | Available | |
-| Deep Links | Validate open scheme | `Links` -> `校验` | `DeepLinkHomeViewModel.validateOpenScheme()` | UI test taps control and remains on Links page | Available | Result text is in long-page ResultPanel and not asserted |
+| Deep Links | Validate open scheme | `Links` -> `校验` | `DeepLinkHomeViewModel.validateOpenScheme()` | UI test taps control and remains on Links page | Entry available; validation result text not fully proven | Deep Link validation result text not asserted because the long-page ResultPanel is fragile in XCUITest |
 | Deep Links | External tab scheme | External `webbridgekit://tab?index=2` | `SuperApp/Sources/AppDelegate.swift` | `xcrun simctl openurl`; after first-open confirmation, XcodeBuildMCP snapshot showed Bridge heading and `bridge.group.cache/navigation` controls | Available on simulator | First open may show the iOS confirmation dialog before the app receives the URL |
 | Deep Links | External open URL scheme | External `webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fcache-showcase.html` | `SuperApp/Sources/AppDelegate.swift`, `WebBrowserManager.openBrowser` | `xcrun simctl openurl`; XcodeBuildMCP snapshot showed `browserManager.closeButton`; screenshot showed Cache Showcase page | Available on simulator | `localhost` target depends on the local test HTTP service being reachable |
 | Deep Links | Command scheme field | External `webbridgekit://command/<id>.<base64url-json>` plus `Links` generated command field | `DeepLinkHomeView.swift`, `AppDelegate.application(_:open:)`, `CommandHandler`, `CommandDecoder`, `CommandParser`, `Server/Sources/WebBridgeServer/Services/CommandService.swift` | Unit tests cover URL-safe server token generation, app command URL decoding, and explicit `webbridgekit` scheme parsing; local backend generated real command URLs; `xcrun simctl openurl` showed `口令识别`; tapping `打开` opened Cache Showcase for HTTP payload and switched to Bridge for `webbridgekit://tab?index=2` payload | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | First run after install may require iOS paste permission; allow paste then re-trigger URL if the permission dialog interrupts parsing |
@@ -342,6 +343,17 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Real-device smoke could reuse a stale `SuperApp.app` after build failure | Install/launch rows could look green even when the current build failed | `tools/run-real-device-smoke.sh` now clears DerivedData before build and skips install/launch if build fails |
 | Command token custom-scheme payloads were rejected | `webbridgekit://command/<token>` with payload `webbridgekit://tab?index=2` failed as `invalidURL` before the App command parser allowlist included `webbridgekit`; `CommandHandler` now applies the App command parser config before parsing and EngineBootstrap reuses the same config | `SuperApp/Sources/Managers/CommandHandler.swift`, `SuperApp/Sources/Managers/EngineBootstrap.swift`, `Tests/CommandParserTests/CommandParserTests.swift` |
 
+## Remaining Unavailable And Manual-Only Items
+
+| Item | Status | Required next evidence |
+| --- | --- | --- |
+| Push Notifications provisioning profile is unavailable | Unavailable | Use a paid Apple Developer Program team/App ID with Push Notifications enabled, regenerate provisioning profile, rebuild for device, and verify signed app contains `aps-environment` |
+| Bark/APNs end-to-end delivery is unavailable | Unavailable | After APNs signing passes, register a real iPhone token to shanbox, send a Bark-compatible request, verify notification receipt and tap routing |
+| Bridge real WebView execution not fully available/proven | Partially available | Add or enable a real WebView-backed Bridge execution path and assert JS -> native -> result output on simulator and, ideally, physical device |
+| Clipboard copy content not asserted | Partial evidence | Add a deterministic copy-result assertion or a focused unit/integration test around `UIPasteboard` where platform restrictions allow it |
+| Deep Link validation result text not asserted | Partial evidence | Give the ResultPanel stable identifiers for title/body and assert expected validation text in XCUITest |
+| Physical iOS Settings handoff not proven on real device | Manual-only | On iPhone, tap `设置` -> `通知设置` and verify iOS opens the SuperApp notification settings page or documented fallback |
+
 ## Remaining Non-Blocking Debt
 
 | Debt | Status | Path |
@@ -352,10 +364,21 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/Showcase/ThemeShowcaseViewController.swift:114` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
-| Push Notifications provisioning profile is unavailable | `tools/verify-real-device-push-readiness.sh` confirms `SuperApp/SuperApp.entitlements` is configured, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment`; production readiness needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/SuperApp.entitlements`, Apple Developer Team/App ID/provisioning profile |
 
 ## Current Availability Verdict
 
-No confirmed unavailable in-app UI module is currently listed after this pass.
+No confirmed unavailable non-push in-app navigation entry is currently listed after this pass.
 
-The items not marked fully available are real-device/system-level flows: Push-capable Apple Developer Team/provisioning profile, signed APNs entitlement proof, APNs registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, and background/lock-screen notification behavior.
+The items not marked fully available are real-device/system-level flows, Push/Bark APNs delivery, phone-specific network behavior, and partial interaction assertions:
+
+- Push-capable Apple Developer Team/provisioning profile
+- Signed-app `aps-environment` entitlement proof
+- APNs registration on physical iPhone
+- Bark end-to-end notification delivery to a real APNs token
+- Real-device notification settings handoff
+- Background/lock-screen notification behavior
+- Phone-specific backend reachability and LAN/firewall/VPN differences outside simulator
+- Bridge lab real WebView execution
+- Bark push URL clipboard content
+- Deep Link validation ResultPanel text
+- Debug Center diagnostics/network/manifest inner debug flows not replayed one by one in this report

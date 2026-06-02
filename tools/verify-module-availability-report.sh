@@ -57,6 +57,7 @@ required_sections = [
     "## Automated Evidence",
     "## Module Matrix",
     "## Items Requiring Physical Manual Verification",
+    "## Remaining Unavailable And Manual-Only Items",
     "## Remaining Non-Blocking Debt",
     "## Current Availability Verdict",
 ]
@@ -151,6 +152,11 @@ record(
 
 known_unavailable_markers = [
     "Push Notifications provisioning profile is unavailable",
+    "Bark/APNs end-to-end delivery is unavailable",
+    "Bridge real WebView execution not fully available/proven",
+    "Clipboard copy content not asserted",
+    "Deep Link validation result text not asserted",
+    "Physical iOS Settings handoff not proven on real device",
 ]
 for marker in known_unavailable_markers:
     record(marker in doc, f"Known unavailable marker: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
