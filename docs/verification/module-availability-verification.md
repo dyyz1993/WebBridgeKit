@@ -24,7 +24,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavail
 | shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned expected 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
-| Deep Link command token | Available on simulator for HTTP/HTTPS URL payloads | Local server generated `webbridgekit://command/<id>.<base64url-json>`; `xcrun simctl openurl` showed `口令识别`, tapping `打开` opened Cache Showcase; screenshot: `docs/screenshots/interaction/command-deeplink-cache-showcase.jpg` |
+| Deep Link command token | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | Local server generated `webbridgekit://command/<id>.<base64url-json>`; HTTP payload opened Cache Showcase; in-app custom-scheme payload `webbridgekit://tab?index=2` switched to Bridge; screenshots: `docs/screenshots/interaction/command-deeplink-cache-showcase.jpg`, `docs/screenshots/interaction/command-deeplink-custom-scheme-bridge.jpg` |
 
 ## Automated Evidence
 
@@ -82,6 +82,16 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 "$URL"
 # Result: token used URL-safe base64 without `/`, `+`, or `=`.
 # UI result: command recognition alert appeared; tapping `打开` opened Cache Showcase.
 # Screenshot: docs/screenshots/interaction/command-deeplink-cache-showcase.jpg
+```
+
+```bash
+BODY='{"type":"urlScheme","data":"webbridgekit://tab?index=2","format":"urlScheme","ttlSeconds":300}'
+JSON=$(curl -sS -X POST http://localhost:8080/api/v1/commands -H 'Content-Type: application/json' -d "$BODY")
+URL=$(printf '%s' "$JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["url"])')
+xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 "$URL"
+# Previous result before fix: CommandParser failed with invalidURL("webbridgekit://tab?index=2").
+# Fixed result: command recognition alert appeared; tapping `打开` switched to Bridge tab.
+# Screenshot: docs/screenshots/interaction/command-deeplink-custom-scheme-bridge.jpg
 ```
 
 ```bash
@@ -222,7 +232,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Deep Links | Validate open scheme | `Links` -> `校验` | `DeepLinkHomeViewModel.validateOpenScheme()` | UI test taps control and remains on Links page | Available | Result text is in long-page ResultPanel and not asserted |
 | Deep Links | External tab scheme | External `webbridgekit://tab?index=2` | `SuperApp/Sources/AppDelegate.swift` | `xcrun simctl openurl`; after first-open confirmation, XcodeBuildMCP snapshot showed Bridge heading and `bridge.group.cache/navigation` controls | Available on simulator | First open may show the iOS confirmation dialog before the app receives the URL |
 | Deep Links | External open URL scheme | External `webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fcache-showcase.html` | `SuperApp/Sources/AppDelegate.swift`, `WebBrowserManager.openBrowser` | `xcrun simctl openurl`; XcodeBuildMCP snapshot showed `browserManager.closeButton`; screenshot showed Cache Showcase page | Available on simulator | `localhost` target depends on the local test HTTP service being reachable |
-| Deep Links | Command scheme field | External `webbridgekit://command/<id>.<base64url-json>` plus `Links` generated command field | `DeepLinkHomeView.swift`, `AppDelegate.application(_:open:)`, `CommandHandler`, `CommandDecoder`, `CommandParser`, `Server/Sources/WebBridgeServer/Services/CommandService.swift` | Unit tests cover URL-safe server token generation and app command URL decoding; local backend generated a real command URL; `xcrun simctl openurl` showed `口令识别`; tapping `打开` opened Cache Showcase in WebBrowser | Available on simulator for HTTP/HTTPS URL payloads | Custom app-scheme payload execution remains intentionally unclaimed because current parser allowed schemes are HTTP/HTTPS |
+| Deep Links | Command scheme field | External `webbridgekit://command/<id>.<base64url-json>` plus `Links` generated command field | `DeepLinkHomeView.swift`, `AppDelegate.application(_:open:)`, `CommandHandler`, `CommandDecoder`, `CommandParser`, `Server/Sources/WebBridgeServer/Services/CommandService.swift` | Unit tests cover URL-safe server token generation, app command URL decoding, and explicit `webbridgekit` scheme parsing; local backend generated real command URLs; `xcrun simctl openurl` showed `口令识别`; tapping `打开` opened Cache Showcase for HTTP payload and switched to Bridge for `webbridgekit://tab?index=2` payload | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | First run after install may require iOS paste permission; allow paste then re-trigger URL if the permission dialog interrupts parsing |
 | Server Admin | Node admin console | External `/admin`, `/admin-push` | `Server/node/server.js`, `Server/node/admin.html`, `Server/node/admin-push.html` | `tools/verify-shanbox-backend.sh`: 5 Node paths return 404 | Unavailable on public Swift backend | Node console exists in source but is not deployed behind `wbk.shanbox` |
 
 ## Items Requiring Physical Manual Verification
@@ -261,6 +271,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | AppDelegate discarded real APNs device tokens | Push UI could remain `未注册` even if APNs registration succeeded, and Bark server registration would not run through `PushNotificationManager` | `SuperApp/Sources/AppDelegate.swift`, `tools/verify-real-device-push-readiness.sh` |
 | Real-device APNs readiness was tracked as manual-only | Automatic evidence now shows hard blockers: no project `aps-environment` entitlement and no signed APNs entitlement in the real-device app | `tools/verify-real-device-push-readiness.sh`, `build/reports/real-device-push-readiness.md` |
 | Real-device smoke could reuse a stale `SuperApp.app` after build failure | Install/launch rows could look green even when the current build failed | `tools/run-real-device-smoke.sh` now clears DerivedData before build and skips install/launch if build fails |
+| Command token custom-scheme payloads were rejected | `webbridgekit://command/<token>` with payload `webbridgekit://tab?index=2` failed as `invalidURL` before the App command parser allowlist included `webbridgekit`; `CommandHandler` now applies the App command parser config before parsing and EngineBootstrap reuses the same config | `SuperApp/Sources/Managers/CommandHandler.swift`, `SuperApp/Sources/Managers/EngineBootstrap.swift`, `Tests/CommandParserTests/CommandParserTests.swift` |
 
 ## Remaining Non-Blocking Debt
 
@@ -273,11 +284,10 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
 | APNs entitlement is missing | `tools/verify-real-device-push-readiness.sh` confirms no `aps-environment` in project config and no APNs entitlement in the signed real-device app; production readiness also needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/`, signed `SuperApp.app` entitlements |
-| Custom app-scheme command payload execution is not fully proven | `webbridgekit://command/<token>` is now proven for HTTP/HTTPS URL payloads, but payloads whose `data` is another custom app scheme are not claimed because the current parser configuration allows HTTP/HTTPS route targets | `AppDelegate.application(_:open:)`, `CommandHandler`, `CommandParser`, command server |
 | Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
 
 ## Current Availability Verdict
 
 No confirmed unavailable in-app UI module was found in automated verification.
 
-The items not marked fully available are real-device/system-level flows, custom-scheme command payload execution, and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, custom app-scheme payloads inside `webbridgekit://command/<token>`, and Node admin console deployment.
+The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
