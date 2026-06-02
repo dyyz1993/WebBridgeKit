@@ -84,8 +84,8 @@ class SettingsViewModel: ViewModel {
     private static func makeColor(_ base: UIColor, alpha: CGFloat = 0.1) -> UIColor { base.withAlphaComponent(alpha) }
 
     static var rememberLastAppEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: "settings.rememberLastApp") }
-        set { UserDefaults.standard.set(newValue, forKey: "settings.rememberLastApp") }
+        get { UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp) }
+        set { UserDefaults.standard.set(newValue, forKey: SettingsPreferenceKeys.rememberLastApp) }
     }
 
     let sections: [SettingsSection] = {

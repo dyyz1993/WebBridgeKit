@@ -127,6 +127,9 @@ final class ModuleAvailabilityTests: XCTestCase {
             "settings.cell.cacheManager",
             "settings.cell.favorites",
             "settings.cell.history",
+            "settings.cell.appearance",
+            "settings.cell.debugPanel",
+            "settings.cell.exportDiagnostics",
             "settings.cell.cacheDashboard",
             "settings.cell.about"
         ]
@@ -135,11 +138,28 @@ final class ModuleAvailabilityTests: XCTestCase {
             assertTab("tab.settings", opens: "SettingsViewController")
             tapElement(row)
             XCTAssertTrue(
-                app.navigationBars.firstMatch.waitForExistence(timeout: 3),
+                app.navigationBars.firstMatch.waitForExistence(timeout: 3)
+                    || app.sheets.firstMatch.waitForExistence(timeout: 3),
                 "\(row) should navigate to a concrete screen."
             )
-            goBack()
+            dismissCurrentPresentation()
         }
+    }
+
+    func testSettingsPreferencesAreUsable() {
+        assertTab("tab.settings", opens: "SettingsViewController")
+
+        tapElement("settings.cell.rememberLastApp")
+        assertExists("SettingsViewController")
+
+        tapElement("settings.cell.appearance")
+        assertExists("appearance.root")
+        assertExists("appearance.modePicker")
+        tapLabeledControl("浅色")
+        tapLabeledControl("深色")
+        tapLabeledControl("跟随系统")
+        assertExists("appearance.currentMode")
+        goBack()
     }
 
     func testSettingsAboutLegalDeepDrillIsReachable() {
@@ -304,6 +324,22 @@ final class ModuleAvailabilityTests: XCTestCase {
             app.buttons["Back"].tap()
         }
         RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+    }
+
+    private func dismissCurrentPresentation() {
+        if app.sheets.firstMatch.exists {
+            app.swipeDown()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+            return
+        }
+
+        if app.navigationBars.buttons["关闭"].exists {
+            app.navigationBars.buttons["关闭"].tap()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+            return
+        }
+
+        goBack()
     }
 
     private func assertNavigationTitleContains(_ candidates: [String]) {

@@ -1,8 +1,8 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 20:36 CST
-Commit under test: `3f5cede` plus current module-report guard changes
-Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
+Date: 2026-06-02 21:06 CST
+Commit under test: `efb31b9` plus current settings preference and appearance fixes
+Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `unavailable` to Xcode CoreDevice
 
 ## Summary
@@ -13,17 +13,17 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
-| Module UI availability | Available | `ModuleAvailabilityTests`: 8 tests, 0 failures |
+| Module UI availability | Available | `ModuleAvailabilityTests`: 9 tests, 0 failures |
 | Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 52 passed, 0 failed; all `SettingsAction` entries are represented in the report |
-| Settings remember-last-app restore | Unavailable | `SettingsView` writes `settings.rememberLastApp`, but `TabBarController.checkAndRestoreLastApp()` reads `EnableLastAppMemory`; restore cannot be marked available until the keys and saved URL path are aligned |
-| Settings Appearance entry | Unavailable | `settings.cell.appearance` is present, but `TabBarController.handleSettingsNavigation(.appearance)` is currently `break` |
+| Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
+| Settings Appearance entry | Available | `settings.cell.appearance` now opens `AppearanceSettingsView`; `ThemeMode` selection is persisted to `settings.appearanceMode` and applied through `ThemeManager` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Unavailable in current run | `xcrun devicectl list devices` shows the paired iPhone as `unavailable`; `bash tools/run-real-device-smoke.sh` -> 0 passed, 1 failed |
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 4 passed, 4 failed, 4 manual; blockers are unavailable iPhone, missing APNs entitlement, and no signed app entitlement evidence |
-| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed, report date 2026-06-02 20:27 CST |
+| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed, report date 2026-06-02 21:00 CST |
 | shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS via supervisord, report date 2026-06-02 20:16 CST |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
@@ -52,12 +52,12 @@ bash scripts/services.sh verify
 xcodebuild test -workspace WebBridgeKit.xcworkspace \
   -scheme SuperApp \
   -sdk iphonesimulator \
-  -destination 'id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0' \
-  -derivedDataPath /tmp/wbk-dd-module-current \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -derivedDataPath /tmp/wbk-dd \
   CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
-# Result: TEST SUCCEEDED, 8 tests, 0 failures, xcresult:
-# /Users/xuyingzhou/Library/Developer/XcodeBuildMCP/workspaces/WebBridgeKit-815a0cec42de/result-bundles/test_sim_2026-06-02T11-15-15-461Z_pid64712_e17d58d1.xcresult
+# Result: TEST SUCCEEDED, 9 tests, 0 failures, xcresult:
+# /tmp/wbk-dd/Logs/Test/Test-SuperApp-2026.06.02_21-00-42-+0800.xcresult
 ```
 
 ```bash
@@ -96,7 +96,8 @@ bash tools/verify-module-availability-report.sh
 # - Verifies required report sections and core module rows are present.
 # - Extracts all 15 `SettingsAction` cases from `SettingsViewModel.swift`.
 # - Requires every Settings action to appear as a `settings.cell.*` row in the module report.
-# - Requires known unavailable markers for APNs, Node Admin public deployment, Appearance, and remember-last-app restore.
+# - Requires known unavailable markers for APNs and Node Admin public deployment.
+# - Requires Appearance and remember-last-app restore to be marked available when source implementation is present.
 ```
 
 ```bash
@@ -268,8 +269,8 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Settings | Cache manager | `设置` -> `缓存管理` (`settings.cell.cacheManager`) | `ManagementViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
 | Settings | Favorites | `设置` -> `收藏夹` (`settings.cell.favorites`) | `FavoriteViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
 | Settings | Recent history | `设置` -> `最近访问` (`settings.cell.history`) | `RecentAccessHistoryView.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
-| Settings | Remember last app toggle and restore | `设置` -> `记住上次打开` (`settings.cell.rememberLastApp`) | `SettingsView.swift`, `TabBarController.checkAndRestoreLastApp()` | Static source check: `SettingsView` writes `settings.rememberLastApp`, while `TabBarController` reads `EnableLastAppMemory` | Unavailable for restore | Toggle UI is present, but restore behavior cannot work until the persisted keys and saved URL path are aligned |
-| Settings | Appearance | `设置` -> `外观` (`settings.cell.appearance`) | `SettingsView.swift`, `TabBarController.handleSettingsNavigation(_:)` | Static source check: `case .appearance: break` | Unavailable | Entry exists but has no implemented destination |
+| Settings | Remember last app toggle and restore | `设置` -> `记住上次打开` (`settings.cell.rememberLastApp`, `settings.toggle.rememberLastApp`) | `SettingsView.swift`, `SettingsPreferenceKeys.swift`, `TabBarController.checkAndRestoreLastApp()` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable`; source uses shared `SettingsPreferenceKeys.rememberLastApp` and `SettingsPreferenceKeys.lastOpenedURL` with legacy migration | Available | Toggle is UI-test reachable; restore reads the same key written by Web open flows |
+| Settings | Appearance | `设置` -> `外观` (`settings.cell.appearance`) | `AppearanceSettingsView.swift`, `TabBarController.handleSettingsNavigation(_:)`, `ThemeManager` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable` opens `appearance.root`, verifies `appearance.modePicker`, and toggles `浅色/深色/跟随系统` | Available | Selection persists to `settings.appearanceMode` and is re-applied during theme bootstrap |
 | Settings | Debug panel direct entry | `设置` -> `调试面板` (`settings.cell.debugPanel`) | `DebugPanelViewController.swift`, `TabBarController.handleSettingsNavigation(_:)` | Source pushes/presents `DebugPanelViewController`; Debug Center path also asserts `debugCenter.openDebugPanel` | Available in DEBUG with indirect UI evidence | Direct row is not separately tapped by `ModuleAvailabilityTests` |
 | Settings | Debug Center | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `debugCenter.home` | Available | |
 | Settings | Deep Links | `设置` -> `协议跳转工具` (`settings.cell.deepLinks`) | `DeepLinkHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `deepLink.home` | Available | |
@@ -342,12 +343,10 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
 | APNs entitlement is missing | `tools/verify-real-device-push-readiness.sh` confirms no `aps-environment` in project config and no APNs entitlement in the signed real-device app; production readiness also needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/`, signed `SuperApp.app` entitlements |
-| Remember last app restore reads a stale key | `SettingsView` persists `settings.rememberLastApp`, but `TabBarController.checkAndRestoreLastApp()` reads `EnableLastAppMemory`; the setting cannot restore the last opened URL in the current app path | `SuperApp/Sources/Views/SettingsView.swift`, `SuperApp/Sources/Controllers/Tab/TabBarController.swift` |
-| Settings appearance entry has no implemented destination | `settings.cell.appearance` exists, but `TabBarController.handleSettingsNavigation(.appearance)` is `break`, so tapping the row does not open a functional appearance screen | `SuperApp/Sources/Views/SettingsView.swift`, `SuperApp/Sources/Controllers/Tab/TabBarController.swift` |
 | Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
 
 ## Current Availability Verdict
 
-Two in-app Settings functions are currently marked unavailable from source evidence: remember-last-app restore and the Appearance destination.
+No confirmed unavailable in-app UI module is currently listed after this pass.
 
-The other items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
+The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.

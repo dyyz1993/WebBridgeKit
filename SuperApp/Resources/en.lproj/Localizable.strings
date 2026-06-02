@@ -155,6 +155,11 @@
 "settings.remember.last.app" = "Remember Last App";
 "settings.appearance" = "Appearance";
 "settings.appearance.system" = "System";
+"settings.appearance.light" = "Light";
+"settings.appearance.dark" = "Dark";
+"settings.appearance.system.description" = "Follow the iOS system appearance and switch between light and dark automatically.";
+"settings.appearance.light.description" = "Always use light mode for bright environments.";
+"settings.appearance.dark.description" = "Always use dark mode for night or low-light use.";
 "settings.debug.panel" = "Debug Panel";
 "settings.debug.badge" = "DEBUG";
 "settings.export.diagnostics" = "Export Diagnostics";

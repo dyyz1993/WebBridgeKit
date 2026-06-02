@@ -53,6 +53,10 @@ public final class EngineBootstrap {
 
     private func bootstrapTheme(in window: UIWindow?) async {
         let themeManager = ThemeManager.shared
+        let storedMode = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.appearanceMode)
+            .flatMap(ThemeMode.init(rawValue:)) ?? .system
+
+        await themeManager.apply(storedMode)
         let theme = await themeManager.getTheme()
 
         if let window = window {

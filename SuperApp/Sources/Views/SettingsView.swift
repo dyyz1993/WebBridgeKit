@@ -6,7 +6,7 @@ struct SettingsView: View {
 
     @State private var showCopiedAlert = false
     @State private var appeared = false
-    @AppStorage("settings.rememberLastApp") private var rememberLastApp = false
+    @AppStorage(SettingsPreferenceKeys.rememberLastApp) private var rememberLastApp = false
 
     let onNavigate: (Destination) -> Void
 
@@ -151,6 +151,7 @@ struct SettingsView: View {
             isToggleOn: $rememberLastApp,
             isDestructive: item.action == .cacheManager,
             badge: item.badge,
+            toggleAccessibilityIdentifier: item.action.map { "settings.toggle.\($0.rawValue)" },
             onTap: {
                 guard let action = item.action else { return }
                 handleAction(action)

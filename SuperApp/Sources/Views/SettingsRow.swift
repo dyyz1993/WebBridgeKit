@@ -12,6 +12,7 @@ struct SettingsRow: View {
     @Binding var isToggleOn: Bool
     var isDestructive: Bool = false
     var badge: String?
+    var toggleAccessibilityIdentifier: String?
     var onTap: (() -> Void)?
 
     @State private var isPressed = false
@@ -20,7 +21,12 @@ struct SettingsRow: View {
     var body: some View {
         Group {
             if isToggle {
-                rowContent
+                Button(
+                    action: { isToggleOn.toggle() },
+                    label: { rowContent.allowsHitTesting(false) }
+                )
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityAddTraits(.isButton)
             } else {
                 Button(
                     action: { onTap?() },
@@ -71,6 +77,7 @@ struct SettingsRow: View {
             if isToggle {
                 Toggle("", isOn: $isToggleOn)
                     .labelsHidden()
+                    .accessibilityIdentifier(toggleAccessibilityIdentifier ?? "settings.toggle")
             } else if showChevron {
                 Image(systemName: "chevron.right")
                     .font(.system(size: ThemeTokens.Icons.Sizes.chevron, weight: .semibold))
