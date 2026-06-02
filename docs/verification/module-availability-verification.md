@@ -1,9 +1,9 @@
 # Module Availability Verification Report
 
-Date: 2026-06-03 00:48 CST
-Commit under test: `1c556e2` plus current Debug Center child-content/action verification changes
+Date: 2026-06-03 00:55 CST
+Commit under test: `869402f` plus current real-device Push readiness refresh
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 26.5, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
-Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `available (paired)` to Xcode CoreDevice
+Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `connected` to Xcode CoreDevice
 
 ## Summary
 
@@ -22,10 +22,10 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
-| Physical device install and launch | Unavailable for push-capable build in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `available (paired)`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications |
-| Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual; `project.yml` now points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
-| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-02 22:28 CST |
-| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-02 22:28 CST |
+| Physical device install and launch | Unavailable for SuperApp in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `connected`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications; a no-push command-line override with bundle id `com.webbridgekit.superapp.nopush` also failed before producing `SuperApp.app` |
+| Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual on 2026-06-03 00:52 CST; `project.yml` points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
+| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-03 00:52 CST |
+| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-03 00:52 CST |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Available | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` all return 200; `webbridge-node-admin` is supervised on remote port `8765` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
@@ -90,7 +90,7 @@ cd Server && swift test
 
 ```bash
 bash tools/verify-module-availability-report.sh
-# Result: 77 passed, 0 failed
+# Result: 80 passed, 0 failed
 # Report: build/reports/module-availability-report-check.md
 #
 # Scope:
@@ -143,6 +143,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 "$URL"
 ```bash
 bash tools/run-real-device-smoke.sh
 # Result: 1 passed, 2 failed, exit 1
+# Date: 2026-06-03 00:52 CST
 # Gates:
 # - Device discovery passed
 # - Build for device failed because Personal Development Teams do not support Push Notifications
@@ -153,7 +154,7 @@ bash tools/run-real-device-smoke.sh
 ```bash
 bash tools/verify-real-device-push-readiness.sh
 # Result: 6 passed, 3 failed, 4 manual, exit 1
-# Date: 2026-06-02 21:18 CST
+# Date: 2026-06-03 00:52 CST
 # Report: build/reports/real-device-push-readiness.md
 #
 # Passed:
@@ -177,9 +178,25 @@ bash tools/verify-real-device-push-readiness.sh
 ```
 
 ```bash
+xcodebuild build -workspace WebBridgeKit.xcworkspace \
+  -scheme SuperApp \
+  -destination 'id=F38FECA2-2A43-5554-B65D-9990CEEAB0EA' \
+  -derivedDataPath /tmp/wbk-dd-device-smoke-nopush \
+  -allowProvisioningUpdates \
+  CODE_SIGN_ENTITLEMENTS= \
+  PRODUCT_BUNDLE_IDENTIFIER=com.webbridgekit.superapp.nopush
+# Result: exit 65
+# Report: build/reports/real-device-nopush-override.log
+# Failure:
+# - Cannot create a provisioning profile for `com.webbridgekit.superapp.nopush`
+# - Personal Development Teams do not support the Push Notifications capability
+# - No `SuperApp.app` was produced
+```
+
+```bash
 bash tools/verify-shanbox-backend.sh
 # Result: 26 passed, 0 failed, 0 unavailable/needs deployment
-# Date: 2026-06-02 22:28 CST
+# Date: 2026-06-03 00:52 CST
 # Report: build/reports/shanbox-backend-verification.md
 #
 # Required-available routes:
@@ -216,7 +233,7 @@ bash tools/verify-shanbox-backend.sh
 ```bash
 bash tools/verify-shanbox-supervision.sh
 # Result: process=PASS, supervision=PASS, node_admin=PASS
-# Date: 2026-06-02 22:28 CST
+# Date: 2026-06-03 00:52 CST
 # Report: build/reports/shanbox-supervision-verification.md
 #
 # Evidence:
@@ -363,6 +380,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Real-device APNs readiness was tracked as manual-only | Automatic evidence now shows hard blockers separately: project entitlement presence, provisioning profile Push capability, signed app entitlements, and manual notification observation | `tools/verify-real-device-push-readiness.sh`, `build/reports/real-device-push-readiness.md` |
 | Project had no APNs entitlement file | Push readiness could not even request the Push Notifications capability | `SuperApp/SuperApp.entitlements`, `project.yml`; current blocker moved to Apple Developer Team/provisioning profile support |
 | Real-device smoke could reuse a stale `SuperApp.app` after build failure | Install/launch rows could look green even when the current build failed | `tools/run-real-device-smoke.sh` now clears DerivedData before build and skips install/launch if build fails |
+| SuperApp cannot be real-device smoke tested under the current Personal Development Team | Both the production bundle id and a temporary no-push command-line bundle id failed before producing `SuperApp.app` because Xcode still requires Push Notifications capability for this target | `build/reports/build-for-device.log`, `build/reports/real-device-nopush-override.log`; use a paid Apple Developer Program team/App ID/profile with Push Notifications enabled before marking real-device SuperApp install/launch, APNs registration, or Bark delivery available |
 | Command token custom-scheme payloads were rejected | `webbridgekit://command/<token>` with payload `webbridgekit://tab?index=2` failed as `invalidURL` before the App command parser allowlist included `webbridgekit`; `CommandHandler` now applies the App command parser config before parsing and EngineBootstrap reuses the same config | `SuperApp/Sources/Managers/CommandHandler.swift`, `SuperApp/Sources/Managers/EngineBootstrap.swift`, `Tests/CommandParserTests/CommandParserTests.swift` |
 | Token Push copy URL button was not reliably tappable under XCUITest | The UI test could find the icon control but tapping it left ResultPanel in `Idle`, so the copy action was not proven | `TokenPushHomeView.swift` now keeps the icon-only control as a concrete Button with a 52x44 hit target, content shape, accessibility label, and direct UI assertion |
 | ResultPanel message/detail were not stable accessibility evidence | Long-page SwiftUI Text identifiers were not reliably discoverable, so result semantics could not be asserted | `ResultPanel.swift` now exposes message/detail through the panel accessibility value; `ModuleAvailabilityTests` asserts Push copy and Deep Link validation result content |
@@ -379,6 +397,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Item | Status | Required next evidence |
 | --- | --- | --- |
 | Push Notifications provisioning profile is unavailable | Unavailable | Use a paid Apple Developer Program team/App ID with Push Notifications enabled, regenerate provisioning profile, rebuild for device, and verify signed app contains `aps-environment` |
+| SuperApp real-device install/launch is blocked by Push capability signing | Unavailable in current signing environment | Use a Push-capable Apple Developer Program team/profile; temporary command-line no-push override with `com.webbridgekit.superapp.nopush` still failed, so do not claim non-push real-device SuperApp smoke until an installable app bundle is produced |
 | Bark/APNs end-to-end delivery is unavailable | Unavailable | After APNs signing passes, register a real iPhone token to shanbox, send a Bark-compatible request, verify notification receipt and tap routing |
 | Physical iOS Settings handoff not proven on real device | Manual-only | On iPhone, tap `设置` -> `通知设置` and verify iOS opens the SuperApp notification settings page or documented fallback |
 
@@ -401,6 +420,7 @@ The items not marked fully available are real-device/system-level flows, Push/Ba
 
 - Push-capable Apple Developer Team/provisioning profile
 - Signed-app `aps-environment` entitlement proof
+- SuperApp real-device install/launch under the current signing environment
 - APNs registration on physical iPhone
 - Bark end-to-end notification delivery to a real APNs token
 - Real-device notification settings handoff
