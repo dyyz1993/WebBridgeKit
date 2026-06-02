@@ -90,6 +90,55 @@ xcrun simctl launch booted com.webbridgekit.superapp
 - **Component Catalog**: Settings → 框架展示 OR launch arg `--show-component-catalog`
 - **Visual Regression**: `tools/diff-screenshots.sh` (PIL-based, HTML report)
 
+## Essential Verification Scripts
+
+Use these scripts as the repeatable evidence source before declaring a module "available". Most scripts write reports/logs under `build/reports/`; treat those as verification artifacts, not source files to commit unless the user explicitly asks.
+
+### Basic Gates
+
+| Script | Purpose | Pass Signal | When To Run |
+|--------|---------|-------------|-------------|
+| `bash scripts/services.sh start` | Starts backend `:8080`, test HTTP `:8081`, prototype `:8083` | All 3 services running | Before simulator app tests, cache tests, manifest tests, push/command route checks |
+| `bash scripts/services.sh verify` | Curl health check for the 3 local services | Backend `/health` 200/204, test HTTP 200, prototype 200 | After starting services or when a network/cache/push feature looks broken |
+| `bash scripts/scan-crash-logs.sh --json` | Scans app crash logs, diagnostic reports, simulator logs, OOM/jetsam signals | JSON contains `"total": 0` | After launch, UI tests, real-device/simulator smoke, or when user asks about crashes |
+| `swiftlint --quiet` | SwiftLint quality gate | No output, exit 0 | Before every commit |
+| `bash tools/ci-lint.sh` | Design-system lint wrapper: colors, icons, fonts, `.opencode`, crash logs, token JSON, touch targets | `16 passed, 0 failed`; warnings may remain documented debt | Before UI/design commits and release gates |
+
+### Module Regression Gates
+
+| Script / Command | Purpose | Pass Signal | Notes |
+|------------------|---------|-------------|-------|
+| `bash tools/run-cache-regression.sh` | Cache module regression: services, `CacheTests`, cache handler tests, cache dashboard UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
+| `bash tools/run-jsbridge-regression.sh` | JSBridge regression: core bridge tests, `BridgeTests`, handler tests, functional UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
+| `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 7 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, `Settings`, Debug Center, Deep Links, About/Legal |
+| `cd Server && swift test` | Swift Hummingbird backend route semantics | All `Manifest Routes`, `Push Routes`, `Command Routes` tests pass | Does not prove public shanbox deployment or APNs delivery |
+
+### UI And Visual Gates
+
+| Script | Purpose | Pass Signal | Notes |
+|--------|---------|-------------|-------|
+| `bash tools/run-ui-v4-regression.sh` | Aggregated UI v4 gate: services, SwiftLint, design lint, static visual checks, crash scan, screenshots, visual regression | `Summary: ... failed` must be 0 | Requires a booted simulator for screenshot/visual gates |
+| `bash tools/visual-checks.sh` | Static UI contract checks: UILabel wrapping, search placeholder, row/card/pill heights, empty-state action, hardcoded component colors | `FAIL=0` | Warnings are acceptable only if documented |
+| `bash tools/capture-screenshots.sh --build` | Builds/installs app, captures light/dark screenshots to `docs/screenshots/ui-redesign/` | Screenshots written successfully | Requires a booted simulator |
+| `bash tools/run-visual-regression.sh` | Compares screenshot directories with threshold, writes HTML/JSON diff report | Exit 0, no screenshots over threshold | Use `--threshold N`, `--output-dir PATH`, `--screenshots-dir PATH` as needed |
+| `bash tools/diff-screenshots.sh` | Low-level PIL screenshot diff engine | Exit 0 within threshold | Normally called by `run-visual-regression.sh` |
+
+### External, Release, And Device Gates
+
+| Script | Purpose | Pass Signal | Notes |
+|--------|---------|-------------|-------|
+| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes: `/health`, `/api/v1/stats`, `/api/v1/manifests`, `/register`, `/push`, `/test`, `/api/v1/commands`, Bark-compatible GET | `8 passed, 0 failed`; Node admin paths currently tracked as unavailable | Route-level only; fake device token does not prove APNs delivery |
+| `bash tools/run-real-device-smoke.sh` | Auto-discovers paired/available iPhone, builds for device, installs, launches `com.webbridgekit.superapp` | `4 passed, 0 failed` | Proves physical build/install/launch only, not APNs/Bark delivery |
+| `bash tools/run-release-gate.sh` | Release readiness: services, SwiftLint, design lint, Debug build, crash scan, Release archive, no test HTML in app bundle | `Summary: ... failed` must be 0 | Use before release/archive handoff |
+| `bash tools/validate-cache-html.sh` | Validates cache-related HTML resources | Exit 0 | Use after changing test resources or cached HTML fixtures |
+
+### Availability Evidence Rules
+
+- Do not mark APNs registration, Bark end-to-end delivery, iOS Settings handoff, lock-screen/background notification behavior, or phone-specific LAN reachability as fully available from simulator-only evidence.
+- `tools/verify-shanbox-backend.sh` proves public route behavior only. It intentionally marks Node admin routes (`/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages`) as unavailable on the current Swift backend deployment.
+- `tools/run-real-device-smoke.sh` proves the app can build, install, and launch on a paired iPhone. It does not prove notification permission, APNs token registration, or notification receipt.
+- When updating `docs/verification/module-availability-verification.md`, cite the exact command, pass/fail count, and report/log path.
+
 ## Prototypes
 
 | File | Purpose |
@@ -262,6 +311,9 @@ xcrun simctl launch booted com.webbridgekit.superapp --show-component-catalog
 
 | Commit | Description |
 |--------|-------------|
+| `e75dccb` | test(device): harden real-device smoke gate |
+| `ab062a2` | test(ui): verify about legal deep link path |
+| `4b2382e` | test(server): add shanbox backend verification gate |
 | `3608f0e` | feat(ui): add screenshot capture tests, visual check scripts, CI design lint |
 | `ef2874e` | feat(ui): v3 UI redesign — token system, 11 WBK components, 4 page redesigns (#2) |
 | `3d79ccf` | fix(ui): inbox search bar shadow + home bookmark tap opens URL instead of camera |
