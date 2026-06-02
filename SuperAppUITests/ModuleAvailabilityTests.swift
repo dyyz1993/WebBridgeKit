@@ -177,6 +177,43 @@ final class ModuleAvailabilityTests: XCTestCase {
         }
     }
 
+    func testDebugCenterChildToolContentAndActionsAreUsable() {
+        openDebugCenter()
+
+        tapActionRow(identifier: "debugCenter.openDiagnostics", title: "诊断导出")
+        assertExists("diagnostics.root")
+        assertTextExists("系统信息")
+        assertTextExists("导出工具")
+        tapLabeledControl("复制到剪贴板")
+        assertExists("diagnostics.lastAction")
+        assertElementValue("diagnostics.lastAction", contains: "已复制到剪贴板")
+        app.buttons["确定"].tapIfExists()
+        goBack()
+
+        assertExists("debugCenter.home")
+        tapActionRow(identifier: "debugCenter.openNetworkInspector", title: "网络请求")
+        assertExists("networkDebug.tableView")
+        assertExists("networkDebug.cell.0")
+        assertTextExists("https://api.example.com/manifest")
+        assertTextExists("GET")
+        assertTextExists("200")
+        tapElement("networkDebug.clearButton")
+        assertTextExists("暂无网络请求记录")
+        goBack()
+
+        assertExists("debugCenter.home")
+        tapActionRow(identifier: "debugCenter.openManifestCacheTests", title: "Manifest 缓存用例")
+        assertExists("manifestCacheTest.root")
+        assertExists("manifest_test.url_field")
+        assertExists("manifest_test.mode_segment")
+        assertExists("manifest_test.start_button")
+        assertElementValue("manifest_test.stats_label", contains: "总请求数")
+        assertElementValue("manifest_test.log_view", contains: "Manifest 缓存测试页面已加载")
+        tapElement("manifest_test.clear_cache_button")
+        assertElementValue("manifest_test.log_view", contains: "所有缓存已清除", timeout: 6)
+        goBack()
+    }
+
     func testSettingsCoreRowsAreReachable() {
         assertTab("tab.settings", opens: "SettingsViewController")
 
@@ -288,6 +325,14 @@ final class ModuleAvailabilityTests: XCTestCase {
         }
 
         XCTAssertTrue(actual.contains(expectedText), "Expected \(identifier) to contain '\(expectedText)', got '\(actual)'.")
+    }
+
+    private func assertTextExists(_ text: String, timeout: TimeInterval = 6) {
+        XCTAssertTrue(
+            app.staticTexts[text].waitForExistence(timeout: timeout)
+                || app.buttons[text].waitForExistence(timeout: 0.5),
+            "Expected visible text: \(text)"
+        )
     }
 
     @discardableResult

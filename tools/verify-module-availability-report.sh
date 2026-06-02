@@ -170,10 +170,16 @@ for marker in bridge_smoke_markers:
     record(marker in doc, f"Real WebView JSBridge evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
 
 module_ui_markers = [
-    "13 tests, 0 failures",
-    "Test-SuperApp-2026.06.03_00-19-52-+0800.xcresult",
+    "14 tests, 0 failures",
+    "Test-SuperApp-2026.06.03_00-42-24-+0800.xcresult",
     "testDebugCenterGlobalDebugPanelEntryOpensPanel",
     "testDebugCenterChildToolEntriesOpenConcreteScreens",
+    "testDebugCenterChildToolContentAndActionsAreUsable",
+    "diagnostics.lastAction",
+    "networkDebug.cell.0",
+    "networkDebug.clearButton",
+    "manifest_test.stats_label",
+    "manifest_test.log_view",
 ]
 for marker in module_ui_markers:
     record(marker in doc, f"Module UI suite evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)

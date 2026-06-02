@@ -8,6 +8,7 @@ final class DiagnosticsViewModel: ObservableObject {
     @Published var isExporting = false
     @Published var shareItemURL: URL?
     @Published var alertMessage: String?
+    @Published var lastActionMessage: String?
     @Published var showClearConfirmation = false
 
     struct DiagnosticsUISection: Identifiable {
@@ -59,6 +60,7 @@ final class DiagnosticsViewModel: ObservableObject {
             guard let data = try? JSONSerialization.data(withJSONObject: diagnostics, options: [.prettyPrinted, .sortedKeys]),
                   let string = String(data: data, encoding: .utf8) else {
                 alertMessage = L10n.tr("settings.diagnostics.export_failed")
+                lastActionMessage = alertMessage
                 isExporting = false
                 return
             }
@@ -76,12 +78,14 @@ final class DiagnosticsViewModel: ObservableObject {
             let diagnostics = collectDiagnosticsData()
             guard let data = try? JSONSerialization.data(withJSONObject: diagnostics, options: [.prettyPrinted, .sortedKeys]) else {
                 alertMessage = "导出失败：无法生成 JSON 数据"
+                lastActionMessage = alertMessage
                 isExporting = false
                 return
             }
             let filename = "WebBridgeKit_Diagnostics_\(ISO8601DateFormatter().string(from: Date())).json"
             guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
                 alertMessage = "导出失败：无法访问文档目录"
+                lastActionMessage = alertMessage
                 isExporting = false
                 return
             }
@@ -89,8 +93,10 @@ final class DiagnosticsViewModel: ObservableObject {
             do {
                 try data.write(to: url)
                 shareItemURL = url
+                lastActionMessage = "诊断文件已生成"
             } catch {
                 alertMessage = "导出失败: \(error.localizedDescription)"
+                lastActionMessage = alertMessage
             }
             isExporting = false
         }
@@ -98,18 +104,18 @@ final class DiagnosticsViewModel: ObservableObject {
 
     func copyToClipboard() {
         isExporting = true
-        Task { @MainActor in
-            let diagnostics = collectDiagnosticsData()
-            guard let data = try? JSONSerialization.data(withJSONObject: diagnostics, options: [.prettyPrinted, .sortedKeys]),
-                  let string = String(data: data, encoding: .utf8) else {
-                alertMessage = "复制失败：无法生成 JSON 数据"
-                isExporting = false
-                return
-            }
-            UIPasteboard.general.string = string
-            alertMessage = "已复制到剪贴板"
+        let diagnostics = collectDiagnosticsData()
+        guard let data = try? JSONSerialization.data(withJSONObject: diagnostics, options: [.prettyPrinted, .sortedKeys]),
+              let string = String(data: data, encoding: .utf8) else {
+            alertMessage = "复制失败：无法生成 JSON 数据"
+            lastActionMessage = alertMessage
             isExporting = false
+            return
         }
+        UIPasteboard.general.string = string
+        alertMessage = "已复制到剪贴板"
+        lastActionMessage = "已复制到剪贴板"
+        isExporting = false
     }
 
     func confirmClear() {
@@ -121,9 +127,11 @@ final class DiagnosticsViewModel: ObservableObject {
             }
             StructuredLogger.shared.clearBuffer()
             alertMessage = "诊断数据已清除"
+            lastActionMessage = "诊断数据已清除"
             load()
         } catch {
             alertMessage = "清除失败: \(error.localizedDescription)"
+            lastActionMessage = alertMessage
         }
     }
 
@@ -204,6 +212,14 @@ struct DiagnosticsView: View {
     var body: some View {
         ZStack {
             List {
+                Section {
+                    Text(viewModel.lastActionMessage ?? "诊断页就绪")
+                        .font(Font.app(ThemeTokens.Typography.caption1))
+                        .foregroundColor(Color.appTextSecondary)
+                        .accessibilityIdentifier("diagnostics.lastAction")
+                }
+                .staggerIn(index: 0, appeared: appeared)
+
                 ForEach(Array(viewModel.sections.enumerated()), id: \.element.id) { sIndex, section in
                     Section(header: Text(section.title).font(Font.app(ThemeTokens.Typography.headline))) {
                         ForEach(Array(section.items.enumerated()), id: \.element.id) { iIndex, item in
@@ -212,8 +228,10 @@ struct DiagnosticsView: View {
                                     actionRow(item: item)
                                 }
                                 .buttonStyle(PressScaleButtonStyle())
+                                .accessibilityIdentifier("diagnostics.action.\(sIndex).\(iIndex)")
                             } else {
                                 infoRow(item: item)
+                                    .accessibilityIdentifier("diagnostics.info.\(sIndex).\(iIndex)")
                             }
                         }
                     }
