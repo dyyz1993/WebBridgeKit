@@ -1,8 +1,8 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 22:41 CST
-Commit under test: `3e890e5` plus current ResultPanel/copy-button verification changes
-Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
+Date: 2026-06-02 23:44 CST
+Commit under test: `3e890e5` plus current ResultPanel/copy-button, real WebView JSBridge, and persistent-cache refresh verification changes
+Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 26.5, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `available (paired)` to Xcode CoreDevice
 
 ## Summary
@@ -13,8 +13,9 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
-| Module UI availability | Available | `ModuleAvailabilityTests`: 9 tests, 0 failures |
-| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 55 passed, 0 failed; all `SettingsAction` entries are represented in the report and known partial/unavailable markers are enforced |
+| Module UI availability | Available | `ModuleAvailabilityTests`: 11 tests, 0 failures on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; includes real WebView JSBridge smoke and split Settings row reachability gates |
+| JSBridge real WebView Promise smoke | Available | `testRealWebViewBridgePromiseResolves` opens `bridge-promise-smoke.html`, executes `BarkBridge.callNative('getSystemInfo')`, and waits for DOM text `Bridge Promise OK` |
+| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh`; all `SettingsAction` entries are represented in the report and current unavailable markers are enforced |
 | Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
 | Settings Appearance entry | Available | `settings.cell.appearance` now opens `AppearanceSettingsView`; `ThemeMode` selection is persisted to `settings.appearanceMode` and applied through `ThemeManager` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
@@ -52,12 +53,12 @@ bash scripts/services.sh verify
 xcodebuild test -workspace WebBridgeKit.xcworkspace \
   -scheme SuperApp \
   -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -destination 'platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0' \
   -derivedDataPath /tmp/wbk-dd \
   CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
-# Result: TEST SUCCEEDED, 9 tests, 0 failures, xcresult:
-# /tmp/wbk-dd/Logs/Test/Test-SuperApp-2026.06.02_21-00-42-+0800.xcresult
+# Result: TEST SUCCEEDED, 11 tests, 0 failures, xcresult:
+# /tmp/wbk-dd/Logs/Test/Test-SuperApp-2026.06.02_23-40-10-+0800.xcresult
 ```
 
 ```bash
@@ -89,7 +90,7 @@ cd Server && swift test
 
 ```bash
 bash tools/verify-module-availability-report.sh
-# Result: 51 passed, 0 failed
+# Result: 61 passed, 0 failed
 # Report: build/reports/module-availability-report-check.md
 #
 # Scope:
@@ -98,6 +99,24 @@ bash tools/verify-module-availability-report.sh
 # - Requires every Settings action to appear as a `settings.cell.*` row in the module report.
 # - Requires known unavailable markers for current APNs/Push provisioning blockers.
 # - Requires Appearance and remember-last-app restore to be marked available when source implementation is present.
+```
+
+```bash
+xcodebuild test -workspace WebBridgeKit.xcworkspace \
+  -scheme SuperApp \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0' \
+  -derivedDataPath /tmp/wbk-dd \
+  CODE_SIGNING_ALLOWED=NO \
+  -only-testing:SuperAppUITests/ModuleAvailabilityTests/testRealWebViewBridgePromiseResolves
+# Result: TEST SUCCEEDED, 1 test, 0 failures, xcresult:
+# /tmp/wbk-dd/Logs/Test/Test-SuperApp-2026.06.02_23-24-59-+0800.xcresult
+#
+# Fixture:
+# http://localhost:8081/test_resources/bridge-promise-smoke.html?v=2
+#
+# UI assertion:
+# Real WKWebView exposes browserManager.webView and page DOM reaches "Bridge Promise OK".
 ```
 
 ```bash
@@ -268,24 +287,25 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift`, `AppDelegate.swift`, project entitlements | `tools/verify-real-device-push-readiness.sh`: project entitlement passes, provisioning profile and signed-app entitlement fail | Unavailable | Token forwarding is fixed and `SuperApp/SuperApp.entitlements` contains `aps-environment`; current Personal Development Team/provisioning profile rejects Push Notifications, so APNs cannot be marked ready |
 | Push/Bark | Bark/APNs end-to-end delivery | Bark-compatible request -> shanbox -> APNs -> iPhone notification -> tap action | `PushNotificationManager.swift`, `BarkChannel`, `PushRoutes.swift`, APNs provisioning | `tools/verify-real-device-push-readiness.sh` marks Bark delivery as MANUAL and APNs signing as failed | Unavailable in current signing environment | Bark/APNs end-to-end delivery is unavailable until a Push-capable Apple Developer Program team/profile signs the app and a real device token is registered |
 | Bridge | Primary tab loads | Bottom tab `Bridge` | `BridgeLabHomeView.swift` | UI test verifies `bridgeLab.home`, groups, command list, parameter editor | Available | |
-| Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Partially available | Bridge real WebView execution not fully available/proven; current evidence covers command registry, parameter editing, and lab validation entry, while real WebView execution remains future wiring per current UI copy |
+| Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Partially available | Bridge Lab is a validation/lab surface, not the production WebView execution path; real WebView Promise execution is separately proven below |
+| Bridge | Real WebView JSBridge Promise execution | `Web` -> `在线` -> open `bridge-promise-smoke.html` | `WebJavaScriptBridge.swift`, `Resources/WebBridge.js`, `SuperApp/Resources/WebBridge.js`, `WebBrowserViewModel.swift`, `WebBrowserViewController.swift`, `WebBrowserViewController+Navigation.swift`, `LazyManifestLoader.swift`, `PersistentManifestLoader.swift`, `test_resources/bridge-promise-smoke.html` | `ModuleAvailabilityTests.testRealWebViewBridgePromiseResolves` passed on simulator UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0` | Available on simulator | Proves page JS -> native `getSystemInfo` -> JS Promise resolve -> DOM text `Bridge Promise OK`; physical-device WebView smoke can reuse the same URL after phone backend reachability is configured |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
 | Commands | shanbox command generation | External `POST /api/v1/commands` | `Server/Sources/WebBridgeServer/Routes/CommandRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/CommandRoutesTests` | Available | Public endpoint returns a signed command token |
 | Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=PASS | Available | Process is running, listening, and supervised by supervisord |
 | Settings | Primary tab loads | Bottom tab `设置` | `SettingsView.swift`, `SettingsViewModel.swift` | UI test verifies top rows and all operational rows | Available | |
-| Settings | Server config | `设置` -> `服务器配置` (`settings.cell.serverConfig`) | `ServerConfigViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
-| Settings | Token manager | `设置` -> `口令管理` (`settings.cell.tokenManager`) | `TokenManageViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
-| Settings | API key manager | `设置` -> `密钥管理` (`settings.cell.apiKeyManage`) | `APIKeyManageViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
-| Settings | Cache manager | `设置` -> `缓存管理` (`settings.cell.cacheManager`) | `ManagementViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
-| Settings | Favorites | `设置` -> `收藏夹` (`settings.cell.favorites`) | `FavoriteViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
-| Settings | Recent history | `设置` -> `最近访问` (`settings.cell.history`) | `RecentAccessHistoryView.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | Server config | `设置` -> `服务器配置` (`settings.cell.serverConfig`) | `ServerConfigViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | Token manager | `设置` -> `口令管理` (`settings.cell.tokenManager`) | `TokenManageViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | API key manager | `设置` -> `密钥管理` (`settings.cell.apiKeyManage`) | `APIKeyManageViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | Cache manager | `设置` -> `缓存管理` (`settings.cell.cacheManager`) | `ManagementViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | Favorites | `设置` -> `收藏夹` (`settings.cell.favorites`) | `FavoriteViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | Recent history | `设置` -> `最近访问` (`settings.cell.history`) | `RecentAccessHistoryView.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Remember last app toggle and restore | `设置` -> `记住上次打开` (`settings.cell.rememberLastApp`, `settings.toggle.rememberLastApp`) | `SettingsView.swift`, `SettingsPreferenceKeys.swift`, `TabBarController.checkAndRestoreLastApp()` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable`; source uses shared `SettingsPreferenceKeys.rememberLastApp` and `SettingsPreferenceKeys.lastOpenedURL` with legacy migration | Available | Toggle is UI-test reachable; restore reads the same key written by Web open flows |
 | Settings | Appearance | `设置` -> `外观` (`settings.cell.appearance`) | `AppearanceSettingsView.swift`, `TabBarController.handleSettingsNavigation(_:)`, `ThemeManager` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable` opens `appearance.root`, verifies `appearance.modePicker`, and toggles `浅色/深色/跟随系统` | Available | Selection persists to `settings.appearanceMode` and is re-applied during theme bootstrap |
-| Settings | Debug panel direct entry | `设置` -> `调试面板` (`settings.cell.debugPanel`) | `DebugPanelViewController.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` taps direct row; `DebugPanelTests` cover panel tabs | Available in DEBUG | Direct entry is reachable; DEBUG-only surface |
+| Settings | Debug panel direct entry | `设置` -> `调试面板` (`settings.cell.debugPanel`) | `DebugPanelViewController.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugAndSupportRowsAreReachable` taps direct row; `DebugPanelTests` cover panel tabs | Available in DEBUG | Direct entry is reachable; DEBUG-only surface |
 | Settings | Debug Center | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `debugCenter.home` | Available | |
 | Settings | Deep Links | `设置` -> `协议跳转工具` (`settings.cell.deepLinks`) | `DeepLinkHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `deepLink.home` | Available | |
-| Settings | Export diagnostics direct entry | `设置` -> `诊断导出` (`settings.cell.exportDiagnostics`) | `DiagnosticsView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` taps direct row and verifies concrete presentation | Available in DEBUG | Direct entry is reachable; DEBUG-only surface |
-| Settings | Cache dashboard | `设置` -> `缓存仪表盘` (`settings.cell.cacheDashboard`) | `CacheDashboardViewController.swift` | `ModuleAvailabilityTests.testSettingsOperationalRowsAreReachable` opens screen | Available | |
+| Settings | Export diagnostics direct entry | `设置` -> `诊断导出` (`settings.cell.exportDiagnostics`) | `DiagnosticsView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugAndSupportRowsAreReachable` taps direct row and verifies concrete presentation | Available in DEBUG | Direct entry is reachable; DEBUG-only surface |
+| Settings | Cache dashboard | `设置` -> `缓存仪表盘` (`settings.cell.cacheDashboard`) | `CacheDashboardViewController.swift` | `ModuleAvailabilityTests.testSettingsDebugAndSupportRowsAreReachable` opens screen | Available | |
 | Settings | About/legal | `设置` -> `关于` (`settings.cell.about`) -> `第三方开源许可` -> `Alamofire` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift`, `LicenseDetailViewController.swift` | `ModuleAvailabilityTests.testSettingsAboutLegalDeepDrillIsReachable` opens About, license list, and license detail | Available | Deep drill now asserted with accessibility identifiers |
 | Settings | Notification settings entry | `设置` -> `通知设置` (`settings.cell.notificationSettings`) | `NotificationSettingsOpener.open()` using `UIApplication.openNotificationSettingsURLString` on iOS 16+ and app Settings fallback below iOS 16 | `ModuleAvailabilityTests.testNotificationSettingsEntryIsWiredWithoutCrashing` taps the row and verifies either iOS Settings foregrounds or the app remains stable in foreground | Entry available; system handoff not proven in current simulator | The UI entry is wired and non-crashing. Current simulator did not foreground `com.apple.Preferences`, so real iOS Settings handoff still requires physical/manual confirmation |
 | Debug Center | Debug home | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
@@ -344,6 +364,12 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Command token custom-scheme payloads were rejected | `webbridgekit://command/<token>` with payload `webbridgekit://tab?index=2` failed as `invalidURL` before the App command parser allowlist included `webbridgekit`; `CommandHandler` now applies the App command parser config before parsing and EngineBootstrap reuses the same config | `SuperApp/Sources/Managers/CommandHandler.swift`, `SuperApp/Sources/Managers/EngineBootstrap.swift`, `Tests/CommandParserTests/CommandParserTests.swift` |
 | Token Push copy URL button was not reliably tappable under XCUITest | The UI test could find the icon control but tapping it left ResultPanel in `Idle`, so the copy action was not proven | `TokenPushHomeView.swift` now keeps the icon-only control as a concrete Button with a 52x44 hit target, content shape, accessibility label, and direct UI assertion |
 | ResultPanel message/detail were not stable accessibility evidence | Long-page SwiftUI Text identifiers were not reliably discoverable, so result semantics could not be asserted | `ResultPanel.swift` now exposes message/detail through the panel accessibility value; `ModuleAvailabilityTests` asserts Push copy and Deep Link validation result content |
+| JSBridge callback IDs were inconsistent between JS and native | Real WKWebView Promise calls could send `messageId` while native only returned `callbackId`, leaving callbacks unable to resolve reliably | `Resources/WebBridge.js`, `SuperApp/Resources/WebBridge.js`, `Sources/Core/WebJavaScriptBridge.swift` now send/read/return both IDs for compatibility |
+| Browser WKWebView JavaScript enablement was implicit after deprecated preference cleanup | Real fixture pages could fail silently if per-page content JavaScript was not enabled | `Sources/ViewModels/WebBrowserViewModel.swift` sets `defaultWebpagePreferences.allowsContentJavaScript = true`; `Sources/Controllers/WebBrowserViewController+Navigation.swift` also enables it in the navigation preferences delegate |
+| Web Cache `在线` mode could reuse stale persistent manifest cache | Opening the same persistent URL for a real WebView smoke could serve an older cached HTML instead of the current fixture | `Sources/Handlers/ManifestLoader/LazyManifestLoader.swift` now forwards `forceRefresh`; `Sources/Handlers/ManifestLoader/PersistentManifestLoader.swift` skips existing persistent cache when `forceRefresh == true` |
+| UI automation had no stable handle for the browser WKWebView | Tests could prove the browser shell opened but not that a concrete WebView was present | `Sources/Controllers/WebBrowserViewController.swift` sets `browserManager.webView`; `ModuleAvailabilityTests.testRealWebViewBridgePromiseResolves` asserts it exists |
+| Simulator destination by name can select the wrong runtime/device during repeated runs | A by-name run can fail for environment reasons even when the booted test simulator is healthy | Current evidence pins destination UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0` |
+| A single long Settings row UI test triggered XCTest high-log-volume SIGSEGV during automation | `CrashLogManager` recorded a SIGSEGV from `XCTAutomationSupport` after the old long `testSettingsOperationalRowsAreReachable` produced excessive repeated snapshot queries; crash gate became red even though the user-facing row routes were valid | `SuperAppUITests/ModuleAvailabilityTests.swift` splits the row coverage into `testSettingsCoreRowsAreReachable` and `testSettingsDebugAndSupportRowsAreReachable`, keeps About in its dedicated deep-drill test, and the full module suite now passes 11/11 with crash scan `total: 0` |
 
 ## Remaining Unavailable And Manual-Only Items
 
@@ -351,7 +377,6 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | --- | --- | --- |
 | Push Notifications provisioning profile is unavailable | Unavailable | Use a paid Apple Developer Program team/App ID with Push Notifications enabled, regenerate provisioning profile, rebuild for device, and verify signed app contains `aps-environment` |
 | Bark/APNs end-to-end delivery is unavailable | Unavailable | After APNs signing passes, register a real iPhone token to shanbox, send a Bark-compatible request, verify notification receipt and tap routing |
-| Bridge real WebView execution not fully available/proven | Partially available | Add or enable a real WebView-backed Bridge execution path and assert JS -> native -> result output on simulator and, ideally, physical device |
 | Physical iOS Settings handoff not proven on real device | Manual-only | On iPhone, tap `设置` -> `通知设置` and verify iOS opens the SuperApp notification settings page or documented fallback |
 
 ## Remaining Non-Blocking Debt
@@ -363,7 +388,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ComponentSections.swift:101` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/Showcase/ThemeShowcaseViewController.swift:114` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
-| Some long-page ResultPanel message assertions remain fragile in XCUITest because nested SwiftUI ScrollViews stay in the hierarchy | Push copy and Deep Link validate now assert ResultPanel accessibility values; Bridge lab semantics remain covered by unit tests until real WebView execution is added | `BridgeLabHomeView.swift` |
+| Some long-page ResultPanel message assertions remain fragile in XCUITest because nested SwiftUI ScrollViews stay in the hierarchy | Push copy and Deep Link validate now assert ResultPanel accessibility values; Bridge Lab remains a validation surface, while real WebView Promise execution is covered by `testRealWebViewBridgePromiseResolves` | `BridgeLabHomeView.swift` |
 
 ## Current Availability Verdict
 
@@ -378,5 +403,5 @@ The items not marked fully available are real-device/system-level flows, Push/Ba
 - Real-device notification settings handoff
 - Background/lock-screen notification behavior
 - Phone-specific backend reachability and LAN/firewall/VPN differences outside simulator
-- Bridge lab real WebView execution
+- Bridge Lab UI execute remains validation-only; production WebView JSBridge Promise execution is now proven on simulator
 - Debug Center diagnostics/network/manifest inner debug flows not replayed one by one in this report

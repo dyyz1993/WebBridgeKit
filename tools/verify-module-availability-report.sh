@@ -81,6 +81,7 @@ for module in required_modules:
 summary_items = [
     "Services",
     "Module UI availability",
+    "JSBridge real WebView Promise smoke",
     "Cache semantics",
     "JSBridge semantics",
     "Bark/Push/message semantics",
@@ -153,11 +154,28 @@ record(
 known_unavailable_markers = [
     "Push Notifications provisioning profile is unavailable",
     "Bark/APNs end-to-end delivery is unavailable",
-    "Bridge real WebView execution not fully available/proven",
     "Physical iOS Settings handoff not proven on real device",
 ]
 for marker in known_unavailable_markers:
     record(marker in doc, f"Known unavailable marker: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
+
+bridge_smoke_markers = [
+    "testRealWebViewBridgePromiseResolves",
+    "bridge-promise-smoke.html",
+    "Bridge Promise OK",
+    "browserManager.webView",
+    "PersistentManifestLoader",
+]
+for marker in bridge_smoke_markers:
+    record(marker in doc, f"Real WebView JSBridge evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
+
+record(
+    "Bridge real WebView execution not fully available/proven" not in doc,
+    "Real WebView JSBridge obsolete unavailable marker removed",
+    "old unavailable marker absent",
+    "absent" if "Bridge real WebView execution not fully available/proven" not in doc else "present",
+    availability,
+)
 
 with output.open("w", encoding="utf-8") as handle:
     handle.write("# Module Availability Report Check\n\n")

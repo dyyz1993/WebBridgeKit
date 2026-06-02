@@ -281,7 +281,8 @@ public class LazyManifestLoader: NSObject {
                     PersistentManifestLoader.load(
                         url: url,
                         in: webView,
-                        from: viewController
+                        from: viewController,
+                        forceRefresh: forceRefresh
                     ) { result in
                         NSLog("[DIAG-PERFORM] PersistentManifestLoader.load completed: \(result)")
                         completion(result)

@@ -50,7 +50,8 @@
                 const message = {
                     action: action,
                     params: params || {},
-                    messageId: messageId
+                    messageId: messageId,
+                    callbackId: messageId
                 };
 
                 console.log('Sending message to native:', JSON.stringify(message));
@@ -83,7 +84,8 @@
             const message = {
                 action: action,
                 params: params || {},
-                messageId: messageId
+                messageId: messageId,
+                callbackId: messageId
             };
 
             // 发送消息到原生
@@ -102,10 +104,11 @@
          * @param {object} result - 结果对象
          */
         receiveResult: function(result) {
-            if (result.messageId && this.callbacks[result.messageId]) {
-                const callback = this.callbacks[result.messageId];
+            const callbackId = result.callbackId || result.messageId;
+            if (callbackId && this.callbacks[callbackId]) {
+                const callback = this.callbacks[callbackId];
                 callback(result);
-                delete this.callbacks[result.messageId];
+                delete this.callbacks[callbackId];
             }
         },
 
