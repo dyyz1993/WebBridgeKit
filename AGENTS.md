@@ -149,7 +149,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 | Script | Purpose | Pass Signal | Notes |
 |--------|---------|-------------|-------|
 | `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, and encoded Bark query paths | `16 passed, 0 failed`; Node admin paths currently tracked as unavailable | Route-level only; fake device token does not prove APNs delivery |
-| `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` process and whether it is supervised by systemd or PM2 | `process=PASS, supervision=PASS`; current shanbox is known to fail supervision | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; intentionally exits 1 if supervision is missing |
+| `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` process and whether it is supervised by systemd, PM2, or supervisord | `process=PASS, supervision=PASS` | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; exits 1 if the process is missing or supervision is missing |
 | `bash tools/run-real-device-smoke.sh` | Auto-discovers paired/available iPhone, builds for device, installs, launches `com.webbridgekit.superapp` | `4 passed, 0 failed` | Proves physical build/install/launch only, not APNs/Bark delivery |
 | `bash tools/run-release-gate.sh` | Release readiness: services, SwiftLint, design lint, Debug build, crash scan, Release archive, no test HTML in app bundle | `Summary: ... failed` must be 0 | Use before release/archive handoff |
 | `bash tools/validate-cache-html.sh` | Validates cache-related HTML resources | Exit 0 | Use after changing test resources or cached HTML fixtures |
@@ -159,7 +159,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 - Do not mark APNs registration, Bark end-to-end delivery, lock-screen/background notification behavior, or phone-specific LAN reachability as fully available from simulator-only evidence.
 - iOS Settings handoff can be simulator-verified by proving `UIApplication.openSettingsURLString` opens `com.apple.Preferences`; require a physical confirmation only when release criteria explicitly demand a real-device Settings handoff check.
 - `tools/verify-shanbox-backend.sh` proves public route behavior only. It intentionally marks Node admin routes (`/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages`) as unavailable on the current Swift backend deployment.
-- `tools/verify-shanbox-supervision.sh` proves whether the public Swift backend has restart supervision. Current shanbox evidence is `process=PASS, supervision=FAIL`, so route availability must not be treated as production supervision.
+- `tools/verify-shanbox-supervision.sh` proves whether the public Swift backend has restart supervision. Current shanbox evidence is `process=PASS, supervision=PASS` via supervisord; route checks and supervision checks should both stay green for production handoff.
 - `tools/run-real-device-smoke.sh` proves the app can build, install, and launch on a paired iPhone. It does not prove notification permission, APNs token registration, or notification receipt.
 - When updating `docs/verification/module-availability-verification.md`, cite the exact command, pass/fail count, and report/log path.
 

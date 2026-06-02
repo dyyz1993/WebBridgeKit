@@ -10,12 +10,13 @@ SSH_HOST="${WBK_SHANBOX_SSH_HOST:-shanbox}"
 REMOTE_BINARY="${WBK_SHANBOX_WEBBRIDGE_BINARY:-/root/WebBridgeKit/Server/.build/release/WebBridgeServer}"
 REMOTE_PORT="${WBK_SHANBOX_WEBBRIDGE_PORT:-8080}"
 SERVICE_NAME="${WBK_SHANBOX_SERVICE_NAME:-webbridgeserver.service}"
+SUPERVISOR_PROGRAM="${WBK_SHANBOX_SUPERVISOR_PROGRAM:-webbridgeserver}"
 
 mkdir -p "$REPORT_DIR"
 
 REMOTE_OUTPUT="$(
     ssh -o BatchMode=yes -o ConnectTimeout=8 "$SSH_HOST" \
-        "REMOTE_BINARY='$REMOTE_BINARY' REMOTE_PORT='$REMOTE_PORT' SERVICE_NAME='$SERVICE_NAME' bash -s" <<'REMOTE'
+        "REMOTE_BINARY='$REMOTE_BINARY' REMOTE_PORT='$REMOTE_PORT' SERVICE_NAME='$SERVICE_NAME' SUPERVISOR_PROGRAM='$SUPERVISOR_PROGRAM' bash -s" <<'REMOTE'
 set -euo pipefail
 
 value() {
@@ -125,6 +126,18 @@ else
     value pm2_available "no"
     value pm2_webbridge "unavailable"
 fi
+
+if command -v supervisorctl >/dev/null 2>&1; then
+    value supervisorctl_available "yes"
+    supervisor_status="$(supervisorctl status "$SUPERVISOR_PROGRAM" 2>/dev/null || true)"
+    if [ -z "$supervisor_status" ]; then
+        supervisor_status="unavailable"
+    fi
+    value supervisor_program "$supervisor_status"
+else
+    value supervisorctl_available "no"
+    value supervisor_program "unavailable"
+fi
 REMOTE
 )"
 
@@ -143,6 +156,7 @@ systemd_unit_restart="$(get_value systemd_unit_restart)"
 systemd_active="$(get_value systemd_active)"
 systemd_enabled="$(get_value systemd_enabled)"
 pm2_webbridge="$(get_value pm2_webbridge)"
+supervisor_program="$(get_value supervisor_program)"
 
 process_result="FAIL"
 if [ "$process_pid" != "none" ] && [ "$listen_port" = "yes" ]; then
@@ -156,6 +170,8 @@ if [ "$systemd_pid1" = "yes" ] &&
    [ "$systemd_unit_restart" != "none" ]; then
     supervision_result="PASS"
 elif printf '%s' "$pm2_webbridge" | grep -q ':online:'; then
+    supervision_result="PASS"
+elif printf '%s' "$supervisor_program" | grep -Eq "^${SUPERVISOR_PROGRAM}[[:space:]]+RUNNING"; then
     supervision_result="PASS"
 fi
 
@@ -175,6 +191,7 @@ fi
     echo "| systemd unit file exists | $([ "$systemd_unit_exists" = "yes" ] && echo PASS || echo FAIL) | path=\`$(get_value systemd_unit_path)\`, Restart=\`$systemd_unit_restart\` |"
     echo "| systemd active/enabled | $([ "$systemd_active" = "active" ] && [ "$systemd_enabled" = "enabled" ] && echo PASS || echo FAIL) | active=\`$systemd_active\`, enabled=\`$systemd_enabled\` |"
     echo "| PM2 supervises WebBridgeServer | $(printf '%s' "$pm2_webbridge" | grep -q ':online:' && echo PASS || echo FAIL) | \`$pm2_webbridge\` |"
+    echo "| supervisord supervises WebBridgeServer | $(printf '%s' "$supervisor_program" | grep -Eq "^${SUPERVISOR_PROGRAM}[[:space:]]+RUNNING" && echo PASS || echo FAIL) | \`$supervisor_program\` |"
     echo ""
     echo "Summary: process=$process_result, supervision=$supervision_result."
     echo ""

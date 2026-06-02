@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 10:19 CST
-Commit under test: current worktree based on `8cf96d9`
+Date: 2026-06-02 10:30 CST
+Commit under test: current worktree based on `92f71bf`
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `com.webbridgekit.superapp`
 
@@ -20,7 +20,7 @@ Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `co
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Available | `bash tools/run-real-device-smoke.sh` passed 4/4 gates on `许映洲的iPhone` |
 | shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed |
-| shanbox WebBridgeServer supervision | Unavailable | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=FAIL |
+| shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned expected 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
 
 ## Automated Evidence
@@ -108,14 +108,14 @@ bash tools/verify-shanbox-backend.sh
 
 ```bash
 bash tools/verify-shanbox-supervision.sh
-# Result: process=PASS, supervision=FAIL, exit 1
+# Result: process=PASS, supervision=PASS
 # Report: build/reports/shanbox-supervision-verification.md
 #
 # Evidence:
 # - WebBridgeServer process exists and listens on remote :8080
-# - Remote PID 1 is `supervisord`, so systemd cannot operate
-# - `/etc/systemd/system/webbridgeserver.service` exists with Restart=always but is disabled/unusable
-# - PM2 is installed but does not supervise WebBridgeServer
+# - Remote PID 1 is `supervisord`
+# - `supervisorctl status webbridgeserver` reports RUNNING
+# - Public route verification still passes 16/16 after replacing the manual process
 ```
 
 ## Module Matrix
@@ -143,7 +143,7 @@ bash tools/verify-shanbox-supervision.sh
 | Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Available | Real WebView execution remains future wiring per current UI copy |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
 | Commands | shanbox command generation | External `POST /api/v1/commands` | `Server/Sources/WebBridgeServer/Routes/CommandRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/CommandRoutesTests` | Available | Public endpoint returns a signed command token |
-| Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=FAIL | Unavailable for production supervision | Process is currently running and listening, but no active systemd/PM2 supervision is available |
+| Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=PASS | Available | Process is running, listening, and supervised by supervisord |
 | Settings | Primary tab loads | Bottom tab `设置` | `SettingsView.swift`, `SettingsViewModel.swift` | UI test verifies top rows and all operational rows | Available | |
 | Settings | Server config | `设置` -> `服务器配置` | `ServerConfigViewController.swift` | UI test opens screen | Available | |
 | Settings | Token manager | `设置` -> `口令管理` | `TokenManageViewController.swift` | UI test opens screen | Available | |
@@ -196,7 +196,7 @@ bash tools/verify-shanbox-supervision.sh
 | Notification settings handoff was listed as manual-only | Settings notification row had weaker evidence than necessary, even though XCUITest can assert the system Settings app reaches foreground | `SuperAppUITests/ModuleAvailabilityTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
 | Bark/Push route evidence only checked shallow HTTP 200s | A route could return 200 while response semantics, encoded Bark URLs, POST compatibility, or optional payload fields stayed unverified | `tools/verify-shanbox-backend.sh`, `Server/Tests/WebBridgeServerTests/PushRoutesTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
 | Push test endpoint logs used dynamic strings as NSLog format strings | Percent-encoded URLs such as `%3A%2F%2F` were mangled in server logs, weakening debug evidence | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` |
-| shanbox WebBridgeServer supervision was assumed from a stale systemd unit file | The Swift backend is route-available now, but a crash/restart would not be proven to recover automatically | `tools/verify-shanbox-supervision.sh`, `build/reports/shanbox-supervision-verification.md`, `AGENTS.md` |
+| shanbox WebBridgeServer supervision was assumed from a stale systemd unit file | Replaced the manual backend process with a supervisord-managed `webbridgeserver` program and made verification check the actual supervisor | `tools/verify-shanbox-supervision.sh`, `build/reports/shanbox-supervision-verification.md`, `AGENTS.md`, remote `/etc/supervisor/supervisord.conf` |
 
 ## Remaining Non-Blocking Debt
 
@@ -209,10 +209,9 @@ bash tools/verify-shanbox-supervision.sh
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
 | Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
-| shanbox backend process supervision is unavailable | `tools/verify-shanbox-supervision.sh` confirms process=PASS but supervision=FAIL; PID 1 is `supervisord`, systemd unit is disabled/unusable, and PM2 has no WebBridgeServer entry | `tools/verify-shanbox-supervision.sh`, `build/reports/shanbox-supervision-verification.md` |
 
 ## Current Availability Verdict
 
 No confirmed unavailable in-app UI module was found in automated verification.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs registration, Bark end-to-end delivery to a real APNs token, backend reachability from phone-specific networks, background/lock-screen notification behavior, Node admin console deployment, and persistent service supervision for `WebBridgeServer`.
+The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs registration, Bark end-to-end delivery to a real APNs token, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
