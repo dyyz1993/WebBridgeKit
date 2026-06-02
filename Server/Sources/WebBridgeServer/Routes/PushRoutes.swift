@@ -106,12 +106,12 @@ enum PushRoutes {
         let testRequest = try await request.decode(as: JSONPushRequest.self, context: context)
 
         NSLog("🧪 [PushRoutes] TEST ENDPOINT - Received push payload:")
-        NSLog("   - Device Key: \(testRequest.deviceKey)")
-        NSLog("   - Title: \(testRequest.title)")
-        NSLog("   - Body: \(testRequest.body)")
-        NSLog("   - Sound: \(testRequest.sound ?? "default")")
-        NSLog("   - Group: \(testRequest.group ?? "default")")
-        NSLog("   - URL: \(testRequest.url ?? "none")")
+        NSLog("   - Device Key: %@", testRequest.deviceKey)
+        NSLog("   - Title: %@", testRequest.title)
+        NSLog("   - Body: %@", testRequest.body)
+        NSLog("   - Sound: %@", testRequest.sound ?? "default")
+        NSLog("   - Group: %@", testRequest.group ?? "default")
+        NSLog("   - URL: %@", testRequest.url ?? "none")
 
         // Attempt to send push if device is registered
         do {
@@ -138,7 +138,7 @@ enum PushRoutes {
                 timestamp: makeISO8601DateFormatter().string(from: Date())
             )
         } catch {
-            NSLog("❌ [PushRoutes] TEST ENDPOINT - Push failed: \(error.localizedDescription)")
+            NSLog("❌ [PushRoutes] TEST ENDPOINT - Push failed: %@", error.localizedDescription)
 
             // Return success for test purposes even if push fails (device might not be registered)
             return TestPushResponse(
