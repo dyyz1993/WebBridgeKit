@@ -66,6 +66,7 @@ expect_status() {
 
     slug="$(echo "$name" | tr '[:upper:] /' '[:lower:]--' | tr -cd '[:alnum:]-')"
     evidence="$REPORT_DIR/shanbox-$slug.json"
+    : >"$evidence"
 
     echo "== $name =="
     if status="$(request "$method" "$path" "$body" "$evidence")"; then
@@ -96,6 +97,7 @@ expect_unavailable_status() {
 
     slug="$(echo "$name" | tr '[:upper:] /' '[:lower:]--' | tr -cd '[:alnum:]-')"
     evidence="$REPORT_DIR/shanbox-$slug.json"
+    : >"$evidence"
 
     echo "== $name =="
     if status="$(request "$method" "$path" "" "$evidence")"; then

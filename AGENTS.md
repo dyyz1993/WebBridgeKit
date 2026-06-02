@@ -2,13 +2,33 @@
 
 ## Services
 
-Three services must be running for testing/verification:
+Three local services must be running for simulator development and local regression testing:
 
 | Service | Port | URL | Description |
 |---------|------|-----|-------------|
 | Backend (Swift) | 8080 | http://localhost:8080 | WebBridgeServer - Hummingbird, routes: /health /push /manifest /command |
 | Test HTTP | 8081 | http://localhost:8081 | Static file server for cache testing (project root + test_resources/) |
 | Prototype | 8083 | http://localhost:8083 | HTML prototype (index.html, v2-current-implementation.html) |
+
+### Public shanbox Backend
+
+Do **not** replace the local services above with the public URL. They serve different verification scopes.
+
+| Environment | URL | Use For | Do Not Use For |
+|-------------|-----|---------|----------------|
+| Local backend | http://localhost:8080 | Simulator tests, local route debugging, cache/manifest/command regression | Proving public deployment or phone reachability |
+| Local test HTTP | http://localhost:8081 | Static fixtures for cache tests and offline/cache HTML validation | Production/Bark route checks |
+| Local prototype | http://localhost:8083 | HTML design prototype comparison | Backend/API validation |
+| Public shanbox Swift backend | https://wbk.shanbox.19930810.xyz:8443 | Real-phone/server config, Bark-compatible route checks, public `/health`, `/register`, `/push`, `/test`, `/api/v1/commands` verification | Local fixture tests, prototype viewing, APNs delivery proof by itself |
+
+Use the public URL when validating the deployed backend or configuring the app on a physical iPhone:
+
+```bash
+bash tools/verify-shanbox-backend.sh
+WBK_SHANBOX_URL=https://wbk.shanbox.19930810.xyz:8443 bash tools/verify-shanbox-backend.sh
+```
+
+The public shanbox check is route-level evidence only. It does not prove APNs registration, real Bark delivery, lock-screen/background notification behavior, or phone LAN behavior.
 
 ### Management
 
@@ -23,7 +43,7 @@ bash scripts/services.sh logs      # Show recent logs
 
 Run `bash scripts/services.sh` without args for full usage.
 
-**IMPORTANT**: Always run `bash scripts/services.sh start` before testing the app in simulator. The backend is required for push notification, command handling, and manifest features to work correctly.
+**IMPORTANT**: Always run `bash scripts/services.sh start` before testing the app in simulator. The local backend is required for simulator push-route, command, manifest, cache, and prototype workflows. Use `tools/verify-shanbox-backend.sh` separately for public deployment evidence.
 
 ## Build & Run
 
