@@ -33,7 +33,7 @@ bash tools/verify-node-admin-local.sh
 
 The public shanbox backend check is route-level evidence only. It does not prove APNs registration, real Bark delivery, lock-screen/background notification behavior, phone LAN behavior, or process supervision. Use `tools/verify-shanbox-supervision.sh` for SSH-level process supervision evidence.
 
-`tools/verify-node-admin-local.sh` starts `Server/node/server.js` on a temporary local port and verifies the Node admin console routes locally. Passing this script proves the Node admin source can serve its routes; it does **not** prove those routes are deployed behind `https://wbk.shanbox.19930810.xyz:8443`.
+`tools/verify-node-admin-local.sh` starts `Server/node/server.js` on a temporary local port and verifies the Node admin console routes locally. Public deployment is separately proven by `tools/verify-shanbox-backend.sh`, which checks the `wbk.shanbox` admin paths, and `tools/verify-shanbox-supervision.sh`, which checks the supervised `webbridge-node-admin` process.
 
 ### Management
 
@@ -143,7 +143,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 | `bash tools/run-cache-regression.sh` | Cache module regression: services, `CacheTests`, cache handler tests, cache dashboard UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
 | `bash tools/run-jsbridge-regression.sh` | JSBridge regression: core bridge tests, `BridgeTests`, handler tests, functional UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
 | `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 9 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, `Settings`, Debug Center, Deep Links, About/Legal, appearance preferences, remember-last-app, iOS Settings handoff |
-| `bash tools/verify-module-availability-report.sh` | Guards `docs/verification/module-availability-verification.md` coverage: required sections, core modules, all `SettingsAction` entries, and known unavailable markers | `52 passed, 0 failed` | Run after changing Settings navigation, module IA, availability docs, or known unavailable status |
+| `bash tools/verify-module-availability-report.sh` | Guards `docs/verification/module-availability-verification.md` coverage: required sections, core modules, all `SettingsAction` entries, and known unavailable markers | `51 passed, 0 failed` | Run after changing Settings navigation, module IA, availability docs, or known unavailable status |
 | `cd Server && swift test` | Swift Hummingbird backend route semantics | All `Manifest Routes`, `Push Routes`, `Command Routes` tests pass | Does not prove public shanbox deployment or APNs delivery |
 
 ### UI And Visual Gates
@@ -160,9 +160,9 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 
 | Script | Purpose | Pass Signal | Notes |
 |--------|---------|-------------|-------|
-| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, and encoded Bark query paths | `16 passed, 0 failed`; Node admin paths currently tracked as unavailable | Route-level only; fake device token does not prove APNs delivery |
-| `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` process and whether it is supervised by systemd, PM2, or supervisord | `process=PASS, supervision=PASS` | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; exits 1 if the process is missing or supervision is missing |
-| `bash tools/verify-node-admin-local.sh` | Starts local `Server/node/server.js` and verifies Node admin, admin API, WebSocket status, messages, and packages routes | `11 passed, 0 failed` | Source/local evidence only; public shanbox still needs separate deployment evidence |
+| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, encoded Bark query paths, and public Node admin routes | `26 passed, 0 failed, 0 unavailable` | Route-level only; fake device token does not prove APNs delivery |
+| `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` and `webbridge-node-admin` processes and whether they are supervised | `process=PASS, supervision=PASS, node_admin=PASS` | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; exits 1 if Swift backend or Node admin supervision is missing |
+| `bash tools/verify-node-admin-local.sh` | Starts local `Server/node/server.js` and verifies Node admin, admin API, WebSocket status, messages, and packages routes | `11 passed, 0 failed` | Source/local evidence only; public deployment is covered by `verify-shanbox-backend.sh` |
 | `bash tools/run-real-device-smoke.sh` | Auto-discovers paired/available iPhone, builds for device, installs, launches `com.webbridgekit.superapp` | `4 passed, 0 failed` | Proves physical build/install/launch only, not APNs/Bark delivery |
 | `bash tools/verify-real-device-push-readiness.sh` | Verifies real-device push prerequisites: iPhone availability, backend/supervision, app install/launch, APNs entitlement, provisioning profile Push capability, token forwarding, default Bark server | `0 failed`; manual notification receipt items must still be observed | Current project is expected to fail under Personal Development Teams because Push Notifications requires an Apple Developer Program team/App ID/profile with `aps-environment` |
 | `bash tools/run-release-gate.sh` | Release readiness: services, SwiftLint, design lint, Debug build, crash scan, Release archive, no test HTML in app bundle | `Summary: ... failed` must be 0 | Use before release/archive handoff |
@@ -172,9 +172,9 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 
 - Do not mark APNs registration, Bark end-to-end delivery, lock-screen/background notification behavior, or phone-specific LAN reachability as fully available from simulator-only evidence.
 - iOS Settings handoff can be simulator-verified by proving `UIApplication.openSettingsURLString` opens `com.apple.Preferences`; require a physical confirmation only when release criteria explicitly demand a real-device Settings handoff check.
-- `tools/verify-shanbox-backend.sh` proves public route behavior only. It intentionally marks Node admin routes (`/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages`) as unavailable on the current Swift backend deployment.
-- `tools/verify-node-admin-local.sh` proves local/source Node admin route availability only. Do not use it to mark public shanbox Node admin deployment available.
-- `tools/verify-shanbox-supervision.sh` proves whether the public Swift backend has restart supervision. Current shanbox evidence is `process=PASS, supervision=PASS` via supervisord; route checks and supervision checks should both stay green for production handoff.
+- `tools/verify-shanbox-backend.sh` proves public route behavior only, including Node admin public routes. It does not prove APNs delivery to a real iPhone.
+- `tools/verify-node-admin-local.sh` proves local/source Node admin route availability only. Use `tools/verify-shanbox-backend.sh` and `tools/verify-shanbox-supervision.sh` before marking public shanbox Node admin deployment available.
+- `tools/verify-shanbox-supervision.sh` proves whether the public Swift backend and Node admin have restart supervision. Current shanbox evidence is `process=PASS, supervision=PASS, node_admin=PASS` via supervisord; route checks and supervision checks should both stay green for production handoff.
 - `tools/run-real-device-smoke.sh` proves the app can build, install, and launch on a paired iPhone. It does not prove notification permission, APNs token registration, or notification receipt.
 - `tools/verify-real-device-push-readiness.sh` proves automatic APNs/Bark prerequisites and separates real iPhone notification observation into MANUAL rows. Do not mark APNs/Bark end-to-end available while this script has FAIL rows.
 - `SuperApp/SuperApp.entitlements` is required for APNs production readiness. Do not remove `aps-environment` merely to make a Personal Development Team build pass; if `xcodebuild` reports that the team/profile does not support Push Notifications, mark APNs/Bark as unavailable and switch to a paid Apple Developer Program team/App ID/provisioning profile with Push Notifications enabled.

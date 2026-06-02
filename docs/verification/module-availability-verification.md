@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 21:18 CST
-Commit under test: `64ae986` plus current APNs entitlement/provisioning verification changes
+Date: 2026-06-02 21:32 CST
+Commit under test: `1127ede` plus current shanbox Node admin deployment verification changes
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `available (paired)` to Xcode CoreDevice
 
@@ -14,7 +14,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
 | Module UI availability | Available | `ModuleAvailabilityTests`: 9 tests, 0 failures |
-| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 52 passed, 0 failed; all `SettingsAction` entries are represented in the report |
+| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh` -> 51 passed, 0 failed; all `SettingsAction` entries are represented in the report |
 | Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
 | Settings Appearance entry | Available | `settings.cell.appearance` now opens `AppearanceSettingsView`; `ThemeMode` selection is persisted to `settings.appearanceMode` and applied through `ThemeManager` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
@@ -23,10 +23,10 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Unavailable for push-capable build in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `available (paired)`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications |
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual; `project.yml` now points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
-| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed, report date 2026-06-02 21:00 CST |
-| shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS via supervisord, report date 2026-06-02 20:16 CST |
+| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-02 21:32 CST |
+| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-02 21:32 CST |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
-| shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
+| shanbox Node admin console | Available | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` all return 200; `webbridge-node-admin` is supervised on remote port `8765` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
 | Deep Link command token | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | Local server generated `webbridgekit://command/<id>.<base64url-json>`; HTTP payload opened Cache Showcase; in-app custom-scheme payload `webbridgekit://tab?index=2` switched to Bridge; screenshots: `docs/screenshots/interaction/command-deeplink-cache-showcase.jpg`, `docs/screenshots/interaction/command-deeplink-custom-scheme-bridge.jpg` |
 
@@ -89,14 +89,14 @@ cd Server && swift test
 
 ```bash
 bash tools/verify-module-availability-report.sh
-# Result: 52 passed, 0 failed
+# Result: 51 passed, 0 failed
 # Report: build/reports/module-availability-report-check.md
 #
 # Scope:
 # - Verifies required report sections and core module rows are present.
 # - Extracts all 15 `SettingsAction` cases from `SettingsViewModel.swift`.
 # - Requires every Settings action to appear as a `settings.cell.*` row in the module report.
-# - Requires known unavailable markers for APNs and Node Admin public deployment.
+# - Requires known unavailable markers for current APNs/Push provisioning blockers.
 # - Requires Appearance and remember-last-app restore to be marked available when source implementation is present.
 ```
 
@@ -158,8 +158,8 @@ bash tools/verify-real-device-push-readiness.sh
 
 ```bash
 bash tools/verify-shanbox-backend.sh
-# Result: 16 passed, 0 failed, 5 unavailable/needs deployment
-# Date: 2026-06-02 20:16 CST
+# Result: 26 passed, 0 failed, 0 unavailable/needs deployment
+# Date: 2026-06-02 21:32 CST
 # Report: build/reports/shanbox-backend-verification.md
 #
 # Required-available routes:
@@ -180,9 +180,14 @@ bash tools/verify-shanbox-backend.sh
 # - GET /test_resources/{encoded-title}/{encoded-body}?sound=bell&group=Codex%20Group&url={encoded-url}
 # - ASSERT Bark encoded query response code == 200
 #
-# Known-unavailable Node routes:
+# Public Node admin routes:
 # - GET /admin
 # - GET /admin-push
+# - GET /admin/api/stats
+# - GET /admin/api/devices
+# - GET /admin/api/commands
+# - GET /admin/api/manifests
+# - GET /admin/api/push-history
 # - GET /ws/status
 # - GET /messages
 # - GET /packages
@@ -190,15 +195,16 @@ bash tools/verify-shanbox-backend.sh
 
 ```bash
 bash tools/verify-shanbox-supervision.sh
-# Result: process=PASS, supervision=PASS
-# Date: 2026-06-02 20:16 CST
+# Result: process=PASS, supervision=PASS, node_admin=PASS
+# Date: 2026-06-02 21:32 CST
 # Report: build/reports/shanbox-supervision-verification.md
 #
 # Evidence:
 # - WebBridgeServer process exists and listens on remote :8080
 # - Remote PID 1 is `supervisord`
 # - `supervisorctl status webbridgeserver` reports RUNNING
-# - Public route verification still passes 16/16 after replacing the manual process
+# - Node admin process `webbridge-node-admin` listens on remote :8765 and is supervised by supervisord
+# - Public route verification passes 26/26 after path-proxying admin routes to Node
 ```
 
 ```bash
@@ -221,7 +227,7 @@ bash tools/verify-node-admin-local.sh
 #
 # Scope:
 # - Proves `Server/node/server.js` can serve the Node admin routes locally.
-# - Does not prove the Node admin console is deployed behind public shanbox.
+# - Public deployment is separately proven by `tools/verify-shanbox-backend.sh`.
 ```
 
 ```bash
@@ -295,7 +301,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Deep Links | External open URL scheme | External `webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fcache-showcase.html` | `SuperApp/Sources/AppDelegate.swift`, `WebBrowserManager.openBrowser` | `xcrun simctl openurl`; XcodeBuildMCP snapshot showed `browserManager.closeButton`; screenshot showed Cache Showcase page | Available on simulator | `localhost` target depends on the local test HTTP service being reachable |
 | Deep Links | Command scheme field | External `webbridgekit://command/<id>.<base64url-json>` plus `Links` generated command field | `DeepLinkHomeView.swift`, `AppDelegate.application(_:open:)`, `CommandHandler`, `CommandDecoder`, `CommandParser`, `Server/Sources/WebBridgeServer/Services/CommandService.swift` | Unit tests cover URL-safe server token generation, app command URL decoding, and explicit `webbridgekit` scheme parsing; local backend generated real command URLs; `xcrun simctl openurl` showed `口令识别`; tapping `打开` opened Cache Showcase for HTTP payload and switched to Bridge for `webbridgekit://tab?index=2` payload | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | First run after install may require iOS paste permission; allow paste then re-trigger URL if the permission dialog interrupts parsing |
 | Server Admin | Node admin console local source | Local temporary port `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` | `Server/node/server.js`, `Server/node/admin.html`, `Server/node/admin-push.html` | `tools/verify-node-admin-local.sh`: 11/11 pass | Available locally | This validates source/local Node Admin behavior only |
-| Server Admin | Node admin console public deployment | Public `https://wbk.shanbox.19930810.xyz:8443/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` | `Server/node/server.js`, shanbox deployment config | `tools/verify-shanbox-backend.sh`: 5 Node paths return 404 | Unavailable on public Swift backend | Public `wbk.shanbox` currently runs the Swift backend, so Node Admin needs a separate deployment or reverse-proxy path before it can be marked available |
+| Server Admin | Node admin console public deployment | Public `https://wbk.shanbox.19930810.xyz:8443/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` | `Server/node/server.js`, shanbox supervisord/nginx deployment config | `tools/verify-shanbox-backend.sh`: Node admin public routes return 200; `tools/verify-shanbox-supervision.sh`: node_admin=PASS | Available | Public `wbk.shanbox` path-proxies admin routes to supervised remote `webbridge-node-admin` on port `8765` |
 
 ## Items Requiring Physical Manual Verification
 
@@ -347,10 +353,9 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
 | Push Notifications provisioning profile is unavailable | `tools/verify-real-device-push-readiness.sh` confirms `SuperApp/SuperApp.entitlements` is configured, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment`; production readiness needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/SuperApp.entitlements`, Apple Developer Team/App ID/provisioning profile |
-| Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
 
 ## Current Availability Verdict
 
 No confirmed unavailable in-app UI module is currently listed after this pass.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: Push-capable Apple Developer Team/provisioning profile, signed APNs entitlement proof, APNs registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
+The items not marked fully available are real-device/system-level flows: Push-capable Apple Developer Team/provisioning profile, signed APNs entitlement proof, APNs registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, and background/lock-screen notification behavior.
