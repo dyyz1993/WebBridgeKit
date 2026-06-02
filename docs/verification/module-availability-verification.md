@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 09:33 CST
-Commit under test: current worktree based on `4b2382e`
+Date: 2026-06-02 09:40 CST
+Commit under test: current worktree based on `ab062a2`
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `com.webbridgekit.superapp`
 
@@ -18,7 +18,7 @@ Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `co
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
 | Server route semantics | Available | `cd Server && swift test` passed 13 tests, 0 failures |
-| Physical device install and launch | Available | `devicectl device install app` and `devicectl device process launch` succeeded on `许映洲的iPhone` |
+| Physical device install and launch | Available | `bash tools/run-real-device-smoke.sh` passed 4/4 gates on `许映洲的iPhone` |
 | shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 8 passed, 0 failed |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned expected 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
 
@@ -64,15 +64,14 @@ cd Server && swift test
 ```
 
 ```bash
-xcrun devicectl device install app \
-  --device F38FECA2-2A43-5554-B65D-9990CEEAB0EA \
-  /tmp/wbk-dd-phone-server-fixes/Build/Products/Debug-iphoneos/SuperApp.app
-# Result: App installed, bundleID com.webbridgekit.superapp
-
-xcrun devicectl device process launch \
-  --device F38FECA2-2A43-5554-B65D-9990CEEAB0EA \
-  com.webbridgekit.superapp
-# Result: launched application with com.webbridgekit.superapp bundle identifier
+bash tools/run-real-device-smoke.sh
+# Result: 4 passed, 0 failed
+# Gates:
+# - Device discovery: F38FECA2-2A43-5554-B65D-9990CEEAB0EA
+# - Build for device
+# - Install device app
+# - Launch device app
+# Report: build/reports/real-device-smoke.md
 ```
 
 ```bash
@@ -171,6 +170,7 @@ bash tools/verify-shanbox-backend.sh
 | shanbox backend checks were manual curl commands only | Endpoint availability evidence was easy to drift and hard to rerun consistently | `tools/verify-shanbox-backend.sh`, `build/reports/shanbox-backend-verification.md` |
 | About/legal route had weak UI automation coverage and a misleading `MIT License` row label | Settings -> About could pass shallow smoke while the third-party license list/detail path stayed unverified | `SuperApp/Sources/Views/AboutView.swift`, `SuperApp/Sources/Controllers/Settings/AboutViewController.swift`, `SuperApp/Sources/Controllers/Settings/ThirdPartyLicensesViewController.swift`, `SuperApp/Sources/Controllers/Settings/LicenseDetailViewController.swift`, `SuperAppUITests/ModuleAvailabilityTests.swift` |
 | UI test helper treated offscreen accessibility elements as visible | XCUITest could tap stale/offscreen coordinates and hit the wrong row on long SwiftUI pages | `SuperAppUITests/ModuleAvailabilityTests.swift` |
+| Real-device smoke script only auto-detected devices whose state text contained `connected` | A paired and available iPhone could be present but still require manual `DEVICE_ID`, weakening repeatability of physical install/launch evidence | `tools/run-real-device-smoke.sh` |
 
 ## Remaining Non-Blocking Debt
 
