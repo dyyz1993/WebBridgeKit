@@ -1,9 +1,9 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 10:30 CST
-Commit under test: current worktree based on `92f71bf`
+Date: 2026-06-02 17:53 CST
+Commit under test: current worktree based on `cc81643`
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
-Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `com.webbridgekit.superapp`
+Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavailable`/offline to Xcode CoreDevice
 
 ## Summary
 
@@ -18,7 +18,8 @@ Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `co
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
-| Physical device install and launch | Available | `bash tools/run-real-device-smoke.sh` passed 4/4 gates on `许映洲的iPhone` |
+| Physical device install and launch | Unavailable in current run | `bash tools/run-real-device-smoke.sh` -> 0 passed, 1 failed because no available paired iPhone was discovered |
+| Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 4 passed, 4 failed, 4 manual |
 | shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed |
 | shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned expected 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
@@ -66,13 +67,34 @@ cd Server && swift test
 
 ```bash
 bash tools/run-real-device-smoke.sh
-# Result: 4 passed, 0 failed
+# Result: 0 passed, 1 failed, exit 1
 # Gates:
-# - Device discovery: F38FECA2-2A43-5554-B65D-9990CEEAB0EA
-# - Build for device
-# - Install device app
-# - Launch device app
+# - Device discovery failed because no available paired iPhone was discovered
 # Report: build/reports/real-device-smoke.md
+```
+
+```bash
+bash tools/verify-real-device-push-readiness.sh
+# Result: 4 passed, 4 failed, 4 manual, exit 1
+# Report: build/reports/real-device-push-readiness.md
+#
+# Passed:
+# - shanbox backend routes
+# - shanbox backend supervision
+# - APNs token forwarded to PushNotificationManager
+# - Default Bark server is shanbox
+#
+# Failed:
+# - No available paired iPhone discovered
+# - Real-device build/install/launch skipped because no paired iPhone was discovered
+# - project.yml does not point SuperApp to an entitlements file containing aps-environment
+# - SuperApp.app not found under /tmp/wbk-dd-device-smoke, so signed APNs entitlement cannot be proven
+#
+# Manual:
+# - Observe notification permission prompt on iPhone
+# - Verify real APNs token registration to shanbox
+# - Verify Bark end-to-end notification receipt
+# - Verify background/lock-screen notification behavior
 ```
 
 ```bash
@@ -138,7 +160,7 @@ bash tools/verify-shanbox-supervision.sh
 | Push/Bark | shanbox health and JSON push route | External `https://wbk.shanbox.19930810.xyz:8443` | `Server/Sources/WebBridgeServer/Routes/HealthRoutes.swift`, `PushRoutes.swift` | `tools/verify-shanbox-backend.sh`: `/health`, `/register`, `/push`, JSON response code assertions | Available for route-level checks | This uses a fake device token, so APNs delivery is not proven |
 | Push/Bark | shanbox Bark-compatible URL | External `/{key}/{title}/{body}` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/PushRoutesTests` verify GET, POST, encoded Chinese title/body, and query parameters | Available for route-level checks | Uses service test key; real APNs delivery still requires a real registered token |
 | Push/Bark | shanbox test endpoint | External `POST /test` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh` asserts `success == true`; `Server/PushRoutesTests.testPushEndpointReportsSuccess` | Available | Route-level semantic success verified; APNs delivery still requires real token |
-| Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift` | Not fully automatable in simulator | Needs physical/manual | Must verify notification permission prompt, device token, foreground/background delivery on iPhone |
+| Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift`, `AppDelegate.swift`, project entitlements | `tools/verify-real-device-push-readiness.sh`: APNs entitlement checks fail | Unavailable | Token forwarding is fixed, but the project and signed app do not contain `aps-environment`, so APNs cannot be marked ready |
 | Bridge | Primary tab loads | Bottom tab `Bridge` | `BridgeLabHomeView.swift` | UI test verifies `bridgeLab.home`, groups, command list, parameter editor | Available | |
 | Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Available | Real WebView execution remains future wiring per current UI copy |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
@@ -171,8 +193,8 @@ bash tools/verify-shanbox-supervision.sh
 
 | Item | Why automation is insufficient | Manual acceptance |
 | --- | --- | --- |
-| APNs permission and device token | Simulator cannot prove real APNs token/device delivery | On iPhone, tap `Push` -> `注册推送`; permission prompt appears if not decided; after allow, APNs state changes to registered or a clear failure is shown |
-| Bark end-to-end push delivery | Requires reachable backend URL, network, and real device notification permissions | Send Bark-compatible request to backend; iPhone receives notification; tapping notification routes to target URL/app state |
+| APNs permission and device token | Requires a paid Apple Developer Program team with Push Notifications capability, `aps-environment` entitlement, and real iPhone permission/token observation | After entitlement is configured with a capable team, tap `Push` -> `注册推送`; permission prompt appears if not decided; after allow, APNs state changes to registered or a clear failure is shown |
+| Bark end-to-end push delivery | Requires APNs entitlement, a real registered APNs token, reachable backend URL, network, and real device notification permissions | After APNs readiness passes, send Bark-compatible request to backend; iPhone receives notification; tapping notification routes to target URL/app state |
 | Physical iOS Settings handoff | Simulator already proves `com.apple.Preferences` handoff, but release may still require a real-device OS check | On iPhone, `设置` -> `通知设置` opens iOS Settings for SuperApp |
 | Physical-device backend reachability | Phone `localhost` is the phone, not the Mac | Configure service URL to Mac LAN IP, for this run `http://192.168.0.4:8080`; backend-dependent features work |
 | Background/locked notification behavior | Requires physical lock screen/background state | Notification appears on lock screen/background and tap behavior matches payload |
@@ -192,11 +214,14 @@ bash tools/verify-shanbox-supervision.sh
 | shanbox backend checks were manual curl commands only | Endpoint availability evidence was easy to drift and hard to rerun consistently | `tools/verify-shanbox-backend.sh`, `build/reports/shanbox-backend-verification.md` |
 | About/legal route had weak UI automation coverage and a misleading `MIT License` row label | Settings -> About could pass shallow smoke while the third-party license list/detail path stayed unverified | `SuperApp/Sources/Views/AboutView.swift`, `SuperApp/Sources/Controllers/Settings/AboutViewController.swift`, `SuperApp/Sources/Controllers/Settings/ThirdPartyLicensesViewController.swift`, `SuperApp/Sources/Controllers/Settings/LicenseDetailViewController.swift`, `SuperAppUITests/ModuleAvailabilityTests.swift` |
 | UI test helper treated offscreen accessibility elements as visible | XCUITest could tap stale/offscreen coordinates and hit the wrong row on long SwiftUI pages | `SuperAppUITests/ModuleAvailabilityTests.swift` |
-| Real-device smoke script only auto-detected devices whose state text contained `connected` | A paired and available iPhone could be present but still require manual `DEVICE_ID`, weakening repeatability of physical install/launch evidence | `tools/run-real-device-smoke.sh` |
+| Real-device smoke discovery treated `unavailable` as `available` because of substring matching | Offline phones could be selected and then fail later with confusing CoreDevice errors | `tools/run-real-device-smoke.sh`, `tools/verify-real-device-push-readiness.sh` now exclude unavailable devices |
 | Notification settings handoff was listed as manual-only | Settings notification row had weaker evidence than necessary, even though XCUITest can assert the system Settings app reaches foreground | `SuperAppUITests/ModuleAvailabilityTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
 | Bark/Push route evidence only checked shallow HTTP 200s | A route could return 200 while response semantics, encoded Bark URLs, POST compatibility, or optional payload fields stayed unverified | `tools/verify-shanbox-backend.sh`, `Server/Tests/WebBridgeServerTests/PushRoutesTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
 | Push test endpoint logs used dynamic strings as NSLog format strings | Percent-encoded URLs such as `%3A%2F%2F` were mangled in server logs, weakening debug evidence | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` |
 | shanbox WebBridgeServer supervision was assumed from a stale systemd unit file | Replaced the manual backend process with a supervisord-managed `webbridgeserver` program and made verification check the actual supervisor | `tools/verify-shanbox-supervision.sh`, `build/reports/shanbox-supervision-verification.md`, `AGENTS.md`, remote `/etc/supervisor/supervisord.conf` |
+| AppDelegate discarded real APNs device tokens | Push UI could remain `未注册` even if APNs registration succeeded, and Bark server registration would not run through `PushNotificationManager` | `SuperApp/Sources/AppDelegate.swift`, `tools/verify-real-device-push-readiness.sh` |
+| Real-device APNs readiness was tracked as manual-only | Automatic evidence now shows hard blockers: no project `aps-environment` entitlement and no signed APNs entitlement in the real-device app | `tools/verify-real-device-push-readiness.sh`, `build/reports/real-device-push-readiness.md` |
+| Real-device smoke could reuse a stale `SuperApp.app` after build failure | Install/launch rows could look green even when the current build failed | `tools/run-real-device-smoke.sh` now clears DerivedData before build and skips install/launch if build fails |
 
 ## Remaining Non-Blocking Debt
 
@@ -208,10 +233,11 @@ bash tools/verify-shanbox-supervision.sh
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/Showcase/ThemeShowcaseViewController.swift:114` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
+| APNs entitlement is missing | `tools/verify-real-device-push-readiness.sh` confirms no `aps-environment` in project config and no APNs entitlement in the signed real-device app; production readiness also needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/`, signed `SuperApp.app` entitlements |
 | Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
 
 ## Current Availability Verdict
 
 No confirmed unavailable in-app UI module was found in automated verification.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs registration, Bark end-to-end delivery to a real APNs token, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
+The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.

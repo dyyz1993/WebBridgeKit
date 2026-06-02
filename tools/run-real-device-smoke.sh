@@ -39,10 +39,33 @@ run_gate() {
     fi
 }
 
+run_gate_with_retries() {
+    local name="$1"
+    local attempts="$2"
+    local command="$3"
+    local log="$REPORT_DIR/$(echo "$name" | tr '[:upper:] /' '[:lower:]--').log"
+
+    echo "== $name =="
+    : >"$log"
+    for attempt in $(seq 1 "$attempts"); do
+        {
+            echo "Attempt $attempt/$attempts"
+            bash -lc "$command"
+        } >>"$log" 2>&1 && {
+            record "$name" "PASS" "$log"
+            echo "PASS"
+            return
+        }
+        sleep 2
+    done
+    record "$name" "FAIL" "$log"
+    echo "FAIL ($log)"
+}
+
 if [ -z "$DEVICE_ID" ]; then
     if command -v xcrun >/dev/null 2>&1; then
         DEVICE_ID="$(xcrun devicectl list devices 2>/dev/null | awk '
-            /iPhone/ && /(available|connected)/ {
+        /iPhone/ && $0 !~ /unavailable/ && /(available|connected)/ {
                 for (i = 1; i <= NF; i++) {
                     if ($i ~ /^[A-F0-9-]{36}$/) {
                         print $i
@@ -58,13 +81,18 @@ if [ -z "$DEVICE_ID" ]; then
     record "Device discovery" "FAIL" "Set DEVICE_ID to an available paired iPhone identifier"
 else
     record "Device discovery" "PASS" "$DEVICE_ID"
+    rm -rf "$DERIVED_DATA"
     run_gate "Build for device" "xcodebuild build -workspace WebBridgeKit.xcworkspace -scheme SuperApp -destination 'id=$DEVICE_ID' -derivedDataPath '$DERIVED_DATA' -allowProvisioningUpdates"
-    APP_PATH="$(find "$DERIVED_DATA" -name 'SuperApp.app' -maxdepth 6 | head -1 || true)"
+    if [ "$FAIL" -eq 0 ]; then
+        APP_PATH="$(find "$DERIVED_DATA" -name 'SuperApp.app' -maxdepth 6 | head -1 || true)"
+    else
+        APP_PATH=""
+    fi
     if [ -n "$APP_PATH" ]; then
         run_gate "Install device app" "xcrun devicectl device install app --device '$DEVICE_ID' '$APP_PATH'"
-        run_gate "Launch device app" "xcrun devicectl device process launch --device '$DEVICE_ID' '$BUNDLE_ID'"
+        run_gate_with_retries "Launch device app" 3 "xcrun devicectl device process launch --device '$DEVICE_ID' '$BUNDLE_ID'"
     else
-        record "Find device app" "FAIL" "SuperApp.app not found under $DERIVED_DATA"
+        record "Find device app" "FAIL" "SuperApp.app not found under $DERIVED_DATA after a successful build"
     fi
 fi
 

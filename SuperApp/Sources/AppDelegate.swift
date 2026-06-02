@@ -196,12 +196,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         _ = tokenParts.joined()
+        PushNotificationManager.shared.didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
 
         // 将 Token 发送给服务器
         // APIKeyManager.shared.updateDeviceToken(token)
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        PushNotificationManager.shared.didFailToRegisterForRemoteNotifications(error: error)
     }
 
     // MARK: - UNUserNotificationCenterDelegate
