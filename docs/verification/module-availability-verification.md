@@ -1,8 +1,8 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 17:53 CST
-Commit under test: current worktree based on `cc81643`
-Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
+Date: 2026-06-02 18:24 CST
+Commit under test: current worktree based on `6c06ff3`
+Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavailable`/offline to Xcode CoreDevice
 
 ## Summary
@@ -30,12 +30,12 @@ Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavail
 xcodebuild test -workspace WebBridgeKit.xcworkspace \
   -scheme SuperApp \
   -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-  -derivedDataPath /tmp/wbk-dd-module-availability-settings \
+  -destination 'id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0' \
+  -derivedDataPath /tmp/wbk-dd-module-current \
   CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
 # Result: TEST SUCCEEDED, 8 tests, 0 failures, xcresult:
-# /tmp/wbk-dd-module-availability-settings/Logs/Test/Test-SuperApp-2026.06.02_09-50-41-+0800.xcresult
+# /tmp/wbk-dd-module-current/Logs/Test/Test-SuperApp-2026.06.02_18-20-58-+0800.xcresult
 ```
 
 ```bash
@@ -175,7 +175,7 @@ bash tools/verify-shanbox-supervision.sh
 | Settings | Recent history | `设置` -> `最近访问` | `RecentAccessHistoryView.swift` | UI test opens screen | Available | |
 | Settings | Cache dashboard | `设置` -> `缓存仪表盘` | `CacheDashboardViewController.swift` | UI test opens screen | Available | |
 | Settings | About/legal | `设置` -> `关于` -> `第三方开源许可` -> `Alamofire` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift`, `LicenseDetailViewController.swift` | `ModuleAvailabilityTests.testSettingsAboutLegalDeepDrillIsReachable` opens About, license list, and license detail | Available | Deep drill now asserted with accessibility identifiers |
-| Settings | Notification settings handoff | `设置` -> `通知设置` | `UIApplication.openSettingsURLString` | `ModuleAvailabilityTests.testNotificationSettingsHandoffOpensSystemSettings` opens `com.apple.Preferences` | Available on simulator; physical confirmation optional for release | Proves the app hands off to iOS Settings; does not prove APNs permission/token/delivery |
+| Settings | Notification settings entry | `设置` -> `通知设置` | `NotificationSettingsOpener.open()` using `UIApplication.openNotificationSettingsURLString` on iOS 16+ and app Settings fallback below iOS 16 | `ModuleAvailabilityTests.testNotificationSettingsEntryIsWiredWithoutCrashing` taps the row and verifies either iOS Settings foregrounds or the app remains stable in foreground | Entry available; system handoff not proven in current simulator | The UI entry is wired and non-crashing. Current simulator did not foreground `com.apple.Preferences`, so real iOS Settings handoff still requires physical/manual confirmation |
 | Debug Center | Debug home | `设置` -> `调试中心` | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
 | Debug Center | Global debug panel | `调试中心` -> `全局调试面板` | `DebugPanelViewController.swift` | Entry exists in UI test | Available | Modal content covered by existing DebugPanel tests, not reopened here |
 | Debug Center | Diagnostics export | `调试中心` -> `诊断导出` | `DiagnosticsView.swift` | Entry exists in UI test | Available | |
@@ -195,7 +195,7 @@ bash tools/verify-shanbox-supervision.sh
 | --- | --- | --- |
 | APNs permission and device token | Requires a paid Apple Developer Program team with Push Notifications capability, `aps-environment` entitlement, and real iPhone permission/token observation | After entitlement is configured with a capable team, tap `Push` -> `注册推送`; permission prompt appears if not decided; after allow, APNs state changes to registered or a clear failure is shown |
 | Bark end-to-end push delivery | Requires APNs entitlement, a real registered APNs token, reachable backend URL, network, and real device notification permissions | After APNs readiness passes, send Bark-compatible request to backend; iPhone receives notification; tapping notification routes to target URL/app state |
-| Physical iOS Settings handoff | Simulator already proves `com.apple.Preferences` handoff, but release may still require a real-device OS check | On iPhone, `设置` -> `通知设置` opens iOS Settings for SuperApp |
+| Physical iOS Settings handoff | Current simulator verifies the row is wired and stable, but did not foreground `com.apple.Preferences`; release still needs a real-device OS check | On iPhone, `设置` -> `通知设置` opens iOS notification settings for SuperApp, or app settings on OS versions without notification-specific settings URL support |
 | Physical-device backend reachability | Phone `localhost` is the phone, not the Mac | Configure service URL to Mac LAN IP, for this run `http://192.168.0.4:8080`; backend-dependent features work |
 | Background/locked notification behavior | Requires physical lock screen/background state | Notification appears on lock screen/background and tap behavior matches payload |
 
@@ -215,7 +215,8 @@ bash tools/verify-shanbox-supervision.sh
 | About/legal route had weak UI automation coverage and a misleading `MIT License` row label | Settings -> About could pass shallow smoke while the third-party license list/detail path stayed unverified | `SuperApp/Sources/Views/AboutView.swift`, `SuperApp/Sources/Controllers/Settings/AboutViewController.swift`, `SuperApp/Sources/Controllers/Settings/ThirdPartyLicensesViewController.swift`, `SuperApp/Sources/Controllers/Settings/LicenseDetailViewController.swift`, `SuperAppUITests/ModuleAvailabilityTests.swift` |
 | UI test helper treated offscreen accessibility elements as visible | XCUITest could tap stale/offscreen coordinates and hit the wrong row on long SwiftUI pages | `SuperAppUITests/ModuleAvailabilityTests.swift` |
 | Real-device smoke discovery treated `unavailable` as `available` because of substring matching | Offline phones could be selected and then fail later with confusing CoreDevice errors | `tools/run-real-device-smoke.sh`, `tools/verify-real-device-push-readiness.sh` now exclude unavailable devices |
-| Notification settings handoff was listed as manual-only | Settings notification row had weaker evidence than necessary, even though XCUITest can assert the system Settings app reaches foreground | `SuperAppUITests/ModuleAvailabilityTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
+| Notification settings used the generic app Settings URL instead of the notification-specific URL when available | Users tapping `设置` -> `通知设置` could land in a broader app settings surface instead of notification settings | `SuperApp/Sources/Utilities/NotificationSettingsOpener.swift`, `SuperApp/Sources/Controllers/Tab/SettingsViewController.swift`, `SuperApp/Sources/Controllers/Tab/TabBarController.swift` |
+| Notification settings handoff evidence was overstated | Current simulator verifies the row is wired and non-crashing, but does not prove `com.apple.Preferences` foregrounding; release evidence now correctly requires a real-device/manual check | `SuperAppUITests/ModuleAvailabilityTests.swift`, `docs/verification/module-availability-verification.md` |
 | Bark/Push route evidence only checked shallow HTTP 200s | A route could return 200 while response semantics, encoded Bark URLs, POST compatibility, or optional payload fields stayed unverified | `tools/verify-shanbox-backend.sh`, `Server/Tests/WebBridgeServerTests/PushRoutesTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
 | Push test endpoint logs used dynamic strings as NSLog format strings | Percent-encoded URLs such as `%3A%2F%2F` were mangled in server logs, weakening debug evidence | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` |
 | shanbox WebBridgeServer supervision was assumed from a stale systemd unit file | Replaced the manual backend process with a supervisord-managed `webbridgeserver` program and made verification check the actual supervisor | `tools/verify-shanbox-supervision.sh`, `build/reports/shanbox-supervision-verification.md`, `AGENTS.md`, remote `/etc/supervisor/supervisord.conf` |
@@ -240,4 +241,4 @@ bash tools/verify-shanbox-supervision.sh
 
 No confirmed unavailable in-app UI module was found in automated verification.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
+The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.

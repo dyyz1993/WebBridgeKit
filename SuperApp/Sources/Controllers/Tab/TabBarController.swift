@@ -402,9 +402,7 @@ class TabBarController: UITabBarController {
             vc.title = "最近访问"
             nav.pushViewController(vc, animated: true)
         case .notificationSettings:
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
+            NotificationSettingsOpener.open()
         case .appearance:
             break
         case .debugPanel:
