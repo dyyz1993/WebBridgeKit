@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-03 00:25 CST
-Commit under test: `3e1e760` plus current module availability, Debug Center concrete-entry, crash scanner, ResultPanel/copy-button, real WebView JSBridge, and persistent-cache refresh verification changes
+Date: 2026-06-03 00:48 CST
+Commit under test: `1c556e2` plus current Debug Center child-content/action verification changes
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 26.5, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `available (paired)` to Xcode CoreDevice
 
@@ -13,7 +13,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
-| Module UI availability | Available | `ModuleAvailabilityTests`: 13 tests, 0 failures on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; includes real WebView JSBridge smoke, split Settings row reachability gates, Debug Center global panel entry, and Debug Center child tool concrete-screen entry checks |
+| Module UI availability | Available | `ModuleAvailabilityTests`: 14 tests, 0 failures on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; includes real WebView JSBridge smoke, split Settings row reachability gates, Debug Center global panel entry, Debug Center child tool concrete-screen entry checks, and Debug Center child tool content/action checks |
 | JSBridge real WebView Promise smoke | Available | `testRealWebViewBridgePromiseResolves` opens `bridge-promise-smoke.html`, executes `BarkBridge.callNative('getSystemInfo')`, and waits for DOM text `Bridge Promise OK` |
 | Module availability report guard | Available | `bash tools/verify-module-availability-report.sh`; all `SettingsAction` entries are represented in the report and current unavailable markers are enforced |
 | Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
@@ -57,8 +57,8 @@ xcodebuild test -workspace WebBridgeKit.xcworkspace \
   -derivedDataPath /tmp/wbk-dd \
   CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
-# Result: TEST SUCCEEDED, 13 tests, 0 failures, xcresult:
-# /tmp/wbk-dd/Logs/Test/Test-SuperApp-2026.06.03_00-19-52-+0800.xcresult
+# Result: TEST SUCCEEDED, 14 tests, 0 failures, xcresult:
+# /tmp/wbk-dd/Logs/Test/Test-SuperApp-2026.06.03_00-42-24-+0800.xcresult
 ```
 
 ```bash
@@ -90,7 +90,7 @@ cd Server && swift test
 
 ```bash
 bash tools/verify-module-availability-report.sh
-# Result: 71 passed, 0 failed
+# Result: 77 passed, 0 failed
 # Report: build/reports/module-availability-report-check.md
 #
 # Scope:
@@ -99,7 +99,7 @@ bash tools/verify-module-availability-report.sh
 # - Requires every Settings action to appear as a `settings.cell.*` row in the module report.
 # - Requires known unavailable markers for current APNs/Push provisioning blockers.
 # - Requires Appearance and remember-last-app restore to be marked available when source implementation is present.
-# - Requires real WebView JSBridge evidence plus Debug Center concrete child-entry evidence.
+# - Requires real WebView JSBridge evidence plus Debug Center concrete child-entry/content/action evidence.
 ```
 
 ```bash
@@ -311,10 +311,10 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Settings | Notification settings entry | `设置` -> `通知设置` (`settings.cell.notificationSettings`) | `NotificationSettingsOpener.open()` using `UIApplication.openNotificationSettingsURLString` on iOS 16+ and app Settings fallback below iOS 16 | `ModuleAvailabilityTests.testNotificationSettingsEntryIsWiredWithoutCrashing` taps the row and verifies either iOS Settings foregrounds or the app remains stable in foreground | Entry available; system handoff not proven in current simulator | The UI entry is wired and non-crashing. Current simulator did not foreground `com.apple.Preferences`, so real iOS Settings handoff still requires physical/manual confirmation |
 | Debug Center | Debug home | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
 | Debug Center | Global debug panel | `调试中心` -> `全局调试面板` (`debugCenter.openDebugPanel`) | `DebugPanelViewController.swift` | `ModuleAvailabilityTests.testDebugCenterGlobalDebugPanelEntryOpensPanel` opens `debugPanel.root`, verifies `debugPanel.tab.0`, and verifies `debugPanel.handlers.tableView` | Available in DEBUG | Proves the Debug Center entry opens the actual panel shell and handler list |
-| Debug Center | Diagnostics export | `调试中心` -> `诊断导出` (`debugCenter.openDiagnostics`) | `DiagnosticsView.swift` | `ModuleAvailabilityTests.testDebugCenterChildToolEntriesOpenConcreteScreens` opens `diagnostics.root`; direct Settings row also opens diagnostics | Entry available | Export payload/content is not deeply asserted here |
-| Debug Center | Network inspector | `调试中心` -> `网络请求` (`debugCenter.openNetworkInspector`) | `NetworkDebugViewController.swift` | `ModuleAvailabilityTests.testDebugCenterChildToolEntriesOpenConcreteScreens` opens `networkDebug.tableView` | Entry available | Network capture content is not deeply asserted here |
+| Debug Center | Diagnostics export | `调试中心` -> `诊断导出` (`debugCenter.openDiagnostics`) | `DiagnosticsView.swift` | `ModuleAvailabilityTests.testDebugCenterChildToolEntriesOpenConcreteScreens` opens `diagnostics.root`; `ModuleAvailabilityTests.testDebugCenterChildToolContentAndActionsAreUsable` verifies `系统信息`, `导出工具`, taps `复制到剪贴板`, and asserts `diagnostics.lastAction` contains `已复制到剪贴板`; direct Settings row also opens diagnostics | Copy action available in DEBUG | Share sheet/export-to-file payload content is not fully asserted here |
+| Debug Center | Network inspector | `调试中心` -> `网络请求` (`debugCenter.openNetworkInspector`) | `NetworkDebugViewController.swift` | `ModuleAvailabilityTests.testDebugCenterChildToolContentAndActionsAreUsable` opens `networkDebug.tableView`, verifies `networkDebug.cell.0`, sample URL `https://api.example.com/manifest`, method `GET`, status `200`, taps `networkDebug.clearButton`, and verifies `暂无网络请求记录` | Available in DEBUG | Verifies seeded capture content and clear-to-empty behavior; live traffic capture is not replayed here |
 | Debug Center | Cache dashboard | `调试中心` -> `缓存仪表盘` (`debugCenter.openCacheDashboard`) | `CacheDashboardViewController.swift` | `ModuleAvailabilityTests.testDebugCenterChildToolEntriesOpenConcreteScreens` opens `cacheDashboard.root` | Available | Cache stats/semantics are covered by `CacheTests` |
-| Debug Center | Manifest cache cases | `调试中心` -> `Manifest 缓存用例` (`debugCenter.openManifestCacheTests`) | `ManifestCacheTestViewController.swift` | `ModuleAvailabilityTests.testDebugCenterChildToolEntriesOpenConcreteScreens` opens `manifestCacheTest.root`; CacheTests validate manifest semantics | Entry available; semantics covered by CacheTests | Individual debug case WebView runs are not all replayed in this report |
+| Debug Center | Manifest cache cases | `调试中心` -> `Manifest 缓存用例` (`debugCenter.openManifestCacheTests`) | `ManifestCacheTestViewController.swift` | `ModuleAvailabilityTests.testDebugCenterChildToolContentAndActionsAreUsable` opens `manifestCacheTest.root`, verifies `manifest_test.url_field`, `manifest_test.mode_segment`, `manifest_test.start_button`, `manifest_test.stats_label`, `manifest_test.log_view`, initial log `Manifest 缓存测试页面已加载`, taps `manifest_test.clear_cache_button`, and verifies `所有缓存已清除`; CacheTests validate manifest semantics | Entry and clear-cache action available; semantics covered by CacheTests | Full smart-load WebView run is not replayed in this report |
 | Debug Center | Crash scan guide | `调试中心` -> `崩溃扫描说明` | `DebugCenterViewModel.showCrashScanGuide()` | UI test taps control and remains on Debug Center | Available | Changed from delegated UIKit alert to ResultPanel update |
 | Deep Links | Links tool opens | `设置` -> `协议跳转工具` | `DeepLinkHomeView.swift` | UI test opens `deepLink.home` | Available | |
 | Deep Links | Open URL builder | `Links` -> target URL / mode / generated scheme | `DeepLinkHomeViewModel.swift` | UI test verifies URL input, generated scheme, mode picker; default local target `/test_resources/cache-showcase.html` returns 200 | Available | Default template now points to an existing cache showcase page |
@@ -371,7 +371,8 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Web Cache `在线` mode could reuse stale persistent manifest cache | Opening the same persistent URL for a real WebView smoke could serve an older cached HTML instead of the current fixture | `Sources/Handlers/ManifestLoader/LazyManifestLoader.swift` now forwards `forceRefresh`; `Sources/Handlers/ManifestLoader/PersistentManifestLoader.swift` skips existing persistent cache when `forceRefresh == true` |
 | UI automation had no stable handle for the browser WKWebView | Tests could prove the browser shell opened but not that a concrete WebView was present | `Sources/Controllers/WebBrowserViewController.swift` sets `browserManager.webView`; `ModuleAvailabilityTests.testRealWebViewBridgePromiseResolves` asserts it exists |
 | Simulator destination by name can select the wrong runtime/device during repeated runs | A by-name run can fail for environment reasons even when the booted test simulator is healthy | Current evidence pins destination UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0` |
-| A single long Settings row UI test triggered XCTest high-log-volume SIGSEGV during automation | `CrashLogManager` recorded a SIGSEGV from `XCTAutomationSupport` after the old long `testSettingsOperationalRowsAreReachable` produced excessive repeated snapshot queries; crash gate became red even though the user-facing row routes were valid | `SuperAppUITests/ModuleAvailabilityTests.swift` splits the row coverage into `testSettingsCoreRowsAreReachable` and `testSettingsDebugAndSupportRowsAreReachable`, keeps About in its dedicated deep-drill test, reduces broad navigation/scroll snapshot queries, and the full module suite now passes 13/13 with crash scan `total: 0` |
+| A single long Settings row UI test triggered XCTest high-log-volume SIGSEGV during automation | `CrashLogManager` recorded a SIGSEGV from `XCTAutomationSupport` after the old long `testSettingsOperationalRowsAreReachable` produced excessive repeated snapshot queries; crash gate became red even though the user-facing row routes were valid | `SuperAppUITests/ModuleAvailabilityTests.swift` splits the row coverage into `testSettingsCoreRowsAreReachable` and `testSettingsDebugAndSupportRowsAreReachable`, keeps About in its dedicated deep-drill test, reduces broad navigation/scroll snapshot queries, and the full module suite now passes 14/14 with crash scan `total: 0` |
+| Debug Center child tools only had entry-level evidence | A child row could open a shell while the expected content or primary action stayed broken | `SuperAppUITests/ModuleAvailabilityTests.testDebugCenterChildToolContentAndActionsAreUsable` now verifies diagnostics copy result, network seeded row plus clear action, and Manifest cache controls/log clear action; `DiagnosticsView.swift`, `NetworkDebugViewController.swift`, and `ManifestCacheTestViewController.swift` expose stable accessibility evidence |
 
 ## Remaining Unavailable And Manual-Only Items
 
@@ -406,4 +407,4 @@ The items not marked fully available are real-device/system-level flows, Push/Ba
 - Background/lock-screen notification behavior
 - Phone-specific backend reachability and LAN/firewall/VPN differences outside simulator
 - Bridge Lab UI execute remains validation-only; production WebView JSBridge Promise execution is now proven on simulator
-- Debug Center diagnostics export payload, network capture content, and individual manifest debug case execution are not deeply asserted one by one in this report, although each child tool entry now opens its concrete screen
+- Debug Center diagnostics share/export-file payload content and Manifest full smart-load WebView execution are not deeply asserted in this report; diagnostics copy, network seeded content/clear, and manifest clear-cache action are now proven by UI automation

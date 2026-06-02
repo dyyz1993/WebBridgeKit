@@ -39,6 +39,7 @@ class NetworkDebugViewController: UIViewController {
             target: self,
             action: #selector(clearRequests)
         )
+        navigationItem.rightBarButtonItem?.accessibilityIdentifier = "networkDebug.clearButton"
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -67,6 +68,7 @@ extension NetworkDebugViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "RequestCell", for: indexPath) as! NetworkRequestCell
         let request = requests[indexPath.row]
         cell.configure(with: request)
+        cell.accessibilityIdentifier = "networkDebug.cell.\(indexPath.row)"
         return cell
     }
 }

@@ -125,6 +125,7 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
         label.font = ThemeTokens.Typography.monospaceMeta
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
+        label.accessibilityIdentifier = "manifest_test.stats_label"
         return label
     }()
 
@@ -196,6 +197,7 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
 
         title = "Manifest 缓存测试"
         view.accessibilityIdentifier = "manifestCacheTest.root"
+        scrollView.accessibilityIdentifier = "manifest_test.scroll_view"
         view.backgroundColor = ThemeTokens.Color.background
 
         setupUI()
