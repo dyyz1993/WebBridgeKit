@@ -135,7 +135,7 @@ enum PushRoutes {
                 success: true,
                 message: "Test push sent successfully",
                 deviceKey: testRequest.deviceKey,
-                timestamp: ISO8601DateFormatter().string(from: Date())
+                timestamp: makeISO8601DateFormatter().string(from: Date())
             )
         } catch {
             NSLog("❌ [PushRoutes] TEST ENDPOINT - Push failed: \(error.localizedDescription)")
@@ -145,14 +145,14 @@ enum PushRoutes {
                 success: false,
                 message: "Test push failed: \(error.localizedDescription)",
                 deviceKey: testRequest.deviceKey,
-                timestamp: ISO8601DateFormatter().string(from: Date())
+                timestamp: makeISO8601DateFormatter().string(from: Date())
             )
         }
     }
 
     /// ISO8601 date formatter
-    private static func ISO8601DateFormatter() -> ISO8601DateFormatter {
-        let formatter = ISO8601DateFormatter()
+    private static func makeISO8601DateFormatter() -> ISO8601DateFormatter {
+        let formatter = Foundation.ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }
