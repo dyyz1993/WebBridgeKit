@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 20:17 CST
-Commit under test: `e3fa307`
+Date: 2026-06-02 20:28 CST
+Commit under test: `32450ba`
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `unavailable` to Xcode CoreDevice
 
@@ -20,8 +20,9 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Unavailable in current run | `xcrun devicectl list devices` shows the paired iPhone as `unavailable`; `bash tools/run-real-device-smoke.sh` -> 0 passed, 1 failed |
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 4 passed, 4 failed, 4 manual; blockers are unavailable iPhone, missing APNs entitlement, and no signed app entitlement evidence |
-| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed, report date 2026-06-02 20:16 CST |
+| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed, report date 2026-06-02 20:27 CST |
 | shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS via supervisord, report date 2026-06-02 20:16 CST |
+| Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
 | Deep Link command token | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | Local server generated `webbridgekit://command/<id>.<base64url-json>`; HTTP payload opened Cache Showcase; in-app custom-scheme payload `webbridgekit://tab?index=2` switched to Bridge; screenshots: `docs/screenshots/interaction/command-deeplink-cache-showcase.jpg`, `docs/screenshots/interaction/command-deeplink-custom-scheme-bridge.jpg` |
@@ -182,6 +183,29 @@ bash tools/verify-shanbox-supervision.sh
 ```
 
 ```bash
+bash tools/verify-node-admin-local.sh
+# Result: 11 passed, 0 failed
+# Report: build/reports/node-admin-local-verification.md
+#
+# Verified local/source routes:
+# - GET /health
+# - GET /admin
+# - GET /admin-push
+# - GET /admin/api/stats
+# - GET /admin/api/devices
+# - GET /admin/api/commands
+# - GET /admin/api/manifests
+# - GET /admin/api/push-history
+# - GET /ws/status
+# - GET /messages
+# - GET /packages
+#
+# Scope:
+# - Proves `Server/node/server.js` can serve the Node admin routes locally.
+# - Does not prove the Node admin console is deployed behind public shanbox.
+```
+
+```bash
 xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 'webbridgekit://tab?index=2'
 # Result: exit 0; first run displayed iOS "在 SuperApp 中打开？" confirmation.
 # After accepting "打开", XcodeBuildMCP snapshot showed Bridge heading and bridgeLab controls.
@@ -245,7 +269,8 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Deep Links | External tab scheme | External `webbridgekit://tab?index=2` | `SuperApp/Sources/AppDelegate.swift` | `xcrun simctl openurl`; after first-open confirmation, XcodeBuildMCP snapshot showed Bridge heading and `bridge.group.cache/navigation` controls | Available on simulator | First open may show the iOS confirmation dialog before the app receives the URL |
 | Deep Links | External open URL scheme | External `webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fcache-showcase.html` | `SuperApp/Sources/AppDelegate.swift`, `WebBrowserManager.openBrowser` | `xcrun simctl openurl`; XcodeBuildMCP snapshot showed `browserManager.closeButton`; screenshot showed Cache Showcase page | Available on simulator | `localhost` target depends on the local test HTTP service being reachable |
 | Deep Links | Command scheme field | External `webbridgekit://command/<id>.<base64url-json>` plus `Links` generated command field | `DeepLinkHomeView.swift`, `AppDelegate.application(_:open:)`, `CommandHandler`, `CommandDecoder`, `CommandParser`, `Server/Sources/WebBridgeServer/Services/CommandService.swift` | Unit tests cover URL-safe server token generation, app command URL decoding, and explicit `webbridgekit` scheme parsing; local backend generated real command URLs; `xcrun simctl openurl` showed `口令识别`; tapping `打开` opened Cache Showcase for HTTP payload and switched to Bridge for `webbridgekit://tab?index=2` payload | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | First run after install may require iOS paste permission; allow paste then re-trigger URL if the permission dialog interrupts parsing |
-| Server Admin | Node admin console | External `/admin`, `/admin-push` | `Server/node/server.js`, `Server/node/admin.html`, `Server/node/admin-push.html` | `tools/verify-shanbox-backend.sh`: 5 Node paths return 404 | Unavailable on public Swift backend | Node console exists in source but is not deployed behind `wbk.shanbox` |
+| Server Admin | Node admin console local source | Local temporary port `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` | `Server/node/server.js`, `Server/node/admin.html`, `Server/node/admin-push.html` | `tools/verify-node-admin-local.sh`: 11/11 pass | Available locally | This validates source/local Node Admin behavior only |
+| Server Admin | Node admin console public deployment | Public `https://wbk.shanbox.19930810.xyz:8443/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` | `Server/node/server.js`, shanbox deployment config | `tools/verify-shanbox-backend.sh`: 5 Node paths return 404 | Unavailable on public Swift backend | Public `wbk.shanbox` currently runs the Swift backend, so Node Admin needs a separate deployment or reverse-proxy path before it can be marked available |
 
 ## Items Requiring Physical Manual Verification
 
