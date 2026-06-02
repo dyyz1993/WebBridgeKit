@@ -1,9 +1,9 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 18:58 CST
-Commit under test: current worktree based on `dc40f2a`
+Date: 2026-06-02 20:17 CST
+Commit under test: `e3fa307`
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
-Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavailable`/offline to Xcode CoreDevice
+Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `unavailable` to Xcode CoreDevice
 
 ## Summary
 
@@ -18,15 +18,24 @@ Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavail
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
-| Physical device install and launch | Unavailable in current run | `bash tools/run-real-device-smoke.sh` -> 0 passed, 1 failed because no available paired iPhone was discovered |
-| Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 4 passed, 4 failed, 4 manual |
-| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed |
-| shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS |
-| shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned expected 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
+| Physical device install and launch | Unavailable in current run | `xcrun devicectl list devices` shows the paired iPhone as `unavailable`; `bash tools/run-real-device-smoke.sh` -> 0 passed, 1 failed |
+| Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 4 passed, 4 failed, 4 manual; blockers are unavailable iPhone, missing APNs entitlement, and no signed app entitlement evidence |
+| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed, report date 2026-06-02 20:16 CST |
+| shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS via supervisord, report date 2026-06-02 20:16 CST |
+| shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
 | Deep Link command token | Available on simulator for HTTP/HTTPS URL and in-app `webbridgekit` payloads | Local server generated `webbridgekit://command/<id>.<base64url-json>`; HTTP payload opened Cache Showcase; in-app custom-scheme payload `webbridgekit://tab?index=2` switched to Bridge; screenshots: `docs/screenshots/interaction/command-deeplink-cache-showcase.jpg`, `docs/screenshots/interaction/command-deeplink-custom-scheme-bridge.jpg` |
 
 ## Automated Evidence
+
+```bash
+xcrun devicectl list devices
+# Result:
+# Name: 许映洲的iPhone
+# Identifier: F38FECA2-2A43-5554-B65D-9990CEEAB0EA
+# State: unavailable
+# Model: iPhone 13 (iPhone14,5)
+```
 
 ```bash
 bash scripts/services.sh restart
@@ -105,6 +114,7 @@ bash tools/run-real-device-smoke.sh
 ```bash
 bash tools/verify-real-device-push-readiness.sh
 # Result: 4 passed, 4 failed, 4 manual, exit 1
+# Date: 2026-06-02 20:16 CST
 # Report: build/reports/real-device-push-readiness.md
 #
 # Passed:
@@ -129,6 +139,7 @@ bash tools/verify-real-device-push-readiness.sh
 ```bash
 bash tools/verify-shanbox-backend.sh
 # Result: 16 passed, 0 failed, 5 unavailable/needs deployment
+# Date: 2026-06-02 20:16 CST
 # Report: build/reports/shanbox-backend-verification.md
 #
 # Required-available routes:
@@ -160,6 +171,7 @@ bash tools/verify-shanbox-backend.sh
 ```bash
 bash tools/verify-shanbox-supervision.sh
 # Result: process=PASS, supervision=PASS
+# Date: 2026-06-02 20:16 CST
 # Report: build/reports/shanbox-supervision-verification.md
 #
 # Evidence:
