@@ -394,7 +394,7 @@
 "apikey.manage.temporary_keys_desc" = "临时密钥有过期时间，过期后自动删除";
 "apikey.manage.bark_config_title" = "Bark 推送配置";
 "apikey.manage.bark_key_placeholder" = "输入 Bark Key";
-"apikey.manage.bark_server_placeholder" = "https://api.day.app";
+"apikey.manage.bark_server_placeholder" = "https://wbk.shanbox.19930810.xyz:8443";
 "apikey.manage.save_config" = "保存配置";
 "apikey.manage.empty_title" = "暂无密钥";
 "apikey.manage.empty_description" = "点击右上角 + 号创建新密钥";

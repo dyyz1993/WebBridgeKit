@@ -394,7 +394,7 @@
 "apikey.manage.temporary_keys_desc" = "Temporary keys have an expiration time and will be auto-deleted";
 "apikey.manage.bark_config_title" = "Bark Push Config";
 "apikey.manage.bark_key_placeholder" = "Enter Bark Key";
-"apikey.manage.bark_server_placeholder" = "https://api.day.app";
+"apikey.manage.bark_server_placeholder" = "https://wbk.shanbox.19930810.xyz:8443";
 "apikey.manage.save_config" = "Save Config";
 "apikey.manage.empty_title" = "No Keys";
 "apikey.manage.empty_description" = "Tap + in the top-right corner to create a new key";
