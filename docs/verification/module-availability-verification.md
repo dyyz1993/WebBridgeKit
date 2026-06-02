@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 18:24 CST
-Commit under test: current worktree based on `6c06ff3`
+Date: 2026-06-02 18:58 CST
+Commit under test: current worktree based on `dc40f2a`
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavailable`/offline to Xcode CoreDevice
 
@@ -9,7 +9,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavail
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Services | Available | `bash scripts/services.sh start && bash scripts/services.sh verify` passed, ports 8080/8081/8083 healthy |
+| Services | Available | `bash scripts/services.sh restart && bash scripts/services.sh verify` passed, ports 8080/8081/8083 healthy; launchctl-backed services remain available across separate shell commands |
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
@@ -23,8 +23,16 @@ Physical device: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, currently `unavail
 | shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed |
 | shanbox WebBridgeServer supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned expected 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
+| Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
 
 ## Automated Evidence
+
+```bash
+bash scripts/services.sh restart
+bash scripts/services.sh verify
+# Result: all 3 services verified in the start shell and again in a separate shell.
+# Implementation note: scripts/services.sh now uses per-user launchctl jobs under .services/*.plist.
+```
 
 ```bash
 xcodebuild test -workspace WebBridgeKit.xcworkspace \
@@ -35,7 +43,7 @@ xcodebuild test -workspace WebBridgeKit.xcworkspace \
   CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
 # Result: TEST SUCCEEDED, 8 tests, 0 failures, xcresult:
-# /tmp/wbk-dd-module-current/Logs/Test/Test-SuperApp-2026.06.02_18-20-58-+0800.xcresult
+# /Users/xuyingzhou/Library/Developer/XcodeBuildMCP/workspaces/WebBridgeKit-815a0cec42de/result-bundles/test_sim_2026-06-02T11-15-15-461Z_pid64712_e17d58d1.xcresult
 ```
 
 ```bash
@@ -140,6 +148,21 @@ bash tools/verify-shanbox-supervision.sh
 # - Public route verification still passes 16/16 after replacing the manual process
 ```
 
+```bash
+xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 'webbridgekit://tab?index=2'
+# Result: exit 0; first run displayed iOS "在 SuperApp 中打开？" confirmation.
+# After accepting "打开", XcodeBuildMCP snapshot showed Bridge heading and bridgeLab controls.
+
+xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
+  'webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fcache-showcase.html'
+# Result: exit 0; XcodeBuildMCP snapshot showed browserManager controls.
+# Screenshot: build/reports/deeplink/open-cache-demo.png showed "Cache Showcase — WebBridgeKit".
+
+/usr/local/opt/curl/bin/curl -s -o /dev/null -w '%{http_code}\n' \
+  http://localhost:8081/test_resources/cache-showcase.html
+# Result: 200
+```
+
 ## Module Matrix
 
 | Module | Function | User path | Code path | Automated evidence | Status | Notes |
@@ -183,10 +206,12 @@ bash tools/verify-shanbox-supervision.sh
 | Debug Center | Manifest cache cases | `调试中心` -> `Manifest 缓存用例` | `ManifestCacheTestViewController.swift` | Entry exists in UI test; CacheTests validate manifest semantics | Available | |
 | Debug Center | Crash scan guide | `调试中心` -> `崩溃扫描说明` | `DebugCenterViewModel.showCrashScanGuide()` | UI test taps control and remains on Debug Center | Available | Changed from delegated UIKit alert to ResultPanel update |
 | Deep Links | Links tool opens | `设置` -> `协议跳转工具` | `DeepLinkHomeView.swift` | UI test opens `deepLink.home` | Available | |
-| Deep Links | Open URL builder | `Links` -> target URL / mode / generated scheme | `DeepLinkHomeViewModel.swift` | UI test verifies URL input, generated scheme, mode picker | Available | |
+| Deep Links | Open URL builder | `Links` -> target URL / mode / generated scheme | `DeepLinkHomeViewModel.swift` | UI test verifies URL input, generated scheme, mode picker; default local target `/test_resources/cache-showcase.html` returns 200 | Available | Default template now points to an existing cache showcase page |
 | Deep Links | Mode switching | `Links` -> `Immersive` | `DeepLinkHomeView.swift` | UI test taps visible label `Immersive` | Available | |
 | Deep Links | Validate open scheme | `Links` -> `校验` | `DeepLinkHomeViewModel.validateOpenScheme()` | UI test taps control and remains on Links page | Available | Result text is in long-page ResultPanel and not asserted |
-| Deep Links | Command/tab scheme fields | `Links` -> command token / tab index | `DeepLinkHomeView.swift` | UI test verifies fields | Available | Actual system URL open should be manually checked |
+| Deep Links | External tab scheme | External `webbridgekit://tab?index=2` | `SuperApp/Sources/AppDelegate.swift` | `xcrun simctl openurl`; after first-open confirmation, XcodeBuildMCP snapshot showed Bridge heading and `bridge.group.cache/navigation` controls | Available on simulator | First open may show the iOS confirmation dialog before the app receives the URL |
+| Deep Links | External open URL scheme | External `webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fcache-showcase.html` | `SuperApp/Sources/AppDelegate.swift`, `WebBrowserManager.openBrowser` | `xcrun simctl openurl`; XcodeBuildMCP snapshot showed `browserManager.closeButton`; screenshot showed Cache Showcase page | Available on simulator | `localhost` target depends on the local test HTTP service being reachable |
+| Deep Links | Command scheme field | `Links` -> command token | `DeepLinkHomeView.swift`, `AppDelegate.application(_:open:)`, `CommandHandler` | UI test verifies generated command field; no current end-to-end token resolution evidence | Generated available; external command execution not proven | Need a real signed/generated command token and command handler result assertion |
 | Server Admin | Node admin console | External `/admin`, `/admin-push` | `Server/node/server.js`, `Server/node/admin.html`, `Server/node/admin-push.html` | `tools/verify-shanbox-backend.sh`: 5 Node paths return 404 | Unavailable on public Swift backend | Node console exists in source but is not deployed behind `wbk.shanbox` |
 
 ## Items Requiring Physical Manual Verification
@@ -217,6 +242,8 @@ bash tools/verify-shanbox-supervision.sh
 | Real-device smoke discovery treated `unavailable` as `available` because of substring matching | Offline phones could be selected and then fail later with confusing CoreDevice errors | `tools/run-real-device-smoke.sh`, `tools/verify-real-device-push-readiness.sh` now exclude unavailable devices |
 | Notification settings used the generic app Settings URL instead of the notification-specific URL when available | Users tapping `设置` -> `通知设置` could land in a broader app settings surface instead of notification settings | `SuperApp/Sources/Utilities/NotificationSettingsOpener.swift`, `SuperApp/Sources/Controllers/Tab/SettingsViewController.swift`, `SuperApp/Sources/Controllers/Tab/TabBarController.swift` |
 | Notification settings handoff evidence was overstated | Current simulator verifies the row is wired and non-crashing, but does not prove `com.apple.Preferences` foregrounding; release evidence now correctly requires a real-device/manual check | `SuperAppUITests/ModuleAvailabilityTests.swift`, `docs/verification/module-availability-verification.md` |
+| Local services died after the agent shell exited | `bash scripts/services.sh start` could pass in the start command but fail in the next command, making cache/deep-link verification flaky | `scripts/services.sh` now launches backend, test HTTP, and prototype servers as per-user `launchctl` jobs |
+| Deep Link default cache template pointed to a missing file | `webbridgekit://open` demo opened a browser container but showed a 404 for `/test_resources/cache-demo.html` | `SuperApp/Sources/Views/DeepLinks/DeepLinkHomeViewModel.swift` now points to `/test_resources/cache-showcase.html`, verified 200 |
 | Bark/Push route evidence only checked shallow HTTP 200s | A route could return 200 while response semantics, encoded Bark URLs, POST compatibility, or optional payload fields stayed unverified | `tools/verify-shanbox-backend.sh`, `Server/Tests/WebBridgeServerTests/PushRoutesTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
 | Push test endpoint logs used dynamic strings as NSLog format strings | Percent-encoded URLs such as `%3A%2F%2F` were mangled in server logs, weakening debug evidence | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` |
 | shanbox WebBridgeServer supervision was assumed from a stale systemd unit file | Replaced the manual backend process with a supervisord-managed `webbridgeserver` program and made verification check the actual supervisor | `tools/verify-shanbox-supervision.sh`, `build/reports/shanbox-supervision-verification.md`, `AGENTS.md`, remote `/etc/supervisor/supervisord.conf` |
@@ -235,10 +262,11 @@ bash tools/verify-shanbox-supervision.sh
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
 | Long-page ResultPanel message assertions are fragile in XCUITest because nested SwiftUI ScrollViews remain in the hierarchy | UI tests assert tappability and no crash; semantics covered by unit tests | `TokenPushHomeView.swift`, `BridgeLabHomeView.swift`, `DeepLinkHomeView.swift` |
 | APNs entitlement is missing | `tools/verify-real-device-push-readiness.sh` confirms no `aps-environment` in project config and no APNs entitlement in the signed real-device app; production readiness also needs an Apple Developer Program team/App ID with Push Notifications enabled | `project.yml`, `SuperApp/`, signed `SuperApp.app` entitlements |
+| External command deep link execution is not fully proven | UI generates `webbridgekit://command/<token>`, but no current automated evidence proves a real command token is resolved and executed through `CommandHandler` | `AppDelegate.application(_:open:)`, `CommandHandler`, command server |
 | Node admin console is not deployed behind `wbk.shanbox` | `tools/verify-shanbox-backend.sh` confirms `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` return 404 on public shanbox Swift service | `Server/node/server.js`, shanbox deployment config |
 
 ## Current Availability Verdict
 
 No confirmed unavailable in-app UI module was found in automated verification.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, and Node admin console deployment.
+The items not marked fully available are real-device/system-level flows, external command-token execution, and non-Swift admin tooling: APNs entitlement/registration, Bark end-to-end delivery to a real APNs token, real-device notification settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, `webbridgekit://command/<token>` end-to-end execution, and Node admin console deployment.

@@ -44,6 +44,8 @@ bash scripts/services.sh logs      # Show recent logs
 
 Run `bash scripts/services.sh` without args for full usage.
 
+`services.sh start/restart` uses per-user `launchctl` jobs under `.services/*.plist`, so the services keep running across separate agent shell commands. Use `bash scripts/services.sh stop` when the local verification session is finished.
+
 **IMPORTANT**: Always run `bash scripts/services.sh start` before testing the app in simulator. The local backend is required for simulator push-route, command, manifest, cache, and prototype workflows. Use `tools/verify-shanbox-backend.sh` separately for public deployment evidence.
 
 ## Build & Run
