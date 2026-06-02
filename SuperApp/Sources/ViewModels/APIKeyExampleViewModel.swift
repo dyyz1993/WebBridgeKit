@@ -40,15 +40,16 @@ class APIKeyExampleViewModel: ViewModel {
     private let examplesRelay = BehaviorRelay<[CodeExample]>(value: [])
     private let copySuccessRelay = PublishRelay<Void>()
     private let copiedCodeRelay = PublishRelay<String>()
+    private static let serverBaseURL = "https://wbk.shanbox.19930810.xyz:8443"
 
     private let exampleData: [CodeExample] = [
         CodeExample(
             title: "Bark 推送请求",
             language: "URL",
             code: """
-            https://api.day.app/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit&icon=https://day.app/assets/images/avatar.jpg&sound=birdsong
+            https://wbk.shanbox.19930810.xyz:8443/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit&sound=birdsong
             """,
-            description: "使用 Bark API 发送推送通知，支持自定义分组、图标和铃声"
+            description: "使用 WebBridgeKit Bark 兼容 API 发送推送通知，支持自定义分组和铃声"
         ),
         CodeExample(
             title: "Swift 请求",
@@ -56,20 +57,20 @@ class APIKeyExampleViewModel: ViewModel {
             code: """
             import Alamofire
 
-            let headers = ["X-API-Key": "YOUR_KEY_HERE"]
-            AF.request("https://wbk.shanbox.19930810.xyz:8443/v1/pages", headers: headers)
+            let headers = ["Authorization": "Bearer YOUR_ADMIN_API_KEY"]
+            AF.request("\(APIKeyExampleViewModel.serverBaseURL)/api/v1/manifests", headers: headers)
                 .responseJSON { response in
                     // 处理响应
                 }
             """,
-            description: "使用 Alamofire 发送带 API Key 的请求"
+            description: "使用 Alamofire 发送带管理 API Key 的请求"
         ),
         CodeExample(
             title: "cURL 请求",
             language: "Bash",
             code: """
-            curl -H "X-API-Key: YOUR_KEY_HERE" \\
-                 https://wbk.shanbox.19930810.xyz:8443/v1/pages
+            curl -H "Authorization: Bearer YOUR_ADMIN_API_KEY" \\
+                 \(APIKeyExampleViewModel.serverBaseURL)/api/v1/manifests
             """,
             description: "使用 cURL 命令行工具发送请求"
         ),
@@ -77,10 +78,10 @@ class APIKeyExampleViewModel: ViewModel {
             title: "JavaScript 请求",
             language: "JavaScript",
             code: """
-            fetch('https://wbk.shanbox.19930810.xyz:8443/v1/pages', {
+            fetch('\(APIKeyExampleViewModel.serverBaseURL)/api/v1/manifests', {
               method: 'GET',
               headers: {
-                'X-API-Key': 'YOUR_KEY_HERE',
+                'Authorization': 'Bearer YOUR_ADMIN_API_KEY',
                 'Content-Type': 'application/json'
               }
             })
@@ -95,9 +96,9 @@ class APIKeyExampleViewModel: ViewModel {
             code: """
             import requests
 
-            headers = {'X-API-Key': 'YOUR_KEY_HERE'}
+            headers = {'Authorization': 'Bearer YOUR_ADMIN_API_KEY'}
             response = requests.get(
-                'https://wbk.shanbox.19930810.xyz:8443/v1/pages',
+                '\(APIKeyExampleViewModel.serverBaseURL)/api/v1/manifests',
                 headers=headers
             )
 

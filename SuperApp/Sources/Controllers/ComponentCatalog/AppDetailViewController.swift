@@ -265,7 +265,7 @@ class AppDetailViewController: UIViewController {
 
     @objc private func copyPushURL(_ sender: UIButton) {
         if let token = item.pushToken {
-            let urlString = "https://api.day.app/\(token)"
+            let urlString = "https://wbk.shanbox.19930810.xyz:8443/\(token)"
             UIPasteboard.general.string = urlString
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             showAlert(title: L10n.tr("common.success"), message: L10n.tr("discover.detail.url_copied"))
