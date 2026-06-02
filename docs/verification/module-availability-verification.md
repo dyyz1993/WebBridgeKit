@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 09:40 CST
-Commit under test: current worktree based on `ab062a2`
+Date: 2026-06-02 09:55 CST
+Commit under test: current worktree based on `724553e`
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `com.webbridgekit.superapp`
 
@@ -13,7 +13,7 @@ Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `co
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
-| Module UI availability | Available | `ModuleAvailabilityTests`: 7 tests, 0 failures |
+| Module UI availability | Available | `ModuleAvailabilityTests`: 8 tests, 0 failures |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
@@ -29,11 +29,11 @@ xcodebuild test -workspace WebBridgeKit.xcworkspace \
   -scheme SuperApp \
   -sdk iphonesimulator \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-  -derivedDataPath /tmp/wbk-dd-module-availability-legal \
+  -derivedDataPath /tmp/wbk-dd-module-availability-settings \
   CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
-# Result: TEST SUCCEEDED, 7 tests, 0 failures, xcresult:
-# /tmp/wbk-dd-module-availability-legal/Logs/Test/Test-SuperApp-2026.06.02_09-29-14-+0800.xcresult
+# Result: TEST SUCCEEDED, 8 tests, 0 failures, xcresult:
+# /tmp/wbk-dd-module-availability-settings/Logs/Test/Test-SuperApp-2026.06.02_09-50-41-+0800.xcresult
 ```
 
 ```bash
@@ -131,7 +131,7 @@ bash tools/verify-shanbox-backend.sh
 | Settings | Recent history | `设置` -> `最近访问` | `RecentAccessHistoryView.swift` | UI test opens screen | Available | |
 | Settings | Cache dashboard | `设置` -> `缓存仪表盘` | `CacheDashboardViewController.swift` | UI test opens screen | Available | |
 | Settings | About/legal | `设置` -> `关于` -> `第三方开源许可` -> `Alamofire` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift`, `LicenseDetailViewController.swift` | `ModuleAvailabilityTests.testSettingsAboutLegalDeepDrillIsReachable` opens About, license list, and license detail | Available | Deep drill now asserted with accessibility identifiers |
-| Settings | Notification settings handoff | `设置` -> `通知设置` | `UIApplication.openSettingsURLString` | Not run in automated suite | Needs physical/manual | System Settings handoff is OS-controlled |
+| Settings | Notification settings handoff | `设置` -> `通知设置` | `UIApplication.openSettingsURLString` | `ModuleAvailabilityTests.testNotificationSettingsHandoffOpensSystemSettings` opens `com.apple.Preferences` | Available on simulator; physical confirmation optional for release | Proves the app hands off to iOS Settings; does not prove APNs permission/token/delivery |
 | Debug Center | Debug home | `设置` -> `调试中心` | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
 | Debug Center | Global debug panel | `调试中心` -> `全局调试面板` | `DebugPanelViewController.swift` | Entry exists in UI test | Available | Modal content covered by existing DebugPanel tests, not reopened here |
 | Debug Center | Diagnostics export | `调试中心` -> `诊断导出` | `DiagnosticsView.swift` | Entry exists in UI test | Available | |
@@ -151,7 +151,7 @@ bash tools/verify-shanbox-backend.sh
 | --- | --- | --- |
 | APNs permission and device token | Simulator cannot prove real APNs token/device delivery | On iPhone, tap `Push` -> `注册推送`; permission prompt appears if not decided; after allow, APNs state changes to registered or a clear failure is shown |
 | Bark end-to-end push delivery | Requires reachable backend URL, network, and real device notification permissions | Send Bark-compatible request to backend; iPhone receives notification; tapping notification routes to target URL/app state |
-| iOS Settings handoff | `UIApplication.openSettingsURLString` opens system app outside normal XCUITest scope | `设置` -> `通知设置` opens iOS Settings for SuperApp |
+| Physical iOS Settings handoff | Simulator already proves `com.apple.Preferences` handoff, but release may still require a real-device OS check | On iPhone, `设置` -> `通知设置` opens iOS Settings for SuperApp |
 | Physical-device backend reachability | Phone `localhost` is the phone, not the Mac | Configure service URL to Mac LAN IP, for this run `http://192.168.0.4:8080`; backend-dependent features work |
 | Background/locked notification behavior | Requires physical lock screen/background state | Notification appears on lock screen/background and tap behavior matches payload |
 
@@ -171,6 +171,7 @@ bash tools/verify-shanbox-backend.sh
 | About/legal route had weak UI automation coverage and a misleading `MIT License` row label | Settings -> About could pass shallow smoke while the third-party license list/detail path stayed unverified | `SuperApp/Sources/Views/AboutView.swift`, `SuperApp/Sources/Controllers/Settings/AboutViewController.swift`, `SuperApp/Sources/Controllers/Settings/ThirdPartyLicensesViewController.swift`, `SuperApp/Sources/Controllers/Settings/LicenseDetailViewController.swift`, `SuperAppUITests/ModuleAvailabilityTests.swift` |
 | UI test helper treated offscreen accessibility elements as visible | XCUITest could tap stale/offscreen coordinates and hit the wrong row on long SwiftUI pages | `SuperAppUITests/ModuleAvailabilityTests.swift` |
 | Real-device smoke script only auto-detected devices whose state text contained `connected` | A paired and available iPhone could be present but still require manual `DEVICE_ID`, weakening repeatability of physical install/launch evidence | `tools/run-real-device-smoke.sh` |
+| Notification settings handoff was listed as manual-only | Settings notification row had weaker evidence than necessary, even though XCUITest can assert the system Settings app reaches foreground | `SuperAppUITests/ModuleAvailabilityTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
 
 ## Remaining Non-Blocking Debt
 
@@ -189,4 +190,4 @@ bash tools/verify-shanbox-backend.sh
 
 No confirmed unavailable in-app UI module was found in automated verification.
 
-The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs registration, Bark end-to-end delivery to a real APNs token, iOS Settings handoff, backend reachability from phone-specific networks, background/lock-screen notification behavior, Node admin console deployment, and persistent service supervision for `WebBridgeServer`.
+The items not marked fully available are real-device/system-level flows and non-Swift admin tooling: APNs registration, Bark end-to-end delivery to a real APNs token, backend reachability from phone-specific networks, background/lock-screen notification behavior, Node admin console deployment, and persistent service supervision for `WebBridgeServer`.
