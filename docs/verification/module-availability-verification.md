@@ -1,8 +1,8 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 09:05 CST
-Commit under test: current worktree based on `b236ec5`
-Simulator: `iPhone 16 Pro UI Test`, iOS 18.3.1, `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
+Date: 2026-06-02 09:33 CST
+Commit under test: current worktree based on `4b2382e`
+Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `com.webbridgekit.superapp`
 
 ## Summary
@@ -13,7 +13,7 @@ Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `co
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
-| Module UI availability | Available | `ModuleAvailabilityTests`: 6 tests, 0 failures |
+| Module UI availability | Available | `ModuleAvailabilityTests`: 7 tests, 0 failures |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
@@ -27,12 +27,13 @@ Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `co
 ```bash
 xcodebuild test -workspace WebBridgeKit.xcworkspace \
   -scheme SuperApp \
-  -destination 'platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0' \
-  -derivedDataPath /tmp/wbk-dd-module-availability \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -derivedDataPath /tmp/wbk-dd-module-availability-legal \
+  CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
-  CODE_SIGNING_ALLOWED=NO
-# Result: TEST SUCCEEDED, 6 tests, 0 failures, xcresult:
-# /tmp/wbk-dd-module-availability/Logs/Test/Test-SuperApp-2026.06.02_04-04-55-+0800.xcresult
+# Result: TEST SUCCEEDED, 7 tests, 0 failures, xcresult:
+# /tmp/wbk-dd-module-availability-legal/Logs/Test/Test-SuperApp-2026.06.02_09-29-14-+0800.xcresult
 ```
 
 ```bash
@@ -130,7 +131,7 @@ bash tools/verify-shanbox-backend.sh
 | Settings | Favorites | `设置` -> `收藏夹` | `FavoriteViewController.swift` | UI test opens screen | Available | |
 | Settings | Recent history | `设置` -> `最近访问` | `RecentAccessHistoryView.swift` | UI test opens screen | Available | |
 | Settings | Cache dashboard | `设置` -> `缓存仪表盘` | `CacheDashboardViewController.swift` | UI test opens screen | Available | |
-| Settings | About/legal | `设置` -> `关于` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift` | UI test opens About entry | Available | Legal/license deep drill not separately asserted |
+| Settings | About/legal | `设置` -> `关于` -> `第三方开源许可` -> `Alamofire` | `AboutView.swift`, `ThirdPartyLicensesViewController.swift`, `LicenseDetailViewController.swift` | `ModuleAvailabilityTests.testSettingsAboutLegalDeepDrillIsReachable` opens About, license list, and license detail | Available | Deep drill now asserted with accessibility identifiers |
 | Settings | Notification settings handoff | `设置` -> `通知设置` | `UIApplication.openSettingsURLString` | Not run in automated suite | Needs physical/manual | System Settings handoff is OS-controlled |
 | Debug Center | Debug home | `设置` -> `调试中心` | `DebugCenterHomeView.swift` | UI test opens `debugCenter.home` | Available | |
 | Debug Center | Global debug panel | `调试中心` -> `全局调试面板` | `DebugPanelViewController.swift` | Entry exists in UI test | Available | Modal content covered by existing DebugPanel tests, not reopened here |
@@ -168,6 +169,8 @@ bash tools/verify-shanbox-backend.sh
 | Server Push route tests used an unregistered key and did not verify the service-supported test key | `swift test` failed 3 Push route tests, weakening backend availability evidence | `Server/Tests/WebBridgeServerTests/PushRoutesTests.swift` |
 | shanbox `WebBridgeServer` process was down during verification | Public `wbk` routes returned 502 until the Swift backend was restarted | Synced Server route fixes to `/root/WebBridgeKit`, rebuilt release, restarted `WebBridgeServer` |
 | shanbox backend checks were manual curl commands only | Endpoint availability evidence was easy to drift and hard to rerun consistently | `tools/verify-shanbox-backend.sh`, `build/reports/shanbox-backend-verification.md` |
+| About/legal route had weak UI automation coverage and a misleading `MIT License` row label | Settings -> About could pass shallow smoke while the third-party license list/detail path stayed unverified | `SuperApp/Sources/Views/AboutView.swift`, `SuperApp/Sources/Controllers/Settings/AboutViewController.swift`, `SuperApp/Sources/Controllers/Settings/ThirdPartyLicensesViewController.swift`, `SuperApp/Sources/Controllers/Settings/LicenseDetailViewController.swift`, `SuperAppUITests/ModuleAvailabilityTests.swift` |
+| UI test helper treated offscreen accessibility elements as visible | XCUITest could tap stale/offscreen coordinates and hit the wrong row on long SwiftUI pages | `SuperAppUITests/ModuleAvailabilityTests.swift` |
 
 ## Remaining Non-Blocking Debt
 

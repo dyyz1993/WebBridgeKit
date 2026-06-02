@@ -18,6 +18,7 @@ class ThirdPartyLicensesViewController: UIViewController {
         tv.dataSource = self
         tv.register(UITableViewCell.self, forCellReuseIdentifier: "LicenseCell")
         tv.separatorInset = UIEdgeInsets(top: 0, left: 52, bottom: 0, right: 0)
+        tv.accessibilityIdentifier = "licenses.tableView"
         return tv
     }()
 
@@ -243,6 +244,7 @@ class ThirdPartyLicensesViewController: UIViewController {
         super.viewDidLoad()
         title = L10n.tr("about.third_party_licenses")
         view.backgroundColor = ThemeTokens.Color.background
+        view.accessibilityIdentifier = "licenses.root"
 
         view.addSubview(tableView)
         tableView.snp.makeConstraints { make in
@@ -280,8 +282,18 @@ extension ThirdPartyLicensesViewController: UITableViewDataSource {
         cell.contentConfiguration = content
         cell.accessoryType = .disclosureIndicator
         cell.backgroundColor = ThemeTokens.Color.cardBackground
+        cell.accessibilityIdentifier = "licenses.cell.\(entry.accessibilityKey)"
 
         return cell
+    }
+}
+
+private extension LicenseEntry {
+    var accessibilityKey: String {
+        name.lowercased()
+            .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "+", with: "plus")
+            .replacingOccurrences(of: ".", with: "-")
     }
 }
 
