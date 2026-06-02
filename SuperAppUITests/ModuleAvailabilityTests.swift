@@ -162,6 +162,21 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("SettingsViewController")
     }
 
+    func testNotificationSettingsHandoffOpensSystemSettings() {
+        let systemSettings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        addTeardownBlock { [app] in
+            app.activate()
+        }
+
+        assertTab("tab.settings", opens: "SettingsViewController")
+        tapElement("settings.cell.notificationSettings")
+
+        XCTAssertTrue(
+            systemSettings.wait(for: .runningForeground, timeout: 8),
+            "Notification settings handoff should open iOS Settings."
+        )
+    }
+
     // MARK: - Helpers
 
     private func assertTab(_ identifier: String, opens rootIdentifier: String) {

@@ -110,7 +110,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 |------------------|---------|-------------|-------|
 | `bash tools/run-cache-regression.sh` | Cache module regression: services, `CacheTests`, cache handler tests, cache dashboard UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
 | `bash tools/run-jsbridge-regression.sh` | JSBridge regression: core bridge tests, `BridgeTests`, handler tests, functional UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
-| `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 7 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, `Settings`, Debug Center, Deep Links, About/Legal |
+| `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 8 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, `Settings`, Debug Center, Deep Links, About/Legal, iOS Settings handoff |
 | `cd Server && swift test` | Swift Hummingbird backend route semantics | All `Manifest Routes`, `Push Routes`, `Command Routes` tests pass | Does not prove public shanbox deployment or APNs delivery |
 
 ### UI And Visual Gates
@@ -134,7 +134,8 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 
 ### Availability Evidence Rules
 
-- Do not mark APNs registration, Bark end-to-end delivery, iOS Settings handoff, lock-screen/background notification behavior, or phone-specific LAN reachability as fully available from simulator-only evidence.
+- Do not mark APNs registration, Bark end-to-end delivery, lock-screen/background notification behavior, or phone-specific LAN reachability as fully available from simulator-only evidence.
+- iOS Settings handoff can be simulator-verified by proving `UIApplication.openSettingsURLString` opens `com.apple.Preferences`; require a physical confirmation only when release criteria explicitly demand a real-device Settings handoff check.
 - `tools/verify-shanbox-backend.sh` proves public route behavior only. It intentionally marks Node admin routes (`/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages`) as unavailable on the current Swift backend deployment.
 - `tools/run-real-device-smoke.sh` proves the app can build, install, and launch on a paired iPhone. It does not prove notification permission, APNs token registration, or notification receipt.
 - When updating `docs/verification/module-availability-verification.md`, cite the exact command, pass/fail count, and report/log path.
