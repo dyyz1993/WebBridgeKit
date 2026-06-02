@@ -229,6 +229,7 @@ struct DiagnosticsView: View {
             }
         }
         .navigationTitle(L10n.tr("settings.diagnostics.title"))
+        .accessibilityIdentifier("diagnostics.root")
         .background(
             ShareSheetPresenter(isPresented: Binding(
                 get: { viewModel.shareItemURL != nil },

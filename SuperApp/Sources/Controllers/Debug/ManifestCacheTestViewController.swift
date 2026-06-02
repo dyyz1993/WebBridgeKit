@@ -195,6 +195,7 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
         super.viewDidLoad()
 
         title = "Manifest 缓存测试"
+        view.accessibilityIdentifier = "manifestCacheTest.root"
         view.backgroundColor = ThemeTokens.Color.background
 
         setupUI()
