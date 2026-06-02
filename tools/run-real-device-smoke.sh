@@ -41,12 +41,21 @@ run_gate() {
 
 if [ -z "$DEVICE_ID" ]; then
     if command -v xcrun >/dev/null 2>&1; then
-        DEVICE_ID="$(xcrun devicectl list devices 2>/dev/null | awk '/iPhone/ && /connected/ {print $NF; exit}' || true)"
+        DEVICE_ID="$(xcrun devicectl list devices 2>/dev/null | awk '
+            /iPhone/ && /(available|connected)/ {
+                for (i = 1; i <= NF; i++) {
+                    if ($i ~ /^[A-F0-9-]{36}$/) {
+                        print $i
+                        exit
+                    }
+                }
+            }
+        ' || true)"
     fi
 fi
 
 if [ -z "$DEVICE_ID" ]; then
-    record "Device discovery" "FAIL" "Set DEVICE_ID to a connected iPhone UDID"
+    record "Device discovery" "FAIL" "Set DEVICE_ID to an available paired iPhone identifier"
 else
     record "Device discovery" "PASS" "$DEVICE_ID"
     run_gate "Build for device" "xcodebuild build -workspace WebBridgeKit.xcworkspace -scheme SuperApp -destination 'id=$DEVICE_ID' -derivedDataPath '$DERIVED_DATA' -allowProvisioningUpdates"
