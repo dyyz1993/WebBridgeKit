@@ -10,6 +10,15 @@ Three local services must be running for simulator development and local regress
 | Test HTTP | 8081 | http://localhost:8081 | Static file server for cache testing (project root + test_resources/) |
 | Prototype | 8083 | http://localhost:8083 | HTML prototype (index.html, v2-current-implementation.html) |
 
+### Environment Selection Rule
+
+Do **not** use one URL for every workflow. Pick the endpoint by device and evidence type:
+
+- **Simulator/local regression**: start `scripts/services.sh` and use `localhost` (`:8080`, `:8081`, `:8083`).
+- **Physical iPhone / Bark / public backend verification**: use `https://wbk.shanbox.19930810.xyz:8443`.
+- **Physical iPhone cache and JSBridge fixture pages**: use `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/`.
+- **HTML prototype comparison**: use local `http://localhost:8083` unless a specific public prototype deployment is being verified.
+
 ### Public shanbox Backend
 
 Do **not** replace the local services above with the public URL. They serve different verification scopes.
@@ -20,6 +29,8 @@ Do **not** replace the local services above with the public URL. They serve diff
 | Local test HTTP | http://localhost:8081 | Static fixtures for cache tests and offline/cache HTML validation | Production/Bark route checks |
 | Local prototype | http://localhost:8083 | HTML design prototype comparison | Backend/API validation |
 | Public shanbox Swift backend | https://wbk.shanbox.19930810.xyz:8443 | Real-phone/server config, Bark-compatible route checks, public `/health`, `/register`, `/push`, `/test`, `/api/v1/commands` verification | Local fixture tests, prototype viewing, APNs delivery proof by itself |
+| Public shanbox static fixtures | https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/ | Real-phone cache/offline/JSBridge demo pages and externally reachable WebView fixtures | Backend, Bark, push, command, or admin route checks |
+| Public shanbox Node admin console | https://wbk.shanbox.19930810.xyz:8443/admin | Real-phone/browser admin console checks; public `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` verification | Local source-only admin checks |
 | Local Node admin console | http://127.0.0.1:{dynamic-port} | Source-level admin console checks for `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` | Proving the Node admin console is deployed on public shanbox |
 
 Use the public URL when validating the deployed backend or configuring the app on a physical iPhone:
@@ -29,6 +40,8 @@ bash tools/verify-shanbox-backend.sh
 WBK_SHANBOX_URL=https://wbk.shanbox.19930810.xyz:8443 bash tools/verify-shanbox-backend.sh
 bash tools/verify-shanbox-supervision.sh
 bash tools/verify-node-admin-local.sh
+curl -k https://wbk.shanbox.19930810.xyz:8443/health
+curl -k https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html
 ```
 
 The public shanbox backend check is route-level evidence only. It does not prove APNs registration, real Bark delivery, lock-screen/background notification behavior, phone LAN behavior, or process supervision. Use `tools/verify-shanbox-supervision.sh` for SSH-level process supervision evidence.
