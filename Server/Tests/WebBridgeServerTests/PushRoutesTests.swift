@@ -19,7 +19,7 @@ struct PushRoutesTests {
     func barkGetPush() async throws {
         let app = createApplication()
         try await app.test(.router) { client in
-            try await client.execute(uri: "/testkey/hello/world", method: .get) { response in
+            try await client.execute(uri: "/test_resources/hello/world", method: .get) { response in
                 #expect(response.status == .ok)
             }
         }
@@ -29,7 +29,7 @@ struct PushRoutesTests {
     func barkPostPush() async throws {
         let app = createApplication()
         try await app.test(.router) { client in
-            try await client.execute(uri: "/testkey/title/body", method: .post) { response in
+            try await client.execute(uri: "/test_resources/title/body", method: .post) { response in
                 #expect(response.status == .ok)
             }
         }
@@ -40,7 +40,7 @@ struct PushRoutesTests {
         let app = createApplication()
         try await app.test(.router) { client in
             let body = ByteBuffer(string: """
-            {"device_key": "testkey", "title": "Hello", "body": "World"}
+            {"device_key": "test", "title": "Hello", "body": "World"}
             """)
             try await client.execute(uri: "/push", method: .post, body: body) { response in
                 #expect(response.status == .ok)
