@@ -153,8 +153,11 @@ record(
 
 known_unavailable_markers = [
     "Push Notifications provisioning profile is unavailable",
+    "SuperApp real-device install/launch is blocked by Push capability signing",
     "Bark/APNs end-to-end delivery is unavailable",
     "Physical iOS Settings handoff not proven on real device",
+    "real-device-nopush-override.log",
+    "com.webbridgekit.superapp.nopush",
 ]
 for marker in known_unavailable_markers:
     record(marker in doc, f"Known unavailable marker: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
