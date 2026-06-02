@@ -147,7 +147,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 
 | Script | Purpose | Pass Signal | Notes |
 |--------|---------|-------------|-------|
-| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes: `/health`, `/api/v1/stats`, `/api/v1/manifests`, `/register`, `/push`, `/test`, `/api/v1/commands`, Bark-compatible GET | `8 passed, 0 failed`; Node admin paths currently tracked as unavailable | Route-level only; fake device token does not prove APNs delivery |
+| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, and encoded Bark query paths | `16 passed, 0 failed`; Node admin paths currently tracked as unavailable | Route-level only; fake device token does not prove APNs delivery |
 | `bash tools/run-real-device-smoke.sh` | Auto-discovers paired/available iPhone, builds for device, installs, launches `com.webbridgekit.superapp` | `4 passed, 0 failed` | Proves physical build/install/launch only, not APNs/Bark delivery |
 | `bash tools/run-release-gate.sh` | Release readiness: services, SwiftLint, design lint, Debug build, crash scan, Release archive, no test HTML in app bundle | `Summary: ... failed` must be 0 | Use before release/archive handoff |
 | `bash tools/validate-cache-html.sh` | Validates cache-related HTML resources | Exit 0 | Use after changing test resources or cached HTML fixtures |

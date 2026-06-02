@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-02 09:55 CST
-Commit under test: current worktree based on `724553e`
+Date: 2026-06-02 10:12 CST
+Commit under test: current worktree based on `525f253`
 Simulator: `iPhone 16 Pro`, iOS Simulator 26.5, command destination `platform=iOS Simulator,name=iPhone 16 Pro`<br>
 Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `com.webbridgekit.superapp`
 
@@ -17,9 +17,9 @@ Physical device install: `许映洲的iPhone`, iPhone 13, iOS 18.7.3, bundle `co
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
 | Bark/Push/message semantics | Available | `MessageTests`: 226 tests, 0 failures |
-| Server route semantics | Available | `cd Server && swift test` passed 13 tests, 0 failures |
+| Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Available | `bash tools/run-real-device-smoke.sh` passed 4/4 gates on `许映洲的iPhone` |
-| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 8 passed, 0 failed |
+| shanbox Swift backend | Available | `bash tools/verify-shanbox-backend.sh` -> 16 passed, 0 failed |
 | shanbox Node admin console | Unavailable on current public service | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/ws/status`, `/messages`, `/packages` returned expected 404 because the public `wbk` host is running the Swift backend, not `Server/node/server.js` |
 
 ## Automated Evidence
@@ -59,7 +59,7 @@ xcodebuild test -workspace WebBridgeKit.xcworkspace -scheme MessageTests \
 
 ```bash
 cd Server && swift test
-# Result: Test run with 13 tests in 3 suites passed
+# Result: Test run with 16 tests in 3 suites passed
 # Suites: Manifest Routes, Push Routes, Command Routes
 ```
 
@@ -76,7 +76,7 @@ bash tools/run-real-device-smoke.sh
 
 ```bash
 bash tools/verify-shanbox-backend.sh
-# Result: 8 passed, 0 failed, 5 unavailable/needs deployment
+# Result: 16 passed, 0 failed, 5 unavailable/needs deployment
 # Report: build/reports/shanbox-backend-verification.md
 #
 # Required-available routes:
@@ -84,10 +84,18 @@ bash tools/verify-shanbox-backend.sh
 # - GET /api/v1/stats
 # - GET /api/v1/manifests
 # - POST /register
+# - ASSERT register response code == 200
 # - POST /push
+# - ASSERT JSON push response code == 200
 # - POST /test
+# - ASSERT test push response success == true
 # - POST /api/v1/commands
 # - GET /test_resources/Codex/route%20check
+# - ASSERT Bark GET response code == 200
+# - POST /test_resources/Codex/post%20route
+# - ASSERT Bark POST response code == 200
+# - GET /test_resources/{encoded-title}/{encoded-body}?sound=bell&group=Codex%20Group&url={encoded-url}
+# - ASSERT Bark encoded query response code == 200
 #
 # Known-unavailable Node routes:
 # - GET /admin
@@ -114,9 +122,9 @@ bash tools/verify-shanbox-backend.sh
 | Push/Bark | Notification debug entry | `Push` -> `Bark 推送调试` | `NotificationDebugViewController.swift` | UI test opens screen in Debug build | Available | Debug-only in non-Debug builds |
 | Push/Bark | Copy Bark-compatible push URL | `Push` -> copy icon beside push URL | `TokenPushHomeViewModel.copyPushURL()` | UI test taps control without crash; MessageTests cover routing/payload semantics | Available | Clipboard content is not asserted in XCUITest |
 | Push/Bark | Bark payload validation | `Push` -> `校验 Bark Payload` | `TokenPushHomeViewModel.validatePayload()`, `PushPayload.swift` | UI test taps control; `MessageTests` validates Bark/push payload behavior | Available | |
-| Push/Bark | shanbox health and JSON push route | External `https://wbk.shanbox.19930810.xyz:8443` | `Server/Sources/WebBridgeServer/Routes/HealthRoutes.swift`, `PushRoutes.swift` | `tools/verify-shanbox-backend.sh`: `/health`, `/register`, `/push` | Available for route-level checks | This uses a fake device token, so APNs delivery is not proven |
-| Push/Bark | shanbox Bark-compatible URL | External `/{key}/{title}/{body}` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/PushRoutesTests` | Available for route-level checks | Uses service test key; real APNs delivery still requires a real registered token |
-| Push/Bark | shanbox test endpoint | External `POST /test` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/PushRoutesTests` | Available | Fixed recursive timestamp formatter before redeploy |
+| Push/Bark | shanbox health and JSON push route | External `https://wbk.shanbox.19930810.xyz:8443` | `Server/Sources/WebBridgeServer/Routes/HealthRoutes.swift`, `PushRoutes.swift` | `tools/verify-shanbox-backend.sh`: `/health`, `/register`, `/push`, JSON response code assertions | Available for route-level checks | This uses a fake device token, so APNs delivery is not proven |
+| Push/Bark | shanbox Bark-compatible URL | External `/{key}/{title}/{body}` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/PushRoutesTests` verify GET, POST, encoded Chinese title/body, and query parameters | Available for route-level checks | Uses service test key; real APNs delivery still requires a real registered token |
+| Push/Bark | shanbox test endpoint | External `POST /test` | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` | `tools/verify-shanbox-backend.sh` asserts `success == true`; `Server/PushRoutesTests.testPushEndpointReportsSuccess` | Available | Route-level semantic success verified; APNs delivery still requires real token |
 | Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift` | Not fully automatable in simulator | Needs physical/manual | Must verify notification permission prompt, device token, foreground/background delivery on iPhone |
 | Bridge | Primary tab loads | Bottom tab `Bridge` | `BridgeLabHomeView.swift` | UI test verifies `bridgeLab.home`, groups, command list, parameter editor | Available | |
 | Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabViewModel.swift` | UI test taps execute; `BridgeTests` validates registry/core semantics | Available | Real WebView execution remains future wiring per current UI copy |
@@ -172,6 +180,8 @@ bash tools/verify-shanbox-backend.sh
 | UI test helper treated offscreen accessibility elements as visible | XCUITest could tap stale/offscreen coordinates and hit the wrong row on long SwiftUI pages | `SuperAppUITests/ModuleAvailabilityTests.swift` |
 | Real-device smoke script only auto-detected devices whose state text contained `connected` | A paired and available iPhone could be present but still require manual `DEVICE_ID`, weakening repeatability of physical install/launch evidence | `tools/run-real-device-smoke.sh` |
 | Notification settings handoff was listed as manual-only | Settings notification row had weaker evidence than necessary, even though XCUITest can assert the system Settings app reaches foreground | `SuperAppUITests/ModuleAvailabilityTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
+| Bark/Push route evidence only checked shallow HTTP 200s | A route could return 200 while response semantics, encoded Bark URLs, POST compatibility, or optional payload fields stayed unverified | `tools/verify-shanbox-backend.sh`, `Server/Tests/WebBridgeServerTests/PushRoutesTests.swift`, `docs/verification/module-availability-verification.md`, `AGENTS.md` |
+| Push test endpoint logs used dynamic strings as NSLog format strings | Percent-encoded URLs such as `%3A%2F%2F` were mangled in server logs, weakening debug evidence | `Server/Sources/WebBridgeServer/Routes/PushRoutes.swift` |
 
 ## Remaining Non-Blocking Debt
 
