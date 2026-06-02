@@ -200,14 +200,7 @@ public final class EngineBootstrap {
     // MARK: - CommandParser
 
     private func bootstrapCommandParser() async {
-        let config = CommandParserConfiguration(
-            maxPayloadSize: 4096,
-            maxAge: 300,
-            allowedSchemes: ["http", "https"],
-            enableSignatureVerification: false,
-            enableTimestampValidation: false
-        )
-        await CommandParser.shared.setConfiguration(config)
+        await CommandHandler.configureParserForAppCommands()
         #if DEBUG
         print("  [OK] CommandParser Engine: initialized (clipboard monitoring active)")
         #endif

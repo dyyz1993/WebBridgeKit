@@ -136,6 +136,23 @@ final class CommandParserTests: XCTestCase {
         XCTAssertEqual(result.url, "https://example.com")
     }
 
+    func testParseAppSchemeURLWhenExplicitlyAllowed() async throws {
+        let config = CommandParserConfiguration(
+            allowedSchemes: ["http", "https", "webbridgekit"],
+            enableSignatureVerification: false,
+            enableTimestampValidation: false
+        )
+        await parser.setConfiguration(config)
+
+        let payload: [String: Any] = ["url": "webbridgekit://tab?index=2"]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        let base64 = data.base64EncodedString()
+
+        let result = try await parser.parse(base64)
+        XCTAssertEqual(result.appid, "")
+        XCTAssertEqual(result.url, "webbridgekit://tab?index=2")
+    }
+
     func testParseMissingRouteTarget() async throws {
         let payload: [String: Any] = ["title": "No route"]
         let data = try JSONSerialization.data(withJSONObject: payload)
