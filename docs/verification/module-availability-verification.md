@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-04 00:07 CST
-Commit under test: `5147ca8` plus current shanbox backend refresh
+Date: 2026-06-04 00:13 CST
+Commit under test: `c00cc74` plus current shanbox static fixture refresh
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 26.5, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `connected` to Xcode CoreDevice
 
@@ -26,6 +26,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual on 2026-06-03 00:52 CST; `project.yml` points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
 | shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-04 00:07 CST |
 | shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-04 00:07 CST |
+| shanbox static fixtures for phone WebView/cache/JSBridge | Available for public reachability/content markers | `bash tools/verify-shanbox-fixtures.sh` -> 18 passed, 0 failed, report date 2026-06-04 00:13 CST; verifies `bridge-hub.html`, `bridge-promise-smoke.html`, `cache-showcase.html`, `WebBridge.js`, manifest, CSS/JS/image resources on `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources` |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Available | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` all return 200; `webbridge-node-admin` is supervised on remote port `8765` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
@@ -90,7 +91,7 @@ cd Server && swift test
 
 ```bash
 bash tools/verify-module-availability-report.sh
-# Result: 80 passed, 0 failed
+# Result: 96 passed, 0 failed
 # Report: build/reports/module-availability-report-check.md
 #
 # Scope:
@@ -100,6 +101,7 @@ bash tools/verify-module-availability-report.sh
 # - Requires known unavailable markers for current APNs/Push provisioning blockers.
 # - Requires Appearance and remember-last-app restore to be marked available when source implementation is present.
 # - Requires real WebView JSBridge evidence plus Debug Center concrete child-entry/content/action evidence.
+# - Requires public shanbox fixture evidence for physical-phone WebView/cache/JSBridge pages.
 ```
 
 ```bash
@@ -245,6 +247,33 @@ bash tools/verify-shanbox-supervision.sh
 ```
 
 ```bash
+bash tools/verify-shanbox-fixtures.sh
+# Result: 18 passed, 0 failed
+# Date: 2026-06-04 00:13 CST
+# Report: build/reports/shanbox-fixtures-verification.md
+#
+# Verified public static fixtures:
+# - /index.html
+# - /bridge-hub.html
+# - /bridge-promise-smoke.html
+# - /cache-showcase.html
+# - /engine-dashboard.html
+# - /all-in-one-tester.html
+# - /message-showcase.html
+# - /websocket-showcase.html
+# - /bridge-device.html
+# - /bridge-interaction.html
+# - /bridge-cache.html
+# - /manifest_demo.html
+# - /image_cache_test.html
+# - /WebBridge.js
+# - /manifest.json
+# - /css/styles.css
+# - /js/app.js
+# - /images/logo.png
+```
+
+```bash
 bash tools/verify-node-admin-local.sh
 # Result: 11 passed, 0 failed
 # Report: build/reports/node-admin-local-verification.md
@@ -293,6 +322,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Web Cache | Cache management | `Web` -> `缓存管理` | `ManagementViewController.swift`, `CacheManagementViewController.swift` | UI test opens segmented management screen | Available | |
 | Web Cache | Clear all confirmation | `Web` -> `清理全部缓存` | `WebCacheHomeViewModel.clearAllCache()` | UI test verifies confirmation sheet and cancel action | Available | Destructive confirm is visible |
 | Web Cache | Resource/manifest/offline storage semantics | Non-UI cache APIs | `Sources/Cache/` | `CacheTests`: 548/548 | Available | Includes manifest, URL scheme, resource cache, stats |
+| Web Cache | Public phone cache fixtures | Physical iPhone WebView target `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/cache-showcase.html` and related static resources | `test_resources/cache-showcase.html`, `test_resources/manifest.json`, `test_resources/css/styles.css`, `test_resources/js/app.js`, `test_resources/images/logo.png`, `tools/verify-shanbox-fixtures.sh` | `tools/verify-shanbox-fixtures.sh`: Cache showcase, manifest JSON, CSS, JS, and image resource all returned HTTP 200 with expected content markers | Available for public fixture reachability | Does not prove full offline cache completion on a physical iPhone; native/cache semantics remain covered by `CacheTests` and simulator UI evidence |
 | Push/Bark | Primary tab loads | Bottom tab `Push` | `TokenPushHomeView.swift` | UI test verifies `tokenPush.home` and metric grid | Available | |
 | Push/Bark | Access token manager | `Push` -> `访问口令` | `TokenManageViewController.swift` | UI test opens screen | Available | |
 | Push/Bark | Bark API/API key manager | `Push` -> `Bark API / API Key` | `APIKeyManageViewController.swift` | UI test opens screen | Available | |
@@ -307,6 +337,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Bridge | Primary tab loads | Bottom tab `Bridge` | `BridgeLabHomeView.swift` | UI test verifies `bridgeLab.home`, groups, command list, parameter editor | Available | |
 | Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabHomeView.swift`, `BridgeLabViewModel.swift`, `ResultPanel.swift`, `ModuleAvailabilityTests.swift` | Existing UI test taps execute; `BridgeTests` validates registry/core semantics. Current source now exposes `bridge.resultPanel` and `testBridgeLabControlsAreUsable` asserts the result value contains `命令已完成结构化校验` and `cache.stats`, but the focused rerun was blocked before XCTest execution by local `AssetCatalogSimulatorAgent`/CoreSimulator system-policy failure while compiling `Sources/Theme/icons.xcassets`. | Partially available | Bridge Lab is a validation/lab surface, not the production WebView execution path. Keep partial until `testBridgeLabControlsAreUsable` passes with the new `bridge.resultPanel` assertions; real WebView Promise execution is separately proven below |
 | Bridge | Real WebView JSBridge Promise execution | `Web` -> `在线` -> open `bridge-promise-smoke.html` | `WebJavaScriptBridge.swift`, `Resources/WebBridge.js`, `SuperApp/Resources/WebBridge.js`, `WebBrowserViewModel.swift`, `WebBrowserViewController.swift`, `WebBrowserViewController+Navigation.swift`, `LazyManifestLoader.swift`, `PersistentManifestLoader.swift`, `test_resources/bridge-promise-smoke.html` | `ModuleAvailabilityTests.testRealWebViewBridgePromiseResolves` passed on simulator UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0` | Available on simulator | Proves page JS -> native `getSystemInfo` -> JS Promise resolve -> DOM text `Bridge Promise OK`; physical-device WebView smoke can reuse the same URL after phone backend reachability is configured |
+| Bridge | Public phone JSBridge fixture pages | Physical iPhone WebView target `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html` and linked Bridge pages | `test_resources/bridge-hub.html`, `bridge-promise-smoke.html`, `bridge-device.html`, `bridge-interaction.html`, `bridge-cache.html`, `WebBridge.js`, `tools/verify-shanbox-fixtures.sh` | `tools/verify-shanbox-fixtures.sh`: Bridge hub, Bridge Promise smoke, Bridge device, Bridge interaction, Bridge cache, and `WebBridge.js` returned HTTP 200 with expected content markers | Available for public fixture reachability | Does not prove native Bridge execution on physical iPhone; simulator real WebView Promise smoke and `BridgeTests` cover execution semantics |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
 | Commands | shanbox command generation | External `POST /api/v1/commands` | `Server/Sources/WebBridgeServer/Routes/CommandRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/CommandRoutesTests` | Available | Public endpoint returns a signed command token |
 | Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=PASS | Available | Process is running, listening, and supervised by supervisord |
