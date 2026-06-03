@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-03 00:55 CST
-Commit under test: `869402f` plus current real-device Push readiness refresh
+Date: 2026-06-04 00:07 CST
+Commit under test: `5147ca8` plus current shanbox backend refresh
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 26.5, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `connected` to Xcode CoreDevice
 
@@ -24,8 +24,8 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Unavailable for SuperApp in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `connected`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications; a no-push command-line override with bundle id `com.webbridgekit.superapp.nopush` also failed before producing `SuperApp.app` |
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual on 2026-06-03 00:52 CST; `project.yml` points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
-| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-03 00:52 CST |
-| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-03 00:52 CST |
+| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-04 00:07 CST |
+| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-04 00:07 CST |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Available | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` all return 200; `webbridge-node-admin` is supervised on remote port `8765` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
@@ -196,7 +196,7 @@ xcodebuild build -workspace WebBridgeKit.xcworkspace \
 ```bash
 bash tools/verify-shanbox-backend.sh
 # Result: 26 passed, 0 failed, 0 unavailable/needs deployment
-# Date: 2026-06-03 00:52 CST
+# Date: 2026-06-04 00:07 CST
 # Report: build/reports/shanbox-backend-verification.md
 #
 # Required-available routes:
@@ -233,7 +233,7 @@ bash tools/verify-shanbox-backend.sh
 ```bash
 bash tools/verify-shanbox-supervision.sh
 # Result: process=PASS, supervision=PASS, node_admin=PASS
-# Date: 2026-06-03 00:52 CST
+# Date: 2026-06-04 00:07 CST
 # Report: build/reports/shanbox-supervision-verification.md
 #
 # Evidence:
