@@ -190,9 +190,12 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("diagnostics.lastAction")
         assertElementValue("diagnostics.lastAction", contains: "已复制到剪贴板")
         app.buttons["确定"].tapIfExists()
-        goBack()
+        tapElement("diagnostics.action.1.1")
+        assertExists("diagnostics.lastAction")
+        assertElementValue("diagnostics.lastAction", contains: "诊断文件已生成", timeout: 8)
+        dismissShareSheetIfPresent()
 
-        assertExists("debugCenter.home")
+        restartAtDebugCenter()
         tapActionRow(identifier: "debugCenter.openNetworkInspector", title: "网络请求")
         assertExists("networkDebug.tableView")
         assertExists("networkDebug.cell.0")
@@ -201,9 +204,8 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertTextExists("200")
         tapElement("networkDebug.clearButton")
         assertTextExists("暂无网络请求记录")
-        goBack()
 
-        assertExists("debugCenter.home")
+        restartAtDebugCenter()
         tapActionRow(identifier: "debugCenter.openManifestCacheTests", title: "Manifest 缓存用例")
         assertExists("manifestCacheTest.root")
         assertExists("manifest_test.url_field")
@@ -213,6 +215,13 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertElementValue("manifest_test.log_view", contains: "Manifest 缓存测试页面已加载")
         tapElement("manifest_test.clear_cache_button")
         assertElementValue("manifest_test.log_view", contains: "所有缓存已清除", timeout: 6)
+        replaceText(in: "manifest_test.url_field", with: "http://localhost:8081/test_resources/bridge-hub.html")
+        tapElement("manifest_test.start_button")
+        assertExists("WebViewDisplayViewController", timeout: 12)
+        assertExists("manifest_test.display_webview", timeout: 8)
+        assertExists("webview_display.close_button")
+        tapElement("webview_display.close_button")
+        assertElementValue("manifest_test.log_view", contains: "智能加载成功", timeout: 12)
         goBack()
     }
 
@@ -371,6 +380,15 @@ final class ModuleAvailabilityTests: XCTestCase {
         return false
     }
 
+    private func dismissShareSheetIfPresent() {
+        if element("diagnostics.shareSheet").exists
+            || app.sheets.firstMatch.exists
+            || app.navigationBars["分享"].exists
+            || app.navigationBars["Share"].exists {
+            dismissCurrentPresentation()
+        }
+    }
+
     @discardableResult
     private func tapElement(_ identifier: String, timeout: TimeInterval = 8) -> XCUIElement {
         XCTAssertTrue(makeVisible(identifier, timeout: timeout), "Expected tappable element: \(identifier)")
@@ -456,6 +474,12 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("debugCenter.home")
     }
 
+    private func restartAtDebugCenter() {
+        app.terminate()
+        app.launch()
+        openDebugCenter()
+    }
+
     private func makeVisible(_ identifier: String, timeout: TimeInterval) -> Bool {
         makeVisible(identifier, timeout: timeout, inRoot: nil)
     }
@@ -520,17 +544,28 @@ final class ModuleAvailabilityTests: XCTestCase {
     }
 
     private func goBack() {
-        let backButton = app.navigationBars.buttons.element(boundBy: 0)
-        if backButton.exists, backButton.isHittable {
-            backButton.tap()
-            RunLoop.current.run(until: Date().addingTimeInterval(0.6))
-            return
+        for label in ["调试中心", "设置", "返回", "Back", "Debug Center", "Settings"] {
+            let button = app.navigationBars.buttons[label]
+            if button.exists {
+                if button.isHittable {
+                    button.tap()
+                } else {
+                    button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+                return
+            }
         }
 
-        if app.buttons["返回"].exists {
-            app.buttons["返回"].tap()
-        } else if app.buttons["Back"].exists {
-            app.buttons["Back"].tap()
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        if backButton.exists {
+            if backButton.isHittable {
+                backButton.tap()
+            } else {
+                backButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            }
+        } else {
+            app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.07)).tap()
         }
         RunLoop.current.run(until: Date().addingTimeInterval(0.6))
     }

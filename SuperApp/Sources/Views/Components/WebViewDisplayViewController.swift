@@ -116,6 +116,7 @@ public class WebViewDisplayViewController: UIViewController {
 
         // 添加 WebView
         view.addSubview(webView)
+        webView.accessibilityIdentifier = "manifest_test.display_webview"
         webView.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide)
         }
