@@ -88,6 +88,7 @@ summary_items = [
     "Physical device install and launch",
     "Real-device Push/APNs readiness",
     "shanbox Swift backend",
+    "shanbox static fixtures",
     "Node admin local source",
     "shanbox Node admin console",
 ]
@@ -200,6 +201,23 @@ debug_center_markers = [
 ]
 for marker in debug_center_markers:
     record(marker in doc, f"Debug Center concrete screen evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
+
+shanbox_fixture_markers = [
+    "verify-shanbox-fixtures.sh",
+    "18 passed, 0 failed",
+    "bridge-hub.html",
+    "bridge-promise-smoke.html",
+    "cache-showcase.html",
+    "WebBridge.js",
+    "manifest.json",
+    "css/styles.css",
+    "js/app.js",
+    "images/logo.png",
+    "Public phone cache fixtures",
+    "Public phone JSBridge fixture pages",
+]
+for marker in shanbox_fixture_markers:
+    record(marker in doc, f"shanbox fixture evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
 
 record(
     "Bridge real WebView execution not fully available/proven" not in doc,
