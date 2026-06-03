@@ -15,13 +15,6 @@ struct BridgeLabHomeView: View {
                 commandSection
                 parameterSection
                 actionSection
-                ResultPanel(
-                    title: "执行结果",
-                    state: viewModel.resultState,
-                    accessibilityIdentifier: "bridge.resultPanel",
-                    detail: viewModel.resultDetail.isEmpty ? nil : viewModel.resultDetail,
-                    copyAction: viewModel.copyResult
-                )
             }
             .padding(.horizontal, ThemeTokens.Spacing.screenHorizontal)
             .padding(.top, ThemeTokens.Spacing.screenTop)
@@ -119,6 +112,14 @@ struct BridgeLabHomeView: View {
 
     private var actionSection: some View {
         VStack(alignment: .leading, spacing: ThemeTokens.Spacing.md) {
+            ResultPanel(
+                title: "执行结果",
+                state: viewModel.resultState,
+                accessibilityIdentifier: "bridge.resultPanel",
+                detail: viewModel.resultDetail.isEmpty ? nil : viewModel.resultDetail,
+                copyAction: viewModel.copyResult
+            )
+
             HStack(spacing: ThemeTokens.Spacing.md) {
                 Button(action: viewModel.executeSelectedCommand) {
                     Text("执行校验")

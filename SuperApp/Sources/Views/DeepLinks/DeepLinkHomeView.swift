@@ -18,13 +18,13 @@ struct DeepLinkHomeView: View {
                 ServiceStatusStrip(items: viewModel.serviceItems)
                 templateSection
                 builderSection
-                commandSection
                 ResultPanel(
                     title: "协议结果",
                     state: viewModel.resultState,
                     detail: viewModel.resultDetail.isEmpty ? nil : viewModel.resultDetail,
                     copyAction: viewModel.copyResult
                 )
+                commandSection
             }
             .padding(.horizontal, ThemeTokens.Spacing.screenHorizontal)
             .padding(.top, ThemeTokens.Spacing.screenTop)

@@ -45,7 +45,12 @@ struct ResultPanel: View {
                 .accessibilityIdentifier("resultPanel.message")
 
             if let detail, !detail.isEmpty {
-                CodeBlockView(title: nil, text: detail, maxHeight: 180)
+                CodeBlockView(
+                    title: nil,
+                    text: detail,
+                    maxHeight: 180,
+                    accessibilityIdentifier: "\(accessibilityIdentifier).detail"
+                )
             }
         }
         .padding(ThemeTokens.Spacing.lg)
