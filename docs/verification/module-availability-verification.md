@@ -1,7 +1,7 @@
 # Module Availability Verification Report
 
-Date: 2026-06-04 00:13 CST
-Commit under test: `c00cc74` plus current shanbox static fixture refresh
+Date: 2026-06-04 00:38 CST
+Commit under test: `fe513f5` plus current shanbox command token and static fixture refresh
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 26.5, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `connected` to Xcode CoreDevice
 
@@ -15,7 +15,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
 | Module UI availability | Available | `ModuleAvailabilityTests`: 14 tests, 0 failures on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; includes real WebView JSBridge smoke, split Settings row reachability gates, Debug Center global panel entry, Debug Center child tool concrete-screen entry checks, and Debug Center child tool content/action checks |
 | JSBridge real WebView Promise smoke | Available | `testRealWebViewBridgePromiseResolves` opens `bridge-promise-smoke.html`, executes `BarkBridge.callNative('getSystemInfo')`, and waits for DOM text `Bridge Promise OK` |
-| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh`; all `SettingsAction` entries are represented in the report and current unavailable markers are enforced |
+| Module availability report guard | Available | `bash tools/verify-module-availability-report.sh`; all `SettingsAction` entries are represented in the report and current unavailable markers plus shanbox command token semantics are enforced |
 | Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
 | Settings Appearance entry | Available | `settings.cell.appearance` now opens `AppearanceSettingsView`; `ThemeMode` selection is persisted to `settings.appearanceMode` and applied through `ThemeManager` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
@@ -24,8 +24,8 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Unavailable for SuperApp in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `connected`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications; a no-push command-line override with bundle id `com.webbridgekit.superapp.nopush` also failed before producing `SuperApp.app` |
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual on 2026-06-03 00:52 CST; `project.yml` points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
-| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 26 passed, 0 failed, 0 unavailable, report date 2026-06-04 00:07 CST |
-| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-04 00:07 CST |
+| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 27 passed, 0 failed, 0 unavailable, report date 2026-06-04 00:37 CST; includes `Command token semantics` asserting URL-safe command token payload decoding |
+| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-04 00:38 CST |
 | shanbox static fixtures for phone WebView/cache/JSBridge | Available for public reachability/content markers | `bash tools/verify-shanbox-fixtures.sh` -> 18 passed, 0 failed, report date 2026-06-04 00:13 CST; verifies `bridge-hub.html`, `bridge-promise-smoke.html`, `cache-showcase.html`, `WebBridge.js`, manifest, CSS/JS/image resources on `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources` |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Available | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` all return 200; `webbridge-node-admin` is supervised on remote port `8765` |
@@ -91,7 +91,7 @@ cd Server && swift test
 
 ```bash
 bash tools/verify-module-availability-report.sh
-# Result: 96 passed, 0 failed
+# Result: 100 passed, 0 failed
 # Report: build/reports/module-availability-report-check.md
 #
 # Scope:
@@ -102,6 +102,7 @@ bash tools/verify-module-availability-report.sh
 # - Requires Appearance and remember-last-app restore to be marked available when source implementation is present.
 # - Requires real WebView JSBridge evidence plus Debug Center concrete child-entry/content/action evidence.
 # - Requires public shanbox fixture evidence for physical-phone WebView/cache/JSBridge pages.
+# - Requires shanbox command token semantics evidence: URL-safe token and decoded payload.
 ```
 
 ```bash
@@ -197,8 +198,8 @@ xcodebuild build -workspace WebBridgeKit.xcworkspace \
 
 ```bash
 bash tools/verify-shanbox-backend.sh
-# Result: 26 passed, 0 failed, 0 unavailable/needs deployment
-# Date: 2026-06-04 00:07 CST
+# Result: 27 passed, 0 failed, 0 unavailable/needs deployment
+# Date: 2026-06-04 00:37 CST
 # Report: build/reports/shanbox-backend-verification.md
 #
 # Required-available routes:
@@ -212,6 +213,7 @@ bash tools/verify-shanbox-backend.sh
 # - POST /test
 # - ASSERT test push response success == true
 # - POST /api/v1/commands
+# - ASSERT Command token semantics == url-safe token, decoded payload ok
 # - GET /test_resources/Codex/route%20check
 # - ASSERT Bark GET response code == 200
 # - POST /test_resources/Codex/post%20route
@@ -235,7 +237,7 @@ bash tools/verify-shanbox-backend.sh
 ```bash
 bash tools/verify-shanbox-supervision.sh
 # Result: process=PASS, supervision=PASS, node_admin=PASS
-# Date: 2026-06-04 00:07 CST
+# Date: 2026-06-04 00:38 CST
 # Report: build/reports/shanbox-supervision-verification.md
 #
 # Evidence:
@@ -243,7 +245,7 @@ bash tools/verify-shanbox-supervision.sh
 # - Remote PID 1 is `supervisord`
 # - `supervisorctl status webbridgeserver` reports RUNNING
 # - Node admin process `webbridge-node-admin` listens on remote :8765 and is supervised by supervisord
-# - Public route verification passes 26/26 after path-proxying admin routes to Node
+# - Public route verification passes 27/27 after path-proxying admin routes to Node and validating command token semantics
 ```
 
 ```bash
@@ -339,7 +341,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Bridge | Real WebView JSBridge Promise execution | `Web` -> `在线` -> open `bridge-promise-smoke.html` | `WebJavaScriptBridge.swift`, `Resources/WebBridge.js`, `SuperApp/Resources/WebBridge.js`, `WebBrowserViewModel.swift`, `WebBrowserViewController.swift`, `WebBrowserViewController+Navigation.swift`, `LazyManifestLoader.swift`, `PersistentManifestLoader.swift`, `test_resources/bridge-promise-smoke.html` | `ModuleAvailabilityTests.testRealWebViewBridgePromiseResolves` passed on simulator UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0` | Available on simulator | Proves page JS -> native `getSystemInfo` -> JS Promise resolve -> DOM text `Bridge Promise OK`; physical-device WebView smoke can reuse the same URL after phone backend reachability is configured |
 | Bridge | Public phone JSBridge fixture pages | Physical iPhone WebView target `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html` and linked Bridge pages | `test_resources/bridge-hub.html`, `bridge-promise-smoke.html`, `bridge-device.html`, `bridge-interaction.html`, `bridge-cache.html`, `WebBridge.js`, `tools/verify-shanbox-fixtures.sh` | `tools/verify-shanbox-fixtures.sh`: Bridge hub, Bridge Promise smoke, Bridge device, Bridge interaction, Bridge cache, and `WebBridge.js` returned HTTP 200 with expected content markers | Available for public fixture reachability | Does not prove native Bridge execution on physical iPhone; simulator real WebView Promise smoke and `BridgeTests` cover execution semantics |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
-| Commands | shanbox command generation | External `POST /api/v1/commands` | `Server/Sources/WebBridgeServer/Routes/CommandRoutes.swift` | `tools/verify-shanbox-backend.sh`; `Server/CommandRoutesTests` | Available | Public endpoint returns a signed command token |
+| Commands | shanbox command generation | External `POST /api/v1/commands` | `Server/Sources/WebBridgeServer/Routes/CommandRoutes.swift`, `Server/Sources/WebBridgeServer/Services/CommandService.swift` | `tools/verify-shanbox-backend.sh`: `Command generation` and `Command token semantics` both pass; `Server/CommandRoutesTests` | Available | Public endpoint returns a signed `webbridgekit://command/<id>.<base64url-json>` token; verifier decodes payload and rejects `+`, `/`, or `=` padding in the token payload |
 | Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=PASS | Available | Process is running, listening, and supervised by supervisord |
 | Settings | Primary tab loads | Bottom tab `设置` | `SettingsView.swift`, `SettingsViewModel.swift` | UI test verifies top rows and all operational rows | Available | |
 | Settings | Server config | `设置` -> `服务器配置` (`settings.cell.serverConfig`) | `ServerConfigViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
@@ -422,6 +424,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Simulator destination by name can select the wrong runtime/device during repeated runs | A by-name run can fail for environment reasons even when the booted test simulator is healthy | Current evidence pins destination UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0` |
 | A single long Settings row UI test triggered XCTest high-log-volume SIGSEGV during automation | `CrashLogManager` recorded a SIGSEGV from `XCTAutomationSupport` after the old long `testSettingsOperationalRowsAreReachable` produced excessive repeated snapshot queries; crash gate became red even though the user-facing row routes were valid | `SuperAppUITests/ModuleAvailabilityTests.swift` splits the row coverage into `testSettingsCoreRowsAreReachable` and `testSettingsDebugAndSupportRowsAreReachable`, keeps About in its dedicated deep-drill test, reduces broad navigation/scroll snapshot queries, and the full module suite now passes 14/14 with crash scan `total: 0` |
 | Debug Center child tools only had entry-level evidence | A child row could open a shell while the expected content or primary action stayed broken | `SuperAppUITests/ModuleAvailabilityTests.testDebugCenterChildToolContentAndActionsAreUsable` now verifies diagnostics copy result, network seeded row plus clear action, and Manifest cache controls/log clear action; `DiagnosticsView.swift`, `NetworkDebugViewController.swift`, and `ManifestCacheTestViewController.swift` expose stable accessibility evidence |
+| shanbox command generation returned padded base64 token payloads | Public `/api/v1/commands` returned HTTP 200 but emitted `=` padding, conflicting with the app/report requirement for URL-safe command deep links | Synced the current `CommandService.swift` to `/root/WebBridgeKit/Server`, rebuilt `swift build -c release`, restarted `webbridgeserver` via supervisord, and added `Command token semantics` to `tools/verify-shanbox-backend.sh`; refreshed evidence is 27/27 pass |
 
 ## Remaining Unavailable And Manual-Only Items
 
