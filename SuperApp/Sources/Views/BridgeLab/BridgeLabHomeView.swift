@@ -18,6 +18,7 @@ struct BridgeLabHomeView: View {
                 ResultPanel(
                     title: "执行结果",
                     state: viewModel.resultState,
+                    accessibilityIdentifier: "bridge.resultPanel",
                     detail: viewModel.resultDetail.isEmpty ? nil : viewModel.resultDetail,
                     copyAction: viewModel.copyResult
                 )

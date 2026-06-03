@@ -175,6 +175,9 @@ for marker in bridge_smoke_markers:
 module_ui_markers = [
     "14 tests, 0 failures",
     "Test-SuperApp-2026.06.03_00-42-24-+0800.xcresult",
+    "bridge.resultPanel",
+    "命令已完成结构化校验",
+    "cache.stats",
     "testDebugCenterGlobalDebugPanelEntryOpensPanel",
     "testDebugCenterChildToolEntriesOpenConcreteScreens",
     "testDebugCenterChildToolContentAndActionsAreUsable",

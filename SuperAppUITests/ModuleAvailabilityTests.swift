@@ -91,6 +91,8 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("bridge.group.cache")
         assertExists("bridge.group.navigation")
         tapElement("bridge.executeButton")
+        assertElementValue("bridge.resultPanel", contains: "命令已完成结构化校验")
+        assertElementValue("bridge.resultPanel", contains: "cache.stats")
     }
 
     func testRealWebViewBridgePromiseResolves() {
