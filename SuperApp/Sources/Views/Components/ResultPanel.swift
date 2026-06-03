@@ -12,6 +12,7 @@ struct ResultPanel: View {
 
     let title: String
     let state: State
+    var accessibilityIdentifier: String = "resultPanel"
     var detail: String?
     var copyAction: (() -> Void)?
 
@@ -55,7 +56,7 @@ struct ResultPanel: View {
             RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card)
                 .stroke(Color.appSeparator, lineWidth: 1)
         )
-        .accessibilityIdentifier("resultPanel")
+        .accessibilityIdentifier(accessibilityIdentifier)
         .accessibilityValue(accessibilityValue)
     }
 
