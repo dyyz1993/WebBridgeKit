@@ -176,6 +176,7 @@ for marker in bridge_smoke_markers:
 module_ui_markers = [
     "14 tests, 0 failures",
     "Test-SuperApp-2026.06.04_01-36-26-+0800.xcresult",
+    "Test-SuperApp-2026.06.04_03-06-36-+0800.xcresult",
     "3 tests, 0 failures",
     "Test-SuperApp-2026.06.04_01-31-30-+0800.xcresult",
     "testTokenPushAndBarkControlsAreUsable",
@@ -187,10 +188,15 @@ module_ui_markers = [
     "testDebugCenterChildToolEntriesOpenConcreteScreens",
     "testDebugCenterChildToolContentAndActionsAreUsable",
     "diagnostics.lastAction",
+    "diagnostics.action.1.1",
+    "诊断文件已生成",
     "networkDebug.cell.0",
     "networkDebug.clearButton",
     "manifest_test.stats_label",
     "manifest_test.log_view",
+    "WebViewDisplayViewController",
+    "manifest_test.display_webview",
+    "智能加载成功",
 ]
 for marker in module_ui_markers:
     record(marker in doc, f"Module UI suite evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)

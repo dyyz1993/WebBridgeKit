@@ -68,6 +68,7 @@ final class DiagnosticsViewModel: ObservableObject {
             let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
             try? string.write(to: url, atomically: true, encoding: .utf8)
             shareItemURL = url
+            lastActionMessage = "诊断分享已准备"
             isExporting = false
         }
     }
@@ -248,12 +249,12 @@ struct DiagnosticsView: View {
         }
         .navigationTitle(L10n.tr("settings.diagnostics.title"))
         .accessibilityIdentifier("diagnostics.root")
-        .background(
-            ShareSheetPresenter(isPresented: Binding(
-                get: { viewModel.shareItemURL != nil },
-                set: { if !$0 { viewModel.shareItemURL = nil } }
-            ), url: viewModel.shareItemURL ?? URL(fileURLWithPath: "/dev/null"))
-        )
+        .sheet(isPresented: Binding(
+            get: { viewModel.shareItemURL != nil },
+            set: { if !$0 { viewModel.shareItemURL = nil } }
+        )) {
+            ActivityShareSheet(url: viewModel.shareItemURL ?? URL(fileURLWithPath: "/dev/null"))
+        }
         .alert(isPresented: $viewModel.showClearConfirmation) {
             Alert(
                 title: Text("确认清除"),
@@ -311,30 +312,21 @@ struct DiagnosticsView: View {
     }
 }
 
-private struct ShareSheetPresenter: UIViewControllerRepresentable {
-    @Binding var isPresented: Bool
+private struct ActivityShareSheet: UIViewControllerRepresentable {
     let url: URL
 
-    func makeUIViewController(context: Context) -> UIViewController {
-        let vc = UIViewController()
-        DispatchQueue.main.async {
-            if self.isPresented {
-                let activityVC = UIActivityViewController(activityItems: [self.url], applicationActivities: nil)
-                activityVC.completionWithItemsHandler = { _, _, _, _ in
-                    self.isPresented = false
-                }
-                if let popover = activityVC.popoverPresentationController {
-                    popover.sourceView = vc.view
-                    popover.sourceRect = CGRect(x: vc.view.bounds.midX, y: vc.view.bounds.midY, width: 0, height: 0)
-                    popover.permittedArrowDirections = []
-                }
-                vc.present(activityVC, animated: true)
-            }
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        activityVC.view.accessibilityIdentifier = "diagnostics.shareSheet"
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = activityVC.view
+            popover.sourceRect = CGRect(x: activityVC.view.bounds.midX, y: activityVC.view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
         }
-        return vc
+        return activityVC
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #endif
