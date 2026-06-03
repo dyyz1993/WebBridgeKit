@@ -189,8 +189,22 @@ class TabBarController: UITabBarController {
         }
         let hostingVC = UIHostingController(rootView: view)
         hostingVC.title = tab.title
+        hostingVC.view.accessibilityIdentifier = rootAccessibilityIdentifier(for: tab)
         hostingVC.tabBarItem = tab.makeTabBarItem()
         return hostingVC
+    }
+
+    private func rootAccessibilityIdentifier(for tab: AppTab) -> String {
+        switch tab {
+        case .web:
+            return "webCache.home"
+        case .tokenPush:
+            return "tokenPush.home"
+        case .bridge:
+            return "bridgeLab.home"
+        case .settings:
+            return "SettingsViewController"
+        }
     }
 
     private func handleWebCacheAction(_ action: WebCacheHomeAction) {

@@ -18,13 +18,13 @@ struct TokenPushHomeView: View {
                 ServiceStatusStrip(items: viewModel.serviceItems)
                 metricSection
                 actionSection
-                payloadSection
                 ResultPanel(
                     title: "校验结果",
                     state: viewModel.resultState,
                     detail: viewModel.resultDetail.isEmpty ? nil : viewModel.resultDetail,
                     copyAction: viewModel.copyPayloadResult
                 )
+                payloadSection
             }
             .padding(.horizontal, ThemeTokens.Spacing.screenHorizontal)
             .padding(.top, ThemeTokens.Spacing.screenTop)
@@ -34,7 +34,6 @@ struct TokenPushHomeView: View {
         .navigationTitle("Token/Push")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: viewModel.refreshSnapshot)
-        .accessibilityIdentifier("tokenPush.home")
     }
 
     private var metricSection: some View {

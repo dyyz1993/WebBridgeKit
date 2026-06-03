@@ -5,6 +5,7 @@ struct CodeBlockView: View {
     let title: String?
     let text: String
     var maxHeight: CGFloat = 220
+    var accessibilityIdentifier: String = "codeBlock"
 
     var body: some View {
         VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
@@ -21,6 +22,7 @@ struct CodeBlockView: View {
                     .foregroundColor(Color.appText)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(ThemeTokens.Spacing.md)
+                    .accessibilityIdentifier("\(accessibilityIdentifier).text")
             }
             .frame(maxHeight: maxHeight)
             .background(Color(ThemeTokens.Color.surface))
@@ -30,6 +32,6 @@ struct CodeBlockView: View {
                     .stroke(Color.appSeparator, lineWidth: 1)
             )
         }
-        .accessibilityIdentifier("codeBlock")
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }

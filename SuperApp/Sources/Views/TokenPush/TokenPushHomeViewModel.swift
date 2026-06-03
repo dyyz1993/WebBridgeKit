@@ -21,9 +21,7 @@ final class TokenPushHomeViewModel: ObservableObject {
     @Published var resultState: ResultPanel.State = .idle
     @Published var resultDetail = ""
 
-    init() {
-        refreshSnapshot()
-    }
+    private var snapshotTask: Task<Void, Never>?
 
     var serviceItems: [AppShellStatusItem] {
         [
@@ -47,6 +45,14 @@ final class TokenPushHomeViewModel: ObservableObject {
     }
 
     func refreshSnapshot() {
+        snapshotTask?.cancel()
+        snapshotTask = Task { [weak self] in
+            await Task.yield()
+            self?.refreshSnapshotNow()
+        }
+    }
+
+    private func refreshSnapshotNow() {
         let deviceToken = PushNotificationManager.shared.deviceToken
         deviceTokenState = deviceToken?.isEmpty == false ? "已注册" : "未注册"
 

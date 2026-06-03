@@ -1,8 +1,8 @@
 # Module Availability Verification Report
 
-Date: 2026-06-04 00:38 CST
-Commit under test: `fe513f5` plus current shanbox command token and static fixture refresh
-Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 26.5, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
+Date: 2026-06-04 01:54 CST
+Commit under test: `f25e556` plus current result-panel and Push UI automation refresh
+Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>
 Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554-B65D-9990CEEAB0EA`, currently `connected` to Xcode CoreDevice
 
 ## Summary
@@ -13,7 +13,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
 | Crash gate | Available | `bash scripts/scan-crash-logs.sh --json` -> `{"diagnostic_reports":0,"app_crash_logs":0,"total":0}` |
 | Design lint | Available with warnings | `bash tools/ci-lint.sh` passed 16/16 checks, 0 errors, 5 warnings |
-| Module UI availability | Available | `ModuleAvailabilityTests`: 14 tests, 0 failures on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; includes real WebView JSBridge smoke, split Settings row reachability gates, Debug Center global panel entry, Debug Center child tool concrete-screen entry checks, and Debug Center child tool content/action checks |
+| Module UI availability | Available | `ModuleAvailabilityTests`: 14 tests, 0 failures on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; full rerun includes Push/Bark, Bridge Lab, and Deep Link result-panel paths, plus the affected 3-test focused rerun on the same UDID; includes real WebView JSBridge smoke, Bridge Lab execute-result evidence, split Settings row reachability gates, Debug Center global panel entry, Debug Center child tool concrete-screen entry checks, and Debug Center child tool content/action checks |
 | JSBridge real WebView Promise smoke | Available | `testRealWebViewBridgePromiseResolves` opens `bridge-promise-smoke.html`, executes `BarkBridge.callNative('getSystemInfo')`, and waits for DOM text `Bridge Promise OK` |
 | Module availability report guard | Available | `bash tools/verify-module-availability-report.sh`; all `SettingsAction` entries are represented in the report and current unavailable markers plus shanbox command token semantics are enforced |
 | Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
@@ -24,9 +24,9 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Server route semantics | Available | `cd Server && swift test` passed 16 tests, 0 failures |
 | Physical device install and launch | Unavailable for SuperApp in current signing environment | `xcrun devicectl list devices` shows the paired iPhone as `connected`; `bash tools/run-real-device-smoke.sh` -> 1 passed, 2 failed because the Personal Development Team provisioning profile does not support Push Notifications; a no-push command-line override with bundle id `com.webbridgekit.superapp.nopush` also failed before producing `SuperApp.app` |
 | Real-device Push/APNs readiness | Unavailable | `bash tools/verify-real-device-push-readiness.sh` -> 6 passed, 3 failed, 4 manual on 2026-06-03 00:52 CST; `project.yml` points to `SuperApp/SuperApp.entitlements`, but the current Personal Development Team/provisioning profile does not support Push Notifications or `aps-environment` |
-| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 27 passed, 0 failed, 0 unavailable, report date 2026-06-04 00:37 CST; includes `Command token semantics` asserting URL-safe command token payload decoding |
-| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-04 00:38 CST |
-| shanbox static fixtures for phone WebView/cache/JSBridge | Available for public reachability/content markers | `bash tools/verify-shanbox-fixtures.sh` -> 18 passed, 0 failed, report date 2026-06-04 00:13 CST; verifies `bridge-hub.html`, `bridge-promise-smoke.html`, `cache-showcase.html`, `WebBridge.js`, manifest, CSS/JS/image resources on `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources` |
+| shanbox Swift backend + Node admin public routes | Available | `bash tools/verify-shanbox-backend.sh` -> 27 passed, 0 failed, 0 unavailable, report date 2026-06-04 01:53 CST; includes `Command token semantics` asserting URL-safe command token payload decoding |
+| shanbox WebBridgeServer + Node admin supervision | Available | `bash tools/verify-shanbox-supervision.sh` -> process=PASS, supervision=PASS, node_admin=PASS via supervisord, report date 2026-06-04 01:53 CST |
+| shanbox static fixtures for phone WebView/cache/JSBridge | Available for public reachability/content markers | `bash tools/verify-shanbox-fixtures.sh` -> 18 passed, 0 failed, report date 2026-06-04 01:53 CST; verifies `bridge-hub.html`, `bridge-promise-smoke.html`, `cache-showcase.html`, `WebBridge.js`, manifest, CSS/JS/image resources on `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources` |
 | Node admin local source | Available locally | `bash tools/verify-node-admin-local.sh` -> 11 passed, 0 failed; validates `Server/node/server.js` routes on a temporary local port |
 | shanbox Node admin console | Available | `bash tools/verify-shanbox-backend.sh` -> `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` all return 200; `webbridge-node-admin` is supervised on remote port `8765` |
 | Deep Link external open | Available with first-open confirmation | `xcrun simctl openurl ... webbridgekit://tab?index=2` switched to Bridge; `webbridgekit://open?...cache-showcase.html` opened WebBrowser with Cache Showcase page |
@@ -53,13 +53,35 @@ bash scripts/services.sh verify
 ```bash
 xcodebuild test -workspace WebBridgeKit.xcworkspace \
   -scheme SuperApp \
-  -sdk iphonesimulator \
+  -configuration Debug \
   -destination 'platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0' \
-  -derivedDataPath /tmp/wbk-dd \
+  -derivedDataPath /tmp/wbk-dd-module-availability \
   CODE_SIGNING_ALLOWED=NO \
   -only-testing:SuperAppUITests/ModuleAvailabilityTests \
 # Result: TEST SUCCEEDED, 14 tests, 0 failures, xcresult:
-# /tmp/wbk-dd/Logs/Test/Test-SuperApp-2026.06.03_00-42-24-+0800.xcresult
+# Date: 2026-06-04 01:42 CST
+# /tmp/wbk-dd-module-availability/Logs/Test/Test-SuperApp-2026.06.04_01-36-26-+0800.xcresult
+```
+
+```bash
+xcodebuild test -workspace WebBridgeKit.xcworkspace \
+  -scheme SuperApp \
+  -configuration Debug \
+  -destination 'platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0' \
+  -derivedDataPath /tmp/wbk-dd-module-availability \
+  CODE_SIGNING_ALLOWED=NO \
+  -only-testing:SuperAppUITests/ModuleAvailabilityTests/testTokenPushAndBarkControlsAreUsable \
+  -only-testing:SuperAppUITests/ModuleAvailabilityTests/testBridgeLabControlsAreUsable \
+  -only-testing:SuperAppUITests/ModuleAvailabilityTests/testSettingsDebugCenterAndDeepLinksAreReachable
+# Result: TEST SUCCEEDED, 3 tests, 0 failures
+# Date: 2026-06-04 01:33 CST
+# xcresult:
+# /tmp/wbk-dd-module-availability/Logs/Test/Test-SuperApp-2026.06.04_01-31-30-+0800.xcresult
+#
+# UI assertion:
+# Push opens Token Manager, API Key Manager, Notification Debug, copies the shanbox Bark URL, and validates Bark payload.
+# Bridge Lab taps `执行校验` and verifies `命令已完成结构化校验` plus `cache.stats`.
+# Deep Link validates the generated open URL and verifies `协议链接合法` plus `cache-showcase.html`.
 ```
 
 ```bash
@@ -121,6 +143,21 @@ xcodebuild test -workspace WebBridgeKit.xcworkspace \
 #
 # UI assertion:
 # Real WKWebView exposes browserManager.webView and page DOM reaches "Bridge Promise OK".
+```
+
+```bash
+XcodeBuildMCP test_sim \
+  -destination 'platform=iOS Simulator,id=BDD44ED8-3763-483C-971F-259E5BAB6B47' \
+  -derivedDataPath /tmp/wbk-dd-bridge-focused-17pro \
+  CODE_SIGNING_ALLOWED=NO \
+  -only-testing:SuperAppUITests/ModuleAvailabilityTests/testBridgeLabControlsAreUsable
+# Result: TEST SUCCEEDED, 1 test, 0 failures
+# Date: 2026-06-04 00:59 CST
+# xcresult:
+# /Users/xuyingzhou/Library/Developer/XcodeBuildMCP/workspaces/WebBridgeKit-815a0cec42de/result-bundles/test_sim_2026-06-03T16-59-21-966Z_pid29096_fd7b7ac0.xcresult
+#
+# UI assertion:
+# Bridge Lab taps `执行校验`; `resultPanel.message` / result detail text expose visible evidence containing `命令已完成结构化校验` and `cache.stats`.
 ```
 
 ```bash
@@ -325,7 +362,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Web Cache | Clear all confirmation | `Web` -> `清理全部缓存` | `WebCacheHomeViewModel.clearAllCache()` | UI test verifies confirmation sheet and cancel action | Available | Destructive confirm is visible |
 | Web Cache | Resource/manifest/offline storage semantics | Non-UI cache APIs | `Sources/Cache/` | `CacheTests`: 548/548 | Available | Includes manifest, URL scheme, resource cache, stats |
 | Web Cache | Public phone cache fixtures | Physical iPhone WebView target `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/cache-showcase.html` and related static resources | `test_resources/cache-showcase.html`, `test_resources/manifest.json`, `test_resources/css/styles.css`, `test_resources/js/app.js`, `test_resources/images/logo.png`, `tools/verify-shanbox-fixtures.sh` | `tools/verify-shanbox-fixtures.sh`: Cache showcase, manifest JSON, CSS, JS, and image resource all returned HTTP 200 with expected content markers | Available for public fixture reachability | Does not prove full offline cache completion on a physical iPhone; native/cache semantics remain covered by `CacheTests` and simulator UI evidence |
-| Push/Bark | Primary tab loads | Bottom tab `Push` | `TokenPushHomeView.swift` | UI test verifies `tokenPush.home` and metric grid | Available | |
+| Push/Bark | Primary tab loads | Bottom tab `Push` | `TokenPushHomeView.swift`, `TabBarController.swift` | `ModuleAvailabilityTests.testTokenPushAndBarkControlsAreUsable` taps `tab.push`, then verifies concrete Push controls: `tokenPush.openTokenManager`, `tokenPush.openAPIKeyManager`, `tokenPush.openNotificationDebug`, copy URL, and payload validation; affected 3-test rerun passed | Available | `tokenPush.home` is also exposed on the UIKit hosting view for stable post-action checks |
 | Push/Bark | Access token manager | `Push` -> `访问口令` | `TokenManageViewController.swift` | UI test opens screen | Available | |
 | Push/Bark | Bark API/API key manager | `Push` -> `Bark API / API Key` | `APIKeyManageViewController.swift` | UI test opens screen | Available | |
 | Push/Bark | Notification debug entry | `Push` -> `Bark 推送调试` | `NotificationDebugViewController.swift` | UI test opens screen in Debug build | Available | Debug-only in non-Debug builds |
@@ -337,7 +374,7 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Push/Bark | APNs registration | `Push` -> `注册推送` | `PushNotificationManager.swift`, `AppDelegate.swift`, project entitlements | `tools/verify-real-device-push-readiness.sh`: project entitlement passes, provisioning profile and signed-app entitlement fail | Unavailable | Token forwarding is fixed and `SuperApp/SuperApp.entitlements` contains `aps-environment`; current Personal Development Team/provisioning profile rejects Push Notifications, so APNs cannot be marked ready |
 | Push/Bark | Bark/APNs end-to-end delivery | Bark-compatible request -> shanbox -> APNs -> iPhone notification -> tap action | `PushNotificationManager.swift`, `BarkChannel`, `PushRoutes.swift`, APNs provisioning | `tools/verify-real-device-push-readiness.sh` marks Bark delivery as MANUAL and APNs signing as failed | Unavailable in current signing environment | Bark/APNs end-to-end delivery is unavailable until a Push-capable Apple Developer Program team/profile signs the app and a real device token is registered |
 | Bridge | Primary tab loads | Bottom tab `Bridge` | `BridgeLabHomeView.swift` | UI test verifies `bridgeLab.home`, groups, command list, parameter editor | Available | |
-| Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabHomeView.swift`, `BridgeLabViewModel.swift`, `ResultPanel.swift`, `ModuleAvailabilityTests.swift` | Existing UI test taps execute; `BridgeTests` validates registry/core semantics. Current source now exposes `bridge.resultPanel` and `testBridgeLabControlsAreUsable` asserts the result value contains `命令已完成结构化校验` and `cache.stats`, but the focused rerun was blocked before XCTest execution by local `AssetCatalogSimulatorAgent`/CoreSimulator system-policy failure while compiling `Sources/Theme/icons.xcassets`. | Partially available | Bridge Lab is a validation/lab surface, not the production WebView execution path. Keep partial until `testBridgeLabControlsAreUsable` passes with the new `bridge.resultPanel` assertions; real WebView Promise execution is separately proven below |
+| Bridge | Command JSON entry and execute control | `Bridge` -> `执行校验` | `BridgeLabHomeView.swift`, `BridgeLabViewModel.swift`, `ResultPanel.swift`, `CodeBlockView.swift`, `ModuleAvailabilityTests.swift` | `ModuleAvailabilityTests.testBridgeLabControlsAreUsable` passed in the affected 3-test rerun on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; it taps execute and verifies visible result text contains `命令已完成结构化校验` and detail contains `cache.stats`; `BridgeTests` validates registry/core semantics | Available | Bridge Lab is a validation/lab surface, not the production WebView execution path; real WebView Promise execution is separately proven below |
 | Bridge | Real WebView JSBridge Promise execution | `Web` -> `在线` -> open `bridge-promise-smoke.html` | `WebJavaScriptBridge.swift`, `Resources/WebBridge.js`, `SuperApp/Resources/WebBridge.js`, `WebBrowserViewModel.swift`, `WebBrowserViewController.swift`, `WebBrowserViewController+Navigation.swift`, `LazyManifestLoader.swift`, `PersistentManifestLoader.swift`, `test_resources/bridge-promise-smoke.html` | `ModuleAvailabilityTests.testRealWebViewBridgePromiseResolves` passed on simulator UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0` | Available on simulator | Proves page JS -> native `getSystemInfo` -> JS Promise resolve -> DOM text `Bridge Promise OK`; physical-device WebView smoke can reuse the same URL after phone backend reachability is configured |
 | Bridge | Public phone JSBridge fixture pages | Physical iPhone WebView target `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html` and linked Bridge pages | `test_resources/bridge-hub.html`, `bridge-promise-smoke.html`, `bridge-device.html`, `bridge-interaction.html`, `bridge-cache.html`, `WebBridge.js`, `tools/verify-shanbox-fixtures.sh` | `tools/verify-shanbox-fixtures.sh`: Bridge hub, Bridge Promise smoke, Bridge device, Bridge interaction, Bridge cache, and `WebBridge.js` returned HTTP 200 with expected content markers | Available for public fixture reachability | Does not prove native Bridge execution on physical iPhone; simulator real WebView Promise smoke and `BridgeTests` cover execution semantics |
 | Bridge | Handler registry and metadata | Non-UI JSBridge APIs | `Sources/Bridge/`, `Sources/Handlers/` | `BridgeTests`: 101/101 | Available | |
@@ -425,6 +462,8 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | A single long Settings row UI test triggered XCTest high-log-volume SIGSEGV during automation | `CrashLogManager` recorded a SIGSEGV from `XCTAutomationSupport` after the old long `testSettingsOperationalRowsAreReachable` produced excessive repeated snapshot queries; crash gate became red even though the user-facing row routes were valid | `SuperAppUITests/ModuleAvailabilityTests.swift` splits the row coverage into `testSettingsCoreRowsAreReachable` and `testSettingsDebugAndSupportRowsAreReachable`, keeps About in its dedicated deep-drill test, reduces broad navigation/scroll snapshot queries, and the full module suite now passes 14/14 with crash scan `total: 0` |
 | Debug Center child tools only had entry-level evidence | A child row could open a shell while the expected content or primary action stayed broken | `SuperAppUITests/ModuleAvailabilityTests.testDebugCenterChildToolContentAndActionsAreUsable` now verifies diagnostics copy result, network seeded row plus clear action, and Manifest cache controls/log clear action; `DiagnosticsView.swift`, `NetworkDebugViewController.swift`, and `ManifestCacheTestViewController.swift` expose stable accessibility evidence |
 | shanbox command generation returned padded base64 token payloads | Public `/api/v1/commands` returned HTTP 200 but emitted `=` padding, conflicting with the app/report requirement for URL-safe command deep links | Synced the current `CommandService.swift` to `/root/WebBridgeKit/Server`, rebuilt `swift build -c release`, restarted `webbridgeserver` via supervisord, and added `Command token semantics` to `tools/verify-shanbox-backend.sh`; refreshed evidence is 27/27 pass |
+| Bridge Lab result was hidden below the execute action and unstable in XCUITest | The result panel could be below the fold after tapping `执行校验`, and asserting the SwiftUI container triggered fragile broad snapshots | `BridgeLabHomeView.swift` now places the result panel directly above the execute controls; `CodeBlockView.swift` exposes stable detail text identifiers; `ModuleAvailabilityTests.testBridgeLabControlsAreUsable` verifies visible result text and `cache.stats`, 1/1 passed |
+| Push tab availability used a fragile root-container assertion | On iOS 26.5 automation, repeatedly waiting for a SwiftUI root container could make XCUITest lose the app session even though the Push page was visually loaded | `TabBarController.swift` exposes UIKit hosting root identifiers, `TokenPushHomeViewModel.swift` defers status snapshot refresh until after first render, and `ModuleAvailabilityTests.testTokenPushAndBarkControlsAreUsable` now proves availability through concrete Push controls and result text; affected rerun passed 3/3 |
 
 ## Remaining Unavailable And Manual-Only Items
 
@@ -444,14 +483,12 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ComponentSections.swift:101` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/Showcase/ThemeShowcaseViewController.swift:114` |
 | Design lint warning: deprecated `ThemeBadge` init | Non-blocking warning | `SuperApp/Sources/Controllers/ComponentCatalog/ActionSections.swift:223` |
-| Some long-page ResultPanel message assertions remain fragile in XCUITest because nested SwiftUI ScrollViews stay in the hierarchy | Push copy and Deep Link validate now assert ResultPanel accessibility values; Bridge Lab remains a validation surface, while real WebView Promise execution is covered by `testRealWebViewBridgePromiseResolves` | `BridgeLabHomeView.swift` |
-| Bridge Lab result assertion awaits a clean local simulator rebuild | Current source adds a dedicated `bridge.resultPanel` accessibility identifier and focused assertions for `命令已完成结构化校验` plus `cache.stats`, but the 2026-06-04 focused UI rerun failed before tests because `AssetCatalogSimulatorAgent` could not load `CoreThemeDefinition.framework` under current CoreSimulator system policy | `ResultPanel.swift`, `BridgeLabHomeView.swift`, `ModuleAvailabilityTests.swift`, `/tmp/wbk-dd-bridge-focused/Logs/Test/Test-SuperApp-2026.06.03_23-57-06-+0800.xcresult` |
 
 ## Current Availability Verdict
 
 No confirmed unavailable non-push in-app navigation entry is currently listed after this pass.
 
-The items not marked fully available are real-device/system-level flows, Push/Bark APNs delivery, phone-specific network behavior, and partial interaction assertions:
+The items not marked fully available are real-device/system-level flows, Push/Bark APNs delivery, and phone-specific network behavior:
 
 - Push-capable Apple Developer Team/provisioning profile
 - Signed-app `aps-environment` entitlement proof
@@ -461,5 +498,4 @@ The items not marked fully available are real-device/system-level flows, Push/Ba
 - Real-device notification settings handoff
 - Background/lock-screen notification behavior
 - Phone-specific backend reachability and LAN/firewall/VPN differences outside simulator
-- Bridge Lab UI execute remains validation-only and the stronger `bridge.resultPanel` result assertion is awaiting a clean simulator rebuild; production WebView JSBridge Promise execution is now proven on simulator
 - Debug Center diagnostics share/export-file payload content and Manifest full smart-load WebView execution are not deeply asserted in this report; diagnostics copy, network seeded content/clear, and manifest clear-cache action are now proven by UI automation
