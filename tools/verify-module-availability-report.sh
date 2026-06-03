@@ -219,6 +219,15 @@ shanbox_fixture_markers = [
 for marker in shanbox_fixture_markers:
     record(marker in doc, f"shanbox fixture evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
 
+shanbox_command_markers = [
+    "27 passed, 0 failed",
+    "Command token semantics",
+    "url-safe token, decoded payload ok",
+    "base64url-json",
+]
+for marker in shanbox_command_markers:
+    record(marker in doc, f"shanbox command evidence: {marker}", "marker exists", "present" if marker in doc else "missing", availability)
+
 record(
     "Bridge real WebView execution not fully available/proven" not in doc,
     "Real WebView JSBridge obsolete unavailable marker removed",

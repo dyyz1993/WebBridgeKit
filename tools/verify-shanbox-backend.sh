@@ -90,6 +90,67 @@ PY
     fi
 }
 
+expect_command_token_semantics() {
+    local evidence="$1"
+    local expected_data="$2"
+    local actual
+
+    echo "== Command token semantics =="
+    if actual="$(python3 - "$evidence" "$expected_data" <<'PY'
+import base64
+import json
+import re
+import sys
+
+path, expected_data = sys.argv[1], sys.argv[2]
+
+try:
+    with open(path, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+
+    command_id = data.get("id")
+    token = data.get("token")
+    url = data.get("url")
+    signature = data.get("signature")
+
+    assert isinstance(command_id, str) and re.fullmatch(
+        r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}",
+        command_id,
+    ), "id is not UUID"
+    assert isinstance(signature, str) and re.fullmatch(r"[0-9a-f]{64}", signature), "signature is not 64 lowercase hex"
+    assert isinstance(token, str) and token.startswith(command_id + "."), "token does not start with id"
+    assert isinstance(url, str) and url == "webbridgekit://command/" + token, "url does not match token"
+
+    parts = token.split(".", 1)
+    assert len(parts) == 2 and parts[0] == command_id and parts[1], "token must be id.payload"
+    payload_part = parts[1]
+    assert not any(char in payload_part for char in "+/="), "payload is not unpadded base64url"
+
+    padded = payload_part.replace("-", "+").replace("_", "/")
+    padded += "=" * ((4 - len(padded) % 4) % 4)
+    payload_bytes = base64.b64decode(padded, validate=True)
+    payload = json.loads(payload_bytes.decode("utf-8"))
+
+    assert payload.get("type") == "plainText", "payload.type mismatch"
+    assert payload.get("format") == "plainText", "payload.format mismatch"
+    assert payload.get("data") == expected_data, "payload.data mismatch"
+
+    print("url-safe token, decoded payload ok")
+except Exception as error:
+    print(f"command-token-error:{error}")
+    sys.exit(1)
+PY
+    )"; then
+        add_row "Command token semantics" "PASS" "ASSERT" "token/url/payload" "url-safe decoded payload" "$actual" "$evidence"
+        PASS=$((PASS + 1))
+        echo "PASS ($actual)"
+    else
+        add_row "Command token semantics" "FAIL" "ASSERT" "token/url/payload" "url-safe decoded payload" "$actual" "$evidence"
+        FAIL=$((FAIL + 1))
+        echo "FAIL ($actual; $evidence)"
+    fi
+}
+
 add_row() {
     local name="$1"
     local result="$2"
@@ -194,6 +255,7 @@ expect_json_value "JSON push response code" "$REPORT_DIR/shanbox-json-push-route
 expect_status "Test push endpoint" "POST" "/test" "200" "$test_body"
 expect_json_value "Test push response success" "$REPORT_DIR/shanbox-test-push-endpoint.json" "success" "true"
 expect_status "Command generation" "POST" "/api/v1/commands" "200" "$command_body"
+expect_command_token_semantics "$REPORT_DIR/shanbox-command-generation.json" "public command ${timestamp}"
 expect_status "Bark compatible GET" "GET" "/test_resources/Codex/route%20check" "200"
 expect_json_value "Bark GET response code" "$REPORT_DIR/shanbox-bark-compatible-get.json" "code" "200"
 expect_status "Bark compatible POST" "POST" "/test_resources/Codex/post%20route" "200"
