@@ -8,6 +8,7 @@ REPORT_DIR="$PROJECT_ROOT/build/reports"
 REPORT="$REPORT_DIR/shanbox-backend-verification.md"
 BASE_URL="${WBK_SHANBOX_URL:-https://wbk.shanbox.19930810.xyz:8443}"
 CURL_COMMON=(-k -sS --connect-timeout 10 --max-time 20)
+PYTHON3="${PYTHON3:-/usr/bin/python3}"
 
 mkdir -p "$REPORT_DIR"
 
@@ -17,11 +18,11 @@ UNAVAILABLE=0
 ROWS=()
 
 json_escape() {
-    python3 -c 'import json,sys; print(json.dumps(sys.argv[1])[1:-1])' "$1"
+    "$PYTHON3" -c 'import json,sys; print(json.dumps(sys.argv[1])[1:-1])' "$1"
 }
 
 url_encode() {
-    python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
+    "$PYTHON3" -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
 }
 
 request() {
@@ -54,7 +55,7 @@ expect_json_value() {
     local actual
 
     echo "== $name =="
-    if actual="$(python3 - "$evidence" "$key" <<'PY'
+    if actual="$("$PYTHON3" - "$evidence" "$key" <<'PY'
 import json
 import sys
 
@@ -96,7 +97,7 @@ expect_command_token_semantics() {
     local actual
 
     echo "== Command token semantics =="
-    if actual="$(python3 - "$evidence" "$expected_data" <<'PY'
+    if actual="$("$PYTHON3" - "$evidence" "$expected_data" <<'PY'
 import base64
 import json
 import re
