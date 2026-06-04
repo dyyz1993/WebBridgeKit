@@ -15,13 +15,14 @@ final class TabScreenshotTests: XCTestCase {
         XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist")
 
         let tabs = [
-            ("首页", "home"),
-            ("收信箱", "inbox"),
-            ("发现", "discover"),
+            ("tab.web", "web"),
+            ("tab.push", "push"),
+            ("tab.bridge", "bridge"),
+            ("tab.inbox", "messages"),
             ("设置", "settings")
         ]
 
-        for (index, (title, name)) in tabs.enumerated() {
+        for (title, name) in tabs {
             let tab = tabBar.buttons[title]
             XCTAssertTrue(tab.exists, "Tab '\(title)' should exist")
             tab.tap()

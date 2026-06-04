@@ -128,6 +128,9 @@ class InboxGroupHeaderCell: UITableViewCell {
         backgroundColor = ThemeTokens.Color.background
         selectionStyle = .none
         contentView.backgroundColor = ThemeTokens.Color.background
+        accessibilityIdentifier = "InboxGroupHeaderCell"
+        contentView.accessibilityIdentifier = "InboxGroupHeaderCell.content"
+        containerView.accessibilityIdentifier = "InboxGroupHeaderCell.container"
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         contentView.addGestureRecognizer(tapGesture)

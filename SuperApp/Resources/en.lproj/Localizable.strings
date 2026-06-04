@@ -1,6 +1,6 @@
 // Tab Bar
 "tab.home" = "Home";
-"tab.inbox" = "Inbox";
+"tab.inbox" = "Messages";
 "tab.discover" = "Discover";
 "tab.settings" = "Settings";
 
@@ -54,7 +54,7 @@
 "home.test_cases_entry" = "🧪 Automated Test Cases";
 
 // Inbox
-"inbox.title" = "Inbox";
+"inbox.title" = "Messages";
 "inbox.search.placeholder" = "Search Messages";
 "inbox.filter.all" = "All";
 "inbox.filter.unread" = "Unread";

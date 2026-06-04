@@ -22,6 +22,18 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("webCache.openButton")
         assertExists("webCache.cacheDashboard")
 
+        assertTab("tab.inbox", opens: "InboxViewController")
+        assertExists("wbk_search_field")
+        assertExists("filter_0")
+        assertExists("filter_1")
+        assertExists("filter_2")
+        XCTAssertTrue(
+            app.cells["InboxGroupHeaderCell"].waitForExistence(timeout: 3)
+                || app.cells["InboxMessageCell"].waitForExistence(timeout: 3)
+                || app.otherElements["wbk_empty_state"].waitForExistence(timeout: 3),
+            "Messages tab should show grouped message history or an empty state."
+        )
+
         assertTab("tab.push", opens: "tokenPush.home")
         assertExists("tokenPush.metricGrid")
         assertExists("tokenPush.openTokenManager")
@@ -314,6 +326,12 @@ final class ModuleAvailabilityTests: XCTestCase {
         tab.tap()
         if rootIdentifier == "tokenPush.home" {
             RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+            return
+        }
+        if rootIdentifier == "InboxViewController",
+           element(rootIdentifier).waitForExistence(timeout: 4)
+            || app.staticTexts["消息"].waitForExistence(timeout: 2)
+            || app.staticTexts["Messages"].waitForExistence(timeout: 2) {
             return
         }
         if element(rootIdentifier).waitForExistence(timeout: 8) {
@@ -613,6 +631,7 @@ final class ModuleAvailabilityTests: XCTestCase {
     private var rootTitleFallbacks: [String: [String]] {
         [
             "webCache.home": ["Web"],
+            "InboxViewController": ["消息", "Messages"],
             "tokenPush.home": ["Token/Push", "TokenPush", "Push"],
             "bridgeLab.home": ["Bridge"],
             "SettingsViewController": ["设置", "Settings"]

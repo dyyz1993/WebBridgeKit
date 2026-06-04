@@ -9,6 +9,7 @@ enum AppShellAction {
     case openTokenManager
     case openAPIKeyManager
     case openNotificationDebug
+    case openMessageHistory
     case openDebugPanel
     case openDiagnostics
     case openDeepLinkExamples
@@ -51,6 +52,12 @@ final class AppShellViewModel: ObservableObject {
                 AppShellStatusItem(title: "Backend", value: ":8080", tone: .neutral),
                 AppShellStatusItem(title: "Cache", value: "ready", tone: .success),
                 AppShellStatusItem(title: "Offline", value: "testable", tone: .success)
+            ]
+        case .inbox:
+            return [
+                AppShellStatusItem(title: "Messages", value: "history", tone: .success),
+                AppShellStatusItem(title: "Groups", value: "enabled", tone: .success),
+                AppShellStatusItem(title: "Unread", value: "badge", tone: .neutral)
             ]
         case .bridge:
             return [
@@ -97,6 +104,16 @@ final class AppShellViewModel: ObservableObject {
                     icon: .trash,
                     action: .openCacheManagement,
                     accessibilityIdentifier: "web.cacheManagement"
+                )
+            ]
+        case .inbox:
+            return [
+                AppShellActionCard(
+                    title: "消息历史",
+                    subtitle: "查看推送消息、按分组折叠、筛选未读并进入消息详情",
+                    icon: .inbox,
+                    action: .openMessageHistory,
+                    accessibilityIdentifier: "inbox.history"
                 )
             ]
         case .bridge:

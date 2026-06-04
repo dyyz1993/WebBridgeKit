@@ -38,8 +38,8 @@ final class LayoutGuardTests: XCTestCase {
 
     // MARK: - Combined Layout Checks
 
-    func testHomeLayoutIntegrity() {
-        navigateToTab(identifier: "tab.home", zhName: "首页", enName: "Home")
+    func testWebLayoutIntegrity() {
+        navigateToTab(identifier: "tab.web", zhName: "Web", enName: "Web")
 
         let cards = app.otherElements.matching(NSPredicate(format: "identifier == 'wbk_resource_card'")).allElementsBoundByIndex
         for card in cards.prefix(5) where card.isHittable {
@@ -48,7 +48,8 @@ final class LayoutGuardTests: XCTestCase {
             XCTAssertLessThanOrEqual(h, 140, "Card height \(h) > 140")
         }
 
-        checkVisibleElementsNoZeroFrame(on: "Home")
+        XCTAssertTrue(app.otherElements["webCache.home"].waitForExistence(timeout: 3), "Web Cache home should exist")
+        checkVisibleElementsNoZeroFrame(on: "Web")
 
         let wbkButtons = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'wbk_'")).allElementsBoundByIndex
         for button in wbkButtons.prefix(10) where button.isHittable {
@@ -60,7 +61,7 @@ final class LayoutGuardTests: XCTestCase {
     }
 
     func testInboxLayoutIntegrity() {
-        navigateToTab(identifier: "tab.inbox", zhName: "收信箱", enName: "Inbox")
+        navigateToTab(identifier: "tab.inbox", zhName: "消息", enName: "Messages")
 
         let searchField = app.otherElements["wbk_search_field"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Inbox search field should exist")
@@ -80,9 +81,14 @@ final class LayoutGuardTests: XCTestCase {
         }
     }
 
-    func testDiscoverAndSettingsLayoutIntegrity() {
-        navigateToTab(identifier: "tab.discover", zhName: "发现", enName: "Discover")
-        checkVisibleElementsNoZeroFrame(on: "Discover")
+    func testBridgePushAndSettingsLayoutIntegrity() {
+        navigateToTab(identifier: "tab.bridge", zhName: "Bridge", enName: "Bridge")
+        XCTAssertTrue(app.otherElements["bridgeLab.home"].waitForExistence(timeout: 3), "Bridge home should exist")
+        checkVisibleElementsNoZeroFrame(on: "Bridge")
+
+        navigateToTab(identifier: "tab.push", zhName: "Token/Push", enName: "Token/Push")
+        XCTAssertTrue(app.otherElements["tokenPush.home"].waitForExistence(timeout: 3), "Token/Push home should exist")
+        checkVisibleElementsNoZeroFrame(on: "Token/Push")
 
         navigateToTab(identifier: "tab.settings", zhName: "设置", enName: "Settings")
         let settingsView = app.otherElements["SettingsViewController"]
@@ -117,9 +123,10 @@ final class LayoutGuardTests: XCTestCase {
             "Tab bar overlaps home indicator area")
 
         let tabs: [(String, String, String)] = [
-            ("tab.home", "首页", "Home"),
-            ("tab.inbox", "收信箱", "Inbox"),
-            ("tab.discover", "发现", "Discover"),
+            ("tab.web", "Web", "Web"),
+            ("tab.push", "Token/Push", "Token/Push"),
+            ("tab.bridge", "Bridge", "Bridge"),
+            ("tab.inbox", "消息", "Messages"),
             ("tab.settings", "设置", "Settings")
         ]
         for (id, zh, en) in tabs {
@@ -143,7 +150,7 @@ final class LayoutGuardTests: XCTestCase {
     // MARK: - Empty State
 
     func testEmptyStateActionVisibleAboveTabBar() {
-        navigateToTab(identifier: "tab.discover", zhName: "发现", enName: "Discover")
+        navigateToTab(identifier: "tab.web", zhName: "Web", enName: "Web")
 
         let wbkEmptyState = app.otherElements["wbk_empty_state"]
         let legacyEmptyState = app.otherElements["EmptyStateView"]
@@ -159,7 +166,7 @@ final class LayoutGuardTests: XCTestCase {
         } else {
             let tabBar = app.tabBars.firstMatch
             XCTAssertTrue(tabBar.exists, "Tab bar should exist even when no empty state is shown")
-            XCTAssertTrue(app.staticTexts.count > 0, "Discover should have visible content when empty state is absent")
+            XCTAssertTrue(app.staticTexts.count > 0, "Web should have visible content when empty state is absent")
         }
     }
 
@@ -203,14 +210,14 @@ final class LayoutGuardTests: XCTestCase {
                 "Tab button '\(btn.identifier)' extends beyond SE screen width \(screen.width)")
         }
 
-        navigateToTab(identifier: "tab.home", zhName: "首页", enName: "Home")
+        navigateToTab(identifier: "tab.web", zhName: "Web", enName: "Web")
         let searchField = app.otherElements["wbk_search_field"]
         if searchField.waitForExistence(timeout: 3) {
             XCTAssertLessThanOrEqual(searchField.frame.maxX, screen.width,
                 "Search field extends beyond SE screen")
         }
 
-        navigateToTab(identifier: "tab.inbox", zhName: "收信箱", enName: "Inbox")
+        navigateToTab(identifier: "tab.inbox", zhName: "消息", enName: "Messages")
         let pills = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH 'filter_'")).allElementsBoundByIndex
         for pill in pills where pill.isHittable {
             XCTAssertLessThanOrEqual(pill.frame.maxX, screen.width,

@@ -42,8 +42,11 @@ class TabBarController: UITabBarController {
 
     private func bindMessages() {
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            guard let self = self, let items = self.tabBar.items, items.count > 1 else { return }
-            let messageItem = items[1]
+            guard let self = self,
+                  let items = self.tabBar.items,
+                  let messageIndex = AppTab.allCases.firstIndex(of: .inbox),
+                  items.indices.contains(messageIndex) else { return }
+            let messageItem = items[messageIndex]
             Task {
                 let count = await MessageEngine.shared.getUnreadCount()
                 await MainActor.run {
@@ -100,7 +103,7 @@ class TabBarController: UITabBarController {
 
     private func setupTabs() {
         viewControllers = AppTab.allCases.map { tab in
-            let root = createAppShellViewController(tab: tab)
+            let root = tab == .inbox ? createInboxViewController() : createAppShellViewController(tab: tab)
             let nav = UINavigationController(rootViewController: root)
             nav.tabBarItem = tab.makeTabBarItem()
             return nav
@@ -198,6 +201,8 @@ class TabBarController: UITabBarController {
         switch tab {
         case .web:
             return "webCache.home"
+        case .inbox:
+            return "InboxViewController"
         case .tokenPush:
             return "tokenPush.home"
         case .bridge:
@@ -355,6 +360,10 @@ class TabBarController: UITabBarController {
             #else
             showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
             #endif
+        case .openMessageHistory:
+            if let inboxIndex = AppTab.allCases.firstIndex(of: .inbox) {
+                selectedIndex = inboxIndex
+            }
         case .openDebugPanel:
             #if DEBUG
             let debugPanel = DebugPanelViewController()

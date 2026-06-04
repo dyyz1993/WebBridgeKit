@@ -1,6 +1,6 @@
 // Tab Bar
 "tab.home" = "首页";
-"tab.inbox" = "收信箱";
+"tab.inbox" = "消息";
 "tab.discover" = "发现";
 "tab.settings" = "设置";
 
@@ -54,7 +54,7 @@
 "home.test_cases_entry" = "🧪 自动化测试用例";
 
 // Inbox
-"inbox.title" = "收信箱";
+"inbox.title" = "消息";
 "inbox.search.placeholder" = "搜索消息";
 "inbox.filter.all" = "全部";
 "inbox.filter.unread" = "未读";

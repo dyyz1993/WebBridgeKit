@@ -206,7 +206,7 @@ final class DeepVerificationTests: XCTestCase {
     // MARK: - Discover Interactions (2 tests)
 
     func testDiscoverCardTap() throws {
-        navigateToTab("发现")
+        navigateToTab("tab.bridge")
 
         let collectionView = app.collectionViews.firstMatch
         guard collectionView.waitForExistence(timeout: 5) else {
@@ -239,7 +239,7 @@ final class DeepVerificationTests: XCTestCase {
     }
 
     func testDiscoverCachedAppsSection() throws {
-        navigateToTab("发现")
+        navigateToTab("tab.bridge")
 
         let collectionView = app.collectionViews.firstMatch
         guard collectionView.waitForExistence(timeout: 5) else {
@@ -265,7 +265,7 @@ final class DeepVerificationTests: XCTestCase {
     // MARK: - Inbox Interactions (3 tests)
 
     func testInboxMessageDetail() throws {
-        navigateToTab("收信箱")
+        navigateToTab("tab.inbox")
 
         sleep(1)
 
@@ -311,7 +311,7 @@ final class DeepVerificationTests: XCTestCase {
     }
 
     func testInboxUnreadFilter() throws {
-        navigateToTab("收信箱")
+        navigateToTab("tab.inbox")
 
         sleep(1)
 
@@ -336,7 +336,7 @@ final class DeepVerificationTests: XCTestCase {
     }
 
     func testInboxAppFilter() throws {
-        navigateToTab("收信箱")
+        navigateToTab("tab.inbox")
 
         sleep(1)
 
@@ -363,7 +363,7 @@ final class DeepVerificationTests: XCTestCase {
     // MARK: - Home Interactions (2 tests)
 
     func testHomeQuickActions() throws {
-        navigateToTab("首页")
+        navigateToTab("tab.web")
 
         let scanButton = app.buttons["main.scanButton"]
         if scanButton.waitForExistence(timeout: 5) {
@@ -390,11 +390,12 @@ final class DeepVerificationTests: XCTestCase {
     }
 
     func testHomeRegisterButton() throws {
-        navigateToTab("首页")
+        navigateToTab("tab.push")
 
         sleep(1)
 
-        let registerButton = app.buttons["注册"]
+        let primaryRegisterButton = app.buttons["tokenPush.registerButton"]
+        let registerButton = primaryRegisterButton.exists ? primaryRegisterButton : app.buttons["注册"]
         if registerButton.waitForExistence(timeout: 5) {
             registerButton.tap()
             print("[Info] Tapped register button, waiting 3 seconds...")
