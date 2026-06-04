@@ -106,7 +106,7 @@ final class FunctionalTests: XCTestCase {
     // MARK: - Test 2: Inbox Scrolling
 
     func testInboxScrolling() throws {
-        navigateToTab("收信箱")
+        navigateToTab("tab.inbox")
 
         sleep(2)
 
@@ -127,21 +127,23 @@ final class FunctionalTests: XCTestCase {
 
     // MARK: - Test 3: Home Card Tap
 
-    func testHomeCardTap() throws {
-        navigateToTab("首页")
+    func testWebCardTap() throws {
+        navigateToTab("tab.web")
 
         let collectionView = app.collectionViews["MainCollectionView"]
         let emptyState = app.otherElements["EmptyStateView"]
+        let webHome = app.otherElements["webCache.home"]
         let cvExists = collectionView.waitForExistence(timeout: 5)
+        let webHomeExists = webHome.waitForExistence(timeout: 2)
         let emptyExists = emptyState.waitForExistence(timeout: 2)
 
-        guard cvExists || emptyExists else {
-            XCTFail("Home should have collection view or empty state")
+        guard cvExists || webHomeExists || emptyExists else {
+            XCTFail("Web should have content, collection view, or empty state")
             return
         }
 
         guard cvExists else {
-            print("[Info] Home shows empty state, no cards to tap")
+            print("[Info] Web shows v4 content or empty state, no legacy cards to tap")
             saveScreenshot("/tmp/wbk-home-card-tap.png")
             return
         }

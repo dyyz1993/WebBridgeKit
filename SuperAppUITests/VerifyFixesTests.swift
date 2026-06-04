@@ -112,7 +112,7 @@ final class VerifyFixesTests: XCTestCase {
     }
 
     func testInboxMessageDetail() throws {
-        tapTabNamed("收信箱")
+        tapTabNamed("tab.inbox")
         sleep(2)
 
         let tableView = app.tables.firstMatch

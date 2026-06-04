@@ -134,6 +134,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     override func makeUI() {
         view.backgroundColor = ThemeTokens.Color.background
+        view.accessibilityIdentifier = "InboxViewController"
         navigationItem.largeTitleDisplayMode = .never
         navigationController?.navigationBar.prefersLargeTitles = false
 

@@ -5,6 +5,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     case web
     case tokenPush
     case bridge
+    case inbox
     case settings
 
     var id: String { rawValue }
@@ -13,6 +14,8 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .web:
             return "Web"
+        case .inbox:
+            return L10n.tr("tab.inbox")
         case .bridge:
             return "Bridge"
         case .tokenPush:
@@ -26,6 +29,8 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .web:
             return "网页打开、缓存、离线包与清理"
+        case .inbox:
+            return "推送消息历史、未读、分组与路由"
         case .bridge:
             return "JSBridge 命令、参数、回调与错误"
         case .tokenPush:
@@ -39,6 +44,8 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .web:
             return .globe
+        case .inbox:
+            return .inbox
         case .bridge:
             return .terminal
         case .tokenPush:
@@ -52,6 +59,8 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .web:
             return "tab.web"
+        case .inbox:
+            return "tab.inbox"
         case .bridge:
             return "tab.bridge"
         case .tokenPush:

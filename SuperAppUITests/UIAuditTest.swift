@@ -140,9 +140,9 @@ final class UIAuditTest: XCTestCase {
     }
 
     func testAuditHomePage() {
-        app.tabBars.buttons["首页"].tap()
+        app.tabBars.buttons["tab.web"].tap()
         sleep(2)
-        runAudit(page: "首页 (Home)")
+        runAudit(page: "Web")
     }
 
     func testAuditSettingsTab() {

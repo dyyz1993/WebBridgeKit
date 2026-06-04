@@ -122,6 +122,8 @@ private struct AppShellMigrationNotice: View {
         switch tab {
         case .web:
             return "当前先接入旧缓存页，下一步替换为完整 Web Cache Home。"
+        case .inbox:
+            return "消息历史已作为主导航能力，承载推送历史、分组、未读和路由。"
         case .bridge:
             return "当前先接入旧 Bridge Showcase，下一步替换为可执行 Bridge Lab。"
         case .tokenPush:
