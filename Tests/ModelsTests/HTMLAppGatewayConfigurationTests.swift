@@ -39,6 +39,68 @@ final class HTMLAppGatewayConfigurationTests: XCTestCase {
         XCTAssertEqual(gateway.publicKeyID, "gateway-key-1")
     }
 
+    func testCanonicalJSONAndURLProduceEquivalentConfigurations() throws {
+        let key = Data(repeating: 7, count: 32).base64EncodedString()
+        let json = """
+        {
+          "schemaVersion": "1",
+          "id": "inventory",
+          "displayName": "Inventory Gateway",
+          "baseURL": "https://gateway.example.com",
+          "healthEndpoint": "/health",
+          "manifestEndpoint": "/api/v1/manifest",
+          "publicKeyId": "gateway-key-1",
+          "publicKey": "\(key)"
+        }
+        """
+        let url = "webbridgekit://gateway?schemaVersion=1&id=inventory&displayName=Inventory%20Gateway&baseURL=https%3A%2F%2Fgateway.example.com&healthEndpoint=%2Fhealth&manifestEndpoint=%2Fapi%2Fv1%2Fmanifest&publicKeyId=gateway-key-1&publicKey=\(key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)"
+
+        XCTAssertEqual(
+            try HTMLAppGatewayConfiguration.importPayload(json),
+            try HTMLAppGatewayConfiguration.importPayload(url)
+        )
+    }
+
+    func testRejectsSecretBearingJSONAndURLPayloads() {
+        let secretFields = ["privateKey", "apiSecret", "token", "password", "adminToken"]
+        for field in secretFields {
+            let json = """
+            {"name":"Unsafe","baseURL":"https://gateway.example.com","\(field)":"secret"}
+            """
+            XCTAssertThrowsError(try HTMLAppGatewayConfiguration.importPayload(json)) { error in
+                XCTAssertEqual(error as? HTMLAppGatewayConfigurationImportError, .forbiddenSecretField(field))
+            }
+            let url = "webbridgekit://gateway?name=Unsafe&url=https%3A%2F%2Fgateway.example.com&\(field)=secret"
+            XCTAssertThrowsError(try HTMLAppGatewayConfiguration.importPayload(url))
+        }
+        XCTAssertThrowsError(try HTMLAppGatewayConfiguration.importPayload(
+            #"{"name":"Unsafe","baseURL":"https://gateway.example.com","metadata":{"password":"secret"}}"#
+        ))
+    }
+
+    func testRejectsMissingCanonicalFieldsAndUnknownSchema() {
+        XCTAssertThrowsError(try HTMLAppGatewayConfiguration.importPayload(
+            #"{"schemaVersion":"2","displayName":"Future","baseURL":"https://gateway.example.com"}"#
+        )) { error in
+            XCTAssertEqual(error as? HTMLAppGatewayConfigurationImportError, .unsupportedSchemaVersion("2"))
+        }
+        XCTAssertThrowsError(try HTMLAppGatewayConfiguration.importPayload(
+            #"{"schemaVersion":"1","baseURL":"https://gateway.example.com"}"#
+        )) { error in
+            XCTAssertEqual(error as? HTMLAppGatewayConfigurationImportError, .missingRequiredField("displayName"))
+        }
+    }
+
+    func testRejectsMalformedEd25519PublicKey() {
+        let gateway = HTMLAppGatewayConfiguration(
+            name: "Bad key",
+            baseURL: "https://gateway.example.com",
+            publicKeyID: "prod-1",
+            publicKey: Data(repeating: 1, count: 31).base64EncodedString()
+        )
+        XCTAssertEqual(gateway.validate(), .invalid(.invalidPublicKey))
+    }
+
     func testImportsGatewayFromScannedURLAndRejectsDuplicateParameters() throws {
         let payload = "webbridgekit://gateway?name=Inventory%20Gateway&url=https%3A%2F%2Fgateway.example.com&manifestPath=%2Fmanifest"
         let gateway = try HTMLAppGatewayConfiguration.importPayload(payload)
@@ -83,7 +145,8 @@ final class HTMLAppGatewayConfigurationTests: XCTestCase {
             "/%2E%2E/manifest",
             "/manifest?redirect=https://attacker.example.com",
             "/manifest#untrusted",
-            "/\\attacker.example.com/manifest"
+            "/\\attacker.example.com/manifest",
+            "/%5Cattacker.example.com/manifest"
         ]
 
         for path in invalidPaths {

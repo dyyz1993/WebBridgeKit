@@ -12,6 +12,23 @@ public protocol HTMLAppRuntimeStorage: AnyObject {
     func set(_ data: Data?, forKey key: String)
 }
 
+/// Optional extension for storage backends that can surface persistence errors.
+/// Runtime registries use it when available so in-memory state is not advanced
+/// after a failed durable write.
+public protocol HTMLAppThrowingRuntimeStorage: HTMLAppRuntimeStorage {
+    func setThrowing(_ data: Data?, forKey key: String) throws
+}
+
+private extension HTMLAppRuntimeStorage {
+    func persist(_ data: Data?, forKey key: String) throws {
+        if let throwingStorage = self as? HTMLAppThrowingRuntimeStorage {
+            try throwingStorage.setThrowing(data, forKey: key)
+        } else {
+            set(data, forKey: key)
+        }
+    }
+}
+
 public final class HTMLAppUserDefaultsStorage: HTMLAppRuntimeStorage {
     private let userDefaults: UserDefaults
 
@@ -100,8 +117,10 @@ public final class HTMLAppTrustRegistry {
 
         lock.lock()
         defer { lock.unlock() }
-        manifests[manifest.appID] = manifest
-        try persistLocked()
+        var proposed = manifests
+        proposed[manifest.appID] = manifest
+        try persistLocked(proposed)
+        manifests = proposed
     }
 
     public func manifest(for appID: String) -> HTMLAppManifest? {
@@ -119,13 +138,38 @@ public final class HTMLAppTrustRegistry {
     public func unregister(appID: String) throws {
         lock.lock()
         defer { lock.unlock() }
-        manifests.removeValue(forKey: appID)
-        try persistLocked()
+        var proposed = manifests
+        proposed.removeValue(forKey: appID)
+        try persistLocked(proposed)
+        manifests = proposed
     }
 
-    private func persistLocked() throws {
+    public func replaceAll(
+        _ replacement: [HTMLAppManifest],
+        trustPolicy: HTMLAppTrustPolicy = .development
+    ) throws {
+        for manifest in replacement {
+            let validation = manifest.validate(requiringSignature: trustPolicy.requiresSignature)
+            guard validation.isValid else {
+                if case .invalid(let errors) = validation {
+                    throw HTMLAppTrustRegistryError.invalidManifest(errors)
+                }
+                throw HTMLAppTrustRegistryError.persistenceFailed
+            }
+            guard trustPolicy.accepts(manifest) else {
+                throw HTMLAppTrustRegistryError.signatureVerificationFailed(appID: manifest.appID)
+            }
+        }
+        let proposed = Dictionary(uniqueKeysWithValues: replacement.map { ($0.appID, $0) })
+        lock.lock()
+        defer { lock.unlock() }
+        try persistLocked(proposed)
+        manifests = proposed
+    }
+
+    private func persistLocked(_ proposed: [String: HTMLAppManifest]) throws {
         do {
-            storage.set(try JSONEncoder().encode(manifests), forKey: storageKey)
+            try storage.persist(try JSONEncoder().encode(proposed), forKey: storageKey)
         } catch {
             throw HTMLAppTrustRegistryError.persistenceFailed
         }
@@ -217,6 +261,36 @@ public final class HTMLAppPermissionLedger {
         return (Array(sessionGrants.values) + Array(persistentGrants.values))
             .filter { $0.appID == appID }
             .sorted { $0.capability.rawValue < $1.capability.rawValue }
+    }
+
+    public func allGrants() -> [HTMLAppPermissionGrant] {
+        lock.lock()
+        defer { lock.unlock() }
+        return (Array(sessionGrants.values) + Array(persistentGrants.values))
+            .sorted { Self.key(appID: $0.appID, capability: $0.capability) < Self.key(appID: $1.appID, capability: $1.capability) }
+    }
+
+    public func replaceAll(_ grants: [HTMLAppPermissionGrant]) throws {
+        var proposedPersistent: [String: HTMLAppPermissionGrant] = [:]
+        var proposedSession: [String: HTMLAppPermissionGrant] = [:]
+        for grant in grants {
+            let key = Self.key(appID: grant.appID, capability: grant.capability)
+            switch grant.scope {
+            case .once: continue
+            case .appSession: proposedSession[key] = grant
+            case .always: proposedPersistent[key] = grant
+            }
+        }
+        let data = try JSONEncoder().encode(proposedPersistent)
+        lock.lock()
+        defer { lock.unlock() }
+        do {
+            try storage.persist(data, forKey: storageKey)
+        } catch {
+            throw HTMLAppTrustRegistryError.persistenceFailed
+        }
+        persistentGrants = proposedPersistent
+        sessionGrants = proposedSession
     }
 
     public func revoke(appID: String, capability: HTMLAppCapability) {

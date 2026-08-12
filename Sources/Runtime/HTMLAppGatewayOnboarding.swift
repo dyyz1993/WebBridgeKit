@@ -7,7 +7,19 @@ import CryptoKit
 import Foundation
 
 public protocol HTMLAppGatewayTransport: AnyObject {
-    func get(_ url: URL, completion: @escaping (Result<(Data, Int), Error>) -> Void)
+    func get(_ url: URL, completion: @escaping (Result<HTMLAppGatewayTransportResponse, Error>) -> Void)
+}
+
+public struct HTMLAppGatewayTransportResponse: Equatable {
+    public let data: Data
+    public let statusCode: Int
+    public let finalURL: URL
+
+    public init(data: Data, statusCode: Int, finalURL: URL) {
+        self.data = data
+        self.statusCode = statusCode
+        self.finalURL = finalURL
+    }
 }
 
 public final class HTMLAppGatewayURLSessionTransport: HTMLAppGatewayTransport {
@@ -17,27 +29,55 @@ public final class HTMLAppGatewayURLSessionTransport: HTMLAppGatewayTransport {
         self.session = session
     }
 
-    public func get(_ url: URL, completion: @escaping (Result<(Data, Int), Error>) -> Void) {
+    public func get(_ url: URL, completion: @escaping (Result<HTMLAppGatewayTransportResponse, Error>) -> Void) {
         session.dataTask(with: url) { data, response, error in
             if let error {
                 completion(.failure(error))
                 return
             }
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            completion(.success((data ?? Data(), statusCode)))
+            let httpResponse = response as? HTTPURLResponse
+            let statusCode = httpResponse?.statusCode ?? 0
+            completion(.success(HTMLAppGatewayTransportResponse(
+                data: data ?? Data(),
+                statusCode: statusCode,
+                finalURL: httpResponse?.url ?? url
+            )))
         }.resume()
     }
 }
 
 public struct HTMLAppGatewayValidationReport: Equatable {
+    public struct Check: Equatable {
+        public enum Status: String { case passed, failed }
+        public let name: String
+        public let status: Status
+        public let detail: String
+    }
     public let gateway: HTMLAppGatewayConfiguration
     public let manifests: [HTMLAppManifest]
     public let healthStatusCode: Int
+    public let checks: [Check]
 
-    public init(gateway: HTMLAppGatewayConfiguration, manifests: [HTMLAppManifest], healthStatusCode: Int) {
+    public var displayName: String { gateway.name }
+    public var host: String { URL(string: gateway.baseURL)?.host ?? gateway.baseURL }
+    public var healthEndpoint: String { gateway.healthURL?.absoluteString ?? gateway.healthPath }
+    public var manifestEndpoint: String { gateway.manifestURL?.absoluteString ?? gateway.manifestPath }
+    public var publicKeyID: String? { gateway.publicKeyID }
+    public var applicationCount: Int { manifests.count }
+
+    public init(
+        gateway: HTMLAppGatewayConfiguration,
+        manifests: [HTMLAppManifest],
+        healthStatusCode: Int,
+        checks: [Check]? = nil
+    ) {
         self.gateway = gateway
         self.manifests = manifests
         self.healthStatusCode = healthStatusCode
+        self.checks = checks ?? [
+            Check(name: "health", status: .passed, detail: "HTTP \(healthStatusCode)"),
+            Check(name: "manifests", status: .passed, detail: "\(manifests.count) verified")
+        ]
     }
 }
 
@@ -49,6 +89,9 @@ public enum HTMLAppGatewayOnboardingError: Error, Equatable, LocalizedError {
     case missingTrustAnchor
     case invalidManifest(String)
     case signatureVerificationFailed(String)
+    case malformedHealthResponse
+    case crossOriginRedirect
+    case persistenceFailed
 
     public var errorDescription: String? {
         switch self {
@@ -59,6 +102,9 @@ public enum HTMLAppGatewayOnboardingError: Error, Equatable, LocalizedError {
         case .missingTrustAnchor: return "Production gateway configuration requires keyId and an Ed25519 public key"
         case .invalidManifest(let appID): return "Gateway returned an invalid manifest for \(appID)"
         case .signatureVerificationFailed(let appID): return "Manifest signature verification failed for \(appID)"
+        case .malformedHealthResponse: return "Gateway health response must be JSON with status ok"
+        case .crossOriginRedirect: return "Gateway redirected outside the configured origin"
+        case .persistenceFailed: return "Gateway activation could not be persisted and was rolled back"
         }
     }
 }
@@ -109,12 +155,16 @@ public final class HTMLAppGatewayOnboardingService {
             guard let self else { return }
             switch healthResult {
             case .failure(let error): completion(.failure(error))
-            case .success((_, let statusCode)) where !(200..<300).contains(statusCode):
-                completion(.failure(HTMLAppGatewayOnboardingError.invalidHealthResponse(statusCode)))
-            case .success((_, let statusCode)):
+            case .success(let response) where !self.isSameOrigin(response.finalURL, gateway: gateway):
+                completion(.failure(HTMLAppGatewayOnboardingError.crossOriginRedirect))
+            case .success(let response) where !(200..<300).contains(response.statusCode):
+                completion(.failure(HTMLAppGatewayOnboardingError.invalidHealthResponse(response.statusCode)))
+            case .success(let response) where !self.isValidHealthResponse(response.data):
+                completion(.failure(HTMLAppGatewayOnboardingError.malformedHealthResponse))
+            case .success(let response):
                 self.fetchManifests(from: manifestURL, gateway: gateway) { result in
                     completion(result.map {
-                        HTMLAppGatewayValidationReport(gateway: gateway, manifests: $0, healthStatusCode: statusCode)
+                        HTMLAppGatewayValidationReport(gateway: gateway, manifests: $0, healthStatusCode: response.statusCode)
                     })
                 }
             }
@@ -124,19 +174,24 @@ public final class HTMLAppGatewayOnboardingService {
     public func activate(_ report: HTMLAppGatewayValidationReport) throws {
         let previousGateway = gatewayRegistry.activeGateway()
         let previousManifests = trustRegistry.registeredManifests()
-        let newAppIDs = Set(report.manifests.map(\.appID))
+        let previousGrants = permissionLedger.allGrants()
+        let policy = try trustPolicy(for: report.gateway)
+        let identityChanged = previousGateway.map { Self.identity(of: $0) != Self.identity(of: report.gateway) } ?? false
+        let allowedAppIDs = Set(report.manifests.map(\.appID))
+        let replacementGrants = identityChanged
+            ? []
+            : previousGrants.filter { allowedAppIDs.contains($0.appID) }
 
-        for manifest in report.manifests {
-            let policy = try trustPolicy(for: report.gateway)
-            try trustRegistry.register(manifest, trustPolicy: policy.registryPolicy)
+        do {
+            try trustRegistry.replaceAll(report.manifests, trustPolicy: policy.registryPolicy)
+            try permissionLedger.replaceAll(replacementGrants)
+            try gatewayRegistry.save(report.gateway, activate: true)
+        } catch {
+            try? trustRegistry.replaceAll(previousManifests)
+            try? permissionLedger.replaceAll(previousGrants)
+            if let previousGateway { try? gatewayRegistry.save(previousGateway, activate: true) }
+            throw HTMLAppGatewayOnboardingError.persistenceFailed
         }
-        for manifest in previousManifests where !newAppIDs.contains(manifest.appID) {
-            try trustRegistry.unregister(appID: manifest.appID)
-        }
-        if let previousGateway, previousGateway != report.gateway {
-            previousManifests.forEach { permissionLedger.revokeAll(appID: $0.appID) }
-        }
-        try gatewayRegistry.save(report.gateway, activate: true)
     }
 
     /// Removing the active gateway must also remove the trust and capability
@@ -144,14 +199,25 @@ public final class HTMLAppGatewayOnboardingService {
     /// active manifests, so only their configuration is removed.
     public func removeGateway(id: String) throws {
         let isActiveGateway = gatewayRegistry.activeGateway()?.id == id
-        if isActiveGateway {
-            let manifests = trustRegistry.registeredManifests()
-            for manifest in manifests {
-                permissionLedger.revokeAll(appID: manifest.appID)
-                try trustRegistry.unregister(appID: manifest.appID)
-            }
+        guard isActiveGateway else {
+            try gatewayRegistry.remove(id: id)
+            return
         }
-        try gatewayRegistry.remove(id: id)
+        let previousGateway = gatewayRegistry.activeGateway()
+        let previousManifests = trustRegistry.registeredManifests()
+        let previousGrants = permissionLedger.allGrants()
+        do {
+            try trustRegistry.replaceAll([])
+            try permissionLedger.replaceAll([])
+            try gatewayRegistry.remove(id: id)
+        } catch {
+            try? trustRegistry.replaceAll(previousManifests)
+            try? permissionLedger.replaceAll(previousGrants)
+            if let previousGateway {
+                try? gatewayRegistry.save(previousGateway, activate: true)
+            }
+            throw HTMLAppGatewayOnboardingError.persistenceFailed
+        }
     }
 
     private func fetchManifests(
@@ -163,11 +229,13 @@ public final class HTMLAppGatewayOnboardingService {
             guard let self else { return }
             switch result {
             case .failure(let error): completion(.failure(error))
-            case .success((_, let code)) where !(200..<300).contains(code):
-                completion(.failure(HTMLAppGatewayOnboardingError.invalidManifestResponse(code)))
-            case .success((let data, _)):
+            case .success(let response) where !self.isSameOrigin(response.finalURL, gateway: gateway):
+                completion(.failure(HTMLAppGatewayOnboardingError.crossOriginRedirect))
+            case .success(let response) where !(200..<300).contains(response.statusCode):
+                completion(.failure(HTMLAppGatewayOnboardingError.invalidManifestResponse(response.statusCode)))
+            case .success(let response):
                 do {
-                    let manifests = try self.decodeManifests(data)
+                    let manifests = try self.decodeManifests(response.data)
                     try manifests.forEach { try self.validateTrust(of: $0, gateway: gateway) }
                     completion(.success(manifests))
                 } catch {
@@ -175,6 +243,27 @@ public final class HTMLAppGatewayOnboardingService {
                 }
             }
         }
+    }
+
+    private func isSameOrigin(_ url: URL, gateway: HTMLAppGatewayConfiguration) -> Bool {
+        guard let baseURL = URL(string: gateway.baseURL) else { return false }
+        return url.scheme?.lowercased() == baseURL.scheme?.lowercased()
+            && url.host?.lowercased() == baseURL.host?.lowercased()
+            && url.port == baseURL.port
+    }
+
+    private func isValidHealthResponse(_ data: Data) -> Bool {
+        guard let object = try? JSONSerialization.jsonObject(with: data),
+              let dictionary = object as? [String: Any],
+              let status = dictionary["status"] as? String else { return false }
+        if let schemaVersion = dictionary["schemaVersion"] as? String, schemaVersion != "1" {
+            return false
+        }
+        return status.lowercased() == "ok"
+    }
+
+    private static func identity(of gateway: HTMLAppGatewayConfiguration) -> String {
+        "\(gateway.baseURL.lowercased())|\(gateway.publicKeyID ?? "")|\(gateway.publicKey ?? "")"
     }
 
     private func decodeManifests(_ data: Data) throws -> [HTMLAppManifest] {
