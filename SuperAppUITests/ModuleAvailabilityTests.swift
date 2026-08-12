@@ -353,30 +353,17 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertSettingsRowsNavigate(rows)
     }
 
-    func testGatewayConfigurationImportsPastePayload() {
+    func testGatewayConfigurationExposesCurrentOnePageImportControls() {
         assertTab("tab.settings", opens: "SettingsViewController")
         tapElement("settings.cell.serverConfig")
         assertExists("gateway.table")
-        tapElement("gateway.pasteButton")
-
-        let payload = ProcessInfo.processInfo.environment["WBK_GATEWAY_UI_PAYLOAD"]
-            ?? "{\"id\":\"ui-gateway\",\"name\":\"UI Gateway\",\"baseURL\":\"http://localhost:8081\",\"healthPath\":\"/\",\"manifestPath\":\"/test_resources/gateway-manifest.json\"}"
-        let payloadObject = try? JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any]
-        let expectedGatewayName = payloadObject?["name"] as? String ?? "UI Gateway"
-        let field = app.textFields["gateway.importField"]
-        XCTAssertTrue(field.waitForExistence(timeout: 3))
-        if ProcessInfo.processInfo.environment["WBK_GATEWAY_UI_PAYLOAD"] == nil {
-            replaceText(in: "gateway.importField", with: payload)
-        } else {
-            XCTAssertEqual(field.value as? String, payload)
-        }
-        app.buttons["导入"].tap()
-
-        XCTAssertTrue(app.staticTexts["确认网关"].waitForExistence(timeout: 8))
-        app.buttons["保存并启用"].tap()
-        XCTAssertTrue(app.staticTexts["网关已启用"].waitForExistence(timeout: 5))
-        app.buttons["好"].tap()
-        XCTAssertTrue(app.staticTexts[expectedGatewayName].waitForExistence(timeout: 5))
+        assertExists("gateway.current")
+        assertExists("gateway.scan")
+        assertExists("gateway.paste")
+        assertExists("gateway.input")
+        assertExists("gateway.validate")
+        XCTAssertFalse(element("gateway.report").exists, "Activation report must only appear after validation")
+        XCTAssertFalse(app.buttons["gateway.activate"].exists, "Activation must not be possible before validation")
     }
 
     func testSettingsDebugAndSupportRowsAreReachable() {

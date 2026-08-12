@@ -1,5 +1,9 @@
 # Module Availability Verification Report
 
+## Next Phase Integration Evidence (2026-08-12)
+
+The combined official-first-run, self-hosted gateway, and strong-offline integration is recorded in `docs/verification/next-phase-acceptance.md`. Core evidence: Server 36/36, message types 15/15, approval 11/11, public gateway 5/5, AppTemplate 5/5, CI lint 17/17, and crash scan `total: 0`. The simulator/open-source verdict is GO-WITH-MANUAL-GATE; real APNs permission, token registration, delivery, background and lock-screen behavior remain physical manual requirements.
+
 Date: 2026-06-04 03:08 CST
 Commit under test: `32b57b` plus current Debug Center deep-evidence refresh
 Simulator: `iPhone 16 Pro UI Test`, iOS Simulator 18.3.1, command destination `platform=iOS Simulator,id=79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`<br>

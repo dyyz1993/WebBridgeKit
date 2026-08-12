@@ -155,7 +155,8 @@ final class FunctionalTests: XCTestCase {
             saveScreenshot("/tmp/wbk-home-card-tap.png")
 
             if !app.collectionViews["MainCollectionView"].exists {
-                if !app.navigationBars.buttons.isEmpty {
+                // swiftlint:disable:next empty_count -- XCUIElementQuery has no isEmpty API.
+                if app.navigationBars.buttons.count > 0 {
                     app.navigationBars.firstMatch.buttons.firstMatch.tap()
                     sleep(1)
                 }
@@ -169,7 +170,8 @@ final class FunctionalTests: XCTestCase {
                 saveScreenshot("/tmp/wbk-home-card-tap.png")
 
                 if !app.collectionViews["MainCollectionView"].exists {
-                    if !app.navigationBars.buttons.isEmpty {
+                    // swiftlint:disable:next empty_count -- XCUIElementQuery has no isEmpty API.
+                    if app.navigationBars.buttons.count > 0 {
                         app.navigationBars.firstMatch.buttons.firstMatch.tap()
                         sleep(1)
                     }

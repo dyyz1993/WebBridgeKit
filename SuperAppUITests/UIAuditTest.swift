@@ -195,7 +195,8 @@ final class UIAuditTest: XCTestCase {
         let typeName = elementTypeString(element.elementType)
 
         let children = element.children(matching: .any)
-        let hasChildren = !children.isEmpty
+        // swiftlint:disable:next empty_count -- XCUIElementQuery has no isEmpty API.
+        let hasChildren = children.count > 0
 
         if hasChildren {
             print("\(indent)<\(typeName)\(label)\(id)\(valueStr) frame=\"\(Int(frame.origin.x)),\(Int(frame.origin.y)),\(Int(frame.width)),\(Int(frame.height))\">")

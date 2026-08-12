@@ -133,7 +133,7 @@ final class SuperAppSmokeTests: XCTestCase {
         settingsTab.tap()
 
         let staticTexts = app.staticTexts
-        XCTAssertFalse(staticTexts.isEmpty, "Settings screen should have content")
+        XCTAssertGreaterThan(staticTexts.count, 0, "Settings screen should have content")
     }
 
     // MARK: - Cache Dashboard (in SmokeTests for crash debugging)
