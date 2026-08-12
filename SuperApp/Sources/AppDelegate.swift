@@ -70,9 +70,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // 注册推送通知
         UNUserNotificationCenter.current().delegate = self
-        #if !targetEnvironment(simulator)
-        registerForPushNotifications(application)
-        #endif
 
         //  Support UI Fidelity Testing — show Component Catalog
         if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
@@ -291,25 +288,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     // MARK: - Push Notifications
-
-    private func registerForPushNotifications(_ application: UIApplication) {
-        if ProcessInfo.processInfo.arguments.contains("-UITesting") {
-            return
-        }
-
-        UNUserNotificationCenter.current().delegate = self
-
-        #if !targetEnvironment(simulator)
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, _ in
-            if granted {
-                DispatchQueue.main.async {
-                    application.registerForRemoteNotifications()
-                }
-            }
-        }
-        #endif
-    }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }

@@ -33,8 +33,8 @@ final class APNsService: Sendable {
         )
     }
 
-    func registerDevice(_ registration: DeviceRegistration) async {
-        await tokenStore.register(registration)
+    func registerDevice(_ registration: DeviceRegistration) async throws {
+        try await tokenStore.register(registration)
     }
 
     private func sendToAPNs(deviceToken: String, payload: PushPayload) async {

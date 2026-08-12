@@ -114,7 +114,11 @@ enum PushRoutes {
         services: ServiceRegistry
     ) async throws -> RegistrationResponse {
         let registration = try await request.decode(as: DeviceRegistration.self, context: context)
-        await services.apnsService.registerDevice(registration)
+        do {
+            try await services.apnsService.registerDevice(registration)
+        } catch {
+            throw HTTPError(.internalServerError, message: "Device registration could not be persisted")
+        }
         return RegistrationResponse(code: 200, message: "Device registered", deviceToken: registration.deviceToken)
     }
 

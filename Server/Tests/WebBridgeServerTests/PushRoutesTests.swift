@@ -58,6 +58,26 @@ struct PushRoutesTests {
         }
     }
 
+    @Test("device registration returns a controlled server error when persistence fails")
+    func registrationPersistenceFailureIsControlled() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("webbridgekit-register-failure-\(UUID().uuidString)")
+        try Data("parent-is-a-file".utf8).write(to: directory)
+        let tokenStore = TokenStore(fileURL: directory.appendingPathComponent("registrations.json"))
+        let config = ServerConfiguration()
+        let services = ServiceRegistry(configuration: config, tokenStore: tokenStore)
+        let router = Router()
+        PushRoutes.register(on: router, services: services)
+        let app = Application(router: router)
+
+        try await app.test(.router) { client in
+            let body = ByteBuffer(string: #"{"deviceToken":"token-a","key":"key-a"}"#)
+            try await client.execute(uri: "/register", method: .post, body: body) { response in
+                #expect(response.status == .internalServerError)
+            }
+        }
+    }
+
     @Test("JSON push endpoint")
     func jsonPush() async throws {
         let app = createApplication()

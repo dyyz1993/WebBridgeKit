@@ -53,10 +53,15 @@ final class ServiceRegistry: Sendable {
     init(
         configuration: ServerConfiguration,
         htmlAppGatewayService: HTMLAppGatewayService? = nil,
-        approvalStore: ApprovalStore? = nil
+        approvalStore: ApprovalStore? = nil,
+        tokenStore: TokenStore? = nil
     ) {
-        self.tokenStore = TokenStore()
-        self.apnsService = APNsService(configuration: configuration, tokenStore: TokenStore())
+        let resolvedTokenStore = tokenStore ?? TokenStore(
+            fileURL: URL(fileURLWithPath: configuration.dataDir, isDirectory: true)
+                .appendingPathComponent("device-registrations.json")
+        )
+        self.tokenStore = resolvedTokenStore
+        self.apnsService = APNsService(configuration: configuration, tokenStore: resolvedTokenStore)
         self.manifestService = ManifestService(dataDir: configuration.dataDir)
         self.commandService = CommandService()
         self.htmlAppGatewayService = htmlAppGatewayService ?? HTMLAppGatewayService(
