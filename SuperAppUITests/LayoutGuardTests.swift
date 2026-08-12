@@ -159,7 +159,7 @@ final class LayoutGuardTests: XCTestCase {
         } else {
             let tabBar = app.tabBars.firstMatch
             XCTAssertTrue(tabBar.exists, "Tab bar should exist even when no empty state is shown")
-            XCTAssertFalse(app.staticTexts.isEmpty, "Apps should have visible content when empty state is absent")
+            XCTAssertGreaterThan(app.staticTexts.count, 0, "Apps should have visible content when empty state is absent")
         }
     }
 
@@ -246,7 +246,7 @@ final class ComponentCatalogLayoutTests: XCTestCase {
             sv.swipeUp()
         }
         let allOtherElements = sv.otherElements.allElementsBoundByIndex
-        XCTAssertFalse(allOtherElements.isEmpty, "ComponentCatalog should have at least one element")
+        XCTAssertGreaterThan(allOtherElements.count, 0, "ComponentCatalog should have at least one element")
         let last = allOtherElements.last!
         XCTAssertTrue(last.waitForExistence(timeout: 3), "Last item should exist after scrolling")
         XCTAssertTrue(last.isHittable, "Last item not hittable after scrolling")
