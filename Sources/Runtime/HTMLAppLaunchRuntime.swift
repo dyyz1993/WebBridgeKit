@@ -49,6 +49,7 @@ public struct HTMLAppLaunchTarget: Equatable, Sendable {
     public let manifest: HTMLAppManifest
     public let pageURL: URL
     public let resourceManifestURL: URL?
+    public let installedPackageURL: URL?
     public let offlineMode: HTMLAppOfflineMode
     public let context: HTMLAppLaunchContext
 
@@ -56,18 +57,20 @@ public struct HTMLAppLaunchTarget: Equatable, Sendable {
         manifest: HTMLAppManifest,
         pageURL: URL,
         resourceManifestURL: URL?,
+        installedPackageURL: URL? = nil,
         offlineMode: HTMLAppOfflineMode,
         context: HTMLAppLaunchContext
     ) {
         self.manifest = manifest
         self.pageURL = pageURL
         self.resourceManifestURL = resourceManifestURL
+        self.installedPackageURL = installedPackageURL
         self.offlineMode = offlineMode
         self.context = context
     }
 
     public var loaderURL: URL {
-        resourceManifestURL ?? pageURL
+        installedPackageURL ?? resourceManifestURL ?? pageURL
     }
 }
 
@@ -89,9 +92,14 @@ public enum HTMLAppLaunchError: Error, Equatable, LocalizedError {
 
 public final class HTMLAppLaunchResolver {
     private let trustRegistry: HTMLAppTrustRegistry
+    private let packageLocator: HTMLAppOfflinePackageLocator
 
-    public init(trustRegistry: HTMLAppTrustRegistry = HTMLAppTrustRegistry()) {
+    public init(
+        trustRegistry: HTMLAppTrustRegistry = HTMLAppTrustRegistry(),
+        packageLocator: HTMLAppOfflinePackageLocator = HTMLAppOfflinePackageLocator()
+    ) {
         self.trustRegistry = trustRegistry
+        self.packageLocator = packageLocator
     }
 
     public func resolve(
@@ -157,10 +165,16 @@ public final class HTMLAppLaunchResolver {
         }
 
         let offlineMode: HTMLAppOfflineMode
+        var installedPackageURL: URL?
         if manifest.cache.strategy == .networkOnly {
             offlineMode = .networkOnly
-        } else if manifest.cache.persistent, resourceManifestURL != nil {
+        } else if manifest.cache.isStrongOfflineEligible,
+                  let package = try? packageLocator.installedPackage(appID: manifest.appID),
+                  package.version == manifest.cache.version,
+                  package.resourceManifestSHA256 == manifest.cache.resourceManifestSHA256,
+                  let entrypoint = try? packageLocator.entrypointURL(for: package) {
             offlineMode = .strong
+            installedPackageURL = entrypoint
         } else {
             offlineMode = .partial
         }
@@ -169,6 +183,7 @@ public final class HTMLAppLaunchResolver {
             manifest: manifest,
             pageURL: pageURL,
             resourceManifestURL: resourceManifestURL,
+            installedPackageURL: installedPackageURL,
             offlineMode: offlineMode,
             context: HTMLAppLaunchContext(
                 appID: manifest.appID,

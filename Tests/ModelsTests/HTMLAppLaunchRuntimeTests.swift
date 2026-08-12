@@ -3,6 +3,7 @@
 //  WebBridgeKitTests
 //
 
+import CryptoKit
 import XCTest
 @testable import WebBridgeKit
 
@@ -111,14 +112,15 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
         XCTAssertNil(target.context.bridgePayload["granted"])
     }
 
-    func testNotificationResolvesStrongOfflinePackageForApprovalRoute() throws {
+    func testEligiblePackageIsPartialUntilVerifiedVersionIsInstalled() throws {
         let storage = MemoryStorage()
         let registry = HTMLAppTrustRegistry(storage: storage)
         let cache = HTMLAppCachePolicy(
             strategy: .manifest,
             version: "7",
             persistent: true,
-            resourceManifestURL: "https://chat.example.com/offline/manifest.json"
+            resourceManifestURL: "https://chat.example.com/offline/manifest.json",
+            resourceManifestSHA256: String(repeating: "a", count: 64)
         )
         let app = manifest(cache: cache)
         try registry.register(app)
@@ -131,9 +133,68 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
             source: .notification
         )
 
-        XCTAssertEqual(target.offlineMode, .strong)
+        XCTAssertEqual(target.offlineMode, .partial)
         XCTAssertEqual(target.loaderURL.absoluteString, "https://chat.example.com/offline/manifest.json")
         XCTAssertEqual(target.pageURL.path, "/approvals/request-9")
+    }
+
+    func testResolverPrefersInstalledStrongOfflineEntrypoint() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HTMLAppLaunchPackageTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let digest = String(repeating: "a", count: 64)
+        let cache = HTMLAppCachePolicy(
+            strategy: .manifest,
+            version: "7",
+            persistent: true,
+            resourceManifestURL: "https://chat.example.com/offline/manifest.json",
+            resourceManifestSHA256: digest
+        )
+        let app = manifest(cache: cache)
+        let directoryName = "installed-v7"
+        let metadata = InstalledHTMLAppPackage(
+            appID: app.appID,
+            version: "7",
+            entrypoint: "index.html",
+            directoryName: directoryName,
+            resourceManifestSHA256: digest,
+            installedAt: Date(timeIntervalSince1970: 1)
+        )
+        let appDirectory = root.appendingPathComponent(sha256(app.appID))
+        let packageDirectory = appDirectory.appendingPathComponent("versions/\(directoryName)")
+        try FileManager.default.createDirectory(at: packageDirectory, withIntermediateDirectories: true)
+        try Data("<html></html>".utf8).write(to: packageDirectory.appendingPathComponent("index.html"))
+        try JSONEncoder().encode(metadata).write(to: packageDirectory.appendingPathComponent("package.json"))
+        try JSONEncoder().encode(metadata).write(to: appDirectory.appendingPathComponent("current.json"))
+
+        let storage = MemoryStorage()
+        let registry = HTMLAppTrustRegistry(storage: storage)
+        try registry.register(app)
+        let resolver = HTMLAppLaunchResolver(
+            trustRegistry: registry,
+            packageLocator: HTMLAppOfflinePackageLocator(packagesRoot: root)
+        )
+
+        let target = try resolver.resolve(appID: app.appID, route: "/approvals/request-9")
+
+        XCTAssertEqual(target.offlineMode, .strong)
+        XCTAssertEqual(target.loaderURL, packageDirectory.appendingPathComponent("index.html"))
+    }
+
+    func testLegacyPersistentManifestWithoutDigestRemainsPartial() throws {
+        let storage = MemoryStorage()
+        let registry = HTMLAppTrustRegistry(storage: storage)
+        let app = manifest(cache: HTMLAppCachePolicy(
+            strategy: .manifest,
+            version: "7",
+            persistent: true,
+            resourceManifestURL: "https://chat.example.com/offline/manifest.json"
+        ))
+        try registry.register(app)
+
+        let target = try HTMLAppLaunchResolver(trustRegistry: registry).resolve(appID: app.appID, route: "/")
+
+        XCTAssertEqual(target.offlineMode, .partial)
     }
 
     func testResolverRejectsUnknownOrDisallowedTargets() throws {
@@ -185,5 +246,9 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
         )) {
             XCTAssertEqual($0 as? HTMLAppStateSnapshotError, .invalidJSON)
         }
+    }
+
+    private func sha256(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }

@@ -60,6 +60,7 @@ public struct HTMLAppCachePolicy: Codable, Equatable, Sendable {
     public let version: String
     public let persistent: Bool
     public let resourceManifestURL: String?
+    public let resourceManifestSHA256: String?
     public let restoresLastState: Bool
 
     public init(
@@ -67,17 +68,19 @@ public struct HTMLAppCachePolicy: Codable, Equatable, Sendable {
         version: String,
         persistent: Bool,
         resourceManifestURL: String? = nil,
+        resourceManifestSHA256: String? = nil,
         restoresLastState: Bool = true
     ) {
         self.strategy = strategy
         self.version = version
         self.persistent = persistent
         self.resourceManifestURL = resourceManifestURL
+        self.resourceManifestSHA256 = resourceManifestSHA256
         self.restoresLastState = restoresLastState
     }
 
     private enum CodingKeys: String, CodingKey {
-        case strategy, version, persistent, resourceManifestURL, restoresLastState
+        case strategy, version, persistent, resourceManifestURL, resourceManifestSHA256, restoresLastState
     }
 
     public init(from decoder: Decoder) throws {
@@ -86,7 +89,30 @@ public struct HTMLAppCachePolicy: Codable, Equatable, Sendable {
         version = try values.decode(String.self, forKey: .version)
         persistent = try values.decode(Bool.self, forKey: .persistent)
         resourceManifestURL = try values.decodeIfPresent(String.self, forKey: .resourceManifestURL)
+        resourceManifestSHA256 = try values.decodeIfPresent(String.self, forKey: .resourceManifestSHA256)
         restoresLastState = try values.decodeIfPresent(Bool.self, forKey: .restoresLastState) ?? true
+    }
+
+    /// Whether the signed parent manifest carries all production trust anchors
+    /// needed by a strong offline package. Installation success is a separate
+    /// fact and must be checked before reporting `.strong` launch availability.
+    public var isStrongOfflineEligible: Bool {
+        guard strategy == .manifest,
+              persistent,
+              let value = resourceManifestURL,
+              let url = URL(string: value),
+              url.scheme?.lowercased() == "https",
+              let digest = resourceManifestSHA256 else {
+            return false
+        }
+        return Self.isValidSHA256(digest)
+    }
+
+    public static func isValidSHA256(_ value: String) -> Bool {
+        let bytes = Array(value.utf8)
+        return bytes.count == 64 && bytes.allSatisfy { byte in
+            (48...57).contains(byte) || (97...102).contains(byte)
+        }
     }
 }
 
@@ -175,6 +201,11 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
             }
         }
 
+        if let digest = cache.resourceManifestSHA256,
+           !HTMLAppCachePolicy.isValidSHA256(digest) {
+            errors.append(.invalidResourceManifestDigest)
+        }
+
         if signature != nil && !(signature?.isWellFormed ?? false) {
             errors.append(.missingOrInvalidSignature)
         } else if requiringSignature && signature == nil {
@@ -238,6 +269,7 @@ public enum HTMLAppManifestError: Error, Equatable, LocalizedError {
     case invalidRoutes
     case emptyCacheVersion
     case invalidResourceManifestURL(String)
+    case invalidResourceManifestDigest
     case missingOrInvalidSignature
 
     public var errorDescription: String? {
@@ -252,6 +284,7 @@ public enum HTMLAppManifestError: Error, Equatable, LocalizedError {
         case .invalidRoutes: return "HTML app routes are invalid"
         case .emptyCacheVersion: return "HTML app cache version must not be empty"
         case .invalidResourceManifestURL(let url): return "HTML app resource manifest URL is invalid: \(url)"
+        case .invalidResourceManifestDigest: return "HTML app resource manifest SHA-256 must be 64 lowercase hexadecimal characters"
         case .missingOrInvalidSignature: return "HTML app manifest signature is missing or invalid"
         }
     }
