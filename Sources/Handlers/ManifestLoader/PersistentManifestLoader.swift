@@ -531,6 +531,10 @@ public class PersistentManifestLoader: NSObject {
         loadingState = newState
     }
 
+    func setLoadingState(_ newState: LoadingState) {
+        updateState(newState)
+    }
+
     public func getCurrentState() -> LoadingState {
         stateLock.lock()
         defer { stateLock.unlock() }

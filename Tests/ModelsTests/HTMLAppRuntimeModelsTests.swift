@@ -39,7 +39,72 @@ final class HTMLAppRuntimeModelsTests: XCTestCase {
         let policy = try JSONDecoder().decode(HTMLAppCachePolicy.self, from: data)
 
         XCTAssertNil(policy.resourceManifestURL)
+        XCTAssertNil(policy.resourceManifestSHA256)
         XCTAssertTrue(policy.restoresLastState)
+        XCTAssertFalse(policy.isStrongOfflineEligible)
+    }
+
+    func testStrongOfflineEligibilityRequiresURLAndLowercaseSHA256() throws {
+        let digest = String(repeating: "a", count: 64)
+        let policy = HTMLAppCachePolicy(
+            strategy: .manifest,
+            version: "42",
+            persistent: true,
+            resourceManifestURL: "https://inventory.example.com/package.json",
+            resourceManifestSHA256: digest
+        )
+
+        XCTAssertTrue(policy.isStrongOfflineEligible)
+        XCTAssertEqual(try JSONDecoder().decode(HTMLAppCachePolicy.self, from: JSONEncoder().encode(policy)), policy)
+        XCTAssertFalse(HTMLAppCachePolicy(
+            strategy: .manifest,
+            version: "42",
+            persistent: true,
+            resourceManifestURL: "https://inventory.example.com/package.json",
+            resourceManifestSHA256: String(repeating: "A", count: 64)
+        ).isStrongOfflineEligible)
+    }
+
+    func testManifestRejectsMalformedResourceManifestDigest() {
+        let manifest = HTMLAppManifest(
+            appID: "com.example.inventory",
+            name: "Inventory",
+            startURL: "https://inventory.example.com/index.html",
+            allowedOrigins: ["https://inventory.example.com"],
+            capabilities: [],
+            routes: ["/"],
+            cache: HTMLAppCachePolicy(
+                strategy: .manifest,
+                version: "42",
+                persistent: true,
+                resourceManifestURL: "https://inventory.example.com/package.json",
+                resourceManifestSHA256: "not-a-digest"
+            )
+        )
+
+        XCTAssertEqual(manifest.validate(), .invalid([.invalidResourceManifestDigest]))
+    }
+
+    func testResourceManifestDigestChangesCanonicalParentBytes() throws {
+        let withoutDigest = HTMLAppCachePolicy(
+            strategy: .manifest,
+            version: "42",
+            persistent: true,
+            resourceManifestURL: "https://inventory.example.com/package.json"
+        )
+        let withDigest = HTMLAppCachePolicy(
+            strategy: .manifest,
+            version: "42",
+            persistent: true,
+            resourceManifestURL: "https://inventory.example.com/package.json",
+            resourceManifestSHA256: String(repeating: "a", count: 64)
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+
+        XCTAssertNotEqual(try encoder.encode(withoutDigest), try encoder.encode(withDigest))
+        let object = try JSONSerialization.jsonObject(with: encoder.encode(withDigest)) as? [String: Any]
+        XCTAssertEqual(object?["resourceManifestSHA256"] as? String, String(repeating: "a", count: 64))
     }
 
     func testManifestRejectsWildcardAndPathBasedOrigins() {

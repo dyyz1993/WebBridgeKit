@@ -42,6 +42,7 @@ run_gate() {
 }
 
 run_gate "Services start and verify" "bash scripts/services.sh start && bash scripts/services.sh verify"
+run_gate "Strong offline package fixture" "bash tools/verify-strong-offline-package.sh"
 run_gate "CacheTests" "xcodebuild test -workspace WebBridgeKit.xcworkspace -scheme CacheTests -sdk iphonesimulator -destination '$SIMULATOR_DESTINATION' -derivedDataPath /tmp/wbk-dd-cache CODE_SIGNING_ALLOWED=NO"
 run_gate "HandlerTests cache" "xcodebuild test -workspace WebBridgeKit.xcworkspace -scheme HandlerTests -sdk iphonesimulator -destination '$SIMULATOR_DESTINATION' -derivedDataPath /tmp/wbk-dd-cache CODE_SIGNING_ALLOWED=NO -only-testing:HandlerTests/LazyManifestLoaderTests -only-testing:HandlerTests/WebPageCacheHandlerTests"
 
