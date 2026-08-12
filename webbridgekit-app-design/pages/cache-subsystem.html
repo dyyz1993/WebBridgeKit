@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缓存子系统详情</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+<style>
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wbk-status-bar-icons svg {
+  color: var(--wbk-text);
+}
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.wbk-nav-header {
+  position: sticky;
+  top: 54px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-md);
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  background: var(--wbk-background);
+}
+.wbk-nav-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--wbk-radius-sm);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+  color: var(--wbk-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-nav-back:active {
+  background: var(--wbk-background-secondary);
+}
+.wbk-nav-title {
+  font: var(--wbk-text-section-title);
+  color: var(--wbk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wbk-storage-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-background-tertiary);
+  overflow: hidden;
+  display: flex;
+}
+.wbk-storage-segment {
+  height: 100%;
+  transition: width var(--wbk-duration-normal) var(--wbk-easing);
+}
+</style>
+
+<div class="wbk-shell">
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/><path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/><rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/><rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <div class="wbk-page-content">
+    <!-- Nav Header -->
+    <div class="wbk-nav-header">
+      <button class="wbk-nav-back" data-dom-id="nav-back" aria-label="返回">
+        <i data-lucide="chevron-left" style="width:18px;height:18px;"></i>
+      </button>
+      <span class="wbk-nav-title">缓存仪表盘</span>
+    </div>
+
+    <!-- Content -->
+    <div style="padding: var(--wbk-spacing-lg);">
+
+      <!-- Header Card -->
+      <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-lg); padding: var(--wbk-spacing-xl); box-shadow: var(--wbk-shadow-card); margin-bottom: var(--wbk-spacing-lg); display: flex; align-items: center; gap: var(--wbk-spacing-md);">
+        <div style="width: 44px; height: 44px; border-radius: var(--wbk-radius-md); background: var(--wbk-primary-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i data-lucide="hard-drive" style="width: 22px; height: 22px; color: var(--wbk-primary);"></i>
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: var(--wbk-spacing-sm);">
+            <span style="font: var(--wbk-text-card-title); color: var(--wbk-text);">HTML 缓存</span>
+            <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-success-soft); font: var(--wbk-text-caption); font-weight: 600; color: var(--wbk-success); white-space: nowrap;">活跃</span>
+          </div>
+          <span style="font: var(--wbk-text-metadata); color: var(--wbk-text-secondary);">1.2 MB 已使用</span>
+        </div>
+        <i data-lucide="chevron-right" style="width: 18px; height: 18px; color: var(--wbk-text-tertiary); flex-shrink: 0;"></i>
+      </div>
+
+      <!-- Stats Row -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--wbk-spacing-sm); margin-bottom: var(--wbk-spacing-lg);">
+        <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); padding: var(--wbk-spacing-md); text-align: center; box-shadow: var(--wbk-shadow-sm);">
+          <div style="font: var(--wbk-text-card-title); color: var(--wbk-text); margin-bottom: 2px;">12</div>
+          <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">条目数</div>
+        </div>
+        <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); padding: var(--wbk-spacing-md); text-align: center; box-shadow: var(--wbk-shadow-sm);">
+          <div style="font: var(--wbk-text-card-title); color: var(--wbk-primary); margin-bottom: 2px;">92%</div>
+          <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">命中率</div>
+        </div>
+        <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); padding: var(--wbk-spacing-md); text-align: center; box-shadow: var(--wbk-shadow-sm);">
+          <div style="font: var(--wbk-text-card-title); color: var(--wbk-text); margin-bottom: 2px;">10 分</div>
+          <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">上次访问</div>
+        </div>
+      </div>
+
+      <!-- Storage Breakdown -->
+      <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-lg); padding: var(--wbk-spacing-xl); box-shadow: var(--wbk-shadow-sm); margin-bottom: var(--wbk-spacing-lg);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--wbk-spacing-md);">
+          <span style="font: var(--wbk-text-section-title); color: var(--wbk-text);">存储占用</span>
+          <span style="font: var(--wbk-text-metadata); color: var(--wbk-text-secondary);">1.2 MB / 10 MB</span>
+        </div>
+        <div class="wbk-storage-bar" style="margin-bottom: var(--wbk-spacing-md);">
+          <div class="wbk-storage-segment" style="width: 51%; background: var(--wbk-primary); border-radius: var(--wbk-radius-full) 0 0 var(--wbk-radius-full);"></div>
+          <div class="wbk-storage-segment" style="width: 23%; background: var(--wbk-info);"></div>
+          <div class="wbk-storage-segment" style="width: 18%; background: var(--wbk-warning);"></div>
+        </div>
+        <div style="display: flex; gap: var(--wbk-spacing-md); flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: var(--wbk-spacing-xs);">
+            <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-primary);"></div>
+            <span style="font: var(--wbk-text-caption); color: var(--wbk-text-secondary);">bridge-hub (51%)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: var(--wbk-spacing-xs);">
+            <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-info);"></div>
+            <span style="font: var(--wbk-text-caption); color: var(--wbk-text-secondary);">cache-showcase (23%)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: var(--wbk-spacing-xs);">
+            <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-warning);"></div>
+            <span style="font: var(--wbk-text-caption); color: var(--wbk-text-secondary);">其他 (18%)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: var(--wbk-spacing-xs);">
+            <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-background-tertiary);"></div>
+            <span style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">可用 (8%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cached Resources List -->
+      <div style="margin-bottom: var(--wbk-spacing-lg);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--wbk-spacing-md);">
+          <span style="font: var(--wbk-text-section-title); color: var(--wbk-text);">缓存资源</span>
+          <span style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">4 个条目</span>
+        </div>
+
+        <!-- Resource Item 1 -->
+        <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); padding: var(--wbk-spacing-md) var(--wbk-spacing-lg); box-shadow: var(--wbk-shadow-sm); margin-bottom: var(--wbk-spacing-sm); display: flex; align-items: center; gap: var(--wbk-spacing-md);">
+          <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-success); flex-shrink: 0;"></div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font: var(--wbk-text-row-title); color: var(--wbk-text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">bridge-hub.html</div>
+            <div style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/test_resources/bridge-hub.html</div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="font: var(--wbk-text-metadata); color: var(--wbk-text);">245 KB</div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">2025-05-08</div>
+          </div>
+        </div>
+
+        <!-- Resource Item 2 -->
+        <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); padding: var(--wbk-spacing-md) var(--wbk-spacing-lg); box-shadow: var(--wbk-shadow-sm); margin-bottom: var(--wbk-spacing-sm); display: flex; align-items: center; gap: var(--wbk-spacing-md);">
+          <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-success); flex-shrink: 0;"></div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font: var(--wbk-text-row-title); color: var(--wbk-text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">bridge-promise.html</div>
+            <div style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/test_resources/bridge-promise.html</div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="font: var(--wbk-text-metadata); color: var(--wbk-text);">89 KB</div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">2025-05-07</div>
+          </div>
+        </div>
+
+        <!-- Resource Item 3 -->
+        <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); padding: var(--wbk-spacing-md) var(--wbk-spacing-lg); box-shadow: var(--wbk-shadow-sm); margin-bottom: var(--wbk-spacing-sm); display: flex; align-items: center; gap: var(--wbk-spacing-md);">
+          <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-success); flex-shrink: 0;"></div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font: var(--wbk-text-row-title); color: var(--wbk-text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">cache-showcase.html</div>
+            <div style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/test_resources/cache-showcase.html</div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="font: var(--wbk-text-metadata); color: var(--wbk-text);">156 KB</div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">2025-05-06</div>
+          </div>
+        </div>
+
+        <!-- Resource Item 4 -->
+        <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); padding: var(--wbk-spacing-md) var(--wbk-spacing-lg); box-shadow: var(--wbk-shadow-sm); margin-bottom: var(--wbk-spacing-sm); display: flex; align-items: center; gap: var(--wbk-spacing-md);">
+          <div style="width: 8px; height: 8px; border-radius: var(--wbk-radius-full); background: var(--wbk-warning); flex-shrink: 0;"></div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font: var(--wbk-text-row-title); color: var(--wbk-text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">test-hub.html</div>
+            <div style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/test_resources/test-hub.html</div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="font: var(--wbk-text-metadata); color: var(--wbk-text);">67 KB</div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">2025-05-05</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: var(--wbk-spacing-md); padding-bottom: var(--wbk-spacing-xxxl);">
+        <button style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--wbk-spacing-sm); height: 44px; border-radius: var(--wbk-radius-md); background: var(--wbk-error-soft); color: var(--wbk-error); font: var(--wbk-text-button); border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity var(--wbk-duration-fast) var(--wbk-easing);">
+          <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+          清除此子系统
+        </button>
+        <button style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--wbk-spacing-sm); height: 44px; border-radius: var(--wbk-radius-md); background: var(--wbk-primary); color: var(--wbk-text-on-color); font: var(--wbk-text-button); border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background var(--wbk-duration-fast) var(--wbk-easing);">
+          <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+          刷新全部
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

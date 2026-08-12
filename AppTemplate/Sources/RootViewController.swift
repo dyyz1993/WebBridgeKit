@@ -1,13 +1,23 @@
 import UIKit
 import WebBridgeKit
 import SnapKit
-import RxSwift
 
 /// Root view controller - a simple WebView container
 /// This is the starting point for apps built with WebBridgeKit
 class RootViewController: UIViewController {
-    
-    private let disposeBag = DisposeBag()
+
+    private let configuration: AppTemplateConfiguration
+    private var didOpenInitialPWA = false
+
+    init(configuration: AppTemplateConfiguration) {
+        self.configuration = configuration
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        configuration = .safeDefaults
+        super.init(coder: coder)
+    }
     
     // MARK: - UI
     private lazy var urlTextField: UITextField = {
@@ -19,13 +29,17 @@ class RootViewController: UIViewController {
         tf.keyboardType = .URL
         tf.returnKeyType = .go
         tf.delegate = self
+        tf.text = configuration.initialPWAURL?.absoluteString
+        tf.textColor = ThemeTokens.Color.text
+        tf.backgroundColor = ThemeTokens.Color.surface
         return tf
     }()
     
     private lazy var goButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Go", for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        btn.titleLabel?.font = ThemeTokens.Typography.buttonMedium
+        btn.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         btn.addTarget(self, action: #selector(openURL), for: .touchUpInside)
         return btn
     }()
@@ -35,8 +49,15 @@ class RootViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "WebBridgeKit App"
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = ThemeTokens.Color.background
         setupUI()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !didOpenInitialPWA, configuration.initialPWAURL != nil else { return }
+        didOpenInitialPWA = true
+        openURL()
     }
 }
 

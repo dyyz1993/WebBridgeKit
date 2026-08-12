@@ -1,0 +1,16 @@
+{
+  "nodeId": "gen-project-shell",
+  "kind": "project-shell",
+  "pageIds": ["page-home", "page-inbox", "page-discover", "page-settings", "page-debug"],
+  "output": "partials/project-shell.html",
+  "sharedRegions": ["iOS status bar", "bottom tab bar with 4 tabs", "brand color system", "font system", "radius/shadow model", "dark mode support"],
+  "privateRegions": [],
+  "status": "planned",
+  "children": [
+    { "nodeId": "gen-page-home", "kind": "page-leaf", "pageIds": ["page-home"], "output": "pages/home.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+    { "nodeId": "gen-page-inbox", "kind": "page-leaf", "pageIds": ["page-inbox"], "output": "pages/inbox.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+    { "nodeId": "gen-page-discover", "kind": "page-leaf", "pageIds": ["page-discover"], "output": "pages/discover.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+    { "nodeId": "gen-page-settings", "kind": "page-leaf", "pageIds": ["page-settings"], "output": "pages/settings.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+    { "nodeId": "gen-page-debug", "kind": "page-leaf", "pageIds": ["page-debug"], "output": "pages/debug.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "generated", "children": [] }
+  ]
+}

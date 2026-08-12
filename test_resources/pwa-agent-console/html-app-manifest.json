@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1",
+  "appId": "com.webbridgekit.fixture.agent-console",
+  "name": "Agent Console Fixture",
+  "startURL": "https://cloak.xbrowser.dev:5801/fixtures/pwa-agent-console/index.html",
+  "allowedOrigins": [
+    "https://cloak.xbrowser.dev:5801"
+  ],
+  "capabilities": [
+    "notification"
+  ],
+  "routes": [
+    "/fixtures/pwa-agent-console/index.html",
+    "/fixtures/pwa-agent-console/approval.html"
+  ],
+  "cache": {
+    "strategy": "manifest",
+    "version": "2026.08.10-tx.1",
+    "persistent": true,
+    "restoresLastState": true
+  }
+}

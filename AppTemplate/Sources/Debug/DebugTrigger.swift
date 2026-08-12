@@ -15,6 +15,7 @@ public class DebugTrigger {
     }
 
     public func showDebugPanel(from viewController: UIViewController?) {
+        #if DEBUG
         guard !isShowing else { return }
         guard let vc = viewController ?? topViewController() else { return }
 
@@ -35,6 +36,7 @@ public class DebugTrigger {
         vc.present(nav, animated: true) { [weak self] in
             self?.isShowing = false
         }
+        #endif
     }
 
     @objc private func dismissDebugPanel() {

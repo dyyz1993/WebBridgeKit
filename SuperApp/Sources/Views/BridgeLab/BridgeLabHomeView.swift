@@ -9,7 +9,12 @@ struct BridgeLabHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xxl) {
-                ModuleHeaderView(tab: .bridge)
+                ModuleHeaderView(
+                    title: "Bridge 调试",
+                    subtitle: "JSBridge 命令、参数、回调与错误",
+                    icon: .terminal,
+                    accessibilityIdentifier: "moduleHeader.bridge"
+                )
                 ServiceStatusStrip(items: serviceItems)
                 groupSection
                 commandSection

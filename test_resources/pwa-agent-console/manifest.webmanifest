@@ -1,0 +1,9 @@
+{
+  "name": "WebBridgeKit Agent Console Fixture",
+  "short_name": "Agent Console",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#10251e",
+  "theme_color": "#10251e"
+}

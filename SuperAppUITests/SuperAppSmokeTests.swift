@@ -46,41 +46,27 @@ final class SuperAppSmokeTests: XCTestCase {
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should be visible after launch")
     }
 
-    func testTabBarHasFiveTabs() {
+    func testTabBarHasThreeUserTabs() {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should exist")
         let tabs = tabBar.buttons
-        XCTAssertEqual(tabs.count, 5, "Tab bar should have 5 tabs")
+        XCTAssertEqual(tabs.count, 3, "Tab bar should contain Apps, Notifications, and Settings")
     }
 
     // MARK: - Tab Existence
 
-    func testWebTabExists() {
+    func testAppsTabExists() {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
-        let webTab = findTabButton(in: tabBar, identifier: "tab.web", zhName: "Web", enName: "Web")
-        XCTAssertTrue(webTab.exists, "Web tab should exist")
+        let appsTab = findTabButton(in: tabBar, identifier: "tab.apps", zhName: "应用", enName: "Apps")
+        XCTAssertTrue(appsTab.exists, "Apps tab should exist")
     }
 
-    func testInboxTabExists() {
+    func testNotificationsTabExists() {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
-        let inboxTab = findTabButton(in: tabBar, identifier: "tab.inbox", zhName: "消息", enName: "Messages")
-        XCTAssertTrue(inboxTab.exists, "Messages tab should exist")
-    }
-
-    func testBridgeTabExists() {
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
-        let bridgeTab = findTabButton(in: tabBar, identifier: "tab.bridge", zhName: "Bridge", enName: "Bridge")
-        XCTAssertTrue(bridgeTab.exists, "Bridge tab should exist")
-    }
-
-    func testTokenPushTabExists() {
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
-        let pushTab = findTabButton(in: tabBar, identifier: "tab.push", zhName: "Token/Push", enName: "Token/Push")
-        XCTAssertTrue(pushTab.exists, "Token/Push tab should exist")
+        let notificationsTab = findTabButton(in: tabBar, identifier: "tab.notifications", zhName: "通知", enName: "Notifications")
+        XCTAssertTrue(notificationsTab.exists, "Notifications tab should exist")
     }
 
     func testSettingsTabExists() {
@@ -92,14 +78,14 @@ final class SuperAppSmokeTests: XCTestCase {
 
     // MARK: - Tab Navigation
 
-    func testNavigateToBridgeTab() {
+    func testNavigateToAppsTab() {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
-        let bridgeTab = findTabButton(in: tabBar, identifier: "tab.bridge", zhName: "Bridge", enName: "Bridge")
-        bridgeTab.tap()
+        let appsTab = findTabButton(in: tabBar, identifier: "tab.apps", zhName: "应用", enName: "Apps")
+        appsTab.tap()
 
-        let contentExists = app.otherElements["bridgeLab.home"].waitForExistence(timeout: 5)
-        XCTAssertTrue(contentExists, "Bridge tab should show content")
+        let contentExists = app.descendants(matching: .any)["pwaCenter.table"].waitForExistence(timeout: 5)
+        XCTAssertTrue(contentExists, "Apps tab should show the PWA app center")
     }
 
     func testNavigateToSettingsTab() {
@@ -115,27 +101,27 @@ final class SuperAppSmokeTests: XCTestCase {
         XCTAssertTrue(tableViewExists || contentExists, "Settings screen should have content")
     }
 
-    func testNavigateToInboxTab() {
+    func testNavigateToNotificationsTab() {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
-        let inboxTab = findTabButton(in: tabBar, identifier: "tab.inbox", zhName: "消息", enName: "Messages")
-        inboxTab.tap()
+        let notificationsTab = findTabButton(in: tabBar, identifier: "tab.notifications", zhName: "通知", enName: "Notifications")
+        notificationsTab.tap()
 
         let contentExists = app.otherElements["InboxViewController"].waitForExistence(timeout: 5)
             || app.otherElements["wbk_search_field"].waitForExistence(timeout: 3)
-        XCTAssertTrue(contentExists, "Messages tab should show content")
+        XCTAssertTrue(contentExists, "Notifications tab should show content")
     }
 
     // MARK: - Home Screen
 
-    func testWebScreenHasContent() {
+    func testAppsScreenHasContent() {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15))
-        let webTab = findTabButton(in: tabBar, identifier: "tab.web", zhName: "Web", enName: "Web")
-        webTab.tap()
+        let appsTab = findTabButton(in: tabBar, identifier: "tab.apps", zhName: "应用", enName: "Apps")
+        appsTab.tap()
 
-        XCTAssertTrue(app.otherElements["webCache.home"].waitForExistence(timeout: 5),
-            "Web screen should show Web Cache home")
+        XCTAssertTrue(app.descendants(matching: .any)["pwaCenter.table"].waitForExistence(timeout: 5),
+            "Apps screen should show the PWA app center")
     }
 
     // MARK: - Settings Screen
@@ -147,7 +133,7 @@ final class SuperAppSmokeTests: XCTestCase {
         settingsTab.tap()
 
         let staticTexts = app.staticTexts
-        XCTAssertTrue(staticTexts.count > 0, "Settings screen should have content")
+        XCTAssertFalse(staticTexts.isEmpty, "Settings screen should have content")
     }
 
     // MARK: - Cache Dashboard (in SmokeTests for crash debugging)

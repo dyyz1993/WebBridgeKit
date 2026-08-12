@@ -136,7 +136,19 @@ public struct ArchiveProcessor: MessageProcessor {
             threadId: content.threadId,
             targetURL: content.targetURL,
             targetAppId: content.targetAppId,
+            route: content.route,
             targetMode: content.targetMode,
+            imageURL: content.imageURL,
+            iconURL: content.iconURL,
+            interruptionLevel: content.level,
+            soundVolume: content.volume,
+            isCall: content.isCall,
+            copyText: content.copyText,
+            isAutoCopy: content.isAutoCopy,
+            isArchive: content.isArchive,
+            ttl: content.ttl,
+            replacementID: content.replacementID,
+            isDeleted: content.isDeleted,
             userInfo: content.userInfo as? [String: String]
         )
         

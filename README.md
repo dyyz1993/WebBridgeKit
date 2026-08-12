@@ -5,11 +5,23 @@
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-iOS WebView 与原生能力桥接框架，面向超级 App 场景设计。
+iOS 原生增强 PWA 的 SDK、应用模板与完整宿主 App。
 
 ## 项目简介
 
-WebBridgeKit 是一个 iOS 原生框架，将 WKWebView 与 **41 种原生能力**（相机、定位、分享、扫码、AI 等）通过统一的 JS Bridge 暴露给 Web 页面。框架内置 **6 大引擎 + WebSocket + CommandParser**，覆盖缓存、消息推送、实时通信、AI 调试、主题切换、技能插件等超级 App 核心需求，开箱即用。
+这个仓库最初从 SDK 和底层调试能力开始建设，目标一直是支撑一个完整的 iOS App。现在仓库同时维护三种交付物：
+
+- **WebBridgeKit SDK**：将 WKWebView 与相机、定位、分享、扫码等原生能力通过统一 JS Bridge 暴露给标准 PWA，并提供缓存、消息、路由、权限和诊断能力。
+- **AppTemplate**：供开发者创建另一款宿主 App 的最小起点，只演示如何初始化和接入 SDK，不承担完整产品体验。
+- **SuperApp**：基于 SDK 开发的完整 WebBridgeKit App，面向普通用户提供首页、通知中心、PWA 应用中心和设置；官方托管版与开源自托管版共享这套客户端。
+
+`SuperApp` 是当前产品开发主线；`AppTemplate` 不是它的替代品。仓库内仍保留内部 target 名称 `SuperApp`，对外产品名称使用 `WebBridgeKit`。
+
+### 选择你的起点
+
+- **普通用户或官方/自托管部署者**：使用完整的 WebBridgeKit App（内部 target 为 `SuperApp`）。官方版安装后直接使用；自托管版只需在部署后导入一次网关配置。
+- **已有 iOS App 的开发者**：直接集成 `WebBridgeKit SDK`，按需启用 Bridge、缓存、消息、路由等能力。
+- **准备创建另一款宿主 App 的开发者**：从 `AppTemplate` 开始。模板默认不包含凭据、不启动消息通道或本地服务器，只提供最小 SDK 初始化与 PWA 容器。
 
 **核心解决的问题：**
 
@@ -23,11 +35,11 @@ WebBridgeKit 是一个 iOS 原生框架，将 WKWebView 与 **41 种原生能力
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  SuperApp                        │  业务应用层
-│           (业务代码、路由、UI 逻辑)                │
+│            WebBridgeKit App (SuperApp)           │  产品应用层
+│      (首页、通知、PWA 中心、设置、产品路由)          │
 ├─────────────────────────────────────────────────┤
-│                 AppTemplate                      │  应用模板层
-│     (AppDelegate、RootVC、TabBar 模板)            │
+│                 AppTemplate                      │  开发起点
+│       (最小初始化、RootVC、宿主接入示例)             │
 ├─────────────────────────────────────────────────┤
 │                WebBridgeKit                      │  框架层
 │  ┌──────┬──────┬──────┬──────┬──────┬──────┐    │
@@ -42,8 +54,16 @@ WebBridgeKit 是一个 iOS 原生框架，将 WKWebView 与 **41 种原生能力
 | 层级 | 说明 |
 |------|------|
 | **WebBridgeKit（框架层）** | 静态库，包含全部引擎和 41 个 Handler |
-| **AppTemplate（模板层）** | 新 App 脚手架，提供 AppDelegate/RootVC/TabBar 模板，展示 100% 框架能力 |
-| **SuperApp（应用层）** | 示例/宿主 App，在模板基础上叠加 UI 业务和交互逻辑 |
+| **AppTemplate（模板层）** | 面向 iOS 开发者的最小宿主脚手架，用于基于 SDK 创建自己的 App；不复制官方 App 的完整产品 UI |
+| **SuperApp（产品层）** | 完整 WebBridgeKit App 的内部 target，集成 SDK 并承载普通用户可见的 UI、路由和官方/自托管体验 |
+
+### 功能归属原则
+
+- 可被不同宿主复用的 Bridge、缓存、消息、路由、权限与诊断能力放在 `Sources/`。
+- 创建新宿主必须具备的最小初始化示例放在 `AppTemplate/`。
+- 普通用户直接操作的首页、通知中心、PWA 管理、审批与设置体验放在 `SuperApp/`。
+- 官方服务和自托管服务共用的推送、审批与网关协议放在 `Server/` 和 `docs/api/`。
+- 不为了展示 SDK 能力而把调试页面放进正式 App 主导航；开发工具集中在 Debug Center。
 
 ## 核心特性
 
@@ -182,7 +202,7 @@ import WebBridgeKit
 
 func application(_ application: UIApplication,
                  didFinishLaunchingWithOptions launchOptions: ...) -> Bool {
-    WebBridgeKit.shared.initialize()  // 注册 Handler + 预热 WebView 池
+    WebBridgeKitManager.shared.initialize()  // 注册 Handler + 预热 WebView 池
     return true
 }
 ```
@@ -199,9 +219,10 @@ cp -r AppTemplate/ MyNewApp/
 ```
 
 AppTemplate 提供的模板文件：
+- `AppTemplateConfiguration.swift` — 安全默认值与可选能力配置
 - `AppDelegate.swift` — 框架初始化
 - `RootViewController.swift` — 根视图控制器
-- `TabBarController.swift` — TabBar 布局
+- `TabBarController.swift` — 单一宿主页布局；Debug 工具通过独立入口打开
 
 ## 引擎使用
 
@@ -426,7 +447,7 @@ GitHub Actions 自动化流程（`.github/workflows/`）：
 
 | Workflow | Job | 说明 |
 |----------|-----|------|
-| **ci.yml** | Build | 编译 SuperApp（push/PR → main/develop） |
+| **ci.yml** | Build | 分别编译完整 `SuperApp` 与最小 `AppTemplate`（push/PR → main/develop） |
 | | Unit Tests | Cache/Message/AI/Skills/Handler 测试矩阵并行 |
 | | Smoke Tests | 主流程冒烟测试 + 截图收集 |
 | | Core UI Tests | 核心功能 UI 测试（3 workers 并行） |
@@ -461,12 +482,12 @@ WebBridgeKit/
 │   ├── WebSocket/                    # WebSocket Engine（JSON-RPC + 连接池 + 心跳）
 │   ├── CommandParser/                # 命令解析与路由
 │   └── WebBridgeKit.swift            # 框架入口
-├── AppTemplate/                      # 应用模板（展示 100% 框架能力）
+├── AppTemplate/                      # 最小 SDK 宿主开发模板
 │   └── Sources/
 │       ├── AppDelegate.swift
 │       ├── RootViewController.swift
 │       └── TabBarController.swift
-├── SuperApp/                         # 示例应用（模板 + UI 业务）
+├── SuperApp/                         # 完整 WebBridgeKit 产品 App
 │   ├── Sources/
 │   └── Resources/
 ├── Tests/                            # 34 个测试文件，520+ 测试方法

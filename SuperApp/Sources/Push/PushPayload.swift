@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import WebBridgeKit
 
 /// 解析推送通知的参数模型
 struct PushPayload {
@@ -17,6 +18,18 @@ struct PushPayload {
 
     /// 小程序 APP ID（对应缓存的离线应用）
     let appid: String?
+
+    /// 受信任 HTML App 声明的内部路由
+    let route: String?
+
+    /// 协议版本
+    let version: String
+
+    /// 可选过期时间，防止旧通知重复导航
+    let expiresAt: String?
+
+    /// 可选通知唯一标识
+    let nonce: String?
 
     /// 要打开的 URL
     let url: String?
@@ -43,16 +56,27 @@ struct PushPayload {
     let group: String?
 
     init(userInfo: [AnyHashable: Any]) {
-        self.appid = userInfo["appid"] as? String
+        self.appid = (userInfo["appId"] as? String) ?? (userInfo["appid"] as? String)
+        self.route = userInfo["route"] as? String
+        self.version = userInfo["version"] as? String ?? HTMLAppManifest.supportedSchemaVersion
+        self.expiresAt = userInfo["expiresAt"] as? String
+        self.nonce = userInfo["nonce"] as? String
         self.url = userInfo["url"] as? String
-        self.title = userInfo["title"] as? String
-        self.body = userInfo["body"] as? String
+        let notification = userInfo["notification"] as? [String: Any]
+        self.title = (notification?["title"] as? String) ?? (userInfo["title"] as? String)
+        self.body = (notification?["body"] as? String) ?? (userInfo["body"] as? String)
         self.sound = userInfo["sound"] as? String
         self.level = userInfo["level"] as? String
         self.group = userInfo["group"] as? String
 
         if let modeStr = userInfo["mode"] as? String {
             self.mode = OpenMode(rawValue: modeStr) ?? .normal
+        } else if let display = userInfo["display"] as? String {
+            switch display {
+            case "sheet", "inline": self.mode = .modal
+            case "full": self.mode = .immersive
+            default: self.mode = .normal
+            }
         } else {
             self.mode = .normal
         }
@@ -67,5 +91,31 @@ struct PushPayload {
     /// 是否有可路由的目标
     var hasRoute: Bool {
         return appid != nil || url != nil
+    }
+
+    var stringParams: [String: String] {
+        params.reduce(into: [:]) { result, item in
+            switch item.value {
+            case let value as String:
+                result[item.key] = value
+            case let value as NSNumber:
+                result[item.key] = value.stringValue
+            default:
+                break
+            }
+        }
+    }
+
+    var htmlAppEnvelope: HTMLAppPushEnvelope? {
+        guard let appid, let route, let title, !title.isEmpty else { return nil }
+        return HTMLAppPushEnvelope(
+            version: version,
+            appID: appid,
+            route: route,
+            parameters: stringParams,
+            notification: HTMLAppPushNotification(title: title, body: body ?? ""),
+            expiresAt: expiresAt,
+            nonce: nonce
+        )
     }
 }

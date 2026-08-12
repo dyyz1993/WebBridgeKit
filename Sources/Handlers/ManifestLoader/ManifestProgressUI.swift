@@ -25,13 +25,13 @@ extension PersistentManifestLoader {
             guard let baseURL = URL(string: "\(scheme)://\(cacheID)/") else {
                 throw LoaderError.invalidManifestFormat
             }
-            try await MainActor.run {
+            _ = await MainActor.run {
                 webView.loadHTMLString(html, baseURL: baseURL)
             }
             return
         }
 
-        try await MainActor.run {
+        _ = await MainActor.run {
             webView.loadFileURL(indexFile, allowingReadAccessTo: cacheDir)
         }
     }

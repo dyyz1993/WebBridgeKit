@@ -6,7 +6,9 @@
 
 ## 1. 项目概览
 
-**WebBridgeKit** 是一个面向 iOS 的「推送 + 缓存 + 原生桥接」超级应用框架，提供 JS↔Native Bridge、离线缓存引擎、消息推送路由、WebSocket 双通道通信等核心能力，支持任意 iOS App 集成。
+**WebBridgeKit** 是一个以完整 iOS App 为最终交付目标、同时开放底层 SDK 和开发模板的原生增强 PWA 项目。SDK 提供 JS↔Native Bridge、离线缓存、消息路由、权限和诊断能力；AppTemplate 是最小接入起点；`SuperApp` target 是完整 WebBridgeKit App 的产品实现。
+
+依赖方向固定为：完整 App 使用 SDK，模板演示 SDK；SDK 不依赖模板或具体 App。官方托管版与开源自托管版共用完整 App 和协议，仅在服务来源与一次性网关配置上不同。
 
 ### 技术栈总览
 
@@ -40,9 +42,9 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    SuperApp (业务层)                         │
-│  首页 / 收信箱 / 发现 / 设置 / Debug Panel / Token 管理     │
-│  87 个 Swift 文件 · MVVM 架构 · 22+ ViewControllers         │
+│             WebBridgeKit App / SuperApp (产品层)             │
+│       首页 / 通知中心 / PWA 应用中心 / 设置 / 消息详情        │
+│       普通用户主流程；开发工具收敛到 Debug Center             │
 └───────────────────────┬─────────────────────────────────────┘
                         │ 调用框架能力
 ┌───────────────────────▼─────────────────────────────────────┐
@@ -154,9 +156,11 @@
 | **Extensions/** | — | 扩展 | WKWebView+Rx 等 |
 | **Managers/** | — | 管理器 | URLFavoriteManager 等 |
 
-### 3.2 SuperApp — 页面结构
+### 3.2 SuperApp — 完整产品 App
 
-SuperApp 采用 **MVVM 架构**，共 87 个 Swift 文件：
+`SuperApp` 是内部 target 名称，产品显示名称为 WebBridgeKit。它采用 **MVVM + SwiftUI/UIKit 混合**架构，集成框架能力并承载终端用户流程；它不是只用于展示 SDK 的示例应用。
+
+`AppTemplate` 与它并列存在，仅作为开发者创建另一款宿主 App 的最小起点。自托管用户使用的仍是完整 App，而不是 AppTemplate。
 
 #### Controllers（44 个 VC）
 

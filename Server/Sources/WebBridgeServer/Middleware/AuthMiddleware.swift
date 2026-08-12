@@ -25,6 +25,7 @@ struct AuthMiddleware<Context: RequestContext>: RouterMiddleware {
 
     private func isAdminEndpoint(_ path: String) -> Bool {
         path.hasPrefix("/api/v1/manifests") && !path.hasSuffix("/version")
+            || path.hasPrefix("/api/v1/html-apps")
             || path.hasPrefix("/api/v1/stats")
     }
 

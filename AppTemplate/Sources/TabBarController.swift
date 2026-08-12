@@ -3,6 +3,18 @@ import WebBridgeKit
 
 class TabBarController: UITabBarController {
 
+    private let configuration: AppTemplateConfiguration
+
+    init(configuration: AppTemplateConfiguration) {
+        self.configuration = configuration
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        configuration = .safeDefaults
+        super.init(coder: coder)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTabs()
@@ -11,36 +23,12 @@ class TabBarController: UITabBarController {
     }
 
     private func setupTabs() {
-        let webVC = RootViewController()
-
-        #if DEBUG
-        let cacheVC = CacheShowcaseViewController()
-        let messageVC = MessageShowcaseViewController()
-        let commandVC = CommandShowcaseViewController()
-        let themeVC = ThemeShowcaseViewController()
-        let debugVC = DebugPanelViewController()
-
-        webVC.tabBarItem = UITabBarItem(title: "网页", image: UIImage(systemName: "globe"), selectedImage: UIImage(systemName: "globe.fill"))
-        cacheVC.tabBarItem = UITabBarItem(title: "缓存", image: UIImage(systemName: "internaldrive"), selectedImage: UIImage(systemName: "internaldrive.fill"))
-        messageVC.tabBarItem = UITabBarItem(title: "消息", image: UIImage(systemName: "bell"), selectedImage: UIImage(systemName: "bell.fill"))
-        commandVC.tabBarItem = UITabBarItem(title: "口令", image: UIImage(systemName: "key"), selectedImage: UIImage(systemName: "key.fill"))
-        themeVC.tabBarItem = UITabBarItem(title: "主题", image: UIImage(systemName: "paintbrush"), selectedImage: UIImage(systemName: "paintbrush.fill"))
-        debugVC.tabBarItem = UITabBarItem(title: "调试", image: UIImage(systemName: "exclamationmark.bubble.fill"), selectedImage: UIImage(systemName: "exclamationmark.bubble"))
-
-        viewControllers = [
-            UINavigationController(rootViewController: webVC),
-            UINavigationController(rootViewController: cacheVC),
-            UINavigationController(rootViewController: messageVC),
-            UINavigationController(rootViewController: commandVC),
-            UINavigationController(rootViewController: themeVC),
-            UINavigationController(rootViewController: debugVC)
-        ]
-        #else
-        webVC.tabBarItem = UITabBarItem(title: "网页", image: UIImage(systemName: "globe"), selectedImage: UIImage(systemName: "globe.fill"))
+        let webVC = RootViewController(configuration: configuration)
+        let webIcon = LucideIcon.globe.image(pointSize: 20)
+        webVC.tabBarItem = UITabBarItem(title: "网页", image: webIcon, selectedImage: webIcon)
         viewControllers = [
             UINavigationController(rootViewController: webVC)
         ]
-        #endif
     }
 
     private func setupAppearance() {

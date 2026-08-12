@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发现</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+<!-- === Project Shell Styles (in body per sub-agent hard rules) === -->
+<style>
+/* === Project Shell Styles === */
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wbk-status-bar-icons svg { color: var(--wbk-text); }
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.wbk-tab-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: 83px;
+  padding-top: 8px;
+  padding-bottom: 34px;
+  background: var(--wbk-background);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--wbk-separator);
+}
+.wbk-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--wbk-text-tertiary);
+  transition: color var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-tab:active { opacity: 0.6; }
+.wbk-tab.wbk-tab--active { color: var(--wbk-primary); }
+.wbk-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 23px;
+  height: 23px;
+  position: relative;
+}
+.wbk-tab-icon i { width: 23px; height: 23px; }
+.wbk-tab-label { font: var(--wbk-text-tab-label); font-size: 11px; line-height: 1.3; }
+.wbk-tab-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-error);
+  border: 1.5px solid var(--wbk-background);
+  pointer-events: none;
+}
+
+/* === Discover Page Styles === */
+.discover-nav {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--wbk-spacing-sm) var(--wbk-spacing-lg) var(--wbk-spacing-md);
+}
+.discover-nav-title {
+  font: var(--wbk-text-screen-title);
+  font-size: 28px;
+  color: var(--wbk-text);
+}
+.discover-nav-count {
+  font: var(--wbk-text-metadata);
+  color: var(--wbk-text-tertiary);
+}
+.discover-section-header {
+  padding: var(--wbk-spacing-lg) var(--wbk-spacing-lg) var(--wbk-spacing-sm);
+  font: var(--wbk-text-badge);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--wbk-text-secondary);
+}
+.discover-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--wbk-spacing-md);
+  padding: 0 var(--wbk-spacing-lg);
+}
+.discover-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  padding: var(--wbk-spacing-xl) var(--wbk-spacing-md);
+  min-height: 92px;
+  background: var(--wbk-card-background);
+  border-radius: var(--wbk-radius-lg);
+  box-shadow: var(--wbk-shadow-card);
+}
+.discover-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--wbk-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+.discover-card-icon svg { width: 22px; height: 22px; }
+.discover-card-title {
+  font: var(--wbk-text-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  text-align: center;
+  line-height: 1.3;
+}
+.discover-card-detail {
+  font: var(--wbk-text-caption);
+  font-size: 10px;
+  color: var(--wbk-text-secondary);
+  text-align: center;
+}
+.discover-card-badge {
+  font: var(--wbk-text-badge);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: var(--wbk-radius-full);
+  white-space: nowrap;
+}
+.badge-persistent {
+  background: var(--wbk-primary-soft);
+  color: var(--wbk-primary);
+}
+.badge-offline {
+  background: var(--wbk-success-soft);
+  color: var(--wbk-success);
+}
+.badge-needs-update {
+  background: var(--wbk-warning-soft);
+  color: var(--wbk-warning);
+}
+.badge-not-cached {
+  background: var(--wbk-background-tertiary);
+  color: var(--wbk-text-secondary);
+}
+.gradient-blue-purple { background: linear-gradient(135deg, #4F6AF6, #8B5CF6); }
+.gradient-pink-red { background: linear-gradient(135deg, #EC4899, #EF4444); }
+.gradient-blue-cyan { background: linear-gradient(135deg, #3B82F6, #06B6D4); }
+.gradient-green-teal { background: linear-gradient(135deg, #22C55E, #14B8A6); }
+.gradient-pink-yellow { background: linear-gradient(135deg, #F472B6, #F59E0B); }
+.gradient-purple-pink { background: linear-gradient(135deg, #A855F7, #EC4899); }
+.gradient-indigo-blue { background: linear-gradient(135deg, #6366F1, #3B82F6); }
+.gradient-teal-green { background: linear-gradient(135deg, #14B8A6, #22C55E); }
+.gradient-orange-red { background: linear-gradient(135deg, #F97316, #EF4444); }
+.gradient-slate-blue { background: linear-gradient(135deg, #64748B, #6366F1); }
+</style>
+
+<main>
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor" opacity="1"/><rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor" opacity="1"/><rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity="1"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/><path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/><rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/><rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+
+    <!-- Navigation Bar -->
+    <div class="discover-nav">
+      <h1 class="discover-nav-title">发现</h1>
+      <span class="discover-nav-count">8 个资源</span>
+    </div>
+
+    <!-- Section: Offline Resources -->
+    <div class="discover-section-header">离线资源</div>
+    <div class="discover-grid">
+
+      <!-- Card: bridge-hub -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-blue-purple">
+          <i data-lucide="layers"></i>
+        </div>
+        <span class="discover-card-title">bridge-hub</span>
+        <span class="discover-card-badge badge-persistent">persistent</span>
+        <span class="discover-card-detail">核心桥接管理面板</span>
+      </div>
+
+      <!-- Card: bridge-promise -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-pink-red">
+          <i data-lucide="zap"></i>
+        </div>
+        <span class="discover-card-title">bridge-promise</span>
+        <span class="discover-card-badge badge-offline">offline</span>
+        <span class="discover-card-detail">Promise 桥接测试</span>
+      </div>
+
+      <!-- Card: cache-showcase -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-blue-cyan">
+          <i data-lucide="hard-drive"></i>
+        </div>
+        <span class="discover-card-title">cache-showcase</span>
+        <span class="discover-card-badge badge-offline">offline</span>
+        <span class="discover-card-detail">离线缓存展示</span>
+      </div>
+
+      <!-- Card: manifest-demo -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-green-teal">
+          <i data-lucide="file-code"></i>
+        </div>
+        <span class="discover-card-title">manifest-demo</span>
+        <span class="discover-card-badge badge-needs-update">needs-update</span>
+        <span class="discover-card-detail">清单文件演示</span>
+      </div>
+
+      <!-- Card: test-hub -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-pink-yellow">
+          <i data-lucide="flask-conical"></i>
+        </div>
+        <span class="discover-card-title">test-hub</span>
+        <span class="discover-card-badge badge-not-cached">not-cached</span>
+        <span class="discover-card-detail">综合测试入口</span>
+      </div>
+
+      <!-- Card: js-bridge -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-purple-pink">
+          <i data-lucide="code-xml"></i>
+        </div>
+        <span class="discover-card-title">js-bridge</span>
+        <span class="discover-card-badge badge-persistent">persistent</span>
+        <span class="discover-card-detail">JS 桥接接口</span>
+      </div>
+
+    </div>
+
+    <!-- Section: Bridge Capabilities -->
+    <div class="discover-section-header">Bridge 能力</div>
+    <div class="discover-grid">
+
+      <!-- Card: Device Info -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-indigo-blue">
+          <i data-lucide="smartphone"></i>
+        </div>
+        <span class="discover-card-title">设备信息</span>
+        <span class="discover-card-badge badge-persistent">persistent</span>
+        <span class="discover-card-detail">设备参数查询</span>
+      </div>
+
+      <!-- Card: Network Status -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-teal-green">
+          <i data-lucide="wifi"></i>
+        </div>
+        <span class="discover-card-title">网络状态</span>
+        <span class="discover-card-badge badge-offline">offline</span>
+        <span class="discover-card-detail">网络连接监控</span>
+      </div>
+
+      <!-- Card: Media Control -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-orange-red">
+          <i data-lucide="play-circle"></i>
+        </div>
+        <span class="discover-card-title">媒体控制</span>
+        <span class="discover-card-badge badge-needs-update">needs-update</span>
+        <span class="discover-card-detail">播放器控制接口</span>
+      </div>
+
+      <!-- Card: Gesture Interaction -->
+      <div class="discover-card">
+        <div class="discover-card-icon gradient-slate-blue">
+          <i data-lucide="hand"></i>
+        </div>
+        <span class="discover-card-title">手势交互</span>
+        <span class="discover-card-badge badge-not-cached">not-cached</span>
+        <span class="discover-card-detail">手势识别能力</span>
+      </div>
+
+    </div>
+
+    <!-- Bottom padding for scroll comfort -->
+    <div style="height: var(--wbk-spacing-xxl);"></div>
+
+  </div>
+
+  <!-- Bottom Tab Bar (discover active) -->
+  <nav class="wbk-tab-bar" role="tablist" aria-label="主导航">
+
+    <button class="wbk-tab" data-dom-id="tab-home" role="tab" aria-selected="false" aria-label="首页">
+      <span class="wbk-tab-icon"><i data-lucide="house"></i></span>
+      <span class="wbk-tab-label">首页</span>
+    </button>
+
+    <button class="wbk-tab" data-dom-id="tab-inbox" role="tab" aria-selected="false" aria-label="收件箱">
+      <span class="wbk-tab-icon">
+        <i data-lucide="inbox"></i>
+        <span class="wbk-tab-badge" aria-hidden="true"></span>
+      </span>
+      <span class="wbk-tab-label">收件箱</span>
+    </button>
+
+    <button class="wbk-tab wbk-tab--active" data-dom-id="tab-discover" role="tab" aria-selected="true" aria-label="发现">
+      <span class="wbk-tab-icon"><i data-lucide="compass"></i></span>
+      <span class="wbk-tab-label">发现</span>
+    </button>
+
+    <button class="wbk-tab" data-dom-id="tab-settings" role="tab" aria-selected="false" aria-label="设置">
+      <span class="wbk-tab-icon"><i data-lucide="settings"></i></span>
+      <span class="wbk-tab-label">设置</span>
+    </button>
+
+  </nav>
+
+</div>
+</main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

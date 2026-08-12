@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebView 浏览器</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+<style>
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wbk-status-bar-icons svg { color: var(--wbk-text); }
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+.wbk-nav-header {
+  position: sticky;
+  top: 54px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-md);
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  background: var(--wbk-background);
+}
+.wbk-nav-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--wbk-radius-sm);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+  color: var(--wbk-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-nav-back:active { background: var(--wbk-background-secondary); }
+.wbk-nav-title {
+  font: var(--wbk-text-section-title);
+  color: var(--wbk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wbk-url-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+  border-radius: var(--wbk-radius-full);
+  padding: 0 var(--wbk-spacing-md);
+  height: 40px;
+  margin-bottom: var(--wbk-spacing-md);
+}
+.wbk-url-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: var(--wbk-text-mono-meta);
+  font-size: 13px;
+  color: var(--wbk-text);
+}
+.wbk-url-bar input::placeholder { color: var(--wbk-placeholder); }
+.wbk-url-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--wbk-radius-xs);
+  background: none;
+  border: none;
+  color: var(--wbk-text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.wbk-url-btn:active { color: var(--wbk-text); }
+.wbk-url-btn.wbk-url-btn--active { color: var(--wbk-primary); }
+.wbk-bottom-toolbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 49px;
+  padding-bottom: 4px;
+  background: var(--wbk-card-background);
+  border-top: 1px solid var(--wbk-separator);
+}
+.wbk-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--wbk-radius-sm);
+  background: none;
+  border: none;
+  color: var(--wbk-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-toolbar-btn:active { color: var(--wbk-text); }
+.wbk-toolbar-btn.wbk-toolbar-btn--active { color: var(--wbk-primary); }
+</style>
+
+<div class="wbk-shell">
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/><path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/><rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/><rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <div class="wbk-page-content">
+    <div class="wbk-nav-header">
+      <button class="wbk-nav-back" data-dom-id="nav-back" aria-label="返回">
+        <i data-lucide="chevron-left" style="width:18px;height:18px;"></i>
+      </button>
+      <span class="wbk-nav-title">首页</span>
+    </div>
+
+    <div style="padding: var(--wbk-spacing-lg); flex: 1;">
+
+      <!-- URL Bar -->
+      <div class="wbk-url-bar">
+        <i data-lucide="lock" style="width:14px;height:14px;color:var(--wbk-success);flex-shrink:0;"></i>
+        <input type="text" value="https://api.day.app" readonly>
+        <button class="wbk-url-btn wbk-url-btn--active" aria-label="分享">
+          <i data-lucide="share" style="width:16px;height:16px;"></i>
+        </button>
+        <button class="wbk-url-btn" aria-label="收藏">
+          <i data-lucide="bookmark" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+
+      <!-- Browser Content (simulated) -->
+      <div style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-lg); box-shadow: var(--wbk-shadow-card); overflow: hidden; flex: 1;">
+        <!-- Simulated page header -->
+        <div style="border-bottom: 1px solid var(--wbk-separator); padding: var(--wbk-spacing-xl) var(--wbk-spacing-xl) var(--wbk-spacing-md);">
+          <div style="font-size: 20px; font-weight: 700; color: var(--wbk-text); line-height: 1.3; margin-bottom: var(--wbk-spacing-xs);">WebBridgeKit API 文档</div>
+          <div style="font: var(--wbk-text-caption); color: var(--wbk-text-tertiary);">v1.2.0</div>
+        </div>
+
+        <!-- Simulated nav links -->
+        <div style="padding: var(--wbk-spacing-md) var(--wbk-spacing-xl); border-bottom: 1px solid var(--wbk-separator);">
+          <div style="display: flex; flex-wrap: wrap; gap: var(--wbk-spacing-sm);">
+            <span style="font: var(--wbk-text-metadata); color: var(--wbk-primary); font-weight: 500; cursor: pointer;">快速开始</span>
+            <span style="font: var(--wbk-text-metadata); color: var(--wbk-primary); font-weight: 500; cursor: pointer;">接口列表</span>
+            <span style="font: var(--wbk-text-metadata); color: var(--wbk-primary); font-weight: 500; cursor: pointer;">认证说明</span>
+            <span style="font: var(--wbk-text-metadata); color: var(--wbk-primary); font-weight: 500; cursor: pointer;">缓存策略</span>
+          </div>
+        </div>
+
+        <!-- Simulated content -->
+        <div style="padding: var(--wbk-spacing-xl);">
+          <div style="font-size: 16px; font-weight: 600; color: var(--wbk-text); margin-bottom: var(--wbk-spacing-sm);">概述</div>
+          <p style="font: var(--wbk-text-body); color: var(--wbk-text-secondary); line-height: 1.5; margin-bottom: var(--wbk-spacing-lg);">WebBridgeKit API 提供了一套完整的推送通知、缓存管理和命令执行接口。通过 RESTful 风格的设计，开发者可以轻松集成到现有的 iOS 应用中。</p>
+
+          <div style="font-size: 16px; font-weight: 600; color: var(--wbk-text); margin-bottom: var(--wbk-spacing-sm);">核心接口</div>
+          <div style="background: var(--wbk-background-secondary); border-radius: var(--wbk-radius-sm); padding: var(--wbk-spacing-md); margin-bottom: var(--wbk-spacing-sm);">
+            <div style="display: flex; align-items: center; gap: var(--wbk-spacing-sm); margin-bottom: 4px;">
+              <span style="display: inline-flex; align-items: center; padding: 1px 6px; border-radius: var(--wbk-radius-xs); background: var(--wbk-success-soft); font: var(--wbk-text-badge); color: var(--wbk-success);">GET</span>
+              <span style="font: var(--wbk-text-mono-meta); color: var(--wbk-text);">/health</span>
+            </div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-secondary);">健康检查端点，返回服务状态。</div>
+          </div>
+          <div style="background: var(--wbk-background-secondary); border-radius: var(--wbk-radius-sm); padding: var(--wbk-spacing-md); margin-bottom: var(--wbk-spacing-sm);">
+            <div style="display: flex; align-items: center; gap: var(--wbk-spacing-sm); margin-bottom: 4px;">
+              <span style="display: inline-flex; align-items: center; padding: 1px 6px; border-radius: var(--wbk-radius-xs); background: var(--wbk-primary-soft); font: var(--wbk-text-badge); color: var(--wbk-primary);">POST</span>
+              <span style="font: var(--wbk-text-mono-meta); color: var(--wbk-text);">/push</span>
+            </div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-secondary);">发送推送通知到指定设备。</div>
+          </div>
+          <div style="background: var(--wbk-background-secondary); border-radius: var(--wbk-radius-sm); padding: var(--wbk-spacing-md); margin-bottom: var(--wbk-spacing-sm);">
+            <div style="display: flex; align-items: center; gap: var(--wbk-spacing-sm); margin-bottom: 4px;">
+              <span style="display: inline-flex; align-items: center; padding: 1px 6px; border-radius: var(--wbk-radius-xs); background: var(--wbk-primary-soft); font: var(--wbk-text-badge); color: var(--wbk-primary);">POST</span>
+              <span style="font: var(--wbk-text-mono-meta); color: var(--wbk-text);">/command</span>
+            </div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-secondary);">执行远程命令，如缓存刷新、配置更新。</div>
+          </div>
+          <div style="background: var(--wbk-background-secondary); border-radius: var(--wbk-radius-sm); padding: var(--wbk-spacing-md);">
+            <div style="display: flex; align-items: center; gap: var(--wbk-spacing-sm); margin-bottom: 4px;">
+              <span style="display: inline-flex; align-items: center; padding: 1px 6px; border-radius: var(--wbk-radius-xs); background: var(--wbk-success-soft); font: var(--wbk-text-badge); color: var(--wbk-success);">GET</span>
+              <span style="font: var(--wbk-text-mono-meta); color: var(--wbk-text);">/manifest</span>
+            </div>
+            <div style="font: var(--wbk-text-caption); color: var(--wbk-text-secondary);">获取当前应用配置清单。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Toolbar -->
+    <div class="wbk-bottom-toolbar">
+      <button class="wbk-toolbar-btn" aria-label="后退">
+        <i data-lucide="arrow-left" style="width:20px;height:20px;"></i>
+      </button>
+      <button class="wbk-toolbar-btn" aria-label="前进">
+        <i data-lucide="arrow-right" style="width:20px;height:20px;"></i>
+      </button>
+      <button class="wbk-toolbar-btn wbk-toolbar-btn--active" aria-label="刷新">
+        <i data-lucide="rotate-cw" style="width:20px;height:20px;"></i>
+      </button>
+      <button class="wbk-toolbar-btn wbk-toolbar-btn--active" aria-label="书签">
+        <i data-lucide="bookmark" style="width:20px;height:20px;"></i>
+      </button>
+      <button class="wbk-toolbar-btn" aria-label="更多">
+        <i data-lucide="more-horizontal" style="width:20px;height:20px;"></i>
+      </button>
+    </div>
+  </div>
+</div>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

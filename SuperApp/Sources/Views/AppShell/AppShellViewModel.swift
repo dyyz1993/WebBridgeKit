@@ -47,29 +47,17 @@ final class AppShellViewModel: ObservableObject {
 
     var statusItems: [AppShellStatusItem] {
         switch tab {
-        case .web:
+        case .apps:
             return [
-                AppShellStatusItem(title: "Backend", value: ":8080", tone: .neutral),
-                AppShellStatusItem(title: "Cache", value: "ready", tone: .success),
-                AppShellStatusItem(title: "Offline", value: "testable", tone: .success)
+                AppShellStatusItem(title: "PWA", value: "verified", tone: .success),
+                AppShellStatusItem(title: "Gateway", value: "managed", tone: .neutral),
+                AppShellStatusItem(title: "Offline", value: "available", tone: .success)
             ]
-        case .inbox:
+        case .notifications:
             return [
-                AppShellStatusItem(title: "Messages", value: "history", tone: .success),
+                AppShellStatusItem(title: "Notifications", value: "history", tone: .success),
                 AppShellStatusItem(title: "Groups", value: "enabled", tone: .success),
                 AppShellStatusItem(title: "Unread", value: "badge", tone: .neutral)
-            ]
-        case .bridge:
-            return [
-                AppShellStatusItem(title: "Bridge", value: "native", tone: .success),
-                AppShellStatusItem(title: "Handlers", value: "grouped", tone: .neutral),
-                AppShellStatusItem(title: "Logs", value: "linked", tone: .neutral)
-            ]
-        case .tokenPush:
-            return [
-                AppShellStatusItem(title: "Secrets", value: "redacted", tone: .success),
-                AppShellStatusItem(title: "Push", value: "device", tone: .warning),
-                AppShellStatusItem(title: "Payload", value: "json", tone: .neutral)
             ]
         case .settings:
             return [
@@ -82,14 +70,14 @@ final class AppShellViewModel: ObservableObject {
 
     var actionCards: [AppShellActionCard] {
         switch tab {
-        case .web:
+        case .apps:
             return [
                 AppShellActionCard(
-                    title: "打开网页目录",
-                    subtitle: "从预置 URL 开始验证在线打开和缓存入口",
+                    title: "应用中心",
+                    subtitle: "查看已验证 PWA 并在沉浸式容器中打开",
                     icon: .globe,
                     action: .openWebCatalog,
-                    accessibilityIdentifier: "web.openCatalog"
+                    accessibilityIdentifier: "apps.openCatalog"
                 ),
                 AppShellActionCard(
                     title: "缓存仪表盘",
@@ -106,55 +94,14 @@ final class AppShellViewModel: ObservableObject {
                     accessibilityIdentifier: "web.cacheManagement"
                 )
             ]
-        case .inbox:
+        case .notifications:
             return [
                 AppShellActionCard(
-                    title: "消息历史",
-                    subtitle: "查看推送消息、按分组折叠、筛选未读并进入消息详情",
-                    icon: .inbox,
-                    action: .openMessageHistory,
-                    accessibilityIdentifier: "inbox.history"
-                )
-            ]
-        case .bridge:
-            return [
-                AppShellActionCard(
-                    title: "Bridge Showcase",
-                    subtitle: "暂时复用旧桥接展示页，后续替换为 Bridge Lab",
-                    icon: .terminal,
-                    action: .openBridgeShowcase,
-                    accessibilityIdentifier: "bridge.openShowcase"
-                ),
-                AppShellActionCard(
-                    title: "命令结果规范",
-                    subtitle: "Bridge Lab 将在这里展示 JSON、耗时、错误和日志关联",
-                    icon: .docText,
-                    action: .openCommandExamples,
-                    accessibilityIdentifier: "bridge.commandExamples"
-                )
-            ]
-        case .tokenPush:
-            return [
-                AppShellActionCard(
-                    title: "Token 管理",
-                    subtitle: "生成、查看、复制和撤销口令",
-                    icon: .key,
-                    action: .openTokenManager,
-                    accessibilityIdentifier: "tokenPush.tokenManager"
-                ),
-                AppShellActionCard(
-                    title: "API Key 管理",
-                    subtitle: "管理服务调用密钥和脱敏展示",
-                    icon: .shield,
-                    action: .openAPIKeyManager,
-                    accessibilityIdentifier: "tokenPush.apiKeyManager"
-                ),
-                AppShellActionCard(
-                    title: "推送调试",
-                    subtitle: "编辑 payload 并验证本地/服务端推送路径",
+                    title: "通知记录",
+                    subtitle: "查看推送、待办与审批提醒，并进入目标页面",
                     icon: .bell,
-                    action: .openNotificationDebug,
-                    accessibilityIdentifier: "tokenPush.notificationDebug"
+                    action: .openMessageHistory,
+                    accessibilityIdentifier: "notifications.history"
                 )
             ]
         case .settings:
