@@ -1,0 +1,22 @@
+{
+  "Simulator Target Bundle": "com.webbridgekit.superapp",
+  "aps": {
+    "alert": {
+      "title": "新的聊天消息",
+      "body": "用户 42 发来一条消息"
+    },
+    "sound": "default"
+  },
+  "version": "1",
+  "appId": "com.webbridgekit.fixture.chat",
+  "route": "/test_resources/pwa-notification/index.html",
+  "notification": {
+    "title": "新的聊天消息",
+    "body": "用户 42 发来一条消息"
+  },
+  "params": {
+    "conversationId": "gateway-user-42",
+    "messageId": "gateway-message-7"
+  },
+  "nonce": "gateway-chat-20260810"
+}

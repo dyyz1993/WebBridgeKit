@@ -8,6 +8,7 @@ REPORT_DIR="$PROJECT_ROOT/build/reports"
 REPORT="$REPORT_DIR/release-gate.md"
 DERIVED_DATA="/tmp/wbk-dd-release-gate"
 ARCHIVE_PATH="/tmp/wbk-release-gate/SuperApp.xcarchive"
+SWIFTLINT_BIN="$(command -v swiftlint)"
 mkdir -p "$REPORT_DIR" /tmp/wbk-release-gate
 cd "$PROJECT_ROOT"
 
@@ -33,7 +34,8 @@ run_gate() {
 }
 
 run_gate "Services start and verify" "bash scripts/services.sh start && bash scripts/services.sh verify"
-run_gate "SwiftLint" "swiftlint --quiet"
+run_gate "Deliverable boundaries" "bash tools/verify-deliverable-boundaries.sh"
+run_gate "SwiftLint" "'$SWIFTLINT_BIN' --quiet"
 run_gate "Design lint" "bash tools/ci-lint.sh"
 run_gate "Build Debug" "xcodebuild build -workspace WebBridgeKit.xcworkspace -scheme SuperApp -sdk iphonesimulator -arch arm64 -derivedDataPath '$DERIVED_DATA' CODE_SIGNING_ALLOWED=NO"
 run_gate "Crash scan" "bash scripts/scan-crash-logs.sh --json | grep '\"total\": 0'"
@@ -48,6 +50,8 @@ run_gate "No Release test HTML" "if [ -d '$ARCHIVE_PATH/Products/Applications/Su
     printf "%s\n" "${ROWS[@]}"
     echo ""
     echo "Summary: $PASS passed, $FAIL failed"
+    echo ""
+    echo "AppTemplate readiness is verified independently by: bash tools/run-template-gate.sh"
 } >"$REPORT"
 
 echo "Report: $REPORT"

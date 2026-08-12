@@ -2,6 +2,7 @@ FROM swift:6.0-noble AS build
 WORKDIR /build
 COPY Package.swift ./
 COPY Sources/ Sources/
+COPY Tests/ Tests/
 RUN swift build -c release --static-swift-stdlib
 
 FROM ubuntu:noble AS run

@@ -326,7 +326,22 @@ function buildBarkMessage(params) {
     ciphertext: params.ciphertext || '',
     iv: params.iv || '',
     mode: params.mode || 'normal',
-    appid: params.appid || '',
+    display: params.display || '',
+    appid: params.appId || params.appid || '',
+    route: params.route || '',
+    category: params.category || '',
+    verificationCode: params.verificationCode || '',
+    expiresAt: params.expiresAt || '',
+    ttl: params.ttl || '',
+    delete: params.delete || '',
+    actionState: params.actionState || '',
+    requestId: params.requestId || '',
+    contentType: params.contentType || '',
+    qrPayload: params.qrPayload || '',
+    statePath: params.statePath || '',
+    revision: params.revision || '',
+    threadId: params.threadId || '',
+    params: params.params || {},
     deviceKey: params.device_key || params.key || '',
     createDate: new Date().toISOString(),
     timestamp: Date.now()
@@ -980,7 +995,14 @@ async function handleBarkPush(req, res, pathname, urlObj) {
       body: decodeURIComponent(body)
     };
     const queryParams = urlObj.searchParams;
-    const barkParams = ['sound', 'url', 'icon', 'image', 'group', 'level', 'badge', 'mode', 'appid', 'markdown', 'copy', 'autoCopy', 'isArchive', 'action', 'call', 'ciphertext', 'iv', 'volume', 'subtitle'];
+    const barkParams = [
+      'sound', 'url', 'icon', 'image', 'group', 'threadId', 'level', 'badge',
+      'mode', 'display', 'appid', 'appId', 'route', 'category', 'markdown',
+      'copy', 'autoCopy', 'isArchive', 'action', 'call', 'ciphertext', 'iv',
+      'volume', 'subtitle', 'verificationCode', 'expiresAt', 'ttl', 'id',
+      'delete', 'actionState', 'requestId', 'contentType', 'qrPayload',
+      'statePath', 'revision'
+    ];
     for (const p of barkParams) {
       params[p] = queryParams.get(p) || '';
     }

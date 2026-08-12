@@ -44,7 +44,7 @@ class TabBarController: UITabBarController {
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             guard let self = self,
                   let items = self.tabBar.items,
-                  let messageIndex = AppTab.allCases.firstIndex(of: .inbox),
+                  let messageIndex = AppTab.allCases.firstIndex(of: .notifications),
                   items.indices.contains(messageIndex) else { return }
             let messageItem = items[messageIndex]
             Task {
@@ -103,9 +103,19 @@ class TabBarController: UITabBarController {
 
     private func setupTabs() {
         viewControllers = AppTab.allCases.map { tab in
-            let root = tab == .inbox ? createInboxViewController() : createAppShellViewController(tab: tab)
+            let root: UIViewController
+            switch tab {
+            case .apps:
+                root = PWAAppCenterViewController()
+            case .notifications:
+                root = createInboxViewController()
+            case .settings:
+                root = createSettingsViewController()
+            }
             let nav = UINavigationController(rootViewController: root)
-            nav.tabBarItem = tab.makeTabBarItem()
+            // UINavigationController adopts its visible root item's title unless
+            // the root owns the item, which would make the tab read "PWA 应用".
+            root.tabBarItem = tab.makeTabBarItem()
             return nav
         }
     }
@@ -159,25 +169,7 @@ class TabBarController: UITabBarController {
 
     private func createAppShellViewController(tab: AppTab) -> UIViewController {
         let view: AnyView
-        if tab == .web {
-            view = AnyView(
-                WebCacheHomeView { [weak self] action in
-                    self?.handleWebCacheAction(action)
-                }
-            )
-        } else if tab == .bridge {
-            view = AnyView(
-                BridgeLabHomeView { [weak self] action in
-                    self?.handleBridgeLabAction(action)
-                }
-            )
-        } else if tab == .tokenPush {
-            view = AnyView(
-                TokenPushHomeView { [weak self] action in
-                    self?.handleTokenPushAction(action)
-                }
-            )
-        } else if tab == .settings {
+        if tab == .settings {
             view = AnyView(
                 SettingsView { [weak self] destination in
                     self?.handleSettingsNavigation(destination)
@@ -199,14 +191,10 @@ class TabBarController: UITabBarController {
 
     private func rootAccessibilityIdentifier(for tab: AppTab) -> String {
         switch tab {
-        case .web:
-            return "webCache.home"
-        case .inbox:
+        case .apps:
+            return "pwaCenter.table"
+        case .notifications:
             return "InboxViewController"
-        case .tokenPush:
-            return "tokenPush.home"
-        case .bridge:
-            return "bridgeLab.home"
         case .settings:
             return "SettingsViewController"
         }
@@ -303,11 +291,35 @@ class TabBarController: UITabBarController {
             #else
             showAppShellInfo(title: "Manifest", message: "Manifest cache tests are available in DEBUG builds.")
             #endif
+        case .openWebCache:
+            #if DEBUG
+            let vc = UIHostingController(rootView: WebCacheHomeView { [weak self] action in
+                self?.handleWebCacheAction(action)
+            })
+            vc.title = "Web 缓存调试"
+            nav.pushViewController(vc, animated: true)
+            #endif
         case .showCrashScanGuide:
             showAppShellInfo(
                 title: "崩溃扫描",
                 message: "在项目根目录执行 bash scripts/scan-crash-logs.sh --json，要求 total 为 0。"
             )
+        case .openBridgeLab:
+            #if DEBUG
+            let vc = UIHostingController(rootView: BridgeLabHomeView { [weak self] action in
+                self?.handleBridgeLabAction(action)
+            })
+            vc.title = "Bridge 调试"
+            nav.pushViewController(vc, animated: true)
+            #endif
+        case .openPushTools:
+            #if DEBUG
+            let vc = UIHostingController(rootView: TokenPushHomeView { [weak self] action in
+                self?.handleTokenPushAction(action)
+            })
+            vc.title = "Push 调试"
+            nav.pushViewController(vc, animated: true)
+            #endif
         }
     }
 
@@ -361,7 +373,7 @@ class TabBarController: UITabBarController {
             showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
             #endif
         case .openMessageHistory:
-            if let inboxIndex = AppTab.allCases.firstIndex(of: .inbox) {
+            if let inboxIndex = AppTab.allCases.firstIndex(of: .notifications) {
                 selectedIndex = inboxIndex
             }
         case .openDebugPanel:
@@ -413,7 +425,7 @@ class TabBarController: UITabBarController {
 
         switch destination {
         case .serverConfig:
-            nav.pushViewController(ServerConfigViewController(viewModel: ServerConfigViewModel()), animated: true)
+            nav.pushViewController(GatewayConfigurationViewController(), animated: true)
         case .tokenManage:
             nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
         case .apiKeyManage:

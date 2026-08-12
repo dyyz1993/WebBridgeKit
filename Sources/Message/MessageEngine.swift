@@ -136,19 +136,51 @@ public actor MessageEngine: MessageEngineProtocol {
 
     /// Receive and process an incoming message
     public func receive(_ payload: MessagePayload) async throws {
-        var bodyType = "plainText"
+        let existingMessage = await findExistingMessage(for: payload)
+
+        if let existingMessage,
+           let currentRevision = existingMessage.payload.revision,
+           let incomingRevision = payload.revision,
+           incomingRevision < currentRevision {
+            return
+        }
+
+        if payload.isDeleted == true {
+            if let existingMessage {
+                await store.delete(id: existingMessage.id)
+            }
+            statistics.recordReceived(channelId: payload.channel)
+            return
+        }
+
+        let initialBodyType: MessageBodyType = payload.contentType == .markdown || payload.markdown != nil
+            ? .markdown
+            : .plainText
+        var bodyType = initialBodyType.rawValue
         var content = MutableMessageContent(
             title: payload.title,
             subtitle: payload.subtitle,
             body: payload.body,
-            bodyType: payload.markdown != nil ? .markdown : .plainText,
+            bodyType: initialBodyType,
             sound: payload.sound,
             badge: payload.badge,
             group: payload.group,
             threadId: payload.threadId,
             targetURL: payload.targetURL,
             targetAppId: payload.targetAppId,
+            route: payload.route,
             targetMode: payload.targetMode,
+            imageURL: payload.imageURL,
+            iconURL: payload.iconURL,
+            level: payload.interruptionLevel ?? .active,
+            isAutoCopy: payload.isAutoCopy ?? false,
+            copyText: payload.copyText,
+            isArchive: payload.isArchive ?? true,
+            isCall: payload.isCall ?? false,
+            volume: payload.soundVolume,
+            ttl: payload.ttl,
+            replacementID: payload.replacementID,
+            isDeleted: payload.isDeleted ?? false,
             userInfo: payload.userInfo ?? [:]
         )
         
@@ -160,7 +192,11 @@ public actor MessageEngine: MessageEngineProtocol {
         
         // Store the message with bodyType
         let storedMessage = StoredMessage(
+            id: existingMessage?.id ?? UUID().uuidString,
             payload: payload,
+            isRead: existingMessage?.isRead ?? false,
+            readAt: existingMessage?.readAt,
+            receivedAt: existingMessage?.receivedAt ?? Date(),
             bodyType: bodyType
         )
         try await store.save(storedMessage)
@@ -179,6 +215,14 @@ public actor MessageEngine: MessageEngineProtocol {
         }
         
         onMessageReceived?(storedMessage)
+    }
+
+    private func findExistingMessage(for payload: MessagePayload) async -> StoredMessage? {
+        let messages = await store.getAll()
+        let identity = payload.updateIdentity
+        return messages.first { message in
+            message.payload.updateIdentity == identity || message.payload.id == payload.id
+        }
     }
 
     // MARK: - Query Operations
@@ -328,6 +372,7 @@ public actor InMemoryMessageStore: MessageStore {
     public init() {}
 
     public func save(_ message: StoredMessage) async throws {
+        messages.removeValue(forKey: message.id)
         messages[message.id] = message
     }
 

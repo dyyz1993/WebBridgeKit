@@ -51,6 +51,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 浏览器配置
     public var browserConfig: WebBrowserParams?
 
+    private let immersiveExitControl = ImmersivePWAExitControl()
+
     //  浏览器特性控制（默认全部禁用，通过 Bridge 按需开启）
     var bouncesEnabled = false
     var scrollIndicatorEnabled = false
@@ -118,6 +120,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
 
         // 添加缓存调试按钮
         setupCacheDebugButton()
+        setupImmersiveReturnButton()
+        updateImmersiveChrome()
     }
 
     /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
@@ -143,6 +147,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
 
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+
+        updateImmersiveChrome()
 
         //  在 viewWillAppear 中再次确保侧滑手势被禁用
         if let config = browserConfig, config.disableSwipeBack {
@@ -194,6 +200,11 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                 }
             }
         }
+    }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        immersiveExitControl.updateLayout(in: view)
     }
 
     // MARK: - Public Methods
@@ -327,11 +338,24 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 安全地加载 URL（强制使用在线版本）
     /// - Parameter url: 要加载的 URL
     public func loadURLOnline(_ url: URL) {
+        loadURL(url, preferCachedContent: false)
+    }
+
+    /// Loads a standard PWA with a deterministic startup policy.
+    /// Cache-first is used only for partial-offline apps; network-only callers
+    /// retain the normal protocol cache behavior.
+    public func loadURL(_ url: URL, preferCachedContent: Bool) {
         // 确保 view 已加载
         _ = view
         self.url = url
-        webView.load(URLRequest(url: url))
-        StructuredLogger.shared.debug("Loading from network (forced): \(url)", category: .navigation)
+        let policy: URLRequest.CachePolicy = preferCachedContent
+            ? .returnCacheDataElseLoad
+            : .useProtocolCachePolicy
+        webView.load(URLRequest(url: url, cachePolicy: policy, timeoutInterval: 30))
+        StructuredLogger.shared.debug(
+            "Loading standard PWA with cache policy \(policy.rawValue): \(url)",
+            category: .navigation
+        )
     }
 
     /// 配置浏览器参数
@@ -345,12 +369,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             self.title = title
         }
 
-        //  隐藏导航栏（如果要完全沉浸式）
-        if params.hideNavigationBar || params.displayMode == .immersive {
-            navigationController?.setNavigationBarHidden(true, animated: false)
-        } else {
-            navigationController?.setNavigationBarHidden(false, animated: false)
-        }
+        updateImmersiveChrome()
 
         //  TabBar 隐藏由系统的 hidesBottomBarWhenPushed 属性自动处理
         // 当 hideTabBar = true 时，系统会在 push 时自动隐藏 TabBar
@@ -378,27 +397,24 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
 
         //  注入 payload 参数
         if let payload = params.payload {
-            if let payloadData = try? JSONSerialization.data(withJSONObject: payload),
+            if JSONSerialization.isValidJSONObject(payload),
+               let payloadData = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]),
                let payloadString = String(data: payloadData, encoding: .utf8) {
-                let scriptSource = "window.SuperCachePayload = \(payloadString);"
+                let scriptSource = """
+                (() => {
+                  const payload = \(payloadString);
+                  window.SuperCachePayload = payload;
+                  window.WebBridgeKitLaunchContext = payload;
+                  document.addEventListener('DOMContentLoaded', () => {
+                    window.dispatchEvent(new CustomEvent('webbridgekit:launch', { detail: payload }));
+                  }, { once: true });
+                })();
+                """
                 let userScript = WKUserScript(source: scriptSource, injectionTime: .atDocumentStart, forMainFrameOnly: true)
                 webView.configuration.userContentController.addUserScript(userScript)
-                StructuredLogger.shared.debug("Injected payload: \(payloadString)", category: .bridge)
+                StructuredLogger.shared.debug("Injected PWA launch context", category: .bridge)
             }
 
-            // 将 payload 转换为 URL Query 参数
-            if let url = webView.url ?? self.url,
-               var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                var queryItems = components.queryItems ?? []
-                for (key, value) in payload where !queryItems.contains(where: { $0.name == key }) {
-                    queryItems.append(URLQueryItem(name: key, value: value))
-                }
-                components.queryItems = queryItems
-                if let newURL = components.url {
-                    self.url = newURL // 更新初始加载 URL
-                    StructuredLogger.shared.debug("Appended payload to URL: \(newURL.absoluteString)", category: .bridge)
-                }
-            }
         }
 
         //  主动触发屏幕旋转
@@ -459,6 +475,33 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
 
     public override var shouldAutorotate: Bool {
         return true
+    }
+
+    private func setupImmersiveReturnButton() {
+        view.addSubview(immersiveExitControl)
+        immersiveExitControl.onExit = { [weak self] in self?.exitImmersivePWA() }
+    }
+
+    private func updateImmersiveChrome() {
+        let immersive = browserConfig?.displayMode == .immersive || browserConfig?.hideNavigationBar == true
+        navigationController?.setNavigationBarHidden(immersive, animated: false)
+        immersiveExitControl.isHidden = !immersive
+        immersiveExitControl.updateLayout(in: view)
+
+        if immersive {
+            navigationItem.rightBarButtonItem = nil
+            webView?.scrollView.contentInsetAdjustmentBehavior = .never
+        }
+    }
+
+    private func exitImmersivePWA() {
+        if let navigationController, navigationController.viewControllers.count > 1 {
+            navigationController.popViewController(animated: true)
+        } else if let tabBarController {
+            tabBarController.selectedIndex = 0
+        } else {
+            dismiss(animated: true)
+        }
     }
 
     deinit {

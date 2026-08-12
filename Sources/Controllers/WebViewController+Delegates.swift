@@ -90,6 +90,13 @@ extension WebViewController {
                 window.dispatchEvent(customEvent);
             }
         };
+        window.WebBridgeKit = window.WebBridgeKit || {
+            navigation: {
+                back: function() { return window.BarkBridge.callNative('goBack', { steps: 1 }); },
+                close: function() { return window.BarkBridge.callNative('closePage', { animated: true, reason: 'javascript' }); }
+            },
+            isAvailable: function() { return true; }
+        };
         console.log('[OK] [Bark] BarkBridge initialized');
         """
 
@@ -131,7 +138,8 @@ extension WebViewController {
     func configureBrowserFeatures(params: WebBrowserParams) {
         switch params.displayMode {
         case .immersive:
-            webView.scrollView.isScrollEnabled = false
+            // Fullscreen must not change normal PWA scrolling semantics.
+            webView.scrollView.isScrollEnabled = true
             webView.scrollView.contentInsetAdjustmentBehavior = .never
 
         case .modal:

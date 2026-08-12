@@ -50,11 +50,11 @@ Tabs:
 
 | Tab | Accessibility ID | Root view |
 |---|---|---|
-| Web | `tab.web` | `WebCacheHomeView` |
-| Bridge | `tab.bridge` | `BridgeLabHomeView` |
-| Token/Push | `tab.tokenPush` | `TokenPushHomeView` |
-| Debug | `tab.debug` | `DebugCenterHomeView` |
-| Links | `tab.links` | `DeepLinkHomeView` |
+| 应用 | `tab.apps` | `PWAAppCenterViewController` |
+| 通知 | `tab.notifications` | `InboxViewController` |
+| 设置 | `tab.settings` | `SettingsView` |
+
+`WebCacheHomeView`、`BridgeLabHomeView`、`TokenPushHomeView` 仅从 `设置` -> `调试中心` 打开，不属于正式底部导航。
 
 States:
 

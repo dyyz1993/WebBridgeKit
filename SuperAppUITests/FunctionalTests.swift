@@ -106,7 +106,7 @@ final class FunctionalTests: XCTestCase {
     // MARK: - Test 2: Inbox Scrolling
 
     func testInboxScrolling() throws {
-        navigateToTab("tab.inbox")
+        navigateToTab("tab.notifications")
 
         sleep(2)
 
@@ -128,17 +128,17 @@ final class FunctionalTests: XCTestCase {
     // MARK: - Test 3: Home Card Tap
 
     func testWebCardTap() throws {
-        navigateToTab("tab.web")
+        navigateToTab("tab.apps")
 
         let collectionView = app.collectionViews["MainCollectionView"]
         let emptyState = app.otherElements["EmptyStateView"]
-        let webHome = app.otherElements["webCache.home"]
+        let appCenter = app.descendants(matching: .any)["pwaCenter.table"]
         let cvExists = collectionView.waitForExistence(timeout: 5)
-        let webHomeExists = webHome.waitForExistence(timeout: 2)
+        let appCenterExists = appCenter.waitForExistence(timeout: 2)
         let emptyExists = emptyState.waitForExistence(timeout: 2)
 
-        guard cvExists || webHomeExists || emptyExists else {
-            XCTFail("Web should have content, collection view, or empty state")
+        guard cvExists || appCenterExists || emptyExists else {
+            XCTFail("Apps should have an app center, collection view, or empty state")
             return
         }
 
@@ -155,7 +155,7 @@ final class FunctionalTests: XCTestCase {
             saveScreenshot("/tmp/wbk-home-card-tap.png")
 
             if !app.collectionViews["MainCollectionView"].exists {
-                if app.navigationBars.buttons.count > 0 {
+                if !app.navigationBars.buttons.isEmpty {
                     app.navigationBars.firstMatch.buttons.firstMatch.tap()
                     sleep(1)
                 }
@@ -169,7 +169,7 @@ final class FunctionalTests: XCTestCase {
                 saveScreenshot("/tmp/wbk-home-card-tap.png")
 
                 if !app.collectionViews["MainCollectionView"].exists {
-                    if app.navigationBars.buttons.count > 0 {
+                    if !app.navigationBars.buttons.isEmpty {
                         app.navigationBars.firstMatch.buttons.firstMatch.tap()
                         sleep(1)
                     }

@@ -123,6 +123,36 @@ struct DebugCenterHomeView: View {
                 action: { onAction(.openManifestCacheTests) }
             )
 
+            ActionRow(
+                title: "网页缓存调试",
+                subtitle: "手动打开 URL，验证缓存策略、离线模式和清理流程",
+                icon: .globe,
+                accessibilityIdentifier: "debugCenter.openWebCache",
+                badge: "DEBUG",
+                badgeTone: .warning,
+                action: { onAction(.openWebCache) }
+            )
+
+            ActionRow(
+                title: "Bridge 实验室",
+                subtitle: "执行 JSBridge 命令，检查参数、回调和日志",
+                icon: .terminal,
+                accessibilityIdentifier: "debugCenter.openBridgeLab",
+                badge: "DEBUG",
+                badgeTone: .warning,
+                action: { onAction(.openBridgeLab) }
+            )
+
+            ActionRow(
+                title: "Push 与 Bark 调试",
+                subtitle: "管理测试 Token、Bark payload 和通知模拟",
+                icon: .bell,
+                accessibilityIdentifier: "debugCenter.openPushTools",
+                badge: "DEBUG",
+                badgeTone: .warning,
+                action: { onAction(.openPushTools) }
+            )
+
             HStack(spacing: ThemeTokens.Spacing.md) {
                 Button(
                     action: viewModel.showCrashScanGuide,

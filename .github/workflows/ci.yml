@@ -41,7 +41,7 @@ jobs:
       - name: Run SwiftLint
         run: |
           brew install swiftlint
-          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/
+          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/ AppTemplate/Sources/
 
   # ─── Job 2: Build ───────────────────────────────────────────────
   build:
@@ -66,7 +66,10 @@ jobs:
           path: Server/.build
           key: spm-server-${{ runner.os }}-${{ hashFiles('Server/Package.resolved') }}
 
-      - name: Build
+      - name: Verify deliverable boundaries
+        run: bash tools/verify-deliverable-boundaries.sh
+
+      - name: Build complete App
         run: |
           set -o pipefail
           xcodebuild build \
@@ -81,12 +84,29 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
+      - name: Build AppTemplate starter
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme AppTemplate \
+            -sdk iphonesimulator \
+            -arch arm64 \
+            -configuration Debug \
+            -resultBundlePath build/AppTemplateBuildResults.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+
       - name: Upload Build Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-results
-          path: build/BuildResults.xcresult
+          path: |
+            build/BuildResults.xcresult
+            build/AppTemplateBuildResults.xcresult
           retention-days: 7
 
       - name: Upload DerivedData
