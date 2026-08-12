@@ -569,3 +569,22 @@
 // Third Party Licenses
 "about.third_party_licenses" = "开源许可";
 "about.license_detail" = "许可详情";
+
+/* Official hosted push first run */
+"official.push.status.preparing" = "正在准备通知服务";
+"official.push.status.permission_required" = "启用后即可接收通知";
+"official.push.status.registering" = "正在启用通知";
+"official.push.status.ready" = "可以接收通知";
+"official.push.status.denied" = "通知权限未开启";
+"official.push.action.enable" = "启用通知";
+"official.push.action.registering" = "正在启用…";
+"official.push.action.settings" = "前往系统设置";
+"official.push.action.preparing" = "正在准备…";
+"official.push.action.send_safari" = "用 Safari 发送测试";
+"official.push.help.enable" = "无需配置服务器；点一次启用通知即可开始";
+"official.push.address.pending" = "启用通知后显示";
+"official.push.permission.denied" = "请在系统设置中允许通知，然后返回重试。";
+"official.push.error.identity" = "无法生成安全的推送身份，请重试。";
+"official.push.error.storage" = "无法安全保存推送身份，请检查设备存储后重试。";
+"official.push.error.permission" = "当前系统无法使用通知，请稍后重试。";
+"official.push.error.server" = "通知服务暂时不可用，请稍后重试。";

@@ -3,6 +3,15 @@ import WebBridgeKit
 
 @MainActor
 final class PWAHomeViewModel: ObservableObject {
+    enum PushState: Equatable {
+        case identityPreparing
+        case permissionRequired
+        case registering
+        case ready
+        case denied
+        case recoverableError(String)
+    }
+
     enum AppState {
         case loading
         case ready
@@ -17,13 +26,36 @@ final class PWAHomeViewModel: ObservableObject {
     }
 
     @Published var pushURL: String
-    @Published var isPushReady: Bool
+    @Published var pushState: PushState
     @Published var appState: AppState = .loading
     @Published var apps: [AppItem] = []
 
-    init(pushURL: String, isPushReady: Bool) {
+    init(pushURL: String, pushState: PushState) {
         self.pushURL = pushURL
-        self.isPushReady = isPushReady
+        self.pushState = pushState
+    }
+
+    var isPushReady: Bool { pushState == .ready }
+
+    var pushStatusText: String {
+        switch pushState {
+        case .identityPreparing: return L10n.tr("official.push.status.preparing")
+        case .permissionRequired: return L10n.tr("official.push.status.permission_required")
+        case .registering: return L10n.tr("official.push.status.registering")
+        case .ready: return L10n.tr("official.push.status.ready")
+        case .denied: return L10n.tr("official.push.status.denied")
+        case .recoverableError(let message): return message
+        }
+    }
+
+    var primaryActionTitle: String {
+        switch pushState {
+        case .ready: return L10n.tr("official.push.action.send_safari")
+        case .registering: return L10n.tr("official.push.action.registering")
+        case .denied: return L10n.tr("official.push.action.settings")
+        case .identityPreparing: return L10n.tr("official.push.action.preparing")
+        case .permissionRequired, .recoverableError: return L10n.tr("official.push.action.enable")
+        }
     }
 }
 
@@ -70,12 +102,17 @@ struct PWAHomeView: View {
                     .fill(viewModel.isPushReady ? Color.appSuccess : Color(ThemeTokens.Color.warning))
                     .frame(width: 8, height: 8)
 
-                Text(viewModel.isPushReady ? "可以接收通知" : "先配置推送地址")
+                Text(viewModel.pushStatusText)
                     .font(Font.app(ThemeTokens.Typography.metadata))
                     .foregroundColor(viewModel.isPushReady ? Color.appSuccess : Color(ThemeTokens.Color.warning))
             }
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("pwaHome.pushStatus")
+            .overlay(
+                Color.clear
+                    .accessibilityLabel(viewModel.pushStatusText)
+                    .accessibilityIdentifier("home.push.status")
+            )
         }
     }
 
@@ -143,7 +180,7 @@ struct PWAHomeView: View {
                 HStack(spacing: ThemeTokens.Spacing.sm) {
                     Image(uiImage: LucideIcon.compass.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm) ?? UIImage())
                         .renderingMode(.template)
-                    Text(viewModel.isPushReady ? "用 Safari 发送测试" : "配置推送地址")
+                    Text(viewModel.primaryActionTitle)
                 }
                 .font(.system(size: ThemeTokens.Typography.button.pointSize, weight: .semibold))
                 .foregroundColor(Color(ThemeTokens.Color.onPrimary))
@@ -152,11 +189,13 @@ struct PWAHomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
             }
             .buttonStyle(PressScaleButtonStyle())
-            .accessibilityIdentifier("pwaHome.sendTest")
+            .disabled(viewModel.pushState == .identityPreparing || viewModel.pushState == .registering)
+            .accessibilityIdentifier("home.push.send-safari")
+            .overlay(Color.clear.accessibilityIdentifier("pwaHome.sendTest"))
 
             Text(viewModel.isPushReady
                  ? "将在外部浏览器发起请求，返回 App 后即可收到通知"
-                 : "先生成设备 Key，之后即可通过浏览器验证真实推送")
+                 : L10n.tr("official.push.help.enable"))
                 .font(Font.app(ThemeTokens.Typography.caption))
                 .foregroundColor(Color.appTextSecondary)
                 .frame(maxWidth: .infinity)
@@ -169,13 +208,14 @@ struct PWAHomeView: View {
                     Text("我的推送地址")
                         .font(Font.app(ThemeTokens.Typography.metadata))
                         .foregroundColor(Color.appText)
-                    Text(viewModel.pushURL)
+                    Text(viewModel.isPushReady ? viewModel.pushURL : L10n.tr("official.push.address.pending"))
                         .font(Font.app(ThemeTokens.Typography.monospaceMeta))
                         .foregroundColor(Color.appTextSecondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                        .accessibilityIdentifier("pwaHome.pushURL")
+                        .accessibilityIdentifier("home.push.address")
                 }
+                .accessibilityIdentifier("pwaHome.pushURL")
 
                 Spacer(minLength: ThemeTokens.Spacing.sm)
 
@@ -189,7 +229,16 @@ struct PWAHomeView: View {
                 }
                 .buttonStyle(PressScaleButtonStyle())
                 .accessibilityLabel("复制推送地址")
-                .accessibilityIdentifier("pwaHome.copyPushURL")
+                .disabled(!viewModel.isPushReady)
+                .accessibilityIdentifier("home.push.copy")
+            }
+            .accessibilityIdentifier("pwaHome.copyPushURL")
+
+            if viewModel.pushState == .denied {
+                Text(L10n.tr("official.push.permission.denied"))
+                    .font(Font.app(ThemeTokens.Typography.caption))
+                    .foregroundColor(Color(ThemeTokens.Color.warning))
+                    .accessibilityIdentifier("home.push.permission-denied")
             }
         }
         .padding(ThemeTokens.Spacing.md)

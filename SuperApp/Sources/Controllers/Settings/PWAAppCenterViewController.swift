@@ -15,19 +15,22 @@ final class PWAAppCenterViewController: UIViewController {
     )
 
     private lazy var homeViewModel = PWAHomeViewModel(
-        pushURL: pushURL,
-        isPushReady: !pushKey.isEmpty
+        pushURL: "",
+        pushState: .identityPreparing
     )
     private var hostingController: UIHostingController<PWAHomeView>?
     private var manifests: [HTMLAppManifest] = []
     private var isBootstrappingOfficialGateway = false
     private var officialGatewayUnavailable = false
+    private var officialPushIdentity: String?
+    private let pushRegistrationFlag = "com.webbridgekit.officialPush.registered"
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "首页"
         view.backgroundColor = ThemeTokens.Color.background
         installHomeView()
+        prepareOfficialPushIdentity()
         reloadApps()
     }
 
@@ -49,16 +52,10 @@ final class PWAAppCenterViewController: UIViewController {
             ?? "https://wbk.shanbox.19930810.xyz:8443"
     }
 
-    private var pushKey: String {
-        PushNotificationManager.shared.barkKey
-            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key")
-            ?? ""
-    }
-
     private var pushURL: String {
-        guard !pushKey.isEmpty else { return pushServerURL }
+        guard let officialPushIdentity, !officialPushIdentity.isEmpty else { return "" }
         let base = pushServerURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        return "\(base)/\(pushKey)"
+        return "\(base)/\(officialPushIdentity)"
     }
 
     private func installHomeView() {
@@ -66,7 +63,7 @@ final class PWAAppCenterViewController: UIViewController {
             viewModel: homeViewModel,
             onSendTest: { [weak self] title, body in self?.openPushExample(.plain, title: title, body: body) },
             onCopyPushURL: { [weak self] in self?.copyPushURL() },
-            onConfigurePush: { [weak self] in self?.showTokenManager() },
+            onConfigurePush: { [weak self] in self?.activateOfficialPush() },
             onSelectApp: { [weak self] appID in self?.showAppDetails(appID: appID) },
             onManageApps: { [weak self] in self?.showGatewayManagement() },
             onOpenAPIExamples: { [weak self] in self?.showAPIExamples() },
@@ -89,7 +86,73 @@ final class PWAAppCenterViewController: UIViewController {
 
     private func refreshPushState() {
         homeViewModel.pushURL = pushURL
-        homeViewModel.isPushReady = !pushKey.isEmpty
+        if officialPushIdentity == nil {
+            prepareOfficialPushIdentity()
+        }
+    }
+
+    private func prepareOfficialPushIdentity() {
+        homeViewModel.pushState = .identityPreparing
+        do {
+            #if DEBUG
+            if Self.isOfficialPushUITest,
+               let fixture = ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_IDENTITY"],
+               !fixture.isEmpty {
+                officialPushIdentity = fixture
+            } else {
+                officialPushIdentity = try OfficialPushIdentityStore.shared.currentOrCreate()
+            }
+            #else
+            officialPushIdentity = try OfficialPushIdentityStore.shared.currentOrCreate()
+            #endif
+            homeViewModel.pushURL = pushURL
+            #if DEBUG
+            if Self.isOfficialPushUITest {
+                homeViewModel.pushState = ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] == "initial-ready"
+                    ? .ready
+                    : .permissionRequired
+            } else {
+                homeViewModel.pushState = UserDefaults.standard.bool(forKey: pushRegistrationFlag)
+                    ? .ready
+                    : .permissionRequired
+            }
+            #else
+            homeViewModel.pushState = UserDefaults.standard.bool(forKey: pushRegistrationFlag)
+                ? .ready
+                : .permissionRequired
+            #endif
+        } catch {
+            homeViewModel.pushState = .recoverableError(error.localizedDescription)
+        }
+    }
+
+    private func activateOfficialPush() {
+        if homeViewModel.pushState == .denied {
+            guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else { return }
+            UIApplication.shared.open(settingsURL)
+            return
+        }
+        guard let officialPushIdentity else {
+            prepareOfficialPushIdentity()
+            return
+        }
+
+        homeViewModel.pushState = .registering
+        PushNotificationManager.shared.activateOfficialPush(
+            serverURL: pushServerURL,
+            key: officialPushIdentity
+        ) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .ready:
+                UserDefaults.standard.set(true, forKey: self.pushRegistrationFlag)
+                self.homeViewModel.pushState = .ready
+            case .denied:
+                self.homeViewModel.pushState = .denied
+            case .failed(let message):
+                self.homeViewModel.pushState = .recoverableError(message)
+            }
+        }
     }
 
     private func reloadApps() {
@@ -216,10 +279,7 @@ final class PWAAppCenterViewController: UIViewController {
     }
 
     private func copyPushURL() {
-        guard !pushKey.isEmpty else {
-            showTokenManager()
-            return
-        }
+        guard homeViewModel.isPushReady else { return }
         UIPasteboard.general.string = pushURL
         HUDService.shared.showSuccess(withStatus: "推送地址已复制")
     }
@@ -283,8 +343,8 @@ final class PWAAppCenterViewController: UIViewController {
         title customTitle: String? = nil,
         body customBody: String? = nil
     ) {
-        guard !pushKey.isEmpty else {
-            showTokenManager()
+        guard homeViewModel.isPushReady else {
+            activateOfficialPush()
             return
         }
 
@@ -297,12 +357,19 @@ final class PWAAppCenterViewController: UIViewController {
             showMessage(title: "无法生成测试地址", message: "请检查推送服务地址是否有效。")
             return
         }
+        #if DEBUG
+        if Self.isOfficialPushUITest {
+            homeViewModel.pushState = .ready
+            return
+        }
+        #endif
         UIApplication.shared.open(url)
     }
 
     private func makeBarkURL(title: String, body: String, queryItems: [URLQueryItem]) -> URL? {
         let base = pushServerURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let path = [pushKey, title, body].compactMap(Self.encodePathSegment).joined(separator: "/")
+        guard let officialPushIdentity else { return nil }
+        let path = [officialPushIdentity, title, body].compactMap(Self.encodePathSegment).joined(separator: "/")
         guard var components = URLComponents(string: "\(base)/\(path)") else { return nil }
         components.queryItems = queryItems.isEmpty ? nil : queryItems
         return components.url
@@ -387,6 +454,14 @@ final class PWAAppCenterViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "好", style: .default))
         present(alert, animated: true)
     }
+
+    #if DEBUG
+    private static var isOfficialPushUITest: Bool {
+        let arguments = ProcessInfo.processInfo.arguments
+        return (arguments.contains("-UITesting") || arguments.contains("--UITesting"))
+            && ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] != nil
+    }
+    #endif
 }
 
 private extension String {

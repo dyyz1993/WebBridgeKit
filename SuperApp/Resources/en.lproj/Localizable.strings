@@ -569,3 +569,22 @@
 // Third Party Licenses
 "about.third_party_licenses" = "Open Source Licenses";
 "about.license_detail" = "License Details";
+
+/* Official hosted push first run */
+"official.push.status.preparing" = "Preparing notifications";
+"official.push.status.permission_required" = "Enable to receive notifications";
+"official.push.status.registering" = "Enabling notifications";
+"official.push.status.ready" = "Ready to receive notifications";
+"official.push.status.denied" = "Notifications are disabled";
+"official.push.action.enable" = "Enable Notifications";
+"official.push.action.registering" = "Enabling…";
+"official.push.action.settings" = "Open System Settings";
+"official.push.action.preparing" = "Preparing…";
+"official.push.action.send_safari" = "Send Test in Safari";
+"official.push.help.enable" = "No server setup required; enable notifications once to begin";
+"official.push.address.pending" = "Shown after notifications are enabled";
+"official.push.permission.denied" = "Allow notifications in System Settings, then return and try again.";
+"official.push.error.identity" = "A secure push identity could not be created. Try again.";
+"official.push.error.storage" = "The push identity could not be stored securely. Check device storage and retry.";
+"official.push.error.permission" = "Notifications are not available right now. Try again later.";
+"official.push.error.server" = "The notification service is temporarily unavailable. Try again later.";
