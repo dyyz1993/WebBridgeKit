@@ -86,6 +86,9 @@ public struct HTMLAppGatewayConfiguration: Codable, Equatable, Sendable, Identif
         if (publicKeyID == nil) != (publicKey == nil) {
             return .invalid(.incompleteTrustAnchor)
         }
+        if let publicKey, Self.decodeBase64URL(publicKey)?.count != 32 {
+            return .invalid(.invalidPublicKey)
+        }
         return .valid
     }
 
@@ -96,9 +99,11 @@ public struct HTMLAppGatewayConfiguration: Codable, Equatable, Sendable, Identif
         let trimmed = payload.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw HTMLAppGatewayConfigurationImportError.emptyPayload }
 
-        if let data = trimmed.data(using: .utf8),
-           let configuration = try? JSONDecoder().decode(HTMLAppGatewayConfiguration.self, from: data) {
-            return try validateImported(configuration, allowsDevelopmentHTTP: allowsDevelopmentHTTP)
+        if trimmed.first == "{" {
+            guard let data = trimmed.data(using: .utf8) else {
+                throw HTMLAppGatewayConfigurationImportError.unsupportedPayload
+            }
+            return try importJSON(data, allowsDevelopmentHTTP: allowsDevelopmentHTTP)
         }
 
         guard let components = URLComponents(string: trimmed),
@@ -109,23 +114,118 @@ public struct HTMLAppGatewayConfiguration: Codable, Equatable, Sendable, Identif
         var values: [String: String] = [:]
         for item in components.queryItems ?? [] {
             guard values[item.name] == nil else {
-                throw HTMLAppGatewayConfigurationImportError.invalidConfiguration
+                throw HTMLAppGatewayConfigurationImportError.duplicateField(item.name)
             }
             values[item.name] = item.value ?? ""
         }
-        guard let baseURL = values["url"], let name = values["name"] else {
-            throw HTMLAppGatewayConfigurationImportError.missingRequiredField
+        try rejectSecretFields(in: values)
+        let canonical = values["schemaVersion"] != nil || values["displayName"] != nil || values["baseURL"] != nil
+        if let version = values["schemaVersion"], version != "1" {
+            throw HTMLAppGatewayConfigurationImportError.unsupportedSchemaVersion(version)
+        }
+        let baseURL = try requiredValue(canonical ? "baseURL" : "url", in: values)
+        let name = try requiredValue(canonical ? "displayName" : "name", in: values)
+        if canonical {
+            for field in ["healthEndpoint", "manifestEndpoint", "publicKeyId", "publicKey"] {
+                _ = try requiredValue(field, in: values)
+            }
         }
         let configuration = HTMLAppGatewayConfiguration(
             id: values["id"]?.isEmpty == false ? values["id"]! : UUID().uuidString.lowercased(),
             name: name,
             baseURL: baseURL,
-            healthPath: values["healthPath"]?.isEmpty == false ? values["healthPath"]! : "/health",
-            manifestPath: values["manifestPath"]?.isEmpty == false ? values["manifestPath"]! : "/manifest",
-            publicKeyID: values["keyId"]?.isEmpty == false ? values["keyId"] : nil,
+            healthPath: values[canonical ? "healthEndpoint" : "healthPath"]?.isEmpty == false
+                ? values[canonical ? "healthEndpoint" : "healthPath"]! : "/health",
+            manifestPath: values[canonical ? "manifestEndpoint" : "manifestPath"]?.isEmpty == false
+                ? values[canonical ? "manifestEndpoint" : "manifestPath"]! : "/manifest",
+            publicKeyID: values[canonical ? "publicKeyId" : "keyId"]?.isEmpty == false
+                ? values[canonical ? "publicKeyId" : "keyId"] : nil,
             publicKey: values["publicKey"]?.isEmpty == false ? values["publicKey"] : nil
         )
         return try validateImported(configuration, allowsDevelopmentHTTP: allowsDevelopmentHTTP)
+    }
+
+    private static func importJSON(
+        _ data: Data,
+        allowsDevelopmentHTTP: Bool
+    ) throws -> HTMLAppGatewayConfiguration {
+        guard let object = try? JSONSerialization.jsonObject(with: data),
+              let values = object as? [String: Any] else {
+            throw HTMLAppGatewayConfigurationImportError.unsupportedPayload
+        }
+        try rejectSecretFields(in: values)
+        let canonical = values["schemaVersion"] != nil || values["displayName"] != nil || values["healthEndpoint"] != nil
+        if let rawVersion = values["schemaVersion"] {
+            guard let version = rawVersion as? String else {
+                throw HTMLAppGatewayConfigurationImportError.invalidField("schemaVersion")
+            }
+            guard version == "1" else {
+                throw HTMLAppGatewayConfigurationImportError.unsupportedSchemaVersion(version)
+            }
+        }
+
+        func string(_ key: String) throws -> String? {
+            guard let value = values[key] else { return nil }
+            guard let string = value as? String else {
+                throw HTMLAppGatewayConfigurationImportError.invalidField(key)
+            }
+            return string
+        }
+        func required(_ key: String) throws -> String {
+            guard let value = try string(key), !value.isEmpty else {
+                throw HTMLAppGatewayConfigurationImportError.missingRequiredField(key)
+            }
+            return value
+        }
+
+        let name = try required(canonical ? "displayName" : "name")
+        let baseURL = try required("baseURL")
+        if canonical {
+            for field in ["healthEndpoint", "manifestEndpoint", "publicKeyId", "publicKey"] {
+                _ = try required(field)
+            }
+        }
+        let configuration = HTMLAppGatewayConfiguration(
+            id: try string("id") ?? UUID().uuidString.lowercased(),
+            name: name,
+            baseURL: baseURL,
+            healthPath: try string(canonical ? "healthEndpoint" : "healthPath") ?? "/health",
+            manifestPath: try string(canonical ? "manifestEndpoint" : "manifestPath") ?? "/manifest",
+            publicKeyID: try string(canonical ? "publicKeyId" : "publicKeyID"),
+            publicKey: try string("publicKey")
+        )
+        return try validateImported(configuration, allowsDevelopmentHTTP: allowsDevelopmentHTTP)
+    }
+
+    private static func rejectSecretFields<S: Sequence>(_ keys: S) throws where S.Element == String {
+        let forbidden = ["privatekey", "apisecret", "token", "password", "admintoken", "clientsecret"]
+        if let key = keys.first(where: { forbidden.contains($0.lowercased()) }) {
+            throw HTMLAppGatewayConfigurationImportError.forbiddenSecretField(key)
+        }
+    }
+
+    private static func rejectSecretFields(in value: Any) throws {
+        if let dictionary = value as? [String: Any] {
+            try rejectSecretFields(dictionary.keys)
+            for nestedValue in dictionary.values { try rejectSecretFields(in: nestedValue) }
+        } else if let array = value as? [Any] {
+            for nestedValue in array { try rejectSecretFields(in: nestedValue) }
+        }
+    }
+
+    private static func requiredValue(_ key: String, in values: [String: String]) throws -> String {
+        guard let value = values[key], !value.isEmpty else {
+            throw HTMLAppGatewayConfigurationImportError.missingRequiredField(key)
+        }
+        return value
+    }
+
+    private static func decodeBase64URL(_ string: String) -> Data? {
+        var base64 = string.replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let padding = (4 - base64.count % 4) % 4
+        base64 += String(repeating: "=", count: padding)
+        return Data(base64Encoded: base64)
     }
 
     private static func validateImported(
@@ -148,6 +248,7 @@ public struct HTMLAppGatewayConfiguration: Codable, Equatable, Sendable, Identif
               components.query == nil,
               components.fragment == nil,
               let decodedPath = components.percentEncodedPath.removingPercentEncoding,
+              !decodedPath.contains("\\"),
               !decodedPath.split(separator: "/", omittingEmptySubsequences: false).contains(".."),
               let endpointURL = components.url(relativeTo: baseURL)?.absoluteURL,
               endpointURL.scheme?.lowercased() == baseURL.scheme?.lowercased(),
@@ -190,6 +291,7 @@ public enum HTMLAppGatewayConfigurationError: Error, Equatable, LocalizedError {
     case insecureBaseURL
     case invalidManifestPath
     case incompleteTrustAnchor
+    case invalidPublicKey
 
     public var errorDescription: String? {
         switch self {
@@ -198,6 +300,7 @@ public enum HTMLAppGatewayConfigurationError: Error, Equatable, LocalizedError {
         case .insecureBaseURL: return "Gateway requires HTTPS outside development"
         case .invalidManifestPath: return "Gateway manifest path is invalid"
         case .incompleteTrustAnchor: return "Gateway keyId and publicKey must be provided together"
+        case .invalidPublicKey: return "Gateway publicKey must be a 32-byte Ed25519 public key"
         }
     }
 }
@@ -205,14 +308,22 @@ public enum HTMLAppGatewayConfigurationError: Error, Equatable, LocalizedError {
 public enum HTMLAppGatewayConfigurationImportError: Error, Equatable, LocalizedError {
     case emptyPayload
     case unsupportedPayload
-    case missingRequiredField
+    case missingRequiredField(String)
+    case invalidField(String)
+    case duplicateField(String)
+    case forbiddenSecretField(String)
+    case unsupportedSchemaVersion(String)
     case invalidConfiguration
 
     public var errorDescription: String? {
         switch self {
         case .emptyPayload: return "Gateway configuration payload is empty"
         case .unsupportedPayload: return "Gateway configuration must be JSON or a webbridgekit gateway URL"
-        case .missingRequiredField: return "Gateway configuration is missing a required field"
+        case .missingRequiredField(let field): return "Gateway configuration is missing required field: \(field)"
+        case .invalidField(let field): return "Gateway configuration field has an invalid type: \(field)"
+        case .duplicateField(let field): return "Gateway configuration repeats field: \(field)"
+        case .forbiddenSecretField(let field): return "Gateway configuration must not contain secret field: \(field)"
+        case .unsupportedSchemaVersion(let version): return "Unsupported gateway schema version: \(version)"
         case .invalidConfiguration: return "Gateway configuration is invalid"
         }
     }
@@ -257,9 +368,11 @@ public final class HTMLAppGatewayRegistry {
         }
         lock.lock()
         defer { lock.unlock() }
-        state.configurations[configuration.id] = configuration
-        if activate { state.activeGatewayID = configuration.id }
-        try persistLocked()
+        var proposed = state
+        proposed.configurations[configuration.id] = configuration
+        if activate { proposed.activeGatewayID = configuration.id }
+        try persistLocked(proposed)
+        state = proposed
     }
 
     public func activeGateway() -> HTMLAppGatewayConfiguration? {
@@ -279,21 +392,30 @@ public final class HTMLAppGatewayRegistry {
         lock.lock()
         defer { lock.unlock() }
         guard state.configurations[id] != nil else { return }
-        state.activeGatewayID = id
-        try persistLocked()
+        var proposed = state
+        proposed.activeGatewayID = id
+        try persistLocked(proposed)
+        state = proposed
     }
 
     public func remove(id: String) throws {
         lock.lock()
         defer { lock.unlock() }
-        state.configurations.removeValue(forKey: id)
-        if state.activeGatewayID == id { state.activeGatewayID = nil }
-        try persistLocked()
+        var proposed = state
+        proposed.configurations.removeValue(forKey: id)
+        if proposed.activeGatewayID == id { proposed.activeGatewayID = nil }
+        try persistLocked(proposed)
+        state = proposed
     }
 
-    private func persistLocked() throws {
+    private func persistLocked(_ proposed: State) throws {
         do {
-            storage.set(try JSONEncoder().encode(state), forKey: storageKey)
+            let data = try JSONEncoder().encode(proposed)
+            if let throwingStorage = storage as? HTMLAppThrowingRuntimeStorage {
+                try throwingStorage.setThrowing(data, forKey: storageKey)
+            } else {
+                storage.set(data, forKey: storageKey)
+            }
         } catch {
             throw HTMLAppTrustRegistryError.persistenceFailed
         }
