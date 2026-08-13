@@ -1,6 +1,6 @@
 # Next Phase Integration Acceptance
 
-Date: 2026-08-12
+Date: 2026-08-13
 
 Integration commit: `89acd7c9eb3478c709246c9640320dd387bc8cb6`
 
@@ -25,9 +25,13 @@ Release recommendation: **GO-WITH-MANUAL-GATE** for simulator/open-source integr
 | Approval | Pending state and explicit user consent | `verify-approval-v1.sh`; integration Inbox journey | PASS | 11/11; Markdown + pending approval UI journey passed | Callback availability outside fixtures remains external |
 | Server | Registration persistence and routes | `cd Server && swift test` | PASS | 36 tests in 7 suites | Local route semantics only |
 | AppTemplate | Product boundary and release surface | `run-template-gate.sh` | PASS | 5/5 | Independent from SuperApp UI |
-| Quality | Lint, design, crash | `swiftlint`, `ci-lint`, crash scan | PASS | CI 17/17; crash `total: 0` | Five documented pre-existing design warnings |
+| Cache | Full cache integration | `bash tools/run-cache-regression.sh` | PASS | 5/5; `build/reports/cache-regression.md` | Simulator/local fixtures only |
+| JSBridge | Core, handlers and product navigation | `bash tools/run-jsbridge-regression.sh` | PASS | 5/5; `build/reports/jsbridge-regression.md` | Physical WebView behavior remains a device check |
+| UI v4 | Signed XCUITest screenshots and true baseline diff | `bash tools/run-ui-v4-regression.sh` | PASS | 7/7; six reviewed light/dark screenshots, max diff 0.18% | Status bar and fixture times are dynamic |
+| Release | Boundaries, Debug, archive, crash and bundle surface | `bash tools/run-release-gate.sh` | PASS | 8/8; `build/reports/release-gate.md` | APNs still requires the manual device gate below |
+| Quality | Lint, design, crash | `swiftlint`, `ci-lint`, crash scan | PASS | CI 17/17; crash `total: 0` | Documented warnings remain non-fatal debt |
 
-The first `verify-next-phase-acceptance.sh` core run completed services, boundaries, message, approval, offline, gateway, Server and AppTemplate checks, then the local SwiftLint subprocess failed to load `sourcekitdInProc.framework` and hung. The process was terminated; the independent SwiftLint run earlier in the same QA session had exited 0, and `ci-lint.sh` passed 17/17. This is retained as an execution-environment limitation rather than silently reported as a clean one-command run.
+The first `verify-next-phase-acceptance.sh` core run completed services, boundaries, message, approval, offline, gateway, Server and AppTemplate checks, then the local SwiftLint subprocess failed to load `sourcekitdInProc.framework` and hung. The UI v4 wrapper used a login shell for every gate, which reproduced that tool failure even though direct arm64 SwiftLint runs exited 0. The wrapper now inherits the current shell environment; the full UI v4 rerun passed 7/7.
 
 ## Integration Audit
 
@@ -39,7 +43,9 @@ The first `verify-next-phase-acceptance.sh` core run completed services, boundar
 
 ## QA Infrastructure Fixes
 
-The integration UI target did not compile because several existing tests called unavailable `XCUIElementQuery.isEmpty`. QA replaced those checks with `count` and updated one obsolete multi-alert gateway test to the current one-page identifiers. No production source was changed.
+The screenshot flow now runs signed XCUITest captures instead of installing an unsigned app. UI tests recognize all supported test arguments and skip automatic clipboard inspection, so screenshots cannot be covered by the iOS paste-permission alert. The visual regression tool compares `docs/screenshots/ui-redesign/` against `build/screenshots/ui-redesign/`, rejects identical directories, and fails on new or removed images. The reviewed baseline matches the current three-tab product IA: Home, Inbox, and Settings in light and dark mode.
+
+Two compatibility-only test updates were required: the persistent manifest state switch now includes the three offline installation phases, and the functional Settings navigation query uses stable SwiftUI accessibility identifiers rather than the removed UIKit table.
 
 ## UI Journey Evidence
 

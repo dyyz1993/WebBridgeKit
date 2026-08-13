@@ -10,6 +10,7 @@ final class ScreenshotCaptureTests: XCTestCase {
     }
 
     private func capture(_ name: String) {
+        XCTAssertFalse(app.alerts.firstMatch.exists, "Screenshot must not contain a blocking alert")
         let screenshot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = name
@@ -45,10 +46,7 @@ final class ScreenshotCaptureTests: XCTestCase {
         capture("02-inbox-light")
 
         navigateToTab(index: 2)
-        capture("03-discover-light")
-
-        navigateToTab(index: 3)
-        capture("04-settings-light")
+        capture("03-settings-light")
     }
 
     func testDarkModeScreenshots() throws {
@@ -57,15 +55,12 @@ final class ScreenshotCaptureTests: XCTestCase {
         sleep(2)
 
         navigateToTab(index: 0)
-        capture("05-home-dark")
+        capture("04-home-dark")
 
         navigateToTab(index: 1)
-        capture("06-inbox-dark")
+        capture("05-inbox-dark")
 
         navigateToTab(index: 2)
-        capture("07-discover-dark")
-
-        navigateToTab(index: 3)
-        capture("08-settings-dark")
+        capture("06-settings-dark")
     }
 }

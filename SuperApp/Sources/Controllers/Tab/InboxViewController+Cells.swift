@@ -226,6 +226,7 @@ private struct NotificationPresentation {
             switch actionState {
             case .pending: return "待确认"
             case .approved, .rejected, .cancelled, .expired: return nil
+            @unknown default: return nil
             }
         }
         return payload.priority == .critical ? "紧急" : nil
@@ -237,6 +238,7 @@ private struct NotificationPresentation {
             case .pending: return (.clock, ThemeTokens.Color.warning)
             case .approved: return (.success, ThemeTokens.Color.success)
             case .rejected, .cancelled, .expired: return (.clipboard, ThemeTokens.Color.textSecondary)
+            @unknown default: return (.clipboard, ThemeTokens.Color.textSecondary)
             }
         }
         switch payload.contentType {
@@ -247,6 +249,7 @@ private struct NotificationPresentation {
         case .chat: return (.paperplane, ThemeTokens.Color.info)
         case .approval: return (.clipboard, ThemeTokens.Color.warning)
         case .plain, nil: break
+        case .some: return (.inbox, ThemeTokens.Color.primary)
         }
         if payload.contentType == .qr || payload.qrPayload != nil {
             return (.qrCode, ThemeTokens.Color.info)

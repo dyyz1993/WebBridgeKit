@@ -259,7 +259,7 @@ class InboxViewModel: ViewModel {
 
             var messages: [StoredMessage] = []
 
-            let isUITesting = CommandLine.arguments.contains("-UITesting") || CommandLine.arguments.contains("--UITesting")
+            let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
 
             if isUITesting {
                 let fallbackKey = "SuperCache_Messages"

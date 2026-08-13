@@ -457,8 +457,7 @@ final class PWAAppCenterViewController: UIViewController {
 
     #if DEBUG
     private static var isOfficialPushUITest: Bool {
-        let arguments = ProcessInfo.processInfo.arguments
-        return (arguments.contains("-UITesting") || arguments.contains("--UITesting"))
+        return ProcessInfo.processInfo.isWebBridgeKitUITesting
             && ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] != nil
     }
     #endif

@@ -9,6 +9,13 @@ import UIKit
 import UserNotifications
 import WebBridgeKit
 
+extension ProcessInfo {
+    var isWebBridgeKitUITesting: Bool {
+        let supportedArguments = ["-UITesting", "--UITesting", "--ui-testing"]
+        return supportedArguments.contains { arguments.contains($0) }
+    }
+}
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
@@ -25,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             CrashLogManager.shared.uploadPendingCrashReports()
         }
 
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("-UITesting") || ProcessInfo.processInfo.arguments.contains("--UITesting")
+        let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
         if isUITesting {
             TestDataSeeder.populateIfNeeded()
             Self.cleanupInvalidHistoryURLs()
@@ -41,7 +48,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // 初始化 WebBridgeKit（异步执行，避免偶尔阻塞主线程导致卡 loading）
         // UI 测试时禁用 WebBridgeKit 预热，减少主线程压力和 WebKit 进程消耗
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !isUITesting {
             DispatchQueue.global(qos: .userInitiated).async {
                 WebBridgeKitManager.shared.initialize()
             }
@@ -95,7 +102,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !isUITesting {
             DispatchQueue.global(qos: .utility).async {
                 PushRelayManager.shared.connect()
             }
@@ -233,7 +240,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !ProcessInfo.processInfo.isWebBridgeKitUITesting {
             TokenManager.shared.parseTokenFromClipboard()
             CommandHandler.shared.checkClipboardOnForeground()
         }

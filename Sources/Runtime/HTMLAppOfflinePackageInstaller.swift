@@ -171,7 +171,7 @@ public actor HTMLAppOfflinePackageInstaller {
         fileManager: FileManager = .default,
         limits: HTMLAppOfflinePackageLimits = HTMLAppOfflinePackageLimits(),
         allowsLocalHTTP: Bool = false,
-        now: @escaping @Sendable () -> Date = Date.init
+        now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.transport = transport
         self.fileManager = fileManager
