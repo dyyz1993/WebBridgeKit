@@ -13,6 +13,7 @@ extension MessageDetailViewController {
             case .primary: style = .primary
             case .destructive: style = .destructive
             case .default, nil: style = .standard
+            @unknown default: style = .standard
             }
             addAction(
                 title: action.title,

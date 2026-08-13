@@ -35,7 +35,7 @@ run_gate() {
     local log="$REPORT_DIR/$(echo "$name" | tr '[:upper:] /' '[:lower:]--').log"
 
     echo "== $name =="
-    if bash -lc "$command" >"$log" 2>&1; then
+    if bash -c "$command" >"$log" 2>&1; then
         record "$name" "PASS" "$log"
         echo "PASS"
     else

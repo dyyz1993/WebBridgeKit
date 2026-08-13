@@ -251,8 +251,7 @@ class PushNotificationManager: NSObject {
 
     #if DEBUG
     private var isOfficialPushUITest: Bool {
-        let arguments = ProcessInfo.processInfo.arguments
-        return (arguments.contains("-UITesting") || arguments.contains("--UITesting"))
+        return ProcessInfo.processInfo.isWebBridgeKitUITesting
             && ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] != nil
     }
 

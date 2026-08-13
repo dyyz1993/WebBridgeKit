@@ -18,8 +18,7 @@ struct TestDataSeeder {
 
     static func populateIfNeeded() {
         let needsSeed = !UserDefaults.standard.bool(forKey: seededKey)
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("-UITesting")
-            || ProcessInfo.processInfo.arguments.contains("--UITesting")
+        let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
 
         if isUITesting {
             UserDefaults.standard.set("test", forKey: "com.webbridgekit.bark.key")

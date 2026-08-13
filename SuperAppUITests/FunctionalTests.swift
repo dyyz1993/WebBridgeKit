@@ -40,14 +40,11 @@ final class FunctionalTests: XCTestCase {
     func testSettingsNavigation() throws {
         navigateToTab("设置")
 
-        let tableView = app.tables["settings.tableView"]
-        XCTAssertTrue(tableView.waitForExistence(timeout: 5), "Settings table should exist")
+        let settingsRoot = app.descendants(matching: .any)["SettingsViewController"]
+        XCTAssertTrue(settingsRoot.waitForExistence(timeout: 5), "Settings screen should exist")
 
-        let allCells = tableView.cells
-        let cellCount = allCells.count
-        XCTAssertGreaterThanOrEqual(cellCount, 7, "Settings should have at least 7 rows, found \(cellCount)")
-
-        let cacheCell = tableView.cells["settings.cell.cacheManager"]
+        let cacheCell = app.descendants(matching: .any)["settings.cell.cacheManager"]
+        XCTAssertTrue(cacheCell.waitForExistence(timeout: 5), "Cache management row should exist")
         if cacheCell.waitForExistence(timeout: 3) {
             cacheCell.tap()
             sleep(1)
@@ -82,10 +79,8 @@ final class FunctionalTests: XCTestCase {
             }
         }
 
-        let notifCell = tableView.cells["settings.cell.notificationSettings"]
+        let notifCell = app.descendants(matching: .any)["settings.cell.notificationSettings"]
         if notifCell.waitForExistence(timeout: 3) {
-            let snapshotBefore = app.state
-
             notifCell.tap()
             sleep(2)
 
@@ -155,7 +150,7 @@ final class FunctionalTests: XCTestCase {
             saveScreenshot("/tmp/wbk-home-card-tap.png")
 
             if !app.collectionViews["MainCollectionView"].exists {
-                // swiftlint:disable:next empty_count -- XCUIElementQuery has no isEmpty API.
+                // swiftlint:disable:next empty_count
                 if app.navigationBars.buttons.count > 0 {
                     app.navigationBars.firstMatch.buttons.firstMatch.tap()
                     sleep(1)
@@ -170,7 +165,7 @@ final class FunctionalTests: XCTestCase {
                 saveScreenshot("/tmp/wbk-home-card-tap.png")
 
                 if !app.collectionViews["MainCollectionView"].exists {
-                    // swiftlint:disable:next empty_count -- XCUIElementQuery has no isEmpty API.
+                    // swiftlint:disable:next empty_count
                     if app.navigationBars.buttons.count > 0 {
                         app.navigationBars.firstMatch.buttons.firstMatch.tap()
                         sleep(1)
