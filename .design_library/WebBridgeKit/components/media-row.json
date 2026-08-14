@@ -1,0 +1,40 @@
+{
+  "slug": "media-row",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["media-row", "thumbnail-list", "playlist"],
+  "variantDimensions": ["hasDuration"],
+  "representativeVariants": [
+    { "name": "带时长", "props": { "hasDuration": true } },
+    { "name": "纯内容", "props": { "hasDuration": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "media row", "type": "element" },
+    { "name": "thumbnail", "role": "media preview image", "type": "element" },
+    { "name": "info", "role": "title + subtitle column", "type": "element" },
+    { "name": "title", "role": "media title", "type": "element" },
+    { "name": "subtitle", "role": "secondary info", "type": "optional" },
+    { "name": "duration", "role": "time/badge overlay", "type": "optional" },
+    { "name": "trailing", "role": "right action", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "minHeight": 60,
+    "paddingH": 16,
+    "thumbnailWidth": 48,
+    "thumbnailHeight": 48,
+    "thumbnailRadius": 8,
+    "titleSize": 14,
+    "titleWeight": 500,
+    "titleColor": { "ref": "--color-text" },
+    "subtitleSize": 12,
+    "subtitleColor": { "ref": "--color-text-secondary" },
+    "gap": 12,
+    "durationSize": 11,
+    "durationColor": { "ref": "--color-text-tertiary" },
+    "trailingIconSize": 16
+  },
+  "usageHints": ["在线资源列表、分享内容预览、管理文件列表"],
+  "doNotInvent": ["不要添加选中态", "不要添加播放按钮"],
+  "unknowns": []
+}

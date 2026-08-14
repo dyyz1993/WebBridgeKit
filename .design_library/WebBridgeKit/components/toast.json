@@ -1,0 +1,31 @@
+{
+  "slug": "toast",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["toast", "snackbar", "notification-toast"],
+  "variantDimensions": ["type"],
+  "representativeVariants": [
+    { "name": "成功提示", "props": { "type": "success" } },
+    { "name": "错误提示", "props": { "type": "error" } }
+  ],
+  "anatomy": [
+    { "name": "toast", "role": "container", "type": "element" },
+    { "name": "icon", "role": "leading icon", "type": "element" },
+    { "name": "message", "role": "text message", "type": "element" }
+  ],
+  "structurePatterns": {
+    "cornerRadius": { "ref": "--radius-md" },
+    "paddingH": 16,
+    "paddingV": 12,
+    "minHeight": 44,
+    "maxWidth": 360,
+    "fontSize": 14,
+    "successBg": { "ref": "--wbk-success" },
+    "errorBg": { "ref": "--wbk-error" },
+    "textColor": { "ref": "--wbk-text-on-color" }
+  },
+  "usageHints": ["操作成功后短暂显示", "自动消失，无需用户操作"],
+  "doNotInvent": ["不要添加不同位置的变体", "不要添加手动关闭按钮"],
+  "unknowns": ["显示时长和动画方式待确认"]
+}

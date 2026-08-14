@@ -1,0 +1,37 @@
+{
+  "slug": "text-field",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["input", "text-field", "form"],
+  "variantDimensions": ["state", "hasIcon"],
+  "representativeVariants": [
+    { "name": "默认", "props": { "state": "default", "hasIcon": false } },
+    { "name": "带图标", "props": { "state": "default", "hasIcon": true } },
+    { "name": "错误", "props": { "state": "error", "hasIcon": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "input wrapper", "type": "element" },
+    { "name": "label", "role": "field label", "type": "optional" },
+    { "name": "input", "role": "text input", "type": "element" },
+    { "name": "icon", "role": "leading/trailing icon", "type": "optional" },
+    { "name": "hint", "role": "helper text", "type": "optional" },
+    { "name": "error", "role": "error message", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "height": 48,
+    "cornerRadius": { "ref": "--radius-md" },
+    "background": { "ref": "--color-surface" },
+    "borderColor": { "ref": "--color-border" },
+    "borderWidth": 1,
+    "textFont": { "ref": "--wbk-text-body" },
+    "placeholderColor": { "ref": "--wbk-placeholder" },
+    "labelSize": 13,
+    "errorColor": { "ref": "--color-error" },
+    "errorBorder": { "ref": "--color-error" },
+    "paddingH": 16
+  },
+  "usageHints": ["服务器配置 URL、API Key 输入、Token 名称编辑", "错误态使用红色边框 + 红色提示文字"],
+  "doNotInvent": ["不要添加浮动标签动画", "不要添加多行文本域"],
+  "unknowns": []
+}

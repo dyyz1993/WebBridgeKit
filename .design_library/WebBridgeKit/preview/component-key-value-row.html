@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Key-Value Row - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); color: var(--color-text); }
+.stage { display: flex; flex-direction: column; gap: 12px; }
+.variant-label { font: 500 13px/1.4 var(--wbk-font-family); color: var(--color-text-secondary); letter-spacing: .3px; }
+
+/* @component-css-start */
+.kv-row { display: flex; flex-direction: row; justify-content: space-between; align-items: center; min-height: 40px; padding: 0 16px; }
+.kv-row__key { font-size: 13px; color: var(--color-text-secondary); flex-shrink: 0; }
+.kv-row__value { font-size: 15px; color: var(--color-text); text-align: right; }
+.kv-row__value--mono { font-family: var(--wbk-font-mono); font-size: 13px; }
+.kv-row--stacked { display: flex; flex-direction: column; gap: 2px; padding: 8px 16px; }
+.kv-row--stacked .kv-row__key { font-size: 12px; }
+.kv-row--stacked .kv-row__value { text-align: left; font-size: 14px; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="variant-label">左键右值（Side）</div>
+  <div class="kv-row">
+    <span class="kv-row__key">名称</span>
+    <span class="kv-row__value">My iPhone</span>
+  </div>
+  <div class="kv-row">
+    <span class="kv-row__key">iOS 版本</span>
+    <span class="kv-row__value">17.4</span>
+  </div>
+  <div class="kv-row">
+    <span class="kv-row__key">Device Token</span>
+    <span class="kv-row__value kv-row__value--mono">abc123...f0e1</span>
+  </div>
+  <div class="kv-row">
+    <span class="kv-row__key">App 版本</span>
+    <span class="kv-row__value">2.1.0</span>
+  </div>
+  <div class="kv-row">
+    <span class="kv-row__key">服务器</span>
+    <span class="kv-row__value kv-row__value--mono">wbk.example.com</span>
+  </div>
+
+  <div class="variant-label">上键下值（Stacked）</div>
+  <div class="kv-row--stacked">
+    <span class="kv-row__key">名称</span>
+    <span class="kv-row__value">My iPhone</span>
+  </div>
+  <div class="kv-row--stacked">
+    <span class="kv-row__key">iOS 版本</span>
+    <span class="kv-row__value">17.4</span>
+  </div>
+  <div class="kv-row--stacked">
+    <span class="kv-row__key">Device Token</span>
+    <span class="kv-row__value kv-row__value--mono">abc123...f0e1</span>
+  </div>
+  <div class="kv-row--stacked">
+    <span class="kv-row__key">App 版本</span>
+    <span class="kv-row__value">2.1.0</span>
+  </div>
+  <div class="kv-row--stacked">
+    <span class="kv-row__key">服务器</span>
+    <span class="kv-row__value kv-row__value--mono">wbk.example.com</span>
+  </div>
+</div>
+</body>
+</html>

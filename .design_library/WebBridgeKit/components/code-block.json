@@ -1,0 +1,30 @@
+{
+  "slug": "code-block",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["code", "monospace", "syntax"],
+  "variantDimensions": ["hasHeader", "hasCopy"],
+  "representativeVariants": [
+    { "name": "带复制按钮", "props": { "hasHeader": true, "hasCopy": true } },
+    { "name": "纯代码", "props": { "hasHeader": false, "hasCopy": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "code wrapper", "type": "element" },
+    { "name": "header", "role": "language label + actions", "type": "optional" },
+    { "name": "code", "role": "formatted code text", "type": "element" },
+    { "name": "copyButton", "role": "copy action", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "background": { "ref": "--color-bg-tertiary" },
+    "cornerRadius": { "ref": "--radius-md" },
+    "padding": 16,
+    "codeFont": { "ref": "--wbk-text-monospace-body" },
+    "codeColor": { "ref": "--color-text" },
+    "headerLabelSize": 11,
+    "headerLabelColor": { "ref": "--color-text-tertiary" }
+  },
+  "usageHints": ["API 密钥展示、JSON 响应、命令行输出", "header 显示语言名称 + 复制按钮"],
+  "doNotInvent": ["不要添加语法高亮颜色", "不要添加行号"],
+  "unknowns": []
+}

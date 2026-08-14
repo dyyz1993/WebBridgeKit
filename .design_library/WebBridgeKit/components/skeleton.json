@@ -1,0 +1,27 @@
+{
+  "slug": "skeleton",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["skeleton", "placeholder", "shimmer"],
+  "variantDimensions": ["shape"],
+  "representativeVariants": [
+    { "name": "卡片骨架", "props": { "shape": "card" } },
+    { "name": "文本行", "props": { "shape": "text" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "skeleton wrapper", "type": "element" },
+    { "name": "line", "role": "shimmer bar", "type": "element" },
+    { "name": "circle", "role": "avatar placeholder", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "shimmerColor": { "ref": "--color-bg-tertiary" },
+    "animationDuration": "1.5s",
+    "lineHeight": 16,
+    "lineRadius": 4,
+    "cornerRadius": { "ref": "--radius-md" }
+  },
+  "usageHints": ["加载占位，对应源码 WBKSkeletonView", "使用从左到右的 shimmer 动画"],
+  "doNotInvent": ["不要添加渐变 shimmer，保持纯色脉冲"],
+  "unknowns": []
+}

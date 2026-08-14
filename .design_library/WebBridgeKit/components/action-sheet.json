@@ -1,0 +1,36 @@
+{
+  "slug": "action-sheet",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["action-sheet", "context-menu", "actions"],
+  "variantDimensions": ["hasCancel", "hasDestructive"],
+  "representativeVariants": [
+    { "name": "标准操作", "props": { "hasCancel": true, "hasDestructive": false } },
+    { "name": "含删除", "props": { "hasCancel": true, "hasDestructive": true } }
+  ],
+  "anatomy": [
+    { "name": "scrim", "role": "dimmed overlay", "type": "element" },
+    { "name": "group", "role": "action group", "type": "element" },
+    { "name": "action", "role": "action row", "type": "element" },
+    { "name": "actionLabel", "role": "action text", "type": "element" },
+    { "name": "actionIcon", "role": "leading icon", "type": "optional" },
+    { "name": "destructive", "role": "danger action", "type": "optional" },
+    { "name": "cancel", "role": "cancel button", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "groupBackground": { "ref": "--color-surface" },
+    "groupRadius": { "ref": "--wbk-radius-sheet" },
+    "actionHeight": 54,
+    "actionFontSize": 20,
+    "actionFontWeight": 400,
+    "actionColor": { "ref": "--color-primary" },
+    "destructiveColor": { "ref": "--color-error" },
+    "cancelColor": { "ref": "--color-primary" },
+    "scrimColor": { "ref": "--color-overlay" },
+    "separatorColor": { "ref": "--color-separator" }
+  },
+  "usageHints": ["iOS 风格 UIAlertController actionSheet", "取消按钮独立分组"],
+  "doNotInvent": ["不要添加长描述文字", "不要添加图片行"],
+  "unknowns": []
+}

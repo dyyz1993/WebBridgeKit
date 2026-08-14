@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>Message Detail — WebBridgeKit</title>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.specimen { max-width: 480px; }
+.story { margin-bottom: var(--space-lg); }
+.story-label { font: var(--wbk-text-caption); color: var(--color-text-tertiary); letter-spacing: 0.5px; margin-bottom: var(--space-sm); }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: var(--space-lg) 0; }
+
+/* @component-css-start */
+.detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
+.pill { display: inline-flex; align-items: center; font: var(--wbk-text-badge); padding: 3px 8px; border-radius: var(--radius-xs); }
+.pill-apns { color: var(--color-primary); background: var(--color-primary-soft); }
+.detail-time { font: var(--type-caption); color: var(--color-text-tertiary); }
+.detail-title { font: 700 20px/1.3 var(--wbk-font-family); color: var(--color-text); margin-bottom: var(--space-md); word-break: keep-all; overflow-wrap: break-word; }
+.body-card { background: var(--color-card); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-lg); }
+.body-text { font-size: 15px; line-height: 1.5; color: var(--color-text-secondary); margin: 0; }
+.meta-card { background: var(--color-card); border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-lg); }
+.meta-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-md) var(--space-lg); min-height: 44px; }
+.meta-row + .meta-row { border-top: 1px solid var(--color-separator); }
+.meta-label { font: var(--type-caption); color: var(--color-text-secondary); }
+.meta-value { display: flex; align-items: center; gap: var(--space-xs); font: var(--wbk-text-footnote); color: var(--color-text); }
+.pill-error { display: inline-flex; align-items: center; font: var(--wbk-text-badge); color: var(--color-error); background: var(--wbk-error-soft); padding: 2px 6px; border-radius: 4px; }
+.actions-row { display: flex; gap: var(--space-md); margin-bottom: var(--space-lg); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); height: var(--wbk-button-height); padding: 0 var(--wbk-button-horizontal-padding); border-radius: var(--wbk-button-corner-radius); border: none; cursor: pointer; font: var(--type-button); white-space: nowrap; min-width: var(--wbk-button-height); transition: filter .15s, background .15s; flex: 1; }
+.btn-primary { background: var(--color-primary); color: var(--wbk-text-on-color); }
+.btn-primary:hover { background: var(--wbk-primary-pressed); }
+.btn-secondary { background: transparent; color: var(--color-primary); border: 1.5px solid var(--color-primary); }
+.btn-secondary:hover { background: var(--color-primary-soft); }
+.msg-cell-compact { display: flex; align-items: flex-start; gap: var(--space-md); padding: var(--space-md); background: var(--color-card); border-radius: var(--radius-md); min-height: 64px; transition: filter .15s; }
+.msg-cell-compact:hover { filter: brightness(0.97); }
+.compact-icon { width: 18px; height: 18px; color: var(--color-text-secondary); flex-shrink: 0; margin-top: 1px; }
+.compact-content { flex: 1; min-width: 0; }
+.compact-title { font: var(--wbk-text-row-title); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compact-body { font: var(--type-caption); color: var(--color-text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; margin-top: 2px; }
+.compact-meta { font: var(--type-caption); color: var(--color-text-tertiary); margin-top: 2px; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+
+<div class="story">
+  <div class="story-label">APNs 通知详情</div>
+
+  <!-- Header: source pill + time -->
+  <div class="detail-header">
+    <span class="pill pill-apns">APNs</span>
+    <span class="detail-time">2025-05-08 14:30</span>
+  </div>
+
+  <!-- Title -->
+  <div class="detail-title">新部署通知</div>
+
+  <!-- Body card -->
+  <div class="body-card">
+    <p class="body-text">应用已部署到生产环境，所有健康检查已通过。构建版本 #42，部署耗时 2 分 18 秒。</p>
+  </div>
+
+  <!-- Metadata card -->
+  <div class="meta-card">
+    <div class="meta-row">
+      <span class="meta-label">发送者</span>
+      <span class="meta-value">CI/CD Pipeline</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">类型</span>
+      <span class="meta-value"><span class="pill pill-apns">APNs</span></span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">优先级</span>
+      <span class="meta-value"><span class="pill-error">高</span></span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-row">
+    <button class="btn btn-secondary"><i data-lucide="copy" style="width:18px;height:18px"></i>复制内容</button>
+    <button class="btn btn-primary"><i data-lucide="external-link" style="width:18px;height:18px"></i>打开链接</button>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="story">
+  <div class="story-label">相关消息 (1)</div>
+
+  <!-- Related message cell -->
+  <div class="msg-cell-compact">
+    <i data-lucide="message-circle" class="compact-icon"></i>
+    <div class="compact-content">
+      <div class="compact-title">构建 Pipeline 已触发</div>
+      <div class="compact-body">自动构建 #43 已开始执行</div>
+      <div class="compact-meta">2025-05-08 14:35 · APNs</div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

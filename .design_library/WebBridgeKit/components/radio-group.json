@@ -1,0 +1,36 @@
+{
+  "slug": "radio-group",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["radio", "option", "single-select"],
+  "variantDimensions": ["layout"],
+  "representativeVariants": [
+    { "name": "列表", "props": { "layout": "list" } }
+  ],
+  "anatomy": [
+    { "name": "group", "role": "radio container", "type": "element" },
+    { "name": "option", "role": "single option row", "type": "element" },
+    { "name": "circle", "role": "radio indicator", "type": "element" },
+    { "name": "circleInner", "role": "selected dot", "type": "element" },
+    { "name": "label", "role": "option text", "type": "element" },
+    { "name": "description", "role": "option description", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "optionHeight": 44,
+    "optionPaddingH": 16,
+    "circleSize": 20,
+    "circleBorderWidth": 2,
+    "circleBorderColor": { "ref": "--color-separator" },
+    "circleSelectedBorderColor": { "ref": "--color-primary" },
+    "circleInnerSize": 10,
+    "circleInnerColor": { "ref": "--color-primary" },
+    "labelSize": 15,
+    "labelColor": { "ref": "--color-text" },
+    "descriptionSize": 12,
+    "descriptionColor": { "ref": "--color-text-secondary" }
+  },
+  "usageHints": ["单选设置项，如主题选择、推送策略", "选中项 circle 内填充实心圆点"],
+  "doNotInvent": ["不要添加卡片背景", "不要添加图标"],
+  "unknowns": []
+}

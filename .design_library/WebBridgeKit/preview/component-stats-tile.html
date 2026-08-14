@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stats Tile — WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; }
+.label { width: 92px; font: var(--type-caption); color: var(--color-text-secondary); white-space: nowrap; padding-top: 8px; flex-shrink: 0; }
+
+/* @component-css-start */
+/* Component definitions — extracted to components.css by deterministic script */
+.tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; min-width: 0; }
+.tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--color-card); border-radius: var(--radius-md); padding: 12px; min-width: 72px; text-align: center; }
+.tile-num { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.tile-lbl { font-size: 11px; color: var(--color-text-secondary); white-space: nowrap; }
+.tile-icon { width: var(--wbk-icon-md); height: var(--wbk-icon-md); }
+.tile-primary .tile-num, .tile-primary .tile-icon { color: var(--color-primary); }
+.tile-success .tile-num, .tile-success .tile-icon { color: var(--color-success); }
+.tile-info .tile-num, .tile-info .tile-icon { color: var(--color-info); }
+.tile-default .tile-num, .tile-default .tile-icon { color: var(--color-text-secondary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+  <div class="row">
+    <span class="label">推送统计</span>
+    <div class="tile-grid">
+      <div class="tile tile-primary">
+        <i data-lucide="mail" class="tile-icon"></i>
+        <span class="tile-num">42</span>
+        <span class="tile-lbl">总消息</span>
+      </div>
+      <div class="tile tile-success">
+        <i data-lucide="download" class="tile-icon"></i>
+        <span class="tile-num">38</span>
+        <span class="tile-lbl">已接收</span>
+      </div>
+      <div class="tile tile-info">
+        <i data-lucide="send" class="tile-icon"></i>
+        <span class="tile-num">4</span>
+        <span class="tile-lbl">已发送</span>
+      </div>
+      <div class="tile tile-default">
+        <i data-lucide="alert-circle" class="tile-icon"></i>
+        <span class="tile-num">0</span>
+        <span class="tile-lbl">失败</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

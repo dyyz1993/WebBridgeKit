@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>WebBridgeKit - 滑块</title>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); color:var(--color-text); }
+.stage { display:flex; flex-direction:column; gap:12px; margin-bottom:12px; }
+.section-label { font:var(--type-caption); color:var(--color-text-secondary); margin-bottom:8px; }
+
+/* @component-css-start */
+.slider { display:flex; flex-direction:column; gap:8px; background:var(--color-surface); padding:12px; border-radius:var(--radius-md); }
+.slider__label { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--color-text-secondary); }
+.slider__value { font-size:13px; color:var(--color-text-secondary); }
+.slider__track { position:relative; height:4px; border-radius:2px; background:var(--color-bg-tertiary); }
+.slider__fill { position:absolute; left:0; top:0; height:100%; background:var(--color-primary); border-radius:2px; width:60%; }
+.slider__thumb { position:absolute; width:24px; height:24px; border-radius:50%; background:var(--color-surface); border:1px solid var(--color-separator); box-shadow:var(--shadow-sm); top:50%; left:60%; transform:translate(-50%,-50%); cursor:grab; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="section-label">带数值 Label</div>
+<div class="stage">
+  <div class="slider">
+    <div class="slider__label">
+      <span>音量</span>
+      <span class="slider__value">60%</span>
+    </div>
+    <div class="slider__track">
+      <div class="slider__fill"></div>
+      <div class="slider__thumb"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label">纯轨道</div>
+<div class="stage">
+  <div class="slider">
+    <div class="slider__track">
+      <div class="slider__fill"></div>
+      <div class="slider__thumb"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

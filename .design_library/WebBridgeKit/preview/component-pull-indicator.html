@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pull Indicator - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; }
+.phone-frame { width:100%; background:var(--wbk-background); border-radius:var(--wbk-radius-card); overflow:hidden; box-shadow:var(--wbk-shadow-card); }
+
+/* @component-css-start */
+.pull-indicator { display:flex; align-items:center; justify-content:center; gap:8px; height:48px; width:100%; }
+.pull-indicator__icon { display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pull-indicator__icon--idle svg { width:20px; height:20px; color:var(--wbk-text-tertiary); }
+.pull-indicator__icon--loading { width:20px; height:20px; border-radius:50%; border:2px solid var(--wbk-background-tertiary); border-top-color:var(--wbk-primary); animation:loading-spin 0.6s linear infinite; }
+.pull-indicator__label { font:var(--wbk-text-caption); color:var(--wbk-text-tertiary); white-space:nowrap; }
+@keyframes loading-spin { to { transform:rotate(360deg); } }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">等待拉动</div>
+    <div class="phone-frame">
+      <div class="pull-indicator">
+        <div class="pull-indicator__icon pull-indicator__icon--idle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="pull-indicator__label">下拉刷新</span>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">加载中</div>
+    <div class="phone-frame">
+      <div class="pull-indicator">
+        <div class="pull-indicator__icon pull-indicator__icon--loading"></div>
+        <span class="pull-indicator__label">正在刷新...</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

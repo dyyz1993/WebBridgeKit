@@ -1,0 +1,29 @@
+{
+  "slug": "loading",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["loading", "spinner", "progress"],
+  "variantDimensions": ["size", "mode"],
+  "representativeVariants": [
+    { "name": "页面加载", "props": { "size": "large", "mode": "fullpage" } },
+    { "name": "行内加载", "props": { "size": "small", "mode": "inline" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "centered container", "type": "element" },
+    { "name": "spinner", "role": "rotating indicator", "type": "element" },
+    { "name": "label", "role": "loading text", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "spinnerSize": 32,
+    "spinnerBorderWidth": 3,
+    "spinnerColor": { "ref": "--color-primary" },
+    "labelSize": 13,
+    "labelColor": { "ref": "--color-text-secondary" },
+    "gap": 12,
+    "animationDuration": "0.6s"
+  },
+  "usageHints": ["大加载用于全屏场景，小加载用于 inline 按钮/行", "使用 CSS border-radius: 50% + border-top 颜色旋转"],
+  "doNotInvent": ["不要添加多种颜色的 spinner"],
+  "unknowns": []
+}

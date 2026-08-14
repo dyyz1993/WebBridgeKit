@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pie Chart - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; background:var(--wbk-surface); padding:12px; border-radius:var(--wbk-radius-card); box-shadow:var(--wbk-shadow-card); align-items:center; }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; align-self:flex-start; }
+
+/* @component-css-start */
+.pie-chart { position:relative; width:120px; height:120px; border-radius:50%; background:conic-gradient(
+  var(--wbk-primary) 0% 50%,
+  var(--wbk-success) 50% 75%,
+  var(--wbk-warning) 75% 90%,
+  var(--wbk-info) 90% 100%
+); }
+.pie-chart__inner { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:48px; height:48px; border-radius:50%; background:var(--wbk-surface); display:flex; align-items:center; justify-content:center; }
+.pie-chart__center-text { font-size:20px; font-weight:700; color:var(--wbk-text); }
+.pie-chart__legend { display:flex; flex-wrap:wrap; gap:12px 20px; margin-top:16px; justify-content:center; }
+.pie-chart__legend-item { display:flex; align-items:center; gap:6px; }
+.pie-chart__legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.pie-chart__legend-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">缓存使用分布</div>
+    <div class="pie-chart">
+      <div class="pie-chart__inner">
+        <span class="pie-chart__center-text">48%</span>
+      </div>
+    </div>
+    <div class="pie-chart__legend">
+      <div class="pie-chart__legend-item">
+        <span class="pie-chart__legend-dot" style="background:var(--wbk-primary);"></span>
+        <span class="pie-chart__legend-label">HTML 缓存</span>
+      </div>
+      <div class="pie-chart__legend-item">
+        <span class="pie-chart__legend-dot" style="background:var(--wbk-success);"></span>
+        <span class="pie-chart__legend-label">API 响应</span>
+      </div>
+      <div class="pie-chart__legend-item">
+        <span class="pie-chart__legend-dot" style="background:var(--wbk-warning);"></span>
+        <span class="pie-chart__legend-label">图片资源</span>
+      </div>
+      <div class="pie-chart__legend-item">
+        <span class="pie-chart__legend-dot" style="background:var(--wbk-info);"></span>
+        <span class="pie-chart__legend-label">其他</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

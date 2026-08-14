@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Web View - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; }
+
+/* @component-css-start */
+.webview { width:100%; max-width:480px; background:var(--wbk-background); border-radius:var(--wbk-radius-card); overflow:hidden; box-shadow:var(--wbk-shadow-card); display:flex; flex-direction:column; min-height:360px; position:relative; }
+.webview__progress { position:absolute; top:0; left:0; right:0; height:2px; background:var(--wbk-primary); z-index:2; }
+.webview__progress--loading { animation:webview-progress 2s ease-in-out infinite; }
+@keyframes webview-progress { 0% { width:0; } 50% { width:70%; } 100% { width:100%; } }
+.webview__url-bar { display:flex; align-items:center; height:36px; margin:8px 12px 0; padding:0 12px; background:var(--wbk-background-tertiary); border-radius:var(--wbk-radius-md); gap:8px; flex-shrink:0; }
+.webview__url-bar-icon { width:14px; height:14px; color:var(--wbk-text-tertiary); flex-shrink:0; }
+.webview__url-bar-text { font:var(--wbk-text-metadata); color:var(--wbk-text-secondary); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.webview__url-bar-lock { width:12px; height:12px; color:var(--wbk-success); flex-shrink:0; }
+.webview__content { flex:1; padding:var(--wbk-spacing-lg); overflow:hidden; }
+.webview__content-heading { font:var(--wbk-text-section-title); color:var(--wbk-text); margin:0 0 12px; }
+.webview__content-para { font:var(--wbk-text-body); color:var(--wbk-text-secondary); margin:0 0 12px; line-height:1.6; }
+.webview__content-para:last-child { margin-bottom:0; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">加载中</div>
+    <div class="webview">
+      <div class="webview__progress webview__progress--loading"></div>
+      <div class="webview__url-bar">
+        <svg class="webview__url-bar-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="webview__url-bar-text">apple.com</span>
+      </div>
+      <div class="webview__content">
+        <div style="display:flex;flex-direction:column;gap:12px;padding-top:8px;">
+          <div style="height:20px;width:70%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite;"></div>
+          <div style="height:14px;width:100%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite 0.1s;"></div>
+          <div style="height:14px;width:90%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite 0.2s;"></div>
+          <div style="height:14px;width:60%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite 0.3s;"></div>
+          <div style="margin-top:12px;height:16px;width:50%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite 0.4s;"></div>
+          <div style="height:14px;width:100%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite 0.5s;"></div>
+          <div style="height:14px;width:80%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite 0.6s;"></div>
+          <div style="height:14px;width:95%;border-radius:4px;background:var(--wbk-background-tertiary);animation:skeleton-pulse 1.5s ease-in-out infinite 0.7s;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">已加载</div>
+    <div class="webview">
+      <div class="webview__url-bar">
+        <svg class="webview__url-bar-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="webview__url-bar-text">apple.com</span>
+      </div>
+      <div class="webview__content">
+        <h2 class="webview__content-heading">Apple</h2>
+        <p class="webview__content-para">探索 Apple 的创新世界，发现最新的产品、服务和技术。从 iPhone 到 Mac，从 iPad 到 Apple Watch，每一件产品都经过精心设计，为用户带来卓越的体验。</p>
+        <h2 class="webview__content-heading">最新动态</h2>
+        <p class="webview__content-para">Apple 始终致力于将先进技术与简洁设计相结合，打造直观易用的产品。我们的生态系统涵盖了硬件、软件和服务，为全球数百万用户提供无缝连接的体验。</p>
+        <p class="webview__content-para">隐私是基本人权，也是我们产品的核心价值之一。我们设计产品时会将隐私保护融入每一个环节。</p>
+      </div>
+    </div>
+  </div>
+</div>
+<style>@keyframes skeleton-pulse { 0% { opacity:0.4; } 50% { opacity:1; } 100% { opacity:0.4; } }</style>
+</body>
+</html>

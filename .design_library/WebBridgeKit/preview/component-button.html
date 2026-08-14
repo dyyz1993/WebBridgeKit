@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>WebBridgeKit - 按钮</title>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); color: var(--color-text); }
+.row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.label { width: 92px; font: var(--type-caption); color: var(--color-text-secondary); flex-shrink: 0; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 12px 0; }
+
+/* @component-css-start */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: var(--wbk-button-height); padding: 0 var(--space-xl); min-width: var(--wbk-button-height); border: none; border-radius: var(--radius-md); font: var(--type-button); cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background .15s, border-color .15s; }
+.btn-primary { background: var(--color-primary); color: var(--wbk-text-on-color); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:active { background: var(--color-primary-pressed); filter: none; }
+.btn-primary:disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+.btn-outline { background: transparent; color: var(--color-primary); border: 1.5px solid var(--color-primary); }
+.btn-outline:hover { background: var(--color-primary-soft); border-color: var(--color-primary-pressed); }
+.btn-outline:disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+.btn-ghost { background: transparent; color: var(--color-text-secondary); }
+.btn-ghost:hover { background: var(--color-bg-secondary); }
+.btn-ghost:disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+.btn-icon { width: var(--wbk-button-height); padding: 0; justify-content: center; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="row">
+  <span class="label">主要</span>
+  <button class="btn btn-primary">确认</button>
+  <button class="btn btn-primary" disabled>确认</button>
+</div>
+<div class="row">
+  <span class="label">次要</span>
+  <button class="btn btn-outline">取消</button>
+  <button class="btn btn-outline" disabled>取消</button>
+</div>
+<div class="row">
+  <span class="label">文字</span>
+  <button class="btn btn-ghost">更多</button>
+  <button class="btn btn-ghost" disabled>更多</button>
+</div>
+
+<hr class="divider">
+
+<div class="row">
+  <span class="label">带图标</span>
+  <button class="btn btn-primary"><i data-lucide="download" style="width:18px;height:18px;display:inline-block"></i>下载</button>
+  <button class="btn btn-outline"><i data-lucide="upload" style="width:18px;height:18px;display:inline-block"></i>上传</button>
+</div>
+<div class="row">
+  <span class="label">图标按钮</span>
+  <button class="btn btn-primary btn-icon"><i data-lucide="search" style="width:18px;height:18px;display:inline-block"></i></button>
+  <button class="btn btn-outline btn-icon" disabled><i data-lucide="search" style="width:18px;height:18px;display:inline-block"></i></button>
+</div>
+
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

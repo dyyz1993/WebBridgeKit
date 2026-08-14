@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>Message Cell — WebBridgeKit</title>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.specimen { max-width: 480px; }
+.story { margin-bottom: 8px; }
+.story-label { font: var(--wbk-text-caption); color: var(--color-text-tertiary); letter-spacing: 0.5px; margin-bottom: 4px; }
+
+/* @component-css-start */
+/* Component definitions — extracted to components.css by deterministic script */
+.message-cell { display: flex; align-items: flex-start; gap: 12px; width: 100%; min-height: 72px; max-height: 96px; padding: 12px; background: var(--color-card); border-radius: var(--radius-md); box-sizing: border-box; transition: filter .15s; overflow: hidden; }
+.message-cell:hover { filter: brightness(0.97); }
+.cell-left { display: flex; align-items: flex-start; gap: 0; flex-shrink: 0; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); flex-shrink: 0; margin-top: 6px; margin-right: 4px; }
+.message-cell.read .dot { opacity: 0; }
+.cell-icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 4px; color: var(--color-text-secondary); display: block; }
+.cell-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.cell-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pill { display: inline-flex; align-items: center; font: var(--wbk-text-badge); color: var(--wbk-text-on-color); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+.pill-primary { background: var(--color-primary); }
+.pill-success { background: var(--color-success); }
+.pill-warning { background: var(--color-warning); }
+.cell-title { font: var(--wbk-text-card-title); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.cell-body { font: var(--type-body); color: var(--color-text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cell-time { font: var(--type-caption); color: var(--color-text-tertiary); flex-shrink: 0; white-space: nowrap; margin-top: 4px; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="icon-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+</svg>
+
+<div class="story">
+  <div class="story-label">消息</div>
+
+  <!-- Variant 1: 未读 APNs 消息 -->
+  <div class="message-cell">
+    <div class="cell-left">
+      <span class="dot"></span>
+      <svg class="cell-icon"><use href="#icon-bell"/></svg>
+    </div>
+    <div class="cell-content">
+      <div class="cell-top">
+        <span class="pill pill-primary">APNs</span>
+        <span class="cell-title">新部署通知</span>
+      </div>
+      <div class="cell-body">应用已部署到生产环境，请确认版本号。</div>
+    </div>
+    <span class="cell-time">14:30</span>
+  </div>
+
+  <!-- Variant 2: 已读 Bark 消息 -->
+  <div class="message-cell read">
+    <div class="cell-left">
+      <span class="dot"></span>
+      <svg class="cell-icon"><use href="#icon-alert-triangle"/></svg>
+    </div>
+    <div class="cell-content">
+      <div class="cell-top">
+        <span class="pill pill-success">Bark</span>
+        <span class="cell-title">服务器告警</span>
+      </div>
+      <div class="cell-body">CPU 使用率超过 90%，请及时处理。</div>
+    </div>
+    <span class="cell-time">12:15</span>
+  </div>
+
+  <!-- Variant 3: 已读 Bridge 命令 -->
+  <div class="message-cell read">
+    <div class="cell-left">
+      <span class="dot"></span>
+      <svg class="cell-icon"><use href="#icon-terminal"/></svg>
+    </div>
+    <div class="cell-content">
+      <div class="cell-top">
+        <span class="pill pill-warning">Bridge</span>
+        <span class="cell-title">构建完成</span>
+      </div>
+      <div class="cell-body">iOS 构建 #42 成功完成。</div>
+    </div>
+    <span class="cell-time">09:30</span>
+  </div>
+
+</div>
+
+</div>
+</body>
+</html>

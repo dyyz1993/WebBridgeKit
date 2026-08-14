@@ -1,0 +1,31 @@
+{
+  "slug": "pie-chart",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["chart", "pie-chart", "donut", "data-visualization"],
+  "variantDimensions": ["variant"],
+  "representativeVariants": [
+    { "name": "环形图", "props": { "variant": "donut" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "chart area", "type": "element" },
+    { "name": "slice", "role": "data segment", "type": "element" },
+    { "name": "center", "role": "donut center text", "type": "optional" },
+    { "name": "legend", "role": "color legend", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "defaultSize": 120,
+    "donutInnerRadius": "40%",
+    "sliceGap": 2,
+    "centerFontSize": 20,
+    "centerFontWeight": 700,
+    "centerColor": { "ref": "--color-text" },
+    "legendFontSize": 12,
+    "legendColor": { "ref": "--color-text-secondary" },
+    "defaultColors": ["--color-primary", "--color-success", "--color-warning", "--color-info", "--color-accent"]
+  },
+  "usageHints": ["缓存使用占比可视化，对应源码 PieChartView"],
+  "doNotInvent": ["不要添加 3D 效果", "不要添加交互高亮"],
+  "unknowns": []
+}

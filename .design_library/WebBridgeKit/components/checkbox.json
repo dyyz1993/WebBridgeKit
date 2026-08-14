@@ -1,0 +1,34 @@
+{
+  "slug": "checkbox",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["checkbox", "check", "multi-select"],
+  "variantDimensions": ["hasLabel"],
+  "representativeVariants": [
+    { "name": "带标签", "props": { "hasLabel": true } },
+    { "name": "仅勾选框", "props": { "hasLabel": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "checkbox row", "type": "element" },
+    { "name": "box", "role": "check box", "type": "element" },
+    { "name": "check", "role": "checkmark icon", "type": "element" },
+    { "name": "label", "role": "checkbox text", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "boxSize": 22,
+    "boxCornerRadius": 6,
+    "boxBorderWidth": 2,
+    "boxBorderColor": { "ref": "--color-separator" },
+    "boxCheckedBackground": { "ref": "--color-primary" },
+    "boxCheckedBorderColor": { "ref": "--color-primary" },
+    "checkColor": "#ffffff",
+    "checkSize": 14,
+    "labelSize": 15,
+    "labelColor": { "ref": "--color-text" },
+    "gap": 10
+  },
+  "usageHints": ["多选列表、权限勾选、协议同意", "选中态实心主色 + 白色勾"],
+  "doNotInvent": ["不要添加不确定态(indeterminate)", "不要添加副标题"],
+  "unknowns": []
+}

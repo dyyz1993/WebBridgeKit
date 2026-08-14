@@ -1,0 +1,34 @@
+{
+  "slug": "list-view",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["list", "history-list", "transaction-list"],
+  "variantDimensions": ["grouped"],
+  "representativeVariants": [
+    { "name": "分组列表", "props": { "grouped": true } },
+    { "name": "简单列表", "props": { "grouped": false } }
+  ],
+  "anatomy": [
+    { "name": "list", "role": "container", "type": "element" },
+    { "name": "section", "role": "group section", "type": "optional" },
+    { "name": "sectionHeader", "role": "date/group header", "type": "optional" },
+    { "name": "row", "role": "list row", "type": "element" },
+    { "name": "icon", "role": "leading icon", "type": "optional" },
+    { "name": "title", "role": "primary text", "type": "element" },
+    { "name": "subtitle", "role": "secondary text", "type": "optional" },
+    { "name": "trailing", "role": "right-side content", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "cornerRadius": { "ref": "--radius-md" },
+    "rowMinHeight": 54,
+    "rowPaddingH": 16,
+    "iconSize": 20,
+    "titleSize": 15,
+    "subtitleSize": 12,
+    "separatorColor": { "ref": "--color-separator" }
+  },
+  "usageHints": ["网页历史记录使用分组列表", "section header 13px 600 uppercase"],
+  "doNotInvent": ["不要添加拖拽排序", "不要添加滑动删除"],
+  "unknowns": []
+}

@@ -1,0 +1,32 @@
+{
+  "slug": "swipe-action",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["swipe", "gesture", "reveal"],
+  "variantDimensions": ["actionCount"],
+  "representativeVariants": [
+    { "name": "双按钮", "props": { "actionCount": 2 } },
+    { "name": "单按钮", "props": { "actionCount": 1 } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "row wrapper", "type": "element" },
+    { "name": "content", "role": "visible row content", "type": "element" },
+    { "name": "actions", "role": "hidden action buttons", "type": "element" },
+    { "name": "actionButton", "role": "single action", "type": "element" }
+  ],
+  "structurePatterns": {
+    "contentBackground": { "ref": "--color-surface" },
+    "contentMinHeight": 54,
+    "actionWidth": 60,
+    "actionFontSize": 13,
+    "actionFontWeight": 500,
+    "deleteActionColor": "#ffffff",
+    "deleteActionBackground": { "ref": "--color-error" },
+    "editActionBackground": { "ref": "--color-bg-tertiary" },
+    "editActionColor": { "ref": "--color-text" }
+  },
+  "usageHints": ["消息列表滑动删除/编辑、历史记录滑动操作", "静止态隐藏操作，左滑露出按钮"],
+  "doNotInvent": ["不要添加滑动动画CSS", "展示静止态和露出态两个状态即可"],
+  "unknowns": []
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "alert-banner",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["alert", "banner", "notice", "callout"],
+  "variantDimensions": ["severity"],
+  "representativeVariants": [
+    { "name": "警告", "props": { "severity": "warning" } },
+    { "name": "错误", "props": { "severity": "error" } },
+    { "name": "信息", "props": { "severity": "info" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "banner wrapper", "type": "element" },
+    { "name": "icon", "role": "severity icon", "type": "element" },
+    { "name": "text", "role": "message text", "type": "element" },
+    { "name": "action", "role": "optional action button", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "height": "auto",
+    "minHeight": 48,
+    "paddingH": 16,
+    "paddingV": 12,
+    "cornerRadius": { "ref": "--radius-md" },
+    "fontSize": 14,
+    "fontWeight": 400,
+    "gap": 10,
+    "warningBackground": { "ref": "--wbk-warning-soft" },
+    "warningColor": { "ref": "--wbk-text" },
+    "warningIconColor": { "ref": "--wbk-warning" },
+    "errorBackground": { "ref": "--wbk-error-soft" },
+    "errorColor": { "ref": "--wbk-text" },
+    "errorIconColor": { "ref": "--wbk-error" },
+    "infoBackground": { "ref": "--wbk-info-soft" },
+    "infoColor": { "ref": "--wbk-text" },
+    "infoIconColor": { "ref": "--wbk-info" }
+  },
+  "usageHints": ["调试中心错误提示、网络断开警告、更新通知", "图标在左，文字在右，可选操作按钮在尾"],
+  "doNotInvent": ["不要添加关闭按钮", "不要添加多行文字"],
+  "unknowns": []
+}

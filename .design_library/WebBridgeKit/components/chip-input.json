@@ -1,0 +1,33 @@
+{
+  "slug": "chip-input",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["chip", "tag-input", "token-input"],
+  "variantDimensions": ["editable"],
+  "representativeVariants": [
+    { "name": "只读标签组", "props": { "editable": false } },
+    { "name": "可添加", "props": { "editable": true } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "chip wrapper", "type": "element" },
+    { "name": "chip", "role": "single tag/chip", "type": "element" },
+    { "name": "chipText", "role": "chip label", "type": "element" },
+    { "name": "chipRemove", "role": "remove icon", "type": "optional" },
+    { "name": "input", "role": "text input for adding", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "chipHeight": 28,
+    "chipCornerRadius": 14,
+    "chipPaddingH": 10,
+    "chipFontSize": 13,
+    "chipFontWeight": 500,
+    "chipBackground": { "ref": "--color-primary-soft" },
+    "chipTextColor": { "ref": "--color-primary" },
+    "chipRemoveIconSize": 12,
+    "gap": 6
+  },
+  "usageHints": ["URL 标签、关键词标签组", "可添加模式下末尾显示输入框"],
+  "doNotInvent": ["不要添加多行模式", "不要添加拖拽排序"],
+  "unknowns": []
+}

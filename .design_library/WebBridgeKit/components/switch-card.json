@@ -1,0 +1,35 @@
+{
+  "slug": "switch-card",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["setting", "toggle-card", "switch-row"],
+  "variantDimensions": ["hasSubtitle"],
+  "representativeVariants": [
+    { "name": "带副标题", "props": { "hasSubtitle": true } },
+    { "name": "仅标题", "props": { "hasSubtitle": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "card wrapper", "type": "element" },
+    { "name": "icon", "role": "leading icon", "type": "optional" },
+    { "name": "content", "role": "title + subtitle column", "type": "element" },
+    { "name": "title", "role": "setting name", "type": "element" },
+    { "name": "subtitle", "role": "description text", "type": "optional" },
+    { "name": "toggle", "role": "on/off switch", "type": "element" }
+  ],
+  "structurePatterns": {
+    "background": { "ref": "--color-surface" },
+    "cornerRadius": { "ref": "--radius-md" },
+    "paddingH": 16,
+    "minHeight": 54,
+    "titleSize": 15,
+    "titleWeight": 500,
+    "titleColor": { "ref": "--color-text" },
+    "subtitleSize": 12,
+    "subtitleColor": { "ref": "--color-text-secondary" },
+    "gap": 12
+  },
+  "usageHints": ["设置页开关行，对应源码 SettingsToggleCell", "左侧图标 + 标题副标题 + 右侧开关"],
+  "doNotInvent": ["不要添加箭头指示器", "不要添加 badge"],
+  "unknowns": []
+}

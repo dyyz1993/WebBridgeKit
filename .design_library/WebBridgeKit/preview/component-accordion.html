@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>WebBridgeKit - 手风琴</title>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); color:var(--color-text); }
+.stage { display:flex; gap:12px; }
+.section-label { font:var(--type-caption); color:var(--color-text-secondary); margin-bottom:8px; }
+
+/* @component-css-start */
+.accordion { background:var(--color-surface); border-radius:var(--radius-md); overflow:hidden; flex:1; }
+.accordion__checkbox { display:none; }
+.accordion__header { display:flex; align-items:center; justify-content:space-between; height:44px; padding:0 16px; cursor:pointer; user-select:none; }
+.accordion__label { font-size:15px; font-weight:500; color:var(--color-text); }
+.accordion__chevron { width:16px; height:16px; color:var(--color-text-tertiary); transition:transform .25s ease; flex-shrink:0; }
+.accordion__body { padding:8px 16px 16px; font-size:14px; color:var(--color-text-secondary); line-height:1.6; display:none; }
+.accordion__body p { margin:0 0 6px; }
+.accordion__body p:last-child { margin-bottom:0; }
+.accordion__checkbox:checked ~ .accordion__body,
+.accordion--open .accordion__body { display:block; }
+.accordion__checkbox:checked ~ .accordion__header .accordion__chevron,
+.accordion--open .accordion__chevron { transform:rotate(180deg); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="section-label">手风琴</div>
+<div class="stage">
+  <label class="accordion">
+    <input type="checkbox" class="accordion__checkbox" checked>
+    <div class="accordion__header">
+      <span class="accordion__label">展开</span>
+      <i data-lucide="chevron-down" class="accordion__chevron"></i>
+    </div>
+    <div class="accordion__body">
+      <p>这是一段示例内容，展示了展开状态下的手风琴面板。</p>
+      <p>你可以在这里放置任何 HTML 内容，如文本、列表或表单。</p>
+    </div>
+  </label>
+  <label class="accordion">
+    <input type="checkbox" class="accordion__checkbox">
+    <div class="accordion__header">
+      <span class="accordion__label">收起</span>
+      <i data-lucide="chevron-down" class="accordion__chevron"></i>
+    </div>
+    <div class="accordion__body">
+      <p>这段内容默认是隐藏的。</p>
+      <p>点击标题即可展开查看隐藏内容。</p>
+    </div>
+  </label>
+</div>
+
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

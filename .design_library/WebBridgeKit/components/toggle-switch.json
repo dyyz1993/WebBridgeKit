@@ -1,0 +1,30 @@
+{
+  "slug": "toggle-switch",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["switch", "toggle", "boolean-input"],
+  "variantDimensions": ["state"],
+  "representativeVariants": [
+    { "name": "开启", "props": { "state": "on" } },
+    { "name": "关闭", "props": { "state": "off" } }
+  ],
+  "anatomy": [
+    { "name": "track", "role": "background track", "type": "element" },
+    { "name": "thumb", "role": "sliding thumb", "type": "element" },
+    { "name": "label", "role": "text label", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "width": 51,
+    "height": 31,
+    "thumbSize": 27,
+    "trackRadius": 16,
+    "onColor": { "ref": "--color-primary" },
+    "offColor": { "ref": "--wbk-text-tertiary" },
+    "thumbColor": "#FFFFFF",
+    "animationDuration": "var(--wbk-duration-fast)"
+  },
+  "usageHints": ["iOS 风格滑动开关", "开启态使用 primary 颜色轨道", "关闭态使用 text-tertiary 颜色轨道"],
+  "doNotInvent": ["不要添加不同尺寸变体", "thumb 始终为白色圆形"],
+  "unknowns": []
+}

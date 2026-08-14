@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="product-type" content="developer-tool/mobile-app">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>Search Field - WebBridgeKit</title>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.specimen { max-width: 400px; }
+.row { display: flex; gap: var(--space-md); align-items: center; margin-bottom: var(--space-sm); }
+.label { font: var(--type-caption); color: var(--color-text-secondary); white-space: nowrap; min-width: 92px; letter-spacing: 0.5px; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: var(--space-md) 0; }
+
+/* @component-css-start */
+/* Component definitions — extracted to components.css by deterministic script */
+.search-field { display: flex; align-items: center; height: var(--wbk-search-field-height); border-radius: var(--wbk-search-field-corner-radius); background: var(--color-card); padding: 0 var(--wbk-search-field-horizontal-padding); gap: var(--space-sm); width: 100%; transition: background .15s, border-color .15s; }
+.search-field:hover { filter: brightness(1.08); }
+.search-field:focus-within { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.search-field-icon { width: var(--wbk-search-field-icon-size); height: var(--wbk-search-field-icon-size); flex-shrink: 0; color: var(--color-text-secondary); }
+.search-field input { flex: 1; border: none; background: transparent; font: var(--type-body); color: var(--color-text); outline: none; padding: 0; min-width: 0; height: 100%; -webkit-appearance: none; appearance: none; }
+.search-field input::placeholder { color: var(--wbk-placeholder); }
+.search-field input::-webkit-search-decoration,
+.search-field input::-webkit-search-cancel-button,
+.search-field input::-webkit-search-results-button,
+.search-field input::-webkit-search-results-decoration { display: none; }
+.search-field.is-disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+  </symbol>
+</svg>
+<div class="specimen">
+  <div class="row">
+    <span class="label">默认</span>
+    <div class="search-field">
+      <svg class="search-field-icon"><use href="#icon-search"/></svg>
+      <input type="search" placeholder="搜索应用、功能或设置...">
+    </div>
+  </div>
+  <hr class="divider">
+  <div class="row">
+    <span class="label">禁用</span>
+    <div class="search-field is-disabled">
+      <svg class="search-field-icon"><use href="#icon-search"/></svg>
+      <input type="search" placeholder="搜索应用、功能或设置..." disabled>
+    </div>
+  </div>
+</div>
+</body>
+</html>

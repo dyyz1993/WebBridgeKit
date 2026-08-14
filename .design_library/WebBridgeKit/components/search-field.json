@@ -1,0 +1,29 @@
+{
+  "slug": "search-field",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["search", "input"],
+  "variantDimensions": ["hasIcon"],
+  "representativeVariants": [
+    { "name": "默认搜索框", "props": { "hasIcon": true } }
+  ],
+  "anatomy": [
+    { "name": "input", "role": "text input", "type": "element" },
+    { "name": "icon", "role": "leading icon", "type": "optional" },
+    { "name": "placeholder", "role": "placeholder text", "type": "element" }
+  ],
+  "structurePatterns": {
+    "height": 44,
+    "cornerRadius": 12,
+    "iconSize": 18,
+    "paddingH": 12,
+    "backgroundColor": { "ref": "--color-card" },
+    "fontSize": 15,
+    "color": { "ref": "--color-text" },
+    "placeholderColor": { "ref": "--wbk-placeholder" }
+  },
+  "usageHints": ["圆角 pill 样式", "leading icon 使用 search Lucide 图标", "placeholder 使用 wbk-placeholder 颜色"],
+  "doNotInvent": ["不要改变 44px 高度", "不要使用实色边框"],
+  "unknowns": []
+}

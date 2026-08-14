@@ -1,0 +1,32 @@
+{
+  "slug": "empty-state",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["empty", "placeholder", "no-content"],
+  "variantDimensions": ["hasAction"],
+  "representativeVariants": [
+    { "name": "空状态带操作按钮", "props": { "hasAction": true } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "centered container", "type": "element" },
+    { "name": "icon", "role": "empty state icon", "type": "element" },
+    { "name": "title", "role": "empty state title", "type": "element" },
+    { "name": "body", "role": "description text", "type": "optional" },
+    { "name": "action", "role": "primary action button", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "iconSize": 48,
+    "titleSize": 17,
+    "titleWeight": 600,
+    "bodySize": 13,
+    "maxWidth": 280,
+    "padding": 32,
+    "iconColor": { "ref": "--color-text-tertiary" },
+    "titleColor": { "ref": "--color-text" },
+    "bodyColor": { "ref": "--color-text-secondary" }
+  },
+  "usageHints": ["列表/搜索结果为空时使用", "始终包含 icon + title", "可选的 action button 提供恢复路径"],
+  "doNotInvent": ["不要添加动画效果", "不要添加多种 icon 尺寸变体"],
+  "unknowns": []
+}

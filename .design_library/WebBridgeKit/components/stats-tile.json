@@ -1,0 +1,32 @@
+{
+  "slug": "stats-tile",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["stat", "metric", "count"],
+  "variantDimensions": ["color"],
+  "representativeVariants": [
+    { "name": "总消息", "props": { "color": "primary" } },
+    { "name": "已接收", "props": { "color": "success" } },
+    { "name": "已发送", "props": { "color": "info" } },
+    { "name": "失败", "props": { "color": "default" } }
+  ],
+  "anatomy": [
+    { "name": "tile", "role": "container", "type": "element" },
+    { "name": "number", "role": "statistic number", "type": "element" },
+    { "name": "label", "role": "statistic label", "type": "element" },
+    { "name": "icon", "role": "leading icon", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "minWidth": 72,
+    "cornerRadius": { "ref": "--radius-md" },
+    "padding": 12,
+    "numberSize": 24,
+    "numberWeight": 700,
+    "labelSize": 11,
+    "labelColor": { "ref": "--color-text-secondary" }
+  },
+  "usageHints": ["2x2 网格布局，每行 2 个", "数字颜色使用对应的语义色"],
+  "doNotInvent": ["不要添加分数或百分比变体", "不要添加图表"],
+  "unknowns": []
+}
