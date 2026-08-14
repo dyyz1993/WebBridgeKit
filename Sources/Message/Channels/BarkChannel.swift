@@ -128,23 +128,92 @@ public actor BarkChannel: @preconcurrency MessageChannel {
         if let sound = payload.sound {
             queryItems.append(URLQueryItem(name: "sound", value: sound))
         }
+        if let subtitle = payload.subtitle {
+            queryItems.append(URLQueryItem(name: "subtitle", value: subtitle))
+        }
+        if let category = payload.category {
+            queryItems.append(URLQueryItem(name: "category", value: category))
+        }
+        if let markdown = payload.markdown {
+            queryItems.append(URLQueryItem(name: "markdown", value: markdown))
+        }
+        if let badge = payload.badge {
+            queryItems.append(URLQueryItem(name: "badge", value: String(badge)))
+        }
         if let group = payload.group {
             queryItems.append(URLQueryItem(name: "group", value: group))
+        }
+        if let threadID = payload.threadId {
+            queryItems.append(URLQueryItem(name: "threadId", value: threadID))
         }
         if let url = payload.targetURL {
             queryItems.append(URLQueryItem(name: "url", value: url))
         }
-        if let level = barkLevel(from: payload.priority) {
+        if let appID = payload.targetAppId {
+            queryItems.append(URLQueryItem(name: "appid", value: appID))
+        }
+        if let route = payload.route {
+            queryItems.append(URLQueryItem(name: "route", value: route))
+        }
+        if let mode = payload.targetMode {
+            queryItems.append(URLQueryItem(name: "mode", value: mode))
+        }
+        if let level = payload.interruptionLevel?.rawValue ?? barkLevel(from: payload.priority) {
             queryItems.append(URLQueryItem(name: "level", value: level))
         }
-        if configuration.icon != nil {
-            queryItems.append(URLQueryItem(name: "icon", value: configuration.icon))
+        if let icon = payload.iconURL ?? configuration.icon {
+            queryItems.append(URLQueryItem(name: "icon", value: icon))
         }
-        if configuration.isArchive {
+        if let image = payload.imageURL {
+            queryItems.append(URLQueryItem(name: "image", value: image))
+        }
+        if payload.isArchive ?? configuration.isArchive {
             queryItems.append(URLQueryItem(name: "isArchive", value: "1"))
         }
-        if configuration.copyable {
-            queryItems.append(URLQueryItem(name: "copyable", value: "1"))
+        if let copyText = payload.copyText ?? payload.verificationCode {
+            queryItems.append(URLQueryItem(name: "copy", value: copyText))
+            if payload.isAutoCopy ?? configuration.copyable {
+                queryItems.append(URLQueryItem(name: "autoCopy", value: "1"))
+            }
+        }
+        if payload.isCall == true {
+            queryItems.append(URLQueryItem(name: "call", value: "1"))
+        }
+        if let volume = payload.soundVolume {
+            queryItems.append(URLQueryItem(name: "volume", value: String(volume)))
+        }
+        if let ttl = payload.ttl {
+            queryItems.append(URLQueryItem(name: "ttl", value: String(Int(ttl))))
+        }
+        if let verificationCode = payload.verificationCode {
+            queryItems.append(URLQueryItem(name: "verificationCode", value: verificationCode))
+        }
+        if let expiresAt = payload.expiresAt {
+            queryItems.append(URLQueryItem(name: "expiresAt", value: ISO8601DateFormatter().string(from: expiresAt)))
+        }
+        if let replacementID = payload.replacementID {
+            queryItems.append(URLQueryItem(name: "id", value: replacementID))
+        }
+        if payload.isDeleted == true {
+            queryItems.append(URLQueryItem(name: "delete", value: "1"))
+        }
+        if let actionState = payload.actionState {
+            queryItems.append(URLQueryItem(name: "actionState", value: actionState.rawValue))
+        }
+        if let requestID = payload.requestID {
+            queryItems.append(URLQueryItem(name: "requestId", value: requestID))
+        }
+        if let contentType = payload.contentType {
+            queryItems.append(URLQueryItem(name: "contentType", value: contentType.rawValue))
+        }
+        if let qrPayload = payload.qrPayload {
+            queryItems.append(URLQueryItem(name: "qrPayload", value: qrPayload))
+        }
+        if let statePath = payload.statePath {
+            queryItems.append(URLQueryItem(name: "statePath", value: statePath))
+        }
+        if let revision = payload.revision {
+            queryItems.append(URLQueryItem(name: "revision", value: String(revision)))
         }
 
         var urlComponents = URLComponents(string: urlString)

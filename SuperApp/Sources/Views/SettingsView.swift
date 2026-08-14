@@ -149,7 +149,7 @@ struct SettingsView: View {
             showChevron: item.showArrow,
             isToggle: item.hasToggle,
             isToggleOn: $rememberLastApp,
-            isDestructive: item.action == .cacheManager,
+            isDestructive: false,
             badge: item.badge,
             toggleAccessibilityIdentifier: item.action.map { "settings.toggle.\($0.rawValue)" },
             onTap: {

@@ -285,6 +285,16 @@
             return BarkBridge.callNative('navigation', params);
         },
 
+        /** Return from the current native PWA screen. */
+        back: function() {
+            return BarkBridge.callNative('goBack', { steps: 1 });
+        },
+
+        /** Close the current native PWA screen and return to the host. */
+        close: function() {
+            return BarkBridge.callNative('closePage', { animated: true, reason: 'javascript' });
+        },
+
         /**
          * 检查 WebBridgeKit 是否可用
          * @returns {boolean}

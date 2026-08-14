@@ -9,6 +9,13 @@ import UIKit
 import UserNotifications
 import WebBridgeKit
 
+extension ProcessInfo {
+    var isWebBridgeKitUITesting: Bool {
+        let supportedArguments = ["-UITesting", "--UITesting", "--ui-testing"]
+        return supportedArguments.contains { arguments.contains($0) }
+    }
+}
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
@@ -25,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             CrashLogManager.shared.uploadPendingCrashReports()
         }
 
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("-UITesting") || ProcessInfo.processInfo.arguments.contains("--UITesting")
+        let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
         if isUITesting {
             TestDataSeeder.populateIfNeeded()
             Self.cleanupInvalidHistoryURLs()
@@ -41,7 +48,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         // 初始化 WebBridgeKit（异步执行，避免偶尔阻塞主线程导致卡 loading）
         // UI 测试时禁用 WebBridgeKit 预热，减少主线程压力和 WebKit 进程消耗
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !isUITesting {
             DispatchQueue.global(qos: .userInitiated).async {
                 WebBridgeKitManager.shared.initialize()
             }
@@ -69,9 +76,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         // 注册推送通知
-        #if !targetEnvironment(simulator)
-        registerForPushNotifications(application)
-        #endif
+        UNUserNotificationCenter.current().delegate = self
 
         //  Support UI Fidelity Testing — show Component Catalog
         if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
@@ -97,7 +102,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !isUITesting {
             DispatchQueue.global(qos: .utility).async {
                 PushRelayManager.shared.connect()
             }
@@ -106,8 +111,125 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let duration = Date().timeIntervalSince(start)
         Log.info("App launch took \(String(format: "%.3f", duration))s", category: .performance)
 
+        #if DEBUG
+        registerNotificationFixtureIfRequested()
+        showPWAAppCenterIfRequested()
+        #endif
+
         return true
     }
+
+    #if DEBUG
+    private func registerNotificationFixtureIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--register-pwa-notification-fixture") else { return }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in }
+        let fixture = notificationFixture()
+        let manifest = HTMLAppManifest(
+            appID: fixture.appID,
+            name: fixture.name,
+            startURL: "\(fixture.origin)\(fixture.route)",
+            allowedOrigins: [fixture.origin],
+            capabilities: [.notification],
+            routes: fixture.routes,
+            cache: HTMLAppCachePolicy(
+                strategy: .manifest,
+                version: "2026.08.10",
+                persistent: true,
+                restoresLastState: true
+            )
+        )
+        do {
+            try HTMLAppTrustRegistry().register(manifest)
+            StructuredLogger.shared.info("Registered APNs route fixture", category: .navigation)
+            openNotificationFixtureIfRequested()
+        } catch {
+            StructuredLogger.shared.error(
+                "Unable to register APNs route fixture: \(error.localizedDescription)",
+                category: .navigation
+            )
+        }
+    }
+
+    private func openNotificationFixtureIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--open-pwa-notification-fixture") else { return }
+        let fixture = notificationFixture()
+        let userInfo: [AnyHashable: Any] = [
+            "version": "1",
+            "appId": fixture.appID,
+            "route": fixture.route,
+            "title": fixture.notificationTitle,
+            "body": fixture.notificationBody,
+            "params": fixture.parameters
+        ]
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            PushNotificationManager.shared.handleNotificationTap(
+                userInfo: userInfo,
+                rootViewController: self?.window?.rootViewController
+            )
+        }
+    }
+
+    private func notificationFixture() -> NotificationFixture {
+        NotificationFixture(processInfo: ProcessInfo.processInfo)
+    }
+
+    private struct NotificationFixture {
+        let origin: String
+        let appID: String
+        let name: String
+        let route: String
+        let routes: [String]
+        let parameters: [String: String]
+        let notificationTitle: String
+        let notificationBody: String
+
+        init(processInfo: ProcessInfo) {
+            origin = processInfo.environment["WBK_PWA_FIXTURE_ORIGIN"] ?? "http://localhost:8081"
+            let requestedCase = processInfo.environment["WBK_PWA_FIXTURE_CASE"]
+
+            switch requestedCase {
+            case "task":
+                appID = "com.webbridgekit.fixture.agent-console"
+                name = "Agent Console Fixture"
+                route = "/test_resources/pwa-agent-console/index.html"
+                routes = [route, "/test_resources/pwa-agent-console/approval.html"]
+                parameters = ["taskId": "run-20260810", "status": "completed"]
+                notificationTitle = "运行任务已完成"
+                notificationBody = "点击查看任务输出并继续处理"
+            case "approval":
+                appID = "com.webbridgekit.fixture.agent-console"
+                name = "Agent Console Fixture"
+                route = "/test_resources/pwa-agent-console/approval.html"
+                routes = ["/test_resources/pwa-agent-console/index.html", route]
+                parameters = ["requestId": "approval-42", "source": "remote-task"]
+                notificationTitle = "需要你的确认"
+                notificationBody = "打开审批页面后仍需手动确认"
+            default:
+                appID = "com.webbridgekit.fixture.chat"
+                name = "Chat Fixture"
+                route = processInfo.environment["WBK_PWA_FIXTURE_ROUTE"] ?? "/test_resources/pwa-notification/index.html"
+                routes = Array(Set([
+                    route,
+                    "/test_resources/pwa-notification/index.html",
+                    "/test_resources/pwa-notification/approval.html"
+                ])).sorted()
+                parameters = ["conversationId": "user-42", "messageId": "message-7"]
+                notificationTitle = "收到一条新消息"
+                notificationBody = "点击回到与 User 42 的对话"
+            }
+        }
+    }
+
+    private func showPWAAppCenterIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--show-pwa-app-center") else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            guard let tabBarController = self?.window?.rootViewController as? TabBarController else { return }
+            tabBarController.selectedIndex = 0
+            guard let navigationController = tabBarController.selectedViewController as? UINavigationController else { return }
+            navigationController.pushViewController(PWAAppCenterViewController(), animated: false)
+        }
+    }
+    #endif
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         Log.info("App entering foreground", category: .general)
@@ -118,7 +240,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !ProcessInfo.processInfo.isWebBridgeKitUITesting {
             TokenManager.shared.parseTokenFromClipboard()
             CommandHandler.shared.checkClipboardOnForeground()
         }
@@ -174,25 +296,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     // MARK: - Push Notifications
 
-    private func registerForPushNotifications(_ application: UIApplication) {
-        if ProcessInfo.processInfo.arguments.contains("-UITesting") {
-            return
-        }
-
-        UNUserNotificationCenter.current().delegate = self
-
-        #if !targetEnvironment(simulator)
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, _ in
-            if granted {
-                DispatchQueue.main.async {
-                    application.registerForRemoteNotifications()
-                }
-            }
-        }
-        #endif
-    }
-
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         _ = tokenParts.joined()
@@ -211,6 +314,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        let request = notification.request
+        Task {
+            let payload = makeMessagePayload(
+                identifier: request.identifier,
+                userInfo: request.content.userInfo,
+                content: request.content
+            )
+            try? await MessageEngine.shared.receive(payload)
+        }
+
         let mode = notification.request.content.userInfo["mode"] as? String
         if mode == "silent" || mode == "passive" {
             completionHandler([])
@@ -223,21 +336,224 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
+        let content = response.notification.request.content
+        var routingInfo = userInfo
+        routingInfo["title"] = userInfo["title"] as? String ?? content.title
+        routingInfo["body"] = userInfo["body"] as? String ?? content.body
+
+        DispatchQueue.main.async { [weak self] in
+            PushNotificationManager.shared.handleNotificationTap(
+                userInfo: routingInfo,
+                rootViewController: self?.window?.rootViewController
+            )
+        }
 
         Task {
-            let payload = MessagePayload(
-                title: userInfo["title"] as? String ?? response.notification.request.content.title,
-                body: userInfo["body"] as? String ?? response.notification.request.content.body,
-                channel: userInfo["channel"] as? String ?? "apns",
-                targetURL: userInfo["url"] as? String,
-                targetAppId: userInfo["appid"] as? String,
-                targetMode: userInfo["mode"] as? String,
-                userInfo: userInfo as? [String: String] ?? [:]
+            let payload = makeMessagePayload(
+                identifier: response.notification.request.identifier,
+                userInfo: userInfo,
+                content: content
             )
             try? await MessageEngine.shared.receive(payload)
         }
 
         completionHandler()
+    }
+
+    private func makeMessagePayload(
+        identifier: String,
+        userInfo: [AnyHashable: Any],
+        content: UNNotificationContent
+    ) -> MessagePayload {
+        let aps = userInfo["aps"] as? [String: Any]
+        let rawMarkdown = userInfo["markdown"] as? String
+        let markdown = rawMarkdown == "1" || rawMarkdown?.lowercased() == "true"
+            ? (userInfo["body"] as? String ?? content.body)
+            : rawMarkdown
+        let level = notificationLevel(
+            userInfo["level"] as? String ?? aps?["interruption-level"] as? String
+        )
+        let requestID = userInfo["requestId"] as? String
+        let replacementID = userInfo["id"] as? String
+        let payloadID = (userInfo["messageId"] as? String) ?? replacementID ?? identifier
+
+        var stringUserInfo = notificationStringDictionary(userInfo)
+        if let params = userInfo["params"] as? [String: Any] {
+            for (key, value) in params {
+                if let string = notificationString(value) {
+                    stringUserInfo[key] = string
+                }
+            }
+        }
+
+        return MessagePayload(
+            id: payloadID,
+            title: userInfo["title"] as? String ?? content.title,
+            body: userInfo["body"] as? String ?? content.body,
+            markdown: markdown,
+            subtitle: userInfo["subtitle"] as? String ?? content.subtitle,
+            channel: userInfo["channel"] as? String ?? "apns",
+            category: userInfo["category"] as? String,
+            priority: messagePriority(for: level),
+            sound: userInfo["sound"] as? String,
+            badge: notificationInt(userInfo["badge"]) ?? content.badge?.intValue,
+            group: userInfo["group"] as? String,
+            threadId: (userInfo["threadId"] as? String)
+                ?? (userInfo["thread-id"] as? String)
+                ?? (aps?["thread-id"] as? String),
+            targetURL: userInfo["url"] as? String,
+            targetAppId: (userInfo["appId"] as? String) ?? (userInfo["appid"] as? String),
+            route: userInfo["route"] as? String,
+            targetMode: notificationTargetMode(userInfo),
+            verificationCode: userInfo["verificationCode"] as? String,
+            expiresAt: notificationExpiration(userInfo),
+            imageURL: userInfo["image"] as? String,
+            iconURL: userInfo["icon"] as? String,
+            interruptionLevel: MessageInterruptionLevel(rawValue: level ?? ""),
+            soundVolume: notificationDouble(userInfo["volume"]),
+            isCall: notificationBool(userInfo["call"]),
+            copyText: userInfo["copy"] as? String,
+            isAutoCopy: notificationBool(userInfo["autoCopy"] ?? userInfo["automaticallyCopy"]),
+            isArchive: notificationBool(userInfo["isArchive"]),
+            ttl: notificationDouble(userInfo["ttl"]),
+            replacementID: replacementID,
+            isDeleted: notificationBool(userInfo["delete"]),
+            actionState: MessageActionState(
+                rawValue: ((userInfo["state"] as? String) ?? (userInfo["actionState"] as? String) ?? "").lowercased()
+            ),
+            requestID: requestID,
+            contentType: MessageContentType(
+                rawValue: ((userInfo["type"] as? String) ?? (userInfo["contentType"] as? String) ?? "").lowercased()
+            ),
+            qrPayload: userInfo["qrPayload"] as? String,
+            statePath: userInfo["statePath"] as? String,
+            revision: notificationInt(userInfo["revision"]),
+            presentation: MessagePresentation(
+                rawValue: (userInfo["presentation"] as? String ?? "").lowercased()
+            ),
+            approval: notificationApproval(userInfo["approval"]),
+            userInfo: stringUserInfo
+        )
+    }
+
+    private func notificationApproval(_ value: Any?) -> MessageApproval? {
+        guard let object = value as? [String: Any],
+              let rawActions = object["actions"] as? [[String: Any]] else { return nil }
+        let actions = rawActions.compactMap { action -> MessageApprovalAction? in
+            guard let id = action["id"] as? String,
+                  let title = action["title"] as? String,
+                  !id.isEmpty,
+                  !title.isEmpty else { return nil }
+            return MessageApprovalAction(
+                id: id,
+                title: title,
+                style: MessageApprovalActionStyle(rawValue: action["style"] as? String ?? ""),
+                requiresReason: notificationBool(action["requiresReason"]),
+                resultState: MessageActionState(rawValue: action["resultState"] as? String ?? "")
+            )
+        }
+        return actions.isEmpty ? nil : MessageApproval(actions: actions)
+    }
+
+    private func notificationStringDictionary(_ userInfo: [AnyHashable: Any]) -> [String: String] {
+        userInfo.reduce(into: [:]) { result, item in
+            guard let key = item.key as? String, let value = notificationString(item.value) else { return }
+            result[key] = value
+        }
+    }
+
+    private func notificationString(_ value: Any?) -> String? {
+        switch value {
+        case let value as String:
+            return value
+        case let value as NSNumber:
+            return value.stringValue
+        default:
+            return nil
+        }
+    }
+
+    private func notificationInt(_ value: Any?) -> Int? {
+        switch value {
+        case let value as Int:
+            return value
+        case let value as NSNumber:
+            return value.intValue
+        case let value as String:
+            return Int(value)
+        default:
+            return nil
+        }
+    }
+
+    private func notificationDouble(_ value: Any?) -> Double? {
+        switch value {
+        case let value as Double:
+            return value
+        case let value as NSNumber:
+            return value.doubleValue
+        case let value as String:
+            return Double(value)
+        default:
+            return nil
+        }
+    }
+
+    private func notificationTargetMode(_ userInfo: [AnyHashable: Any]) -> String? {
+        if let mode = userInfo["mode"] as? String { return mode }
+        switch userInfo["display"] as? String {
+        case "sheet", "inline": return "modal"
+        case "full": return "immersive"
+        default: return nil
+        }
+    }
+
+    private func notificationLevel(_ value: String?) -> String? {
+        switch value {
+        case "time-sensitive", "timeSensitive": return "timeSensitive"
+        case "passive", "active", "critical": return value
+        default: return nil
+        }
+    }
+
+    private func notificationBool(_ value: Any?) -> Bool? {
+        switch value {
+        case let value as Bool:
+            return value
+        case let value as NSNumber:
+            return value.boolValue
+        case let value as String:
+            return value == "1" || value.lowercased() == "true"
+        default:
+            return nil
+        }
+    }
+
+    private func notificationExpiration(_ userInfo: [AnyHashable: Any]) -> Date? {
+        guard let rawValue = userInfo["expiresAt"] else { return nil }
+        if let timestamp = rawValue as? TimeInterval {
+            return Date(timeIntervalSince1970: timestamp)
+        }
+        if let timestamp = rawValue as? NSNumber {
+            return Date(timeIntervalSince1970: timestamp.doubleValue)
+        }
+        if let value = rawValue as? String {
+            return ISO8601DateFormatter().date(from: value)
+        }
+        return nil
+    }
+
+    private func messagePriority(for level: String?) -> MessagePriority {
+        switch MessageInterruptionLevel(rawValue: level ?? "") {
+        case .critical:
+            return .critical
+        case .timeSensitive:
+            return .high
+        case .passive:
+            return .low
+        default:
+            return .normal
+        }
     }
 
     // MARK: - DEBUG Helpers

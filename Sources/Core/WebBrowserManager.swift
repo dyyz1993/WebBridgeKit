@@ -133,6 +133,7 @@ public class WebBrowserManager: WebBrowserManaging {
 
     // MARK: - Private Open Methods
 
+    @MainActor
     private func openNormalBrowser(
         url: URL,
         params: WebBrowserParams,
@@ -160,15 +161,26 @@ public class WebBrowserManager: WebBrowserManaging {
         navController.pushViewController(webVC, animated: animated)
         currentBrowser = webVC
 
-        //  统一调用 loadURLWithCache
+        // Strong-offline packages use the manifest cache; standard PWAs keep
+        // WKWebView's native storage and service-worker behavior.
         if let browserVC = webVC as? WebBrowserViewController {
-            browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
+            os_log("PWA loader selected: %{public}@", log: OSLog.default, type: .info, params.useManifestLoader ? "manifest" : "direct")
+            if params.useManifestLoader {
+                browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
+            } else {
+                DispatchQueue.main.async {
+                    browserVC.loadURLDirect(url, forceRefresh: forceRefresh)
+                }
+            }
+        } else if let pwaVC = webVC as? WebViewController {
+            pwaVC.loadURL(url, preferCachedContent: params.preferCachedContent)
         }
 
         os_log("[OK] 已推送浏览器到导航栈", log: OSLog.default, type: .info)
         StructuredLogger.shared.info("[OK] [WebBrowserManager] Pushed normal browser to navigation stack", category: .bridge)
     }
 
+    @MainActor
     private func openImmersiveBrowser(
         url: URL,
         params: WebBrowserParams,
@@ -191,9 +203,19 @@ public class WebBrowserManager: WebBrowserManaging {
         navController.pushViewController(webVC, animated: animated)
         currentBrowser = webVC
 
-        //  统一调用 loadURLWithCache
+        // Strong-offline packages use the manifest cache; standard PWAs keep
+        // WKWebView's native storage and service-worker behavior.
         if let browserVC = webVC as? WebBrowserViewController {
-            browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
+            os_log("PWA loader selected: %{public}@", log: OSLog.default, type: .info, params.useManifestLoader ? "manifest" : "direct")
+            if params.useManifestLoader {
+                browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
+            } else {
+                DispatchQueue.main.async {
+                    browserVC.loadURLDirect(url, forceRefresh: forceRefresh)
+                }
+            }
+        } else if let pwaVC = webVC as? WebViewController {
+            pwaVC.loadURL(url, preferCachedContent: params.preferCachedContent)
         }
 
         os_log("[OK] 已推送沉浸式浏览器到导航栈", log: OSLog.default, type: .info)
@@ -223,11 +245,11 @@ public class WebBrowserManager: WebBrowserManaging {
 
         // 创建 ModalWebViewController
         let modalVC: ModalWebViewController
-        if isLocalURL(url) {
+        if url.isFileURL {
             let pageName = getPageName(from: url)
             modalVC = ModalWebViewController(htmlName: pageName, config: config)
         } else {
-            modalVC = ModalWebViewController(url: url, config: config)
+            modalVC = ModalWebViewController(url: url, config: config, browserParams: params)
         }
 
         modalVC.modalPresentationStyle = .overFullScreen
@@ -414,10 +436,26 @@ public class WebBrowserManager: WebBrowserManaging {
 
     // MARK: - Helper Methods
 
+    @MainActor
     private func createWebViewController(for url: URL, params: WebBrowserParams) -> UIViewController {
         StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] createWebViewController called for URL: \(url.absoluteString)", category: .bridge)
         StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.hideTabBar: \(params.hideTabBar)", category: .bridge)
         StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.displayMode: \(params.displayMode)", category: .bridge)
+
+        if !params.useManifestLoader {
+            let pwaVC = WebViewController()
+            _ = pwaVC.view
+            pwaVC.configure(with: params)
+            pwaVC.title = params.customTitle ?? ((url.host == "localhost") ? nil : url.host)
+            pwaVC.hidesBottomBarWhenPushed = params.hideTabBar
+            pwaVC.view.accessibilityIdentifier = "browserManager.container"
+            pwaVC.webView.accessibilityIdentifier = "browserManager.webView"
+            Task {
+                try? await WebPageHistoryManager.shared.addOrUpdateHistory(url: url, title: pwaVC.title)
+            }
+            StructuredLogger.shared.info("[OK] [WebBrowserManager] Standard PWA container created", category: .bridge)
+            return pwaVC
+        }
 
         //  关键：必须在创建时就设置 hidesBottomBarWhenPushed（在 push 之前）
         // 使用 WebBrowserViewController 以支持页面自动缓存功能
@@ -445,6 +483,7 @@ public class WebBrowserManager: WebBrowserManaging {
 
         //  必须在 push 之前设置 hidesBottomBarWhenPushed
         webVC.hidesBottomBarWhenPushed = params.hideTabBar
+        webVC.configure(with: params)
 
         // 添加 accessibility identifier
         webVC.view.accessibilityIdentifier = "browserManager.container"

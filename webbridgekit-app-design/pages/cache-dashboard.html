@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缓存仪表盘</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+
+<style>
+/* === Cache Dashboard Page Shell === */
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wbk-status-bar-icons svg { color: var(--wbk-text); }
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.wbk-nav-header {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  position: relative;
+}
+.wbk-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--wbk-primary);
+  font: var(--wbk-text-body);
+  font-size: 17px;
+  padding: 0;
+  transition: opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-nav-back:active { opacity: 0.6; }
+.wbk-nav-back i { width: 20px; height: 20px; }
+.wbk-nav-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font: var(--wbk-text-row-title);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  white-space: nowrap;
+}
+.wbk-safe-bottom {
+  height: env(safe-area-inset-bottom, 34px);
+  background: var(--wbk-background);
+}
+/* Cache Dashboard specific */
+.wbk-summary-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--wbk-spacing-sm);
+  margin: var(--wbk-spacing-lg);
+}
+.wbk-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--wbk-spacing-md) var(--wbk-spacing-xs);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-separator);
+  border-radius: var(--wbk-radius-md);
+}
+.wbk-tile-value {
+  font: var(--wbk-text-row-title);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--wbk-text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+.wbk-tile-label {
+  font: var(--wbk-text-caption);
+  font-size: 11px;
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+}
+.wbk-storage-section {
+  margin: 0 var(--wbk-spacing-lg) var(--wbk-spacing-lg);
+  padding: var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-separator);
+  border-radius: var(--wbk-radius-md);
+}
+.wbk-storage-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--wbk-spacing-md);
+}
+.wbk-storage-title {
+  font: var(--wbk-text-section-title);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wbk-text);
+}
+.wbk-storage-detail {
+  font: var(--wbk-text-metadata);
+  font-size: 13px;
+  color: var(--wbk-text-secondary);
+}
+.wbk-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--wbk-background-tertiary);
+  border-radius: var(--wbk-radius-full);
+  overflow: hidden;
+}
+.wbk-progress-fill {
+  height: 100%;
+  width: 4.8%;
+  background: var(--wbk-primary);
+  border-radius: var(--wbk-radius-full);
+  transition: width var(--wbk-duration-normal) var(--wbk-easing);
+}
+.wbk-section {
+  padding: var(--wbk-spacing-sm) var(--wbk-spacing-lg) 0;
+  margin-bottom: var(--wbk-spacing-md);
+}
+.wbk-section-title {
+  font: var(--wbk-text-section-title);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wbk-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: var(--wbk-spacing-sm) 0 var(--wbk-spacing-xs);
+}
+.wbk-subsystem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--wbk-spacing-sm);
+}
+.wbk-subsystem-card {
+  padding: var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-separator);
+  border-radius: var(--wbk-radius-md);
+}
+.wbk-subsystem-header {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  margin-bottom: var(--wbk-spacing-sm);
+}
+.wbk-subsystem-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--wbk-radius-sm);
+  background: var(--wbk-primary-soft);
+  flex-shrink: 0;
+}
+.wbk-subsystem-icon i { width: 16px; height: 16px; color: var(--wbk-primary); }
+.wbk-subsystem-name {
+  font: var(--wbk-text-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wbk-subsystem-size {
+  font: var(--wbk-text-metadata);
+  font-size: 13px;
+  color: var(--wbk-text-secondary);
+  margin-bottom: 2px;
+}
+.wbk-status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--wbk-text-caption);
+  font-size: 12px;
+}
+.wbk-status-dot::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.wbk-status-dot--active::before {
+  background: var(--wbk-success);
+}
+.wbk-status-dot--idle::before {
+  background: var(--wbk-text-tertiary);
+}
+.wbk-status-dot--active { color: var(--wbk-success); }
+.wbk-status-dot--idle { color: var(--wbk-text-tertiary); }
+.wbk-action-row {
+  display: flex;
+  gap: var(--wbk-spacing-sm);
+  padding: var(--wbk-spacing-lg);
+}
+.wbk-btn-danger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  background: var(--wbk-error);
+  color: var(--wbk-text-on-color);
+  border: none;
+  border-radius: var(--wbk-radius-md);
+  font: var(--wbk-text-button);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-btn-danger:active { opacity: 0.85; }
+.wbk-btn-primary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  background: var(--wbk-primary);
+  color: var(--wbk-text-on-color);
+  border: none;
+  border-radius: var(--wbk-radius-md);
+  font: var(--wbk-text-button);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing), opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-btn-primary:active { background: var(--wbk-primary-pressed); opacity: 0.85; }
+.wbk-activity-list {
+  margin: var(--wbk-spacing-sm) var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-separator);
+  border-radius: var(--wbk-radius-md);
+  overflow: hidden;
+}
+.wbk-activity-row {
+  display: flex;
+  align-items: center;
+  padding: var(--wbk-spacing-md) var(--wbk-spacing-lg);
+  min-height: 48px;
+}
+.wbk-activity-row + .wbk-activity-row {
+  border-top: 1px solid var(--wbk-separator);
+}
+.wbk-activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: var(--wbk-spacing-md);
+  flex-shrink: 0;
+}
+.wbk-activity-dot--hit { background: var(--wbk-success); }
+.wbk-activity-dot--miss { background: var(--wbk-error); }
+.wbk-activity-info {
+  flex: 1;
+  min-width: 0;
+}
+.wbk-activity-name {
+  font: var(--wbk-text-body);
+  font-size: 14px;
+  color: var(--wbk-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wbk-activity-time {
+  font: var(--wbk-text-caption);
+  font-size: 12px;
+  color: var(--wbk-text-tertiary);
+  flex-shrink: 0;
+  margin-left: var(--wbk-spacing-sm);
+}
+.wbk-activity-tag {
+  font: var(--wbk-text-caption);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--wbk-radius-xs);
+  white-space: nowrap;
+  margin-right: var(--wbk-spacing-sm);
+  flex-shrink: 0;
+}
+.wbk-activity-tag--hit { background: var(--wbk-success-soft); color: var(--wbk-success); }
+.wbk-activity-tag--miss { background: var(--wbk-error-soft); color: var(--wbk-error); }
+</style>
+
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/>
+        <path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/>
+        <rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+
+    <!-- Navigation Header -->
+    <div class="wbk-nav-header">
+      <button class="wbk-nav-back" data-dom-id="nav-back" aria-label="返回设置">
+        <i data-lucide="chevron-left"></i>
+        <span>设置</span>
+      </button>
+      <span class="wbk-nav-title">缓存仪表盘</span>
+    </div>
+
+    <!-- Summary Tiles -->
+    <div class="wbk-summary-tiles">
+      <div class="wbk-tile">
+        <span class="wbk-tile-value">2.4 MB</span>
+        <span class="wbk-tile-label">总大小</span>
+      </div>
+      <div class="wbk-tile">
+        <span class="wbk-tile-value">8</span>
+        <span class="wbk-tile-label">资源数</span>
+      </div>
+      <div class="wbk-tile">
+        <span class="wbk-tile-value">87%</span>
+        <span class="wbk-tile-label">命中率</span>
+      </div>
+      <div class="wbk-tile">
+        <span class="wbk-tile-value">2天前</span>
+        <span class="wbk-tile-label">上次清理</span>
+      </div>
+    </div>
+
+    <!-- Storage Bar -->
+    <div class="wbk-storage-section">
+      <div class="wbk-storage-header">
+        <span class="wbk-storage-title">存储用量</span>
+        <span class="wbk-storage-detail">2.4 MB / 50 MB</span>
+      </div>
+      <div class="wbk-progress-track">
+        <div class="wbk-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- 缓存子系统 Section -->
+    <div class="wbk-section">
+      <div class="wbk-section-title">缓存子系统</div>
+      <div class="wbk-subsystem-grid">
+        <div class="wbk-subsystem-card">
+          <div class="wbk-subsystem-header">
+            <div class="wbk-subsystem-icon"><i data-lucide="code"></i></div>
+            <span class="wbk-subsystem-name">HTML 缓存</span>
+          </div>
+          <div class="wbk-subsystem-size">1.2 MB</div>
+          <div class="wbk-status-dot wbk-status-dot--active">active</div>
+        </div>
+        <div class="wbk-subsystem-card">
+          <div class="wbk-subsystem-header">
+            <div class="wbk-subsystem-icon"><i data-lucide="image"></i></div>
+            <span class="wbk-subsystem-name">图片缓存</span>
+          </div>
+          <div class="wbk-subsystem-size">0.8 MB</div>
+          <div class="wbk-status-dot wbk-status-dot--active">active</div>
+        </div>
+        <div class="wbk-subsystem-card">
+          <div class="wbk-subsystem-header">
+            <div class="wbk-subsystem-icon"><i data-lucide="file-text"></i></div>
+            <span class="wbk-subsystem-name">Manifest</span>
+          </div>
+          <div class="wbk-subsystem-size">0.3 MB</div>
+          <div class="wbk-status-dot wbk-status-dot--active">active</div>
+        </div>
+        <div class="wbk-subsystem-card">
+          <div class="wbk-subsystem-header">
+            <div class="wbk-subsystem-icon"><i data-lucide="archive"></i></div>
+            <span class="wbk-subsystem-name">其他</span>
+          </div>
+          <div class="wbk-subsystem-size">0.1 MB</div>
+          <div class="wbk-status-dot wbk-status-dot--idle">idle</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="wbk-action-row">
+      <button class="wbk-btn-danger" data-dom-id="btn-clear-all">清除全部缓存</button>
+      <button class="wbk-btn-primary" data-dom-id="btn-clean-expired">清理过期</button>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="wbk-section">
+      <div class="wbk-section-title">最近活动</div>
+      <div class="wbk-activity-list">
+        <div class="wbk-activity-row">
+          <div class="wbk-activity-dot wbk-activity-dot--hit"></div>
+          <span class="wbk-activity-tag wbk-activity-tag--hit">HIT</span>
+          <div class="wbk-activity-info">
+            <div class="wbk-activity-name">bridge-hub.html</div>
+          </div>
+          <span class="wbk-activity-time">14:32</span>
+        </div>
+        <div class="wbk-activity-row">
+          <div class="wbk-activity-dot wbk-activity-dot--miss"></div>
+          <span class="wbk-activity-tag wbk-activity-tag--miss">MISS</span>
+          <div class="wbk-activity-info">
+            <div class="wbk-activity-name">bridge-promise.html</div>
+          </div>
+          <span class="wbk-activity-time">14:31</span>
+        </div>
+        <div class="wbk-activity-row">
+          <div class="wbk-activity-dot wbk-activity-dot--hit"></div>
+          <span class="wbk-activity-tag wbk-activity-tag--hit">HIT</span>
+          <div class="wbk-activity-info">
+            <div class="wbk-activity-name">cache-showcase.html</div>
+          </div>
+          <span class="wbk-activity-time">14:28</span>
+        </div>
+        <div class="wbk-activity-row">
+          <div class="wbk-activity-dot wbk-activity-dot--hit"></div>
+          <span class="wbk-activity-tag wbk-activity-tag--hit">HIT</span>
+          <div class="wbk-activity-info">
+            <div class="wbk-activity-name">manifest.json</div>
+          </div>
+          <span class="wbk-activity-time">14:25</span>
+        </div>
+        <div class="wbk-activity-row">
+          <div class="wbk-activity-dot wbk-activity-dot--miss"></div>
+          <span class="wbk-activity-tag wbk-activity-tag--miss">MISS</span>
+          <div class="wbk-activity-info">
+            <div class="wbk-activity-name">test-hub.html</div>
+          </div>
+          <span class="wbk-activity-time">14:20</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Safe Area Bottom -->
+    <div class="wbk-safe-bottom"></div>
+
+  </div>
+
+</div>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

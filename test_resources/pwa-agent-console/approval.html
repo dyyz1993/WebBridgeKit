@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#321f18">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>Agent Console Approval Fixture</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Avenir Next", "PingFang SC", sans-serif; }
+    body { margin: 0; min-height: 100vh; background: linear-gradient(145deg, #321f18, #15110e 68%); color: #fff7ee; }
+    main { max-width: 720px; margin: 0 auto; padding: max(42px, env(safe-area-inset-top)) 24px 64px; }
+    .eyebrow { color: #f3bb83; font: 700 12px/1.4 ui-monospace, monospace; letter-spacing: .13em; }
+    h1 { max-width: 9ch; margin: 15px 0 28px; font-size: clamp(38px, 10vw, 66px); line-height: .94; letter-spacing: -.05em; }
+    .card { padding: 24px; border: 1px solid #865f43; border-radius: 22px; background: rgba(67, 38, 25, .6); }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 15px 20px; margin: 0; }
+    dt { color: #d8b59c; } dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, monospace; }
+    #status { margin-top: 22px; padding: 13px 15px; border-radius: 14px; background: #60351f; color: #ffcf9e; line-height: 1.55; }
+    button { margin-top: 22px; width: 100%; min-height: 48px; border: 0; border-radius: 14px; background: #f5c28d; color: #40230f; font: 700 16px/1 "Avenir Next", "PingFang SC", sans-serif; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">SENSITIVE ACTION / USER CONSENT REQUIRED</div>
+    <h1>需要你的确认。</h1>
+    <section class="card">
+      <dl>
+        <dt>App ID</dt><dd id="app-id">等待启动参数</dd>
+        <dt>路由</dt><dd id="route">等待启动参数</dd>
+        <dt>请求</dt><dd id="request">等待启动参数</dd>
+        <dt>来源</dt><dd id="source">等待启动参数</dd>
+      </dl>
+      <div id="status">通知只负责导航；此请求尚未获得批准。</div>
+      <button type="button" id="review">查看请求详情</button>
+    </section>
+  </main>
+  <script>
+    (() => {
+      function render(context) {
+        if (!context || !context.webbridgekitAppId) return;
+        document.querySelector('#app-id').textContent = context.webbridgekitAppId;
+        document.querySelector('#route').textContent = context.webbridgekitRoute;
+        document.querySelector('#request').textContent = context.requestId || 'n/a';
+        document.querySelector('#source').textContent = context.webbridgekitSource || 'notification';
+      }
+      render(window.WebBridgeKitLaunchContext);
+      window.addEventListener('webbridgekit:launch', event => render(event.detail), { once: true });
+      document.querySelector('#review').addEventListener('click', () => {
+        document.querySelector('#status').textContent = '请先由 PWA 重新拉取请求状态，再由用户明确选择允许或拒绝。';
+      });
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+    })();
+  </script>
+</body>
+</html>

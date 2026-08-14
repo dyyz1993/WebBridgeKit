@@ -41,6 +41,55 @@ extension PersistentManifestLoader {
     }
 }
 
+// MARK: - Strong Offline Package Integration
+
+extension PersistentManifestLoader {
+    /// Installs a verified strong-offline package without changing the legacy
+    /// partial-cache path. Hosts call this only after authenticating the parent
+    /// HTML app manifest through the trust registry.
+    public func installStrongOfflinePackage(
+        for appManifest: HTMLAppManifest,
+        installer: HTMLAppOfflinePackageInstaller = HTMLAppOfflinePackageInstaller(),
+        progress: @escaping @Sendable (HTMLAppPackageProgress) -> Void = { _ in }
+    ) async throws -> InstalledHTMLAppPackage {
+        setLoadingState(.validatingPackage)
+        do {
+            let installed = try await installer.install(appManifest: appManifest) { [weak self] packageProgress in
+                switch packageProgress {
+                case .validatingManifest, .validatingFile:
+                    self?.setLoadingState(.validatingPackage)
+                case .activating:
+                    self?.setLoadingState(.installingPackage)
+                case .usingPreviousVersion:
+                    self?.setLoadingState(.usingPreviousVersion)
+                default:
+                    break
+                }
+                progress(packageProgress)
+            }
+            setLoadingState(.completed)
+            return installed
+        } catch {
+            if (try? await installer.installedPackage(appID: appManifest.appID)) != nil {
+                setLoadingState(.usingPreviousVersion)
+            } else {
+                setLoadingState(.failed(error))
+            }
+            throw error
+        }
+    }
+
+    /// Resolves a verified local entrypoint through the existing file/scheme
+    /// loading path. This performs no network request.
+    public func strongOfflineEntrypoint(
+        for appID: String,
+        packageLocator: HTMLAppOfflinePackageLocator = HTMLAppOfflinePackageLocator()
+    ) throws -> URL? {
+        guard let package = try packageLocator.installedPackage(appID: appID) else { return nil }
+        return try packageLocator.entrypointURL(for: package)
+    }
+}
+
 // MARK: - WebManifest
 
 extension PersistentManifestLoader {
@@ -155,6 +204,9 @@ extension PersistentManifestLoader {
         case fetchingManifest
         case downloadingResources(current: Int, total: Int)
         case preparingHTML
+        case validatingPackage
+        case installingPackage
+        case usingPreviousVersion
         case loadingWebView
         case completed
         case failed(Error)

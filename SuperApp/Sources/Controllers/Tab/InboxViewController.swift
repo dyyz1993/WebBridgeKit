@@ -18,45 +18,77 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = ThemeTokens.Typography.screenTitle
+        label.font = ThemeTokens.Typography.compactTitle
         label.textColor = ThemeTokens.Color.text
         label.text = L10n.tr("tab.inbox")
         label.numberOfLines = 1
         return label
     }()
 
+    private let clearAllButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle(L10n.tr("inbox.mark_all_read"), for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.metadata
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
+        button.contentEdgeInsets = .zero
+        return button
+    }()
+
     private let searchField = WBKSearchField(placeholder: L10n.tr("inbox.search.placeholder"))
 
-    private let filterScrollView: UIScrollView = {
-        let sv = UIScrollView()
-        sv.showsHorizontalScrollIndicator = false
-        sv.showsVerticalScrollIndicator = false
-        sv.alwaysBounceHorizontal = true
-        return sv
+    private let displayModeControl: UISegmentedControl = {
+        let control = UISegmentedControl(items: [
+            L10n.tr("inbox.display.latest"),
+            L10n.tr("inbox.display.groups")
+        ])
+        control.selectedSegmentIndex = InboxViewModel.DisplayMode.latest.rawValue
+        control.selectedSegmentTintColor = ThemeTokens.Color.surface
+        control.backgroundColor = ThemeTokens.Color.backgroundSecondary
+        control.setTitleTextAttributes([
+            .font: ThemeTokens.Typography.metadata,
+            .foregroundColor: ThemeTokens.Color.textSecondary
+        ], for: .normal)
+        control.setTitleTextAttributes([
+            .font: ThemeTokens.Typography.metadata,
+            .foregroundColor: ThemeTokens.Color.primary
+        ], for: .selected)
+        control.accessibilityIdentifier = "inbox.displayMode"
+        return control
     }()
 
     private let filterStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.spacing = ThemeTokens.Spacing.sm
-        stack.alignment = .leading
+        stack.alignment = .fill
+        stack.distribution = .fill
         return stack
     }()
 
-    private var filterPills: [WBKFilterPill] = []
+    private let filterScrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.alwaysBounceHorizontal = true
+        scrollView.accessibilityIdentifier = "inbox.filters"
+        return scrollView
+    }()
+
+    private var filterButtons: [UIButton] = []
     private let filterRelay = BehaviorRelay<InboxViewModel.FilterType>(value: .all)
 
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .plain)
         table.register(InboxMessageCellWrapper.self, forCellReuseIdentifier: InboxMessageCellWrapper.identifier)
         table.register(InboxGroupHeaderCell.self, forCellReuseIdentifier: InboxGroupHeaderCell.identifier)
-        table.rowHeight = UITableView.automaticDimension
-        table.estimatedRowHeight = 84
+        // A notification preview has a fixed, scannable shape; details belong in its detail screen.
+        table.rowHeight = 92
+        table.estimatedRowHeight = 92
         table.backgroundColor = ThemeTokens.Color.background
         table.separatorStyle = .none
         table.delegate = self
         table.dataSource = self
         table.contentInset = .zero
+        table.contentInsetAdjustmentBehavior = .never
         return table
     }()
 
@@ -72,26 +104,11 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             icon: .inbox,
             title: L10n.tr("inbox.empty.title"),
             message: L10n.tr("inbox.empty.description"),
-            actionTitle: L10n.tr("inbox.send_test"),
+            actionTitle: nil,
             style: .default
         )
         es.isHidden = true
         return es
-    }()
-
-    private let fabButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(LucideIcon.plus.image(pointSize: 24, weight: .semibold), for: .normal)
-        button.backgroundColor = ThemeTokens.Color.primary
-        button.tintColor = ThemeTokens.Color.text
-        button.layer.cornerRadius = ThemeTokens.CornerRadius.pill
-        let shadow = ThemeTokens.Shadows.floatingAction
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: shadow.offsetX, height: shadow.offsetY)
-        button.layer.shadowRadius = shadow.radius
-        button.layer.shadowOpacity = Float(shadow.opacity)
-        button.accessibilityLabel = L10n.tr("inbox.test.send")
-        return button
     }()
 
     private let swipeHintLabel: UIView = {
@@ -124,37 +141,24 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     }()
 
     private let markAllReadRelay = PublishRelay<Void>()
-    private let sendTestRelay = PublishRelay<Void>()
     private let deleteItemRelay = PublishRelay<IndexPath>()
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         viewModel.refreshData()
     }
 
     override func makeUI() {
         view.backgroundColor = ThemeTokens.Color.background
         view.accessibilityIdentifier = "InboxViewController"
-        navigationItem.largeTitleDisplayMode = .never
-        navigationController?.navigationBar.prefersLargeTitles = false
-
-        let clearAllBtn = UIBarButtonItem(
-            title: L10n.tr("inbox.clear_all"),
-            style: .plain,
-            target: nil,
-            action: nil
-        )
-        clearAllBtn.tintColor = ThemeTokens.Color.error
-        clearAllBtn.setTitleTextAttributes([.font: ThemeTokens.Typography.metadata], for: .normal)
-        navigationItem.rightBarButtonItem = clearAllBtn
-
-        setupScaffold()
         setupFilterPills()
+        setupScaffold()
+        displayModeControl.addTarget(self, action: #selector(displayModeChanged), for: .valueChanged)
 
         tableView.refreshControl = refreshControl
 
         view.addSubview(scaffold)
-        view.addSubview(fabButton)
         view.addSubview(swipeHintLabel)
 
         scaffold.snp.makeConstraints { make in
@@ -162,32 +166,39 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             make.bottom.equalTo(swipeHintLabel.snp.top)
         }
 
-        fabButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.xl)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-ThemeTokens.Spacing.xl)
-            make.width.height.equalTo(56)
-        }
-
         swipeHintLabel.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-ThemeTokens.Spacing.sm)
         }
 
-        fabButton.addTarget(self, action: #selector(fabHaptic), for: .touchUpInside)
-
-        emptyState.onActionTapped = { [weak self] in
-            self?.sendTestRelay.accept(())
-        }
     }
 
     private func setupScaffold() {
-        scaffold.addSection(titleLabel)
+        let header = UIView()
+        header.addSubview(titleLabel)
+        header.addSubview(clearAllButton)
+        titleLabel.snp.makeConstraints { make in
+            make.leading.centerY.equalToSuperview()
+            make.trailing.lessThanOrEqualTo(clearAllButton.snp.leading).offset(-ThemeTokens.Spacing.md)
+        }
+        clearAllButton.snp.makeConstraints { make in
+            make.trailing.centerY.equalToSuperview()
+            make.height.greaterThanOrEqualTo(32)
+        }
+        header.snp.makeConstraints { make in
+            make.height.equalTo(40)
+        }
+        scaffold.addSection(header)
+        displayModeControl.snp.makeConstraints { make in
+            make.height.equalTo(32)
+        }
+        scaffold.addSection(displayModeControl, spacing: ThemeTokens.Spacing.sm)
         scaffold.addSection(searchField, spacing: ThemeTokens.Spacing.md)
 
         filterScrollView.addSubview(filterStack)
         filterStack.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.height.equalToSuperview()
+            make.height.equalTo(ThemeTokens.ComponentContract.FilterPill.height)
         }
         filterScrollView.snp.makeConstraints { make in
             make.height.equalTo(ThemeTokens.ComponentContract.FilterPill.height)
@@ -207,10 +218,6 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         scaffold.addSection(tableContainer, spacing: ThemeTokens.Spacing.sm)
     }
 
-    @objc private func fabHaptic() {
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-    }
-
     @objc private func handleRefresh() {
         viewModel.refreshData()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
@@ -218,39 +225,74 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         }
     }
 
+    @objc private func displayModeChanged() {
+        guard let mode = InboxViewModel.DisplayMode(rawValue: displayModeControl.selectedSegmentIndex) else { return }
+        UISelectionFeedbackGenerator().selectionChanged()
+        viewModel.setDisplayMode(mode)
+    }
+
     private func setupFilterPills() {
         let filters: [(String, InboxViewModel.FilterType)] = [
             (L10n.tr("inbox.filter.all"), .all),
             (L10n.tr("inbox.filter.unread"), .unread),
-            (L10n.tr("inbox.filter.apps"), .apps)
+            (L10n.tr("inbox.filter.apps"), .apps),
+            (L10n.tr("inbox.filter.action_required"), .actionRequired)
         ]
 
         for (title, type) in filters {
-            let pill = WBKFilterPill(title: title)
-            pill.isSelected = type == .all
-            pill.onTap = { [weak self] _ in
+            let button = UIButton(type: .custom)
+            button.setTitle(title, for: .normal)
+            button.titleLabel?.font = ThemeTokens.Typography.caption
+            button.titleLabel?.lineBreakMode = .byTruncatingTail
+            button.contentEdgeInsets = UIEdgeInsets(
+                top: 0,
+                left: ThemeTokens.Spacing.md,
+                bottom: 0,
+                right: ThemeTokens.Spacing.md
+            )
+            button.layer.cornerRadius = ThemeTokens.ComponentContract.FilterPill.height / 2
+            button.layer.borderWidth = 1
+            button.clipsToBounds = true
+            button.addAction(UIAction { [weak self] _ in
                 guard let self = self else { return }
                 UISelectionFeedbackGenerator().selectionChanged()
                 let selectedFilter = type
                 self.filterRelay.accept(selectedFilter)
                 self.updateFilterSelection(selectedFilter)
                 self.viewModel.refreshData()
+            }, for: .touchUpInside)
+            button.accessibilityIdentifier = type.accessibilityIdentifier
+            button.snp.makeConstraints { make in
+                make.height.equalTo(ThemeTokens.ComponentContract.FilterPill.height)
+                make.width.greaterThanOrEqualTo(ThemeTokens.ComponentContract.FilterPill.minWidth)
             }
-            pill.accessibilityIdentifier = "filter_\(type.rawValue)"
-            filterStack.addArrangedSubview(pill)
-            filterPills.append(pill)
+            button.setContentHuggingPriority(.required, for: .horizontal)
+            filterStack.addArrangedSubview(button)
+            filterButtons.append(button)
         }
+        updateFilterSelection(.all)
     }
 
     private func updateFilterSelection(_ selected: InboxViewModel.FilterType) {
-        for (index, pill) in filterPills.enumerated() {
+        for (index, button) in filterButtons.enumerated() {
             let filterType = InboxViewModel.FilterType(rawValue: index) ?? .all
-            pill.isSelected = filterType == selected
+            let isSelected = filterType == selected
+            button.isSelected = isSelected
+            button.backgroundColor = isSelected
+                ? ThemeTokens.Color.primarySoft
+                : ThemeTokens.Color.surface
+            button.layer.borderColor = (isSelected
+                ? ThemeTokens.Color.primary
+                : ThemeTokens.Color.border).cgColor
+            button.setTitleColor(
+                isSelected ? ThemeTokens.Color.primary : ThemeTokens.Color.textSecondary,
+                for: .normal
+            )
         }
     }
 
     override func bindViewModel() {
-        let markAllRead = navigationItem.rightBarButtonItem!.rx.tap.asDriver(onErrorDriveWith: .empty())
+        let markAllRead = clearAllButton.rx.tap.asDriver(onErrorDriveWith: .empty())
 
         let input = InboxViewModel.Input(
             refresh: Driver.merge(
@@ -261,7 +303,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             itemSelect: tableView.rx.itemSelected.asDriver(onErrorDriveWith: .empty()),
             deleteItem: deleteItemRelay.asDriver(onErrorJustReturn: IndexPath(row: 0, section: 0)),
             markAllRead: markAllRead,
-            sendTestNotification: fabButton.rx.tap.asDriver(onErrorDriveWith: .empty())
+            sendTestNotification: Driver<Void>.empty()
         )
 
         let output = viewModel.transform(input: input)
@@ -288,8 +330,20 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     }
 
     private func navigateToDetail(_ message: StoredMessage) {
+        navigationController?.setNavigationBarHidden(false, animated: true)
         let detailVC = MessageDetailViewController(message: message)
         navigationController?.pushViewController(detailVC, animated: true)
+    }
+}
+
+private extension InboxViewModel.FilterType {
+    var accessibilityIdentifier: String {
+        switch self {
+        case .all: return "filter_all"
+        case .unread: return "filter_unread"
+        case .apps: return "filter_apps"
+        case .actionRequired: return "filter_action_required"
+        }
     }
 }
 
@@ -316,40 +370,51 @@ extension InboxViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard viewModel.showsGroupHeaders else { return nil }
         let header = tableView.dequeueReusableCell(
             withIdentifier: InboxGroupHeaderCell.identifier
         ) as! InboxGroupHeaderCell
         header.configure(
             title: viewModel.groupHeaderTitle(section),
-            count: viewModel.numberOfRowsInGroup(section),
+            count: viewModel.numberOfMessagesInGroup(section),
             isExpanded: viewModel.isGroupExpanded(section),
-            hasUnread: viewModel.groupHasUnread(section)
+            hasUnread: viewModel.groupHasUnread(section),
+            accessibilityIdentifier: "notification.group.\(viewModel.groupIdentifier(section).slugIdentifier)"
         )
         header.onTap = { [weak self] in
             guard let self = self else { return }
+            let messageCount = self.viewModel.numberOfMessagesInGroup(section)
             self.viewModel.toggleGroup(section)
             let isExpanded = self.viewModel.isGroupExpanded(section)
-            let rowsInGroup = self.viewModel.numberOfRowsInGroup(section)
-            if isExpanded {
-                var indexPaths: [IndexPath] = []
-                for row in 0..<rowsInGroup {
-                    indexPaths.append(IndexPath(row: row, section: section))
+            let indexPaths = (0..<messageCount).map { IndexPath(row: $0, section: section) }
+            self.tableView.performBatchUpdates {
+                if isExpanded {
+                    self.tableView.insertRows(at: indexPaths, with: .automatic)
+                } else {
+                    self.tableView.deleteRows(at: indexPaths, with: .automatic)
                 }
-                self.tableView.insertRows(at: indexPaths, with: .automatic)
-            } else {
-                var indexPaths: [IndexPath] = []
-                for row in 0..<rowsInGroup {
-                    indexPaths.append(IndexPath(row: row, section: section))
-                }
-                self.tableView.deleteRows(at: indexPaths, with: .automatic)
             }
-            self.tableView.reloadSections(IndexSet(integer: section), with: .none)
+            header.configure(
+                title: self.viewModel.groupHeaderTitle(section),
+                count: messageCount,
+                isExpanded: isExpanded,
+                hasUnread: self.viewModel.groupHasUnread(section),
+                accessibilityIdentifier: "notification.group.\(self.viewModel.groupIdentifier(section).slugIdentifier)"
+            )
         }
         return header
     }
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 44
+        return viewModel.showsGroupHeaders ? 44 : .leastNormalMagnitude
+    }
+}
+
+private extension String {
+    var slugIdentifier: String {
+        lowercased()
+            .replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
     }
 }
 

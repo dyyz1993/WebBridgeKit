@@ -56,6 +56,7 @@ struct AppearanceSettingsView: View {
         case .system: return L10n.tr("settings.appearance.system")
         case .light: return L10n.tr("settings.appearance.light")
         case .dark: return L10n.tr("settings.appearance.dark")
+        @unknown default: return L10n.tr("settings.appearance.system")
         }
     }
 
@@ -64,6 +65,7 @@ struct AppearanceSettingsView: View {
         case .system: return L10n.tr("settings.appearance.system.description")
         case .light: return L10n.tr("settings.appearance.light.description")
         case .dark: return L10n.tr("settings.appearance.dark.description")
+        @unknown default: return L10n.tr("settings.appearance.system.description")
         }
     }
 

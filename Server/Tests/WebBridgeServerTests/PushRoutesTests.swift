@@ -58,6 +58,26 @@ struct PushRoutesTests {
         }
     }
 
+    @Test("device registration returns a controlled server error when persistence fails")
+    func registrationPersistenceFailureIsControlled() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("webbridgekit-register-failure-\(UUID().uuidString)")
+        try Data("parent-is-a-file".utf8).write(to: directory)
+        let tokenStore = TokenStore(fileURL: directory.appendingPathComponent("registrations.json"))
+        let config = ServerConfiguration()
+        let services = ServiceRegistry(configuration: config, tokenStore: tokenStore)
+        let router = Router()
+        PushRoutes.register(on: router, services: services)
+        let app = Application(router: router)
+
+        try await app.test(.router) { client in
+            let body = ByteBuffer(string: #"{"deviceToken":"token-a","key":"key-a"}"#)
+            try await client.execute(uri: "/register", method: .post, body: body) { response in
+                #expect(response.status == .internalServerError)
+            }
+        }
+    }
+
     @Test("JSON push endpoint")
     func jsonPush() async throws {
         let app = createApplication()
@@ -95,6 +115,136 @@ struct PushRoutesTests {
                 #expect(response.status == .ok)
                 let json = try responseJSON(response.body)
                 #expect(json["code"] as? Int == 200)
+            }
+        }
+    }
+
+    @Test("Push v2 fields survive APNs payload construction")
+    func pushV2FieldsSurviveAPNsPayloadConstruction() throws {
+        let payload = PushPayload(
+            schema: "webbridgekit.message.v1",
+            type: "approval",
+            title: "Production release",
+            body: "Review the deployment",
+            subtitle: "Agent Console",
+            category: "approval",
+            markdown: "## Deployment",
+            sound: "default",
+            badge: 2,
+            icon: "https://example.com/icon.png",
+            image: "https://example.com/image.png",
+            group: "agent-approvals",
+            threadID: "approval-thread",
+            url: "https://example.com/approvals/42",
+            copy: "approval-42",
+            isArchive: true,
+            level: "timeSensitive",
+            volume: 7,
+            isCall: false,
+            autoCopy: false,
+            appID: "agent-console",
+            route: "/approvals/approval-42",
+            mode: "modal",
+            display: "sheet",
+            verificationCode: "482901",
+            expiresAt: "2026-08-12T21:30:00Z",
+            ttl: 300,
+            replacementID: "approval-42",
+            isDeleted: false,
+            actionState: "pending",
+            requestID: "approval-42",
+            contentType: "approval",
+            qrPayload: "webbridgekit://login/42",
+            statePath: "/api/approvals/approval-42",
+            revision: 17,
+            params: ["requestId": "approval-42"]
+        )
+
+        let apns = APNsService.makeAPNsPayload(payload)
+        let aps = try #require(apns["aps"] as? [String: Any])
+        let alert = try #require(aps["alert"] as? [String: Any])
+
+        #expect(alert["title"] as? String == "Production release")
+        #expect(alert["subtitle"] as? String == "Agent Console")
+        #expect(aps["thread-id"] as? String == "approval-thread")
+        #expect(aps["interruption-level"] as? String == "time-sensitive")
+        #expect(apns["category"] as? String == "approval")
+        #expect(apns["appId"] as? String == "agent-console")
+        #expect(apns["route"] as? String == "/approvals/approval-42")
+        #expect(apns["display"] as? String == "sheet")
+        #expect(apns["actionState"] as? String == "pending")
+        #expect(apns["state"] as? String == "pending")
+        #expect(apns["verificationCode"] as? String == "482901")
+        #expect(apns["qrPayload"] as? String == "webbridgekit://login/42")
+        #expect(apns["params"] as? [String: String] == ["requestId": "approval-42"])
+
+        let resolved = payload.updatingApprovalState(.approved, revision: 18)
+        #expect(resolved.group == payload.group)
+        #expect(resolved.approval == payload.approval)
+        #expect(resolved.actionState == "approved")
+        #expect(resolved.revision == 18)
+    }
+
+    @Test("JSON Push v2 request maps canonical and Bark-compatible aliases")
+    func jsonPushV2RequestMapsAliases() throws {
+        let data = Data("""
+        {
+          "device_key": "test",
+          "title": "Approval",
+          "body": "Review it",
+          "appid": "agent-console",
+          "route": "/approvals/42",
+          "display": "sheet",
+          "category": "approval",
+          "actionState": "pending",
+          "requestId": "approval-42",
+          "contentType": "approval",
+          "params": {"requestId": "approval-42"}
+        }
+        """.utf8)
+
+        let request = try JSONDecoder().decode(JSONPushRequest.self, from: data)
+        let payload = request.payload
+
+        #expect(request.deviceKey == "test")
+        #expect(payload.appID == "agent-console")
+        #expect(payload.route == "/approvals/42")
+        #expect(payload.display == "sheet")
+        #expect(payload.actionState == "pending")
+        #expect(payload.requestID == "approval-42")
+        #expect(payload.params == ["requestId": "approval-42"])
+    }
+
+    @Test("Canonical message types require their rendering fields")
+    func canonicalMessageTypesValidateRenderingFields() async throws {
+        let app = createApplication()
+        let validPayloads = [
+            #"{"schema":"webbridgekit.message.v1","type":"plain","deviceKey":"test","title":"Plain","body":"Readable body"}"#,
+            "{\"schema\":\"webbridgekit.message.v1\",\"type\":\"markdown\",\"deviceKey\":\"test\",\"title\":\"Markdown\",\"body\":\"Summary\",\"markdown\":\"## Result\"}",
+            #"{"schema":"webbridgekit.message.v1","type":"image","deviceKey":"test","title":"Image","body":"Preview","image":"https://example.com/preview.png"}"#,
+            #"{"schema":"webbridgekit.message.v1","type":"qr","deviceKey":"test","title":"QR","body":"Scan","qrPayload":"webbridgekit://login/42"}"#,
+            #"{"schema":"webbridgekit.message.v1","type":"otp","deviceKey":"test","title":"OTP","body":"Use code","verificationCode":"482901"}"#,
+            #"{"schema":"webbridgekit.message.v1","type":"chat","deviceKey":"test","title":"Chat","body":"New reply","appId":"team-chat","route":"/conversations/42","params":{"conversationId":"42"}}"#,
+        ]
+
+        try await app.test(.router) { client in
+            for payload in validPayloads {
+                try await client.execute(uri: "/push", method: .post, body: ByteBuffer(string: payload)) { response in
+                    #expect(response.status == .ok)
+                }
+            }
+
+            let invalidPayloads = [
+                #"{"schema":"webbridgekit.message.v1","type":"markdown","deviceKey":"test","title":"Markdown","body":"Missing markdown"}"#,
+                #"{"schema":"webbridgekit.message.v1","type":"image","deviceKey":"test","title":"Image","body":"Missing image"}"#,
+                #"{"schema":"webbridgekit.message.v1","type":"qr","deviceKey":"test","title":"QR","body":"Missing payload"}"#,
+                #"{"schema":"webbridgekit.message.v1","type":"otp","deviceKey":"test","title":"OTP","body":"Missing code"}"#,
+                #"{"schema":"webbridgekit.message.v1","type":"chat","deviceKey":"test","title":"Chat","body":"Missing route"}"#,
+            ]
+            for payload in invalidPayloads {
+                try await client.execute(uri: "/push", method: .post, body: ByteBuffer(string: payload)) { response in
+                    #expect(response.status == .badRequest)
+                }
             }
         }
     }

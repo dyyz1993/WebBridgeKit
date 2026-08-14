@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173126">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>WebBridgeKit Approval Route Fixture</title>
+  <style>
+    :root { color-scheme: light dark; font-family: Georgia, "Songti SC", serif; }
+    body { margin: 0; min-height: 100vh; background: #f4efe5; color: #173126; }
+    main { max-width: 680px; margin: 0 auto; padding: 64px 24px; }
+    .eyebrow { color: #a3482d; font: 700 12px/1.4 monospace; letter-spacing: .14em; }
+    h1 { margin: 12px 0 24px; font-size: clamp(34px, 9vw, 64px); line-height: .96; }
+    .card { padding: 22px; border: 1px solid #b8aa91; border-radius: 18px; background: rgba(255,255,255,.45); }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 12px 18px; margin: 0; }
+    dt { color: #6c6254; } dd { margin: 0; overflow-wrap: anywhere; font-family: monospace; }
+    #status { margin-top: 24px; padding: 14px 18px; border-radius: 999px; background: #a3482d; color: #fff; display: inline-block; }
+    .notice { margin: 20px 0 0; line-height: 1.6; color: #6c6254; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">SIMULATED APNs -> APPROVAL ROUTE</div>
+    <h1>审批请求</h1>
+    <div class="card">
+      <dl>
+        <dt>App ID</dt><dd id="app-id">等待启动参数</dd>
+        <dt>页面</dt><dd id="route">等待启动参数</dd>
+        <dt>请求</dt><dd id="request">等待启动参数</dd>
+        <dt>来源</dt><dd id="source">等待启动参数</dd>
+      </dl>
+      <p class="notice">通知只负责定位。敏感权限仍需用户在原生授权层和 HTML 应用内分别确认。</p>
+    </div>
+    <div id="status">等待 WebBridgeKit</div>
+  </main>
+  <script>
+    (() => {
+      function render(context) {
+        if (!context || !context.webbridgekitAppId) return;
+        document.querySelector('#app-id').textContent = context.webbridgekitAppId;
+        document.querySelector('#route').textContent = context.webbridgekitRoute;
+        document.querySelector('#request').textContent = context.requestId || 'n/a';
+        document.querySelector('#source').textContent = context.webbridgekitSource;
+        document.querySelector('#status').textContent = '等待用户确认';
+      }
+
+      render(window.WebBridgeKitLaunchContext);
+      window.addEventListener('webbridgekit:launch', event => render(event.detail), { once: true });
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+    })();
+  </script>
+</body>
+</html>

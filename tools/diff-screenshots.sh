@@ -92,6 +92,7 @@ def main():
     total_pass = 0
     total_fail = 0
     total_new = 0
+    total_removed = 0
 
     for fname in sorted(actual_files):
         act_path = os.path.join(act_dir, fname)
@@ -125,6 +126,7 @@ def main():
     # Check for removed references
     for fname in sorted(ref_files - set(actual_files)):
         if fname.lower().endswith(".png"):
+            total_removed += 1
             results.append({
                 "name": fname,
                 "status": "REMOVED",
@@ -142,7 +144,8 @@ def main():
             "pass": total_pass,
             "fail": total_fail,
             "new": total_new,
-            "overall_status": "FAIL" if total_fail > 0 else "PASS"
+            "removed": total_removed,
+            "overall_status": "FAIL" if total_fail > 0 or total_new > 0 or total_removed > 0 else "PASS"
         },
         "results": results
     }
@@ -152,7 +155,7 @@ def main():
         json.dump(report, f, indent=2)
 
     print(json.dumps(report))
-    sys.exit(1 if total_fail > 0 else 0)
+    sys.exit(1 if total_fail > 0 or total_new > 0 or total_removed > 0 else 0)
 
 
 def null_val():

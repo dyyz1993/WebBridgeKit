@@ -8,6 +8,9 @@ enum DebugCenterAction {
     case openNetworkInspector
     case openCacheDashboard
     case openManifestCacheTests
+    case openWebCache
+    case openBridgeLab
+    case openPushTools
     case showCrashScanGuide
 }
 

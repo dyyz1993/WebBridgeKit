@@ -189,6 +189,16 @@
             });
         },
 
+        /** Return from the current native PWA screen. */
+        goBack: function() {
+            return this.callNative('goBack', { steps: 1 });
+        },
+
+        /** Close the current native PWA screen and return to the host. */
+        closePage: function() {
+            return this.callNative('closePage', { animated: true, reason: 'javascript' });
+        },
+
         /**
          * 工具方法
          */
@@ -213,6 +223,15 @@
             BarkBridge['on' + data.type](data);
         }
     });
+
+    // Keep the public PWA API consistent with the framework bundle.
+    window.WebBridgeKit = window.WebBridgeKit || {
+        navigation: {
+            back: function() { return BarkBridge.goBack(); },
+            close: function() { return BarkBridge.closePage(); }
+        },
+        isAvailable: function() { return BarkBridge.isAvailable(); }
+    };
 
     // 打印初始化日志
     console.log('[BarkBridge] Initialized successfully');

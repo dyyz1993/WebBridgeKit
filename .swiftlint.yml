@@ -41,6 +41,7 @@ opt_in_rules:
 included:
   - Sources
   - SuperApp/Sources
+  - AppTemplate/Sources
 
 excluded:
   - Pods

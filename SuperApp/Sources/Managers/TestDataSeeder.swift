@@ -18,6 +18,12 @@ struct TestDataSeeder {
 
     static func populateIfNeeded() {
         let needsSeed = !UserDefaults.standard.bool(forKey: seededKey)
+        let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
+
+        if isUITesting {
+            UserDefaults.standard.set("test", forKey: "com.webbridgekit.bark.key")
+            UserDefaults.standard.set("http://localhost:8080", forKey: "com.webbridgekit.bark.server")
+        }
 
         if needsSeed {
 
@@ -29,11 +35,13 @@ struct TestDataSeeder {
             seedAPIKeys()
             seedCacheRules()
             seedPageCacheRules()
-            seedMessages()
+            seedMessages(forceRefresh: isUITesting)
 
             UserDefaults.standard.set(true, forKey: seededKey)
 
-        } else {
+        } else if isUITesting {
+            // UI tests need a deterministic fixture set even when the simulator keeps prior defaults.
+            seedMessages(forceRefresh: true)
         }
 
         seedManifestCaches()

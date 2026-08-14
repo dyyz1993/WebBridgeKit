@@ -3,10 +3,18 @@ import XCTest
 final class DeepVerificationTests: XCTestCase {
 
     let app = XCUIApplication()
+    private var nativeApprovalRequestID = ""
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        nativeApprovalRequestID = "approval-ui-\(UUID().uuidString)"
         app.launchArguments = ["--UITesting", "-UITesting"]
+        app.launchEnvironment["WBK_UI_APPROVAL_REQUEST_ID"] = nativeApprovalRequestID
+        if name.contains("testInboxPWAApprovalOpensTrustedRouteWithoutApproving") {
+            app.launchArguments.append("--register-pwa-notification-fixture")
+            app.launchEnvironment["WBK_PWA_FIXTURE_CASE"] = "approval"
+            app.launchEnvironment["WBK_PWA_FIXTURE_ORIGIN"] = "http://localhost:8081"
+        }
         app.launch()
     }
 
@@ -33,6 +41,44 @@ final class DeepVerificationTests: XCTestCase {
         XCTAssertTrue(tab.exists, "Tab '\(name)' should exist")
         tab.tap()
         sleep(1)
+    }
+
+    private func createNativeApprovalRecord(requestID: String) throws {
+        let payload: [String: Any] = [
+            "schema": "webbridgekit.message.v1",
+            "type": "approval",
+            "deviceKey": "test",
+            "id": requestID,
+            "requestId": requestID,
+            "revision": 1,
+            "state": "pending",
+            "title": "确认部署到生产环境",
+            "body": "版本 2.4.0 已通过自动化测试，等待你决定是否继续发布。",
+            "presentation": "native",
+            "approval": [
+                "actions": [
+                    ["id": "approve", "title": "通过并发布", "style": "primary", "resultState": "approved"],
+                    ["id": "reject", "title": "拒绝", "style": "destructive", "requiresReason": true, "resultState": "rejected"],
+                ],
+                "responseMode": "poll",
+            ],
+        ]
+        var request = URLRequest(url: try XCTUnwrap(URL(string: "http://localhost:8080/push")))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let completed = expectation(description: "Create native approval record")
+        var statusCode: Int?
+        var requestError: Error?
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            statusCode = (response as? HTTPURLResponse)?.statusCode
+            requestError = error
+            completed.fulfill()
+        }.resume()
+        wait(for: [completed], timeout: 5)
+        XCTAssertNil(requestError)
+        XCTAssertEqual(statusCode, 200)
     }
 
     private func goBack() {
@@ -206,7 +252,7 @@ final class DeepVerificationTests: XCTestCase {
     // MARK: - Discover Interactions (2 tests)
 
     func testDiscoverCardTap() throws {
-        navigateToTab("tab.bridge")
+        navigateToTab("tab.apps")
 
         let collectionView = app.collectionViews.firstMatch
         guard collectionView.waitForExistence(timeout: 5) else {
@@ -239,7 +285,7 @@ final class DeepVerificationTests: XCTestCase {
     }
 
     func testDiscoverCachedAppsSection() throws {
-        navigateToTab("tab.bridge")
+        navigateToTab("tab.apps")
 
         let collectionView = app.collectionViews.firstMatch
         guard collectionView.waitForExistence(timeout: 5) else {
@@ -262,108 +308,326 @@ final class DeepVerificationTests: XCTestCase {
         saveScreenshot("/tmp/wbk-ui-discover-cached.png")
     }
 
-    // MARK: - Inbox Interactions (3 tests)
+    // MARK: - Inbox Interactions
 
     func testInboxMessageDetail() throws {
-        navigateToTab("tab.inbox")
+        navigateToTab("tab.notifications")
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("运行任务")
+        search.typeText("\n")
 
+        let markdownCard = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-markdown-011").firstMatch
+        XCTAssertTrue(markdownCard.waitForExistence(timeout: 5))
+        markdownCard.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail.markdown").firstMatch.waitForExistence(timeout: 5))
         sleep(1)
+        saveScreenshot("/tmp/wbk-ui-inbox-markdown-top.png")
 
-        let tableView = app.tables.firstMatch
-        guard tableView.waitForExistence(timeout: 5) else {
-            print("[Warning] No table view on Inbox tab")
-            saveScreenshot("/tmp/wbk-ui-inbox-detail.png")
-            return
-        }
+        let detail = app.descendants(matching: .any).matching(identifier: "message.detail").firstMatch
+        detail.swipeUp()
+        saveScreenshot("/tmp/wbk-ui-inbox-markdown-details.png")
+    }
 
-        let messageCells = tableView.cells.matching(identifier: "InboxMessageCell")
-        let allCells = tableView.cells
-        print("[Inbox] Total cells: \(allCells.count), message cells: \(messageCells.count)")
+    func testInboxPlainMessageKeepsBodyReadable() throws {
+        navigateToTab("tab.notifications")
+        openInboxMessage(searchText: "系统维护通知", cardID: "stored-sys-004")
 
-        if allCells.count > 0 {
-            let firstCell = allCells.element(boundBy: 0)
-            firstCell.tap()
-            sleep(2)
-            saveScreenshot("/tmp/wbk-ui-inbox-detail.png")
+        XCTAssertTrue(app.staticTexts["系统将于今晚 22:00-23:00 进行维护升级"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail.body").firstMatch.exists)
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "message.detail.media").firstMatch.exists)
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "message.detail.markdown").firstMatch.exists)
+        saveScreenshot("/tmp/wbk-ui-inbox-type-plain.png")
+    }
 
-            let actionSheet = app.sheets.firstMatch
-            let alert = app.alerts.firstMatch
-            let detailNav = app.navigationBars.count > 1
+    func testInboxImageMessageLoadsNativeMediaCard() throws {
+        navigateToTab("tab.notifications")
+        openInboxMessage(searchText: "设计稿预览", cardID: "stored-image-017")
 
-            if actionSheet.waitForExistence(timeout: 2) {
-                print("[Info] Action sheet appeared after tapping message")
-                actionSheet.buttons.firstMatch.tap()
-                sleep(1)
-            } else if alert.waitForExistence(timeout: 1) {
-                print("[Info] Alert appeared after tapping message")
-                alert.buttons.firstMatch.tap()
-                sleep(1)
-            } else if detailNav {
-                print("[Info] Navigated to message detail")
-                goBack()
-            } else {
-                print("[Info] Tapped message, no detail/action sheet detected")
-            }
-        } else {
-            print("[Info] No messages in inbox to tap")
-            saveScreenshot("/tmp/wbk-ui-inbox-detail.png")
-        }
+        let media = app.descendants(matching: .any).matching(identifier: "message.detail.media").firstMatch
+        XCTAssertTrue(media.waitForExistence(timeout: 5))
+        let loaded = NSPredicate(format: "value == %@", "loaded")
+        expectation(for: loaded, evaluatedWith: media)
+        waitForExpectations(timeout: 8)
+        saveScreenshot("/tmp/wbk-ui-inbox-type-image.png")
+    }
+
+    func testInboxImageFailureUsesCompactReadableFallback() throws {
+        navigateToTab("tab.notifications")
+        openInboxMessage(searchText: "图片加载失败示例", cardID: "stored-image-failure-018")
+
+        let media = app.descendants(matching: .any).matching(identifier: "message.detail.media").firstMatch
+        XCTAssertTrue(media.waitForExistence(timeout: 5))
+        let failed = NSPredicate(format: "value == %@", "failed")
+        expectation(for: failed, evaluatedWith: media)
+        waitForExpectations(timeout: 8)
+        XCTAssertTrue(app.staticTexts["图片暂时无法加载"].exists)
+        XCTAssertLessThanOrEqual(media.frame.height, 100)
+        XCTAssertTrue(app.staticTexts["即使远端图片不可用，通知正文和其他操作仍然可以正常使用。"].exists)
+        saveScreenshot("/tmp/wbk-ui-inbox-type-image-failure.png")
+    }
+
+    func testInboxChatMessageUsesConversationActionAndCollapsedDiagnostics() throws {
+        navigateToTab("tab.notifications")
+        openInboxMessage(searchText: "林默发来新消息", cardID: "stored-chat-route-013")
+
+        XCTAssertTrue(app.buttons["message.detail.openConversation"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["message.detail.openConversation"].label, "打开会话")
+        XCTAssertFalse(app.staticTexts["/fixtures/pwa-notification/index.html"].exists)
+
+        let technicalToggle = app.buttons["message.detail.technical.toggle"]
+        XCTAssertTrue(technicalToggle.waitForExistence(timeout: 5))
+        technicalToggle.tap()
+        XCTAssertTrue(app.staticTexts["/fixtures/pwa-notification/index.html"].waitForExistence(timeout: 5))
+        saveScreenshot("/tmp/wbk-ui-inbox-type-chat.png")
     }
 
     func testInboxUnreadFilter() throws {
-        navigateToTab("tab.inbox")
+        navigateToTab("tab.notifications")
 
-        sleep(1)
+        let unreadFilter = app.buttons["filter_unread"]
+        XCTAssertTrue(unreadFilter.waitForExistence(timeout: 5))
+        unreadFilter.tap()
 
-        let filterUnread = app.buttons["filter_1"]
-        if filterUnread.waitForExistence(timeout: 5) {
-            filterUnread.tap()
-            sleep(1)
-            saveScreenshot("/tmp/wbk-ui-inbox-unread.png")
-            print("[Info] Tapped unread filter (filter_1)")
-        } else {
-            let unreadButton = app.buttons["未读"]
-            if unreadButton.waitForExistence(timeout: 3) {
-                unreadButton.tap()
-                sleep(1)
-                saveScreenshot("/tmp/wbk-ui-inbox-unread.png")
-                print("[Info] Tapped unread filter by label")
-            } else {
-                print("[Warning] Unread filter button not found")
-                saveScreenshot("/tmp/wbk-ui-inbox-unread.png")
-            }
-        }
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "notification.card.stored-critical-005").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "notification.card.stored-read-001").firstMatch.exists)
+        saveScreenshot("/tmp/wbk-ui-inbox-unread.png")
     }
 
     func testInboxAppFilter() throws {
-        navigateToTab("tab.inbox")
+        navigateToTab("tab.notifications")
 
-        sleep(1)
+        let appsFilter = app.buttons["filter_apps"]
+        XCTAssertTrue(appsFilter.waitForExistence(timeout: 5))
+        appsFilter.tap()
 
-        let filterApps = app.buttons["filter_2"]
-        if filterApps.waitForExistence(timeout: 5) {
-            filterApps.tap()
-            sleep(1)
-            saveScreenshot("/tmp/wbk-ui-inbox-app-filter.png")
-            print("[Info] Tapped apps filter (filter_2)")
-        } else {
-            let appsButton = app.buttons["应用"]
-            if appsButton.waitForExistence(timeout: 3) {
-                appsButton.tap()
-                sleep(1)
-                saveScreenshot("/tmp/wbk-ui-inbox-app-filter.png")
-                print("[Info] Tapped apps filter by label")
-            } else {
-                print("[Warning] Apps filter button not found")
-                saveScreenshot("/tmp/wbk-ui-inbox-app-filter.png")
-            }
-        }
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "notification.card.stored-critical-005").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "notification.card.stored-sys-004").firstMatch.exists)
+        saveScreenshot("/tmp/wbk-ui-inbox-app-filter.png")
+    }
+
+    func testInboxGroupCanCollapseAndExpand() throws {
+        navigateToTab("tab.notifications")
+
+        let displayMode = app.segmentedControls["inbox.displayMode"]
+        XCTAssertTrue(displayMode.waitForExistence(timeout: 5))
+        displayMode.buttons["分组"].tap()
+
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("安全告警\n")
+
+        let header = app.descendants(matching: .any)
+            .matching(identifier: "notification.group.security-alerts").firstMatch
+        let securityCard = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-critical-005").firstMatch
+
+        XCTAssertTrue(header.waitForExistence(timeout: 5))
+        XCTAssertTrue(securityCard.waitForExistence(timeout: 5))
+        header.tap()
+        XCTAssertFalse(securityCard.exists)
+
+        header.tap()
+        XCTAssertTrue(securityCard.waitForExistence(timeout: 5))
+    }
+
+    func testInboxLatestTimelineCanSwitchToGroups() throws {
+        navigateToTab("tab.notifications")
+
+        let displayMode = app.segmentedControls["inbox.displayMode"]
+        XCTAssertTrue(displayMode.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "notification.card.stored-approval-media-014").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "notification.group.agent-approvals").firstMatch.exists)
+        saveScreenshot("/tmp/wbk-ui-inbox-latest.png")
+
+        displayMode.buttons["分组"].tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "notification.group.agent-approvals").firstMatch.waitForExistence(timeout: 5))
+        saveScreenshot("/tmp/wbk-ui-inbox-groups.png")
+    }
+
+    func testInboxVerificationCodeCanBeCopied() throws {
+        navigateToTab("tab.notifications")
+
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("登录验证码\n")
+
+        let verificationCard = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-verification-012").firstMatch
+        XCTAssertTrue(verificationCard.waitForExistence(timeout: 5))
+        verificationCard.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail.verificationCode").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["482 901"].waitForExistence(timeout: 5))
+        let copyButton = app.buttons["message.detail.copyVerificationCode"]
+        let metadata = app.descendants(matching: .any).matching(identifier: "message.detail.metadata").firstMatch
+        XCTAssertTrue(copyButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(metadata.waitForExistence(timeout: 5))
+        XCTAssertLessThan(copyButton.frame.minY, metadata.frame.minY)
+        saveScreenshot("/tmp/wbk-ui-inbox-verification.png")
+    }
+
+    func testInboxApprovalMessageShowsNativePresentationMetadata() throws {
+        navigateToTab("tab.notifications")
+
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("生产发布\n")
+
+        let approvalCard = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-approval-media-014").firstMatch
+        XCTAssertTrue(approvalCard.waitForExistence(timeout: 5))
+        approvalCard.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail.media").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["时效性"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail.approvalState").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["待确认"].waitForExistence(timeout: 5))
+        let openButton = app.buttons["message.detail.openApp"]
+        let metadata = app.descendants(matching: .any).matching(identifier: "message.detail.metadata").firstMatch
+        XCTAssertTrue(openButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(metadata.waitForExistence(timeout: 5))
+        XCTAssertLessThan(openButton.frame.minY, metadata.frame.minY)
+        XCTAssertTrue(app.buttons["message.detail.copyValue"].waitForExistence(timeout: 5))
+        let technicalToggle = app.buttons["message.detail.technical.toggle"]
+        XCTAssertTrue(technicalToggle.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["/test_resources/pwa-agent-console/approval.html"].exists)
+        technicalToggle.tap()
+        XCTAssertTrue(app.staticTexts["/test_resources/pwa-agent-console/approval.html"].waitForExistence(timeout: 5))
+        saveScreenshot("/tmp/wbk-ui-inbox-approval.png")
+    }
+
+    func testInboxPWAApprovalOpensTrustedRouteWithoutApproving() throws {
+        navigateToTab("tab.notifications")
+
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("生产发布\n")
+
+        let approvalCard = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-approval-media-014").firstMatch
+        XCTAssertTrue(approvalCard.waitForExistence(timeout: 5))
+        approvalCard.tap()
+
+        let openButton = app.buttons["message.detail.openApp"]
+        XCTAssertTrue(openButton.waitForExistence(timeout: 5))
+        openButton.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)
+            .matching(identifier: "modalBrowser.webView").firstMatch.waitForExistence(timeout: 8))
+        sleep(5)
+        saveScreenshot("/tmp/wbk-ui-inbox-pwa-approval.png")
+
+        let modal = app.descendants(matching: .any).matching(identifier: "modalBrowser.view").firstMatch
+        XCTAssertTrue(modal.exists)
+        XCTAssertTrue(app.staticTexts["approval-42"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["notification"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["通知只负责导航；此请求尚未获得批准。"].exists)
+        XCTAssertFalse(app.staticTexts["已通过"].exists)
+
+        let closeButton = app.buttons["modalBrowser.closeButton"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5))
+        closeButton.tap()
+        let modalDismissed = NSPredicate(format: "exists == false")
+        expectation(for: modalDismissed, evaluatedWith: modal)
+        waitForExpectations(timeout: 5)
+        XCTAssertTrue(app.staticTexts["待确认"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["已通过"].exists)
+    }
+
+    func testInboxNativeApprovalShowsActionsAndConfirmation() throws {
+        try createNativeApprovalRecord(requestID: nativeApprovalRequestID)
+        navigateToTab("tab.notifications")
+
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("确认部署到生产环境\n")
+
+        let approvalCard = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-approval-native-016").firstMatch
+        XCTAssertTrue(approvalCard.waitForExistence(timeout: 5))
+        approvalCard.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail.approvalState").firstMatch.waitForExistence(timeout: 5))
+        let approveButton = app.buttons["message.detail.approval.approve"]
+        let rejectButton = app.buttons["message.detail.approval.reject"]
+        XCTAssertTrue(approveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(rejectButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["待确认"].waitForExistence(timeout: 5))
+        saveScreenshot("/tmp/wbk-ui-inbox-native-approval.png")
+
+        rejectButton.tap()
+        let reasonPrompt = app.alerts.firstMatch
+        XCTAssertTrue(reasonPrompt.waitForExistence(timeout: 5))
+        XCTAssertTrue(reasonPrompt.textFields["message.detail.approval.reason"].exists)
+        reasonPrompt.buttons["取消"].tap()
+
+        approveButton.tap()
+        let confirmation = app.alerts.firstMatch
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+        XCTAssertTrue(confirmation.staticTexts["确认操作"].exists)
+        confirmation.buttons["通过并发布"].tap()
+
+        XCTAssertTrue(app.staticTexts["已通过"].waitForExistence(timeout: 5))
+        XCTAssertFalse(approveButton.exists)
+        XCTAssertFalse(rejectButton.exists)
+
+        goBack()
+        XCTAssertTrue(approvalCard.waitForExistence(timeout: 5))
+        approvalCard.tap()
+        XCTAssertTrue(app.staticTexts["已通过"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["message.detail.approval.approve"].exists)
+        saveScreenshot("/tmp/wbk-ui-inbox-native-approval-approved.png")
+    }
+
+    func testInboxQRCodeUsesNativeRendering() throws {
+        navigateToTab("tab.notifications")
+
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("桌面端登录二维码\n")
+
+        let qrCard = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-qr-015").firstMatch
+        XCTAssertTrue(qrCard.waitForExistence(timeout: 5))
+        qrCard.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail.qrCode").firstMatch.waitForExistence(timeout: 5))
+        let copyButton = app.buttons["message.detail.copyQRValue"]
+        let metadata = app.descendants(matching: .any).matching(identifier: "message.detail.metadata").firstMatch
+        XCTAssertTrue(copyButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(metadata.waitForExistence(timeout: 5))
+        XCTAssertLessThan(copyButton.frame.minY, metadata.frame.minY)
+        saveScreenshot("/tmp/wbk-ui-inbox-qr.png")
+    }
+
+    private func openInboxMessage(searchText: String, cardID: String) {
+        let search = app.descendants(matching: .any).matching(identifier: "wbk_search_field").firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("\(searchText)\n")
+
+        let card = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.\(cardID)").firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "message.detail").firstMatch.waitForExistence(timeout: 5))
     }
 
     // MARK: - Home Interactions (2 tests)
 
     func testHomeQuickActions() throws {
-        navigateToTab("tab.web")
+        navigateToTab("tab.apps")
 
         let scanButton = app.buttons["main.scanButton"]
         if scanButton.waitForExistence(timeout: 5) {
@@ -390,7 +654,7 @@ final class DeepVerificationTests: XCTestCase {
     }
 
     func testHomeRegisterButton() throws {
-        navigateToTab("tab.push")
+        navigateToTab("tab.settings")
 
         sleep(1)
 

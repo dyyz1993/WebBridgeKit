@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+
+<!-- ============================================
+     WebBridgeKit iOS App — Project Shell Partial
+     Shared frame: iOS status bar + bottom tab bar + page content slot
+     This is a PARTIAL (fragment), NOT a full HTML document.
+============================================= -->
+
+<style>
+/* === Project Shell Styles === */
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS Status Bar */
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wbk-status-bar-icons svg {
+  color: var(--wbk-text);
+}
+
+/* Page Content Area */
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bottom Tab Bar */
+.wbk-tab-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: 83px;
+  padding-top: 8px;
+  padding-bottom: 34px;
+  background: var(--wbk-background);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--wbk-separator);
+}
+
+.wbk-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--wbk-text-tertiary);
+  transition: color var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-tab:active {
+  opacity: 0.6;
+}
+
+.wbk-tab.wbk-tab--active {
+  color: var(--wbk-primary);
+}
+
+.wbk-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 23px;
+  height: 23px;
+  position: relative;
+}
+
+.wbk-tab-icon i {
+  width: 23px;
+  height: 23px;
+}
+
+.wbk-tab-label {
+  font: var(--wbk-text-tab-label);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Unread Badge */
+.wbk-tab-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-error);
+  border: 1.5px solid var(--wbk-background);
+  pointer-events: none;
+}
+
+/* === Home Page Styles === */
+
+/* 1. Navigation Bar */
+.wbk-home-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--wbk-spacing-lg);
+  height: 44px;
+}
+
+.wbk-home-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--wbk-radius-sm);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+  color: var(--wbk-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wbk-home-nav-btn:active {
+  opacity: 0.6;
+}
+
+.wbk-home-nav-btn i {
+  width: 18px;
+  height: 18px;
+}
+
+.wbk-home-nav-center {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.wbk-home-nav-bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--wbk-radius-sm);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+  color: var(--wbk-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wbk-home-nav-bell i {
+  width: 18px;
+  height: 18px;
+}
+
+.wbk-home-nav-bell:active {
+  opacity: 0.6;
+}
+
+.wbk-home-nav-bell-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-error);
+  border: 1.5px solid var(--wbk-card-background);
+  pointer-events: none;
+}
+
+.wbk-home-storage {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--wbk-spacing-sm);
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-background-secondary);
+  font: var(--wbk-text-mono-meta);
+  font-size: 12px;
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+}
+
+/* 2. Page Title */
+.wbk-home-title-area {
+  padding: 0 var(--wbk-spacing-lg);
+  padding-bottom: var(--wbk-spacing-xl);
+}
+
+.wbk-home-title {
+  font: var(--wbk-text-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--wbk-text);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 3. Command Banner */
+.wbk-command-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  margin: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-xl);
+  padding: 10px 14px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-primary-soft);
+  border: 1px solid var(--wbk-primary-soft);
+}
+
+.wbk-command-banner i[data-lucide="shield"] {
+  width: 16px;
+  height: 16px;
+  color: var(--wbk-primary);
+  flex-shrink: 0;
+}
+
+.wbk-command-banner-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--wbk-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-command-banner-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--wbk-radius-full);
+  background: none;
+  border: none;
+  color: var(--wbk-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.wbk-command-banner-close i {
+  width: 14px;
+  height: 14px;
+}
+
+.wbk-command-banner-close:active {
+  opacity: 0.4;
+}
+
+/* 4. Token Card */
+.wbk-token-card {
+  margin: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-xxl);
+  padding: var(--wbk-spacing-xl);
+  border-radius: var(--wbk-radius-lg);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+}
+
+.wbk-token-card-top {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  padding: var(--wbk-spacing-sm) 0;
+}
+
+.wbk-token-card-top i[data-lucide="server"] {
+  width: 16px;
+  height: 16px;
+  color: var(--wbk-text-tertiary);
+  flex-shrink: 0;
+}
+
+.wbk-token-server-url {
+  font-family: var(--wbk-font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-token-divider {
+  height: 1px;
+  background: var(--wbk-separator);
+  margin: var(--wbk-spacing-sm) 0;
+}
+
+.wbk-token-card-bottom {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  padding: var(--wbk-spacing-sm) 0;
+}
+
+.wbk-token-card-bottom i[data-lucide="key"] {
+  width: 16px;
+  height: 16px;
+  color: var(--wbk-primary);
+  flex-shrink: 0;
+}
+
+.wbk-token-value {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--wbk-font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--wbk-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-token-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 var(--wbk-spacing-md);
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-primary-soft);
+  border: none;
+  color: var(--wbk-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.wbk-token-copy-btn:active {
+  opacity: 0.6;
+}
+
+.wbk-token-register-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  margin-top: var(--wbk-spacing-xl);
+  border-radius: var(--wbk-radius-md);
+  background: var(--wbk-primary);
+  border: none;
+  color: var(--wbk-text-on-color);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wbk-token-register-btn:active {
+  background: var(--wbk-primary-pressed);
+}
+
+/* Section Utilities */
+.wbk-section-spacing {
+  padding: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-xxl);
+}
+
+.wbk-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-md);
+}
+
+.wbk-section-header-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wbk-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* 5. Quick Actions Grid */
+.wbk-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--wbk-spacing-md);
+}
+
+.wbk-quick-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wbk-quick-action:active {
+  opacity: 0.6;
+}
+
+.wbk-quick-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--wbk-radius-md);
+  flex-shrink: 0;
+}
+
+.wbk-quick-action-icon i {
+  width: 22px;
+  height: 22px;
+}
+
+.wbk-quick-action-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--wbk-text-secondary);
+  white-space: nowrap;
+}
+
+/* 7. App Cards Grid */
+.wbk-app-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--wbk-spacing-md);
+}
+
+.wbk-app-card {
+  padding: var(--wbk-spacing-xl);
+  border-radius: var(--wbk-radius-md);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-app-card:active {
+  transform: scale(0.97);
+}
+
+.wbk-app-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  margin-bottom: var(--wbk-spacing-sm);
+}
+
+.wbk-app-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--wbk-radius-sm);
+  flex-shrink: 0;
+}
+
+.wbk-app-card-icon i {
+  width: 16px;
+  height: 16px;
+  color: #FFFFFF;
+}
+
+.wbk-app-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wbk-app-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-app-card-status-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wbk-app-card-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--wbk-radius-full);
+  flex-shrink: 0;
+}
+
+.wbk-app-card-status-text {
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.wbk-app-card-time {
+  font-size: 11px;
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+}
+
+/* 9. Recent History List */
+.wbk-history-list {
+  padding: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-xxl);
+}
+
+.wbk-history-item {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-md);
+  padding: var(--wbk-spacing-md) 0;
+  border-bottom: 1px solid var(--wbk-separator);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wbk-history-item:last-child {
+  border-bottom: none;
+}
+
+.wbk-history-item:active {
+  opacity: 0.6;
+}
+
+.wbk-history-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--wbk-radius-sm);
+  background: var(--wbk-background-secondary);
+  flex-shrink: 0;
+}
+
+.wbk-history-icon i {
+  width: 16px;
+  height: 16px;
+  color: var(--wbk-text-secondary);
+}
+
+.wbk-history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wbk-history-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--wbk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-history-url {
+  font-family: var(--wbk-font-mono);
+  font-size: 12px;
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-history-time {
+  font-size: 12px;
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 11. Stats Card */
+.wbk-stats-card {
+  margin: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-xxl);
+  padding: var(--wbk-spacing-xl);
+  border-radius: var(--wbk-radius-lg);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+}
+
+.wbk-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--wbk-spacing-lg);
+}
+
+.wbk-stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wbk-spacing-xs);
+}
+
+.wbk-stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.wbk-stat-label {
+  font-size: 11px;
+  color: var(--wbk-text-secondary);
+  white-space: nowrap;
+}
+
+/* 12. Feature Entry Cards */
+.wbk-feature-card {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-lg);
+  margin: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-md);
+  padding: var(--wbk-spacing-xl);
+  border-radius: var(--wbk-radius-md);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-feature-card:last-child {
+  margin-bottom: var(--wbk-spacing-xxxl);
+}
+
+.wbk-feature-card:active {
+  transform: scale(0.98);
+}
+
+.wbk-feature-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--wbk-radius-md);
+  flex-shrink: 0;
+}
+
+.wbk-feature-card-icon i {
+  width: 20px;
+  height: 20px;
+}
+
+.wbk-feature-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wbk-feature-card-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--wbk-text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-feature-card-desc {
+  font-size: 12px;
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-feature-card-chevron {
+  flex-shrink: 0;
+  color: var(--wbk-text-tertiary);
+}
+
+.wbk-feature-card-chevron i {
+  width: 16px;
+  height: 16px;
+}
+</style>
+
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/>
+        <path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/>
+        <rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+
+    <!-- ===== 1. Navigation Bar ===== -->
+    <div class="wbk-home-nav">
+      <button class="wbk-home-nav-btn" aria-label="扫描">
+        <i data-lucide="scan-line"></i>
+      </button>
+      <div class="wbk-home-nav-center">
+        <button class="wbk-home-nav-bell" aria-label="通知">
+          <i data-lucide="bell"></i>
+          <span class="wbk-home-nav-bell-dot"></span>
+        </button>
+      </div>
+      <span class="wbk-home-storage">2.4 MB</span>
+    </div>
+
+    <!-- ===== 2. Page Title ===== -->
+    <div class="wbk-home-title-area">
+      <h1 class="wbk-home-title">首页</h1>
+    </div>
+
+    <!-- ===== 3. Command Banner ===== -->
+    <div class="wbk-command-banner" role="alert">
+      <i data-lucide="shield"></i>
+      <span class="wbk-command-banner-text">检测到口令，点击打开「MyApp」</span>
+      <button class="wbk-command-banner-close" aria-label="关闭">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <!-- ===== 4. Token Card ===== -->
+    <div class="wbk-token-card">
+      <div class="wbk-token-card-top">
+        <i data-lucide="server"></i>
+        <span class="wbk-token-server-url">https://api.day.app</span>
+      </div>
+      <div class="wbk-token-divider"></div>
+      <div class="wbk-token-card-bottom">
+        <i data-lucide="key"></i>
+        <span class="wbk-token-value">AbCd****EfGh</span>
+        <button class="wbk-token-copy-btn" aria-label="复制令牌">复制</button>
+      </div>
+      <button class="wbk-token-register-btn">注册设备</button>
+    </div>
+
+    <!-- ===== 5. Quick Actions Grid ===== -->
+    <div class="wbk-section-spacing">
+      <div class="wbk-quick-actions">
+        <button class="wbk-quick-action" aria-label="扫码">
+          <span class="wbk-quick-action-icon" style="background: var(--wbk-primary-soft);">
+            <i data-lucide="scan" style="color: var(--wbk-primary);"></i>
+          </span>
+          <span class="wbk-quick-action-label">扫码</span>
+        </button>
+        <button class="wbk-quick-action" aria-label="粘贴口令">
+          <span class="wbk-quick-action-icon" style="background: var(--wbk-warning-soft);">
+            <i data-lucide="clipboard-paste" style="color: var(--wbk-warning);"></i>
+          </span>
+          <span class="wbk-quick-action-label">粘贴口令</span>
+        </button>
+        <button class="wbk-quick-action" aria-label="口令管理">
+          <span class="wbk-quick-action-icon" style="background: var(--wbk-primary-soft);">
+            <i data-lucide="terminal" style="color: var(--wbk-primary);"></i>
+          </span>
+          <span class="wbk-quick-action-label">口令管理</span>
+        </button>
+        <button class="wbk-quick-action" aria-label="调试">
+          <span class="wbk-quick-action-icon" style="background: var(--wbk-success-soft);">
+            <i data-lucide="bug" style="color: var(--wbk-success);"></i>
+          </span>
+          <span class="wbk-quick-action-label">调试</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== 6. Section Header: 常用应用 ===== -->
+    <div class="wbk-section-header">
+      <span class="wbk-section-header-title">常用应用</span>
+    </div>
+
+    <!-- ===== 7. App Cards Grid (2x2) ===== -->
+    <div class="wbk-section-spacing">
+      <div class="wbk-app-grid">
+        <!-- App 1: Dashboard -->
+        <div class="wbk-app-card">
+          <div class="wbk-app-card-header">
+            <span class="wbk-app-card-icon" style="background: linear-gradient(135deg, #F472B6, #EF4444);">
+              <i data-lucide="layout-dashboard"></i>
+            </span>
+            <div class="wbk-app-card-info">
+              <div class="wbk-app-card-name">Dashboard</div>
+              <div class="wbk-app-card-status-row">
+                <span class="wbk-app-card-status-dot" style="background: var(--wbk-success);"></span>
+                <span class="wbk-app-card-status-text" style="color: var(--wbk-success);">已缓存</span>
+              </div>
+            </div>
+          </div>
+          <span class="wbk-app-card-time">2 小时前</span>
+        </div>
+
+        <!-- App 2: API Explorer -->
+        <div class="wbk-app-card">
+          <div class="wbk-app-card-header">
+            <span class="wbk-app-card-icon" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+              <i data-lucide="flask-conical"></i>
+            </span>
+            <div class="wbk-app-card-info">
+              <div class="wbk-app-card-name">API Explorer</div>
+              <div class="wbk-app-card-status-row">
+                <span class="wbk-app-card-status-dot" style="background: var(--wbk-success);"></span>
+                <span class="wbk-app-card-status-text" style="color: var(--wbk-success);">已缓存</span>
+              </div>
+            </div>
+          </div>
+          <span class="wbk-app-card-time">昨天</span>
+        </div>
+
+        <!-- App 3: 文档中心 -->
+        <div class="wbk-app-card">
+          <div class="wbk-app-card-header">
+            <span class="wbk-app-card-icon" style="background: linear-gradient(135deg, #3B82F6, #06B6D4);">
+              <i data-lucide="book-open"></i>
+            </span>
+            <div class="wbk-app-card-info">
+              <div class="wbk-app-card-name">文档中心</div>
+              <div class="wbk-app-card-status-row">
+                <span class="wbk-app-card-status-dot" style="background: var(--wbk-primary);"></span>
+                <span class="wbk-app-card-status-text" style="color: var(--wbk-primary);">在线</span>
+              </div>
+            </div>
+          </div>
+          <span class="wbk-app-card-time">3 天前</span>
+        </div>
+
+        <!-- App 4: 管理面板 -->
+        <div class="wbk-app-card">
+          <div class="wbk-app-card-header">
+            <span class="wbk-app-card-icon" style="background: linear-gradient(135deg, #16A34A, #0F766E);">
+              <i data-lucide="settings-2"></i>
+            </span>
+            <div class="wbk-app-card-info">
+              <div class="wbk-app-card-name">管理面板</div>
+              <div class="wbk-app-card-status-row">
+                <span class="wbk-app-card-status-dot" style="background: var(--wbk-warning);"></span>
+                <span class="wbk-app-card-status-text" style="color: var(--wbk-warning);">需更新</span>
+              </div>
+            </div>
+          </div>
+          <span class="wbk-app-card-time">1 周前</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 8. Section Header: 最近访问 ===== -->
+    <div class="wbk-section-header">
+      <span class="wbk-section-header-title">最近访问</span>
+    </div>
+
+    <!-- ===== 9. Recent History List ===== -->
+    <div class="wbk-history-list">
+      <!-- History 1 -->
+      <div class="wbk-history-item">
+        <span class="wbk-history-icon">
+          <i data-lucide="globe"></i>
+        </span>
+        <div class="wbk-history-info">
+          <div class="wbk-history-title">WebBridgeKit API</div>
+          <div class="wbk-history-url">api.day.app/v1/manifest</div>
+        </div>
+        <span class="wbk-history-time">10 分钟前</span>
+      </div>
+
+      <!-- History 2 -->
+      <div class="wbk-history-item">
+        <span class="wbk-history-icon">
+          <i data-lucide="hard-drive"></i>
+        </span>
+        <div class="wbk-history-info">
+          <div class="wbk-history-title">缓存测试页</div>
+          <div class="wbk-history-url">localhost:8081/cache-test</div>
+        </div>
+        <span class="wbk-history-time">30 分钟前</span>
+      </div>
+
+      <!-- History 3 -->
+      <div class="wbk-history-item">
+        <span class="wbk-history-icon">
+          <i data-lucide="code-2"></i>
+        </span>
+        <div class="wbk-history-info">
+          <div class="wbk-history-title">JSBridge Demo</div>
+          <div class="wbk-history-url">localhost:8083/bridge-demo</div>
+        </div>
+        <span class="wbk-history-time">2 小时前</span>
+      </div>
+
+      <!-- History 4 -->
+      <div class="wbk-history-item">
+        <span class="wbk-history-icon">
+          <i data-lucide="bell"></i>
+        </span>
+        <div class="wbk-history-info">
+          <div class="wbk-history-title">推送配置</div>
+          <div class="wbk-history-url">api.day.app/config</div>
+        </div>
+        <span class="wbk-history-time">昨天</span>
+      </div>
+    </div>
+
+    <!-- ===== 10. Section Header: 推送统计 ===== -->
+    <div class="wbk-section-header">
+      <span class="wbk-section-header-title">推送统计</span>
+    </div>
+
+    <!-- ===== 11. Stats Card ===== -->
+    <div class="wbk-stats-card">
+      <div class="wbk-stats-grid">
+        <div class="wbk-stat-tile">
+          <span class="wbk-stat-number" style="color: var(--wbk-primary);">42</span>
+          <span class="wbk-stat-label">总消息</span>
+        </div>
+        <div class="wbk-stat-tile">
+          <span class="wbk-stat-number" style="color: var(--wbk-success);">38</span>
+          <span class="wbk-stat-label">已接收</span>
+        </div>
+        <div class="wbk-stat-tile">
+          <span class="wbk-stat-number" style="color: var(--wbk-info);">4</span>
+          <span class="wbk-stat-label">已发送</span>
+        </div>
+        <div class="wbk-stat-tile">
+          <span class="wbk-stat-number" style="color: var(--wbk-text-secondary);">0</span>
+          <span class="wbk-stat-label">失败</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 12. Feature Entry Cards ===== -->
+    <div class="wbk-section-header" style="margin-top: var(--wbk-spacing-lg);">
+      <span class="wbk-section-header-title">更多功能</span>
+    </div>
+
+    <div class="wbk-feature-card">
+      <span class="wbk-feature-card-icon" style="background: var(--wbk-primary-soft);">
+        <i data-lucide="bell-ring" style="color: var(--wbk-primary);"></i>
+      </span>
+      <div class="wbk-feature-card-info">
+        <div class="wbk-feature-card-title">消息推送</div>
+        <div class="wbk-feature-card-desc">管理和接收推送通知</div>
+      </div>
+      <span class="wbk-feature-card-chevron">
+        <i data-lucide="chevron-right"></i>
+      </span>
+    </div>
+
+    <div class="wbk-feature-card">
+      <span class="wbk-feature-card-icon" style="background: var(--wbk-warning-soft);">
+        <i data-lucide="bookmark" style="color: var(--wbk-warning);"></i>
+      </span>
+      <div class="wbk-feature-card-info">
+        <div class="wbk-feature-card-title">网页收藏</div>
+        <div class="wbk-feature-card-desc">收藏常用网页快速访问</div>
+      </div>
+      <span class="wbk-feature-card-chevron">
+        <i data-lucide="chevron-right"></i>
+      </span>
+    </div>
+
+    <div class="wbk-feature-card">
+      <span class="wbk-feature-card-icon" style="background: var(--wbk-success-soft);">
+        <i data-lucide="scan" style="color: var(--wbk-success);"></i>
+      </span>
+      <div class="wbk-feature-card-info">
+        <div class="wbk-feature-card-title">二维码扫描</div>
+        <div class="wbk-feature-card-desc">扫描二维码快速跳转</div>
+      </div>
+      <span class="wbk-feature-card-chevron">
+        <i data-lucide="chevron-right"></i>
+      </span>
+    </div>
+
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <nav class="wbk-tab-bar" role="tablist" aria-label="主导航">
+    <button class="wbk-tab wbk-tab--active" data-dom-id="tab-home" role="tab" aria-selected="true" aria-label="首页">
+      <span class="wbk-tab-icon">
+        <i data-lucide="house"></i>
+      </span>
+      <span class="wbk-tab-label">首页</span>
+    </button>
+    <button class="wbk-tab" data-dom-id="tab-inbox" role="tab" aria-selected="false" aria-label="收件箱">
+      <span class="wbk-tab-icon">
+        <i data-lucide="inbox"></i>
+        <span class="wbk-tab-badge" aria-hidden="true"></span>
+      </span>
+      <span class="wbk-tab-label">收件箱</span>
+    </button>
+    <button class="wbk-tab" data-dom-id="tab-discover" role="tab" aria-selected="false" aria-label="发现">
+      <span class="wbk-tab-icon">
+        <i data-lucide="compass"></i>
+      </span>
+      <span class="wbk-tab-label">发现</span>
+    </button>
+    <button class="wbk-tab" data-dom-id="tab-settings" role="tab" aria-selected="false" aria-label="设置">
+      <span class="wbk-tab-icon">
+        <i data-lucide="settings"></i>
+      </span>
+      <span class="wbk-tab-label">设置</span>
+    </button>
+  </nav>
+
+</div>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

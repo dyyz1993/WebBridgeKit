@@ -2,24 +2,18 @@ import UIKit
 import WebBridgeKit
 
 enum AppTab: String, CaseIterable, Identifiable {
-    case web
-    case tokenPush
-    case bridge
-    case inbox
+    case apps
+    case notifications
     case settings
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .web:
-            return "Web"
-        case .inbox:
-            return L10n.tr("tab.inbox")
-        case .bridge:
-            return "Bridge"
-        case .tokenPush:
-            return "Push"
+        case .apps:
+            return L10n.tr("tab.apps")
+        case .notifications:
+            return L10n.tr("tab.notifications")
         case .settings:
             return L10n.tr("tab.settings")
         }
@@ -27,14 +21,10 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .web:
-            return "网页打开、缓存、离线包与清理"
-        case .inbox:
-            return "推送消息历史、未读、分组与路由"
-        case .bridge:
-            return "JSBridge 命令、参数、回调与错误"
-        case .tokenPush:
-            return "Bark 推送、API 兼容、设备 Token 与消息路由"
+        case .apps:
+            return "已验证 PWA、离线状态与网关接入"
+        case .notifications:
+            return "跨应用通知、未读、分组与精确路由"
         case .settings:
             return "配置、调试工具、协议模板与关于"
         }
@@ -42,13 +32,9 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var icon: LucideIcon {
         switch self {
-        case .web:
+        case .apps:
             return .globe
-        case .inbox:
-            return .inbox
-        case .bridge:
-            return .terminal
-        case .tokenPush:
+        case .notifications:
             return .bell
         case .settings:
             return .settings
@@ -57,14 +43,10 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var accessibilityIdentifier: String {
         switch self {
-        case .web:
-            return "tab.web"
-        case .inbox:
-            return "tab.inbox"
-        case .bridge:
-            return "tab.bridge"
-        case .tokenPush:
-            return "tab.push"
+        case .apps:
+            return "tab.apps"
+        case .notifications:
+            return "tab.notifications"
         case .settings:
             return "tab.settings"
         }
