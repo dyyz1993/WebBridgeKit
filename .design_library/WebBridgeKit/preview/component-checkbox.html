@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Checkbox - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { max-width:480px; margin:0 auto; }
+.section-label { font-size:13px; color:var(--color-text-secondary); margin-bottom:12px; letter-spacing:0.5px; }
+.section { margin-bottom:32px; }
+.checkbox-row { display:flex; align-items:center; height:44px; padding:0 16px; gap:10px; }
+.checkbox-row-list { display:flex; flex-direction:column; background:var(--color-surface); border-radius:var(--wbk-radius-card); box-shadow:var(--shadow-card); overflow:hidden; }
+.checkbox-row-list .checkbox-row:not(:last-child) { border-bottom:1px solid var(--color-separator); }
+.checkbox-only-row { display:flex; align-items:center; gap:16px; padding:0 16px; }
+
+/* @component-css-start */
+.checkbox { display:flex; align-items:center; gap:10px; }
+.checkbox__box { width:22px; height:22px; border-radius:6px; border:2px solid var(--color-separator); flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s, border-color 0.2s; }
+.checkbox__box--checked { background:var(--color-primary); border-color:var(--color-primary); }
+.checkbox__check { display:none; color:#FFFFFF; font-size:14px; font-weight:700; line-height:1; }
+.checkbox__box--checked .checkbox__check { display:block; }
+.checkbox__label { font-size:15px; color:var(--color-text); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="section">
+    <div class="section-label">带标签</div>
+    <div class="checkbox-row-list">
+      <div class="checkbox-row">
+        <div class="checkbox">
+          <div class="checkbox__box checkbox__box--checked"><span class="checkbox__check">&#10003;</span></div>
+          <span class="checkbox__label">接收推送通知</span>
+        </div>
+      </div>
+      <div class="checkbox-row">
+        <div class="checkbox">
+          <div class="checkbox__box"><span class="checkbox__check">&#10003;</span></div>
+          <span class="checkbox__label">显示调试日志</span>
+        </div>
+      </div>
+      <div class="checkbox-row">
+        <div class="checkbox">
+          <div class="checkbox__box checkbox__box--checked"><span class="checkbox__check">&#10003;</span></div>
+          <span class="checkbox__label">自动检查更新</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">仅勾选框</div>
+    <div class="checkbox-only-row">
+      <div class="checkbox__box checkbox__box--checked"><span class="checkbox__check">&#10003;</span></div>
+      <div class="checkbox__box"><span class="checkbox__check">&#10003;</span></div>
+      <div class="checkbox__box checkbox__box--checked"><span class="checkbox__check">&#10003;</span></div>
+      <div class="checkbox__box"><span class="checkbox__check">&#10003;</span></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

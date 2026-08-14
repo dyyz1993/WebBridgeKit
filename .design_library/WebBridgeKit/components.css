@@ -1,0 +1,874 @@
+/* ═══════════════════════════════════════════════════════════════
+   components.css — Design System Component Definitions
+   Auto-extracted from preview/component-*.html
+   DO NOT EDIT MANUALLY — regenerate via extract-components-css.mjs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Accordion ─────────────────────────────────────────────── */
+/* @anatomy
+   <div class="section-label">手风琴</div>
+*/
+.accordion { background:var(--color-surface); border-radius:var(--radius-md); overflow:hidden; flex:1; }
+.accordion__checkbox { display:none; }
+.accordion__header { display:flex; align-items:center; justify-content:space-between; height:44px; padding:0 16px; cursor:pointer; user-select:none; }
+.accordion__label { font-size:15px; font-weight:500; color:var(--color-text); }
+.accordion__chevron { width:16px; height:16px; color:var(--color-text-tertiary); transition:transform .25s ease; flex-shrink:0; }
+.accordion__body { padding:8px 16px 16px; font-size:14px; color:var(--color-text-secondary); line-height:1.6; display:none; }
+.accordion__body p { margin:0 0 6px; }
+.accordion__body p:last-child { margin-bottom:0; }
+.accordion__checkbox:checked ~ .accordion__body,
+.accordion--open .accordion__body { display:block; }
+.accordion__checkbox:checked ~ .accordion__header .accordion__chevron,
+.accordion--open .accordion__chevron { transform:rotate(180deg); }
+
+/* ── Action Sheet ──────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">标准操作</span> <div class="phone-frame"> <div class="dummy-content">页面背景内容区域
+*/
+.action-sheet-scrim { position: absolute; inset: 0; background: var(--color-overlay); display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; padding: 0 8px 12px 8px; }
+.action-group { background: var(--color-surface); border-radius: var(--wbk-radius-sheet); overflow: hidden; }
+.action-group + .action-group { margin-top: 8px; }
+.action-row { height: 54px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 400; color: var(--color-primary); cursor: pointer; transition: background .12s; user-select: none; }
+.action-row:active { background: var(--color-bg-tertiary); }
+.action-row + .action-row { border-top: 1px solid var(--color-separator); }
+.action-row--destructive { color: var(--color-error); }
+.action-row--cancel { font-weight: 600; }
+
+/* ── Alert Banner ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <span class="story-label">警告</span> <div class="alert-banner alert-banner--warning"> <i data-lucide="alert-triangle" class="alert-banner__icon" style="color:var(--wbk-warning)"></i> <span class="alert-banner__text">存储空间不足，请清理缓存</span> </div>
+*/
+.alert-banner { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:var(--radius-md); }
+.alert-banner--warning { background:var(--wbk-warning-soft); }
+.alert-banner--error { background:var(--wbk-error-soft); }
+.alert-banner--info { background:var(--wbk-info-soft); }
+.alert-banner__icon { width:20px; height:20px; flex-shrink:0; display:inline-block; }
+.alert-banner__text { font-size:14px; font-weight:400; color:var(--wbk-text); line-height:1.4; }
+
+/* ── App Card ──────────────────────────────────────────────── */
+/* @anatomy
+   <div class="app-card"> <div class="app-card-top"> <div class="app-card-icon" style="background: linear-gradient(135deg, var(--wbk-gradient-pink-start), var(--wbk-gradient-pink-end));"> <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+*/
+.app-card { display: flex; flex-direction: column; border-radius: var(--radius-lg); background: var(--color-card); padding: var(--space-lg); min-height: 92px; box-shadow: var(--shadow-card); }
+.app-card-top { display: flex; align-items: flex-start; gap: var(--space-md); }
+.app-card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.app-card-icon svg { width: 18px; height: 18px; color: #fff; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.app-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.app-card-name { font-size: 14px; font-weight: 600; color: var(--color-text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: keep-all; overflow-wrap: break-word; }
+.app-card-status { display: flex; align-items: center; gap: 4px; }
+.app-card-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.app-card-dot.cached { background: var(--color-success); }
+.app-card-dot.online { background: var(--color-info); }
+.app-card-status-text { font-size: 10px; color: var(--color-text-secondary); white-space: nowrap; }
+.app-card-time { font-size: 10px; color: var(--color-text-tertiary); white-space: nowrap; }
+
+/* ── Avatar ────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div> <div class="section-title">尺寸</div>
+*/
+.wbk-avatar { position:relative; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; border:2px solid var(--color-surface); box-sizing:border-box; }
+.wbk-avatar-initials { font-family:var(--wbk-font-family); font-weight:600; line-height:1; user-select:none; }
+.wbk-avatar--lg { width:48px; height:48px; }
+.wbk-avatar--lg .wbk-avatar-initials { font-size:18px; }
+.wbk-avatar--md { width:32px; height:32px; }
+.wbk-avatar--md .wbk-avatar-initials { font-size:13px; }
+.wbk-avatar--sm { width:24px; height:24px; }
+.wbk-avatar--sm .wbk-avatar-initials { font-size:10px; }
+.wbk-avatar__status { position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; border:2px solid var(--color-surface); box-sizing:border-box; }
+.wbk-avatar__status--online { background-color:var(--color-success); }
+.wbk-avatar__status--offline { background-color:var(--wbk-text-tertiary); }
+
+/* ── Badge ─────────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">状态</span><span class="badge persistent"><span class="dot"></span><span>持久化</span></span><span class="badge cached"><span class="dot"></span><span>已缓存</span></span><span class="badge needs-update"><span class="dot"></span><span>需更新</span></span><span class="badge not-cached"><span class="dot"></span><span>未缓存</span></span>
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.badge { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--wbk-radius-full); font: 700 10px/1.3 var(--wbk-font-family); white-space: nowrap; min-width: 22px; }
+.badge .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.badge.persistent { background: var(--color-primary-soft); color: var(--color-primary); }
+.badge.persistent .dot { background: var(--color-primary); }
+.badge.cached { background: var(--wbk-success-soft); color: var(--color-success); }
+.badge.cached .dot { background: var(--color-success); }
+.badge.needs-update { background: var(--wbk-warning-soft); color: var(--color-warning); }
+.badge.needs-update .dot { background: var(--color-warning); }
+.badge.not-cached { background: var(--color-bg-tertiary); color: var(--color-text-secondary); }
+.badge.not-cached .dot { background: var(--color-text-tertiary); }
+.badge.pill { height: 26px; padding: 0 10px; gap: 5px; font: 700 11px/1.3 var(--wbk-font-family); min-width: 26px; }
+.badge.pill .dot { width: 7px; height: 7px; }
+
+/* ── Bottom Sheet ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="phone-frame"> <div class="frame-content"> <h1 class="frame-title">Bottom Sheet</h1> <p class="frame-subtitle">底部弹出面板，用于操作选择与确认</p> </div>
+*/
+.sheet-scrim { position:absolute; inset:0; background:var(--color-overlay); z-index:10; }
+.sheet { position:absolute; bottom:0; left:0; right:0; background:var(--color-surface); border-radius:var(--wbk-radius-sheet) var(--wbk-radius-sheet) 0 0; padding:16px; z-index:11; }
+.sheet__handle { width:36px; height:5px; border-radius:3px; background:var(--color-separator); margin:0 auto 12px auto; }
+.sheet__header { font-size:17px; font-weight:600; color:var(--color-text); margin:0 0 8px 0; }
+.sheet__body { display:flex; flex-direction:column; }
+.sheet__item { display:flex; align-items:center; gap:12px; height:54px; padding:0 4px; cursor:pointer; }
+.sheet__item:hover { background:var(--wbk-background-secondary); border-radius:var(--wbk-radius-md); }
+.sheet__item-icon { width:24px; height:24px; color:var(--color-primary); flex-shrink:0; }
+.sheet__item-label { font-size:17px; font-weight:400; color:var(--color-text); }
+.sheet__item-icon--danger { color:var(--wbk-error, #ef4444); }
+.sheet__item-label--danger { color:var(--wbk-error, #ef4444); }
+
+/* ── Button ────────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">主要</span> <button class="btn btn-primary">确认</button> <button class="btn btn-primary" disabled>确认</button>
+*/
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: var(--wbk-button-height); padding: 0 var(--space-xl); min-width: var(--wbk-button-height); border: none; border-radius: var(--radius-md); font: var(--type-button); cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background .15s, border-color .15s; }
+.btn-primary { background: var(--color-primary); color: var(--wbk-text-on-color); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:active { background: var(--color-primary-pressed); filter: none; }
+.btn-primary:disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+.btn-outline { background: transparent; color: var(--color-primary); border: 1.5px solid var(--color-primary); }
+.btn-outline:hover { background: var(--color-primary-soft); border-color: var(--color-primary-pressed); }
+.btn-outline:disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+.btn-ghost { background: transparent; color: var(--color-text-secondary); }
+.btn-ghost:hover { background: var(--color-bg-secondary); }
+.btn-ghost:disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+.btn-icon { width: var(--wbk-button-height); padding: 0; justify-content: center; }
+
+/* ── Card ──────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"> <span class="label">Token</span> <div class="card shadow" data-evidence-sample="Token 卡片"> <div class="card-header"> <span class="card-title">服务器令牌</span> <span class="badge badge-success">活跃</span>
+*/
+.card { display: flex; flex-direction: column; gap: 12px; width: 100%; border-radius: var(--radius-lg); background: var(--color-card); padding: var(--space-md); box-sizing: border-box; }
+.card.shadow { box-shadow: var(--shadow-card); }
+.card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-title { font: var(--wbk-text-card-title); color: var(--color-text); display: flex; align-items: center; gap: 6px; }
+.card-content { display: flex; flex-direction: column; gap: 8px; }
+.card-meta { font: var(--wbk-text-metadata); color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
+.card-action { font: var(--wbk-text-button); color: var(--color-primary); cursor: default; padding: 2px 0; transition: color .15s; }
+.card-action:hover { color: var(--color-primary-pressed); }
+.badge { display: inline-flex; align-items: center; gap: 4px; font: var(--wbk-text-badge); padding: 2px 8px; border-radius: var(--wbk-radius-pill); text-transform: uppercase; }
+.badge-success { background: var(--wbk-success-soft); color: var(--wbk-success); }
+.badge-warning { background: var(--wbk-warning-soft); color: var(--wbk-warning); }
+.text-mono { font: var(--wbk-text-monospace-body); color: var(--color-text); }
+.key-value { display: flex; align-items: center; gap: 8px; font: var(--wbk-text-body); color: var(--color-text); }
+.key-value .key { color: var(--color-text-secondary); min-width: 80px; flex-shrink: 0; }
+.resource-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; font: var(--wbk-text-card-title); color: var(--color-primary); flex-shrink: 0; }
+.resource-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.resource-name { font: var(--wbk-text-card-title); color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resource-meta { font: var(--wbk-text-caption); color: var(--color-text-secondary); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+.stat-item { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: var(--radius-sm); background: var(--color-bg-secondary); }
+.stat-value { font: 700 20px/1.2 var(--wbk-font-family); color: var(--color-text); }
+.stat-label { font: var(--wbk-text-caption); color: var(--color-text-secondary); }
+
+/* ── Chart Bar ─────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">推送数据 - 本周概览</div>
+*/
+.chart-bar { position:relative; display:flex; flex-direction:column; width:100%; }
+.chart-bar__grid { position:relative; flex:1; min-height:200px; }
+.chart-bar__y-label { position:absolute; left:0; font-size:11px; color:var(--wbk-text-tertiary); transform:translateY(-50%); line-height:1; }
+.chart-bar__grid-line { position:absolute; left:28px; right:0; height:1px; background:var(--wbk-background-tertiary); }
+.chart-bar__bars { position:absolute; left:28px; right:0; bottom:0; top:0; display:flex; align-items:flex-end; justify-content:space-around; }
+.chart-bar__bar { flex:1; max-width:32px; margin:0 4px; background:var(--wbk-primary); border-radius:4px 4px 0 0; }
+.chart-bar__x-labels { display:flex; justify-content:space-around; padding-left:28px; margin-top:8px; }
+.chart-bar__x-label { font-size:11px; color:var(--wbk-text-tertiary); text-align:center; flex:1; max-width:32px; }
+
+/* ── Checkbox ──────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="section"> <div class="section-label">带标签</div>
+*/
+.checkbox { display:flex; align-items:center; gap:10px; }
+.checkbox__box { width:22px; height:22px; border-radius:6px; border:2px solid var(--color-separator); flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s, border-color 0.2s; }
+.checkbox__box--checked { background:var(--color-primary); border-color:var(--color-primary); }
+.checkbox__check { display:none; color:#FFFFFF; font-size:14px; font-weight:700; line-height:1; }
+.checkbox__box--checked .checkbox__check { display:block; }
+.checkbox__label { font-size:15px; color:var(--color-text); }
+
+/* ── Chip Input ────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">只读标签组</div>
+*/
+.chip-input { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.chip-input__chip { display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:14px; background:var(--wbk-primary-soft); color:var(--wbk-primary); font-size:13px; font-weight:500; white-space:nowrap; gap:4px; flex-shrink:0; }
+.chip-input__text { line-height:1; }
+.chip-input__remove { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; background:none; border:none; color:var(--wbk-primary); cursor:pointer; padding:0; margin-left:2px; flex-shrink:0; opacity:0.6; }
+.chip-input__remove:hover { opacity:1; }
+.chip-input__remove svg { width:12px; height:12px; }
+.chip-input__field { flex:1; min-width:80px; height:28px; border:none; outline:none; background:transparent; font:var(--wbk-text-metadata); color:var(--wbk-text); padding:0 4px; }
+.chip-input__field::placeholder { color:var(--wbk-text-tertiary); }
+
+/* ── Code Block ────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"> <span class="label">带复制按钮</span> <div class="code-block" style="max-width:360px;" data-evidence-sample="带复制按钮代码块"> <div class="code-block-header"> <span class="code-block-lang">JSON</span> <button class="code-block-copy" aria-label="复制"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-...
+*/
+.code-block { display: flex; flex-direction: column; width: 100%; border-radius: var(--radius-md); background: var(--color-bg-tertiary); padding: 16px; box-sizing: border-box; }
+.code-block-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.code-block-lang { font: var(--wbk-text-monospace-small); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .5px; }
+.code-block-copy { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--color-text-tertiary); border: none; background: transparent; padding: 4px; border-radius: var(--radius-sm); transition: color .15s; }
+.code-block-copy:hover { color: var(--color-primary); }
+.code-block-copy svg { width: 14px; height: 14px; }
+.code-block pre { margin: 0; padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.code-block code { font: var(--wbk-text-monospace-body); color: var(--color-text); white-space: pre; display: block; }
+
+/* ── Context Menu ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">带图标</div>
+*/
+.ctx-menu { background:var(--color-surface-elevated); border-radius:var(--radius-md); padding:4px 0; box-shadow:var(--shadow-card); max-width:220px; width:100%; box-sizing:border-box; }
+.ctx-menu__item { height:36px; display:flex; align-items:center; gap:10px; padding:0 12px; cursor:pointer; transition:background .12s; }
+.ctx-menu__item:hover { background:var(--color-bg-tertiary); }
+.ctx-menu__icon { width:16px; height:16px; flex-shrink:0; display:block; color:var(--color-text-secondary); }
+.ctx-menu__label { font-size:14px; font-weight:400; color:var(--color-text); }
+.ctx-menu__item--danger .ctx-menu__label { color:var(--color-error); }
+.ctx-menu__item--danger .ctx-menu__icon { color:var(--color-error); }
+.ctx-menu__separator { border:none; border-top:1px solid var(--color-separator); margin:4px 12px; }
+
+/* ── Dialog ────────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">确认弹窗</span> <div class="dialog-backdrop"> <div class="dialog"> <div class="dialog-icon confirmation"><i data-lucide="shield-check" width="20" height="20"></i>
+*/
+.dialog-backdrop { display: flex; align-items: center; justify-content: center; background: var(--wbk-overlay); border-radius: var(--radius-lg); min-height: 200px; width: 380px; padding: var(--space-lg); }
+.dialog { background: var(--color-surface); border-radius: var(--radius-lg); max-width: 320px; width: 100%; padding: var(--space-xl); box-shadow: var(--shadow-card); }
+.dialog-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-full); margin-bottom: var(--space-md); }
+.dialog-icon.confirmation { background: var(--color-primary-soft); color: var(--color-primary); }
+.dialog-icon.destructive { background: var(--wbk-error-soft); color: var(--color-error); }
+.dialog-icon.info { background: var(--wbk-info-soft); color: var(--color-info); }
+.dialog-title { font: var(--type-body); font-weight: 600; margin: 0 0 var(--space-xs) 0; color: var(--color-text); }
+.dialog-body { font: var(--type-body); margin: 0 0 var(--space-md) 0; color: var(--color-text-secondary); line-height: 1.4; }
+.dialog-actions { display: flex; gap: var(--space-md); }
+.dialog-actions.single { justify-content: center; }
+.dialog-actions.single .btn { flex: 0 1 auto; min-width: 120px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 var(--space-xl); border-radius: var(--wbk-button-corner-radius); border: none; cursor: pointer; font: var(--type-button); white-space: nowrap; transition: background .15s; flex: 1; }
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover { background: var(--color-primary-pressed); }
+.btn-secondary { background: var(--color-bg-secondary); color: var(--color-text); }
+.btn-secondary:hover { filter: brightness(0.92); }
+.btn-error { background: var(--color-error); color: #fff; }
+.btn-error:hover { filter: brightness(0.85); }
+
+/* ── Divider ───────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <!-- Variant 1: Full-width divider --> <div> <div class="section-title">全宽</div>
+*/
+.wbk-divider {
+  height:1px;
+  background:var(--color-separator);
+  border:none;
+  margin:8px 0;
+}
+.wbk-divider--inset {
+  margin-left:16px;
+  margin-right:16px;
+}
+
+/* Sample context rows */
+.wbk-context-row {
+  display:flex;
+  align-items:center;
+  padding:14px 16px;
+  background:var(--color-surface);
+  font:var(--wbk-text-row-title);
+  color:var(--wbk-text);
+}
+.wbk-context-row + .wbk-context-row {
+  border-top:1px solid var(--color-separator);
+}
+.wbk-context-group {
+  background:var(--color-surface);
+  border-radius:var(--wbk-radius-card);
+  overflow:hidden;
+}
+.wbk-context-group .wbk-context-row {
+  border-top:none;
+}
+
+/* ── Empty State ───────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">空状态 (无操作)</span>
+*/
+.empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-xxxl); gap: var(--space-lg); max-width: var(--wbk-empty-state-max-width); width: 100%; }
+.empty-icon-wrap { width: var(--wbk-icon-empty); height: var(--wbk-icon-empty); display: flex; align-items: center; justify-content: center; color: var(--color-text-tertiary); }
+.empty-icon-wrap svg { width: var(--wbk-icon-empty); height: var(--wbk-icon-empty); stroke: currentColor; }
+.empty-title { margin: 0; font-size: var(--wbk-empty-state-title-size); font-weight: 600; color: var(--color-text); line-height: 1.3; }
+.empty-body { margin: 0; font-size: var(--wbk-empty-state-body-size); color: var(--color-text-secondary); line-height: 1.4; overflow-wrap: break-word; }
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: var(--wbk-button-height); padding: 0 var(--wbk-button-horizontal-padding); border: none; border-radius: var(--wbk-button-corner-radius); background: var(--color-primary); color: var(--wbk-text-on-color); font: var(--type-button); cursor: pointer; white-space: nowrap; min-width: var(--wbk-button-height); transition: background .15s; }
+.btn-primary:hover { background: var(--color-primary-pressed); }
+
+/* ── Filter Pill ───────────────────────────────────────────── */
+/* @anatomy
+   <button class="filter-pill active">全部</button> <button class="filter-pill active">文章</button> <button class="filter-pill active">视频</button> <button class="filter-pill active">音频</button> <button class="filter-pill active">项目</button>
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.filter-pill { display: inline-flex; align-items: center; justify-content: center; height: var(--wbk-filter-pill-height); min-width: var(--wbk-filter-pill-min-width); padding: 0 var(--wbk-filter-pill-horizontal-padding); border-radius: var(--radius-full); white-space: nowrap; font: var(--wbk-text-metadata); cursor: pointer; border: none; transition: background .15s; flex-shrink: 0; }
+.filter-pill.active { background: var(--color-primary); color: var(--wbk-text-on-color); }
+.filter-pill.active:hover { filter: brightness(1.08); }
+.filter-pill.inactive { background: var(--wbk-badge-background); color: var(--wbk-badge-text); }
+.filter-pill.inactive:hover { filter: brightness(1.08); }
+
+/* ── Icon Button ───────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">默认</span> <button class="icon-btn icon-btn--default"><i data-lucide="settings"></i></button> <button class="icon-btn icon-btn--default"><i data-lucide="share-2"></i></button> <button class="icon-btn icon-btn--default"><i data-lucide="bookmark"></i></button>
+*/
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--radius-md); border: none; cursor: pointer; transition: background .12s, opacity .12s; flex-shrink: 0; }
+.icon-btn svg { width: 20px; height: 20px; pointer-events: none; }
+.icon-btn--default { background: transparent; color: var(--color-text); }
+.icon-btn--default:hover { background: var(--color-bg-tertiary); }
+.icon-btn--primary { background: var(--color-primary); color: #fff; }
+.icon-btn--primary:hover { filter: brightness(1.08); }
+.icon-btn--primary:active { filter: brightness(0.92); }
+.icon-btn--ghost { background: var(--color-bg-tertiary); color: var(--color-text-secondary); }
+.icon-btn--ghost:hover { background: var(--color-bg-secondary); }
+
+/* ── Input Group ───────────────────────────────────────────── */
+/* @anatomy
+   <div class="section-label">标准 Form</div>
+*/
+.input-group { display:flex; flex-direction:column; gap:8px; background:var(--color-surface); padding:12px; border-radius:var(--radius-md); }
+.input-group__label { font-size:14px; font-weight:600; color:var(--color-text); }
+.input-group__desc { font-size:12px; color:var(--color-text-secondary); }
+.input-group__field { height:44px; border:1px solid var(--color-separator); border-radius:var(--radius-md); background:var(--color-surface); padding:0 12px; font-size:15px; color:var(--color-text); outline:none; box-sizing:border-box; }
+.input-group__field:focus { border-color:var(--color-primary); }
+.input-group__field::placeholder { color:var(--wbk-placeholder); }
+.input-group__error { font-size:12px; color:var(--color-error); }
+
+/* ── Key Value Row ─────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="variant-label">左键右值（Side）</div>
+*/
+.kv-row { display: flex; flex-direction: row; justify-content: space-between; align-items: center; min-height: 40px; padding: 0 16px; }
+.kv-row__key { font-size: 13px; color: var(--color-text-secondary); flex-shrink: 0; }
+.kv-row__value { font-size: 15px; color: var(--color-text); text-align: right; }
+.kv-row__value--mono { font-family: var(--wbk-font-mono); font-size: 13px; }
+.kv-row--stacked { display: flex; flex-direction: column; gap: 2px; padding: 8px 16px; }
+.kv-row--stacked .kv-row__key { font-size: 12px; }
+.kv-row--stacked .kv-row__value { text-align: left; font-size: 14px; }
+
+/* ── List View ─────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">分组列表</div>
+*/
+.list-view { width:100%; }
+.list-view--grouped { display:flex; flex-direction:column; gap:var(--space-md); padding:var(--space-md); }
+.list-view--flat { padding:0; }
+.list-section-header { font-size:13px; font-weight:600; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px; }
+.list-row { display:flex; align-items:center; min-height:48px; padding:0 16px; gap:12px; background:var(--color-surface); }
+.list-row + .list-row { border-top:1px solid var(--color-separator); }
+.list-view--grouped .list-row { border-radius:var(--radius-md); }
+.list-view--grouped .list-row + .list-row { border-top-left-radius:0; border-top-right-radius:0; }
+.list-view--grouped .list-row:first-child { border-top-left-radius:var(--radius-md); border-top-right-radius:var(--radius-md); }
+.list-view--grouped .list-row:last-child { border-bottom-left-radius:var(--radius-md); border-bottom-right-radius:var(--radius-md); }
+.list-row__icon { width:20px; height:20px; flex-shrink:0; color:var(--color-primary); display:flex; align-items:center; justify-content:center; }
+.list-row__icon--circle { width:32px; height:32px; border-radius:50%; background:var(--color-primary-soft); }
+.list-row__content { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.list-row__title { font-size:15px; font-weight:500; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-row__subtitle { font-size:12px; color:var(--color-text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-row__trailing { font-size:13px; color:var(--color-text-tertiary); flex-shrink:0; display:flex; align-items:center; gap:4px; }
+.list-row__chevron { width:16px; height:16px; color:var(--color-text-tertiary); }
+
+/* ── Loading ───────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">页面加载 (全屏)</div>
+*/
+.loading { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+.loading__spinner { border-radius:50%; border:3px solid var(--color-bg-tertiary); border-top-color:var(--color-primary); animation:loading-spin 0.6s linear infinite; }
+.loading__spinner--large { width:32px; height:32px; border-width:3px; }
+.loading__spinner--small { width:20px; height:20px; border-width:2px; }
+.loading__label { font-size:13px; color:var(--color-text-secondary); white-space:nowrap; }
+@keyframes loading-spin { to { transform:rotate(360deg); } }
+
+/* ── Media Row ─────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="variant-label">带时长</div>
+*/
+.media-row { display: flex; flex-direction: row; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; }
+.media-row__thumb { width: 44px; height: 44px; border-radius: 8px; background: var(--color-bg-tertiary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--color-text-tertiary); }
+.media-row__thumb i { width: 20px; height: 20px; }
+.media-row__info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.media-row__title { font-size: 14px; font-weight: 500; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.media-row__subtitle { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.media-row__duration { font-size: 11px; color: var(--color-text-tertiary); flex-shrink: 0; }
+
+/* ── Message Cell ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="specimen"> <svg style="display:none" xmlns="http://www.w3.org/2000/svg"> <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol> <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="1...
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.message-cell { display: flex; align-items: flex-start; gap: 12px; width: 100%; min-height: 72px; max-height: 96px; padding: 12px; background: var(--color-card); border-radius: var(--radius-md); box-sizing: border-box; transition: filter .15s; overflow: hidden; }
+.message-cell:hover { filter: brightness(0.97); }
+.cell-left { display: flex; align-items: flex-start; gap: 0; flex-shrink: 0; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); flex-shrink: 0; margin-top: 6px; margin-right: 4px; }
+.message-cell.read .dot { opacity: 0; }
+.cell-icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 4px; color: var(--color-text-secondary); display: block; }
+.cell-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.cell-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pill { display: inline-flex; align-items: center; font: var(--wbk-text-badge); color: var(--wbk-text-on-color); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+.pill-primary { background: var(--color-primary); }
+.pill-success { background: var(--color-success); }
+.pill-warning { background: var(--color-warning); }
+.cell-title { font: var(--wbk-text-card-title); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.cell-body { font: var(--type-body); color: var(--color-text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cell-time { font: var(--type-caption); color: var(--color-text-tertiary); flex-shrink: 0; white-space: nowrap; margin-top: 4px; }
+
+/* ── Message Detail ────────────────────────────────────────── */
+/* @anatomy
+   <div class="specimen"> <div class="story"> <div class="story-label">APNs 通知详情</div>
+*/
+.detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
+.pill { display: inline-flex; align-items: center; font: var(--wbk-text-badge); padding: 3px 8px; border-radius: var(--radius-xs); }
+.pill-apns { color: var(--color-primary); background: var(--color-primary-soft); }
+.detail-time { font: var(--type-caption); color: var(--color-text-tertiary); }
+.detail-title { font: 700 20px/1.3 var(--wbk-font-family); color: var(--color-text); margin-bottom: var(--space-md); word-break: keep-all; overflow-wrap: break-word; }
+.body-card { background: var(--color-card); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-lg); }
+.body-text { font-size: 15px; line-height: 1.5; color: var(--color-text-secondary); margin: 0; }
+.meta-card { background: var(--color-card); border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-lg); }
+.meta-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-md) var(--space-lg); min-height: 44px; }
+.meta-row + .meta-row { border-top: 1px solid var(--color-separator); }
+.meta-label { font: var(--type-caption); color: var(--color-text-secondary); }
+.meta-value { display: flex; align-items: center; gap: var(--space-xs); font: var(--wbk-text-footnote); color: var(--color-text); }
+.pill-error { display: inline-flex; align-items: center; font: var(--wbk-text-badge); color: var(--color-error); background: var(--wbk-error-soft); padding: 2px 6px; border-radius: 4px; }
+.actions-row { display: flex; gap: var(--space-md); margin-bottom: var(--space-lg); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); height: var(--wbk-button-height); padding: 0 var(--wbk-button-horizontal-padding); border-radius: var(--wbk-button-corner-radius); border: none; cursor: pointer; font: var(--type-button); white-space: nowrap; min-width: var(--wbk-button-height); transition: filter .15s, background .15s; flex: 1; }
+.btn-primary { background: var(--color-primary); color: var(--wbk-text-on-color); }
+.btn-primary:hover { background: var(--wbk-primary-pressed); }
+.btn-secondary { background: transparent; color: var(--color-primary); border: 1.5px solid var(--color-primary); }
+.btn-secondary:hover { background: var(--color-primary-soft); }
+.msg-cell-compact { display: flex; align-items: flex-start; gap: var(--space-md); padding: var(--space-md); background: var(--color-card); border-radius: var(--radius-md); min-height: 64px; transition: filter .15s; }
+.msg-cell-compact:hover { filter: brightness(0.97); }
+.compact-icon { width: 18px; height: 18px; color: var(--color-text-secondary); flex-shrink: 0; margin-top: 1px; }
+.compact-content { flex: 1; min-width: 0; }
+.compact-title { font: var(--wbk-text-row-title); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compact-body { font: var(--type-caption); color: var(--color-text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; margin-top: 2px; }
+.compact-meta { font: var(--type-caption); color: var(--color-text-tertiary); margin-top: 2px; }
+
+/* ── Nav Header ────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div> <div class="story-label">有返回按钮</div>
+*/
+.nav-header { display:flex; align-items:center; height:44px; padding:0 16px; background:var(--color-bg); position:relative; }
+.nav-header::after { content:''; position:absolute; bottom:0; left:16px; right:16px; height:1px; background:var(--color-separator); }
+.nav-header__back { display:inline-flex; align-items:center; gap:2px; background:none; border:none; color:var(--color-primary); cursor:pointer; padding:4px 0; font-family:inherit; }
+.nav-header__back-icon { width:24px; height:24px; flex-shrink:0; }
+.nav-header__back-label { font-size:15px; font-weight:400; }
+.nav-header__title { position:absolute; left:50%; transform:translateX(-50%); font-size:17px; font-weight:600; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%; }
+.nav-header__title--left { position:static; transform:none; left:auto; margin-left:var(--space-sm); }
+.nav-header__actions { margin-left:auto; display:flex; align-items:center; gap:var(--space-sm); }
+
+/* ── Notification Banner ───────────────────────────────────── */
+/* @anatomy
+   <div class="notif-banner"> <div class="notif-banner__body"> <span class="notif-banner__title">系统更新</span> <span class="notif-banner__message">新版本 v2.1.0 已发布，包含性能优化</span> <span class="notif-banner__time">2分钟前</span>
+*/
+.notif-banner { max-width:380px; width:100%; background:var(--color-surface); border-radius:var(--radius-md); padding:12px; box-shadow:var(--shadow-card); box-sizing:border-box; }
+.notif-banner__row { display:flex; align-items:flex-start; gap:12px; }
+.notif-banner__avatar { width:36px; height:36px; border-radius:50%; background:var(--wbk-primary-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:15px; font-weight:600; color:var(--color-primary); }
+.notif-banner__body { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.notif-banner__title { font-size:13px; font-weight:600; color:var(--color-text); }
+.notif-banner__message { font-size:13px; font-weight:400; color:var(--color-text-secondary); line-height:1.4; }
+.notif-banner__time { font-size:11px; color:var(--color-text-tertiary); margin-top:4px; }
+
+/* ── Page Dots ─────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="variant-label">3 页 · 第 2 页激活</div>
+*/
+.page-dots { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 6px; height: 24px; }
+.page-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-bg-tertiary); flex-shrink: 0; transition: all .2s; }
+.page-dot--active { width: 18px; border-radius: 3px; background: var(--color-primary); }
+
+/* ── Pie Chart ─────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">缓存使用分布</div>
+*/
+.pie-chart { position:relative; width:120px; height:120px; border-radius:50%; background:conic-gradient(
+  var(--wbk-primary) 0% 50%,
+  var(--wbk-success) 50% 75%,
+  var(--wbk-warning) 75% 90%,
+  var(--wbk-info) 90% 100%
+); }
+.pie-chart__inner { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:48px; height:48px; border-radius:50%; background:var(--wbk-surface); display:flex; align-items:center; justify-content:center; }
+.pie-chart__center-text { font-size:20px; font-weight:700; color:var(--wbk-text); }
+.pie-chart__legend { display:flex; flex-wrap:wrap; gap:12px 20px; margin-top:16px; justify-content:center; }
+.pie-chart__legend-item { display:flex; align-items:center; gap:6px; }
+.pie-chart__legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.pie-chart__legend-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); }
+
+/* ── Progress Bar ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">缓存使用进度</div>
+*/
+.progress-bar { display:flex; flex-direction:column; gap:6px; width:100%; }
+.progress-bar__track { width:100%; height:8px; border-radius:4px; background:var(--color-bg-tertiary); overflow:hidden; }
+.progress-bar__fill { height:100%; border-radius:4px; background:var(--color-primary); transition:width 0.4s ease; }
+.progress-bar__fill--success { background:var(--color-success); }
+.progress-bar__fill--warning { background:var(--color-warning); }
+.progress-bar__fill--error { background:var(--color-error); }
+
+/* ── Pull Indicator ────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">等待拉动</div>
+*/
+.pull-indicator { display:flex; align-items:center; justify-content:center; gap:8px; height:48px; width:100%; }
+.pull-indicator__icon { display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pull-indicator__icon--idle svg { width:20px; height:20px; color:var(--wbk-text-tertiary); }
+.pull-indicator__icon--loading { width:20px; height:20px; border-radius:50%; border:2px solid var(--wbk-background-tertiary); border-top-color:var(--wbk-primary); animation:loading-spin 0.6s linear infinite; }
+.pull-indicator__label { font:var(--wbk-text-caption); color:var(--wbk-text-tertiary); white-space:nowrap; }
+@keyframes loading-spin { to { transform:rotate(360deg); } }
+
+/* ── Radio Group ───────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="section-label">外观模式</div>
+*/
+.radio-group { display:flex; flex-direction:column; background:var(--color-surface); border-radius:var(--wbk-radius-card); box-shadow:var(--shadow-card); overflow:hidden; }
+.radio-option { display:flex; align-items:center; height:44px; padding:0 16px; gap:12px; cursor:pointer; }
+.radio-option:not(:last-child) { border-bottom:1px solid var(--color-separator); }
+.radio-option__circle { width:20px; height:20px; border-radius:50%; border:2px solid var(--color-separator); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:border-color 0.2s; }
+.radio-option--selected .radio-option__circle { border-color:var(--color-primary); }
+.radio-option__circle--selected { width:10px; height:10px; border-radius:50%; background:var(--color-primary); }
+.radio-option__inner { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+.radio-option__label { font-size:15px; color:var(--color-text); }
+
+/* ── Search Field ──────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">默认</span> <div class="search-field"> <svg class="search-field-icon"><use href="#icon-search"/></svg> <input type="search" placeholder="搜索应用、功能或设置...">
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.search-field { display: flex; align-items: center; height: var(--wbk-search-field-height); border-radius: var(--wbk-search-field-corner-radius); background: var(--color-card); padding: 0 var(--wbk-search-field-horizontal-padding); gap: var(--space-sm); width: 100%; transition: background .15s, border-color .15s; }
+.search-field:hover { filter: brightness(1.08); }
+.search-field:focus-within { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.search-field-icon { width: var(--wbk-search-field-icon-size); height: var(--wbk-search-field-icon-size); flex-shrink: 0; color: var(--color-text-secondary); }
+.search-field input { flex: 1; border: none; background: transparent; font: var(--type-body); color: var(--color-text); outline: none; padding: 0; min-width: 0; height: 100%; -webkit-appearance: none; appearance: none; }
+.search-field input::placeholder { color: var(--wbk-placeholder); }
+.search-field input::-webkit-search-decoration,
+.search-field input::-webkit-search-cancel-button,
+.search-field input::-webkit-search-results-button,
+.search-field input::-webkit-search-results-decoration { display: none; }
+.search-field.is-disabled { opacity: var(--wbk-opacity-disabled); pointer-events: none; }
+
+/* ── Section Header ────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <!-- Variant 1: Standard --> <div> <div class="section-title">标准</div>
+*/
+.wbk-section-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:24px 16px 8px;
+  margin:0;
+}
+.wbk-section-header__title {
+  font-size:13px;
+  font-weight:600;
+  color:var(--color-text-secondary);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  line-height:1;
+}
+.wbk-section-header__action {
+  font-size:13px;
+  font-weight:500;
+  color:var(--color-primary);
+  text-decoration:none;
+  line-height:1;
+}
+
+/* Sample list row context */
+.wbk-list-row {
+  display:flex;
+  align-items:center;
+  padding:14px 16px;
+  background:var(--color-surface);
+  gap:12px;
+}
+.wbk-list-row + .wbk-list-row {
+  border-top:1px solid var(--color-separator);
+}
+.wbk-list-row__icon {
+  width:32px;
+  height:32px;
+  border-radius:var(--radius-sm);
+  background:var(--color-primary-soft);
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--color-primary);
+}
+.wbk-list-row__content {
+  flex:1;
+  min-width:0;
+}
+.wbk-list-row__title {
+  font:var(--wbk-text-row-title);
+  color:var(--wbk-text);
+}
+.wbk-list-row__subtitle {
+  font:var(--wbk-text-caption);
+  color:var(--wbk-text-tertiary);
+  margin-top:2px;
+}
+.wbk-list-row__chevron {
+  color:var(--wbk-text-tertiary);
+  flex-shrink:0;
+}
+
+/* ── Segmented Control ─────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <span class="story-label">2 段</span> <div class="seg-track"> <span class="seg-segment seg-segment--active">概述</span> <span class="seg-segment">详情</span> </div>
+*/
+.seg-track { display:inline-flex; height:32px; background:var(--color-bg-tertiary); border-radius:8px; padding:2px; position:relative; }
+.seg-segment { display:inline-flex; align-items:center; justify-content:center; padding:0 16px; height:28px; border-radius:7px; position:relative; z-index:2; font-size:13px; font-weight:500; color:var(--color-text-secondary); cursor:pointer; white-space:nowrap; user-select:none; }
+.seg-segment--active { background:var(--color-surface); color:var(--color-text); box-shadow:var(--shadow-sm); z-index:3; }
+
+/* ── Settings Row ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="specimen"> <svg style="display:none" xmlns="http://www.w3.org/2000/svg"> <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol> <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol> <symbol id="icon-hard-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.45...
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.settings-row { display: flex; align-items: center; gap: 12px; min-height: var(--wbk-settings-row-min-height); max-height: var(--wbk-settings-row-max-height); padding: 0 var(--wbk-settings-row-horizontal-padding); background: var(--color-surface); border-bottom: 1px solid var(--color-separator); cursor: pointer; transition: background .15s; width: 100%; box-sizing: border-box; }
+.settings-row:hover { filter: brightness(0.97); }
+.settings-row .icon-box { width: var(--wbk-settings-row-icon-box); height: var(--wbk-settings-row-icon-box); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.settings-row .icon-box svg { width: var(--wbk-settings-row-icon-size); height: var(--wbk-settings-row-icon-size); display: block; }
+.settings-row .label-text { font: var(--wbk-text-row-title); color: var(--color-text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.settings-row .value-text { font: var(--wbk-text-body); color: var(--color-text-secondary); flex-shrink: 0; }
+.settings-row .chevron { width: var(--wbk-settings-row-chevron-size); height: var(--wbk-settings-row-chevron-size); flex-shrink: 0; color: var(--color-text-tertiary); opacity: 0.4; display: block; }
+
+/* ── Skeleton ──────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div> <div class="section-title">卡片骨架</div>
+*/
+@keyframes skeleton-pulse { 0% { opacity:0.4; } 50% { opacity:1; } 100% { opacity:0.4; } }
+.wbk-skeleton { background-color:var(--color-bg-tertiary); animation:skeleton-pulse 1.5s ease-in-out infinite; }
+.wbk-skeleton-card { border-radius:var(--radius-md); padding:16px; background-color:var(--color-surface); box-shadow:var(--shadow-card); display:flex; flex-direction:column; gap:12px; }
+.wbk-skeleton-card__header { display:flex; align-items:center; gap:12px; }
+.wbk-skeleton__circle { width:32px; height:32px; border-radius:50%; flex-shrink:0; }
+.wbk-skeleton__bar { height:16px; border-radius:4px; }
+.wbk-skeleton-lines { display:flex; flex-direction:column; gap:10px; }
+
+/* ── Slider ────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="section-label">带数值 Label</div>
+*/
+.slider { display:flex; flex-direction:column; gap:8px; background:var(--color-surface); padding:12px; border-radius:var(--radius-md); }
+.slider__label { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--color-text-secondary); }
+.slider__value { font-size:13px; color:var(--color-text-secondary); }
+.slider__track { position:relative; height:4px; border-radius:2px; background:var(--color-bg-tertiary); }
+.slider__fill { position:absolute; left:0; top:0; height:100%; background:var(--color-primary); border-radius:2px; width:60%; }
+.slider__thumb { position:absolute; width:24px; height:24px; border-radius:50%; background:var(--color-surface); border:1px solid var(--color-separator); box-shadow:var(--shadow-sm); top:50%; left:60%; transform:translate(-50%,-50%); cursor:grab; }
+
+/* ── Stats Tile ────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">推送统计</span> <div class="tile-grid"> <div class="tile tile-primary"> <i data-lucide="mail" class="tile-icon"></i> <span class="tile-num">42</span> <span class="tile-lbl">总消息</span>
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; min-width: 0; }
+.tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--color-card); border-radius: var(--radius-md); padding: 12px; min-width: 72px; text-align: center; }
+.tile-num { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.tile-lbl { font-size: 11px; color: var(--color-text-secondary); white-space: nowrap; }
+.tile-icon { width: var(--wbk-icon-md); height: var(--wbk-icon-md); }
+.tile-primary .tile-num, .tile-primary .tile-icon { color: var(--color-primary); }
+.tile-success .tile-num, .tile-success .tile-icon { color: var(--color-success); }
+.tile-info .tile-num, .tile-info .tile-icon { color: var(--color-info); }
+.tile-default .tile-num, .tile-default .tile-icon { color: var(--color-text-secondary); }
+
+/* ── Step Indicator ────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <span class="story-label">步骤条</span> <div class="step-indicator"> <div class="step-indicator__step"> <div class="step-indicator__circle step-indicator__circle--completed">&#10003;</div>
+*/
+.step-indicator { display:flex; align-items:flex-start; padding:24px 16px; }
+.step-indicator__step { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; }
+.step-indicator__circle { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; position:relative; z-index:1; }
+.step-indicator__circle--completed { background:var(--color-primary); color:#fff; }
+.step-indicator__circle--active { background:var(--color-primary); color:#fff; box-shadow:0 0 0 4px var(--wbk-primary-soft); }
+.step-indicator__circle--pending { background:var(--color-bg-tertiary); color:var(--color-text-tertiary); }
+.step-indicator__line { position:absolute; top:12px; left:calc(50% + 12px); right:calc(-50% + 12px); height:2px; background:var(--color-separator); z-index:0; }
+.step-indicator__step:last-child .step-indicator__line { display:none; }
+.step-indicator__line--completed { background:var(--color-primary); }
+.step-indicator__label { font-size:12px; color:var(--color-text-secondary); margin-top:8px; text-align:center; white-space:nowrap; }
+.step-indicator__label--active { color:var(--color-text); font-weight:600; }
+
+/* ── Swipe Action ──────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">静止态</div>
+*/
+.swipe-action { display:flex; overflow:hidden; border-radius:var(--radius-md); }
+.swipe-action__actions { display:flex; align-items:stretch; }
+.swipe-action__btn { width:60px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:500; border:none; cursor:pointer; background:var(--color-bg-tertiary); color:var(--color-text); }
+.swipe-action__btn--delete { background:var(--color-error); color:#fff; }
+.swipe-action__content { display:flex; align-items:center; gap:12px; min-height:48px; padding:12px 16px; background:var(--color-surface); flex-shrink:0; width:100%; box-sizing:border-box; }
+.swipe-action__icon { width:36px; height:36px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.swipe-action__text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.swipe-action__title { font-size:15px; font-weight:600; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.swipe-action__subtitle { font-size:13px; color:var(--color-text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.swipe-action__time { font-size:12px; color:var(--color-text-tertiary); flex-shrink:0; align-self:flex-start; margin-top:2px; }
+
+/* ── Switch Card ───────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <span class="story-label">带副标题</span> <div class="switch-card"> <span class="switch-card__icon"><i data-lucide="bell" width="24" height="24"></i></span> <div class="switch-card__content"> <span class="switch-card__title">推送通知</span> <span class="switch-card__subtitle">接收来自服务器的实时消息</span> </div>
+*/
+.switch-card { display:flex; align-items:center; background:var(--color-surface); border-radius:var(--radius-md); padding:0 16px; min-height:48px; }
+.switch-card + .switch-card { margin-top:-1px; }
+.switch-card__icon { width:24px; height:24px; flex-shrink:0; color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin-right:12px; }
+.switch-card__content { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+.switch-card__title { font-size:15px; font-weight:500; color:var(--color-text); line-height:1.3; }
+.switch-card__subtitle { font-size:12px; font-weight:400; color:var(--color-text-secondary); line-height:1.3; }
+.switch-card__toggle { position:relative; width:51px; height:31px; border-radius:16px; flex-shrink:0; margin-left:12px; }
+.switch-card__toggle::after { content:''; position:absolute; top:2px; left:2px; width:27px; height:27px; border-radius:50%; background:#fff; transition:transform .2s ease; }
+.switch-card__toggle--on { background:var(--color-primary); }
+.switch-card__toggle--on::after { transform:translateX(20px); }
+.switch-card__toggle:not(.switch-card__toggle--on) { background:var(--color-separator); }
+
+/* ── Tab Bar ───────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">首页激活</span> <div class="tab-bar" data-active="home"> <button class="tab active" data-tab="home"><i data-lucide="home"></i><span class="tab-label">首页</span></button> <button class="tab" data-tab="inbox"><i data-lucide="inbox"></i><span class="tab-label">收件箱</span></button> <button class="tab" data-tab="discover"><i data-lucide="compass"></i><span class="tab-label">发现</span></...
+*/
+/* Component definitions — extracted to components.css */
+.tab-bar { display:flex; align-items:flex-start; justify-content:space-around; width:100%; height:83px; padding:8px 0 34px; background:var(--color-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); box-sizing:border-box; }
+.tab { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; border:none; background:none; padding:0; min-width:44px; min-height:44px; position:relative; transition:background .15s,border-color .15s; }
+.tab:hover { filter:brightness(1.08); }
+.tab.active { color:var(--color-primary); }
+.tab:not(.active) { color:var(--color-text-tertiary); }
+.tab i { width:23px; height:23px; display:inline-block; }
+.tab .tab-label { font:var(--wbk-text-tab-label); white-space:nowrap; }
+.tab .badge-dot { position:absolute; top:-1px; right:-2px; width:8px; height:8px; background:var(--wbk-error); border-radius:var(--radius-full); border:2px solid var(--color-bg); }
+
+/* ── Tab Indicator ─────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="variant-label">2 标签</div>
+*/
+.tab-indicator { display: flex; flex-direction: row; height: 40px; border-bottom: 1px solid var(--color-separator); position: relative; }
+.tab-indicator__tab { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: var(--color-text-secondary); cursor: default; position: relative; }
+.tab-indicator__tab--active { color: var(--color-primary); }
+.tab-indicator__indicator { position: absolute; bottom: 0; left: 0; height: 2px; border-radius: 1px; background: var(--color-primary); transition: left .25s; }
+
+/* ── Table ─────────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">Handler 列表</span>
+*/
+/* Component definitions — extracted to components.css by deterministic script */
+.tbl { width: 100%; border-collapse: collapse; background: var(--color-card); border-radius: var(--radius-md); overflow: hidden; }
+.tbl th { background: var(--color-bg-secondary); font-size: 13px; font-weight: 600; height: 36px; padding: 0 12px; text-align: left; white-space: nowrap; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-separator); }
+.tbl td { height: 44px; padding: 0 12px; font-size: 14px; border-bottom: 1px solid var(--color-separator); }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr { transition: filter .15s; }
+.tbl tr:hover { filter: brightness(0.97); }
+.tbl .action-link { color: var(--color-primary); cursor: pointer; text-decoration: none; transition: color .15s; }
+.tbl .action-link:hover { color: var(--color-primary-pressed); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-xs); font-size: 12px; line-height: 1.4; white-space: nowrap; }
+.badge-success { background: var(--wbk-success-soft); color: var(--wbk-success); }
+.badge-primary { background: var(--wbk-primary-soft); color: var(--wbk-primary); }
+.badge-warning { background: var(--wbk-warning-soft); color: var(--wbk-warning); }
+
+/* ── Text Field ────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row"> <span class="label">默认</span> <div class="text-field" style="max-width:280px;" data-evidence-sample="默认文本输入框"> <label class="text-field-label">服务器地址</label> <div class="text-field-input-wrap"> <input class="text-field-input" type="text" placeholder="请输入服务器地址">
+*/
+.text-field { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.text-field-label { font: var(--wbk-text-metadata); color: var(--color-text-secondary); }
+.text-field-input-wrap { display: flex; align-items: center; height: 48px; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-surface); padding: 0 12px; gap: 8px; box-sizing: border-box; transition: border-color .15s; }
+.text-field-input-wrap:focus-within { border-color: var(--color-primary); outline: none; }
+.text-field-input-wrap.is-error { border-color: var(--color-error); }
+.text-field-input-wrap.is-error:focus-within { border-color: var(--color-error); }
+.text-field-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--color-text-tertiary); display: flex; align-items: center; justify-content: center; }
+.text-field-icon svg { width: 18px; height: 18px; }
+.text-field-input { flex: 1; border: none; background: transparent; font: var(--wbk-text-body); color: var(--color-text); outline: none; padding: 0; min-width: 0; height: 100%; -webkit-appearance: none; appearance: none; }
+.text-field-input::placeholder { color: var(--wbk-placeholder); }
+.text-field-error { font: var(--wbk-text-caption); color: var(--color-error); }
+
+/* ── Toast ─────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="toast toast--success"> <i data-lucide="check-circle" class="toast__icon"></i> <span>已成功发送推送通知</span>
+*/
+.toast { display:inline-flex; align-items:center; gap:8px; max-width:360px; padding:12px 16px; border-radius:var(--radius-md); min-height:44px; font-size:14px; line-height:1.4; }
+.toast--success { background:var(--color-success); color:var(--wbk-text-on-color); }
+.toast--error { background:var(--color-error); color:var(--wbk-text-on-color); }
+.toast__icon { width:20px; height:20px; flex-shrink:0; display:inline-block; }
+
+/* ── Toggle Switch ─────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">允许通知</span> <div class="toggle on"> <div class="toggle-track"><div class="toggle-thumb">
+*/
+.toggle { display: inline-flex; flex-shrink: 0; }
+.toggle-track { position: relative; width: 51px; height: 31px; border-radius: 16px; cursor: pointer; transition: background var(--wbk-animation-fast-duration); }
+.toggle-track:hover { filter: brightness(1.08); }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFF; transition: transform var(--wbk-animation-fast-duration); }
+.toggle.on .toggle-track { background: var(--color-primary); }
+.toggle.on .toggle-thumb { transform: translateX(20px); }
+.toggle.off .toggle-track { background: var(--wbk-text-tertiary); }
+.toggle.off .toggle-thumb { transform: translateX(0); }
+
+/* ── Tooltip ───────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <!-- Variant 1: Above (上方) --> <div> <div class="section-title">上方</div>
+*/
+.wbk-tooltip {
+  display:inline-flex;
+  align-items:center;
+  background:var(--wbk-text);
+  color:var(--wbk-background);
+  font-size:12px;
+  font-weight:500;
+  padding:8px 12px;
+  border-radius:6px;
+  max-width:200px;
+  line-height:1.4;
+  white-space:nowrap;
+}
+
+/* Tooltip placement wrappers */
+.wbk-tooltip-demo {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.wbk-tooltip-demo--top {
+  flex-direction:column;
+}
+.wbk-tooltip-demo--bottom {
+  flex-direction:column;
+}
+
+/* Sample trigger button */
+.wbk-tooltip-trigger {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  border-radius:var(--radius-md);
+  background:var(--color-primary-soft);
+  color:var(--color-primary);
+  border:none;
+  cursor:pointer;
+}
+.wbk-tooltip-trigger--text {
+  width:auto;
+  padding:0 16px;
+  gap:8px;
+  font:var(--wbk-text-button);
+  color:var(--wbk-background);
+  background:var(--color-primary);
+  border-radius:var(--radius-md);
+}
+
+/* ── User Row ──────────────────────────────────────────────── */
+/* @anatomy
+   <div class="section-label">用户行 — 带头像 / 带状态</div>
+*/
+.user-row { display:flex; align-items:center; gap:12px; min-height:48px; padding:0 16px; background:var(--color-surface); border-radius:var(--radius-md); }
+.user-row__avatar { width:36px; height:36px; border-radius:18px; background:var(--wbk-primary-soft); color:var(--color-primary); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; flex-shrink:0; }
+.user-row__info { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+.user-row__name { font-size:15px; font-weight:500; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-row__subtitle { font-size:12px; color:var(--color-text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-row__status { width:10px; height:10px; border-radius:50%; background:var(--color-success); flex-shrink:0; }
+
+/* ── Web View ──────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage"> <div class="story"> <div class="story-label">加载中</div>
+*/
+.webview { width:100%; max-width:480px; background:var(--wbk-background); border-radius:var(--wbk-radius-card); overflow:hidden; box-shadow:var(--wbk-shadow-card); display:flex; flex-direction:column; min-height:360px; position:relative; }
+.webview__progress { position:absolute; top:0; left:0; right:0; height:2px; background:var(--wbk-primary); z-index:2; }
+.webview__progress--loading { animation:webview-progress 2s ease-in-out infinite; }
+@keyframes webview-progress { 0% { width:0; } 50% { width:70%; } 100% { width:100%; } }
+.webview__url-bar { display:flex; align-items:center; height:36px; margin:8px 12px 0; padding:0 12px; background:var(--wbk-background-tertiary); border-radius:var(--wbk-radius-md); gap:8px; flex-shrink:0; }
+.webview__url-bar-icon { width:14px; height:14px; color:var(--wbk-text-tertiary); flex-shrink:0; }
+.webview__url-bar-text { font:var(--wbk-text-metadata); color:var(--wbk-text-secondary); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.webview__url-bar-lock { width:12px; height:12px; color:var(--wbk-success); flex-shrink:0; }
+.webview__content { flex:1; padding:var(--wbk-spacing-lg); overflow:hidden; }
+.webview__content-heading { font:var(--wbk-text-section-title); color:var(--wbk-text); margin:0 0 12px; }
+.webview__content-para { font:var(--wbk-text-body); color:var(--wbk-text-secondary); margin:0 0 12px; line-height:1.6; }
+.webview__content-para:last-child { margin-bottom:0; }

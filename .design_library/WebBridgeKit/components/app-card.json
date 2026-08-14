@@ -1,0 +1,34 @@
+{
+  "slug": "app-card",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["app", "application", "link-card"],
+  "variantDimensions": ["status"],
+  "representativeVariants": [
+    { "name": "已缓存应用卡", "props": { "status": "cached" } },
+    { "name": "在线应用卡", "props": { "status": "online" } },
+    { "name": "待更新应用卡", "props": { "status": "pending" } }
+  ],
+  "anatomy": [
+    { "name": "card", "role": "container", "type": "element" },
+    { "name": "iconCircle", "role": "gradient icon", "type": "element" },
+    { "name": "name", "role": "app name", "type": "element" },
+    { "name": "statusDot", "role": "online indicator", "type": "element" },
+    { "name": "statusText", "role": "status label", "type": "element" },
+    { "name": "time", "role": "relative time", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "minHeight": 92,
+    "maxHeight": 116,
+    "cornerRadius": { "ref": "--radius-lg" },
+    "backgroundColor": { "ref": "--color-card" },
+    "padding": 16,
+    "iconSize": 36,
+    "iconRadius": 10,
+    "titleMaxLines": 2
+  },
+  "usageHints": ["首页 2 列网格中使用", "iconCircle 使用渐变背景", "statusDot=d6 绿色实心圆 + statusText"],
+  "doNotInvent": ["不要添加超过 2 行的文字", "每行 2 列不要改为 3 列"],
+  "unknowns": []
+}

@@ -1,0 +1,35 @@
+{
+  "slug": "accordion",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["accordion", "collapsible", "expandable"],
+  "variantDimensions": ["defaultOpen"],
+  "representativeVariants": [
+    { "name": "展开", "props": { "defaultOpen": true } },
+    { "name": "收起", "props": { "defaultOpen": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "section wrapper", "type": "element" },
+    { "name": "header", "role": "tap to expand/collapse", "type": "element" },
+    { "name": "headerIcon", "role": "chevron indicator", "type": "element" },
+    { "name": "headerLabel", "role": "section title", "type": "element" },
+    { "name": "body", "role": "expandable content area", "type": "element" }
+  ],
+  "structurePatterns": {
+    "headerHeight": 44,
+    "headerPaddingH": 16,
+    "headerBackground": { "ref": "--color-surface" },
+    "headerFontSize": 15,
+    "headerFontWeight": 500,
+    "headerColor": { "ref": "--color-text" },
+    "chevronSize": 16,
+    "chevronColor": { "ref": "--color-text-tertiary" },
+    "bodyPadding": 16,
+    "separatorColor": { "ref": "--color-separator" },
+    "cornerRadius": { "ref": "--radius-md" }
+  },
+  "usageHints": ["调试面板折叠分区、设置页可收起选项组"],
+  "doNotInvent": ["不要添加多级嵌套", "只使用纯CSS展开/收起"],
+  "unknowns": []
+}

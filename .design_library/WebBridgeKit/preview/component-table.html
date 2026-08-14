@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>Table — WebBridgeKit</title>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); color: var(--color-text); }
+.specimen { max-width: 640px; }
+.label { font: var(--type-caption); color: var(--color-text-tertiary); letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+.row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 16px 0; }
+
+/* @component-css-start */
+/* Component definitions — extracted to components.css by deterministic script */
+.tbl { width: 100%; border-collapse: collapse; background: var(--color-card); border-radius: var(--radius-md); overflow: hidden; }
+.tbl th { background: var(--color-bg-secondary); font-size: 13px; font-weight: 600; height: 36px; padding: 0 12px; text-align: left; white-space: nowrap; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-separator); }
+.tbl td { height: 44px; padding: 0 12px; font-size: 14px; border-bottom: 1px solid var(--color-separator); }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr { transition: filter .15s; }
+.tbl tr:hover { filter: brightness(0.97); }
+.tbl .action-link { color: var(--color-primary); cursor: pointer; text-decoration: none; transition: color .15s; }
+.tbl .action-link:hover { color: var(--color-primary-pressed); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-xs); font-size: 12px; line-height: 1.4; white-space: nowrap; }
+.badge-success { background: var(--wbk-success-soft); color: var(--wbk-success); }
+.badge-primary { background: var(--wbk-primary-soft); color: var(--wbk-primary); }
+.badge-warning { background: var(--wbk-warning-soft); color: var(--wbk-warning); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+
+<div class="row"><span class="label">Handler 列表</span></div>
+<div class="row">
+<table class="tbl">
+<thead><tr><th>处理器</th><th>操作</th></tr></thead>
+<tbody>
+<tr><td>get_manifest</td><td><a class="action-link">查看</a></td></tr>
+<tr><td>push_notification</td><td><a class="action-link">查看</a></td></tr>
+<tr><td>get_device_info</td><td><a class="action-link">查看</a></td></tr>
+<tr><td>open_url</td><td><a class="action-link">查看</a></td></tr>
+</tbody>
+</table>
+</div>
+
+<hr class="divider">
+
+<div class="row"><span class="label">缓存资源</span></div>
+<div class="row">
+<table class="tbl">
+<thead><tr><th>名称</th><th>大小</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>bridge-hub.html</td><td>245 KB</td><td><span class="badge badge-success">已缓存</span></td></tr>
+<tr><td>manifest.json</td><td>12 KB</td><td><span class="badge badge-primary">持久化</span></td></tr>
+<tr><td>cache-showcase.html</td><td>156 KB</td><td><span class="badge badge-success">已缓存</span></td></tr>
+<tr><td>test-hub.html</td><td>67 KB</td><td><span class="badge badge-warning">需更新</span></td></tr>
+</tbody>
+</table>
+</div>
+
+</div>
+</body>
+</html>

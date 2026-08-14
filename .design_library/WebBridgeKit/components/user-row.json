@@ -1,0 +1,35 @@
+{
+  "slug": "user-row",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["user-row", "contact", "person"],
+  "variantDimensions": ["hasStatus"],
+  "representativeVariants": [
+    { "name": "带头像", "props": { "hasStatus": false } },
+    { "name": "带状态", "props": { "hasStatus": true } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "user row", "type": "element" },
+    { "name": "avatar", "role": "user avatar", "type": "element" },
+    { "name": "info", "role": "name + subtitle column", "type": "element" },
+    { "name": "name", "role": "user display name", "type": "element" },
+    { "name": "subtitle", "role": "extra info", "type": "optional" },
+    { "name": "trailing", "role": "right-side content", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "minHeight": 54,
+    "paddingH": 16,
+    "avatarSize": 36,
+    "avatarRadius": 18,
+    "nameSize": 15,
+    "nameWeight": 500,
+    "nameColor": { "ref": "--color-text" },
+    "subtitleSize": 12,
+    "subtitleColor": { "ref": "--color-text-secondary" },
+    "gap": 12
+  },
+  "usageHints": ["设备列表、联系人、调试中心日志来源"],
+  "doNotInvent": ["不要添加选择态", "不要添加滑动操作"],
+  "unknowns": []
+}

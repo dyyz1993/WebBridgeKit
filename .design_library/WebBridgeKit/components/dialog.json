@@ -1,0 +1,33 @@
+{
+  "slug": "dialog",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["modal", "alert", "confirmation"],
+  "variantDimensions": ["style", "buttons"],
+  "representativeVariants": [
+    { "name": "确认弹窗", "props": { "style": "confirmation", "buttons": "two" } },
+    { "name": "警告弹窗", "props": { "style": "destructive", "buttons": "two" } },
+    { "name": "信息弹窗", "props": { "style": "info", "buttons": "single" } }
+  ],
+  "anatomy": [
+    { "name": "overlay", "role": "backdrop", "type": "element" },
+    { "name": "dialog", "role": "dialog container", "type": "element" },
+    { "name": "icon", "role": "leading icon", "type": "optional" },
+    { "name": "title", "role": "dialog title", "type": "element" },
+    { "name": "body", "role": "dialog body text", "type": "element" },
+    { "name": "actions", "role": "button group", "type": "element" }
+  ],
+  "structurePatterns": {
+    "overlayColor": { "ref": "--wbk-overlay" },
+    "cornerRadius": { "ref": "--radius-lg" },
+    "backgroundColor": { "ref": "--color-surface" },
+    "padding": 24,
+    "maxWidth": 320,
+    "buttonHeight": 48,
+    "modalAnimationDuration": "var(--wbk-duration-normal)"
+  },
+  "usageHints": ["使用 var(--wbk-overlay) 作为遮罩", "确认弹窗使用 primary 按钮", "危险弹窗使用 error 按钮"],
+  "doNotInvent": ["不要添加全屏弹窗变体", "按钮最多 2 个"],
+  "unknowns": ["具体按钮间距值待确认"]
+}

@@ -1,0 +1,659 @@
+/* ============================================================
+   WebBridgeKit Design System — Design Tokens CSS
+   Source: structured-spec
+   Auto-generated from docs/design-tokens.json v4.0.0
+   ============================================================ */
+
+/* ===== 1. Web Font Imports ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/*
+  Font stack: system-ui, -apple-system, BlinkMacSystemFont,
+  "SF Pro Text", "Segoe UI", Roboto, sans-serif
+  Monospace: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace
+*/
+
+/* ============================================================ */
+/* ===== 2. :root — Light Theme (Default) ===== */
+/* ============================================================ */
+:root {
+  /* Source: structured-spec */
+
+  /* ===== Color Tokens ===== */
+
+  /* background */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+
+  /* surface */
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+
+  /* text */
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+
+  /* border */
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+
+  /* brand */
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-accent: #8B5CF6;
+  --wbk-accent-soft: #F3EFFE;
+
+  /* semantic */
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-offline: #64748B;
+  --wbk-offline-soft: #EEF2F6;
+
+  /* navigation */
+  --wbk-navigation-bar-background: #FFFFFF;
+  --wbk-tab-bar-background: #FFFFFF;
+
+  /* overlay & shadow base */
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+
+  /* ===== Compatibility Aliases ===== */
+  --wbk-divider: var(--wbk-separator);
+  --wbk-navigation-bar-title: var(--wbk-text);
+  --wbk-dim-overlay: var(--wbk-overlay);
+  --wbk-secondary: var(--wbk-text-secondary);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-on-primary: var(--wbk-text-on-color);
+  --wbk-badge-background: var(--wbk-primary-soft);
+  --wbk-badge-text: var(--wbk-text-secondary);
+  --wbk-fab-background: var(--wbk-primary);
+  --wbk-unread-dot: var(--wbk-primary);
+  --wbk-scrim: var(--wbk-overlay);
+  --wbk-icon-background: rgba(79,106,246,0.10);
+  --wbk-gradient-end: rgba(153,77,191,0.85);
+  --wbk-gradient-start: rgba(64,115,242,0.85);
+  --wbk-overlay-strong: rgba(17,24,39,0.70);
+  --wbk-overlay-soft: rgba(17,24,39,0.20);
+
+  /* ===== Typography Variables ===== */
+  --wbk-font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --wbk-font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+  /* --- Font Shorthand (weight size/line-height family) --- */
+  /* Display & Titles */
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.3 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+
+  /* Body */
+  --wbk-text-body: 400 15px/1.4 var(--wbk-font-family);
+
+  /* Metadata & Small */
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.4 var(--wbk-font-family);
+  --wbk-text-monospace-meta: 400 12px/1.4 var(--wbk-font-mono);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-button-medium: 500 15px/1.4 var(--wbk-font-family);
+
+  /* Monospace Variants */
+  --wbk-text-monospace-meta-bold: 700 12px/1.4 var(--wbk-font-mono);
+  --wbk-text-monospace-body: 400 13px/1.4 var(--wbk-font-mono);
+  --wbk-text-monospace-body-medium: 500 13px/1.4 var(--wbk-font-mono);
+  --wbk-text-monospace-small: 400 11px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-small-medium: 500 11px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-mini: 400 10px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-mini-medium: 500 10px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-micro: 400 9px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-large: 400 14px/1.4 var(--wbk-font-mono);
+  --wbk-text-monospace-large-medium: 500 14px/1.4 var(--wbk-font-mono);
+  --wbk-text-monospace-large-semibold: 600 17px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-title: 700 18px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-display: 700 20px/1.3 var(--wbk-font-mono);
+  --wbk-text-monospace-display-semibold: 600 20px/1.3 var(--wbk-font-mono);
+
+  /* TextStyle Aliases (UIFontTextStyle mapping) */
+  --wbk-text-large-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-title1: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-title2: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-title3: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-headline: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-subheadline: 400 15px/1.4 var(--wbk-font-family);
+  --wbk-text-callout: 400 15px/1.4 var(--wbk-font-family);
+  --wbk-text-footnote: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption1: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-caption2: 500 11px/1.3 var(--wbk-font-family);
+
+  /* --- Individual Typography Properties --- */
+  /* displayLarge */
+  --wbk-display-large-size: 34px;
+  --wbk-display-large-weight: 700;
+  --wbk-display-large-tracking: -0.5px;
+  --wbk-display-large-max-lines: 1;
+  /* display */
+  --wbk-display-size: 28px;
+  --wbk-display-weight: 700;
+  --wbk-display-tracking: -0.3px;
+  --wbk-display-max-lines: 1;
+  /* screenTitle */
+  --wbk-screen-title-size: 28px;
+  --wbk-screen-title-weight: 700;
+  --wbk-screen-title-tracking: 0px;
+  --wbk-screen-title-max-lines: 1;
+  /* compactTitle */
+  --wbk-compact-title-size: 24px;
+  --wbk-compact-title-weight: 700;
+  --wbk-compact-title-tracking: 0px;
+  --wbk-compact-title-max-lines: 1;
+  /* sectionTitle */
+  --wbk-section-title-size: 17px;
+  --wbk-section-title-weight: 600;
+  --wbk-section-title-tracking: 0px;
+  --wbk-section-title-max-lines: 1;
+  /* rowTitle */
+  --wbk-row-title-size: 16px;
+  --wbk-row-title-weight: 500;
+  --wbk-row-title-tracking: 0px;
+  --wbk-row-title-max-lines: 1;
+  /* cardTitle */
+  --wbk-card-title-size: 16px;
+  --wbk-card-title-weight: 600;
+  --wbk-card-title-tracking: 0px;
+  --wbk-card-title-max-lines: 2;
+  /* body */
+  --wbk-body-size: 15px;
+  --wbk-body-weight: 400;
+  --wbk-body-tracking: 0px;
+  --wbk-body-max-lines: 3;
+  /* metadata */
+  --wbk-metadata-size: 13px;
+  --wbk-metadata-weight: 400;
+  --wbk-metadata-tracking: 0px;
+  --wbk-metadata-max-lines: 1;
+  /* caption */
+  --wbk-caption-size: 12px;
+  --wbk-caption-weight: 400;
+  --wbk-caption-tracking: 0px;
+  --wbk-caption-max-lines: 1;
+  /* tabLabel */
+  --wbk-tab-label-size: 11px;
+  --wbk-tab-label-weight: 500;
+  --wbk-tab-label-tracking: 0px;
+  --wbk-tab-label-max-lines: 1;
+  /* button */
+  --wbk-button-size: 15px;
+  --wbk-button-weight: 600;
+  --wbk-button-tracking: 0px;
+  --wbk-button-max-lines: 1;
+  /* monospaceMeta */
+  --wbk-monospace-meta-size: 12px;
+  --wbk-monospace-meta-weight: 400;
+  --wbk-monospace-meta-tracking: 0px;
+  --wbk-monospace-meta-max-lines: 1;
+  /* badge */
+  --wbk-badge-size: 10px;
+  --wbk-badge-weight: 700;
+  --wbk-badge-tracking: 0px;
+  --wbk-badge-max-lines: 1;
+  /* buttonMedium */
+  --wbk-button-medium-size: 15px;
+  --wbk-button-medium-weight: 500;
+  --wbk-button-medium-tracking: 0px;
+  --wbk-button-medium-max-lines: 1;
+
+  /* ===== Spacing ===== */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-horizontal: 16px;
+  --wbk-spacing-screen-top: 16px;
+  --wbk-spacing-screen-bottom: 24px;
+
+  /* ===== Border Radius ===== */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-row: 12px;
+  --wbk-radius-lg: 12px;
+  --wbk-radius-card: 16px;
+  --wbk-radius-sheet: 20px;
+  --wbk-radius-xxl: 20px;
+  --wbk-radius-xl: 24px;
+  --wbk-radius-full: 999px;
+  --wbk-radius-avatar: 22px;
+  --wbk-radius-pill: 28px;
+
+  /* ===== Shadows (Light) ===== */
+  --wbk-shadow-none: 0 0 0 0 transparent;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.008);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.010);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.008);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.020);
+  --wbk-shadow-lg: 0 8px 24px rgba(17,24,39,0.012);
+  --wbk-shadow-sheet: 0 12px 32px rgba(17,24,39,0.015);
+
+  /* Legacy shadow aliases */
+  --wbk-shadow-card-legacy: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-fab-legacy: 0 8px 18px rgba(17,24,39,0.10);
+  --wbk-shadow-modal-legacy: 0 12px 28px rgba(17,24,39,0.10);
+  --wbk-shadow-nav-bar-legacy: 0 0 0 0 transparent;
+  --wbk-shadow-search-bar-legacy: 0 0 0 0 transparent;
+  --wbk-shadow-tooltip-legacy: 0 0 0 0 transparent;
+
+  /* ===== Motion / Easing ===== */
+  --wbk-animation-fast-duration: 0.15s;
+  --wbk-animation-fast-curve: ease-in-out;
+  --wbk-animation-normal-duration: 0.25s;
+  --wbk-animation-normal-curve: ease-in-out;
+  --wbk-animation-slow-duration: 0.4s;
+  --wbk-animation-slow-curve: ease-in-out;
+  --wbk-animation-spring-duration: 0.5s;
+  --wbk-animation-spring-damping: 0.85;
+  --wbk-animation-spring-velocity: 0.5;
+  --wbk-animation-sheet-duration: 0.36s;
+  --wbk-animation-sheet-damping: 0.88;
+  --wbk-animation-modal-duration: 0.36s;
+  --wbk-animation-modal-damping: 0.88;
+
+  /* CSS easing overrides for spring curves */
+  --wbk-spring-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ===== Layout ===== */
+
+  /* Icon sizes */
+  --wbk-icon-xs: 14px;
+  --wbk-icon-sm: 16px;
+  --wbk-icon-md: 20px;
+  --wbk-icon-lg: 24px;
+  --wbk-icon-xl: 24px;
+  --wbk-icon-xxl: 48px;
+  --wbk-icon-empty: 48px;
+  --wbk-icon-tab: 23px;
+  --wbk-icon-settings: 20px;
+  --wbk-icon-quick-action: 22px;
+  --wbk-icon-chevron: 16px;
+
+  /* Opacity scale */
+  --wbk-opacity-disabled: 0.36;
+  --wbk-opacity-pressed: 0.72;
+  --wbk-opacity-hover: 0.88;
+  --wbk-opacity-separator: 0.72;
+  --wbk-opacity-badge-fill: 0.14;
+  --wbk-opacity-badge: 0.14;
+  --wbk-opacity-scrim: 0.42;
+  --wbk-opacity-overlay: 0.42;
+  --wbk-opacity-placeholder: 0.36;
+
+  /* Breakpoints */
+  --wbk-breakpoint-compact: 320px;
+  --wbk-breakpoint-regular: 375px;
+  --wbk-breakpoint-large: 428px;
+
+  /* Gradients (reference starts/ends) */
+  --wbk-gradient-brand-start: #4F6AF6;
+  --wbk-gradient-brand-end: #8B5CF6;
+  --wbk-gradient-brand-angle: 135deg;
+  --wbk-gradient-blue-start: #4F6AF6;
+  --wbk-gradient-blue-end: #38BDF8;
+  --wbk-gradient-blue-angle: 135deg;
+  --wbk-gradient-green-start: #10B981;
+  --wbk-gradient-green-end: #34D399;
+  --wbk-gradient-green-angle: 135deg;
+  --wbk-gradient-orange-start: #F59E0B;
+  --wbk-gradient-orange-end: #FB923C;
+  --wbk-gradient-orange-angle: 135deg;
+  --wbk-gradient-pink-start: #EC4899;
+  --wbk-gradient-pink-end: #F472B6;
+  --wbk-gradient-pink-angle: 135deg;
+  --wbk-gradient-purple-start: #8B5CF6;
+  --wbk-gradient-purple-end: #C084FC;
+  --wbk-gradient-purple-angle: 135deg;
+  --wbk-gradient-sky-start: #0EA5E9;
+  --wbk-gradient-sky-end: #7DD3FC;
+  --wbk-gradient-sky-angle: 135deg;
+  --wbk-gradient-peach-start: #FB7185;
+  --wbk-gradient-peach-end: #FDBA74;
+  --wbk-gradient-peach-angle: 135deg;
+  --wbk-gradient-cyan-start: #06B6D4;
+  --wbk-gradient-cyan-end: #67E8F9;
+  --wbk-gradient-cyan-angle: 135deg;
+
+  /* ===== Component Contract Tokens ===== */
+  --wbk-screen-horizontal-inset: 16px;
+  --wbk-screen-inter-section-spacing: 24px;
+  --wbk-tab-bar-height: 56px;
+  --wbk-tab-bar-icon-size: 23px;
+  --wbk-tab-bar-label-size: 11px;
+  --wbk-tab-bar-content-top-padding: 6px;
+  --wbk-settings-row-min-height: 54px;
+  --wbk-settings-row-max-height: 64px;
+  --wbk-settings-row-icon-box: 32px;
+  --wbk-settings-row-icon-size: 20px;
+  --wbk-settings-row-chevron-size: 16px;
+  --wbk-settings-row-horizontal-padding: 16px;
+  --wbk-search-field-height: 44px;
+  --wbk-search-field-corner-radius: 12px;
+  --wbk-search-field-icon-size: 18px;
+  --wbk-search-field-horizontal-padding: 12px;
+  --wbk-filter-pill-height: 34px;
+  --wbk-filter-pill-horizontal-padding: 14px;
+  --wbk-filter-pill-min-width: 56px;
+  --wbk-action-tile-height: 72px;
+  --wbk-action-tile-min-width: 72px;
+  --wbk-action-tile-icon-size: 22px;
+  --wbk-resource-card-min-height: 92px;
+  --wbk-resource-card-max-height: 116px;
+  --wbk-resource-card-icon-size: 22px;
+  --wbk-resource-card-corner-radius: 16px;
+  --wbk-resource-card-padding: 16px;
+  --wbk-message-cell-min-height: 72px;
+  --wbk-message-cell-max-height: 96px;
+  --wbk-empty-state-icon-size: 48px;
+  --wbk-empty-state-title-size: 17px;
+  --wbk-empty-state-body-size: 13px;
+  --wbk-empty-state-max-width: 280px;
+  --wbk-tap-target-minimum-width: 44px;
+  --wbk-tap-target-minimum-height: 44px;
+  --wbk-button-height: 48px;
+  --wbk-button-corner-radius: 12px;
+  --wbk-button-horizontal-padding: 20px;
+  --wbk-button-icon-size: 18px;
+
+  /* ===== Portable Alias Layer ===== */
+  /* --color-* */
+  --color-bg: var(--wbk-background);
+  --color-bg-secondary: var(--wbk-background-secondary);
+  --color-bg-tertiary: var(--wbk-background-tertiary);
+  --color-surface: var(--wbk-surface);
+  --color-surface-elevated: var(--wbk-surface-elevated);
+  --color-card: var(--wbk-card-background);
+  --color-text: var(--wbk-text);
+  --color-text-secondary: var(--wbk-text-secondary);
+  --color-text-tertiary: var(--wbk-text-tertiary);
+  --color-primary: var(--wbk-primary);
+  --color-primary-pressed: var(--wbk-primary-pressed);
+  --color-primary-soft: var(--wbk-primary-soft);
+  --color-success: var(--wbk-success);
+  --color-warning: var(--wbk-warning);
+  --color-error: var(--wbk-error);
+  --color-info: var(--wbk-info);
+  --color-border: var(--wbk-border);
+  --color-separator: var(--wbk-separator);
+  --color-overlay: var(--wbk-overlay);
+  /* --radius-* */
+  --radius-xs: var(--wbk-radius-xs);
+  --radius-sm: var(--wbk-radius-sm);
+  --radius-md: var(--wbk-radius-md);
+  --radius-lg: var(--wbk-radius-lg);
+  --radius-full: var(--wbk-radius-full);
+  /* --space-* */
+  --space-xxs: var(--wbk-spacing-xxs);
+  --space-xs: var(--wbk-spacing-xs);
+  --space-sm: var(--wbk-spacing-sm);
+  --space-md: var(--wbk-spacing-md);
+  --space-lg: var(--wbk-spacing-lg);
+  --space-xl: var(--wbk-spacing-xl);
+  --space-xxl: var(--wbk-spacing-xxl);
+  --space-xxxl: var(--wbk-spacing-xxxl);
+  /* --shadow-* */
+  --shadow-sm: var(--wbk-shadow-sm);
+  --shadow-md: var(--wbk-shadow-md);
+  --shadow-card: var(--wbk-shadow-card);
+  --shadow-fab: var(--wbk-shadow-fab);
+  /* --type-* */
+  --type-display-large: var(--wbk-text-display-large);
+  --type-display: var(--wbk-text-display);
+  --type-body: var(--wbk-text-body);
+  --type-caption: var(--wbk-text-caption);
+  --type-button: var(--wbk-text-button);
+}
+
+
+/* ============================================================ */
+/* ===== 3. .dark — Dark Theme Overrides ===== */
+/* ============================================================ */
+.dark {
+  /* Source: structured-spec */
+
+  /* ===== Color Tokens ===== */
+
+  /* background */
+  --wbk-background: #0F1117;
+  --wbk-background-secondary: #1A1D28;
+  --wbk-background-tertiary: #252A38;
+
+  /* surface */
+  --wbk-surface: #13171D;
+  --wbk-surface-elevated: #191E26;
+  --wbk-card-background: #1E2233;
+
+  /* text */
+  --wbk-text: #F0F2F7;
+  --wbk-text-secondary: #8892B0;
+  --wbk-text-tertiary: #5C6585;
+  --wbk-placeholder: #667085;
+
+  /* border */
+  --wbk-border: #2A323D;
+  --wbk-separator: #232A34;
+
+  /* brand */
+  --wbk-primary: #6B82F8;
+  --wbk-primary-pressed: #4F6AF6;
+  --wbk-primary-soft: rgba(107,130,248,0.14);
+  --wbk-accent: #A78BFA;
+  --wbk-accent-soft: rgba(167,139,250,0.14);
+
+  /* semantic */
+  --wbk-success: #4ADE80;
+  --wbk-success-soft: rgba(74,222,128,0.13);
+  --wbk-warning: #FBBF24;
+  --wbk-warning-soft: rgba(251,191,36,0.14);
+  --wbk-error: #F87171;
+  --wbk-error-soft: rgba(248,113,113,0.14);
+  --wbk-info: #2DD4BF;
+  --wbk-info-soft: rgba(45,212,191,0.13);
+  --wbk-offline: #94A3B8;
+  --wbk-offline-soft: rgba(148,163,184,0.13);
+
+  /* navigation */
+  --wbk-navigation-bar-background: #0F1117;
+  --wbk-tab-bar-background: #10141A;
+
+  /* overlay & shadow base */
+  --wbk-overlay: rgba(0,0,0,0.58);
+  --wbk-shadow: rgba(0,0,0,0.30);
+
+  /* ===== Compatibility Aliases (dark overrides) ===== */
+  --wbk-divider: var(--wbk-separator);
+  --wbk-navigation-bar-title: var(--wbk-text);
+  --wbk-dim-overlay: var(--wbk-overlay);
+  --wbk-secondary: var(--wbk-text-secondary);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-on-primary: var(--wbk-text-on-color);
+  --wbk-badge-background: var(--wbk-primary-soft);
+  --wbk-badge-text: var(--wbk-text-secondary);
+  --wbk-fab-background: var(--wbk-primary);
+  --wbk-unread-dot: var(--wbk-primary);
+  --wbk-scrim: var(--wbk-overlay);
+  --wbk-icon-background: rgba(107,130,248,0.10);
+  --wbk-gradient-end: rgba(102,51,128,0.90);
+  --wbk-gradient-start: rgba(51,77,153,0.90);
+  --wbk-overlay-strong: rgba(0,0,0,0.80);
+  --wbk-overlay-soft: rgba(0,0,0,0.30);
+
+  /* ===== Shadows (Dark) ===== */
+  --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.060);
+  --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.075);
+  --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.090);
+  --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.120);
+  --wbk-shadow-lg: 0 8px 24px rgba(0,0,0,0.105);
+  --wbk-shadow-sheet: 0 12px 32px rgba(0,0,0,0.135);
+
+  /* Legacy shadow aliases (dark) */
+  --wbk-shadow-card-legacy: 0 2px 8px rgba(0,0,0,0.30);
+  --wbk-shadow-fab-legacy: 0 8px 18px rgba(0,0,0,0.30);
+  --wbk-shadow-modal-legacy: 0 12px 28px rgba(0,0,0,0.30);
+  --wbk-shadow-nav-bar-legacy: 0 0 0 0 transparent;
+  --wbk-shadow-search-bar-legacy: 0 0 0 0 transparent;
+  --wbk-shadow-tooltip-legacy: 0 0 0 0 transparent;
+
+  /* ===== Portable Alias Layer ===== */
+  /* --color-* */
+  --color-bg: var(--wbk-background);
+  --color-bg-secondary: var(--wbk-background-secondary);
+  --color-bg-tertiary: var(--wbk-background-tertiary);
+  --color-surface: var(--wbk-surface);
+  --color-surface-elevated: var(--wbk-surface-elevated);
+  --color-card: var(--wbk-card-background);
+  --color-text: var(--wbk-text);
+  --color-text-secondary: var(--wbk-text-secondary);
+  --color-text-tertiary: var(--wbk-text-tertiary);
+  --color-primary: var(--wbk-primary);
+  --color-primary-pressed: var(--wbk-primary-pressed);
+  --color-primary-soft: var(--wbk-primary-soft);
+  --color-success: var(--wbk-success);
+  --color-warning: var(--wbk-warning);
+  --color-error: var(--wbk-error);
+  --color-info: var(--wbk-info);
+  --color-border: var(--wbk-border);
+  --color-separator: var(--wbk-separator);
+  --color-overlay: var(--wbk-overlay);
+  /* --radius-* */
+  --radius-xs: var(--wbk-radius-xs);
+  --radius-sm: var(--wbk-radius-sm);
+  --radius-md: var(--wbk-radius-md);
+  --radius-lg: var(--wbk-radius-lg);
+  --radius-full: var(--wbk-radius-full);
+  /* --space-* */
+  --space-xxs: var(--wbk-spacing-xxs);
+  --space-xs: var(--wbk-spacing-xs);
+  --space-sm: var(--wbk-spacing-sm);
+  --space-md: var(--wbk-spacing-md);
+  --space-lg: var(--wbk-spacing-lg);
+  --space-xl: var(--wbk-spacing-xl);
+  --space-xxl: var(--wbk-spacing-xxl);
+  --space-xxxl: var(--wbk-spacing-xxxl);
+  /* --shadow-* */
+  --shadow-sm: var(--wbk-shadow-sm);
+  --shadow-md: var(--wbk-shadow-md);
+  --shadow-card: var(--wbk-shadow-card);
+  --shadow-fab: var(--wbk-shadow-fab);
+  /* --type-* */
+  --type-display-large: var(--wbk-text-display-large);
+  --type-display: var(--wbk-text-display);
+  --type-body: var(--wbk-text-body);
+  --type-caption: var(--wbk-text-caption);
+  --type-button: var(--wbk-text-button);
+}
+
+
+/* ============================================================ */
+/* ===== 4. Typography Utility Classes ===== */
+/* ============================================================ */
+
+/* Display & Titles */
+.wbk-text-display-large {
+  font: var(--wbk-text-display-large);
+  letter-spacing: var(--wbk-display-large-tracking, -0.5px);
+}
+.wbk-text-display {
+  font: var(--wbk-text-display);
+  letter-spacing: var(--wbk-display-tracking, -0.3px);
+}
+.wbk-text-screen-title {
+  font: var(--wbk-text-screen-title);
+}
+.wbk-text-compact-title {
+  font: var(--wbk-text-compact-title);
+}
+.wbk-text-section-title {
+  font: var(--wbk-text-section-title);
+}
+.wbk-text-row-title {
+  font: var(--wbk-text-row-title);
+}
+.wbk-text-card-title {
+  font: var(--wbk-text-card-title);
+}
+
+/* Body */
+.wbk-text-body {
+  font: var(--wbk-text-body);
+}
+
+/* Metadata & Small */
+.wbk-text-metadata {
+  font: var(--wbk-text-metadata);
+}
+.wbk-text-caption {
+  font: var(--wbk-text-caption);
+}
+.wbk-text-tab-label {
+  font: var(--wbk-text-tab-label);
+}
+.wbk-text-button {
+  font: var(--wbk-text-button);
+}
+.wbk-text-badge {
+  font: var(--wbk-text-badge);
+}
+.wbk-text-button-medium {
+  font: var(--wbk-text-button-medium);
+}
+
+/* Monospace */
+.wbk-text-monospace-meta {
+  font: var(--wbk-text-monospace-meta);
+}
+.wbk-text-monospace-body {
+  font: var(--wbk-text-monospace-body);
+}
+.wbk-text-monospace-small {
+  font: var(--wbk-text-monospace-small);
+}
+.wbk-text-monospace-title {
+  font: var(--wbk-text-monospace-title);
+}
+.wbk-text-monospace-display {
+  font: var(--wbk-text-monospace-display);
+}
+
+/* TextStyle alias classes */
+.wbk-text-headline {
+  font: var(--wbk-text-headline);
+}
+.wbk-text-subheadline {
+  font: var(--wbk-text-subheadline);
+}
+.wbk-text-footnote {
+  font: var(--wbk-text-footnote);
+}
+.wbk-text-caption1 {
+  font: var(--wbk-text-caption1);
+}
+.wbk-text-caption2 {
+  font: var(--wbk-text-caption2);
+}

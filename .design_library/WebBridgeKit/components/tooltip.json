@@ -1,0 +1,31 @@
+{
+  "slug": "tooltip",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["tooltip", "popover", "hint"],
+  "variantDimensions": ["placement"],
+  "representativeVariants": [
+    { "name": "上方", "props": { "placement": "top" } },
+    { "name": "下方", "props": { "placement": "bottom" } }
+  ],
+  "anatomy": [
+    { "name": "content", "role": "tooltip text container", "type": "element" },
+    { "name": "arrow", "role": "directional arrow", "type": "optional" },
+    { "name": "text", "role": "tooltip label", "type": "element" }
+  ],
+  "structurePatterns": {
+    "background": { "ref": "--wbk-text" },
+    "textColor": { "ref": "--wbk-background" },
+    "fontSize": 12,
+    "fontWeight": 500,
+    "paddingH": 8,
+    "paddingV": 4,
+    "cornerRadius": 6,
+    "arrowSize": 6,
+    "maxWidth": 200
+  },
+  "usageHints": ["按钮/图标的提示信息", "深色背景 + 浅色文字，对比度高"],
+  "doNotInvent": ["不要添加多行内容", "不要添加交互元素"],
+  "unknowns": []
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tab Bar</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); color:var(--color-text); }
+.row { display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+.label { width:92px; font-size:11px; font-weight:500; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:.5px; flex-shrink:0; }
+.divider { border:none; border-top:1px solid var(--color-separator); margin:12px 0; }
+
+/* @component-css-start */
+/* Component definitions — extracted to components.css */
+.tab-bar { display:flex; align-items:flex-start; justify-content:space-around; width:100%; height:83px; padding:8px 0 34px; background:var(--color-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); box-sizing:border-box; }
+.tab { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; border:none; background:none; padding:0; min-width:44px; min-height:44px; position:relative; transition:background .15s,border-color .15s; }
+.tab:hover { filter:brightness(1.08); }
+.tab.active { color:var(--color-primary); }
+.tab:not(.active) { color:var(--color-text-tertiary); }
+.tab i { width:23px; height:23px; display:inline-block; }
+.tab .tab-label { font:var(--wbk-text-tab-label); white-space:nowrap; }
+.tab .badge-dot { position:absolute; top:-1px; right:-2px; width:8px; height:8px; background:var(--wbk-error); border-radius:var(--radius-full); border:2px solid var(--color-bg); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="row">
+<span class="label">首页激活</span>
+<div class="tab-bar" data-active="home">
+<button class="tab active" data-tab="home"><i data-lucide="home"></i><span class="tab-label">首页</span></button>
+<button class="tab" data-tab="inbox"><i data-lucide="inbox"></i><span class="tab-label">收件箱</span></button>
+<button class="tab" data-tab="discover"><i data-lucide="compass"></i><span class="tab-label">发现</span></button>
+<button class="tab" data-tab="settings"><i data-lucide="settings"></i><span class="tab-label">设置</span></button>
+</div>
+</div>
+
+<div class="row">
+<span class="label">收件箱激活</span>
+<div class="tab-bar" data-active="inbox">
+<button class="tab" data-tab="home"><i data-lucide="home"></i><span class="tab-label">首页</span></button>
+<button class="tab active" data-tab="inbox"><i data-lucide="inbox"></i><span class="tab-label">收件箱</span></button>
+<button class="tab" data-tab="discover"><i data-lucide="compass"></i><span class="tab-label">发现</span></button>
+<button class="tab" data-tab="settings"><i data-lucide="settings"></i><span class="tab-label">设置</span></button>
+</div>
+</div>
+
+<hr class="divider">
+
+<div class="row">
+<span class="label">未读标记</span>
+<div class="tab-bar" data-active="home">
+<button class="tab active" data-tab="home"><i data-lucide="home"></i><span class="tab-label">首页</span></button>
+<button class="tab" data-tab="inbox"><i data-lucide="inbox"></i><span class="tab-label">收件箱</span><span class="badge-dot"></span></button>
+<button class="tab" data-tab="discover"><i data-lucide="compass"></i><span class="tab-label">发现</span></button>
+<button class="tab" data-tab="settings"><i data-lucide="settings"></i><span class="tab-label">设置</span></button>
+</div>
+</div>
+
+<script>
+lucide.createIcons();
+document.querySelectorAll('.tab-bar').forEach(function(bar){bar.querySelectorAll('.tab').forEach(function(tab){tab.addEventListener('click',function(){bar.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});this.classList.add('active')})})});
+</script>
+</body>
+</html>

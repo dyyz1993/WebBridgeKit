@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>List View - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:4px; }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px; }
+.phone-frame { width:100%; background:var(--wbk-background); border-radius:var(--wbk-radius-card); overflow:hidden; box-shadow:var(--wbk-shadow-card); }
+
+/* @component-css-start */
+.list-view { width:100%; }
+.list-view--grouped { display:flex; flex-direction:column; gap:var(--space-md); padding:var(--space-md); }
+.list-view--flat { padding:0; }
+.list-section-header { font-size:13px; font-weight:600; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.5px; padding:0 4px 6px; }
+.list-row { display:flex; align-items:center; min-height:48px; padding:0 16px; gap:12px; background:var(--color-surface); }
+.list-row + .list-row { border-top:1px solid var(--color-separator); }
+.list-view--grouped .list-row { border-radius:var(--radius-md); }
+.list-view--grouped .list-row + .list-row { border-top-left-radius:0; border-top-right-radius:0; }
+.list-view--grouped .list-row:first-child { border-top-left-radius:var(--radius-md); border-top-right-radius:var(--radius-md); }
+.list-view--grouped .list-row:last-child { border-bottom-left-radius:var(--radius-md); border-bottom-right-radius:var(--radius-md); }
+.list-row__icon { width:20px; height:20px; flex-shrink:0; color:var(--color-primary); display:flex; align-items:center; justify-content:center; }
+.list-row__icon--circle { width:32px; height:32px; border-radius:50%; background:var(--color-primary-soft); }
+.list-row__content { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.list-row__title { font-size:15px; font-weight:500; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-row__subtitle { font-size:12px; color:var(--color-text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-row__trailing { font-size:13px; color:var(--color-text-tertiary); flex-shrink:0; display:flex; align-items:center; gap:4px; }
+.list-row__chevron { width:16px; height:16px; color:var(--color-text-tertiary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">分组列表</div>
+    <div class="phone-frame">
+      <div class="list-view list-view--grouped">
+        <div>
+          <div class="list-section-header">今天</div>
+          <div class="list-row">
+            <div class="list-row__icon list-row__icon--circle"><i data-lucide="globe" style="width:16px;height:16px"></i></div>
+            <div class="list-row__content">
+              <span class="list-row__title">github.com</span>
+              <span class="list-row__subtitle">14:32 · 浏览器</span>
+            </div>
+            <div class="list-row__trailing">
+              <i data-lucide="chevron-right" class="list-row__chevron"></i>
+            </div>
+          </div>
+          <div class="list-row">
+            <div class="list-row__icon list-row__icon--circle"><i data-lucide="globe" style="width:16px;height:16px"></i></div>
+            <div class="list-row__content">
+              <span class="list-row__title">developer.apple.com</span>
+              <span class="list-row__subtitle">10:15 · 浏览器</span>
+            </div>
+            <div class="list-row__trailing">
+              <i data-lucide="chevron-right" class="list-row__chevron"></i>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="list-section-header">昨天</div>
+          <div class="list-row">
+            <div class="list-row__icon list-row__icon--circle"><i data-lucide="globe" style="width:16px;height:16px"></i></div>
+            <div class="list-row__content">
+              <span class="list-row__title">stackoverflow.com</span>
+              <span class="list-row__subtitle">22:08 · 浏览器</span>
+            </div>
+            <div class="list-row__trailing">
+              <i data-lucide="chevron-right" class="list-row__chevron"></i>
+            </div>
+          </div>
+          <div class="list-row">
+            <div class="list-row__icon list-row__icon--circle"><i data-lucide="globe" style="width:16px;height:16px"></i></div>
+            <div class="list-row__content">
+              <span class="list-row__title">webbridgekit.dev</span>
+              <span class="list-row__subtitle">18:45 · 应用内</span>
+            </div>
+            <div class="list-row__trailing">
+              <i data-lucide="chevron-right" class="list-row__chevron"></i>
+            </div>
+          </div>
+          <div class="list-row">
+            <div class="list-row__icon list-row__icon--circle"><i data-lucide="globe" style="width:16px;height:16px"></i></div>
+            <div class="list-row__content">
+              <span class="list-row__title">docs.swift.org</span>
+              <span class="list-row__subtitle">16:20 · 浏览器</span>
+            </div>
+            <div class="list-row__trailing">
+              <i data-lucide="chevron-right" class="list-row__chevron"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">简单列表</div>
+    <div class="phone-frame">
+      <div class="list-view list-view--flat">
+        <div class="list-row">
+          <div class="list-row__icon"><i data-lucide="clock" style="width:20px;height:20px"></i></div>
+          <div class="list-row__content">
+            <span class="list-row__title">清除历史记录</span>
+          </div>
+          <div class="list-row__trailing">
+            <i data-lucide="chevron-right" class="list-row__chevron"></i>
+          </div>
+        </div>
+        <div class="list-row">
+          <div class="list-row__icon"><i data-lucide="download" style="width:20px;height:20px"></i></div>
+          <div class="list-row__content">
+            <span class="list-row__title">导出历史</span>
+          </div>
+          <div class="list-row__trailing">
+            <span>JSON</span>
+            <i data-lucide="chevron-right" class="list-row__chevron"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

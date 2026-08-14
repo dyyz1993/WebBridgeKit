@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Text Field — WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.specimen { max-width: 400px; margin: 0 auto; }
+.story { margin-bottom: 16px; }
+.story-label { display: block; font: var(--wbk-text-section-title); color: var(--color-text-secondary); margin-bottom: 12px; }
+.rail { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 0; flex-wrap: wrap; }
+.label { font: var(--wbk-text-caption); color: var(--color-text-tertiary); letter-spacing: .5px; min-width: 80px; flex-shrink: 0; margin-top: 28px; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 16px 0; }
+
+/* @component-css-start */
+.text-field { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.text-field-label { font: var(--wbk-text-metadata); color: var(--color-text-secondary); }
+.text-field-input-wrap { display: flex; align-items: center; height: 48px; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-surface); padding: 0 12px; gap: 8px; box-sizing: border-box; transition: border-color .15s; }
+.text-field-input-wrap:focus-within { border-color: var(--color-primary); outline: none; }
+.text-field-input-wrap.is-error { border-color: var(--color-error); }
+.text-field-input-wrap.is-error:focus-within { border-color: var(--color-error); }
+.text-field-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--color-text-tertiary); display: flex; align-items: center; justify-content: center; }
+.text-field-icon svg { width: 18px; height: 18px; }
+.text-field-input { flex: 1; border: none; background: transparent; font: var(--wbk-text-body); color: var(--color-text); outline: none; padding: 0; min-width: 0; height: 100%; -webkit-appearance: none; appearance: none; }
+.text-field-input::placeholder { color: var(--wbk-placeholder); }
+.text-field-error { font: var(--wbk-text-caption); color: var(--color-error); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+  <div class="stage">
+
+    <div class="story">
+      <span class="story-label">文本输入框</span>
+      <div class="rail">
+        <div class="row">
+          <span class="label">默认</span>
+          <div class="text-field" style="max-width:280px;" data-evidence-sample="默认文本输入框">
+            <label class="text-field-label">服务器地址</label>
+            <div class="text-field-input-wrap">
+              <input class="text-field-input" type="text" placeholder="请输入服务器地址">
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="row">
+          <span class="label">带图标</span>
+          <div class="text-field" style="max-width:280px;" data-evidence-sample="带图标文本输入框">
+            <label class="text-field-label">链接地址</label>
+            <div class="text-field-input-wrap">
+              <span class="text-field-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </span>
+              <input class="text-field-input" type="text" placeholder="https://example.com">
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="row">
+          <span class="label">错误</span>
+          <div class="text-field" style="max-width:280px;" data-evidence-sample="错误文本输入框">
+            <label class="text-field-label">Token</label>
+            <div class="text-field-input-wrap is-error">
+              <input class="text-field-input" type="text" value="abc">
+            </div>
+            <span class="text-field-error">Token 格式不正确，至少需要 8 个字符</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+</body>
+</html>

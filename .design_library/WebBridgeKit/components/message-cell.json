@@ -1,0 +1,33 @@
+{
+  "slug": "message-cell",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["message", "notification", "list-item"],
+  "variantDimensions": ["readState", "source"],
+  "representativeVariants": [
+    { "name": "未读 APNs 消息", "props": { "readState": "unread", "source": "APNs" } },
+    { "name": "已读 Bark 消息", "props": { "readState": "read", "source": "Bark" } },
+    { "name": "已读 Bridge 命令", "props": { "readState": "read", "source": "Bridge" } }
+  ],
+  "anatomy": [
+    { "name": "cell", "role": "container", "type": "element" },
+    { "name": "unreadDot", "role": "unread indicator", "type": "optional" },
+    { "name": "sourcePill", "role": "source label pill", "type": "element" },
+    { "name": "title", "role": "message title", "type": "element" },
+    { "name": "body", "role": "message preview", "type": "element" },
+    { "name": "time", "role": "timestamp", "type": "element" }
+  ],
+  "structurePatterns": {
+    "minHeight": 72,
+    "maxHeight": 96,
+    "cornerRadius": { "ref": "--radius-md" },
+    "backgroundColor": { "ref": "--color-card" },
+    "padding": 12,
+    "titleMaxLines": 1,
+    "bodyMaxLines": 2
+  },
+  "usageHints": ["未读状态显示蓝色圆点 var(--color-primary)", "Source 颜色: APNs=primary, Bark=success, Bridge=warning, System=text-secondary"],
+  "doNotInvent": ["不要改变 72-96px 行高度范围", "不要添加图片/媒体元素"],
+  "unknowns": []
+}

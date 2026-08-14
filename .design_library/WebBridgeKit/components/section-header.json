@@ -1,0 +1,32 @@
+{
+  "slug": "section-header",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["section-header", "group-header", "label"],
+  "variantDimensions": ["hasAction"],
+  "representativeVariants": [
+    { "name": "标准", "props": { "hasAction": false } },
+    { "name": "带操作", "props": { "hasAction": true } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "header row", "type": "element" },
+    { "name": "title", "role": "section title text", "type": "element" },
+    { "name": "action", "role": "right-side action link", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "fontSize": 13,
+    "fontWeight": 600,
+    "textColor": { "ref": "--color-text-secondary" },
+    "textTransform": "uppercase",
+    "letterSpacing": "0.5px",
+    "paddingH": 16,
+    "paddingTop": 24,
+    "paddingBottom": 8,
+    "actionColor": { "ref": "--color-primary" },
+    "actionSize": 13
+  },
+  "usageHints": ["设置页面分组标题", "列表分组标题，对应源码 ThemeSectionHeader"],
+  "doNotInvent": ["不要添加图标", "不要添加下划线"],
+  "unknowns": []
+}

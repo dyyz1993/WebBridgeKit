@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Step Indicator - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; align-items:stretch; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; width:100%; }
+.story-label { font-size:12px; font-weight:400; color:var(--color-text-tertiary); letter-spacing:0.5px; }
+
+/* @component-css-start */
+.step-indicator { display:flex; align-items:flex-start; padding:24px 16px; }
+.step-indicator__step { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; }
+.step-indicator__circle { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; position:relative; z-index:1; }
+.step-indicator__circle--completed { background:var(--color-primary); color:#fff; }
+.step-indicator__circle--active { background:var(--color-primary); color:#fff; box-shadow:0 0 0 4px var(--wbk-primary-soft); }
+.step-indicator__circle--pending { background:var(--color-bg-tertiary); color:var(--color-text-tertiary); }
+.step-indicator__line { position:absolute; top:12px; left:calc(50% + 12px); right:calc(-50% + 12px); height:2px; background:var(--color-separator); z-index:0; }
+.step-indicator__step:last-child .step-indicator__line { display:none; }
+.step-indicator__line--completed { background:var(--color-primary); }
+.step-indicator__label { font-size:12px; color:var(--color-text-secondary); margin-top:8px; text-align:center; white-space:nowrap; }
+.step-indicator__label--active { color:var(--color-text); font-weight:600; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <span class="story-label">步骤条</span>
+    <div class="step-indicator">
+      <div class="step-indicator__step">
+        <div class="step-indicator__circle step-indicator__circle--completed">&#10003;</div>
+        <div class="step-indicator__line step-indicator__line--completed"></div>
+        <span class="step-indicator__label">注册</span>
+      </div>
+      <div class="step-indicator__step">
+        <div class="step-indicator__circle step-indicator__circle--completed">&#10003;</div>
+        <div class="step-indicator__line step-indicator__line--completed"></div>
+        <span class="step-indicator__label">配置</span>
+      </div>
+      <div class="step-indicator__step">
+        <div class="step-indicator__circle step-indicator__circle--active">3</div>
+        <div class="step-indicator__line"></div>
+        <span class="step-indicator__label step-indicator__label--active">验证</span>
+      </div>
+      <div class="step-indicator__step">
+        <div class="step-indicator__circle step-indicator__circle--pending">4</div>
+        <span class="step-indicator__label">完成</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

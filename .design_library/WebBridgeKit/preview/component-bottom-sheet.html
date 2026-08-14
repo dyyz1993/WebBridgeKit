@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bottom Sheet - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); display:flex; justify-content:center; }
+.phone-frame { width:100%; max-width:480px; min-height:680px; background:var(--wbk-background-secondary); border-radius:var(--wbk-radius-card); overflow:hidden; position:relative; display:flex; flex-direction:column; }
+.frame-content { flex:1; padding:20px; }
+.frame-title { font:var(--wbk-text-section-title); color:var(--wbk-text); margin:0 0 8px 0; }
+.frame-subtitle { font:var(--wbk-text-metadata); color:var(--wbk-text-tertiary); margin:0; }
+
+/* @component-css-start */
+.sheet-scrim { position:absolute; inset:0; background:var(--color-overlay); z-index:10; }
+.sheet { position:absolute; bottom:0; left:0; right:0; background:var(--color-surface); border-radius:var(--wbk-radius-sheet) var(--wbk-radius-sheet) 0 0; padding:16px; z-index:11; }
+.sheet__handle { width:36px; height:5px; border-radius:3px; background:var(--color-separator); margin:0 auto 12px auto; }
+.sheet__header { font-size:17px; font-weight:600; color:var(--color-text); margin:0 0 8px 0; }
+.sheet__body { display:flex; flex-direction:column; }
+.sheet__item { display:flex; align-items:center; gap:12px; height:54px; padding:0 4px; cursor:pointer; }
+.sheet__item:hover { background:var(--wbk-background-secondary); border-radius:var(--wbk-radius-md); }
+.sheet__item-icon { width:24px; height:24px; color:var(--color-primary); flex-shrink:0; }
+.sheet__item-label { font-size:17px; font-weight:400; color:var(--color-text); }
+.sheet__item-icon--danger { color:var(--wbk-error, #ef4444); }
+.sheet__item-label--danger { color:var(--wbk-error, #ef4444); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="frame-content">
+    <h1 class="frame-title">Bottom Sheet</h1>
+    <p class="frame-subtitle">底部弹出面板，用于操作选择与确认</p>
+  </div>
+
+  <div class="sheet-scrim"></div>
+  <div class="sheet">
+    <div class="sheet__handle"></div>
+    <h2 class="sheet__header">选择操作</h2>
+    <div class="sheet__body">
+      <div class="sheet__item">
+        <i data-lucide="share" class="sheet__item-icon"></i>
+        <span class="sheet__item-label">分享到其他应用</span>
+      </div>
+      <div class="sheet__item">
+        <i data-lucide="copy" class="sheet__item-icon"></i>
+        <span class="sheet__item-label">复制链接</span>
+      </div>
+      <div class="sheet__item">
+        <i data-lucide="trash-2" class="sheet__item-icon sheet__item-icon--danger"></i>
+        <span class="sheet__item-label sheet__item-label--danger">删除</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

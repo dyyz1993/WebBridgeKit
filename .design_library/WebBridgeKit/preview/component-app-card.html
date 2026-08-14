@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Card - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); color: var(--color-text); }
+.stage { display: flex; flex-direction: column; gap: 8px; }
+.story { display: flex; flex-direction: column; gap: var(--space-sm); }
+.rail { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+.story-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* @component-css-start */
+.app-card { display: flex; flex-direction: column; border-radius: var(--radius-lg); background: var(--color-card); padding: var(--space-lg); min-height: 92px; box-shadow: var(--shadow-card); }
+.app-card-top { display: flex; align-items: flex-start; gap: var(--space-md); }
+.app-card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.app-card-icon svg { width: 18px; height: 18px; color: #fff; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.app-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.app-card-name { font-size: 14px; font-weight: 600; color: var(--color-text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: keep-all; overflow-wrap: break-word; }
+.app-card-status { display: flex; align-items: center; gap: 4px; }
+.app-card-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.app-card-dot.cached { background: var(--color-success); }
+.app-card-dot.online { background: var(--color-info); }
+.app-card-status-text { font-size: 10px; color: var(--color-text-secondary); white-space: nowrap; }
+.app-card-time { font-size: 10px; color: var(--color-text-tertiary); white-space: nowrap; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">状态展示</div>
+    <div class="rail">
+      <div class="app-card">
+        <div class="app-card-top">
+          <div class="app-card-icon" style="background: linear-gradient(135deg, var(--wbk-gradient-pink-start), var(--wbk-gradient-pink-end));">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </div>
+          <div class="app-card-body">
+            <div class="app-card-name">Dashboard</div>
+            <div class="app-card-status">
+              <span class="app-card-dot cached"></span>
+              <span class="app-card-status-text">已缓存</span>
+            </div>
+          </div>
+          <div class="app-card-time">2 小时前</div>
+        </div>
+      </div>
+      <div class="app-card">
+        <div class="app-card-top">
+          <div class="app-card-icon" style="background: linear-gradient(135deg, var(--wbk-gradient-purple-start), var(--wbk-gradient-purple-end));">
+            <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          </div>
+          <div class="app-card-body">
+            <div class="app-card-name">API Explorer</div>
+            <div class="app-card-status">
+              <span class="app-card-dot cached"></span>
+              <span class="app-card-status-text">已缓存</span>
+            </div>
+          </div>
+          <div class="app-card-time">昨天</div>
+        </div>
+      </div>
+      <div class="app-card">
+        <div class="app-card-top">
+          <div class="app-card-icon" style="background: linear-gradient(135deg, var(--wbk-gradient-blue-start), var(--wbk-gradient-blue-end));">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="app-card-body">
+            <div class="app-card-name">文档中心</div>
+            <div class="app-card-status">
+              <span class="app-card-dot online"></span>
+              <span class="app-card-status-text">在线</span>
+            </div>
+          </div>
+          <div class="app-card-time">3 天前</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

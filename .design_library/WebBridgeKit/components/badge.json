@@ -1,0 +1,34 @@
+{
+  "slug": "badge",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["tag", "status", "badge"],
+  "variantDimensions": ["status", "size"],
+  "representativeVariants": [
+    { "name": "持久化标签", "props": { "status": "persistent" } },
+    { "name": "已缓存标签", "props": { "status": "cached" } },
+    { "name": "需更新标签", "props": { "status": "needsUpdate" } },
+    { "name": "未缓存标签", "props": { "status": "notCached" } }
+  ],
+  "anatomy": [
+    { "name": "badge", "role": "container", "type": "element" },
+    { "name": "dot", "role": "status dot", "type": "optional" },
+    { "name": "label", "role": "text label", "type": "element" }
+  ],
+  "structurePatterns": {
+    "height": 22,
+    "paddingH": 8,
+    "cornerRadius": { "ref": "--radius-full" },
+    "fontSize": 10,
+    "fontWeight": 700,
+    "dotSize": 6
+  },
+  "persistentColor": { "bg": { "ref": "--wbk-primary-soft" }, "text": { "ref": "--color-primary" }, "dot": { "ref": "--color-primary" } },
+  "cachedColor": { "bg": { "ref": "--wbk-success-soft" }, "text": { "ref": "--wbk-success" }, "dot": { "ref": "--wbk-success" } },
+  "needsUpdateColor": { "bg": { "ref": "--wbk-warning-soft" }, "text": { "ref": "--wbk-warning" }, "dot": { "ref": "--wbk-warning" } },
+  "notCachedColor": { "bg": { "ref": "--wbk-background-tertiary" }, "text": { "ref": "--color-text-secondary" }, "dot": { "ref": "--color-text-tertiary" } },
+  "usageHints": ["在发现页资源卡片中使用", "persistent=blue, cached=green, needsUpdate=orange, notCached=gray"],
+  "doNotInvent": ["不要改变 22px 高度", "不要添加动画效果"],
+  "unknowns": []
+}

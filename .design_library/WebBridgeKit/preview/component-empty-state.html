@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empty State — WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.row-center { display: flex; justify-content: center; margin-bottom: 12px; }
+.label { font: var(--type-caption); color: var(--color-text-tertiary); letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; min-width: 92px; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 16px 0; }
+
+/* @component-css-start */
+.empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-xxxl); gap: var(--space-lg); max-width: var(--wbk-empty-state-max-width); width: 100%; }
+.empty-icon-wrap { width: var(--wbk-icon-empty); height: var(--wbk-icon-empty); display: flex; align-items: center; justify-content: center; color: var(--color-text-tertiary); }
+.empty-icon-wrap svg { width: var(--wbk-icon-empty); height: var(--wbk-icon-empty); stroke: currentColor; }
+.empty-title { margin: 0; font-size: var(--wbk-empty-state-title-size); font-weight: 600; color: var(--color-text); line-height: 1.3; }
+.empty-body { margin: 0; font-size: var(--wbk-empty-state-body-size); color: var(--color-text-secondary); line-height: 1.4; overflow-wrap: break-word; }
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: var(--wbk-button-height); padding: 0 var(--wbk-button-horizontal-padding); border: none; border-radius: var(--wbk-button-corner-radius); background: var(--color-primary); color: var(--wbk-text-on-color); font: var(--type-button); cursor: pointer; white-space: nowrap; min-width: var(--wbk-button-height); transition: background .15s; }
+.btn-primary:hover { background: var(--color-primary-pressed); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="row"><span class="label">空状态 (无操作)</span></div>
+<div class="row-center">
+  <div class="empty-state">
+    <span class="empty-icon-wrap"><i data-lucide="inbox" width="48" height="48"></i></span>
+    <h3 class="empty-title">暂无消息</h3>
+    <p class="empty-body">当有新的推送通知时会显示在这里</p>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="row"><span class="label">空状态 (有操作)</span></div>
+<div class="row-center">
+  <div class="empty-state">
+    <span class="empty-icon-wrap"><i data-lucide="search" width="48" height="48"></i></span>
+    <h3 class="empty-title">未找到结果</h3>
+    <p class="empty-body">尝试使用不同的关键词搜索</p>
+    <button class="btn-primary">开始搜索</button>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

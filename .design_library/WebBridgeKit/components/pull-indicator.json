@@ -1,0 +1,27 @@
+{
+  "slug": "pull-indicator",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["pull-refresh", "indicator", "feedback"],
+  "variantDimensions": ["state"],
+  "representativeVariants": [
+    { "name": "等待拉动", "props": { "state": "idle" } },
+    { "name": "加载中", "props": { "state": "loading" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "indicator wrapper", "type": "element" },
+    { "name": "icon", "role": "arrow/spinner", "type": "element" },
+    { "name": "label", "role": "status text", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "height": 48,
+    "iconSize": 20,
+    "labelSize": 12,
+    "labelColor": { "ref": "--color-text-tertiary" },
+    "iconColor": { "ref": "--color-text-tertiary" }
+  },
+  "usageHints": ["下拉刷新指示器", "等待状态显示箭头，加载状态显示 spinner"],
+  "doNotInvent": ["不要添加自定义动画曲线", "不要添加日期/时间戳"],
+  "unknowns": []
+}
