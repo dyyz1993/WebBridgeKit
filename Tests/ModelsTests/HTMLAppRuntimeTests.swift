@@ -22,11 +22,27 @@ final class HTMLAppRuntimeTests: XCTestCase {
 
     private final class NativeAuthorizationProvider: HTMLAppNativeAuthorizationProviding {
         var status: HTMLAppCapabilityResult.Status = .granted
+        var promptResult: HTMLAppCapabilityResult.Status = .granted
+        private(set) var promptedCapabilities: [HTMLAppCapability] = []
 
         func authorizationStatus(for capability: HTMLAppCapability) -> HTMLAppCapabilityResult.Status {
             status
         }
+
+        func requestAuthorization(
+            for capability: HTMLAppCapability,
+            completion: @escaping (HTMLAppCapabilityResult.Status) -> Void
+        ) {
+            promptedCapabilities.append(capability)
+            completion(promptResult)
+        }
     }
+
+    private let subject = HTMLAppPermissionSubject(
+        gatewayIdentity: "gateway#key-1",
+        appID: "com.example.inventory",
+        origin: "https://inventory.example.com"
+    )
 
     private func makeManifest(signature: HTMLAppManifestSignature? = nil) -> HTMLAppManifest {
         HTMLAppManifest(
@@ -50,6 +66,21 @@ final class HTMLAppRuntimeTests: XCTestCase {
         )
     }
 
+    private func makeGateway(
+        storage: HTMLAppRuntimeStorage = MemoryStorage(),
+        nativeProvider: NativeAuthorizationProvider = NativeAuthorizationProvider()
+    ) throws -> (HTMLAppCapabilityGateway, NativeAuthorizationProvider) {
+        let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
+        try registry.register(makeManifest())
+        let ledger = HTMLAppPermissionLedger(storage: storage)
+        let gateway = HTMLAppCapabilityGateway(
+            trustRegistry: registry,
+            permissionLedger: ledger,
+            nativeAuthorizationProvider: nativeProvider
+        )
+        return (gateway, nativeProvider)
+    }
+
     func testTrustRegistryRequiresVerifiedSignatureForManagedApps() throws {
         let storage = MemoryStorage()
         let registry = HTMLAppTrustRegistry(storage: storage)
@@ -70,113 +101,156 @@ final class HTMLAppRuntimeTests: XCTestCase {
     func testPermissionLedgerPersistsAlwaysAndCanRevoke() {
         let storage = MemoryStorage()
         let ledger = HTMLAppPermissionLedger(storage: storage)
-        let appID = "com.example.inventory"
 
-        ledger.grant(appID: appID, capability: .camera, scope: .always)
-        XCTAssertEqual(HTMLAppPermissionLedger(storage: storage).grant(for: appID, capability: .camera)?.scope, .always)
+        ledger.grant(subject: subject, capability: .camera, scope: .always)
+        XCTAssertEqual(
+            HTMLAppPermissionLedger(storage: storage).grant(for: subject, capability: .camera)?.scope,
+            .always
+        )
 
-        ledger.revoke(appID: appID, capability: .camera)
-        XCTAssertNil(ledger.grant(for: appID, capability: .camera))
-        XCTAssertNil(HTMLAppPermissionLedger(storage: storage).grant(for: appID, capability: .camera))
+        ledger.revoke(subject: subject, capability: .camera)
+        XCTAssertNil(ledger.grant(for: subject, capability: .camera))
+        XCTAssertNil(HTMLAppPermissionLedger(storage: storage).grant(for: subject, capability: .camera))
     }
 
-    func testGatewayRequiresNativeThenHTMLAuthorizationAndPersistsUserChoice() throws {
-        let storage = MemoryStorage()
-        let registry = HTMLAppTrustRegistry(storage: storage)
-        let manifest = makeManifest()
-        try registry.register(manifest)
-        let ledger = HTMLAppPermissionLedger(storage: storage)
+    func testBrandedConsentComesFirstAndSystemPromptRunsOnlyAfterAcceptance() throws {
         let nativeProvider = NativeAuthorizationProvider()
-        let gateway = HTMLAppCapabilityGateway(
-            trustRegistry: registry,
-            permissionLedger: ledger,
-            nativeAuthorizationProvider: nativeProvider
-        )
+        // First-time system state: iOS has not been asked yet.
+        nativeProvider.status = .notDetermined
+        let (gateway, _) = try makeGateway(nativeProvider: nativeProvider)
         let request = makeRequest()
-        let documentURL = URL(string: manifest.startURL)!
+        let documentURL = URL(string: "https://inventory.example.com/index.html")!
 
-        XCTAssertEqual(
-            gateway.requestAuthorization(appID: manifest.appID, documentURL: documentURL, request: request),
-            HTMLAppCapabilityResult(
-                id: request.id,
-                capability: .camera,
-                status: .notDetermined,
-                authorizationLayer: .htmlApp
-            )
-        )
+        let firstPass = gateway.requestAuthorization(subject: subject, documentURL: documentURL, request: request)
+        XCTAssertEqual(firstPass.status, .notDetermined)
+        XCTAssertEqual(firstPass.authorizationLayer, .htmlApp)
+        XCTAssertTrue(nativeProvider.promptedCapabilities.isEmpty)
 
-        XCTAssertEqual(
-            gateway.resolveUserConsent(appID: manifest.appID, documentURL: documentURL, request: request, granted: true),
-            HTMLAppCapabilityResult(id: request.id, capability: .camera, status: .granted, scope: .always)
-        )
-        XCTAssertEqual(
-            gateway.requestAuthorization(appID: manifest.appID, documentURL: documentURL, request: request),
-            HTMLAppCapabilityResult(id: request.id, capability: .camera, status: .granted, scope: .always)
-        )
+        let consentExpectation = expectation(description: "consent resolves")
+        gateway.resolveUserConsent(
+            subject: subject,
+            documentURL: documentURL,
+            request: request,
+            approvedScope: .always,
+            granted: true
+        ) { result in
+            defer { consentExpectation.fulfill() }
+            XCTAssertEqual(result.status, .granted)
+            XCTAssertEqual(result.scope, .always)
+        }
+        waitForExpectations(timeout: 1)
+
+        // The system layer was only consulted after the panel was accepted.
+        XCTAssertEqual(nativeProvider.promptedCapabilities, [.camera])
+
+        let secondPass = gateway.requestAuthorization(subject: subject, documentURL: documentURL, request: request)
+        XCTAssertEqual(secondPass.status, .granted)
+        XCTAssertEqual(secondPass.scope, .always)
     }
 
-    func testGatewayStopsAtNativeAuthorizationBeforePresentingHTMLConsent() throws {
-        let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
-        let manifest = makeManifest()
-        try registry.register(manifest)
+    func testSystemDeniedSkipsBrandedPanelAndRequiresSettings() throws {
+        let nativeProvider = NativeAuthorizationProvider()
+        nativeProvider.status = .denied
+        let (gateway, _) = try makeGateway(nativeProvider: nativeProvider)
+        let request = makeRequest()
+
+        let result = gateway.requestAuthorization(
+            subject: subject,
+            documentURL: URL(string: "https://inventory.example.com/index.html")!,
+            request: request
+        )
+
+        XCTAssertEqual(result.status, .requiresSettings)
+        XCTAssertEqual(result.failureReason, .systemDenied)
+        XCTAssertEqual(result.authorizationLayer, .nativeSystem)
+        XCTAssertTrue(nativeProvider.promptedCapabilities.isEmpty)
+    }
+
+    func testSystemRefusalAfterConsentDoesNotRecordGrant() throws {
         let nativeProvider = NativeAuthorizationProvider()
         nativeProvider.status = .notDetermined
-        let gateway = HTMLAppCapabilityGateway(
-            trustRegistry: registry,
-            permissionLedger: HTMLAppPermissionLedger(storage: MemoryStorage()),
-            nativeAuthorizationProvider: nativeProvider
-        )
+        nativeProvider.promptResult = .denied
+        let (gateway, _) = try makeGateway(nativeProvider: nativeProvider)
         let request = makeRequest()
+        let documentURL = URL(string: "https://inventory.example.com/index.html")!
 
-        XCTAssertEqual(
-            gateway.requestAuthorization(
-                appID: manifest.appID,
-                documentURL: URL(string: manifest.startURL)!,
-                request: request
-            ),
-            HTMLAppCapabilityResult(
-                id: request.id,
-                capability: .camera,
-                status: .notDetermined,
-                authorizationLayer: .nativeSystem
-            )
-        )
+        _ = gateway.requestAuthorization(subject: subject, documentURL: documentURL, request: request)
+
+        let refusalExpectation = expectation(description: "consent resolves with system refusal")
+        gateway.resolveUserConsent(
+            subject: subject,
+            documentURL: documentURL,
+            request: request,
+            approvedScope: .always,
+            granted: true
+        ) { result in
+            defer { refusalExpectation.fulfill() }
+            XCTAssertEqual(result.status, .requiresSettings)
+            XCTAssertEqual(result.failureReason, .systemDenied)
+        }
+        waitForExpectations(timeout: 1)
+
+        XCTAssertNil(gateway.permissionLedger.grant(for: subject, capability: .camera))
     }
 
     func testGatewayRejectsUntrustedOriginAndRevocationRestoresPrompt() throws {
-        let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
-        let manifest = makeManifest()
-        try registry.register(manifest)
-        let ledger = HTMLAppPermissionLedger(storage: MemoryStorage())
-        let gateway = HTMLAppCapabilityGateway(
-            trustRegistry: registry,
-            permissionLedger: ledger,
-            nativeAuthorizationProvider: NativeAuthorizationProvider()
-        )
+        let (gateway, _) = try makeGateway()
         let request = makeRequest()
-        let trustedURL = URL(string: manifest.startURL)!
+        let trustedURL = URL(string: "https://inventory.example.com/index.html")!
 
         XCTAssertEqual(
             gateway.requestAuthorization(
-                appID: manifest.appID,
+                subject: subject,
                 documentURL: URL(string: "https://attacker.example.com/index.html")!,
                 request: request
-            ).status,
-            .denied
+            ).failureReason,
+            .originMismatch
         )
 
-        _ = gateway.requestAuthorization(appID: manifest.appID, documentURL: trustedURL, request: request)
-        _ = gateway.resolveUserConsent(appID: manifest.appID, documentURL: trustedURL, request: request, granted: true)
-        gateway.revokeAuthorization(appID: manifest.appID, capability: .camera)
+        _ = gateway.requestAuthorization(subject: subject, documentURL: trustedURL, request: request)
+        let consentExpectation = expectation(description: "consent granted")
+        gateway.resolveUserConsent(
+            subject: subject,
+            documentURL: trustedURL,
+            request: request,
+            approvedScope: .always,
+            granted: true
+        ) { _ in consentExpectation.fulfill() }
+        waitForExpectations(timeout: 1)
 
-        XCTAssertEqual(
-            gateway.requestAuthorization(appID: manifest.appID, documentURL: trustedURL, request: request),
-            HTMLAppCapabilityResult(
-                id: request.id,
-                capability: .camera,
-                status: .notDetermined,
-                authorizationLayer: .htmlApp
-            )
+        gateway.revokeAuthorization(subject: subject, capability: .camera)
+
+        let afterRevoke = gateway.requestAuthorization(subject: subject, documentURL: trustedURL, request: request)
+        XCTAssertEqual(afterRevoke.status, .notDetermined)
+        XCTAssertEqual(afterRevoke.authorizationLayer, .htmlApp)
+    }
+
+    func testUnregisteredAppAndUndeclaredCapabilityHaveStableReasons() throws {
+        let (gateway, _) = try makeGateway()
+        let unknownSubject = HTMLAppPermissionSubject(
+            gatewayIdentity: subject.gatewayIdentity,
+            appID: "com.example.missing",
+            origin: subject.origin
         )
+
+        let unregistered = gateway.requestAuthorization(
+            subject: unknownSubject,
+            documentURL: URL(string: "https://inventory.example.com/index.html")!,
+            request: makeRequest()
+        )
+        XCTAssertEqual(unregistered.failureReason, .appNotRegistered)
+
+        let undeclaredRequest = HTMLAppCapabilityRequest(
+            id: "location-request",
+            capability: .location,
+            reason: "Where am I",
+            scope: .once
+        )
+        let undeclared = gateway.requestAuthorization(
+            subject: subject,
+            documentURL: URL(string: "https://inventory.example.com/index.html")!,
+            request: undeclaredRequest
+        )
+        XCTAssertEqual(undeclared.failureReason, .undeclaredCapability)
     }
 }

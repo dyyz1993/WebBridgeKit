@@ -181,22 +181,85 @@ public final class HTMLAppTrustRegistry {
     }
 }
 
-public struct HTMLAppPermissionGrant: Codable, Equatable, Sendable {
+/// The identity a permission grant is bound to. Grants never carry over when
+/// any component changes: switching or removing a gateway, moving the app to a
+/// different origin, or re-signing under another key all produce a different
+/// subject and therefore cannot reuse an existing grant.
+public struct HTMLAppPermissionSubject: Codable, Equatable, Hashable, Sendable {
+    public let gatewayIdentity: String
     public let appID: String
+    public let origin: String
+
+    public init(gatewayIdentity: String, appID: String, origin: String) {
+        self.gatewayIdentity = gatewayIdentity
+        self.appID = appID
+        self.origin = origin
+    }
+
+    /// True when the subject carries the full identity. Legacy persisted grants
+    /// decoded without gateway/origin components fail this check and are pruned.
+    public var isFullyIdentified: Bool {
+        !gatewayIdentity.isEmpty && !appID.isEmpty && !origin.isEmpty
+    }
+
+    func storageKey(capability: HTMLAppCapability) -> String {
+        "\(gatewayIdentity)|\(appID)|\(origin)|\(capability.rawValue)"
+    }
+}
+
+public struct HTMLAppPermissionGrant: Codable, Equatable, Sendable {
+    public let subject: HTMLAppPermissionSubject
     public let capability: HTMLAppCapability
     public let scope: HTMLAppPermissionScope
     public let grantedAt: Date
 
+    public var appID: String { subject.appID }
+    public var gatewayIdentity: String { subject.gatewayIdentity }
+    public var origin: String { subject.origin }
+
     public init(
-        appID: String,
+        subject: HTMLAppPermissionSubject,
         capability: HTMLAppCapability,
         scope: HTMLAppPermissionScope,
         grantedAt: Date = Date()
     ) {
-        self.appID = appID
+        self.subject = subject
         self.capability = capability
         self.scope = scope
         self.grantedAt = grantedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case subject
+        case appID = "appID"
+        case capability
+        case scope
+        case grantedAt
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        if let subject = try values.decodeIfPresent(HTMLAppPermissionSubject.self, forKey: .subject) {
+            self.subject = subject
+        } else {
+            // Legacy grant persisted before gateway/origin identity existed.
+            self.subject = HTMLAppPermissionSubject(
+                gatewayIdentity: "",
+                appID: try values.decode(String.self, forKey: .appID),
+                origin: ""
+            )
+        }
+        capability = try values.decode(HTMLAppCapability.self, forKey: .capability)
+        scope = try values.decode(HTMLAppPermissionScope.self, forKey: .scope)
+        grantedAt = try values.decode(Date.self, forKey: .grantedAt)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(subject, forKey: .subject)
+        try container.encode(capability, forKey: .capability)
+        try container.encode(scope, forKey: .scope)
+        try container.encode(grantedAt, forKey: .grantedAt)
     }
 }
 
@@ -213,23 +276,26 @@ public final class HTMLAppPermissionLedger {
     ) {
         self.storage = storage
         self.storageKey = storageKey
-        persistentGrants = Self.load(storage: storage, key: storageKey)
+        let loaded = Self.load(storage: storage, key: storageKey)
+        // Grants without full gateway/app/origin identity must not survive an
+        // upgrade: they cannot be attributed to a trustable app identity.
+        persistentGrants = loaded.filter { $0.value.subject.isFullyIdentified }
     }
 
     @discardableResult
     public func grant(
-        appID: String,
+        subject: HTMLAppPermissionSubject,
         capability: HTMLAppCapability,
         scope: HTMLAppPermissionScope,
         grantedAt: Date = Date()
     ) -> HTMLAppPermissionGrant {
         let grant = HTMLAppPermissionGrant(
-            appID: appID,
+            subject: subject,
             capability: capability,
             scope: scope,
             grantedAt: grantedAt
         )
-        let key = Self.key(appID: appID, capability: capability)
+        let key = subject.storageKey(capability: capability)
 
         lock.lock()
         defer { lock.unlock() }
@@ -248,18 +314,29 @@ public final class HTMLAppPermissionLedger {
         return grant
     }
 
-    public func grant(for appID: String, capability: HTMLAppCapability) -> HTMLAppPermissionGrant? {
-        let key = Self.key(appID: appID, capability: capability)
+    public func grant(
+        for subject: HTMLAppPermissionSubject,
+        capability: HTMLAppCapability
+    ) -> HTMLAppPermissionGrant? {
+        let key = subject.storageKey(capability: capability)
         lock.lock()
         defer { lock.unlock() }
         return sessionGrants[key] ?? persistentGrants[key]
+    }
+
+    public func grants(for subject: HTMLAppPermissionSubject) -> [HTMLAppPermissionGrant] {
+        lock.lock()
+        defer { lock.unlock() }
+        return (Array(sessionGrants.values) + Array(persistentGrants.values))
+            .filter { $0.subject == subject }
+            .sorted { $0.capability.rawValue < $1.capability.rawValue }
     }
 
     public func grants(for appID: String) -> [HTMLAppPermissionGrant] {
         lock.lock()
         defer { lock.unlock() }
         return (Array(sessionGrants.values) + Array(persistentGrants.values))
-            .filter { $0.appID == appID }
+            .filter { $0.subject.appID == appID }
             .sorted { $0.capability.rawValue < $1.capability.rawValue }
     }
 
@@ -267,14 +344,14 @@ public final class HTMLAppPermissionLedger {
         lock.lock()
         defer { lock.unlock() }
         return (Array(sessionGrants.values) + Array(persistentGrants.values))
-            .sorted { Self.key(appID: $0.appID, capability: $0.capability) < Self.key(appID: $1.appID, capability: $1.capability) }
+            .sorted { $0.subject.storageKey(capability: $0.capability) < $1.subject.storageKey(capability: $1.capability) }
     }
 
     public func replaceAll(_ grants: [HTMLAppPermissionGrant]) throws {
         var proposedPersistent: [String: HTMLAppPermissionGrant] = [:]
         var proposedSession: [String: HTMLAppPermissionGrant] = [:]
         for grant in grants {
-            let key = Self.key(appID: grant.appID, capability: grant.capability)
+            let key = grant.subject.storageKey(capability: grant.capability)
             switch grant.scope {
             case .once: continue
             case .appSession: proposedSession[key] = grant
@@ -293,8 +370,8 @@ public final class HTMLAppPermissionLedger {
         sessionGrants = proposedSession
     }
 
-    public func revoke(appID: String, capability: HTMLAppCapability) {
-        let key = Self.key(appID: appID, capability: capability)
+    public func revoke(subject: HTMLAppPermissionSubject, capability: HTMLAppCapability) {
+        let key = subject.storageKey(capability: capability)
         lock.lock()
         defer { lock.unlock() }
         sessionGrants.removeValue(forKey: key)
@@ -305,8 +382,42 @@ public final class HTMLAppPermissionLedger {
     public func revokeAll(appID: String) {
         lock.lock()
         defer { lock.unlock() }
-        sessionGrants = sessionGrants.filter { $0.value.appID != appID }
-        persistentGrants = persistentGrants.filter { $0.value.appID != appID }
+        sessionGrants = sessionGrants.filter { $0.value.subject.appID != appID }
+        persistentGrants = persistentGrants.filter { $0.value.subject.appID != appID }
+        persistLocked()
+    }
+
+    /// Drops every grant issued under one gateway identity. Used when a gateway
+    /// is removed; switching gateways also calls this for the previous identity.
+    public func removeGrants(gatewayIdentity: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        sessionGrants = sessionGrants.filter { $0.value.subject.gatewayIdentity != gatewayIdentity }
+        persistentGrants = persistentGrants.filter { $0.value.subject.gatewayIdentity != gatewayIdentity }
+        persistLocked()
+    }
+
+    /// Clears "while using" grants for one container subject. Closing the PWA
+    /// container must call this; backgrounding the app must not.
+    public func endSession(for subject: HTMLAppPermissionSubject) {
+        lock.lock()
+        defer { lock.unlock() }
+        sessionGrants = sessionGrants.filter { $0.value.subject != subject }
+        persistLocked()
+    }
+
+    /// Drops grants for capabilities the current manifest no longer declares.
+    /// Must run after a manifest update removes a capability.
+    public func syncGrants(with manifest: HTMLAppManifest, gatewayIdentity: String, origin: String) {
+        let prefix = "\(gatewayIdentity)|\(manifest.appID)|\(origin)|"
+        lock.lock()
+        defer { lock.unlock() }
+        func keep(_ entry: (key: String, value: HTMLAppPermissionGrant)) -> Bool {
+            guard entry.key.hasPrefix(prefix) else { return true }
+            return manifest.declares(entry.value.capability)
+        }
+        sessionGrants = sessionGrants.filter(keep)
+        persistentGrants = persistentGrants.filter(keep)
         persistLocked()
     }
 
@@ -319,25 +430,39 @@ public final class HTMLAppPermissionLedger {
         guard let data = storage.data(forKey: key) else { return [:] }
         return (try? JSONDecoder().decode([String: HTMLAppPermissionGrant].self, from: data)) ?? [:]
     }
-
-    private static func key(appID: String, capability: HTMLAppCapability) -> String {
-        "\(appID)|\(capability.rawValue)"
-    }
 }
 
+/// Adapts iOS system authorization for HTML app capabilities. The synchronous
+/// status check gates the first-layer panel (denied/restricted short-circuit);
+/// `requestAuthorization` triggers the actual system prompt after the user
+/// accepts the WebBridgeKit panel.
 public protocol HTMLAppNativeAuthorizationProviding: AnyObject {
     func authorizationStatus(for capability: HTMLAppCapability) -> HTMLAppCapabilityResult.Status
+    func requestAuthorization(
+        for capability: HTMLAppCapability,
+        completion: @escaping (HTMLAppCapabilityResult.Status) -> Void
+    )
+}
+
+extension HTMLAppNativeAuthorizationProviding {
+    /// Providers without an interactive system prompt simply re-report status.
+    public func requestAuthorization(
+        for capability: HTMLAppCapability,
+        completion: @escaping (HTMLAppCapabilityResult.Status) -> Void
+    ) {
+        completion(authorizationStatus(for: capability))
+    }
 }
 
 public final class HTMLAppCapabilityGateway {
     private struct PendingRequest {
-        let appID: String
+        let subject: HTMLAppPermissionSubject
         let capability: HTMLAppCapability
         let documentOrigin: String
     }
 
+    public let permissionLedger: HTMLAppPermissionLedger
     private let trustRegistry: HTMLAppTrustRegistry
-    private let permissionLedger: HTMLAppPermissionLedger
     private let nativeAuthorizationProvider: HTMLAppNativeAuthorizationProviding
     private let lock = NSLock()
     private var pendingRequests: [String: PendingRequest] = [:]
@@ -352,97 +477,176 @@ public final class HTMLAppCapabilityGateway {
         self.nativeAuthorizationProvider = nativeAuthorizationProvider
     }
 
+    public func manifest(for appID: String) -> HTMLAppManifest? {
+        trustRegistry.manifest(for: appID)
+    }
+
+    /// First authorization pass. Returns `.notDetermined` with the `.htmlApp`
+    /// layer only when a branded consent panel should be presented. The iOS
+    /// system prompt happens later, inside `resolveUserConsent`, so the
+    /// WebBridgeKit panel is always the first thing the user sees.
     public func requestAuthorization(
-        appID: String,
+        subject: HTMLAppPermissionSubject,
         documentURL: URL,
         request: HTMLAppCapabilityRequest
     ) -> HTMLAppCapabilityResult {
-        guard let manifest = trustRegistry.manifest(for: appID),
-              manifest.allows(documentURL: documentURL),
-              case .accepted = request.validate(against: manifest) else {
-            return result(for: request, status: .denied)
+        guard let manifest = trustRegistry.manifest(for: subject.appID) else {
+            return result(for: request, status: .denied, failureReason: .appNotRegistered)
+        }
+        guard manifest.allows(documentURL: documentURL) else {
+            return result(for: request, status: .denied, failureReason: .originMismatch)
+        }
+        guard case .accepted = request.validate(against: manifest) else {
+            return result(for: request, status: .denied, failureReason: .undeclaredCapability)
+        }
+        guard let documentOrigin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL),
+              documentOrigin == subject.origin,
+              subject.isFullyIdentified else {
+            return result(for: request, status: .denied, failureReason: .originMismatch)
         }
 
+        // A system-level refusal cannot be fixed by an in-app panel; surface it
+        // directly so the host can offer the iOS Settings handoff instead.
         let nativeStatus = nativeAuthorizationProvider.authorizationStatus(for: request.capability)
-        guard nativeStatus == .granted else {
+        switch nativeStatus {
+        case .denied:
             return result(
                 for: request,
-                status: nativeStatus == .denied ? .requiresSettings : nativeStatus,
+                status: .requiresSettings,
+                failureReason: .systemDenied,
                 authorizationLayer: .nativeSystem
             )
+        case .restricted:
+            return result(
+                for: request,
+                status: .restricted,
+                failureReason: .systemRestricted,
+                authorizationLayer: .nativeSystem
+            )
+        default:
+            break
         }
 
-        if let grant = permissionLedger.grant(for: appID, capability: request.capability) {
+        if let grant = permissionLedger.grant(for: subject, capability: request.capability) {
             return result(for: request, status: .granted, scope: grant.scope)
         }
 
-        guard let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL) else {
-            return result(for: request, status: .denied)
-        }
         lock.lock()
-        pendingRequests[pendingKey(appID: appID, requestID: request.id)] = PendingRequest(
-            appID: appID,
+        pendingRequests[pendingKey(subject: subject, requestID: request.id)] = PendingRequest(
+            subject: subject,
             capability: request.capability,
-            documentOrigin: origin
+            documentOrigin: documentOrigin
         )
         lock.unlock()
         return result(for: request, status: .notDetermined, authorizationLayer: .htmlApp)
     }
 
+    /// Completes a pending consent request. On acceptance this triggers the
+    /// iOS system authorization (which may show the system prompt) before the
+    /// grant is recorded, so a system refusal never leaves a stale grant.
     public func resolveUserConsent(
-        appID: String,
+        subject: HTMLAppPermissionSubject,
         documentURL: URL,
         request: HTMLAppCapabilityRequest,
-        granted: Bool
-    ) -> HTMLAppCapabilityResult {
-        let key = pendingKey(appID: appID, requestID: request.id)
+        approvedScope: HTMLAppPermissionScope,
+        granted: Bool,
+        completion: @escaping (HTMLAppCapabilityResult) -> Void
+    ) {
+        let key = pendingKey(subject: subject, requestID: request.id)
         lock.lock()
         let pendingRequest = pendingRequests.removeValue(forKey: key)
         lock.unlock()
 
-        guard let pendingRequest,
-              pendingRequest.appID == appID,
-              pendingRequest.capability == request.capability,
-              pendingRequest.documentOrigin == HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL),
-              granted else {
-            return result(for: request, status: .denied, authorizationLayer: .htmlApp)
+        guard granted else {
+            completion(result(for: request, status: .denied, failureReason: .userCancelled, authorizationLayer: .htmlApp))
+            return
         }
 
-        guard let manifest = trustRegistry.manifest(for: appID),
+        guard let pendingRequest,
+              pendingRequest.subject == subject,
+              pendingRequest.capability == request.capability,
+              pendingRequest.documentOrigin == HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL) else {
+            completion(result(for: request, status: .denied, failureReason: .userCancelled, authorizationLayer: .htmlApp))
+            return
+        }
+
+        guard let manifest = trustRegistry.manifest(for: subject.appID),
               manifest.allows(documentURL: documentURL),
               case .accepted = request.validate(against: manifest) else {
-            return result(for: request, status: .denied, authorizationLayer: .htmlApp)
+            completion(result(for: request, status: .denied, failureReason: .originMismatch, authorizationLayer: .htmlApp))
+            return
         }
 
-        let nativeStatus = nativeAuthorizationProvider.authorizationStatus(for: request.capability)
-        guard nativeStatus == .granted else {
-            return result(
-                for: request,
-                status: nativeStatus == .denied ? .requiresSettings : nativeStatus,
-                authorizationLayer: .nativeSystem
-            )
+        nativeAuthorizationProvider.requestAuthorization(for: request.capability) { [weak self] nativeStatus in
+            guard let self else { return }
+            switch nativeStatus {
+            case .granted:
+                let grant = self.permissionLedger.grant(
+                    subject: subject,
+                    capability: request.capability,
+                    scope: approvedScope
+                )
+                completion(self.result(for: request, status: .granted, scope: grant.scope))
+            case .denied:
+                completion(self.result(
+                    for: request,
+                    status: .requiresSettings,
+                    failureReason: .systemDenied,
+                    authorizationLayer: .nativeSystem
+                ))
+            case .restricted:
+                completion(self.result(
+                    for: request,
+                    status: .restricted,
+                    failureReason: .systemRestricted,
+                    authorizationLayer: .nativeSystem
+                ))
+            default:
+                completion(self.result(
+                    for: request,
+                    status: .notDetermined,
+                    failureReason: .systemNotDetermined,
+                    authorizationLayer: .nativeSystem
+                ))
+            }
         }
-
-        let permissionGrant = permissionLedger.grant(
-            appID: appID,
-            capability: request.capability,
-            scope: request.scope
-        )
-        return result(for: request, status: .granted, scope: permissionGrant.scope)
     }
 
-    public func revokeAuthorization(appID: String, capability: HTMLAppCapability) {
-        permissionLedger.revoke(appID: appID, capability: capability)
+    /// Safely drops pending consent requests, e.g. when the PWA navigates to a
+    /// different origin or the container is destroyed. The coordinator is
+    /// responsible for completing any UI-side callbacks itself.
+    public func cancelPendingRequests(subject: HTMLAppPermissionSubject) {
+        lock.lock()
+        defer { lock.unlock() }
+        let prefix = "\(subject.gatewayIdentity)|\(subject.appID)|\(subject.origin)|"
+        pendingRequests = pendingRequests.filter { !$0.key.hasPrefix(prefix) }
     }
 
-    private func pendingKey(appID: String, requestID: String) -> String {
-        "\(appID)|\(requestID)"
+    public func revokeAuthorization(subject: HTMLAppPermissionSubject, capability: HTMLAppCapability) {
+        permissionLedger.revoke(subject: subject, capability: capability)
+        cancelPendingRequests(subject: subject)
+    }
+
+    public func revokeAllAuthorizations(appID: String) {
+        permissionLedger.revokeAll(appID: appID)
+    }
+
+    /// Ends the container session: clears "while using" grants and pending
+    /// consent requests for this subject without touching persistent grants.
+    public func endSession(subject: HTMLAppPermissionSubject) {
+        permissionLedger.endSession(for: subject)
+        cancelPendingRequests(subject: subject)
+    }
+
+    private func pendingKey(subject: HTMLAppPermissionSubject, requestID: String) -> String {
+        "\(subject.gatewayIdentity)|\(subject.appID)|\(subject.origin)|\(requestID)"
     }
 
     private func result(
         for request: HTMLAppCapabilityRequest,
         status: HTMLAppCapabilityResult.Status,
         scope: HTMLAppPermissionScope? = nil,
+        failureReason: HTMLAppCapabilityResult.FailureReason? = nil,
         authorizationLayer: HTMLAppCapabilityResult.AuthorizationLayer? = nil
     ) -> HTMLAppCapabilityResult {
         HTMLAppCapabilityResult(
@@ -450,7 +654,8 @@ public final class HTMLAppCapabilityGateway {
             capability: request.capability,
             status: status,
             scope: scope,
-            authorizationLayer: authorizationLayer
+            authorizationLayer: authorizationLayer,
+            failureReason: failureReason
         )
     }
 }

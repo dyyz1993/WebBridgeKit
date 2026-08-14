@@ -56,6 +56,14 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         )
     }
 
+    private func makeSubject(gateway: String = "shared-id") -> HTMLAppPermissionSubject {
+        HTMLAppPermissionSubject(
+            gatewayIdentity: gateway,
+            appID: manifest().appID,
+            origin: "https://apps.example.com"
+        )
+    }
+
     func testValidationDoesNotPersistUntilActivation() throws {
         let storage = MemoryStorage()
         let gatewayRegistry = HTMLAppGatewayRegistry(storage: storage, allowsDevelopmentHTTP: true)
@@ -208,7 +216,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         let oldGateway = HTMLAppGatewayConfiguration(id: "old", name: "Old", baseURL: "https://old.example.com")
         try gatewayRegistry.save(oldGateway, activate: true)
         try trustRegistry.register(manifest())
-        permissionLedger.grant(appID: manifest().appID, capability: .notification, scope: .always)
+        permissionLedger.grant(subject: makeSubject(), capability: .notification, scope: .always)
         let oldManifests = trustRegistry.registeredManifests()
         storage.failNextWriteMatching = "gateways"
         let newGateway = HTMLAppGatewayConfiguration(id: "new", name: "New", baseURL: "https://new.example.com")
@@ -222,7 +230,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         XCTAssertThrowsError(try service.activate(.init(gateway: newGateway, manifests: [manifest()], healthStatusCode: 200)))
         XCTAssertEqual(gatewayRegistry.activeGateway(), oldGateway)
         XCTAssertEqual(trustRegistry.registeredManifests(), oldManifests)
-        XCTAssertNotNil(permissionLedger.grant(for: manifest().appID, capability: .notification))
+        XCTAssertNotNil(permissionLedger.grant(for: makeSubject(), capability: .notification))
     }
 
     func testActivationRevokesGrantsWhenGatewayChangesButKeepsTheSameID() throws {
@@ -237,11 +245,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         )
         try gatewayRegistry.save(oldGateway, activate: true)
         try trustRegistry.register(manifest())
-        permissionLedger.grant(
-            appID: manifest().appID,
-            capability: .notification,
-            scope: .always
-        )
+        permissionLedger.grant(subject: makeSubject(), capability: .notification, scope: .always)
         let newGateway = HTMLAppGatewayConfiguration(
             id: "shared-id",
             name: "New",
@@ -261,7 +265,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         ))
 
         XCTAssertEqual(gatewayRegistry.activeGateway(), newGateway)
-        XCTAssertNil(permissionLedger.grant(for: manifest().appID, capability: .notification))
+        XCTAssertNil(permissionLedger.grant(for: makeSubject(), capability: .notification))
     }
 
     func testRemovingActiveGatewayClearsItsTrustAndPermissionGrants() throws {
@@ -276,11 +280,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         )
         try gatewayRegistry.save(gateway, activate: true)
         try trustRegistry.register(manifest())
-        permissionLedger.grant(
-            appID: manifest().appID,
-            capability: .notification,
-            scope: .always
-        )
+        permissionLedger.grant(subject: makeSubject(), capability: .notification, scope: .always)
         let service = HTMLAppGatewayOnboardingService(
             gatewayRegistry: gatewayRegistry,
             trustRegistry: trustRegistry,
@@ -293,7 +293,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         XCTAssertNil(gatewayRegistry.activeGateway())
         XCTAssertTrue(gatewayRegistry.allGateways().isEmpty)
         XCTAssertNil(trustRegistry.manifest(for: manifest().appID))
-        XCTAssertNil(permissionLedger.grant(for: manifest().appID, capability: .notification))
+        XCTAssertNil(permissionLedger.grant(for: makeSubject(), capability: .notification))
     }
 
     func testRemovingActiveGatewayRollsBackWhenGatewayPersistenceFails() throws {
@@ -304,7 +304,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         let gateway = HTMLAppGatewayConfiguration(id: "managed", name: "Managed", baseURL: "https://managed.example.com")
         try gatewayRegistry.save(gateway, activate: true)
         try trustRegistry.register(manifest())
-        permissionLedger.grant(appID: manifest().appID, capability: .notification, scope: .always)
+        permissionLedger.grant(subject: makeSubject(), capability: .notification, scope: .always)
         storage.failNextWriteMatching = "gateways"
         let service = HTMLAppGatewayOnboardingService(
             gatewayRegistry: gatewayRegistry,
@@ -316,7 +316,7 @@ final class HTMLAppGatewayOnboardingTests: XCTestCase {
         XCTAssertThrowsError(try service.removeGateway(id: gateway.id))
         XCTAssertEqual(gatewayRegistry.activeGateway(), gateway)
         XCTAssertEqual(trustRegistry.registeredManifests(), [manifest()])
-        XCTAssertNotNil(permissionLedger.grant(for: manifest().appID, capability: .notification))
+        XCTAssertNotNil(permissionLedger.grant(for: makeSubject(), capability: .notification))
     }
 }
 
