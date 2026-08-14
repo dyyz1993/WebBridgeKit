@@ -92,6 +92,10 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     private let immersiveExitControl = ImmersivePWAExitControl()
 
+    /// App identity from the WebBridgeKit launch payload, when this browser
+    /// hosts a registered HTML app instead of a plain page.
+    public private(set) var htmlAppID: String?
+
     /// 手势 - 点击底部区域关闭（当导航栏隐藏时）
     var tapGesture: UITapGestureRecognizer?
 
@@ -164,6 +168,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         configuredHideNavigationBar = params.hideNavigationBar || params.displayMode == .immersive
         configuredHideStatusBar = params.hideStatusBar || params.displayMode == .immersive
         title = params.customTitle ?? title
+        htmlAppID = params.payload?["webbridgekitAppId"]
 
         guard let payload = params.payload,
               JSONSerialization.isValidJSONObject(payload),
