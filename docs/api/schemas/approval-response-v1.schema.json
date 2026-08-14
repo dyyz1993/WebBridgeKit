@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://webbridgekit.dev/schemas/approval-response-v1.schema.json",
+  "title": "WebBridgeKit Approval Response v1",
+  "type": "object",
+  "required": ["schema", "eventId", "requestId", "revision", "actionId", "values", "respondedAt"],
+  "properties": {
+    "schema": { "const": "webbridgekit.approval-response.v1" },
+    "eventId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "requestId": { "type": "string", "pattern": "^[A-Za-z0-9._:-]+$", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "integer", "minimum": 2 },
+    "actionId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "values": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "respondedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

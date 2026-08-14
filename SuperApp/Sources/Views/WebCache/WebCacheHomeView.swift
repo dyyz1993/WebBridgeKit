@@ -9,7 +9,12 @@ struct WebCacheHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xxl) {
-                ModuleHeaderView(tab: .web)
+                ModuleHeaderView(
+                    title: "Web 缓存调试",
+                    subtitle: "网页打开、缓存策略、离线包与清理",
+                    icon: .globe,
+                    accessibilityIdentifier: "moduleHeader.webCache"
+                )
                 ServiceStatusStrip(items: serviceItems)
                 urlSection
                 WebCacheModePicker(selection: $viewModel.selectedMode)

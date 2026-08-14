@@ -37,6 +37,8 @@ public final class WBKFilterPill: UIView {
         self.currentStyle = style
         super.init(frame: .zero)
         accessibilityIdentifier = "wbk_filter_pill"
+        isAccessibilityElement = true
+        accessibilityTraits = .button
         setupUI(title: title, style: style)
     }
 
@@ -71,7 +73,7 @@ public final class WBKFilterPill: UIView {
     }
 
     private func setupUI(title: String, style: Style) {
-        layer.cornerRadius = ThemeTokens.CornerRadius.full
+        layer.cornerRadius = ThemeTokens.ComponentContract.FilterPill.height / 2
         clipsToBounds = true
         isUserInteractionEnabled = true
         addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
@@ -214,5 +216,6 @@ public final class WBKFilterPill: UIView {
         }
 
         invalidateIntrinsicContentSize()
+        accessibilityTraits = isSelected ? [.button, .selected] : .button
     }
 }

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173126">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>WebBridgeKit PWA Notification Route Fixture</title>
+  <style>
+    :root { color-scheme: light dark; font-family: Georgia, "Songti SC", serif; }
+    body { margin: 0; min-height: 100vh; background: #f4efe5; color: #173126; }
+    main { max-width: 680px; margin: 0 auto; padding: 64px 24px; }
+    .eyebrow { color: #a3482d; font: 700 12px/1.4 monospace; letter-spacing: .14em; }
+    h1 { margin: 12px 0 32px; font-size: clamp(34px, 9vw, 64px); line-height: .96; }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 12px 18px; padding: 22px; border: 1px solid #b8aa91; border-radius: 18px; background: rgba(255,255,255,.45); }
+    dt { color: #6c6254; } dd { margin: 0; overflow-wrap: anywhere; font-family: monospace; }
+    #status { margin-top: 24px; padding: 14px 18px; border-radius: 999px; background: #173126; color: #fff; display: inline-block; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">SIMULATED APNs -> TRUSTED PWA</div>
+    <h1>通知路由验证</h1>
+    <dl>
+      <dt>App ID</dt><dd id="app-id">等待启动参数</dd>
+      <dt>页面</dt><dd id="route">等待启动参数</dd>
+      <dt>会话</dt><dd id="conversation">等待启动参数</dd>
+      <dt>消息</dt><dd id="message">等待启动参数</dd>
+      <dt>离线模式</dt><dd id="offline-mode">等待启动参数</dd>
+      <dt>本地恢复</dt><dd id="restored">无历史状态</dd>
+    </dl>
+    <div id="status">等待 WebBridgeKit</div>
+  </main>
+  <script>
+    (() => {
+      const key = 'webbridgekit.fixture.last-view';
+      const previous = localStorage.getItem(key);
+
+      function render(context) {
+        if (!context || !context.webbridgekitAppId) return;
+        document.querySelector('#app-id').textContent = context.webbridgekitAppId;
+        document.querySelector('#route').textContent = context.webbridgekitRoute;
+        document.querySelector('#conversation').textContent = context.conversationId || 'n/a';
+        document.querySelector('#message').textContent = context.messageId || 'n/a';
+        document.querySelector('#offline-mode').textContent = context.webbridgekitOfflineMode;
+        document.querySelector('#restored').textContent = previous ? `已恢复: ${JSON.parse(previous).conversationId}` : '首次启动';
+        document.querySelector('#status').textContent = 'APNs 路由成功';
+        localStorage.setItem(key, JSON.stringify({
+          conversationId: context.conversationId,
+          messageId: context.messageId,
+          savedAt: new Date().toISOString()
+        }));
+      }
+
+      render(window.WebBridgeKitLaunchContext);
+      window.addEventListener('webbridgekit:launch', event => render(event.detail), { once: true });
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {
+          document.querySelector('#status').textContent = '路由成功，离线壳安装失败';
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -15,11 +15,9 @@ final class TabScreenshotTests: XCTestCase {
         XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist")
 
         let tabs = [
-            ("tab.web", "web"),
-            ("tab.push", "push"),
-            ("tab.bridge", "bridge"),
-            ("tab.inbox", "messages"),
-            ("设置", "settings")
+            ("tab.apps", "apps"),
+            ("tab.notifications", "notifications"),
+            ("tab.settings", "settings")
         ]
 
         for (title, name) in tabs {

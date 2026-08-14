@@ -35,12 +35,26 @@ class InboxViewModel: ViewModel {
         case all = 0
         case unread
         case apps
+        case actionRequired
+    }
+
+    enum DisplayMode: Int {
+        case latest = 0
+        case groups
     }
 
     struct MessageGroup {
+        let identifier: String
         let name: String
         var messages: [StoredMessage]
         var isExpanded: Bool = true
+
+        init(identifier: String? = nil, name: String, messages: [StoredMessage], isExpanded: Bool = true) {
+            self.identifier = identifier ?? name
+            self.name = name
+            self.messages = messages
+            self.isExpanded = isExpanded
+        }
 
         var mostRecentDate: Date {
             messages.map(\.receivedAt).max() ?? .distantPast
@@ -60,6 +74,7 @@ class InboxViewModel: ViewModel {
 
     private var searchText: String = ""
     private var currentFilter: FilterType = .all
+    private var currentDisplayMode: DisplayMode = .latest
     private var searchDebounceWorkItem: DispatchWorkItem?
 
     var messageGroupsValue: [MessageGroup] {
@@ -151,6 +166,17 @@ class InboxViewModel: ViewModel {
         loadMessages()
     }
 
+    func setDisplayMode(_ displayMode: DisplayMode) {
+        guard currentDisplayMode != displayMode else { return }
+        currentDisplayMode = displayMode
+        applyFilters()
+        reloadDataRelay.accept(())
+    }
+
+    var showsGroupHeaders: Bool {
+        currentDisplayMode == .groups
+    }
+
     func messageAt(_ indexPath: IndexPath) -> StoredMessage {
         let groups = messageGroupsRelay.value
         guard indexPath.section < groups.count else { fatalError("Section out of bounds") }
@@ -181,9 +207,12 @@ class InboxViewModel: ViewModel {
 
     func groupHeaderTitle(_ index: Int) -> String {
         guard index < messageGroupsRelay.value.count else { return "" }
-        let group = messageGroupsRelay.value[index]
-        let unread = group.unreadCount
-        return "\(group.name) (\(group.messages.count))" + (unread > 0 ? " · \(unread) \(L10n.tr("inbox.filter.unread").lowercased())" : "")
+        return messageGroupsRelay.value[index].name
+    }
+
+    func groupIdentifier(_ index: Int) -> String {
+        guard index < messageGroupsRelay.value.count else { return "" }
+        return messageGroupsRelay.value[index].identifier
     }
 
     func groupHasUnread(_ index: Int) -> Bool {
@@ -195,6 +224,11 @@ class InboxViewModel: ViewModel {
         guard index < messageGroupsRelay.value.count else { return 0 }
         let group = messageGroupsRelay.value[index]
         return group.isExpanded ? group.messages.count : 0
+    }
+
+    func numberOfMessagesInGroup(_ index: Int) -> Int {
+        guard index < messageGroupsRelay.value.count else { return 0 }
+        return messageGroupsRelay.value[index].messages.count
     }
 
     func messageIndexPath(globalRow row: Int) -> (group: Int, localRow: Int)? {
@@ -225,7 +259,7 @@ class InboxViewModel: ViewModel {
 
             var messages: [StoredMessage] = []
 
-            let isUITesting = CommandLine.arguments.contains("-UITesting") || CommandLine.arguments.contains("--UITesting")
+            let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
 
             if isUITesting {
                 let fallbackKey = "SuperCache_Messages"
@@ -265,25 +299,40 @@ class InboxViewModel: ViewModel {
             messages = messages.filter { !$0.isRead }
         case .apps:
             messages = messages.filter {
-                let ch = $0.payload.channel.uppercased()
-                return ch == "APNS" || ch == "APN" || ch == "BRIDGE"
+                $0.payload.targetAppId != nil || $0.payload.targetURL != nil
             }
+        case .actionRequired:
+            messages = messages.filter(\.requiresUserAttention)
         }
 
         if !searchText.isEmpty {
             messages = messages.filter {
                 $0.payload.title.localizedCaseInsensitiveContains(searchText) ||
-                $0.payload.body.localizedCaseInsensitiveContains(searchText)
+                $0.payload.body.localizedCaseInsensitiveContains(searchText) ||
+                ($0.payload.markdown?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                ($0.payload.subtitle?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                ($0.payload.group?.localizedCaseInsensitiveContains(searchText) ?? false)
             }
         }
 
-        let grouped = Dictionary(grouping: messages) { $0.payload.group ?? L10n.tr("inbox.group.ungrouped") }
-        let groups = grouped.map { name, msgs in
-            MessageGroup(
-                name: name,
-                messages: msgs.sorted { $0.receivedAt > $1.receivedAt }
-            )
-        }.sorted { $0.mostRecentDate > $1.mostRecentDate }
+        let sortedMessages = messages.sorted { $0.receivedAt > $1.receivedAt }
+        let groups: [MessageGroup]
+        if currentDisplayMode == .latest {
+            groups = sortedMessages.isEmpty ? [] : [MessageGroup(name: "", messages: sortedMessages)]
+        } else {
+            let grouped = Dictionary(grouping: sortedMessages) { $0.notificationGroupName }
+            groups = grouped.map { identifier, msgs in
+                MessageGroup(
+                    identifier: identifier,
+                    name: Self.displayName(forGroup: identifier),
+                    messages: msgs
+                )
+            }.sorted { lhs, rhs in
+                if lhs.identifier == "other" { return false }
+                if rhs.identifier == "other" { return true }
+                return lhs.mostRecentDate > rhs.mostRecentDate
+            }
+        }
 
         messageGroupsRelay.accept(groups)
         isEmptyRelay.accept(messages.isEmpty)
@@ -307,5 +356,44 @@ class InboxViewModel: ViewModel {
             try await MessageEngine.shared.receive(payload)
             loadMessages()
         }
+    }
+
+    private static func displayName(forGroup identifier: String) -> String {
+        switch identifier.lowercased() {
+        case "verification-codes": return L10n.tr("inbox.group.verification")
+        case "team-chat-linmo": return L10n.tr("inbox.group.team_chat")
+        case "login-requests": return L10n.tr("inbox.group.login")
+        case "agent-approvals": return L10n.tr("inbox.group.approvals")
+        case "agent-tasks": return L10n.tr("inbox.group.tasks")
+        case "design-reviews": return L10n.tr("inbox.group.design_reviews")
+        case "security-alerts": return L10n.tr("inbox.group.security")
+        case "server-alerts": return L10n.tr("inbox.group.server")
+        case "system-notices": return L10n.tr("inbox.group.system")
+        case "weather-updates": return L10n.tr("inbox.group.weather")
+        case "shop-orders": return L10n.tr("inbox.group.orders")
+        case "shop-promo": return L10n.tr("inbox.group.promotion")
+        case "game-invites": return L10n.tr("inbox.group.invites")
+        case "other": return L10n.tr("inbox.group.other")
+        default: return identifier.replacingOccurrences(of: "-", with: " ")
+        }
+    }
+}
+
+private extension StoredMessage {
+    var requiresUserAttention: Bool {
+        payload.requiresUserAction
+    }
+
+    var notificationGroupName: String {
+        if let group = payload.group?.trimmingCharacters(in: .whitespacesAndNewlines), !group.isEmpty {
+            // Preserve the gateway value as a stable identifier. Presentation is resolved
+            // separately, so a known Bark/group value can be localized without changing
+            // grouping, sort order, or UI-test identifiers.
+            return group
+        }
+        if let appID = payload.targetAppId, !appID.isEmpty {
+            return "PWA · \(appID)"
+        }
+        return "other"
     }
 }

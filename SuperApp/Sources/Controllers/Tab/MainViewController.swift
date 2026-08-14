@@ -212,6 +212,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         Log.debug("viewDidAppear", category: .ui)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
+            guard !ProcessInfo.processInfo.isWebBridgeKitUITesting else { return }
             PassphraseManager.shared.checkClipboard(from: self)
             self.checkClipboardForCommand()
         }

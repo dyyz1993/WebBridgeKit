@@ -120,14 +120,10 @@ private struct AppShellMigrationNotice: View {
 
     private var statusText: String {
         switch tab {
-        case .web:
-            return "当前先接入旧缓存页，下一步替换为完整 Web Cache Home。"
-        case .inbox:
-            return "消息历史已作为主导航能力，承载推送历史、分组、未读和路由。"
-        case .bridge:
-            return "当前先接入旧 Bridge Showcase，下一步替换为可执行 Bridge Lab。"
-        case .tokenPush:
-            return "当前集中 Token 和推送入口，下一步补 payload composer。"
+        case .apps:
+            return "应用中心展示已验证 PWA，并从这里进入沉浸式体验。"
+        case .notifications:
+            return "通知记录承载推送历史、未读、分组与精确路由。"
         case .settings:
             return "Debug 和协议工具已收纳到设置页，底部主导航只保留核心能力。"
         }

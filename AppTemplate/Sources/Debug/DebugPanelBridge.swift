@@ -5,7 +5,13 @@ public class DebugPanelBridge {
 
     public static let shared = DebugPanelBridge()
 
+    private var configuration = AppTemplateConfiguration.safeDefaults
+
     private init() {}
+
+    func configure(with configuration: AppTemplateConfiguration) {
+        self.configuration = configuration
+    }
 
     public func createMainViewController() -> UIViewController {
         return DiagnosticViewController()
@@ -46,7 +52,8 @@ public class DebugPanelBridge {
         vc.title = "Push Token"
         vc.view.backgroundColor = ThemeTokens.Color.background
         let label = UILabel()
-        label.text = "Push Token Management\n\nBark Key: test_key\nWebhook: port 8765\n\nUse the Message tab to send test pushes."
+        let barkState = configuration.barkDeviceKey == nil ? "未配置" : "已配置（值已隐藏）"
+        label.text = "Push Token Management\n\nBark: \(barkState)\nWebhook: Disabled\n\nConfigure channels explicitly in AppTemplateConfiguration."
         label.textAlignment = .center
         label.font = ThemeTokens.Typography.body
         label.textColor = ThemeTokens.Color.textSecondary
@@ -76,11 +83,16 @@ public class DebugPanelBridge {
         textView.snp.makeConstraints { make in
             make.edges.equalTo(vc.view.safeAreaLayoutGuide).inset(16)
         }
+        let serverState: String
+        if let port = configuration.localDiagnosticsPort {
+            serverState = "Enabled on port \(port); startup runs asynchronously"
+        } else {
+            serverState = "Disabled"
+        }
         textView.text = """
         AI HTTP Server
 
-        Port: 8765
-        Status: Running (local)
+        Status: \(serverState)
 
         Endpoints:
           GET  /health          - Health check

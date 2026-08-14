@@ -192,10 +192,8 @@ private class ButtonCell: UITableViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(16)
+        }
     }
-}
-
-#endif
 
     func configure(title: String, action: @escaping () -> Void) {
         button.setTitle(title, for: .normal)
@@ -203,3 +201,5 @@ private class ButtonCell: UITableViewCell {
         button.addAction(UIAction { _ in action() }, for: .touchUpInside)
     }
 }
+
+#endif

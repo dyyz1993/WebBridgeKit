@@ -14,7 +14,12 @@ struct TokenPushHomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xxl) {
-                ModuleHeaderView(tab: .tokenPush)
+                ModuleHeaderView(
+                    title: "Push 调试",
+                    subtitle: "Bark 兼容、设备 Token 与推送路由验证",
+                    icon: .bell,
+                    accessibilityIdentifier: "moduleHeader.push"
+                )
                 ServiceStatusStrip(items: viewModel.serviceItems)
                 metricSection
                 actionSection
@@ -34,6 +39,7 @@ struct TokenPushHomeView: View {
         .navigationTitle("Token/Push")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: viewModel.refreshSnapshot)
+        .accessibilityIdentifier("tokenPush.home")
     }
 
     private var metricSection: some View {

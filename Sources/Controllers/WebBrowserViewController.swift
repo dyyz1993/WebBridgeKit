@@ -90,6 +90,8 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         return button
     }()
 
+    private let immersiveExitControl = ImmersivePWAExitControl()
+
     /// 手势 - 点击底部区域关闭（当导航栏隐藏时）
     var tapGesture: UITapGestureRecognizer?
 
@@ -110,6 +112,10 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             setNeedsStatusBarAppearanceUpdate()
         }
     }
+
+    /// Host-supplied display policy must survive URL parameter parsing.
+    private var configuredHideNavigationBar = false
+    private var configuredHideStatusBar = false
 
     /// 当前 URL
     var currentURL: URL?
@@ -153,6 +159,34 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         fatalError("init(coder:) has not been implemented")
     }
 
+    public func configure(with params: WebBrowserParams) {
+        debugMode = params.debugMode
+        configuredHideNavigationBar = params.hideNavigationBar || params.displayMode == .immersive
+        configuredHideStatusBar = params.hideStatusBar || params.displayMode == .immersive
+        title = params.customTitle ?? title
+
+        guard let payload = params.payload,
+              JSONSerialization.isValidJSONObject(payload),
+              let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]),
+              let json = String(data: data, encoding: .utf8) else {
+            return
+        }
+
+        let source = """
+        (() => {
+          const payload = \(json);
+          window.SuperCachePayload = payload;
+          window.WebBridgeKitLaunchContext = payload;
+          document.addEventListener('DOMContentLoaded', () => {
+            window.dispatchEvent(new CustomEvent('webbridgekit:launch', { detail: payload }));
+          }, { once: true });
+        })();
+        """
+        webView.configuration.userContentController.addUserScript(
+            WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        )
+    }
+
     // MARK: - Setup UI
 
     public override func makeUI() {
@@ -164,10 +198,13 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         view.addSubview(progressView)
         webView.accessibilityIdentifier = "browserManager.webView"
         view.addSubview(webView)
+        view.addSubview(immersiveExitControl)
+        immersiveExitControl.onExit = { [weak self] in self?.dismissOrPop() }
 
         setupConstraints()
         setupActions()
         setupGestures()
+        applyConfiguredDisplayPolicy()
 
         backButton.isHidden = true
         closeButton.isHidden = false
@@ -221,6 +258,11 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         performLoadURLWithCache(pendingCacheLoad.url, forceRefresh: pendingCacheLoad.forceRefresh)
     }
 
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        immersiveExitControl.updateLayout(in: view)
+    }
+
     /// 还原系统 NavigationBar
     private func restoreUIState() {
         StructuredLogger.shared.debug("[SYNC] [Browser] Restoring UI state...", category: .ui)
@@ -243,6 +285,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
         view.backgroundColor = ThemeTokens.Color.background
         hideNavBar = false
+        immersiveExitControl.isHidden = true
 
         StructuredLogger.shared.info("[OK] [Browser] UI state fully restored", category: .ui)
     }
@@ -275,15 +318,15 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let queryItems = components.queryItems else {
-            StructuredLogger.shared.warning("[WARN] [WebBrowserVC] No query items found - resetting UI state", category: .ui)
-            resetUIState()
+            StructuredLogger.shared.debug("[WebBrowserVC] No query items found - applying host display policy", category: .ui)
+            applyConfiguredDisplayPolicy()
             return
         }
 
         StructuredLogger.shared.info("[OK] [WebBrowserVC] Found \(queryItems.count) query items", category: .ui)
 
-        var shouldHideNavBar = false
-        var shouldHideStatusBar = false
+        var shouldHideNavBar = configuredHideNavigationBar
+        var shouldHideStatusBar = configuredHideStatusBar
         var targetOrientation: UIInterfaceOrientation?
 
         for item in queryItems {
@@ -334,6 +377,11 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         StructuredLogger.shared.info("[OK] [WebBrowserVC] checkURLParameters completed", category: .navigation)
     }
 
+    private func applyConfiguredDisplayPolicy() {
+        setNavigationBarHidden(configuredHideNavigationBar)
+        setStatusBarHidden(configuredHideStatusBar)
+    }
+
     /// 重置UI状态（当URL没有参数时调用）
     private func resetUIState() {
         StructuredLogger.shared.debug("[SYNC] [Browser] Resetting UI state to default...", category: .ui)
@@ -379,6 +427,8 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
             self.navigationController?.navigationBar.isHidden = hidden
             self.navigationController?.setNavigationBarHidden(hidden, animated: false)
+            self.immersiveExitControl.isHidden = !hidden
+            self.immersiveExitControl.updateLayout(in: self.view)
 
             if !hidden {
                 let canGoBack = self.webView.canGoBack

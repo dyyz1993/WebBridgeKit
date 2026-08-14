@@ -6,6 +6,7 @@
 //
 
 import WebKit
+import os.log
 
 // MARK: - WKNavigationDelegate - Auto-Capture by Rules
 extension WebBrowserViewController: WKNavigationDelegate {
@@ -165,6 +166,25 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     // MARK: - Cache Support
 
+    /// Load a standard PWA without probing WebBridgeKit's resource manifest.
+    /// WKWebsiteDataStore.default() still persists cookies, localStorage,
+    /// IndexedDB, Cache Storage, and service-worker state.
+    public func loadURLDirect(_ url: URL, forceRefresh: Bool = false) {
+        performDirectLoad(url, forceRefresh: forceRefresh)
+    }
+
+    func performDirectLoad(_ url: URL, forceRefresh: Bool) {
+        os_log("Starting standard PWA navigation", log: OSLog.default, type: .info)
+        currentURL = url
+        loadStartTime = Date()
+        injectDebugScript(for: url)
+        updateCacheStatus(source: "LIVE")
+
+        let policy: URLRequest.CachePolicy = forceRefresh ? .reloadIgnoringLocalCacheData : .useProtocolCachePolicy
+        webView.load(URLRequest(url: url, cachePolicy: policy, timeoutInterval: 30))
+        StructuredLogger.shared.info("Loading standard PWA directly: \(url.absoluteString)", category: .navigation)
+    }
+
     /// 使用 Manifest 缓存加载 URL
     public func loadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
         guard hasAppeared, isViewLoaded, isViewModelBinded else {
@@ -292,14 +312,19 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 加载错误提示页面
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        let nsError = error as NSError
+        os_log("PWA navigation failed: %{public}@/%{public}ld", log: OSLog.default, type: .error, nsError.domain, nsError.code)
         HUDService.shared.showError(withStatus: error.localizedDescription)
     }
 
     public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        let nsError = error as NSError
+        os_log("PWA provisional navigation failed: %{public}@/%{public}ld", log: OSLog.default, type: .error, nsError.domain, nsError.code)
         HUDService.shared.showError(withStatus: error.localizedDescription)
     }
 
     public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        os_log("PWA provisional navigation started", log: OSLog.default, type: .info)
         loadStartTime = Date()
         HUDService.shared.show()
     }

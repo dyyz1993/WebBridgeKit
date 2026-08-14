@@ -1,5 +1,54 @@
 # WebBridgeKit Project
 
+## Deliverable Boundaries
+
+This repository ships three distinct deliverables. Keep their responsibilities
+separate in source, documentation, and verification:
+
+- `Sources/` is the reusable WebBridgeKit SDK. It owns generic runtime models,
+  protocols, services, security, routing, cache, message, and Bridge behavior.
+- `AppTemplate/` is a safe minimal starter for developers building another host
+  app. It may demonstrate stable public SDK APIs, but it must not copy SuperApp
+  product screens, contain credentials, auto-start local servers, or expose a
+  showcase-heavy primary navigation.
+- `SuperApp/` is the complete WebBridgeKit product App. It owns end-user
+  journeys, product copy, navigation, Inbox, App Center, settings, and the
+  official-hosted/self-hosted experience.
+- `Server/` and `docs/api/` own shared gateway, push, approval, and callback
+  contracts. AppTemplate is not the self-hosted client.
+
+Before adding a reusable feature, prove the contract in `Sources/` or `Server/`,
+then complete the product journey in `SuperApp/`. Update AppTemplate only after
+the public API is stable and only with the minimum integration example. Run
+`bash tools/verify-deliverable-boundaries.sh` after boundary-related changes,
+`bash tools/run-template-gate.sh` for AppTemplate, and keep the SuperApp release
+gate independent.
+
+## Open Gateway Configuration
+
+WebBridgeKit is an open-source HTML app runtime. Users must be able to add or
+switch a compatible gateway without rebuilding the app. The host app must offer
+both QR-code import and paste-based import for gateway configuration.
+
+- The portable onboarding payload is a JSON document or `webbridgekit://gateway`
+  URL containing the gateway base URL, health endpoint, manifest endpoint,
+  display name, and production Ed25519 public-key identifier plus public key.
+  Never put APNs device tokens, API secrets, or private keys in a QR payload.
+- Validate every imported endpoint before saving it. Production gateways require
+  exact HTTPS origins; local HTTP endpoints are development-only and must never
+  be silently accepted in a release build.
+- Fetch and validate the health endpoint and every returned HTML app manifest,
+  then show a native confirmation screen. Persist and activate the gateway only
+  after the user confirms the successful validation report.
+- Store gateway settings separately from per-HTML-app manifests and permission
+  grants. Changing a gateway must not carry over trust or capability grants to a
+  different app identity.
+- Show the imported host and endpoints for explicit user confirmation. Users can
+  edit, switch, or remove a configured gateway at any time.
+- Verify the configured gateway locally first. Deploy to shanbox only after the
+  server exposes the generic gateway contract and local/simulator regression is
+  green.
+
 ## Services
 
 Three local services must be running for simulator development and local regression testing:
@@ -37,6 +86,7 @@ Do **not** replace the local services above with the public URL. They serve diff
 | Public shanbox Swift backend | https://wbk.shanbox.19930810.xyz:8443 | Real-phone/server config, Bark-compatible route checks, public `/health`, `/register`, `/push`, `/test`, `/api/v1/commands` verification | Local fixture tests, prototype viewing, APNs delivery proof by itself |
 | Public shanbox static fixtures | https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/ | Real-phone cache/offline/JSBridge demo pages and externally reachable WebView fixtures | Backend, Bark, push, command, or admin route checks |
 | Public shanbox Node admin console | https://wbk.shanbox.19930810.xyz:8443/admin | Real-phone/browser admin console checks; public `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` verification | Local source-only admin checks |
+| Public tx HTML app gateway | https://cloak.xbrowser.dev:5801 | Production-style HTTPS gateway import, signed HTML app manifests, and physical-phone gateway reachability | APNs delivery, shanbox Bark routes, or static fixture hosting |
 | Local Node admin console | http://127.0.0.1:{dynamic-port} | Source-level admin console checks for `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` | Proving the Node admin console is deployed on public shanbox |
 
 Use the public URL when validating the deployed backend or configuring the app on a physical iPhone:
@@ -153,7 +203,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 | `bash scripts/services.sh verify` | Curl health check for the 3 local services | Backend `/health` 200/204, test HTTP 200, prototype 200 | After starting services or when a network/cache/push feature looks broken |
 | `bash scripts/scan-crash-logs.sh --json` | Scans app crash logs, diagnostic reports, simulator logs, OOM/jetsam signals | JSON contains `"total": 0` | After launch, UI tests, real-device/simulator smoke, or when user asks about crashes |
 | `swiftlint --quiet` | SwiftLint quality gate | No output, exit 0 | Before every commit |
-| `bash tools/ci-lint.sh` | Design-system lint wrapper: colors, icons, fonts, `.opencode`, crash logs, token JSON, touch targets | `16 passed, 0 failed`; warnings may remain documented debt | Before UI/design commits and release gates |
+| `bash tools/ci-lint.sh` | Design-system lint wrapper: colors, icons, fonts, `.opencode`, crash logs, token JSON, touch targets, deliverable boundaries | `17 passed, 0 failed`; warnings may remain documented debt | Before UI/design commits and release gates |
 
 ### Module Regression Gates
 
@@ -180,6 +230,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 | Script | Purpose | Pass Signal | Notes |
 |--------|---------|-------------|-------|
 | `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, encoded Bark query paths, command token URL-safe payload semantics, and public Node admin routes | `27 passed, 0 failed, 0 unavailable` | Route-level and command-token semantic evidence only; fake device token does not prove APNs delivery |
+| `WBK_GATEWAY_URL=https://cloak.xbrowser.dev:5801 bash tools/verify-open-gateway.sh` | Verifies the portable gateway document, signed HTML app manifest shape, per-app lookup, health route, and anonymous mutation rejection | `5 passed, 0 failed` | Public HTTPS gateway evidence; this still does not prove APNs delivery |
 | `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` and `webbridge-node-admin` processes and whether they are supervised | `process=PASS, supervision=PASS, node_admin=PASS` | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; exits 1 if Swift backend or Node admin supervision is missing |
 | `bash tools/verify-shanbox-fixtures.sh` | Verifies public shanbox static fixture pages for physical-phone WebView/cache/JSBridge checks, including `bridge-hub.html`, `bridge-promise-smoke.html`, `cache-showcase.html`, `WebBridge.js`, manifest, CSS/JS/image resources | `18 passed, 0 failed` | Static reachability/content-marker evidence only; does not prove native Bridge execution, APNs delivery, or offline cache behavior on a physical iPhone |
 | `bash tools/verify-node-admin-local.sh` | Starts local `Server/node/server.js` and verifies Node admin, admin API, WebSocket status, messages, and packages routes | `11 passed, 0 failed` | Source/local evidence only; public deployment is covered by `verify-shanbox-backend.sh` |
@@ -266,6 +317,10 @@ bash scripts/scan-crash-logs.sh --fix
 
 | 日期 | 类型 | 原因 | 定位 | 修复 |
 |------|------|------|------|------|
+| 2026-08-10 | UITableView termination | 消息分组收起时先变更数据源，随后按变更后的零行数删除，导致 UITableView 的批量更新与数据源不一致并退出 | SuperApp/Sources/Controllers/Tab/InboxViewController.swift:viewForHeaderInSection | 切换前保存消息总数，使用 `performBatchUpdates` 对同一批行插入/删除，并原地刷新分组头状态；分组展开/收起 UI 回归必须通过 |
+| 2026-08-10 | SIGTRAP | Markdown 消息详情的 `WKWebView` 加载完成后，SnapKit 尝试更新一个只以 `greaterThanOrEqualTo` 创建的高度约束，触发 `updateConstraints` 断言 | SuperApp/Sources/Controllers/Message/MessageDetailViewController.swift:didFinish | 保留初始等值高度约束并通过保存的 `Constraint` 更新实际内容高度；消息详情、未读和应用筛选 UI 回归必须通过，随后重新扫描崩溃日志 |
+| 2026-08-10 | SIGSEGV | 历史 ModuleAvailabilityTests 全量运行触发 XCUITest 高日志量隔离；崩溃发生在 `XCTAutomationSupport` 可访问性快照查询，不在通知渲染路径 | `Documents/crash_logs/crash_1786347228.json`; `runtime_issue_os_log_fault_callback` | 本轮仅保留目标化通知回归（2/2 通过），避免全量快照扫描；已按 `scan-crash-logs.sh --fix` 清理历史记录并复扫 |
+| 2026-08-10 | SIGTRAP / disk exhaustion | Simulator disk had only 116 MB available; Realm initialization in the page-cache stats path threw through `try!` while Cache Dashboard data loaded | `PageCacheRuleManager.getRealm`; `CacheStatsAggregator.syncAggregate`; `CacheDashboardViewModelObservable.loadData` | Removed only rebuildable `/tmp/wbk-*` DerivedData artifacts, restored 8.5 GB free space, then rebuilt before resuming PWA notification regression |
 | 2026-06-03 | SIGSEGV / scanner cleanup bug | Debug Center coverage expansion briefly reintroduced heavy XCUITest snapshot/navigation queries, and `scan-crash-logs.sh --fix` could not clean app crash JSON details because scan functions ran in command-substitution subshells and lost the `CRASHES` array | SuperAppUITests/ModuleAvailabilityTests.swift:421-453; scripts/scan-crash-logs.sh | Reduced broad navigation/scroll snapshot queries, added stable Debug Center child-screen identifiers, changed scanner functions to preserve `CRASHES`/`WARNINGS` state via `SCAN_COUNT`; focused Settings row and full ModuleAvailabilityTests 14/14 passed, crash scan returned `total: 0` |
 | 2026-06-02 | SIGSEGV | `ModuleAvailabilityTests` 旧版单个超长 Settings row 用例产生大量 XCUITest snapshot/log 查询，`XCTAutomationSupport` 触发 high logging volume quarantine，CrashLogManager 记录为 SIGSEGV | SuperAppUITests/ModuleAvailabilityTests.swift:testSettingsOperationalRowsAreReachable; crash stack top: `XCTAutomationSupport runtime_issue_os_log_fault_callback` | 拆分为 `testSettingsCoreRowsAreReachable` 与 `testSettingsDebugAndSupportRowsAreReachable`，About 保留独立 deep-drill；完整 ModuleAvailabilityTests 11/11 通过，crash scan 回到 `total: 0` |
 | 2026-05-20 | SIGTRAP | Notification Debug section header 未加入 card 视图层级就使用 SnapKit `equalToSuperview()`，触发 assertionFailure | SuperApp/Sources/Controllers/Debug/NotificationDebugViewController.swift:219 | 在约束 header 前补 `card.addSubview(header)` |

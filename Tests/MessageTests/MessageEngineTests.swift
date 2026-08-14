@@ -59,6 +59,21 @@ final class MessageEngineTests: XCTestCase {
         XCTAssertEqual(messages.count, 1)
         XCTAssertEqual(messages[0].payload.title, "Test")
     }
+
+    func testReceivePersistsExplicitMarkdownWithoutPipeline() async throws {
+        let payload = MessagePayload(
+            title: "部署结果",
+            body: "部署完成",
+            markdown: "## 部署完成",
+            channel: "apns",
+            contentType: .markdown
+        )
+
+        try await engine.receive(payload)
+
+        let messages = await engine.getMessages()
+        XCTAssertEqual(messages.first?.bodyType, MessageBodyType.markdown.rawValue)
+    }
     
     func testReceiveMultipleMessages() async throws {
         for i in 0..<5 {
@@ -72,6 +87,92 @@ final class MessageEngineTests: XCTestCase {
         
         let messages = await engine.getMessages()
         XCTAssertEqual(messages.count, 5)
+    }
+
+    func testReceiveReplacesMatchingMessageAndPreservesReadState() async throws {
+        let initial = MessagePayload(
+            id: "payload-1",
+            title: "需要确认",
+            body: "等待处理",
+            channel: "apns",
+            category: "approval",
+            replacementID: "approval-42",
+            actionState: .pending,
+            requestID: "approval-42",
+            revision: 1
+        )
+        try await engine.receive(initial)
+        let initialMessages = await engine.getMessages()
+        let storedID = try XCTUnwrap(initialMessages.first?.id)
+        await engine.markAsRead(id: storedID)
+
+        let resolved = MessagePayload(
+            id: "payload-2",
+            title: "审批已通过",
+            body: "状态已同步",
+            channel: "apns",
+            category: "approval",
+            replacementID: "approval-42",
+            actionState: .approved,
+            requestID: "approval-42",
+            revision: 2
+        )
+        try await engine.receive(resolved)
+
+        let messages = await engine.getMessages()
+        XCTAssertEqual(messages.count, 1)
+        XCTAssertEqual(messages.first?.id, storedID)
+        XCTAssertEqual(messages.first?.payload.actionState, .approved)
+        XCTAssertTrue(messages.first?.isRead == true)
+    }
+
+    func testReceiveIgnoresStaleRevision() async throws {
+        let current = MessagePayload(
+            title: "已通过",
+            body: "最新状态",
+            channel: "apns",
+            replacementID: "approval-42",
+            actionState: .approved,
+            revision: 2
+        )
+        let stale = MessagePayload(
+            title: "待确认",
+            body: "旧状态",
+            channel: "apns",
+            replacementID: "approval-42",
+            actionState: .pending,
+            revision: 1
+        )
+
+        try await engine.receive(current)
+        try await engine.receive(stale)
+
+        let messages = await engine.getMessages()
+        XCTAssertEqual(messages.count, 1)
+        XCTAssertEqual(messages.first?.payload.actionState, .approved)
+        XCTAssertEqual(messages.first?.payload.revision, 2)
+    }
+
+    func testReceiveDeleteRemovesMatchingMessage() async throws {
+        try await engine.receive(MessagePayload(
+            title: "任务",
+            body: "处理中",
+            channel: "apns",
+            replacementID: "task-7",
+            revision: 1
+        ))
+
+        try await engine.receive(MessagePayload(
+            title: "任务",
+            body: "已撤回",
+            channel: "apns",
+            replacementID: "task-7",
+            isDeleted: true,
+            revision: 2
+        ))
+
+        let messages = await engine.getMessages()
+        XCTAssertTrue(messages.isEmpty)
     }
     
     func testGetUnreadMessages() async throws {

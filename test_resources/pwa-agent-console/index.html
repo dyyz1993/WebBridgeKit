@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10251e">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>Agent Console Task Fixture</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Avenir Next", "PingFang SC", sans-serif; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 92% 8%, #225449, transparent 32%), #10251e; color: #f0f4ed; }
+    main { max-width: 720px; margin: 0 auto; padding: max(42px, env(safe-area-inset-top)) 24px 64px; }
+    .eyebrow { color: #9bd7b8; font: 700 12px/1.4 ui-monospace, monospace; letter-spacing: .13em; }
+    h1 { max-width: 10ch; margin: 15px 0 28px; font-size: clamp(36px, 10vw, 64px); line-height: .96; letter-spacing: -.05em; }
+    .status { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid #4d8b70; border-radius: 999px; color: #b9efcf; background: #1d4437; font-size: 14px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #75e3a4; box-shadow: 0 0 16px #75e3a4; }
+    .card { margin-top: 28px; padding: 22px; border: 1px solid #315f50; border-radius: 22px; background: rgba(12, 34, 27, .72); box-shadow: 0 22px 60px rgba(0, 0, 0, .22); }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 15px 20px; margin: 0; }
+    dt { color: #93b8a7; } dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, monospace; }
+    .hint { margin: 24px 0 0; color: #b9cfc3; line-height: 1.65; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">NOTIFICATION ROUTE / AGENT CONSOLE</div>
+    <h1>任务已完成，继续处理。</h1>
+    <div class="status" id="status"><span class="dot"></span>等待 WebBridgeKit 路由</div>
+    <section class="card">
+      <dl>
+        <dt>App ID</dt><dd id="app-id">等待启动参数</dd>
+        <dt>路由</dt><dd id="route">等待启动参数</dd>
+        <dt>任务</dt><dd id="task">等待启动参数</dd>
+        <dt>状态</dt><dd id="task-status">等待启动参数</dd>
+        <dt>离线模式</dt><dd id="offline-mode">等待启动参数</dd>
+      </dl>
+      <p class="hint">此页仅使用通用的 appId、route 和参数。任务详情由 PWA 在打开后自行获取或从本地恢复。</p>
+    </section>
+  </main>
+  <script>
+    (() => {
+      function render(context) {
+        if (!context || !context.webbridgekitAppId) return;
+        document.querySelector('#app-id').textContent = context.webbridgekitAppId;
+        document.querySelector('#route').textContent = context.webbridgekitRoute;
+        document.querySelector('#task').textContent = context.taskId || 'n/a';
+        document.querySelector('#task-status').textContent = context.status || 'n/a';
+        document.querySelector('#offline-mode').textContent = context.webbridgekitOfflineMode || 'partial';
+        document.querySelector('#status').lastChild.textContent = ' 已定位到任务';
+      }
+      render(window.WebBridgeKitLaunchContext);
+      window.addEventListener('webbridgekit:launch', event => render(event.detail), { once: true });
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+    })();
+  </script>
+</body>
+</html>

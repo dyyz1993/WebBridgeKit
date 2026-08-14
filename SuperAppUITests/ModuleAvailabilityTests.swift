@@ -11,38 +11,36 @@ final class ModuleAvailabilityTests: XCTestCase {
             "AppleLanguages": "(zh-Hans)",
             "AppleLocale": "zh_CN"
         ]
+        if let gatewayPayload = ProcessInfo.processInfo.environment["WBK_GATEWAY_UI_PAYLOAD"] {
+            app.launchEnvironment["WBK_GATEWAY_UI_PAYLOAD"] = gatewayPayload
+        }
         app.launch()
     }
 
     // MARK: - Primary Modules
 
     func testPrimaryTabsExposeCurrentInformationArchitecture() {
-        assertTab("tab.web", opens: "webCache.home")
-        assertExists("webCache.urlInput")
-        assertExists("webCache.openButton")
-        assertExists("webCache.cacheDashboard")
+        assertTab("tab.apps", opens: "pwaCenter.table")
+        assertExists("pwaHome.manageApps")
+        assertExists("pwaHome.guideAndDebug")
 
-        assertTab("tab.inbox", opens: "InboxViewController")
+        assertTab("tab.notifications", opens: "InboxViewController")
         assertExists("wbk_search_field")
-        assertExists("filter_0")
-        assertExists("filter_1")
-        assertExists("filter_2")
+        assertExists("filter_all")
+        assertExists("filter_unread")
+        assertExists("filter_apps")
+        assertExists("filter_action_required")
+        for identifier in ["filter_all", "filter_unread", "filter_apps", "filter_action_required"] {
+            let filter = element(identifier)
+            XCTAssertGreaterThanOrEqual(filter.frame.width, 56, "\(identifier) should have a visible width")
+            XCTAssertGreaterThanOrEqual(filter.frame.height, 34, "\(identifier) should have a visible height")
+        }
         XCTAssertTrue(
-            app.cells["InboxGroupHeaderCell"].waitForExistence(timeout: 3)
-                || app.cells["InboxMessageCell"].waitForExistence(timeout: 3)
+            app.staticTexts["安全告警"].waitForExistence(timeout: 3)
+                || app.staticTexts["天气预报"].waitForExistence(timeout: 3)
                 || app.otherElements["wbk_empty_state"].waitForExistence(timeout: 3),
-            "Messages tab should show grouped message history or an empty state."
+            "Notifications tab should show grouped notification history or an empty state."
         )
-
-        assertTab("tab.push", opens: "tokenPush.home")
-        assertExists("tokenPush.metricGrid")
-        assertExists("tokenPush.openTokenManager")
-        assertExists("tokenPush.openAPIKeyManager")
-
-        assertTab("tab.bridge", opens: "bridgeLab.home")
-        assertExists("bridge.groupList")
-        assertExists("bridge.commandList")
-        assertExists("bridge.parameterEditor")
 
         assertTab("tab.settings", opens: "SettingsViewController")
         assertExists("settings.cell.serverConfig")
@@ -50,8 +48,102 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("settings.cell.apiKeyManage")
     }
 
-    func testWebCacheCriticalControlsAreUsable() {
-        assertTab("tab.web", opens: "webCache.home")
+    func testNotificationCardsExposeMarkdownAndActionRequiredMetadata() {
+        assertTab("tab.notifications", opens: "InboxViewController")
+        replaceText(in: "wbk_search_field", with: "运行任务")
+        assertExists("notification.card.stored-markdown-011")
+        assertExists("notification.preview.stored-markdown-011")
+        assertStaticTextContaining("Markdown")
+
+        replaceText(in: "wbk_search_field", with: "")
+        tapElement("filter_action_required")
+        XCTAssertTrue(
+            element("notification.card.stored-approval-media-014").waitForExistence(timeout: 4),
+            "Action-required filter should retain an explicitly pending request."
+        )
+        XCTAssertFalse(
+            element("notification.card.stored-critical-005").exists,
+            "Priority alone must not turn a notification into an actionable request."
+        )
+    }
+
+    func testPWAAppCenterGatewayAndGuideAreReachable() {
+        assertTab("tab.apps", opens: "pwaCenter.table")
+        tapElement("pwaHome.manageApps")
+        assertExists("gateway.table")
+        goBack()
+
+        tapElement("pwaHome.guideAndDebug")
+        app.buttons["PWA 接入手册"].tap()
+        XCTAssertTrue(
+            element("pwaGuide.table").waitForExistence(timeout: 6),
+            "PWA guide should finish its navigation transition and expose its table."
+        )
+    }
+
+    func testPWAAppCenterStartsWithOfficialServiceInsteadOfGatewaySetup() {
+        assertTab("tab.apps", opens: "pwaCenter.table")
+
+        let officialApp = element("pwaHome.app.com.webbridgekit.fixture.chat")
+        let officialStatus = element("pwaHome.emptyApps")
+        let officialAppLoaded = officialApp.waitForExistence(timeout: 15)
+        XCTAssertTrue(
+            officialAppLoaded || officialStatus.waitForExistence(timeout: 2),
+            "A fresh official install should fetch signed apps automatically, or expose a retryable official-service state rather than gateway setup."
+        )
+        if officialAppLoaded {
+            XCTAssertFalse(
+                element("pwaHome.emptyApps").exists,
+                "Self-hosted gateway import must remain a secondary, opt-in path when the official service is available."
+            )
+        }
+    }
+
+    func testHomePrioritizesFirstPushAndKeepsPWAAndSupportReachable() {
+        assertTab("tab.apps", opens: "pwaCenter.table")
+        assertExists("pwaHome.root")
+        assertExists("pwaHome.pushTitle")
+        assertExists("pwaHome.pushBody")
+        assertExists("pwaHome.sendTest")
+        assertExists("pwaHome.pushURL")
+        assertExists("pwaHome.copyPushURL")
+        assertExists("pwaHome.appsSection")
+        assertExists("pwaHome.apiExamples")
+        assertExists("pwaHome.guideAndDebug")
+    }
+
+    func testHomeAPIExamplesExposeAllCanonicalMessageTypes() {
+        assertTab("tab.apps", opens: "pwaCenter.table")
+        tapElement("pwaHome.apiExamples")
+        assertExists("pushExamples.list")
+        for type in ["plain", "markdown", "otp", "qr", "image", "chat", "approval"] {
+            assertExists("pushExamples.\(type)")
+        }
+    }
+
+    func testHomePlainExampleUsesExternalSafariForARealRequest() {
+        assertTab("tab.apps", opens: "pwaCenter.table")
+        tapElement("pwaHome.apiExamples")
+        tapElement("pushExamples.plain")
+
+        let hostMovedToBackground = XCTNSPredicateExpectation(
+            predicate: NSPredicate(
+                format: "state == %d",
+                XCUIApplication.State.runningBackground.rawValue
+            ),
+            object: app
+        )
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [hostMovedToBackground], timeout: 8),
+            .completed,
+            "A home push example should leave the host and issue its request through Safari."
+        )
+    }
+
+    func testWebCacheCriticalControlsAreUsableFromDeveloperTools() {
+        openDebugCenter()
+        tapElement("debugCenter.openWebCache")
+        assertExists("webCache.home")
 
         assertExists("webCache.urlInput")
         assertExists("webCache.modePicker")
@@ -73,8 +165,10 @@ final class ModuleAvailabilityTests: XCTestCase {
         app.buttons["取消"].tapIfExists()
     }
 
-    func testTokenPushAndBarkControlsAreUsable() {
-        assertTab("tab.push", opens: "tokenPush.home")
+    func testTokenPushAndBarkControlsAreUsableFromDeveloperTools() {
+        openDebugCenter()
+        tapElement("debugCenter.openPushTools")
+        assertExists("tokenPush.home")
 
         tapElement("tokenPush.openTokenManager")
         assertNavigationTitleContains(["口令", "Token"])
@@ -97,8 +191,10 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("tokenPush.home")
     }
 
-    func testBridgeLabControlsAreUsable() {
-        assertTab("tab.bridge", opens: "bridgeLab.home")
+    func testBridgeLabControlsAreUsableFromDeveloperTools() {
+        openDebugCenter()
+        tapElement("debugCenter.openBridgeLab")
+        assertExists("bridgeLab.home")
 
         assertExists("bridge.group.cache")
         assertExists("bridge.group.navigation")
@@ -108,7 +204,9 @@ final class ModuleAvailabilityTests: XCTestCase {
     }
 
     func testRealWebViewBridgePromiseResolves() {
-        assertTab("tab.web", opens: "webCache.home")
+        openDebugCenter()
+        tapElement("debugCenter.openWebCache")
+        assertExists("webCache.home")
 
         tapLabeledControl("在线")
         replaceText(
@@ -143,6 +241,9 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("debugCenter.openDiagnostics")
         assertExists("debugCenter.openCacheDashboard")
         assertExists("debugCenter.openManifestCacheTests")
+        assertExists("debugCenter.openWebCache")
+        assertExists("debugCenter.openBridgeLab")
+        assertExists("debugCenter.openPushTools")
         tapElement("debugCenter.crashGuideButton")
         assertExists("debugCenter.home")
         goBack()
@@ -250,6 +351,19 @@ final class ModuleAvailabilityTests: XCTestCase {
         ]
 
         assertSettingsRowsNavigate(rows)
+    }
+
+    func testGatewayConfigurationExposesCurrentOnePageImportControls() {
+        assertTab("tab.settings", opens: "SettingsViewController")
+        tapElement("settings.cell.serverConfig")
+        assertExists("gateway.table")
+        assertExists("gateway.current")
+        assertExists("gateway.scan")
+        assertExists("gateway.paste")
+        assertExists("gateway.input")
+        assertExists("gateway.validate")
+        XCTAssertFalse(element("gateway.report").exists, "Activation report must only appear after validation")
+        XCTAssertFalse(app.buttons["gateway.activate"].exists, "Activation must not be possible before validation")
     }
 
     func testSettingsDebugAndSupportRowsAreReachable() {
