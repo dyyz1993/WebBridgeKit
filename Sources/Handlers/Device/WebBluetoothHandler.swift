@@ -21,6 +21,30 @@ public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate
     private var discoveredPeripherals: [String: CBPeripheral] = [:]
     private var scanCompletion: ((Any) -> Void)?
 
+    public override init() {
+        super.init()
+        // Revoking the bluetooth capability must stop any active scan and
+        // event stream immediately, not just block future requests.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handlePermissionRevoked(_:)),
+            name: .htmlAppPermissionDidRevoke,
+            object: nil
+        )
+    }
+
+    @objc private func handlePermissionRevoked(_ notification: Notification) {
+        guard let capability = notification.userInfo?["capability"] as? HTMLAppCapability,
+              capability == .bluetooth else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.centralManager?.stopScan()
+            self.discoveredPeripherals.removeAll()
+            self.sendEventToJS(event: "onBluetoothStateChange", data: ["state": "permissionRevoked"])
+            WebBridgeLogger.shared.log(.info, "[WebBluetoothHandler] Scan stopped after permission revocation")
+        }
+    }
+
     // MARK: - Handle
 
     /**

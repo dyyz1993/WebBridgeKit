@@ -346,6 +346,19 @@ public struct HTMLAppCapabilityResult: Codable, Equatable, Sendable {
         case unavailable
     }
 
+    /// Stable machine-readable reason a request did not end in `.granted`.
+    /// Bridge responses expose it so HTML apps can branch without string matching.
+    public enum FailureReason: String, Codable, Sendable {
+        case userCancelled
+        case systemDenied
+        case systemRestricted
+        case systemNotDetermined
+        case undeclaredCapability
+        case originMismatch
+        case appNotRegistered
+        case presentationUnavailable
+    }
+
     public enum AuthorizationLayer: String, Codable, Sendable {
         case nativeSystem
         case htmlApp
@@ -356,19 +369,36 @@ public struct HTMLAppCapabilityResult: Codable, Equatable, Sendable {
     public let status: Status
     public let scope: HTMLAppPermissionScope?
     public let authorizationLayer: AuthorizationLayer?
+    public let failureReason: FailureReason?
 
     public init(
         id: String,
         capability: HTMLAppCapability,
         status: Status,
         scope: HTMLAppPermissionScope? = nil,
-        authorizationLayer: AuthorizationLayer? = nil
+        authorizationLayer: AuthorizationLayer? = nil,
+        failureReason: FailureReason? = nil
     ) {
         self.id = id
         self.capability = capability
         self.status = status
         self.scope = scope
         self.authorizationLayer = authorizationLayer
+        self.failureReason = failureReason
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, capability, status, scope, authorizationLayer, failureReason
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(String.self, forKey: .id)
+        capability = try values.decode(HTMLAppCapability.self, forKey: .capability)
+        status = try values.decode(Status.self, forKey: .status)
+        scope = try values.decodeIfPresent(HTMLAppPermissionScope.self, forKey: .scope)
+        authorizationLayer = try values.decodeIfPresent(AuthorizationLayer.self, forKey: .authorizationLayer)
+        failureReason = try values.decodeIfPresent(FailureReason.self, forKey: .failureReason)
     }
 }
 
