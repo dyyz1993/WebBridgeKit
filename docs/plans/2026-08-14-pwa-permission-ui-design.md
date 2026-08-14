@@ -2,7 +2,25 @@
 
 日期：2026-08-14
 
-状态：设计已确认，等待实现
+状态：核心已实现（2026-08-15，提交 `22a21b4`、`644f3cb`）
+
+已实现并验证（ModelsTests 30/30 通过、SuperApp 模拟器构建通过、SwiftLint 0 error）：
+
+- 授权身份四元组（gatewayIdentity + appID + origin + capability）、旧格式授权加载时剪除
+- 生命周期失效规则：网关切换/移除、来源变化、卸载、manifest 能力删除、容器会话结束
+- 请求队列协调器：单面板串行、同应用同能力请求合并、回调恰好一次、面板呈现前后均可安全取消
+- token 化底部授权面板（亮/暗、动态字体、VoiceOver 标识、三档等权重范围）替换 UIAlertController 流程
+- iOS 系统权限适配器（相机/麦克风/位置/通知/照片/蓝牙），系统拒绝短路为 requiresSettings
+- 蓝牙撤销立即停止扫描与事件流
+- SuperApp 权限管理页（需要处理/已允许/尚未使用分组、单项/全部撤销自有确认面板、前往系统设置）
+- 双入口汇聚同一页面：应用中心详情 + PWA 容器浏览器菜单（宿主注入 presenter 钩子）
+
+待实现（下一批）：
+
+- JS Bridge 到协调器的端到端接线（HTML 调用受保护能力触发面板并回调 Promise）
+- 容器关闭时调用 `HTMLAppRuntimeCenter.endSession(subject:)`
+- 普通浏览器 fixture 的 `NATIVE_MODULE_UNAVAILABLE` 结构化结果验证
+- 权限面板与管理页的 UI 测试、截图、iPhone SE/iPad/VoiceOver 验收证据
 
 ## 目标
 
