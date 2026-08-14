@@ -137,3 +137,8 @@ TestResults_*/*
 .ui-tester/
 .xcodebuildmcp/
 docs/design-tokens-v2-backup.json
+
+# local agent state and runtime data
+.brainstorm/
+.data/
+.uploads/
