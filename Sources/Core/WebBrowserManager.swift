@@ -23,6 +23,13 @@ public class WebBrowserManager: WebBrowserManaging {
     // 允许创建测试实例
     public init() {}
 
+    // MARK: - HTML App Settings Handoff
+
+    /// Host hook presenting the product-side app settings screen when the
+    /// browser menu's "应用设置" entry is tapped for a registered HTML app.
+    /// The SDK stays product-agnostic; hosts like SuperApp install this hook.
+    public var appPermissionSettingsPresenter: ((UIViewController, HTMLAppManifest) -> Void)?
+
     // MARK: - Navigation History
 
     /// 导航历史项

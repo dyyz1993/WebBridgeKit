@@ -4,8 +4,11 @@ import WebBridgeKit
 
 /// SwiftUI home presentation backed by the existing trusted-PWA runtime.
 final class PWAAppCenterViewController: UIViewController {
-    private let trustRegistry = HTMLAppTrustRegistry()
-    private let permissionLedger = HTMLAppPermissionLedger()
+    // Single shared runtime so manifests, grants, and prompts stay in sync
+    // with the permission center, browser container, and bridge handlers.
+    private let runtime = HTMLAppRuntimeCenter.shared
+    private var trustRegistry: HTMLAppTrustRegistry { runtime.trustRegistry }
+    private var permissionLedger: HTMLAppPermissionLedger { runtime.permissionLedger }
     private let launchResolver = HTMLAppLaunchResolver()
     private let gatewayRegistry = HTMLAppGatewayRegistry()
     private lazy var onboardingService = HTMLAppGatewayOnboardingService(
@@ -29,9 +32,24 @@ final class PWAAppCenterViewController: UIViewController {
         super.viewDidLoad()
         title = "首页"
         view.backgroundColor = ThemeTokens.Color.background
+        installAppSettingsHandoff()
         installHomeView()
         prepareOfficialPushIdentity()
         reloadApps()
+    }
+
+    /// Container entry: the PWA browser menu's "应用设置" funnels into the same
+    /// permission management page as the App Center detail entry.
+    private func installAppSettingsHandoff() {
+        WebBrowserManager.shared.appPermissionSettingsPresenter = { [weak self] host, manifest in
+            guard let self else { return }
+            let permissions = PWAPermissionCenterViewController(appID: manifest.appID)
+            if let nav = host.navigationController {
+                nav.pushViewController(permissions, animated: true)
+            } else {
+                self.present(UINavigationController(rootViewController: permissions), animated: true)
+            }
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -245,6 +263,13 @@ final class PWAAppCenterViewController: UIViewController {
         """
         let alert = UIAlertController(title: manifest.name, message: message, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "打开应用", style: .default) { [weak self] _ in self?.launch(manifest) })
+        alert.addAction(UIAlertAction(title: "权限与原生能力", style: .default) { [weak self] _ in
+            guard let self else { return }
+            self.navigationController?.pushViewController(
+                PWAPermissionCenterViewController(appID: manifest.appID),
+                animated: true
+            )
+        })
         alert.addAction(UIAlertAction(title: "管理应用服务", style: .default) { [weak self] _ in
             self?.showGatewayManagement()
         })
