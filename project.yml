@@ -119,6 +119,8 @@ targets:
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
       ENABLE_PREVIEWS: NO
       ENABLE_SWIFT_TESTING: NO
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: "B45VZCNYU3"
     dependencies:
       - target: SuperApp
 

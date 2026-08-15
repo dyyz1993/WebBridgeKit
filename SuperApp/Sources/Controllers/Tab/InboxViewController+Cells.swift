@@ -36,10 +36,22 @@ class InboxMessageCellWrapper: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// Cancels any in-flight group-entrance animation so a cell reused while
+    /// animating never renders with a stale alpha/transform.
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        contentView.layer.removeAllAnimations()
+        contentView.alpha = 1
+        contentView.transform = .identity
+    }
+
     private func setupUI() {
         backgroundColor = ThemeTokens.Color.background
         selectionStyle = .none
         contentView.backgroundColor = ThemeTokens.Color.background
+        // The accordion collapses rows by animating their height to zero; the
+        // card content must be clipped so the compression reads as folding.
+        contentView.clipsToBounds = true
         accessibilityIdentifier = "InboxMessageCell"
 
         cardView.layer.cornerRadius = ThemeTokens.CornerRadius.row
@@ -274,11 +286,74 @@ private struct NotificationPresentation {
     }
 }
 
+// MARK: - GroupChevronIndicator
+
+/// Self-drawn chevron for the group header. A UIImageView loaded from the
+/// Lucide catalog fails to rasterize inside a cell dequeued as a section
+/// header (it renders fine in normal cells), so the indicator draws its own
+/// vector path and stays animatable via `transform`.
+final class GroupChevronIndicator: UIView {
+
+    private let shapeLayer: CAShapeLayer = {
+        let layer = CAShapeLayer()
+        layer.fillColor = nil
+        layer.lineWidth = 2.5
+        layer.lineCap = .round
+        layer.lineJoin = .round
+        return layer
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        isAccessibilityElement = true
+        accessibilityLabel = "展开收起"
+        layer.addSublayer(shapeLayer)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let width = bounds.width
+        let height = bounds.height
+        let path = UIBezierPath()
+        path.move(to: CGPoint(x: width * 0.2, y: height * 0.32))
+        path.addLine(to: CGPoint(x: width * 0.5, y: height * 0.68))
+        path.addLine(to: CGPoint(x: width * 0.8, y: height * 0.32))
+        shapeLayer.frame = bounds
+        shapeLayer.path = path.cgPath
+        updateStrokeColor()
+    }
+
+    override func tintColorDidChange() {
+        super.tintColorDidChange()
+        updateStrokeColor()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateStrokeColor()
+    }
+
+    private func updateStrokeColor() {
+        shapeLayer.strokeColor = ThemeTokens.Color.textSecondary
+            .resolvedColor(with: traitCollection)
+            .cgColor
+    }
+}
+
 // MARK: - InboxGroupHeaderCell
 
 class InboxGroupHeaderCell: UITableViewCell {
 
     static let identifier = "InboxGroupHeaderCell"
+
+    /// Tracks the last applied expand state so the chevron only animates on a
+    /// real state change; reconfigured cells during scroll must not spin.
+    private var appliedExpandedState: Bool?
 
     private let containerView: UIView = {
         let view = UIView()
@@ -310,14 +385,7 @@ class InboxGroupHeaderCell: UITableViewCell {
         return view
     }()
 
-    private let chevronImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.image = LucideIcon.chevronDown.templateImage(pointSize: ThemeTokens.Icons.Sizes.xs)
-        iv.tintColor = ThemeTokens.Color.textSecondary
-        iv.contentMode = .scaleAspectFit
-        iv.accessibilityLabel = "展开收起"
-        return iv
-    }()
+    private let chevronIndicator = GroupChevronIndicator()
 
     var onTap: (() -> Void)?
 
@@ -338,20 +406,23 @@ class InboxGroupHeaderCell: UITableViewCell {
         contentView.accessibilityIdentifier = "InboxGroupHeaderCell.content"
         containerView.accessibilityIdentifier = "InboxGroupHeaderCell.container"
 
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        contentView.addGestureRecognizer(tapGesture)
+        // A zero-delay long-press acts as a press tracker: it gives touch-down
+        // highlight feedback and fires the toggle on release, matching the
+        // accordion feel of system grouped lists.
+        let pressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handlePress(_:)))
+        pressGesture.minimumPressDuration = 0
+        contentView.addGestureRecognizer(pressGesture)
 
         contentView.addSubview(containerView)
         containerView.addSubview(titleLabel)
         containerView.addSubview(countContainer)
         countContainer.addSubview(countLabel)
-        containerView.addSubview(chevronImageView)
+        containerView.addSubview(chevronIndicator)
 
         containerView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(ThemeTokens.Spacing.sm)
             make.bottom.equalToSuperview()
             make.leading.trailing.equalToSuperview()
-            make.height.equalTo(34)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -362,7 +433,9 @@ class InboxGroupHeaderCell: UITableViewCell {
 
         countContainer.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(chevronImageView.snp.leading).offset(-ThemeTokens.Spacing.sm)
+            // Anchored right next to the chevron; a lessThanOrEqualTo here
+            // left the badge underconstrained and drifting beside the title.
+            make.trailing.equalTo(chevronIndicator.snp.leading).offset(-ThemeTokens.Spacing.sm)
             make.height.equalTo(20)
         }
 
@@ -370,7 +443,7 @@ class InboxGroupHeaderCell: UITableViewCell {
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
         }
 
-        chevronImageView.snp.makeConstraints { make in
+        chevronIndicator.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.xs)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(ThemeTokens.Icons.Sizes.xs)
@@ -398,14 +471,47 @@ class InboxGroupHeaderCell: UITableViewCell {
             ? ThemeTokens.Color.text
             : ThemeTokens.Color.textSecondary
 
-        UIView.animate(withDuration: ThemeTokens.Animation.normal.duration) {
-            self.chevronImageView.transform = isExpanded
-                ? .identity
-                : CGAffineTransform(rotationAngle: -.pi / 2)
+        let shouldAnimate = appliedExpandedState != nil && appliedExpandedState != isExpanded
+        appliedExpandedState = isExpanded
+        let chevronTransform: CGAffineTransform = isExpanded
+            ? .identity
+            : CGAffineTransform(rotationAngle: -.pi / 2)
+        if shouldAnimate {
+            UIView.animate(
+                withDuration: ThemeTokens.Animation.modal.duration,
+                delay: 0,
+                usingSpringWithDamping: 0.78,
+                initialSpringVelocity: 0.6,
+                options: [.allowUserInteraction, .beginFromCurrentState]
+            ) {
+                self.chevronIndicator.transform = chevronTransform
+            }
+        } else {
+            chevronIndicator.transform = chevronTransform
         }
     }
 
-    @objc private func handleTap() {
-        onTap?()
+    @objc private func handlePress(_ gesture: UILongPressGestureRecognizer) {
+        #if DEBUG
+        NSLog("WBK-PRESS state=%d id=%@", gesture.state.rawValue, accessibilityIdentifier ?? "?")
+        #endif
+        switch gesture.state {
+        case .began:
+            setPressed(true)
+        case .ended:
+            setPressed(false)
+            onTap?()
+        case .cancelled, .failed:
+            setPressed(false)
+        default:
+            break
+        }
+    }
+
+    private func setPressed(_ pressed: Bool) {
+        let highlight = ThemeTokens.Color.backgroundSecondary
+        UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
+            self.containerView.backgroundColor = pressed ? highlight : .clear
+        }
     }
 }

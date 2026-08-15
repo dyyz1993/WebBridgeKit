@@ -801,3 +801,26 @@ jobs:
 
       - name: Run Design System Lint
         run: bash tools/ci-lint.sh
+
+  # ─── Job 9: Server on Linux ──────────────────────────────────────
+  # The Swift Hummingbird backend deploys to a Linux host (shanbox).
+  # Building and testing it on Linux catches Foundation/URLSession,
+  # Sendable, and glibc incompatibilities before they reach production.
+  server-linux:
+    name: 🐧 Server Build & Tests (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SPM Server build
+        uses: actions/cache@v4
+        with:
+          path: Server/.build
+          key: spm-server-linux-${{ hashFiles('Server/Package.resolved') }}
+
+      - name: Build (Release)
+        run: cd Server && swift build -c release
+
+      - name: Run Server Tests
+        run: cd Server && swift test

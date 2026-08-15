@@ -60,6 +60,9 @@ public extension Notification.Name {
     /// Posted when a push message is received
     static let didReceivePushMessage = Notification.Name("didReceivePushMessage")
 
+    /// Posted when a notification banner tap should focus the message in the Inbox
+    static let focusInboxMessage = Notification.Name("com.webbridgekit.inbox.focus-message")
+
     // MARK: - Cache Hit Notifications
 
     /// Posted when manifest cache is hit

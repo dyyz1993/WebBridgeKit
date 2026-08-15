@@ -25,7 +25,39 @@ class PushRouter {
     ///   - rootViewController: 用于展示页面的根控制器
     func handle(userInfo: [AnyHashable: Any], from rootViewController: UIViewController?) {
         let payload = PushPayload(userInfo: userInfo)
+
+        // 无显式路由（route/appid/url 都没有）的横幅点击应落到收件箱里
+        // 对应的那条消息，而不是停留在上次离开的页面。
+        if payload.route == nil && payload.appid == nil && payload.url == nil {
+            openInboxMessage(userInfo: userInfo, from: rootViewController)
+            return
+        }
+
         handle(payload: payload, from: rootViewController)
+    }
+
+    /// 切换到通知页并请求收件箱定位、打开对应消息。
+    private func openInboxMessage(userInfo: [AnyHashable: Any], from rootViewController: UIViewController?) {
+        guard let tabBarController = rootViewController as? UITabBarController,
+              let viewControllers = tabBarController.viewControllers,
+              let inboxIndex = viewControllers.firstIndex(where: { controller in
+                  (controller as? UINavigationController)?.viewControllers.first is InboxViewController
+                      || controller is InboxViewController
+              })
+        else { return }
+
+        var focusInfo: [String: String] = [:]
+        if let title = userInfo["title"] as? String { focusInfo["title"] = title }
+        if let body = userInfo["body"] as? String { focusInfo["body"] = body }
+
+        // 冷启动时收件箱尚未绑定订阅，先暂存待办再切页；收件箱就绪后消费。
+        if let title = focusInfo["title"], let body = focusInfo["body"] {
+            InboxViewController.pendingFocus = (title, body)
+        }
+        tabBarController.selectedIndex = inboxIndex
+
+        // 热启动：收件箱已可见，直接通知定位
+        NotificationCenter.default.post(name: .focusInboxMessage, object: nil, userInfo: focusInfo)
     }
 
     /// 处理解析后的 payload

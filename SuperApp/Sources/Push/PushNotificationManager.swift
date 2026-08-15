@@ -156,7 +156,7 @@ class PushNotificationManager: NSObject {
         let token = deviceToken.map { String(format: "%02x", $0) }.joined()
         self.deviceToken = token
         #if DEBUG
-        print("[PushManager] Device token: \(token.prefix(8))...")
+        print("[PushManager] Device token: \(token)")
         #endif
 
         if let pending = pendingOfficialRegistration {
