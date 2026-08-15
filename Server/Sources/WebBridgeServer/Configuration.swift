@@ -26,7 +26,7 @@ struct ServerConfiguration: Sendable {
         self.apnsKeyID = env.get("APNS_KEY_ID") ?? ""
         self.apnsTeamID = env.get("APNS_TEAM_ID") ?? ""
         self.apnsKeyPath = env.get("APNS_KEY_PATH") ?? ""
-        self.apnsTopic = env.get("APNS_TOPIC") ?? "com.webbridgekit.app"
+        self.apnsTopic = env.get("APNS_TOPIC") ?? "com.webbridgekit.superapp"
         self.apnsEnvironment = env.get("APNS_ENVIRONMENT") ?? "sandbox"
         self.dataDir = env.get("DATA_DIR") ?? "./data"
         self.gatewayID = env.get("GATEWAY_ID") ?? "webbridgekit-gateway"

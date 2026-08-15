@@ -2,17 +2,20 @@ import Foundation
 import Hummingbird
 import NIOCore
 import NIOHTTP1
-import AsyncHTTPClient
 
 final class APNsService: Sendable {
     private let configuration: ServerConfiguration
     private let tokenStore: TokenStore
-    private let httpClient: HTTPClient
+    private let jwtSigner: APNsJWTSigner?
 
-    init(configuration: ServerConfiguration, tokenStore: TokenStore, httpClient: HTTPClient = .shared) {
+    init(configuration: ServerConfiguration, tokenStore: TokenStore) {
         self.configuration = configuration
         self.tokenStore = tokenStore
-        self.httpClient = httpClient
+        self.jwtSigner = try? APNsJWTSigner(
+            keyID: configuration.apnsKeyID,
+            teamID: configuration.apnsTeamID,
+            keyPath: configuration.apnsKeyPath
+        )
     }
 
     func sendPush(key: String, payload: PushPayload) async throws -> PushResponse {
@@ -38,7 +41,7 @@ final class APNsService: Sendable {
     }
 
     private func sendToAPNs(deviceToken: String, payload: PushPayload) async {
-        guard !configuration.apnsKeyID.isEmpty else { return }
+        guard let jwtSigner else { return }
 
         let apnsPayload = Self.makeAPNsPayload(payload)
 
@@ -47,22 +50,64 @@ final class APNsService: Sendable {
             : "api.sandbox.push.apple.com"
         let urlString = "https://\(host)/3/device/\(deviceToken)"
 
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: apnsPayload) else { return }
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: apnsPayload),
+              let body = String(data: bodyData, encoding: .utf8) else { return }
 
-        guard var request = try? HTTPClient.Request(
-            url: urlString,
-            method: .POST,
-            body: .data(bodyData)
-        ) else { return }
-        request.headers.add(name: "Content-Type", value: "application/json")
-
-        do {
-            let response = try await httpClient.execute(request: request).get()
-            if response.status.code != 200 {
-                print("APNs error: \(response.status.code)")
+        // A token rejected with 429 stays blacklisted by Apple, so retry once
+        // with a freshly minted token before surfacing the error.
+        for attempt in 0...1 {
+            guard let authorizationToken = try? jwtSigner.token() else { return }
+            let status = Self.curlPost(
+                url: urlString,
+                body: body,
+                authorizationToken: authorizationToken,
+                topic: configuration.apnsTopic,
+                priority: payload.level == "passive" ? "5" : "10"
+            )
+            if status == 200 { return }
+            if status == 429, attempt == 0 {
+                jwtSigner.invalidateCachedToken()
+                continue
             }
+            FileHandle.standardError.write(Data("[APNs] status=\(status)\n".utf8))
+            return
+        }
+    }
+
+    /// APNs only speaks HTTP/2. The pinned AsyncHTTPClient release has no HTTP/2
+    /// support and corelibs URLSession hangs against Apple's endpoint, while the
+    /// system curl (nghttp2) has been verified stable — so the push rides on it.
+    private static func curlPost(
+        url: String,
+        body: String,
+        authorizationToken: String,
+        topic: String,
+        priority: String
+    ) -> Int {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
+        process.arguments = [
+            "-s", "--http2", "--max-time", "15",
+            "-o", "/dev/null", "-w", "%{http_code}",
+            "-X", "POST", url,
+            "-H", "Content-Type: application/json",
+            "-H", "Authorization: bearer \(authorizationToken)",
+            "-H", "apns-topic: \(topic)",
+            "-H", "apns-push-type: alert",
+            "-H", "apns-priority: \(priority)",
+            "--data-binary", body,
+        ]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let code = String(data: data, encoding: .utf8) ?? ""
+            return Int(code.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
         } catch {
-            print("APNs send error: \(error)")
+            return 0
         }
     }
 
@@ -78,7 +123,7 @@ final class APNsService: Sendable {
 
         var aps: [String: Any] = [
             "alert": alert,
-            "sound": payload.sound ?? "default",
+            "sound": apsSound(payload),
         ]
         if let badge = payload.badge { aps["badge"] = badge }
         if let threadID = payload.threadID ?? payload.group { aps["thread-id"] = threadID }
@@ -147,5 +192,19 @@ final class APNsService: Sendable {
         case "critical": return "critical"
         default: return nil
         }
+    }
+
+    /// Critical alerts only honor volume in the dictionary sound form; the
+    /// plain string form silently ignores it. Bark URLs carry volume as an
+    /// integer 0–10 while Apple's payload spec expects 0.0–1.0, so rescale
+    /// and clamp here.
+    private static func apsSound(_ payload: PushPayload) -> Any {
+        guard payload.level == "critical" else { return payload.sound ?? "default" }
+        let scaledVolume = min(max((payload.volume ?? 5) / 10, 0), 1)
+        return [
+            "critical": 1,
+            "name": payload.sound ?? "default",
+            "volume": scaledVolume,
+        ]
     }
 }

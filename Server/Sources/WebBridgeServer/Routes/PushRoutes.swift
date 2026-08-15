@@ -10,6 +10,17 @@ enum PushRoutes {
         router.get("/:key/:title/:body") { request, context in
             try await Self.handleBarkPush(request: request, context: context, services: services)
         }
+        // Bark-compatible body-only GET: /<key>/<content>. The path parameter
+        // reuses the name "title" so the router trie stays compatible with the
+        // three-segment /:key/:title/:body route across Hummingbird versions.
+        router.get("/:key/:title") { request, context in
+            try await Self.handleBarkBodyOnlyPush(request: request, context: context, services: services)
+        }
+        // Bark-compatible POST: /<key> with form-urlencoded or JSON body carrying
+        // title/body and the same parameter names as the GET query string.
+        router.post("/:key") { request, context in
+            try await Self.handleBarkPostPush(request: request, context: context, services: services)
+        }
         router.post("/push") { request, context in
             try await Self.handleJSONPush(request: request, context: context, services: services)
         }
@@ -37,45 +48,146 @@ enum PushRoutes {
             throw HTTPError(.badRequest, message: "Missing key, title, or body")
         }
 
-        let payload = PushPayload(
+        let payload = makePayload(title: title, body: body, query: request.uri.query)
+        return try await services.apnsService.sendPush(key: key, payload: payload)
+    }
+
+    /// Bark-compatible `GET /<key>/<content>`: body-only push, no title. The
+    /// router shares the "title" path parameter name with the three-segment
+    /// route, so here it carries the content string instead.
+    private static func handleBarkBodyOnlyPush(
+        request: Request,
+        context: some RequestContext,
+        services: ServiceRegistry
+    ) async throws -> PushResponse {
+        guard let key = context.parameters.get("key"),
+              let content = context.parameters.get("title")?.removingPercentEncoding else {
+            throw HTTPError(.badRequest, message: "Missing key or body")
+        }
+
+        let payload = makePayload(title: "", body: content, query: request.uri.query)
+        return try await services.apnsService.sendPush(key: key, payload: payload)
+    }
+
+    /// Bark-compatible `POST /<key>`: reads title/body and parameters from a
+    /// form-urlencoded or JSON request body, mirroring the GET query contract.
+    private static func handleBarkPostPush(
+        request: Request,
+        context: some RequestContext,
+        services: ServiceRegistry
+    ) async throws -> PushResponse {
+        guard let key = context.parameters.get("key") else {
+            throw HTTPError(.badRequest, message: "Missing key")
+        }
+
+        let buffer = try await request.body.collect(upTo: 1024 * 1024)
+        let raw = String(decoding: buffer.readableBytesView, as: UTF8.self)
+        let contentType = request.headers[values: .contentType].first ?? ""
+        let fields = contentType.contains("json")
+            ? jsonBodyFields(from: raw)
+            : formBodyFields(from: raw)
+
+        guard let body = fields["body"], !body.isEmpty else {
+            throw HTTPError(.badRequest, message: "body is required")
+        }
+
+        let payload = makePayload(title: fields["title"] ?? "", body: body, query: canonicalQuery(from: fields))
+        return try await services.apnsService.sendPush(key: key, payload: payload)
+    }
+
+    /// Shared PushPayload construction for every Bark-style route. `query` uses
+    /// the same `name=value&name=value` grammar as the GET query string.
+    private static func makePayload(title: String, body: String, query: String?) -> PushPayload {
+        PushPayload(
             title: title,
             body: body,
-            subtitle: extractQueryParam(from: request.uri.query, name: "subtitle"),
-            category: extractQueryParam(from: request.uri.query, name: "category"),
-            markdown: markdownContent(from: request.uri.query, body: body),
-            sound: extractQueryParam(from: request.uri.query, name: "sound"),
-            badge: intQueryParam(from: request.uri.query, name: "badge"),
-            icon: extractQueryParam(from: request.uri.query, name: "icon"),
-            image: extractQueryParam(from: request.uri.query, name: "image"),
-            group: extractQueryParam(from: request.uri.query, name: "group"),
-            threadID: extractQueryParam(from: request.uri.query, name: "threadId"),
-            url: extractQueryParam(from: request.uri.query, name: "url"),
-            copy: extractQueryParam(from: request.uri.query, name: "copy"),
-            isArchive: boolQueryParam(from: request.uri.query, name: "isArchive"),
-            level: extractQueryParam(from: request.uri.query, name: "level"),
-            volume: doubleQueryParam(from: request.uri.query, name: "volume"),
-            isCall: boolQueryParam(from: request.uri.query, name: "call"),
-            autoCopy: boolQueryParam(from: request.uri.query, name: "autoCopy")
-                ?? boolQueryParam(from: request.uri.query, name: "automaticallyCopy"),
-            appID: extractQueryParam(from: request.uri.query, name: "appId")
-                ?? extractQueryParam(from: request.uri.query, name: "appid"),
-            route: extractQueryParam(from: request.uri.query, name: "route"),
-            mode: extractQueryParam(from: request.uri.query, name: "mode"),
-            display: extractQueryParam(from: request.uri.query, name: "display"),
-            verificationCode: extractQueryParam(from: request.uri.query, name: "verificationCode"),
-            expiresAt: extractQueryParam(from: request.uri.query, name: "expiresAt"),
-            ttl: doubleQueryParam(from: request.uri.query, name: "ttl"),
-            replacementID: extractQueryParam(from: request.uri.query, name: "id"),
-            isDeleted: boolQueryParam(from: request.uri.query, name: "delete"),
-            actionState: extractQueryParam(from: request.uri.query, name: "actionState"),
-            requestID: extractQueryParam(from: request.uri.query, name: "requestId"),
-            contentType: extractQueryParam(from: request.uri.query, name: "contentType"),
-            qrPayload: extractQueryParam(from: request.uri.query, name: "qrPayload"),
-            statePath: extractQueryParam(from: request.uri.query, name: "statePath"),
-            revision: intQueryParam(from: request.uri.query, name: "revision")
+            subtitle: extractQueryParam(from: query, name: "subtitle"),
+            category: extractQueryParam(from: query, name: "category"),
+            markdown: markdownContent(from: query, body: body),
+            sound: extractQueryParam(from: query, name: "sound"),
+            badge: intQueryParam(from: query, name: "badge"),
+            icon: extractQueryParam(from: query, name: "icon"),
+            image: extractQueryParam(from: query, name: "image"),
+            group: extractQueryParam(from: query, name: "group"),
+            threadID: extractQueryParam(from: query, name: "threadId"),
+            url: extractQueryParam(from: query, name: "url"),
+            copy: extractQueryParam(from: query, name: "copy"),
+            isArchive: boolQueryParam(from: query, name: "isArchive"),
+            level: extractQueryParam(from: query, name: "level"),
+            volume: doubleQueryParam(from: query, name: "volume"),
+            isCall: boolQueryParam(from: query, name: "call"),
+            autoCopy: boolQueryParam(from: query, name: "autoCopy")
+                ?? boolQueryParam(from: query, name: "automaticallyCopy"),
+            appID: extractQueryParam(from: query, name: "appId")
+                ?? extractQueryParam(from: query, name: "appid"),
+            route: extractQueryParam(from: query, name: "route"),
+            mode: extractQueryParam(from: query, name: "mode"),
+            display: extractQueryParam(from: query, name: "display"),
+            verificationCode: extractQueryParam(from: query, name: "verificationCode"),
+            expiresAt: extractQueryParam(from: query, name: "expiresAt"),
+            ttl: doubleQueryParam(from: query, name: "ttl"),
+            replacementID: extractQueryParam(from: query, name: "id"),
+            isDeleted: boolQueryParam(from: query, name: "delete"),
+            actionState: extractQueryParam(from: query, name: "actionState"),
+            requestID: extractQueryParam(from: query, name: "requestId"),
+            contentType: extractQueryParam(from: query, name: "contentType"),
+            qrPayload: extractQueryParam(from: query, name: "qrPayload"),
+            statePath: extractQueryParam(from: query, name: "statePath"),
+            revision: intQueryParam(from: query, name: "revision")
         )
+    }
 
-        return try await services.apnsService.sendPush(key: key, payload: payload)
+    // MARK: - Bark POST body parsing
+
+    private static func formBodyFields(from raw: String) -> [String: String] {
+        var fields: [String: String] = [:]
+        for pair in raw.split(separator: "&") {
+            let parts = pair.split(separator: "=", maxSplits: 1)
+            guard let name = parts.first.flatMap({ String($0).removingPercentEncoding }), !name.isEmpty else { continue }
+            // application/x-www-form-urlencoded treats "+" as space.
+            let value = parts.count == 2
+                ? (String(parts[1]).replacingOccurrences(of: "+", with: " ").removingPercentEncoding ?? "")
+                : ""
+            fields[name] = value
+        }
+        return fields
+    }
+
+    private static func jsonBodyFields(from raw: String) -> [String: String] {
+        guard let data = raw.data(using: .utf8),
+              let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            return [:]
+        }
+        var fields: [String: String] = [:]
+        for (name, value) in object {
+            switch value {
+            case let string as String: fields[name] = string
+            case let bool as Bool: fields[name] = bool ? "1" : "0"
+            case let number as NSNumber: fields[name] = number.stringValue
+            default: continue
+            }
+        }
+        return fields
+    }
+
+    private static let queryValueAllowed: CharacterSet = {
+        var set = CharacterSet.alphanumerics
+        set.insert(charactersIn: "-._~")
+        return set
+    }()
+
+    /// Re-encodes decoded body fields into the canonical query-string grammar
+    /// consumed by the shared parameter extractors.
+    private static func canonicalQuery(from fields: [String: String]) -> String? {
+        let pairs = fields
+            .filter { $0.key != "title" && $0.key != "body" }
+            .compactMap { name, value -> String? in
+                guard let encoded = value.addingPercentEncoding(withAllowedCharacters: queryValueAllowed) else {
+                    return nil
+                }
+                return "\(name)=\(encoded)"
+            }
+        return pairs.isEmpty ? nil : pairs.joined(separator: "&")
     }
 
     private static func handleJSONPush(

@@ -3,11 +3,47 @@ import Hummingbird
 import HummingbirdTesting
 import Testing
 import NIOCore
+import Crypto
 
 @testable import WebBridgeServer
 
 @Suite("Push Routes")
 struct PushRoutesTests {
+    @Test("APNs JWT contains the team and key identifiers and verifies with ES256")
+    func apnsJWTIsSigned() throws {
+        let privateKey = P256.Signing.PrivateKey()
+        let signer = try APNsJWTSigner(
+            keyID: "KEY1234567",
+            teamID: "TEAM123456",
+            pemRepresentation: privateKey.pemRepresentation
+        )
+
+        let token = try signer.token(at: Date(timeIntervalSince1970: 1_700_000_000))
+        let parts = token.split(separator: ".", omittingEmptySubsequences: false)
+        #expect(parts.count == 3)
+
+        let header = try #require(Self.decodeBase64URL(String(parts[0])))
+        let claims = try #require(Self.decodeBase64URL(String(parts[1])))
+        let signatureData = try #require(Self.decodeBase64URL(String(parts[2])))
+        let headerJSON = try #require(JSONSerialization.jsonObject(with: header) as? [String: String])
+        let claimsJSON = try #require(JSONSerialization.jsonObject(with: claims) as? [String: Any])
+        let signature = try P256.Signing.ECDSASignature(rawRepresentation: signatureData)
+
+        #expect(headerJSON["alg"] == "ES256")
+        #expect(headerJSON["kid"] == "KEY1234567")
+        #expect(claimsJSON["iss"] as? String == "TEAM123456")
+        #expect(claimsJSON["iat"] as? Int == 1_700_000_000)
+        #expect(privateKey.publicKey.isValidSignature(signature, for: Data("\(parts[0]).\(parts[1])".utf8)))
+    }
+
+    private static func decodeBase64URL(_ value: String) -> Data? {
+        var base64 = value
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        base64 += String(repeating: "=", count: (4 - base64.count % 4) % 4)
+        return Data(base64Encoded: base64)
+    }
+
     private func createApplication() -> Application<RouterResponder<BasicRequestContext>> {
         let router = Router()
         let config = ServerConfiguration()
@@ -183,6 +219,54 @@ struct PushRoutesTests {
         #expect(resolved.approval == payload.approval)
         #expect(resolved.actionState == "approved")
         #expect(resolved.revision == 18)
+    }
+
+    @Test("Critical level promotes aps.sound to the dictionary form with scaled volume")
+    func criticalLevelBuildsDictionarySound() throws {
+        let critical = PushPayload(
+            title: "Critical",
+            body: "Something happened",
+            sound: "alarm",
+            level: "critical",
+            volume: 5
+        )
+        let apns = APNsService.makeAPNsPayload(critical)
+        let aps = try #require(apns["aps"] as? [String: Any])
+        let sound = try #require(aps["sound"] as? [String: Any])
+        #expect(sound["critical"] as? Int == 1)
+        #expect(sound["name"] as? String == "alarm")
+        #expect(sound["volume"] as? Double == 0.5)
+    }
+
+    @Test("Critical dictionary sound defaults and clamps Bark volume")
+    func criticalDictionarySoundDefaultsAndClampsVolume() throws {
+        let noVolume = APNsService.makeAPNsPayload(PushPayload(
+            title: "Critical", body: "No volume", level: "critical"
+        ))
+        let noVolumeAps = try #require(noVolume["aps"] as? [String: Any])
+        let defaultSound = try #require(noVolumeAps["sound"] as? [String: Any])
+        #expect(defaultSound["name"] as? String == "default")
+        #expect(defaultSound["volume"] as? Double == 0.5)
+
+        let loud = APNsService.makeAPNsPayload(PushPayload(
+            title: "Critical", body: "Too loud", level: "critical", volume: 15
+        ))
+        let loudAps = try #require(loud["aps"] as? [String: Any])
+        let loudSound = try #require(loudAps["sound"] as? [String: Any])
+        #expect(loudSound["volume"] as? Double == 1.0)
+    }
+
+    @Test("Non-critical levels keep the plain string sound")
+    func nonCriticalLevelsKeepStringSound() throws {
+        let active = APNsService.makeAPNsPayload(PushPayload(
+            title: "Hello", body: "World", sound: "bell", level: "timeSensitive", volume: 8
+        ))
+        let aps = try #require(active["aps"] as? [String: Any])
+        #expect(aps["sound"] as? String == "bell")
+
+        let unspecified = APNsService.makeAPNsPayload(PushPayload(title: "Hello", body: "World"))
+        let unspecifiedAps = try #require(unspecified["aps"] as? [String: Any])
+        #expect(unspecifiedAps["sound"] as? String == "default")
     }
 
     @Test("JSON Push v2 request maps canonical and Bark-compatible aliases")
