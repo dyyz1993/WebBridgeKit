@@ -17,6 +17,7 @@ private struct NotificationParams {
     let server: String
     let key: String
     let title: String
+    let subtitle: String
     let body: String
     let level: String
     let sound: String
@@ -25,6 +26,7 @@ private struct NotificationParams {
     let image: String
     let url: String
     let group: String
+    let copy: String
     let notifId: String
 }
 
@@ -78,6 +80,7 @@ class NotificationDebugViewController: UIViewController {
 
     private let urlInput = makeTextField(placeholder: L10n.tr("notif_debug.field.url"))
     private let groupInput = makeTextField(placeholder: L10n.tr("notif_debug.field.group"))
+    private let copyInput = makeTextField(placeholder: L10n.tr("notif_debug.field.copy"))
     private let autocopySwitch = UISwitch()
     private let archiveSwitch = UISwitch()
 
@@ -90,6 +93,17 @@ class NotificationDebugViewController: UIViewController {
         btn.titleLabel?.font = ThemeTokens.Typography.title3
         btn.backgroundColor = ThemeTokens.Color.primary
         btn.setTitleColor(ThemeTokens.Color.surface, for: .normal)
+        btn.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        return btn
+    }()
+    private let copyURLButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle(L10n.tr("notif_debug.button.copy_url"), for: .normal)
+        btn.titleLabel?.font = ThemeTokens.Typography.subheadline
+        btn.backgroundColor = ThemeTokens.Color.surface
+        btn.setTitleColor(ThemeTokens.Color.primary, for: .normal)
+        btn.layer.borderWidth = 1
+        btn.layer.borderColor = ThemeTokens.Color.primary.cgColor
         btn.layer.cornerRadius = ThemeTokens.CornerRadius.lg
         return btn
     }()
@@ -174,6 +188,7 @@ class NotificationDebugViewController: UIViewController {
         addSection(title: L10n.tr("notif_debug.section.action"), views: [
             makeRow(label: L10n.tr("notif_debug.field.url"), view: urlInput),
             makeRow(label: L10n.tr("notif_debug.field.group"), view: groupInput),
+            makeRow(label: L10n.tr("notif_debug.field.copy"), view: copyInput),
             makeRow(label: L10n.tr("notif_debug.field.auto_copy"), view: autocopySwitch),
             makeRow(label: L10n.tr("notif_debug.field.archive"), view: archiveSwitch)
         ])
@@ -182,9 +197,14 @@ class NotificationDebugViewController: UIViewController {
             makeRow(label: L10n.tr("notif_debug.field.notif_id"), view: notifIdInput)
         ])
 
+        let sendButtonRow = UIStackView(arrangedSubviews: [sendButton, copyURLButton])
+        sendButtonRow.axis = .horizontal
+        sendButtonRow.spacing = ThemeTokens.Spacing.sm
+        sendButtonRow.distribution = .fillEqually
+
         addSection(title: L10n.tr("notif_debug.section.send"), views: [
             makeVerticalRow(label: L10n.tr("notif_debug.field.method"), view: methodSegment),
-            sendButton
+            sendButtonRow
         ])
 
         addSection(title: L10n.tr("notif_debug.section.response"), views: [
@@ -196,9 +216,13 @@ class NotificationDebugViewController: UIViewController {
         ])
 
         sendButton.addTarget(self, action: #selector(sendNotification), for: .touchUpInside)
+        copyURLButton.addTarget(self, action: #selector(copyCurrentURL), for: .touchUpInside)
         levelSegment.addTarget(self, action: #selector(levelChanged), for: .valueChanged)
 
         sendButton.snp.makeConstraints { make in
+            make.height.equalTo(48)
+        }
+        copyURLButton.snp.makeConstraints { make in
             make.height.equalTo(48)
         }
     }
@@ -265,8 +289,7 @@ class NotificationDebugViewController: UIViewController {
             L10n.tr("notif_debug.template.image"),
             L10n.tr("notif_debug.template.urgent"),
             "Markdown",
-            L10n.tr("notif_debug.template.link"),
-            L10n.tr("notif_debug.template.encrypted")
+            L10n.tr("notif_debug.template.link")
         ]
 
         let outerStack = UIStackView()
@@ -320,13 +343,13 @@ class NotificationDebugViewController: UIViewController {
     }
 
     private func setupTemplates() {
+        // (displayName, title, body, image, level, sound, url, isMarkdown)
         let templates: [(String, String, String, String, String, String, String, Bool)] = [
             (L10n.tr("notif_debug.template.simple"), L10n.tr("notif_debug.template.test_title"), L10n.tr("notif_debug.template.test_body"), "", "active", "", "", false),
             (L10n.tr("notif_debug.template.image"), L10n.tr("notif_debug.template.image_title"), L10n.tr("notif_debug.template.image_body"), "https://via.placeholder.com/300", "active", "", "", false),
             (L10n.tr("notif_debug.template.urgent"), L10n.tr("notif_debug.template.urgent_title"), L10n.tr("notif_debug.template.urgent_body"), "", "timeSensitive", "alarm", "", false),
             ("Markdown", "Markdown", "# Hello\n- Item 1\n- Item 2", "", "active", "", "", true),
-            (L10n.tr("notif_debug.template.link"), L10n.tr("notif_debug.template.link_title"), L10n.tr("notif_debug.template.link_body"), "", "active", "", "https://wbk.shanbox.19930810.xyz:8443", false),
-            (L10n.tr("notif_debug.template.encrypted"), L10n.tr("notif_debug.template.encrypted_title"), "encrypted content", "", "active", "", "", false)
+            (L10n.tr("notif_debug.template.link"), L10n.tr("notif_debug.template.link_title"), L10n.tr("notif_debug.template.link_body"), "", "active", "", "https://wbk.shanbox.19930810.xyz:8443", false)
         ]
         objc_setAssociatedObject(self, "templates", templates, .OBJC_ASSOCIATION_RETAIN)
     }
@@ -368,42 +391,92 @@ class NotificationDebugViewController: UIViewController {
         }
     }
 
-    @objc private func sendNotification() {
+    // MARK: - 参数收集与 URL 构建
+
+    /// Collects and validates the current form. On validation failure the
+    /// reason is written to the response view and nil is returned.
+    private func collectParams() -> NotificationParams? {
         let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         guard !key.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_key")
             responseView.textColor = ThemeTokens.Color.error
-            return
+            return nil
         }
 
         let title = titleInput.text ?? ""
-        let body = bodyInput.text ?? ""
         guard !title.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_title")
             responseView.textColor = ThemeTokens.Color.error
-            return
+            return nil
         }
 
-        let isPost = methodSegment.selectedSegmentIndex == 1
-        let level = ["active", "timeSensitive", "passive", "critical"][levelSegment.selectedSegmentIndex]
-        let sound = soundInput.text ?? ""
-        let badge = badgeInput.text ?? ""
-        let icon = iconInput.text ?? ""
-        let image = imageInput.text ?? ""
-        let url = urlInput.text ?? ""
-        let group = groupInput.text ?? ""
-        let notifId = notifIdInput.text ?? ""
+        return NotificationParams(
+            server: server,
+            key: key,
+            title: title,
+            subtitle: subtitleInput.text ?? "",
+            body: bodyInput.text ?? "",
+            level: ["active", "timeSensitive", "passive", "critical"][levelSegment.selectedSegmentIndex],
+            sound: soundInput.text ?? "",
+            badge: badgeInput.text ?? "",
+            icon: iconInput.text ?? "",
+            image: imageInput.text ?? "",
+            url: urlInput.text ?? "",
+            group: groupInput.text ?? "",
+            copy: copyInput.text ?? "",
+            notifId: notifIdInput.text ?? ""
+        )
+    }
+
+    /// Shared GET query items for sending and for "copy push URL". Parameter
+    /// names must match the server-side extractors in PushRoutes.makePayload.
+    private func queryItems(params: NotificationParams) -> [URLQueryItem] {
+        var items: [URLQueryItem] = []
+        if !params.subtitle.isEmpty { items.append(URLQueryItem(name: "subtitle", value: params.subtitle)) }
+        if !params.level.isEmpty && params.level != "active" { items.append(URLQueryItem(name: "level", value: params.level)) }
+        if params.level == "critical" { items.append(URLQueryItem(name: "volume", value: String(Int(volumeSlider.value)))) }
+        if !params.sound.isEmpty { items.append(URLQueryItem(name: "sound", value: params.sound)) }
+        if !params.badge.isEmpty, let b = Int(params.badge) { items.append(URLQueryItem(name: "badge", value: "\(b)")) }
+        if !params.icon.isEmpty { items.append(URLQueryItem(name: "icon", value: params.icon)) }
+        if !params.image.isEmpty { items.append(URLQueryItem(name: "image", value: params.image)) }
+        if !params.url.isEmpty { items.append(URLQueryItem(name: "url", value: params.url)) }
+        if !params.group.isEmpty { items.append(URLQueryItem(name: "group", value: params.group)) }
+        if !params.copy.isEmpty { items.append(URLQueryItem(name: "copy", value: params.copy)) }
+        if autocopySwitch.isOn { items.append(URLQueryItem(name: "autoCopy", value: "1")) }
+        if archiveSwitch.isOn { items.append(URLQueryItem(name: "isArchive", value: "1")) }
+        if !params.notifId.isEmpty { items.append(URLQueryItem(name: "id", value: params.notifId)) }
+        if callSwitch.isOn { items.append(URLQueryItem(name: "call", value: "1")) }
+        if markdownSwitch.isOn { items.append(URLQueryItem(name: "markdown", value: "1")) }
+        return items
+    }
+
+    private func buildGETURL(params: NotificationParams) -> URL? {
+        let base = params.server.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let path = [params.key, params.title, params.body]
+            .compactMap(Self.encodePathSegment)
+            .joined(separator: "/")
+        guard var components = URLComponents(string: "\(base)/\(path)") else { return nil }
+        let items = queryItems(params: params)
+        components.queryItems = items.isEmpty ? nil : items
+        return components.url
+    }
+
+    private static func encodePathSegment(_ value: String) -> String? {
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/%?#")
+        return value.addingPercentEncoding(withAllowedCharacters: allowed)
+    }
+
+    // MARK: - 发送与复制
+
+    @objc private func sendNotification() {
+        guard let params = collectParams() else { return }
 
         responseView.text = L10n.tr("notif_debug.sending")
         responseView.textColor = ThemeTokens.Color.textSecondary
 
-        let params = NotificationParams(
-            server: server, key: key, title: title, body: body,
-            level: level, sound: sound, badge: badge, icon: icon,
-            image: image, url: url, group: group, notifId: notifId
-        )
-
+        let isPost = methodSegment.selectedSegmentIndex == 1
         if isPost {
             sendPOST(params: params)
         } else {
@@ -411,30 +484,19 @@ class NotificationDebugViewController: UIViewController {
         }
     }
 
-    private func sendGET(params: NotificationParams) {
-        let encodedTitle = params.title.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? params.title
-        let encodedBody = params.body.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? params.body
-        var path = "\(params.server)/\(params.key)/\(encodedTitle)/\(encodedBody)"
-
-        var items: [URLQueryItem] = []
-        if !params.level.isEmpty && params.level != "active" { items.append(URLQueryItem(name: "level", value: params.level)) }
-        if !params.sound.isEmpty { items.append(URLQueryItem(name: "sound", value: params.sound)) }
-        if !params.badge.isEmpty, let b = Int(params.badge) { items.append(URLQueryItem(name: "badge", value: "\(b)")) }
-        if !params.icon.isEmpty { items.append(URLQueryItem(name: "icon", value: params.icon)) }
-        if !params.image.isEmpty { items.append(URLQueryItem(name: "img", value: params.image)) }
-        if !params.url.isEmpty { items.append(URLQueryItem(name: "url", value: params.url)) }
-        if !params.group.isEmpty { items.append(URLQueryItem(name: "group", value: params.group)) }
-        if autocopySwitch.isOn { items.append(URLQueryItem(name: "copyable", value: "1")) }
-        if archiveSwitch.isOn { items.append(URLQueryItem(name: "isArchive", value: "1")) }
-        if !params.notifId.isEmpty { items.append(URLQueryItem(name: "id", value: params.notifId)) }
-
-        if !items.isEmpty {
-            var comps = URLComponents(string: path)
-            comps?.queryItems = items
-            path = comps?.string ?? path
+    @objc private func copyCurrentURL() {
+        guard let params = collectParams() else { return }
+        guard let url = buildGETURL(params: params) else {
+            responseView.text = L10n.tr("notif_debug.error_url_failed")
+            responseView.textColor = ThemeTokens.Color.error
+            return
         }
+        UIPasteboard.general.string = url.absoluteString
+        HUDService.shared.showSuccess(withStatus: L10n.tr("notif_debug.copied"))
+    }
 
-        guard let requestURL = URL(string: path) else {
+    private func sendGET(params: NotificationParams) {
+        guard let requestURL = buildGETURL(params: params) else {
             responseView.text = L10n.tr("notif_debug.error_url_failed")
             responseView.textColor = ThemeTokens.Color.error
             return
@@ -460,18 +522,20 @@ class NotificationDebugViewController: UIViewController {
             "title": params.title,
             "body": params.body
         ]
-        if !params.level.isEmpty { bodyDict["level"] = params.level }
+        if !params.subtitle.isEmpty { bodyDict["subtitle"] = params.subtitle }
+        if !params.level.isEmpty && params.level != "active" { bodyDict["level"] = params.level }
         if !params.sound.isEmpty { bodyDict["sound"] = params.sound }
         if !params.badge.isEmpty, let b = Int(params.badge) { bodyDict["badge"] = b }
         if !params.icon.isEmpty { bodyDict["icon"] = params.icon }
-        if !params.image.isEmpty { bodyDict["img"] = params.image }
+        if !params.image.isEmpty { bodyDict["image"] = params.image }
         if !params.url.isEmpty { bodyDict["url"] = params.url }
         if !params.group.isEmpty { bodyDict["group"] = params.group }
-        if autocopySwitch.isOn { bodyDict["copyable"] = "1" }
+        if !params.copy.isEmpty { bodyDict["copy"] = params.copy }
+        if autocopySwitch.isOn { bodyDict["autoCopy"] = "1" }
         if archiveSwitch.isOn { bodyDict["isArchive"] = "1" }
         if !params.notifId.isEmpty { bodyDict["id"] = params.notifId }
         if callSwitch.isOn { bodyDict["call"] = "1" }
-        if markdownSwitch.isOn { bodyDict["ismarkdown"] = "1" }
+        if markdownSwitch.isOn { bodyDict["markdown"] = "1" }
         if params.level == "critical" { bodyDict["volume"] = Int(volumeSlider.value) }
 
         var request = URLRequest(url: requestURL)
