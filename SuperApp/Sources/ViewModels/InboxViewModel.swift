@@ -186,7 +186,7 @@ class InboxViewModel: ViewModel {
     }
 
     func numberOfRows() -> Int {
-        return messageGroupsRelay.value.reduce(0) { $0 + ($1.isExpanded ? $1.messages.count : 0) }
+        return messageGroupsRelay.value.reduce(0) { $0 + $1.messages.count }
     }
 
     func numberOfGroups() -> Int {
@@ -222,8 +222,15 @@ class InboxViewModel: ViewModel {
 
     func numberOfRowsInGroup(_ index: Int) -> Int {
         guard index < messageGroupsRelay.value.count else { return 0 }
-        let group = messageGroupsRelay.value[index]
-        return group.isExpanded ? group.messages.count : 0
+        // Rows persist for collapsed groups; the controller expresses collapse
+        // as an animated height morph instead of removing rows.
+        return messageGroupsRelay.value[index].messages.count
+    }
+
+    /// Whether a row's content should be visible (group expanded or latest mode).
+    func isRowRevealed(at indexPath: IndexPath) -> Bool {
+        guard showsGroupHeaders, indexPath.section < messageGroupsRelay.value.count else { return true }
+        return messageGroupsRelay.value[indexPath.section].isExpanded
     }
 
     func numberOfMessagesInGroup(_ index: Int) -> Int {
@@ -321,11 +328,18 @@ class InboxViewModel: ViewModel {
             groups = sortedMessages.isEmpty ? [] : [MessageGroup(name: "", messages: sortedMessages)]
         } else {
             let grouped = Dictionary(grouping: sortedMessages) { $0.notificationGroupName }
+            // Rebuilds happen on every refresh; a user's collapse choice must
+            // survive them, otherwise background reloads silently re-expand.
+            let previousStates = Dictionary(
+                messageGroupsRelay.value.map { ($0.identifier, $0.isExpanded) },
+                uniquingKeysWith: { first, _ in first }
+            )
             groups = grouped.map { identifier, msgs in
                 MessageGroup(
                     identifier: identifier,
                     name: Self.displayName(forGroup: identifier),
-                    messages: msgs
+                    messages: msgs,
+                    isExpanded: previousStates[identifier] ?? true
                 )
             }.sorted { lhs, rhs in
                 if lhs.identifier == "other" { return false }

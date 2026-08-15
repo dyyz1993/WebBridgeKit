@@ -174,8 +174,16 @@ public enum LucideIcon: CaseIterable {
 
     public func templateImage(pointSize: CGFloat = 20, weight: UIImage.SymbolWeight = .medium) -> UIImage? {
         if let img = UIImage(lucideId: lucideId) {
-            let scaled = UIImage(cgImage: img.cgImage!, scale: UIScreen.main.scale, orientation: img.imageOrientation)
-            return scaled.withRenderingMode(.alwaysTemplate)
+            // Vector PDF assets can be backed by a non-CGImage representation on
+            // newer iOS; force-unwrapping and rewrapping a nil/empty cgImage
+            // yields a zero-size image that silently renders nothing. Only
+            // rewrap when a real raster exists; otherwise keep the original
+            // backing, which still honors the template rendering mode.
+            if let cg = img.cgImage, cg.width > 0, cg.height > 0 {
+                let scaled = UIImage(cgImage: cg, scale: UIScreen.main.scale, orientation: img.imageOrientation)
+                return scaled.withRenderingMode(.alwaysTemplate)
+            }
+            return img.withRenderingMode(.alwaysTemplate)
         }
         let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: weight)
         return UIImage(systemName: sfSymbolName, withConfiguration: config)?.withRenderingMode(.alwaysTemplate)

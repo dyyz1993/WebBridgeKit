@@ -52,12 +52,33 @@ final class MessageEngineTests: XCTestCase {
             body: "Test body",
             channel: "test"
         )
-        
+
         try await engine.receive(payload)
-        
+
         let messages = await engine.getMessages()
         XCTAssertEqual(messages.count, 1)
         XCTAssertEqual(messages[0].payload.title, "Test")
+    }
+
+    /// qr 示例（contentType=qr + qrPayload 自定义 scheme）必须能正常入箱，
+    /// 用于回归「全部 API 示例」中扫码登录示例收不到消息的问题。
+    func testReceiveQRContentMessage() async throws {
+        let payload = MessagePayload(
+            title: "扫码登录",
+            body: "使用 WebBridgeKit 扫描此二维码",
+            channel: "apns",
+            contentType: .qr,
+            qrPayload: "webbridgekit://login/example"
+        )
+
+        try await engine.receive(payload)
+
+        let messages = await engine.getMessages()
+        guard let stored = messages.first(where: { $0.payload.title == "扫码登录" }) else {
+            return XCTFail("qr message should be stored in the inbox")
+        }
+        XCTAssertEqual(stored.payload.contentType, .qr)
+        XCTAssertEqual(stored.payload.qrPayload, "webbridgekit://login/example")
     }
 
     func testReceivePersistsExplicitMarkdownWithoutPipeline() async throws {

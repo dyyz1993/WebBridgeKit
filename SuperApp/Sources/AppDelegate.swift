@@ -43,6 +43,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
+        // APNs sandbox tokens rotate across reinstalls; refresh silently on
+        // every launch so the server always holds the current one.
+        if !isUITesting {
+            DispatchQueue.main.async {
+                Self.refreshOfficialPushRegistration()
+            }
+        }
+
         // Removed startup clearAll() — it was deleting PersistentCache files that should survive app restarts.
         // Cache cleanup is now handled by WebCacheManager.scheduleAutoCleanup() which respects persistence.
 
@@ -560,6 +568,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     /// 注入测试URL到历史记录（仅DEBUG模式）
     private func injectTestURLsForDebugging() {
+    }
+
+    /// Re-registers the current APNs token with the official push identity on
+    /// every launch. iOS rotates sandbox device tokens across reinstalls, and
+    /// the server must always hold the latest token for the push address to work.
+    private static func refreshOfficialPushRegistration() {
+        guard let identity = try? OfficialPushIdentityStore.shared.currentOrCreate() else { return }
+        let serverURL = ServerConfigManager.shared.getActiveBaseURL()
+            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
+            ?? "https://wbk.shanbox.19930810.xyz:8443"
+        PushNotificationManager.shared.activateOfficialPush(serverURL: serverURL, key: identity) { _ in }
     }
 
     private static func cleanupInvalidHistoryURLs() {

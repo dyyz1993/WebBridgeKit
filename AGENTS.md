@@ -49,6 +49,41 @@ both QR-code import and paste-based import for gateway configuration.
   server exposes the generic gateway contract and local/simulator regression is
   green.
 
+## APNs Push Delivery Rules (shanbox WebBridgeServer)
+
+Learned the hard way on 2026-08-15: the server answered `{"code":200,"Push sent"}` for weeks
+while Apple silently rejected every request. Rules that must not regress:
+
+- **APNs only speaks HTTP/2.** The AsyncHTTPClient version pinned on shanbox has no HTTP/2
+  support, so `APNsService` sends via `URLSession` (libcurl-backed, negotiates h2 via ALPN).
+  Do not "simplify" this back to `HTTPClient` — HTTP/1.1 requests get `403` with no visible
+  route error.
+- **Provider JWT (ES256) must be cached and reused.** Sign once, cache ~50 minutes (Apple
+  honors ≤1h), re-sign only on expiry. Signing per push triggers `429
+  TooManyProviderTokenUpdates`; the penalty survives 10 minutes of cooldown and needs
+  ~25 minutes of total silence (no pushes, no direct curl) to clear. Debugging curls that
+  mint fresh tokens count against the same key.
+- **`Push sent (200)` only means the route accepted the request.** Real delivery failures
+  print `APNs error: <code>` / `APNs send error:` to stdout, which is block-buffered under
+  supervisord — check `/var/log/supervisor/webbridgeserver.log` and expect flush delay.
+- **Isolating faults:** sign the JWT locally (python + cryptography, ES256 raw r||s) and
+  `curl --http2 https://api.sandbox.push.apple.com/3/device/<token>` with the real device
+  token. A fake token should return `400 BadDeviceToken` (auth OK); `403` means the
+  credentials/JWT are wrong; no response line in the server log means the request never
+  left correctly.
+- **Device registrations persist** to `Server/data/device-registrations.json` (created on
+  first register). Restarting the server is safe; losing the file means every phone must
+  re-activate push.
+- **Inbox recording semantics (iOS):** a push is stored only when it arrives while the app
+  is foreground (`willPresent`) or the user taps the banner (`didReceive`). Background
+  delivery without a tap is lost to the Inbox until the `/ws/stream` SSE relay exists on
+  the Swift backend (currently 404). Design UI tests accordingly: return the app to the
+  foreground before the push is expected to land.
+- **China-region iPhones gate every fresh install** behind a「允许使用无线数据」dialog that
+  silently kills all app traffic. Real-device UI tests must auto-tap
+  「无线局域网与蜂窝网络」(see `RealDevicePushSmokeTests` alert handling); the test runner
+  process has its own copy of the same dialog.
+
 ## Services
 
 Three local services must be running for simulator development and local regression testing:

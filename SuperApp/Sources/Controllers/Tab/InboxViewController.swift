@@ -14,6 +14,10 @@ import WebBridgeKit
 
 class InboxViewController: BaseViewController<InboxViewModel> {
 
+    /// 横幅点击时暂存的待定位消息（仅主线程读写）。冷启动时本页可能
+    /// 尚未完成订阅绑定，定位通知会丢；收件箱就绪后主动消费该待办。
+    static var pendingFocus: (title: String, body: String)?
+
     private let scaffold = WBKScreenScaffold(style: .standard)
 
     private let titleLabel: UILabel = {
@@ -143,6 +147,12 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private let markAllReadRelay = PublishRelay<Void>()
     private let deleteItemRelay = PublishRelay<IndexPath>()
 
+    /// Guards against overlapping group toggle animations; this screen has a
+    /// crash history from batch updates racing each other.
+    private var isAnimatingGroupToggle = false
+    /// Marks the next reload as an animated display-mode transition.
+    private var pendingAnimatedReload = false
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
@@ -228,6 +238,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     @objc private func displayModeChanged() {
         guard let mode = InboxViewModel.DisplayMode(rawValue: displayModeControl.selectedSegmentIndex) else { return }
         UISelectionFeedbackGenerator().selectionChanged()
+        pendingAnimatedReload = true
         viewModel.setDisplayMode(mode)
     }
 
@@ -310,7 +321,19 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
         output.reloadData
             .drive(onNext: { [weak self] in
-                self?.tableView.reloadData()
+                guard let self = self else { return }
+                self.isAnimatingGroupToggle = false
+                if self.pendingAnimatedReload {
+                    self.pendingAnimatedReload = false
+                    UIView.transition(
+                        with: self.tableView,
+                        duration: ThemeTokens.Animation.normal.duration,
+                        options: [.transitionCrossDissolve, .allowUserInteraction],
+                        animations: { self.tableView.reloadData() }
+                    )
+                } else {
+                    self.tableView.reloadData()
+                }
             })
             .disposed(by: rx)
 
@@ -327,6 +350,56 @@ class InboxViewController: BaseViewController<InboxViewModel> {
                 self?.navigateToDetail(message)
             })
             .disposed(by: rx)
+
+        // 横幅点击（无显式路由的推送）会切到本页并请求定位到对应消息
+        NotificationCenter.default.rx.notification(.focusInboxMessage)
+            .subscribe(onNext: { [weak self] notification in
+                // 热路径直接处理，同时清掉待办避免冷路径重复消费
+                Self.pendingFocus = nil
+                let title = notification.userInfo?["title"] as? String
+                let body = notification.userInfo?["body"] as? String
+                // 点击路径同时会写入消息，稍等一拍再定位；找不到再补一次
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    guard let self, !self.focusMessage(title: title, body: body) else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                        self.focusMessage(title: title, body: body)
+                    }
+                }
+            })
+            .disposed(by: rx)
+
+        // 冷启动：本页刚加载完，消费横幅点击留下的待定位消息
+        consumePendingFocusIfAny()
+    }
+
+    /// 消费 PushRouter 暂存的待定位消息；带重试以等待消息入库。
+    private func consumePendingFocusIfAny() {
+        guard let pending = Self.pendingFocus else { return }
+        Self.pendingFocus = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self else { return }
+            if !self.focusMessage(title: pending.title, body: pending.body) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
+                    self?.focusMessage(title: pending.title, body: pending.body)
+                }
+            }
+        }
+    }
+
+    /// 在当前过滤视图里查找并打开对应消息；返回是否找到。
+    @discardableResult
+    private func focusMessage(title: String?, body: String?) -> Bool {
+        guard let title else { return false }
+        for section in 0..<viewModel.numberOfGroups() {
+            for row in 0..<viewModel.numberOfRowsInGroup(section) {
+                let message = viewModel.messageAt(IndexPath(row: row, section: section))
+                if message.payload.title == title && (body == nil || message.payload.body == body) {
+                    navigateToDetail(message)
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     private func navigateToDetail(_ message: StoredMessage) {
@@ -366,7 +439,15 @@ extension InboxViewController: UITableViewDataSource {
             for: indexPath
         ) as! InboxMessageCellWrapper
         cell.configure(with: message)
+        // Collapsed-group rows persist at zero height; hide the whole cell so
+        // its content stays out of the accessibility tree and interaction.
+        cell.isHidden = !viewModel.isRowRevealed(at: indexPath)
         return cell
+    }
+
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        guard viewModel.showsGroupHeaders else { return 92 }
+        return viewModel.isRowRevealed(at: indexPath) ? 92 : 0
     }
 
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -374,35 +455,65 @@ extension InboxViewController: UITableViewDataSource {
         let header = tableView.dequeueReusableCell(
             withIdentifier: InboxGroupHeaderCell.identifier
         ) as! InboxGroupHeaderCell
-        header.configure(
-            title: viewModel.groupHeaderTitle(section),
-            count: viewModel.numberOfMessagesInGroup(section),
-            isExpanded: viewModel.isGroupExpanded(section),
-            hasUnread: viewModel.groupHasUnread(section),
-            accessibilityIdentifier: "notification.group.\(viewModel.groupIdentifier(section).slugIdentifier)"
-        )
-        header.onTap = { [weak self] in
+        let configureHeader = { [weak self] (isExpanded: Bool, count: Int) in
             guard let self = self else { return }
-            let messageCount = self.viewModel.numberOfMessagesInGroup(section)
-            self.viewModel.toggleGroup(section)
-            let isExpanded = self.viewModel.isGroupExpanded(section)
-            let indexPaths = (0..<messageCount).map { IndexPath(row: $0, section: section) }
-            self.tableView.performBatchUpdates {
-                if isExpanded {
-                    self.tableView.insertRows(at: indexPaths, with: .automatic)
-                } else {
-                    self.tableView.deleteRows(at: indexPaths, with: .automatic)
-                }
-            }
             header.configure(
                 title: self.viewModel.groupHeaderTitle(section),
-                count: messageCount,
+                count: count,
                 isExpanded: isExpanded,
                 hasUnread: self.viewModel.groupHasUnread(section),
                 accessibilityIdentifier: "notification.group.\(self.viewModel.groupIdentifier(section).slugIdentifier)"
             )
         }
+        configureHeader(viewModel.isGroupExpanded(section), viewModel.numberOfMessagesInGroup(section))
+        header.onTap = { [weak self] in
+            guard let self = self, !self.isAnimatingGroupToggle else { return }
+            self.toggleGroupAnimated(section: section, configureHeader: configureHeader)
+        }
         return header
+    }
+
+    /// Height-morph accordion: collapsed rows stay in the table and collapse to
+    /// zero height, so the compress-away of the group and the slide-up of the
+    /// sections below happen in one continuous system-driven animation.
+    private func toggleGroupAnimated(section: Int, configureHeader: (Bool, Int) -> Void) {
+        let messageCount = viewModel.numberOfMessagesInGroup(section)
+        let indexPaths = (0..<messageCount).map { IndexPath(row: $0, section: section) }
+        let willExpand = !viewModel.isGroupExpanded(section)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        isAnimatingGroupToggle = true
+        // Capture cells before the toggle: once heights reach zero,
+        // `cellForRow` returns nil for those index paths.
+        let cells = indexPaths.compactMap { tableView.cellForRow(at: $0) }
+        #if DEBUG
+        NSLog("WBK-TOGGLE section=%d willExpand=%d rows=%d cells=%d animsEnabled=%d",
+              section, willExpand ? 1 : 0, indexPaths.count, cells.count,
+              UIView.areAnimationsEnabled ? 1 : 0)
+        #endif
+        // Reveal cells before expanding so they are visible throughout the
+        // height animation; hide after collapsing once the animation finished.
+        if willExpand {
+            cells.forEach { $0.isHidden = false }
+        }
+        configureHeader(willExpand, messageCount)
+        viewModel.toggleGroup(section)
+        tableView.performBatchUpdates(
+            {
+                // No insert/delete: the row-height change alone drives the
+                // whole animation for this section and everything below it.
+            },
+            completion: { [weak self] _ in
+                guard let self = self else { return }
+                if !willExpand {
+                    cells.forEach { $0.isHidden = true }
+                }
+                self.isAnimatingGroupToggle = false
+                #if DEBUG
+                NSLog("WBK-TOGGLE completion section=%d hidden set=%d", section, willExpand ? 0 : cells.count)
+                #endif
+            }
+        )
     }
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
