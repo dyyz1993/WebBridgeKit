@@ -391,6 +391,7 @@
 "notif_debug.field.image" = "Image";
 "notif_debug.field.url" = "Jump URL";
 "notif_debug.field.group" = "Group";
+"notif_debug.field.copy" = "Copy Content";
 "notif_debug.field.auto_copy" = "Auto Copy";
 "notif_debug.field.archive" = "Archive";
 "notif_debug.field.notif_id" = "Notification ID";
@@ -398,6 +399,8 @@
 "notif_debug.field.method" = "Method";
 "notif_debug.button.send" = "Send";
 "notif_debug.button.done" = "Done";
+"notif_debug.button.copy_url" = "Copy Push URL";
+"notif_debug.copied" = "Push URL copied";
 "notif_debug.waiting" = "Waiting to send...";
 "notif_debug.sending" = "Sending...";
 "notif_debug.error_no_key" = "Error: Bark Key not configured\nPlease configure in Settings";

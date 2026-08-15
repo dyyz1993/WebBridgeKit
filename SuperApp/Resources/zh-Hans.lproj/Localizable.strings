@@ -391,6 +391,7 @@
 "notif_debug.field.image" = "图片";
 "notif_debug.field.url" = "跳转 URL";
 "notif_debug.field.group" = "分组";
+"notif_debug.field.copy" = "复制内容";
 "notif_debug.field.auto_copy" = "自动复制";
 "notif_debug.field.archive" = "归档";
 "notif_debug.field.notif_id" = "通知 ID";
@@ -398,6 +399,8 @@
 "notif_debug.field.method" = "方法";
 "notif_debug.button.send" = "发送";
 "notif_debug.button.done" = "完成";
+"notif_debug.button.copy_url" = "复制推送 URL";
+"notif_debug.copied" = "推送 URL 已复制";
 "notif_debug.waiting" = "等待发送...";
 "notif_debug.sending" = "发送中...";
 "notif_debug.error_no_key" = "错误: Bark Key 未配置\n请在设置中配置密钥";
