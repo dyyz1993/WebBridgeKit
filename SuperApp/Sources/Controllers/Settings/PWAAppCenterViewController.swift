@@ -79,7 +79,10 @@ final class PWAAppCenterViewController: UIViewController {
     private func installHomeView() {
         let rootView = PWAHomeView(
             viewModel: homeViewModel,
-            onSendTest: { [weak self] title, body in self?.openPushExample(.plain, title: title, body: body) },
+            onSendTest: { [weak self] title, body in
+                guard let plain = PushExample.example(id: "plain") else { return }
+                self?.openPushExample(plain, title: title, body: body)
+            },
             onCopyPushURL: { [weak self] in self?.copyPushURL() },
             onConfigurePush: { [weak self] in self?.activateOfficialPush() },
             onSelectApp: { [weak self] appID in self?.showAppDetails(appID: appID) },
@@ -321,9 +324,17 @@ final class PWAAppCenterViewController: UIViewController {
     }
 
     private func showAPIExamples() {
-        let view = PushExampleCatalogView { [weak self] type in
-            self?.openPushExample(type)
-        }
+        let view = PushExampleCatalogView(
+            onTry: { [weak self] example in
+                self?.openPushExample(example)
+            },
+            onCopy: { [weak self] example in
+                self?.copyExampleURL(example)
+            },
+            onOpenSounds: { [weak self] in
+                self?.showRingtonePicker()
+            }
+        )
         navigationController?.pushViewController(UIHostingController(rootView: view), animated: true)
     }
 
@@ -331,6 +342,9 @@ final class PWAAppCenterViewController: UIViewController {
         let alert = UIAlertController(title: "手册与调试", message: nil, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "PWA 接入手册", style: .default) { [weak self] _ in
             self?.navigationController?.pushViewController(PWADeveloperGuideViewController(), animated: true)
+        })
+        alert.addAction(UIAlertAction(title: "推送铃声", style: .default) { [weak self] _ in
+            self?.showRingtonePicker()
         })
         alert.addAction(UIAlertAction(title: "管理自有服务", style: .default) { [weak self] _ in
             self?.navigationController?.pushViewController(GatewayConfigurationViewController(), animated: true)
@@ -364,21 +378,30 @@ final class PWAAppCenterViewController: UIViewController {
     }
 
     private func openPushExample(
-        _ type: PushExampleType,
+        _ example: PushExample,
         title customTitle: String? = nil,
         body customBody: String? = nil
     ) {
+        openPushURL(
+            title: customTitle?.trimmedNonEmpty ?? example.pushTitle,
+            body: customBody?.trimmedNonEmpty ?? example.pushBody,
+            queryItems: example.queryItems
+        )
+    }
+
+    private func copyExampleURL(_ example: PushExample) {
+        copyPushURL(title: example.pushTitle, body: example.pushBody, queryItems: example.queryItems)
+    }
+
+    // MARK: - Push URL actions
+
+    private func openPushURL(title: String, body: String, queryItems: [URLQueryItem]) {
         guard homeViewModel.isPushReady else {
             activateOfficialPush()
             return
         }
 
-        let example = Self.examplePayload(for: type)
-        guard let url = makeBarkURL(
-            title: customTitle?.trimmedNonEmpty ?? example.title,
-            body: customBody?.trimmedNonEmpty ?? example.body,
-            queryItems: example.queryItems
-        ) else {
+        guard let url = makeBarkURL(title: title, body: body, queryItems: queryItems) else {
             showMessage(title: "无法生成测试地址", message: "请检查推送服务地址是否有效。")
             return
         }
@@ -389,6 +412,46 @@ final class PWAAppCenterViewController: UIViewController {
         }
         #endif
         UIApplication.shared.open(url)
+    }
+
+    private func copyPushURL(title: String, body: String, queryItems: [URLQueryItem]) {
+        guard homeViewModel.isPushReady else {
+            activateOfficialPush()
+            return
+        }
+
+        guard let url = makeBarkURL(title: title, body: body, queryItems: queryItems) else {
+            showMessage(title: "无法生成测试地址", message: "请检查推送服务地址是否有效。")
+            return
+        }
+        UIPasteboard.general.string = url.absoluteString
+        HUDService.shared.showSuccess(withStatus: "推送 URL 已复制")
+    }
+
+    // MARK: - Ringtone picker
+
+    private func showRingtonePicker() {
+        let view = PushRingtoneView(
+            onTry: { [weak self] sound in self?.tryRingtone(sound) },
+            onCopy: { [weak self] sound in self?.copyRingtoneURL(sound) }
+        )
+        navigationController?.pushViewController(UIHostingController(rootView: view), animated: true)
+    }
+
+    private func tryRingtone(_ sound: String) {
+        openPushURL(
+            title: "铃声试听",
+            body: "铃声 \(sound) 的推送示例",
+            queryItems: [URLQueryItem(name: "sound", value: sound)]
+        )
+    }
+
+    private func copyRingtoneURL(_ sound: String) {
+        copyPushURL(
+            title: "铃声试听",
+            body: "铃声 \(sound) 的推送示例",
+            queryItems: [URLQueryItem(name: "sound", value: sound)]
+        )
     }
 
     private func makeBarkURL(title: String, body: String, queryItems: [URLQueryItem]) -> URL? {
@@ -404,74 +467,6 @@ final class PWAAppCenterViewController: UIViewController {
         var allowed = CharacterSet.urlPathAllowed
         allowed.remove(charactersIn: "/%?#")
         return value.addingPercentEncoding(withAllowedCharacters: allowed)
-    }
-
-    private static func examplePayload(for type: PushExampleType) -> (
-        title: String,
-        body: String,
-        queryItems: [URLQueryItem]
-    ) {
-        switch type {
-        case .plain:
-            return ("测试通知", "你好，这是一条来自 WebBridgeKit 的消息", [])
-        case .markdown:
-            return (
-                "部署完成",
-                "## 结果\n\n- 状态：成功\n- 环境：生产",
-                [URLQueryItem(name: "contentType", value: "markdown"), URLQueryItem(name: "markdown", value: "1")]
-            )
-        case .otp:
-            return (
-                "登录验证码",
-                "验证码 482901，5 分钟内有效",
-                [
-                    URLQueryItem(name: "contentType", value: "otp"),
-                    URLQueryItem(name: "category", value: "otp"),
-                    URLQueryItem(name: "verificationCode", value: "482901"),
-                    URLQueryItem(name: "ttl", value: "300")
-                ]
-            )
-        case .qr:
-            return (
-                "扫码登录",
-                "使用 WebBridgeKit 扫描此二维码",
-                [
-                    URLQueryItem(name: "contentType", value: "qr"),
-                    URLQueryItem(name: "qrPayload", value: "webbridgekit://login/example")
-                ]
-            )
-        case .image:
-            return (
-                "图片预览",
-                "查看远程图片及加载失败降级",
-                [
-                    URLQueryItem(name: "contentType", value: "image"),
-                    URLQueryItem(name: "image", value: "https://example.com/preview.png")
-                ]
-            )
-        case .chat:
-            return (
-                "Team Chat 新消息",
-                "部署日志已经补充好了",
-                [
-                    URLQueryItem(name: "contentType", value: "chat"),
-                    URLQueryItem(name: "category", value: "chat"),
-                    URLQueryItem(name: "appId", value: "com.webbridgekit.fixture.chat"),
-                    URLQueryItem(name: "route", value: "/conversations/release")
-                ]
-            )
-        case .approval:
-            return (
-                "需要确认生产发布",
-                "版本已经通过检查，等待你的决定",
-                [
-                    URLQueryItem(name: "contentType", value: "approval"),
-                    URLQueryItem(name: "category", value: "approval"),
-                    URLQueryItem(name: "requestId", value: "approval-browser-example"),
-                    URLQueryItem(name: "actionState", value: "pending")
-                ]
-            )
-        }
     }
 
     private func showMessage(title: String, message: String) {
