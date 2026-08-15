@@ -439,9 +439,9 @@ extension InboxViewController: UITableViewDataSource {
             for: indexPath
         ) as! InboxMessageCellWrapper
         cell.configure(with: message)
-        // Collapsed-group rows persist at zero height; hide the whole cell so
-        // its content stays out of the accessibility tree and interaction.
-        cell.isHidden = !viewModel.isRowRevealed(at: indexPath)
+        // Collapsed-group rows persist at zero height with their accessibility
+        // identity stripped until revealed again.
+        cell.setCollapsedState(!viewModel.isRowRevealed(at: indexPath))
         return cell
     }
 
@@ -486,15 +486,11 @@ extension InboxViewController: UITableViewDataSource {
         // Capture cells before the toggle: once heights reach zero,
         // `cellForRow` returns nil for those index paths.
         let cells = indexPaths.compactMap { tableView.cellForRow(at: $0) }
-        #if DEBUG
-        NSLog("WBK-TOGGLE section=%d willExpand=%d rows=%d cells=%d animsEnabled=%d",
-              section, willExpand ? 1 : 0, indexPaths.count, cells.count,
-              UIView.areAnimationsEnabled ? 1 : 0)
-        #endif
         // Reveal cells before expanding so they are visible throughout the
-        // height animation; hide after collapsing once the animation finished.
+        // height animation; strip their accessibility identity after
+        // collapsing once the animation finished.
         if willExpand {
-            cells.forEach { $0.isHidden = false }
+            cells.forEach { $0.setCollapsedState(false) }
         }
         configureHeader(willExpand, messageCount)
         viewModel.toggleGroup(section)
@@ -506,12 +502,9 @@ extension InboxViewController: UITableViewDataSource {
             completion: { [weak self] _ in
                 guard let self = self else { return }
                 if !willExpand {
-                    cells.forEach { $0.isHidden = true }
+                    cells.forEach { $0.setCollapsedState(true) }
                 }
                 self.isAnimatingGroupToggle = false
-                #if DEBUG
-                NSLog("WBK-TOGGLE completion section=%d hidden set=%d", section, willExpand ? 0 : cells.count)
-                #endif
             }
         )
     }
