@@ -411,7 +411,11 @@ final class PWAAppCenterViewController: UIViewController {
             return
         }
         #endif
-        UIApplication.shared.open(url)
+        // Bark opens example URLs in an in-app Safari view, not mobile
+        // Safari: keeping the app foregrounded means the arriving push hits
+        // willPresent and is recorded in the Inbox — a mobile-Safari
+        // roundtrip races APNs latency and the message is lost.
+        WebBrowserManager.shared.openBrowser(url: url, params: WebBrowserParams(), from: self)
     }
 
     private func copyPushURL(title: String, body: String, queryItems: [URLQueryItem]) {
