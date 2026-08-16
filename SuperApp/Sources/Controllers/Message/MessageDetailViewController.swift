@@ -131,8 +131,15 @@ class MessageDetailViewController: UIViewController {
         return stack
     }()
 
-    init(message: StoredMessage) {
+    /// Ordered peer messages of the inbox view that opened this detail;
+    /// enables next/previous navigation. Nil disables navigation.
+    private let peerMessages: [StoredMessage]?
+    private var currentIndex: Int
+
+    init(message: StoredMessage, peerMessages: [StoredMessage]? = nil) {
         self.message = message
+        self.peerMessages = peerMessages
+        self.currentIndex = peerMessages?.firstIndex(where: { $0.id == message.id }) ?? 0
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -150,6 +157,94 @@ class MessageDetailViewController: UIViewController {
         webView.accessibilityIdentifier = "message.detail.markdown"
         setupUI()
         configure()
+        setupNavigation()
+    }
+
+    // MARK: - Peer navigation (next/previous)
+
+    private lazy var nextNavButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(LucideIcon.chevronDown.templateImage(pointSize: ThemeTokens.Icons.Sizes.md), for: .normal)
+        button.tintColor = ThemeTokens.Color.primary
+        button.accessibilityIdentifier = "message.detail.next"
+        button.accessibilityLabel = L10n.tr("message.detail.next")
+        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+        return button
+    }()
+
+    private lazy var prevNavButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(LucideIcon.arrowUp.templateImage(pointSize: ThemeTokens.Icons.Sizes.md), for: .normal)
+        button.tintColor = ThemeTokens.Color.primary
+        button.accessibilityIdentifier = "message.detail.prev"
+        button.accessibilityLabel = L10n.tr("message.detail.prev")
+        button.addTarget(self, action: #selector(prevTapped), for: .touchUpInside)
+        return button
+    }()
+
+    /// Unread indicator on the next button: the main cue for the fast
+    /// review loop — a red dot means more unread messages follow.
+    private let nextUnreadDot: UIView = {
+        let dot = UIView()
+        dot.backgroundColor = ThemeTokens.Color.error
+        dot.layer.cornerRadius = 3.5
+        dot.isHidden = true
+        dot.accessibilityIdentifier = "message.detail.next.unread"
+        return dot
+    }()
+
+    private func setupNavigation() {
+        guard peerMessages != nil else { return }
+        nextNavButton.addSubview(nextUnreadDot)
+        nextUnreadDot.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(2)
+            make.trailing.equalToSuperview().offset(2)
+            make.width.height.equalTo(7)
+        }
+        navigationItem.rightBarButtonItems = [
+            UIBarButtonItem(customView: nextNavButton),
+            UIBarButtonItem(customView: prevNavButton)
+        ]
+        refreshNavigationState()
+    }
+
+    private func refreshNavigationState() {
+        guard let peers = peerMessages else { return }
+        prevNavButton.isEnabled = currentIndex > 0
+        prevNavButton.tintColor = prevNavButton.isEnabled
+            ? ThemeTokens.Color.primary
+            : ThemeTokens.Color.textTertiary
+        let hasNext = currentIndex < peers.count - 1
+        nextNavButton.isEnabled = hasNext
+        nextNavButton.tintColor = nextNavButton.isEnabled
+            ? ThemeTokens.Color.primary
+            : ThemeTokens.Color.textTertiary
+        nextUnreadDot.isHidden = !(hasNext && !peers[currentIndex + 1].isRead)
+    }
+
+    @objc private func nextTapped() {
+        advance(toOffset: 1)
+    }
+
+    @objc private func prevTapped() {
+        advance(toOffset: -1)
+    }
+
+    private func advance(toOffset offset: Int) {
+        guard let peers = peerMessages else { return }
+        let target = currentIndex + offset
+        guard peers.indices.contains(target) else { return }
+        let targetMessage = peers[target]
+        if !targetMessage.isRead {
+            Task { await MessageEngine.shared.markAsRead(id: targetMessage.id) }
+        }
+        let replacement = MessageDetailViewController(message: targetMessage, peerMessages: peers)
+        guard let navigationController = navigationController else { return }
+        // Replace the top of the stack instead of pushing: reviewing many
+        // messages must not pile up history that Back would walk through.
+        var stack = navigationController.viewControllers
+        stack[stack.count - 1] = replacement
+        navigationController.setViewControllers(stack, animated: true)
     }
 
     private func setupUI() {

@@ -618,3 +618,35 @@
 "gateway.camera.denied.message" = "You can still paste a gateway configuration or allow camera access in Settings.";
 "gateway.settings" = "Settings";
 "gateway.cancel" = "Cancel";
+
+/* Inbox group swipe actions */
+"inbox.group.pin" = "Pin";
+"inbox.group.unpin" = "Unpin";
+"inbox.group.delete" = "Delete";
+"inbox.group.delete.title" = "Delete Group";
+"inbox.group.delete.message" = "This deletes all %d messages in \"%@\". This cannot be undone.";
+"inbox.group.delete.confirm" = "Delete";
+"inbox.group.delete.cancel" = "Cancel";
+
+/* Message detail navigation */
+"message.detail.next" = "Next";
+"message.detail.prev" = "Previous";
+
+/* Quick review (card triage) */
+"review.title" = "Quick Review";
+"review.entry" = "Review";
+"review.empty" = "No unread messages";
+"review.mark_read" = "Read";
+"review.skip" = "Skip";
+"review.delete" = "Delete";
+"review.tap_for_detail" = "Tap the card for details";
+"review.done.title" = "All Done";
+"review.done.summary" = "%d read · %d deleted · %d skipped";
+"review.done.finish" = "Done";
+"review.next" = "Next";
+"review.coach.title" = "Swipe Gestures";
+"review.coach.start" = "Start Reviewing";
+"review.coach.back" = "Swipe from the left edge to exit anytime";
+"review.coach.next.hint" = "Mark read and go to the next";
+"review.coach.skip.hint" = "Skip, keep unread";
+"review.coach.delete.hint" = "Delete this message";

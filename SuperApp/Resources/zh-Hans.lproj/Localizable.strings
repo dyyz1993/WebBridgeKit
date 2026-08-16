@@ -618,3 +618,35 @@
 "gateway.camera.denied.message" = "你仍可粘贴部署者提供的网关配置，或前往系统设置允许相机访问。";
 "gateway.settings" = "系统设置";
 "gateway.cancel" = "取消";
+
+/* Inbox group swipe actions */
+"inbox.group.pin" = "置顶";
+"inbox.group.unpin" = "取消置顶";
+"inbox.group.delete" = "删除";
+"inbox.group.delete.title" = "删除分组";
+"inbox.group.delete.message" = "将删除「%@」中的全部 %d 条消息，此操作不可撤销。";
+"inbox.group.delete.confirm" = "删除";
+"inbox.group.delete.cancel" = "取消";
+
+/* Message detail navigation */
+"message.detail.next" = "下一条";
+"message.detail.prev" = "上一条";
+
+/* Quick review (card triage) */
+"review.title" = "快速审阅";
+"review.entry" = "快速审阅";
+"review.empty" = "没有未读消息";
+"review.mark_read" = "已读";
+"review.skip" = "跳过";
+"review.delete" = "删除";
+"review.tap_for_detail" = "点按卡片查看详情";
+"review.done.title" = "处理完成";
+"review.done.summary" = "已读 %d 条 · 删除 %d 条 · 跳过 %d 条";
+"review.done.finish" = "完成";
+"review.next" = "下一条";
+"review.coach.title" = "滑动手势";
+"review.coach.start" = "开始审阅";
+"review.coach.back" = "屏幕左缘右滑可随时退出";
+"review.coach.next.hint" = "已读并进入下一条";
+"review.coach.skip.hint" = "跳过，保留未读";
+"review.coach.delete.hint" = "删除这条消息";

@@ -38,6 +38,17 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         return button
     }()
 
+    private lazy var reviewButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle(L10n.tr("review.entry"), for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.metadata
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
+        button.contentEdgeInsets = .zero
+        button.accessibilityIdentifier = "inbox.review.entry"
+        button.addTarget(self, action: #selector(openReview), for: .touchUpInside)
+        return button
+    }()
+
     private let searchField = WBKSearchField(placeholder: L10n.tr("inbox.search.placeholder"))
 
     private let displayModeControl: UISegmentedControl = {
@@ -152,6 +163,9 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private var isAnimatingGroupToggle = false
     /// Marks the next reload as an animated display-mode transition.
     private var pendingAnimatedReload = false
+    /// Header whose swipe actions are currently revealed; opening another
+    /// closes this one first.
+    private weak var openSwipeHeader: InboxGroupHeaderCell?
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -186,10 +200,16 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private func setupScaffold() {
         let header = UIView()
         header.addSubview(titleLabel)
+        header.addSubview(reviewButton)
         header.addSubview(clearAllButton)
         titleLabel.snp.makeConstraints { make in
             make.leading.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(clearAllButton.snp.leading).offset(-ThemeTokens.Spacing.md)
+            make.trailing.lessThanOrEqualTo(reviewButton.snp.leading).offset(-ThemeTokens.Spacing.md)
+        }
+        reviewButton.snp.makeConstraints { make in
+            make.trailing.equalTo(clearAllButton.snp.leading).offset(-ThemeTokens.Spacing.md)
+            make.centerY.equalToSuperview()
+            make.height.greaterThanOrEqualTo(32)
         }
         clearAllButton.snp.makeConstraints { make in
             make.trailing.centerY.equalToSuperview()
@@ -233,6 +253,20 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.refreshControl.endRefreshing()
         }
+    }
+
+    /// Opens the card-stack triage flow over the current inbox order,
+    /// starting at the first unread message.
+    @objc private func openReview() {
+        let ordered = viewModel.orderedMessages()
+        let unread = ordered.filter { !$0.isRead }
+        guard !unread.isEmpty, let firstIndex = ordered.firstIndex(where: { $0.id == unread[0].id }) else {
+            reviewButton.isEnabled = false
+            return
+        }
+        reviewButton.isEnabled = true
+        let queue = Array(ordered[firstIndex...])
+        navigationController?.pushViewController(MessageReviewViewController(messages: queue), animated: true)
     }
 
     @objc private func displayModeChanged() {
@@ -345,6 +379,14 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             })
             .disposed(by: rx)
 
+        output.unreadCount
+            .drive(onNext: { [weak self] count in
+                guard let self = self else { return }
+                self.reviewButton.isEnabled = count > 0
+                self.reviewButton.alpha = count > 0 ? 1 : 0.4
+            })
+            .disposed(by: rx)
+
         output.selectedMessage
             .drive(onNext: { [weak self] message in
                 self?.navigateToDetail(message)
@@ -404,7 +446,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
 
     private func navigateToDetail(_ message: StoredMessage) {
         navigationController?.setNavigationBarHidden(false, animated: true)
-        let detailVC = MessageDetailViewController(message: message)
+        let detailVC = MessageDetailViewController(message: message, peerMessages: viewModel.orderedMessages())
         navigationController?.pushViewController(detailVC, animated: true)
     }
 }
@@ -465,6 +507,7 @@ extension InboxViewController: UITableViewDataSource {
                 count: count,
                 isExpanded: isExpanded,
                 hasUnread: self.viewModel.groupHasUnread(section),
+                isPinned: self.viewModel.isGroupPinned(section),
                 accessibilityIdentifier: "notification.group.\(self.viewModel.groupIdentifier(section).slugIdentifier)"
             )
         }
@@ -473,7 +516,40 @@ extension InboxViewController: UITableViewDataSource {
             guard let self = self, !self.isAnimatingGroupToggle else { return }
             self.toggleGroupAnimated(section: section, configureHeader: configureHeader)
         }
+        header.onPinToggle = { [weak self] in
+            self?.viewModel.togglePinGroup(section)
+        }
+        header.onDelete = { [weak self] in
+            self?.confirmDeleteGroup(section)
+        }
+        header.onSwipeReveal = { [weak self, weak header] in
+            guard let self = self else { return }
+            if let open = self.openSwipeHeader, open !== header {
+                open.closeActions(animated: true)
+            }
+            self.openSwipeHeader = header
+        }
         return header
+    }
+
+    /// Group deletion is a bulk destructive action; confirm before wiping
+    /// every message in the section.
+    private func confirmDeleteGroup(_ section: Int) {
+        let title = viewModel.groupHeaderTitle(section)
+        let count = viewModel.numberOfMessagesInGroup(section)
+        let alert = UIAlertController(
+            title: L10n.tr("inbox.group.delete.title"),
+            message: L10n.tr("inbox.group.delete.message", title, count),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("inbox.group.delete.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(
+            title: L10n.tr("inbox.group.delete.confirm"),
+            style: .destructive
+        ) { [weak self] _ in
+            self?.viewModel.deleteGroup(section)
+        })
+        present(alert, animated: true)
     }
 
     /// Height-morph accordion: collapsed rows stay in the table and collapse to
