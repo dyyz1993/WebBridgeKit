@@ -26,6 +26,15 @@ struct PushExample: Identifiable {
     let pushTitle: String
     let pushBody: String
     let queryItems: [URLQueryItem]
+    /// Optional in-card notification preview (Bark ships static screenshots
+    /// for its icon/group/critical/copy cards; we render them natively).
+    var preview: Preview? = nil
+
+    enum Preview {
+        case banner(title: String, body: String, iconURL: URL? = nil, alertStyle: Bool = false)
+        case grouped(groupName: String, count: Int, title: String, body: String)
+        case autoCopy(title: String, body: String, value: String)
+    }
 }
 
 extension PushExample {
@@ -158,7 +167,12 @@ extension PushExample {
                     name: "icon",
                     value: "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/logo.png"
                 )
-            ]
+            ],
+            preview: .banner(
+                title: "自定义图标",
+                body: "通知左侧图标已替换为示例图片",
+                iconURL: URL(string: "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/logo.png")
+            )
         ),
         PushExample(
             id: "group",
@@ -170,7 +184,13 @@ extension PushExample {
             pushBody: "分组示例：feature 分支单元测试失败",
             queryItems: [
                 URLQueryItem(name: "group", value: "dev")
-            ]
+            ],
+            preview: .grouped(
+                groupName: "开发通知",
+                count: 3,
+                title: "开发通知",
+                body: "分组示例：feature 分支单元测试失败"
+            )
         ),
         PushExample(
             id: "timeSensitive",
@@ -195,7 +215,12 @@ extension PushExample {
             queryItems: [
                 URLQueryItem(name: "level", value: "critical"),
                 URLQueryItem(name: "volume", value: "5")
-            ]
+            ],
+            preview: .banner(
+                title: "重要警告",
+                body: "Something critical has happened!",
+                alertStyle: true
+            )
         ),
         PushExample(
             id: "badge",
@@ -249,7 +274,12 @@ extension PushExample {
             queryItems: [
                 URLQueryItem(name: "copy", value: "WBK-482901"),
                 URLQueryItem(name: "autoCopy", value: "1")
-            ]
+            ],
+            preview: .autoCopy(
+                title: "自动复制",
+                body: "验证码已随通知附带，可自动复制",
+                value: "WBK-482901"
+            )
         ),
         PushExample(
             id: "call",
@@ -331,8 +361,10 @@ struct PushExampleCatalogView: View {
     }
 
     private func exampleCard(_ example: PushExample) -> some View {
-        // Buttons must stay siblings, not nest inside the card button:
-        // nested SwiftUI buttons swallow each other's taps.
+        // Vertical rhythm mirrors Bark's PreviewCardCell: title row with
+        // actions, then the notification preview, then the parameter spec,
+        // and the description last. Buttons stay siblings, not nested in
+        // the card button: nested SwiftUI buttons swallow each other's taps.
         VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
             HStack(spacing: ThemeTokens.Spacing.md) {
                 Button {
@@ -346,15 +378,10 @@ struct PushExampleCatalogView: View {
                             .background(Color(ThemeTokens.Color.primarySoft))
                             .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.sm))
 
-                        VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xs) {
-                            Text(example.title)
-                                .font(.system(size: ThemeTokens.Typography.rowTitle.pointSize, weight: .medium))
-                                .foregroundColor(Color.appText)
-                            Text(example.subtitle)
-                                .font(Font.app(ThemeTokens.Typography.metadata))
-                                .foregroundColor(Color.appTextSecondary)
-                                .multilineTextAlignment(.leading)
-                        }
+                        Text(example.title)
+                            .font(.system(size: ThemeTokens.Typography.rowTitle.pointSize, weight: .medium))
+                            .foregroundColor(Color.appText)
+                            .multilineTextAlignment(.leading)
                     }
                     .contentShape(Rectangle())
                 }
@@ -379,6 +406,12 @@ struct PushExampleCatalogView: View {
                 }
             }
 
+            if let preview = example.preview {
+                NotificationExamplePreview(preview: preview)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("pushExamples.\(example.id).preview")
+            }
+
             if let spec = example.spec {
                 Text(spec)
                     .font(Font.app(ThemeTokens.Typography.monospaceMeta))
@@ -386,6 +419,11 @@ struct PushExampleCatalogView: View {
                     .lineLimit(2)
                     .truncationMode(.tail)
             }
+
+            // Description sits at the card bottom, like Bark's notice label.
+            Text(example.subtitle)
+                .font(Font.app(ThemeTokens.Typography.metadata))
+                .foregroundColor(Color.appTextSecondary)
 
             if example.id == "sound" {
                 Button {

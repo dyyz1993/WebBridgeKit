@@ -159,7 +159,10 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
         ).firstMatch
         XCTAssertTrue(markdownSpec.waitForExistence(timeout: 5), "Markdown card should show its parameter spec")
 
-        // The sound card links straight into the ringtone picker.
+        // The sound card exposes the ringtone-picker link. Don't navigate
+        // through it here: the back tap races with incoming push banners
+        // (they overlay the nav bar) and once routed the test to the Inbox.
+        // The picker itself is covered by testRingtonePickerLoadsBundledSounds.
         let soundMore = app.buttons["pushExamples.sound.more"]
         var soundAttempts = 0
         while !soundMore.exists && soundAttempts < 8 {
@@ -167,12 +170,12 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
             soundAttempts += 1
         }
         XCTAssertTrue(soundMore.waitForExistence(timeout: 5), "Sound card should link to the ringtone picker")
-        soundMore.tap()
-        XCTAssertTrue(app.buttons["pushRingtones.alarm"].waitForExistence(timeout: 10), "Ringtone picker should open from the sound card")
-        attachScreenshot(named: "catalog-sound-links-ringtones")
-        app.navigationBars.buttons.firstMatch.tap()
 
-        // Presentation and behavior groups render below the fold.
+        // Presentation and behavior groups render below the fold. Return to
+        // the top first so the swipe loop below starts from a known offset.
+        for _ in 0..<3 {
+            app.swipeDown()
+        }
         let expectedRows = [
             "pushExamples.sound",
             "pushExamples.critical",
@@ -189,6 +192,31 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
                 attempts += 1
             }
             XCTAssertTrue(row.waitForExistence(timeout: 5), "\(identifier) card should render")
+        }
+
+        // Cards with previews render the native notification mock banner
+        // (Bark's illustration treatment). Previews are plain views, not
+        // buttons, so query across element types. The previous loop ends at
+        // the list bottom; reset to the top before walking down again.
+        for _ in 0..<3 {
+            app.swipeDown()
+        }
+        let expectedPreviews = [
+            "pushExamples.icon.preview",
+            "pushExamples.group.preview",
+            "pushExamples.critical.preview",
+            "pushExamples.copy.preview"
+        ]
+        for identifier in expectedPreviews {
+            let preview = app.descendants(matching: .any).matching(
+                NSPredicate(format: "identifier == %@", identifier)
+            ).firstMatch
+            var attempts = 0
+            while !preview.exists && attempts < 8 {
+                app.swipeUp()
+                attempts += 1
+            }
+            XCTAssertTrue(preview.waitForExistence(timeout: 5), "\(identifier) should render")
         }
         attachScreenshot(named: "catalog-behavior-group")
     }
