@@ -36,8 +36,12 @@ final class PushExampleCatalogTests: XCTestCase {
         addUIInterruptionMonitor(withDescription: "系统权限弹窗") { alert in
             Self.tapAffirmative(on: alert)
         }
+        // Only the send button sends now (card taps are inert); the test
+        // drives the send buttons, and in-app sending keeps the app
+        // foregrounded so willPresent records every delivery.
         app.launchArguments = [
             "--UITesting",
+            "--uitest-inapp-send",
             "--push-server=https://wbk.shanbox.19930810.xyz:8443"
         ]
         app.launchEnvironment = [
@@ -75,14 +79,16 @@ final class PushExampleCatalogTests: XCTestCase {
         XCTAssertTrue(examplesButton.waitForExistence(timeout: 15), "Home should expose the API examples entry")
         examplesButton.tap()
 
-        // Phase 1 — fire every example from the catalog in one pass. Each
-        // card opens the URL in the IN-APP browser (the app never leaves the
-        // foreground, so every push arrives via willPresent and is recorded);
-        // closing the browser returns straight to the catalog, ready for the
-        // next card. Per-example trips back through the home tab proved
-        // fragile: scroll positions virtualize the entry card away.
+        // Phase 1 — fire every example from the catalog in one pass. Only
+        // the send button triggers a send (card taps are inert by design);
+        // under --uitest-inapp-send it opens the in-app browser so the app
+        // never leaves the foreground and every push arrives via
+        // willPresent and is recorded. Closing the browser returns straight
+        // to the catalog, ready for the next card. Per-example trips back
+        // through the home tab proved fragile: scroll positions virtualize
+        // the entry card away.
         for example in Self.examples {
-            var row = app.buttons["pushExamples.\(example.type)"]
+            var row = app.buttons["pushExamples.\(example.type).send"]
             if !row.waitForExistence(timeout: 3) {
                 // Closing the in-app browser can land back on the catalog or
                 // pop all the way to home depending on presentation context.
@@ -96,7 +102,7 @@ final class PushExampleCatalogTests: XCTestCase {
                 if examplesButton.exists {
                     examplesButton.tap()
                 }
-                row = app.buttons["pushExamples.\(example.type)"]
+                row = app.buttons["pushExamples.\(example.type).send"]
             }
             XCTAssertTrue(row.waitForExistence(timeout: 10), "\(example.type) example row should exist")
             var scrollAttempts = 0
@@ -184,8 +190,8 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
         }
         examplesButton.tap()
 
-        // Content group keeps the historical pushExamples.<type> identifiers.
-        let plain = app.buttons["pushExamples.plain"]
+        // Cards are inert; their send button proves the card rendered.
+        let plain = app.buttons["pushExamples.plain.send"]
         XCTAssertTrue(plain.waitForExistence(timeout: 10), "Content-type cards should render")
         attachScreenshot(named: "catalog-content-group")
 
@@ -212,6 +218,8 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
 
         // Presentation and behavior groups render below the fold. Return to
         // the top first so the swipe loop below starts from a known offset.
+        // Cards are no longer buttons (only send/copy act), so row presence
+        // is asserted through each card's send button.
         for _ in 0..<3 {
             app.swipeDown()
         }
@@ -224,7 +232,7 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
             "pushExamples.replace"
         ]
         for identifier in expectedRows {
-            let row = app.buttons[identifier]
+            let row = app.buttons["\(identifier).send"]
             var attempts = 0
             while !row.exists && attempts < 8 {
                 app.swipeUp()

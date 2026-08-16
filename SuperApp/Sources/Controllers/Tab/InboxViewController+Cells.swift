@@ -48,9 +48,9 @@ class InboxMessageCellWrapper: UITableViewCell {
     }
 
     private func setupUI() {
-        backgroundColor = ThemeTokens.Color.background
-        selectionStyle = .none
-        contentView.backgroundColor = ThemeTokens.Color.background
+        backgroundView = UIView()
+        backgroundView?.backgroundColor = ThemeTokens.Color.background
+        contentView.backgroundColor = .clear
         // The accordion collapses rows by animating their height to zero; the
         // card content must be clipped so the compression reads as folding.
         contentView.clipsToBounds = true
@@ -63,16 +63,15 @@ class InboxMessageCellWrapper: UITableViewCell {
         contentView.addSubview(cardView)
         cardView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            // During accordion height animation the cell can be shorter than
-            // the card's natural height; pinning both edges with required
-            // equalities creates negative-height conflicts mid-animation and
-            // the engine breaks layout arbitrarily (cards stick to one edge).
-            // Instead: keep the card centered, let inequalities cap its size,
-            // and let the low-priority height yield while compressing.
-            make.centerY.equalToSuperview()
-            make.top.greaterThanOrEqualToSuperview().offset(ThemeTokens.Spacing.xs)
-            make.bottom.lessThanOrEqualToSuperview().offset(-ThemeTokens.Spacing.xs)
-            make.height.equalTo(92 - ThemeTokens.Spacing.xs * 2).priority(.low)
+            // Top pinned + bottom at priority 999: at the resting 92pt row
+            // this yields the intended 84pt card with 4pt insets (fully
+            // determined, no ambiguity), while the accordion's height
+            // animation to zero can break the bottom edge without conflict —
+            // the card then compresses from its top edge, clipped by bounds.
+            // A centerY+inequalities variant (tried earlier) left the height
+            // underconstrained and cells resolved to random sizes.
+            make.top.equalToSuperview().offset(ThemeTokens.Spacing.xs)
+            make.bottom.equalToSuperview().offset(-ThemeTokens.Spacing.xs).priority(999)
         }
 
         unreadAccent.isHidden = true
@@ -382,7 +381,7 @@ final class GroupChevronIndicator: UIView {
 
 // MARK: - InboxGroupHeaderCell
 
-class InboxGroupHeaderCell: UITableViewCell {
+class InboxGroupHeaderCell: UITableViewHeaderFooterView {
 
     static let identifier = "InboxGroupHeaderCell"
 
@@ -424,8 +423,8 @@ class InboxGroupHeaderCell: UITableViewCell {
 
     var onTap: (() -> Void)?
 
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    override init(reuseIdentifier: String?) {
+        super.init(reuseIdentifier: reuseIdentifier)
         setupUI()
     }
 
@@ -434,9 +433,9 @@ class InboxGroupHeaderCell: UITableViewCell {
     }
 
     private func setupUI() {
-        backgroundColor = ThemeTokens.Color.background
-        selectionStyle = .none
-        contentView.backgroundColor = ThemeTokens.Color.background
+        backgroundView = UIView()
+        backgroundView?.backgroundColor = ThemeTokens.Color.background
+        contentView.backgroundColor = .clear
         accessibilityIdentifier = "InboxGroupHeaderCell"
         contentView.accessibilityIdentifier = "InboxGroupHeaderCell.content"
         containerView.accessibilityIdentifier = "InboxGroupHeaderCell.container"
@@ -455,8 +454,14 @@ class InboxGroupHeaderCell: UITableViewCell {
         containerView.addSubview(chevronIndicator)
 
         containerView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(ThemeTokens.Spacing.sm)
+            // Flush to the header's bottom edge so the title-to-card distance
+            // is just the card's own top inset — the tightest attachment
+            // short of redesigning the row. No top anchor: bottom + height
+            // must determine the frame alone; adding a top constraint
+            // over-constrains, the height breaks, and the title silently
+            // falls back to vertically centered.
             make.bottom.equalToSuperview()
+            make.height.equalTo(28)
             make.leading.trailing.equalToSuperview()
         }
 

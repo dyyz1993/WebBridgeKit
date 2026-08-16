@@ -46,6 +46,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // APNs sandbox tokens rotate across reinstalls; refresh silently on
         // every launch so the server always holds the current one.
         if !isUITesting {
+            // Mirror bundled ringtones into Library/Sounds so named push
+            // sounds resolve even if bundle-root lookup misbehaves on device.
+            DispatchQueue.global(qos: .utility).async {
+                PushSoundInstaller.install()
+            }
             DispatchQueue.main.async {
                 Self.refreshOfficialPushRegistration()
             }

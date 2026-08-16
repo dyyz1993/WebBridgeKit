@@ -363,30 +363,24 @@ struct PushExampleCatalogView: View {
     private func exampleCard(_ example: PushExample) -> some View {
         // Vertical rhythm mirrors Bark's PreviewCardCell: title row with
         // actions, then the notification preview, then the parameter spec,
-        // and the description last. Buttons stay siblings, not nested in
-        // the card button: nested SwiftUI buttons swallow each other's taps.
+        // and the description last. The title area is deliberately NOT
+        // tappable — only the explicit send button opens Safari, so
+        // accidental card taps cannot fire pushes.
         VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
             HStack(spacing: ThemeTokens.Spacing.md) {
-                Button {
-                    onTry(example)
-                } label: {
-                    HStack(spacing: ThemeTokens.Spacing.md) {
-                        Image(uiImage: example.icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
-                            .renderingMode(.template)
-                            .foregroundColor(Color.appPrimary)
-                            .frame(width: 36, height: 36)
-                            .background(Color(ThemeTokens.Color.primarySoft))
-                            .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.sm))
+                HStack(spacing: ThemeTokens.Spacing.md) {
+                    Image(uiImage: example.icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
+                        .renderingMode(.template)
+                        .foregroundColor(Color.appPrimary)
+                        .frame(width: 36, height: 36)
+                        .background(Color(ThemeTokens.Color.primarySoft))
+                        .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.sm))
 
-                        Text(example.title)
-                            .font(.system(size: ThemeTokens.Typography.rowTitle.pointSize, weight: .medium))
-                            .foregroundColor(Color.appText)
-                            .multilineTextAlignment(.leading)
-                    }
-                    .contentShape(Rectangle())
+                    Text(example.title)
+                        .font(.system(size: ThemeTokens.Typography.rowTitle.pointSize, weight: .medium))
+                        .foregroundColor(Color.appText)
+                        .multilineTextAlignment(.leading)
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("pushExamples.\(example.id)")
 
                 Spacer()
 
