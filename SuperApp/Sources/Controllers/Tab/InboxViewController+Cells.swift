@@ -37,12 +37,14 @@ class InboxMessageCellWrapper: UITableViewCell {
     }
 
     /// Cancels any in-flight group-entrance animation so a cell reused while
-    /// animating never renders with a stale alpha/transform.
+    /// animating never renders with a stale alpha/transform. A collapsed
+    /// row's cached identity must not leak into the next configuration.
     override func prepareForReuse() {
         super.prepareForReuse()
         contentView.layer.removeAllAnimations()
         contentView.alpha = 1
         contentView.transform = .identity
+        collapsedIdentity = nil
     }
 
     private func setupUI() {
@@ -61,7 +63,16 @@ class InboxMessageCellWrapper: UITableViewCell {
         contentView.addSubview(cardView)
         cardView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            make.top.bottom.equalToSuperview().inset(ThemeTokens.Spacing.xs)
+            // During accordion height animation the cell can be shorter than
+            // the card's natural height; pinning both edges with required
+            // equalities creates negative-height conflicts mid-animation and
+            // the engine breaks layout arbitrarily (cards stick to one edge).
+            // Instead: keep the card centered, let inequalities cap its size,
+            // and let the low-priority height yield while compressing.
+            make.centerY.equalToSuperview()
+            make.top.greaterThanOrEqualToSuperview().offset(ThemeTokens.Spacing.xs)
+            make.bottom.lessThanOrEqualToSuperview().offset(-ThemeTokens.Spacing.xs)
+            make.height.equalTo(92 - ThemeTokens.Spacing.xs * 2).priority(.low)
         }
 
         unreadAccent.isHidden = true
@@ -139,7 +150,31 @@ class InboxMessageCellWrapper: UITableViewCell {
 
     }
 
+    /// Collapsed rows persist at zero height (content clipped away, impossible
+    /// to hit-test); their accessibility subtree is additionally hidden and
+    /// identifiers stripped so hidden cards are not exposed to VoiceOver or UI
+    /// tests. Both matter: zero-frame descendant elements can break assistive
+    /// snapshots when enough of them accumulate. Visual hiding is NOT needed —
+    /// zero height plus clipping already renders nothing.
+    func setCollapsedAccessibility(_ collapsed: Bool) {
+        accessibilityElementsHidden = collapsed
+        if collapsed {
+            if accessibilityIdentifier != nil {
+                collapsedIdentity = accessibilityIdentifier
+            }
+            accessibilityIdentifier = nil
+            cardView.accessibilityIdentifier = nil
+        } else if let identity = collapsedIdentity {
+            accessibilityIdentifier = identity
+            cardView.accessibilityIdentifier = "\(identity).content"
+        }
+        collapsedIdentity = collapsed ? collapsedIdentity : nil
+    }
+
+    private var collapsedIdentity: String?
+
     func configure(with message: StoredMessage) {
+        collapsedIdentity = nil
         let presentation = NotificationPresentation(message: message)
         accessibilityIdentifier = "notification.card.\(message.id)"
         cardView.accessibilityIdentifier = "notification.card.\(message.id).content"
@@ -492,9 +527,6 @@ class InboxGroupHeaderCell: UITableViewCell {
     }
 
     @objc private func handlePress(_ gesture: UILongPressGestureRecognizer) {
-        #if DEBUG
-        NSLog("WBK-PRESS state=%d id=%@", gesture.state.rawValue, accessibilityIdentifier ?? "?")
-        #endif
         switch gesture.state {
         case .began:
             setPressed(true)
