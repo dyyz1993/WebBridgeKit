@@ -56,14 +56,27 @@ final class InboxGroupAnimationTests: XCTestCase {
             "notification.group.system-notices",
             "notification.group.agent-tasks",
             "notification.group.design-reviews",
-            "notification.group.login-requests"
+            "notification.group.login-requests",
+            "notification.group.weather-updates",
+            "notification.group.shop-orders",
+            "notification.group.shop-promo",
+            "notification.group.game-invites",
+            "notification.group.other"
         ]
         func firstHittable() -> XCUIElement? {
-            candidates.compactMap { identifier in
-                let element = app.descendants(matching: .any)
-                    .matching(identifier: identifier).firstMatch
-                return element.exists && element.isHittable ? element : nil
-            }.first
+            let visible = candidates.compactMap { identifier -> XCUIElement? in
+                guard isOnScreen(identifier, timeout: 0.2) else { return nil }
+                return headerElement(identifier)
+            }
+            if let header = visible.first { return header }
+            // Deep scrolls can land on groups outside the candidate list; fall
+            // back to any header-shaped element currently on screen.
+            return app.otherElements.matching(
+                NSPredicate(format: "identifier BEGINSWITH 'notification.group.'")
+            ).allElementsBoundByIndex.first {
+                let frame = $0.frame
+                return frame.height > 0 && frame.minY >= 0 && frame.maxY <= app.frame.maxY
+            }
         }
         if let header = firstHittable() { return header }
         app.swipeUp()
@@ -87,19 +100,11 @@ final class InboxGroupAnimationTests: XCTestCase {
 
         // Round 1: collapse (fold animation + below sections sliding up),
         // then expand (staggered slide-from-header entrance).
-        print("[ANIM-DIAG] pre-tap count=\(expandedCardCount) hittable=\(header.isHittable) id=\(header.identifier)")
-        saveScreenshot("/tmp/wbk-anim/pre-tap.png")
-        // Tap the header's Button (the actual cell carrying the gesture); the
-        // outer container Other shares the identifier but does not deliver
-        // touches to the cell's gesture recognizer.
-        let headerButton = app.buttons.matching(
-            NSPredicate(format: "identifier == %@", header.identifier as String? ?? "")
-        ).firstMatch
-        let tapTarget: XCUIElement = headerButton.exists ? headerButton : header
+        // Round 1: collapse (fold animation + below sections sliding up),
+        // then expand (staggered slide-from-header entrance).
         mark("collapse1")
-        tapTarget.tap()
+        header.tap()
         sleep(1)
-        print("[ANIM-DIAG] post-tap count=\(notificationCardQuery.count) headerValue=\(header.value ?? "nil")")
         saveScreenshot("/tmp/wbk-anim/groups-collapsed.png")
         let collapsedCardCount = notificationCardQuery.count
         XCTAssertLessThan(collapsedCardCount, expandedCardCount, "Collapsing a group should hide its cards")
@@ -124,6 +129,14 @@ final class InboxGroupAnimationTests: XCTestCase {
         header.tap()
         sleep(1)
 
+        // Rapid double toggle (350ms) guards the animation-overlap mutex.
+        mark("rapid-1")
+        header.tap()
+        usleep(350_000)
+        mark("rapid-2")
+        header.tap()
+        sleep(2)
+
         // Display-mode transitions should cross-dissolve rather than snap.
         mark("mode-latest")
         displayMode.buttons["最新"].tap()
@@ -134,5 +147,91 @@ final class InboxGroupAnimationTests: XCTestCase {
         sleep(1)
         saveScreenshot("/tmp/wbk-anim/mode-groups.png")
         XCTAssertEqual(notificationCardQuery.count, expandedCardCount)
+    }
+
+    /// Group headers surface as `otherElements` with `notification.group.*`
+    /// identifiers; resolving against that small collection keeps the
+    /// accessibility scan cheap. Full-tree `descendants(.any)` queries
+    /// saturate the app's main thread for seconds and freeze the UI under
+    /// automation.
+    private func headerElement(_ identifier: String) -> XCUIElement {
+        app.otherElements.matching(identifier: identifier).firstMatch
+    }
+
+    /// `isHittable` can hard-fail when the snapshot goes stale mid-scroll;
+    /// `waitForExistence` polls safely and the frame check filters off-screen
+    /// headers without hitting the same resolution path.
+    private func isOnScreen(_ identifier: String, timeout: TimeInterval = 1) -> Bool {
+        let element = headerElement(identifier)
+        guard element.waitForExistence(timeout: timeout) else { return false }
+        let frame = element.frame
+        return frame.height > 0 && frame.minY >= 0 && frame.maxY <= app.frame.maxY
+    }
+
+    /// Card-count queries right after an animation can catch a mid-churn
+    /// accessibility snapshot and return nonsense (e.g. 0); retry briefly.
+    private func settledCardCount() -> Int {
+        for _ in 0..<5 {
+            let count = notificationCardQuery.count
+            if count > 0 { return count }
+            sleep(1)
+        }
+        return notificationCardQuery.count
+    }
+
+    /// Deep-list toggle at a deterministic scroll position. The app itself
+    /// scrolls to the target group via the `--uitest-scroll-group` launch
+    /// hook; synthetic XCUITest swipes race iOS 26 snapshot resolution and
+    /// drop taps mid-scroll, so this test never performs a swipe.
+    func testGroupToggleAtDeepScrollPosition() throws {
+        app.terminate()
+        app.launchArguments = ["--UITesting", "-UITesting", "--uitest-scroll-group", "server-alerts"]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist")
+        tabBar.buttons["tab.notifications"].tap()
+        sleep(1)
+
+        let displayMode = app.segmentedControls["inbox.displayMode"]
+        XCTAssertTrue(displayMode.waitForExistence(timeout: 5))
+        displayMode.buttons["分组"].tap()
+
+        // The launch hook scrolls this mid-list group into view after the
+        // groups reload. Wait for it on screen and tap immediately — any
+        // sleep between the frame check and the tap lets later reloads churn
+        // the snapshot and the tap re-resolution fails.
+        XCTAssertTrue(isOnScreen("notification.group.server-alerts", timeout: 10),
+                      "Launch hook should scroll the deep group into view")
+        let tree = app.otherElements.debugDescription
+        tree.split(separator: "\n")
+            .filter { $0.contains("notification.group") }
+            .prefix(8)
+            .forEach { print("[DEEP-TREE] \($0.trimmingCharacters(in: .whitespaces))") }
+        // Element `tap()` re-resolves the snapshot and hard-fails on iOS 26
+        // even for on-screen elements; tap by app-level coordinate instead.
+        let header = headerElement("notification.group.server-alerts")
+        let frame = header.frame
+        let screen = app.frame
+        let vector = CGVector(
+            dx: (frame.midX - screen.minX) / screen.width,
+            dy: (frame.midY - screen.minY) / screen.height
+        )
+
+        let expandedCount = notificationCardQuery.count
+        XCTAssertGreaterThan(expandedCount, 0)
+
+        mark("deep-collapse")
+        app.coordinate(withNormalizedOffset: vector).tap()
+        sleep(1)
+        let collapsedCount = notificationCardQuery.count
+        XCTAssertLessThan(collapsedCount, expandedCount, "Deep-position collapse should hide the group's cards")
+        saveScreenshot("/tmp/wbk-anim/deep-collapsed.png")
+
+        mark("deep-expand")
+        app.coordinate(withNormalizedOffset: vector).tap()
+        sleep(1)
+        XCTAssertEqual(settledCardCount(), expandedCount, "Deep-position expand should restore the cards")
+        saveScreenshot("/tmp/wbk-anim/deep-expanded.png")
     }
 }

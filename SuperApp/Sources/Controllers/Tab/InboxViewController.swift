@@ -152,6 +152,18 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private var isAnimatingGroupToggle = false
     /// Marks the next reload as an animated display-mode transition.
     private var pendingAnimatedReload = false
+    /// UI-testing hook (`--uitest-scroll-group <slug>`): scrolls the named
+    /// group into view once so automation can toggle mid-list sections at a
+    /// deterministic position. Synthetic XCUITest swipes race iOS 26 snapshot
+    /// resolution and drop taps mid-scroll; scrolling in-app removes that
+    /// flake source entirely.
+    private var pendingUITestScrollGroup: String? = {
+        guard ProcessInfo.processInfo.isWebBridgeKitUITesting else { return nil }
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let flag = arguments.firstIndex(of: "--uitest-scroll-group"),
+              arguments.indices.contains(flag + 1) else { return nil }
+        return arguments[flag + 1]
+    }()
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -232,6 +244,27 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         viewModel.refreshData()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.refreshControl.endRefreshing()
+        }
+    }
+
+    /// One-shot in-app scroll for the UI-testing deep-position hook; runs
+    /// after the reload that first materializes the target group.
+    private func performPendingUITestGroupScroll() {
+        guard let slug = pendingUITestScrollGroup else { return }
+        for section in 0..<viewModel.numberOfGroups()
+        where viewModel.groupIdentifier(section).slugIdentifier == slug {
+            guard viewModel.numberOfMessagesInGroup(section) > 0 else { continue }
+            pendingUITestScrollGroup = nil
+            let target = IndexPath(row: 0, section: section)
+            // Delayed + non-animated: the groups-mode reload lands inside a
+            // cross-dissolve transition, and an animated scrollToRow racing it
+            // ends at the wrong offset. Non-animated jumps straight to the
+            // deterministic final position (.middle keeps header + cards on
+            // screen; .top would park the header above the fold).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                self?.tableView.scrollToRow(at: target, at: .middle, animated: false)
+            }
+            return
         }
     }
 
@@ -334,6 +367,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
                 } else {
                     self.tableView.reloadData()
                 }
+                self.performPendingUITestGroupScroll()
             })
             .disposed(by: rx)
 
@@ -441,7 +475,7 @@ extension InboxViewController: UITableViewDataSource {
         cell.configure(with: message)
         // Collapsed-group rows persist at zero height with their accessibility
         // identity stripped until revealed again.
-        cell.setCollapsedState(!viewModel.isRowRevealed(at: indexPath))
+        cell.setCollapsedAccessibility(!viewModel.isRowRevealed(at: indexPath))
         return cell
     }
 
@@ -485,24 +519,31 @@ extension InboxViewController: UITableViewDataSource {
         isAnimatingGroupToggle = true
         // Capture cells before the toggle: once heights reach zero,
         // `cellForRow` returns nil for those index paths.
-        let cells = indexPaths.compactMap { tableView.cellForRow(at: $0) }
-        // Reveal cells before expanding so they are visible throughout the
-        // height animation; strip their accessibility identity after
-        // collapsing once the animation finished.
-        if willExpand {
-            cells.forEach { $0.setCollapsedState(false) }
-        }
+        let cells = indexPaths.compactMap { tableView.cellForRow(at: $0) as? InboxMessageCellWrapper }
         configureHeader(willExpand, messageCount)
         viewModel.toggleGroup(section)
         tableView.performBatchUpdates(
             {
-                // No insert/delete: the row-height change alone drives the
-                // whole animation for this section and everything below it.
+                // No insert/delete and no contentOffset adjustments: touching
+                // the offset inside the batch cancels the height animation and
+                // the collapse becomes a single-frame snap. The row-height
+                // change alone drives the whole animation for this section
+                // and everything below it.
             },
             completion: { [weak self] _ in
                 guard let self = self else { return }
-                if !willExpand {
-                    cells.forEach { $0.setCollapsedState(true) }
+                if willExpand {
+                    // Heights are full again, so cellForRow resolves; restore
+                    // identity for cells that stayed cached through the
+                    // collapsed state (cellForRowAt never re-ran for them).
+                    indexPaths.forEach {
+                        (self.tableView.cellForRow(at: $0) as? InboxMessageCellWrapper)?
+                            .setCollapsedAccessibility(false)
+                    }
+                } else {
+                    // Strip identity only after the compression finished so the
+                    // cards stay exposed to accessibility while they animate.
+                    cells.forEach { $0.setCollapsedAccessibility(true) }
                 }
                 self.isAnimatingGroupToggle = false
             }
