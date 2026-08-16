@@ -104,6 +104,18 @@ while Apple silently rejected every request. Rules that must not regress:
 - **Device registrations persist** to `Server/data/device-registrations.json` (created on
   first register). Restarting the server is safe; losing the file means every phone must
   re-activate push.
+- **Named push sounds require `UIBackgroundModes: remote-notification`** (set via
+  `INFOPLIST_KEY_UIBackgroundModes` in project.yml, mirroring Bark). Without it,
+  background/killed-app delivery silently falls back to the default alert tone for EVERY
+  named sound — no error anywhere, Apple returns 200, and the files are fine
+  (verified byte-identical to Bark's). Learned 2026-08-16 after exhausting file formats
+  (PCM/AAC/IMA4, mono/stereo), payload minimization, and direct-to-Apple curls; a
+  minimal payload still failed until the background mode landed, then everything worked.
+  Foreground delivery dodges this via `PushAlertSoundPlayer` (AVAudioPlayer), which is
+  why foreground tests can pass while system-path sounds are broken.
+- Sound files: ship Bark's original `Sounds/*.caf` byte-identical; do NOT transcode —
+  hand-transcoded variants (mono IMA4, PCM) failed on device even though `afinfo`
+  showed valid formats.
 - **Inbox recording semantics (iOS):** a push is stored only when it arrives while the app
   is foreground (`willPresent`) or the user taps the banner (`didReceive`). Background
   delivery without a tap is lost to the Inbox until the `/ws/stream` SSE relay exists on
@@ -113,6 +125,26 @@ while Apple silently rejected every request. Rules that must not regress:
   silently kills all app traffic. Real-device UI tests must auto-tap
   「无线局域网与蜂窝网络」(see `RealDevicePushSmokeTests` alert handling); the test runner
   process has its own copy of the same dialog.
+
+## Device Selection Policy (Simulator First)
+
+UI-related development and verification must default to the iOS Simulator:
+
+- **Simulator first, always.** Any work that can be verified in the simulator —
+  builds, UI tests, screenshots, visual regression, interactive acceptance,
+  cache/manifest/JSBridge flows against local services — must be completed and
+  signed off on the simulator before anything else is requested.
+- **Real device is the last step, not a shortcut.** Only ask for a physical
+  iPhone after every functional item that the simulator can cover has passed
+  there, and only for what the simulator genuinely cannot prove (APNs/Bark
+  end-to-end delivery, lock-screen/background notification behavior,
+  China-region network permission dialogs, phone-specific LAN reachability).
+  Never jump to a real device for work the simulator already covers.
+- **Sole exception: host resources.** If the Mac lacks free memory or disk
+  space to run the simulator reliably (see the 2026-08-10 disk-exhaustion
+  crash), free resources first — remove only rebuildable `/tmp/wbk-*`
+  DerivedData artifacts — then resume the simulator-first flow instead of
+  migrating the work to a real device.
 
 ## Services
 

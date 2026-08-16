@@ -76,6 +76,8 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
       INFOPLIST_KEY_NSAppTransportSecurity: YES
+      # Bark declares remote-notification background mode; align with it.
+      INFOPLIST_KEY_UIBackgroundModes: remote-notification
     postBuildScripts:
       - name: Strip Test Resources from Release
         outputFiles:

@@ -245,7 +245,7 @@ struct PushRingtoneView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.borderless)
         .accessibilityIdentifier("pushRingtones.\(ringtone.name)")
     }
 
@@ -294,6 +294,7 @@ struct PushRingtoneView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.lg))
         }
+        .buttonStyle(.borderless)
         .accessibilityIdentifier(identifier)
     }
 }
