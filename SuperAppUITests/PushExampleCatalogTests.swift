@@ -28,6 +28,14 @@ final class PushExampleCatalogTests: XCTestCase {
             throw XCTSkip("Real-device only: APNs delivery requires physical hardware")
         }
         app = XCUIApplication()
+        // Every xcodebuild test run reinstalls the app, which re-arms the
+        // China-region 「允许使用无线数据」gate that silently denies all app
+        // traffic — the example URLs then load blank and no push is ever
+        // sent. The monitor answers that dialog (and the notification
+        // permission alert) with the affirmative option.
+        addUIInterruptionMonitor(withDescription: "系统权限弹窗") { alert in
+            Self.tapAffirmative(on: alert)
+        }
         app.launchArguments = [
             "--UITesting",
             "--push-server=https://wbk.shanbox.19930810.xyz:8443"
@@ -39,67 +47,98 @@ final class PushExampleCatalogTests: XCTestCase {
         app.launch()
     }
 
+    private static let affirmativeAlertButtons = [
+        "无线局域网与蜂窝网络", "WLAN & Cellular",
+        "允许", "Allow", "允许通知"
+    ]
+
+    @discardableResult
+    private static func tapAffirmative(on alert: XCUIElement) -> Bool {
+        for label in affirmativeAlertButtons {
+            let button = alert.buttons[label]
+            if button.exists {
+                button.tap()
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func dismissVisibleSystemAlert(on app: XCUIApplication) {
+        let alert = app.alerts.firstMatch
+        guard alert.exists else { return }
+        tapAffirmative(on: alert)
+    }
+
     func testEveryExampleDeliversToInbox() throws {
         let examplesButton = app.buttons["pwaHome.apiExamples"]
         XCTAssertTrue(examplesButton.waitForExistence(timeout: 15), "Home should expose the API examples entry")
+        examplesButton.tap()
 
+        // Phase 1 — fire every example from the catalog in one pass. Each
+        // card opens the URL in the IN-APP browser (the app never leaves the
+        // foreground, so every push arrives via willPresent and is recorded);
+        // closing the browser returns straight to the catalog, ready for the
+        // next card. Per-example trips back through the home tab proved
+        // fragile: scroll positions virtualize the entry card away.
         for example in Self.examples {
-            // The catalog is a pushed screen; enter it fresh for every type so a
-            // Safari roundtrip always starts from a known navigation state.
-            if !app.buttons["pushExamples.\(example.type)"].exists {
-                examplesButton.tap()
+            var row = app.buttons["pushExamples.\(example.type)"]
+            if !row.waitForExistence(timeout: 3) {
+                // Closing the in-app browser can land back on the catalog or
+                // pop all the way to home depending on presentation context.
+                // Recover either way: scroll home to the top (List rows
+                // virtualize away below the fold) and re-enter the catalog.
+                var topAttempts = 0
+                while !examplesButton.exists && topAttempts < 4 {
+                    app.swipeDown()
+                    topAttempts += 1
+                }
+                if examplesButton.exists {
+                    examplesButton.tap()
+                }
+                row = app.buttons["pushExamples.\(example.type)"]
             }
-            let row = app.buttons["pushExamples.\(example.type)"]
             XCTAssertTrue(row.waitForExistence(timeout: 10), "\(example.type) example row should exist")
-            // Rows below the fold must be scrolled into view before tapping,
-            // otherwise the tap misses the button and Safari never opens.
             var scrollAttempts = 0
-            while !row.isHittable && scrollAttempts < 6 {
+            while !row.isHittable && scrollAttempts < 8 {
                 app.swipeUp()
                 scrollAttempts += 1
             }
             row.tap()
+            // The wireless-data gate can surface right after the first
+            // outbound request; dismiss any system dialog (the interruption
+            // monitor only fires on interactions).
+            Self.dismissVisibleSystemAlert(on: app)
 
-            // The example opens Safari, which fires the server request. Pull the
-            // app back almost immediately: the request completes server-side
-            // regardless, and the push must arrive while the app is foreground
-            // (willPresent) or the message is never recorded in the Inbox.
-            Thread.sleep(forTimeInterval: 0.8)
-            if app.state != .runningForeground {
-                app.activate()
-            }
-            attachScreenshot(named: "example-\(example.type)-safari")
-
-            // The example URL opens in the in-app browser, which covers the
-            // tab bar. Close it via its toolbar close button, then pop the
-            // catalog back to the home tab before switching — tapping a
-            // sibling tab straight from the pushed catalog is unreliable.
             let browserClose = app.buttons["browserManager.closeButton"]
-            if browserClose.waitForExistence(timeout: 3) {
-                browserClose.tap()
-                Thread.sleep(forTimeInterval: 0.5)
-            }
-            let navBack = app.navigationBars.buttons.firstMatch
-            if navBack.exists {
-                navBack.tap()
-                Thread.sleep(forTimeInterval: 0.5)
-            }
+            XCTAssertTrue(
+                browserClose.waitForExistence(timeout: 8),
+                "\(example.type) send should open the in-app browser"
+            )
+            attachScreenshot(named: "example-\(example.type)-send")
+            browserClose.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+            Self.dismissVisibleSystemAlert(on: app)
+        }
 
-            // Navigate to the Inbox and require the exact example title.
-            let inboxTab = app.tabBars.buttons["tab.notifications"]
-            XCTAssertTrue(inboxTab.waitForExistence(timeout: 5), "Notifications tab should exist")
-            inboxTab.tap()
+        // Phase 2 — one Inbox visit asserts every delivery. Sends are done
+        // by now, so each title only needs to appear once in the list.
+        let inboxTab = app.tabBars.buttons["tab.notifications"]
+        XCTAssertTrue(inboxTab.waitForExistence(timeout: 5), "Notifications tab should exist")
+        inboxTab.tap()
+        for example in Self.examples {
             let message = app.staticTexts[example.title]
+            var scrollAttempts = 0
+            while !message.exists && scrollAttempts < 6 {
+                app.swipeUp()
+                scrollAttempts += 1
+            }
             XCTAssertTrue(
                 message.waitForExistence(timeout: 30),
                 "\(example.type) push should be recorded in the Inbox as「\(example.title)」"
             )
-            attachScreenshot(named: "example-\(example.type)-inbox")
-
-            let homeTab = app.tabBars.buttons["tab.apps"]
-            XCTAssertTrue(homeTab.waitForExistence(timeout: 5))
-            homeTab.tap()
         }
+        attachScreenshot(named: "catalog-all-delivered-inbox")
     }
 
     private func attachScreenshot(named name: String) {
