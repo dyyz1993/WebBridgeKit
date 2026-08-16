@@ -49,6 +49,36 @@ both QR-code import and paste-based import for gateway configuration.
   server exposes the generic gateway contract and local/simulator regression is
   green.
 
+## Bark Reference Implementation
+
+A local checkout of the open-source Bark app lives at
+`/Users/xuyingzhou/Project/temporary/Bark/Bark/`. WebBridgeKit's
+Bark-compatible push surface is modeled on it — when push behavior, sound
+handling, or example-UX questions come up, consult this source first instead
+of guessing.
+
+Key references:
+
+- `Controller/HomeViewModel.swift` — `previews: [PreviewModel]` defines the
+  API example cards (title / description / `queryParameter` / preview image /
+  `moreInfo` link) that our capability catalog mirrors.
+- `Controller/SoundsViewModel.swift` + `SoundFileStorage` — ringtone
+  library: default sounds come from `Bundle.main` caf files; user imports
+  land in Library/Sounds (Bark uses its app-group container because it
+  keeps a real notification extension; we copy into the main container).
+- `Sounds/` — 32 alert tones at the app bundle root (AAC-in-CAF in the
+  repo; Apple's originals are Int16 PCM and can be re-extracted from the
+  local simulator runtime volume
+  `/Library/Developer/CoreSimulator/Volumes/iOS_*/…/RuntimeRoot/System/Library/Audio/UISounds{,/New}`).
+  Push sound names are sent extensionless (`sound=alarm`).
+- `notificationContentExtension/` — a real content-extension target that
+  renders rich banners; ours is still dead code
+  (`NotificationServiceExtension/` is not in any target).
+- `Bark/Intents/` — Siri shortcut intents for sending pushes.
+- `kBarkSoundPrefix` ("bark.sounds.30s", `Common/SharedDefines.swift`) —
+  Bark synthesizes 30-second looped versions of each sound so `call=1`
+  keeps ringing like a phone call.
+
 ## APNs Push Delivery Rules (shanbox WebBridgeServer)
 
 Learned the hard way on 2026-08-15: the server answered `{"code":200,"Push sent"}` for weeks
@@ -254,6 +284,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 
 | Script | Purpose | Pass Signal | Notes |
 |--------|---------|-------------|-------|
+| `bash tools/verify-inbox-accordion-animation.sh` | Animation gate for the inbox group accordion: builds, records the simulator screen while `InboxGroupAnimationTests` runs, then verifies each collapse/expand anchor produced a continuous multi-frame animation (no snap, no freeze) via frame-burst analysis | `Summary: N passed, 0 failed`, exit 0 | Requires a booted simulator (`WBK_ANIM_SIM`, default iPhone 17 Pro Max) and ffmpeg; `--analyze-only` re-verifies an existing recording; deep-scroll positions are verified manually — synthetic XCUITest interaction at scrolled positions races iOS 26 snapshot resolution |
 | `bash tools/run-ui-v4-regression.sh` | Aggregated UI v4 gate: services, SwiftLint, design lint, static visual checks, crash scan, screenshots, visual regression | `Summary: ... failed` must be 0 | Requires a booted simulator for screenshot/visual gates |
 | `bash tools/visual-checks.sh` | Static UI contract checks: UILabel wrapping, search placeholder, row/card/pill heights, empty-state action, hardcoded component colors | `FAIL=0` | Warnings are acceptable only if documented |
 | `bash tools/capture-screenshots.sh --build` | Builds/installs app, captures light/dark screenshots to `docs/screenshots/ui-redesign/` | Screenshots written successfully | Requires a booted simulator |

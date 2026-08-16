@@ -45,6 +45,14 @@ final class APNsService: Sendable {
 
         let apnsPayload = Self.makeAPNsPayload(payload)
 
+        // Delivery diagnostics: the route JSON only proves acceptance, not
+        // what Apple actually received. Log the presentation-critical fields
+        // so sound/level regressions are visible in the supervisor log.
+        let apsSound = (apnsPayload["aps"] as? [String: Any])?["sound"]
+        FileHandle.standardError.write(Data(
+            "[APNs] sending token=…\(deviceToken.suffix(6)) title=\(payload.title) sound=\(apsSound ?? "nil") level=\(payload.level ?? "nil")\n".utf8
+        ))
+
         let host = configuration.apnsEnvironment == "production"
             ? "api.push.apple.com"
             : "api.sandbox.push.apple.com"

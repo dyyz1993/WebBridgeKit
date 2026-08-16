@@ -52,12 +52,16 @@ final class PushRingtoneModel: ObservableObject {
             .compactMap { pushRingtone(url: $0, isCustom: false) }
             .sorted { $0.name < $1.name }
 
+        // PushSoundInstaller mirrors the bundled library into Library/Sounds
+        // so named sounds resolve reliably; those mirrors are not user
+        // imports and must not show up in the custom section.
+        let bundledNames = Set(bundledURLs.map { $0.lastPathComponent })
         let customURLs = (try? FileManager.default.contentsOfDirectory(
             at: customSoundsDirectory,
             includingPropertiesForKeys: nil
         )) ?? []
         customRingtones = customURLs
-            .filter { $0.pathExtension.lowercased() == "caf" }
+            .filter { $0.pathExtension.lowercased() == "caf" && !bundledNames.contains($0.lastPathComponent) }
             .compactMap { pushRingtone(url: $0, isCustom: true) }
             .sorted { $0.name < $1.name }
     }

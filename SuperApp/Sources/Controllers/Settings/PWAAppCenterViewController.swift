@@ -410,12 +410,16 @@ final class PWAAppCenterViewController: UIViewController {
             homeViewModel.pushState = .ready
             return
         }
+        // UI tests send through the in-app browser so the app stays
+        // foregrounded (willPresent records the message); manual use opens
+        // mobile Safari, which is the documented Bark URL behavior users
+        // expect from a "send" action.
+        if ProcessInfo.processInfo.arguments.contains("--uitest-inapp-send") {
+            WebBrowserManager.shared.openBrowser(url: url, params: WebBrowserParams(), from: self)
+            return
+        }
         #endif
-        // Bark opens example URLs in an in-app Safari view, not mobile
-        // Safari: keeping the app foregrounded means the arriving push hits
-        // willPresent and is recorded in the Inbox — a mobile-Safari
-        // roundtrip races APNs latency and the message is lost.
-        WebBrowserManager.shared.openBrowser(url: url, params: WebBrowserParams(), from: self)
+        UIApplication.shared.open(url)
     }
 
     private func copyPushURL(title: String, body: String, queryItems: [URLQueryItem]) {
