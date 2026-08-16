@@ -275,10 +275,39 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
         XCTAssertTrue(ringtoneEntry.waitForExistence(timeout: 10), "Guide sheet should offer the ringtone picker")
         ringtoneEntry.tap()
 
-        // Bundled .caf assets resolve as rows with real durations.
+        // Bundled .caf assets resolve as rows with real durations. The picker
+        // silently drops files AVAudioPlayer cannot open, so walking the full
+        // alphabet and requiring the last name doubles as a file-integrity
+        // gate: a corrupt sound would vanish from this list.
         let alarmRow = app.buttons["pushRingtones.alarm"]
         XCTAssertTrue(alarmRow.waitForExistence(timeout: 10), "Bundled alarm ringtone should be listed")
         alarmRow.tap()
+
+        // Distinct ringtones spread head/middle/tail of the alphabetical
+        // library; "update" is last, so reaching it proves the full traversal.
+        let expectedSounds = [
+            "alarm", "anticipate", "bell", "gotosleep",
+            "minuet", "suspense", "typewriters", "update"
+        ]
+        for name in expectedSounds {
+            let row = app.buttons["pushRingtones.\(name)"]
+            var attempts = 0
+            while !row.exists && attempts < 10 {
+                app.swipeUp()
+                attempts += 1
+            }
+            XCTAssertTrue(
+                row.waitForExistence(timeout: 5),
+                "Ringtone \(name) should be listed (missing or unloadable .caf)"
+            )
+        }
+        attachScreenshot(named: "ringtone-library-tail")
+
+        var topAttempts = 0
+        while !alarmRow.isHittable && topAttempts < 10 {
+            app.swipeDown()
+            topAttempts += 1
+        }
 
         let tryButton = app.buttons["pushRingtones.try"]
         XCTAssertTrue(tryButton.waitForExistence(timeout: 5), "Action bar should render after selection")
