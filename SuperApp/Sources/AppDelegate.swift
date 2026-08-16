@@ -343,16 +343,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             return
         }
 
-        // Foreground .sound presentation has an iOS quirk where named
-        // sounds fall back to the default tone; play named sounds through
-        // AVAudioPlayer instead and keep the system path only when we
-        // cannot resolve the file.
-        let soundName = notification.request.content.userInfo["sound"] as? String
-        if let soundName, PushAlertSoundPlayer.shared.play(named: soundName) {
-            completionHandler([.banner, .list, .badge])
-        } else {
-            completionHandler([.banner, .list, .sound, .badge])
-        }
+        // Bark parity: foreground notifications present silently. The iOS
+        // foreground pipeline mangles named sounds every way we tried
+        // (SystemSound rejects AAC, AVAudioPlayer plays silently, .sound
+        // falls back to the default tone), and Bark itself returns plain
+        // .alert here. Named sounds play via the system path when the app
+        // is backgrounded or locked — the normal push usage.
+        completionHandler([.banner, .list, .badge])
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter,

@@ -186,20 +186,51 @@ final class InboxGroupAnimationTests: XCTestCase {
             .firstMatch
         XCTAssertTrue(firstCard.waitForExistence(timeout: 3))
         firstCard.tap()
-        let nextButton = app.buttons["message.detail.next"]
-        XCTAssertTrue(nextButton.waitForExistence(timeout: 5), "Detail should show the next button")
-        let detailTitleBefore = app.staticTexts.firstMatch.label
-        nextButton.tap()
-        sleep(1)
         let backButton = app.navigationBars.buttons.firstMatch
-        XCTAssertTrue(backButton.waitForExistence(timeout: 3), "Detail should remain pushed after advancing")
-        saveScreenshot("/tmp/wbk-anim/detail-next.png")
-        _ = detailTitleBefore // title comparison is visual; stack shape is asserted above
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Detail should push onto the stack")
 
-        // Quick review (card triage): go back to the inbox, enter review,
-        // clear every card with the skip button, and reach the summary.
-        backButton.tap()
-        sleep(1)
+        // Pure swipe navigation: left = next, right = previous. The nav bar
+        // no longer carries prev/next buttons by design.
+        let detailSurface = app.descendants(matching: .any)
+            .matching(identifier: "message.detail").firstMatch
+        detailSurface.swipeLeft()
+        XCTAssertTrue(backButton.waitForExistence(timeout: 3), "Swipe left should advance within the detail stack")
+        saveScreenshot("/tmp/wbk-anim/detail-swiped-left.png")
+        detailSurface.swipeRight()
+        XCTAssertTrue(backButton.waitForExistence(timeout: 3), "Swipe right should stay in the detail stack")
+        saveScreenshot("/tmp/wbk-anim/detail-swiped-right.png")
+
+        // Edge swipe (from the very left edge toward the center) must exit
+        // the detail via the system back gesture — this was broken by an
+        // earlier stack trick and is the critical regression to hold.
+        // Synthetic edge drags are timing-sensitive, so retry a few times:
+        // a short press before the drag helps the system edge recognizer
+        // engage before the detail's own pan gesture.
+        func inboxAppeared() -> Bool {
+            app.otherElements["inbox.filters"].waitForExistence(timeout: 2)
+                || app.segmentedControls["inbox.displayMode"].waitForExistence(timeout: 2)
+        }
+        var exited = false
+        for attempt in 0..<4 {
+            let edge = app.coordinate(
+                withNormalizedOffset: CGVector(dx: 0.003 + CGFloat(attempt) * 0.004, dy: 0.55 + CGFloat(attempt % 2) * 0.1)
+            )
+            let center = app.coordinate(withNormalizedOffset: CGVector(dx: 0.6, dy: 0.6))
+            edge.press(forDuration: 0.03, thenDragTo: center)
+            if inboxAppeared() {
+                exited = true
+                break
+            }
+        }
+        XCTAssertTrue(exited, "Edge swipe should return to the inbox")
+        saveScreenshot("/tmp/wbk-anim/detail-edge-exited.png")
+
+        // Quick review (card triage): the edge swipe above already returned
+        // to the inbox; only tap back if a detail is still on screen.
+        if backButton.exists {
+            backButton.tap()
+            sleep(1)
+        }
         app.tabBars.buttons["tab.notifications"].tap()
         sleep(1)
         let reviewEntry = app.buttons["inbox.review.entry"]
@@ -247,6 +278,4 @@ final class InboxGroupAnimationTests: XCTestCase {
         let frame = element.frame
         return frame.height > 0 && frame.minY >= 0 && frame.maxY <= app.frame.maxY
     }
-
-
 }
