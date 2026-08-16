@@ -52,6 +52,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The shell verification gates (deliverable boundaries, template gate,
+      # design lint) rely on ripgrep, which is not preinstalled on the
+      # macos-15 runner image.
+      - name: Install ripgrep
+        run: brew install ripgrep
+
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
