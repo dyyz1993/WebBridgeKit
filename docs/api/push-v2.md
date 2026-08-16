@@ -6,6 +6,9 @@ Push v2 是官方版与自托管版共同使用的开放通知协议。最小请
 
 7 类规范消息的必填字段、UI 映射和最小 curl 示例见 [Message Types v1](message-types-v1.md)。
 
+HTML App/PWA 的渐进式接入（零改造打开 → 推送深链 → 原生能力）见
+[HTML App 接入指南](html-app-onboarding.md)。
+
 ## 发送入口
 
 - JSON：`POST /push`
