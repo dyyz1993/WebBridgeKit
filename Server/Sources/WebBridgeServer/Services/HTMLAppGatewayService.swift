@@ -60,8 +60,25 @@ actor HTMLAppGatewayService {
         return try sign(manifest)
     }
 
-    func save(_ manifest: HTMLAppPolicyManifest) throws -> HTMLAppPolicyManifest {
-        let unsigned = manifest.unsigned()
+    func save(_ manifest: HTMLAppPolicyManifest) async throws -> HTMLAppPolicyManifest {
+        // Zero-friction onboarding: an empty display name is auto-filled from
+        // the page's own manifest.webmanifest (discovered via <link rel=manifest>).
+        var candidate = manifest
+        if candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           let fetchedName = await Self.fetchWebManifestName(startURL: candidate.startURL) {
+            candidate = HTMLAppPolicyManifest(
+                schemaVersion: candidate.schemaVersion,
+                appId: candidate.appId,
+                name: fetchedName,
+                startURL: candidate.startURL,
+                allowedOrigins: candidate.allowedOrigins,
+                capabilities: candidate.capabilities,
+                routes: candidate.routes,
+                cache: candidate.cache,
+                signature: nil
+            )
+        }
+        let unsigned = candidate.unsigned()
         if let validationError = unsigned.validationError() {
             throw HTTPError(.badRequest, message: validationError)
         }
@@ -86,6 +103,59 @@ actor HTMLAppGatewayService {
         } catch {
             manifests[appID] = previous
             throw error
+        }
+    }
+
+    /// Fetches the page, discovers `<link rel="manifest">`, and returns the
+    /// webmanifest's name/short_name. Rides the system curl like APNsService:
+    /// corelibs URLSession is unreliable against arbitrary hosts on Linux.
+    private static func fetchWebManifestName(startURL: String) async -> String? {
+        guard let pageHTML = curlGet(url: startURL) else { return nil }
+        guard let href = firstManifestLink(in: pageHTML),
+              let base = URL(string: startURL),
+              let manifestURL = URL(string: href, relativeTo: base)?.absoluteString else {
+            return nil
+        }
+        guard let manifestJSON = curlGet(url: manifestURL),
+              let data = manifestJSON.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        if let name = object["name"] as? String, !name.isEmpty { return name }
+        if let shortName = object["short_name"] as? String, !shortName.isEmpty { return shortName }
+        return nil
+    }
+
+    private static func firstManifestLink(in html: String) -> String? {
+        guard let regex = try? NSRegularExpression(pattern: "<link[^>]*rel=[\"']manifest[\"'][^>]*>"),
+              let match = regex.firstMatch(
+                  in: html, range: NSRange(html.startIndex..., in: html)
+              ) else { return nil }
+        let tag = String(html[Range(match.range, in: html)!])
+        let hrefPattern = "href=[\"']([^\"']+)[\"']"
+        guard let hrefRegex = try? NSRegularExpression(pattern: hrefPattern),
+              let hrefMatch = hrefRegex.firstMatch(in: tag, range: NSRange(tag.startIndex..., in: tag)) else {
+            return nil
+        }
+        return String(tag[Range(hrefMatch.range(at: 1), in: tag)!])
+    }
+
+    @discardableResult
+    private static func curlGet(url: String) -> String? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
+        process.arguments = ["-sL", "--max-time", "8", url]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            process.waitUntilExit()
+            guard process.terminationStatus == 0 else { return nil }
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            return String(data: data, encoding: .utf8)
+        } catch {
+            return nil
         }
     }
 
