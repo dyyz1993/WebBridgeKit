@@ -427,6 +427,7 @@ struct PushExampleCatalogView: View {
                         .font(Font.app(ThemeTokens.Typography.footnote))
                         .foregroundColor(Color.appPrimary)
                 }
+                .buttonStyle(.borderless)
                 .accessibilityIdentifier("pushExamples.sound.more")
             }
         }
@@ -448,6 +449,9 @@ struct PushExampleCatalogView: View {
                 .background(Color(ThemeTokens.Color.primarySoft))
                 .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.sm))
         }
+        // Default-styled buttons inside a List row make the whole row act as
+        // the button; borderless confines the tap target to the icon itself.
+        .buttonStyle(.borderless)
         .accessibilityIdentifier(identifier)
         .accessibilityLabel(label)
     }
