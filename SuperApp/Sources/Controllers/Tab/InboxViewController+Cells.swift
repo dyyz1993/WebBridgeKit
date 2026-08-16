@@ -381,7 +381,7 @@ final class GroupChevronIndicator: UIView {
 
 // MARK: - InboxGroupHeaderCell
 
-class InboxGroupHeaderCell: UITableViewHeaderFooterView {
+class InboxGroupHeaderCell: UITableViewHeaderFooterView, UIGestureRecognizerDelegate {
 
     static let identifier = "InboxGroupHeaderCell"
 
@@ -390,8 +390,10 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
     private var appliedExpandedState: Bool?
 
     private let containerView: UIView = {
+        // Opaque: the swipe action buttons sit directly behind this view;
+        // a transparent container lets them show through on every header.
         let view = UIView()
-        view.backgroundColor = .clear
+        view.backgroundColor = ThemeTokens.Color.background
         return view
     }()
 
@@ -421,7 +423,53 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
 
     private let chevronIndicator = GroupChevronIndicator()
 
+    private let pinIconView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.pin.templateImage(pointSize: ThemeTokens.Icons.Sizes.xs)
+        iv.tintColor = ThemeTokens.Color.primary
+        iv.contentMode = .scaleAspectFit
+        iv.isHidden = true
+        return iv
+    }()
+
+    // MARK: Swipe actions (trailing reveal: swipe left on the header)
+
+    private enum SwipeConstants {
+        static let actionWidth: CGFloat = 68
+        static var revealWidth: CGFloat { actionWidth * 2 }
+    }
+
+    private static func makeActionButton(title: String, color: UIColor) -> UIButton {
+        let button = UIButton(type: .custom)
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.caption
+        button.backgroundColor = color
+        return button
+    }
+
+    private lazy var pinActionButton = Self.makeActionButton(
+        title: L10n.tr("inbox.group.pin"), color: ThemeTokens.Color.info
+    )
+    private lazy var deleteActionButton = Self.makeActionButton(
+        title: L10n.tr("inbox.group.delete"), color: ThemeTokens.Color.error
+    )
+    private lazy var swipeActionsStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [deleteActionButton, pinActionButton])
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        stack.spacing = 1
+        return stack
+    }()
+
     var onTap: (() -> Void)?
+    var onPinToggle: (() -> Void)?
+    var onDelete: (() -> Void)?
+    /// Informs the controller this header revealed its actions so any other
+    /// open header can be closed first.
+    var onSwipeReveal: (() -> Void)?
+
+    private var swipePanGesture: UIPanGestureRecognizer?
 
     override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
@@ -445,10 +493,38 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
         // accordion feel of system grouped lists.
         let pressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handlePress(_:)))
         pressGesture.minimumPressDuration = 0
-        contentView.addGestureRecognizer(pressGesture)
+        // Attached to the sliding content, not contentView: a gesture on
+        // contentView intercepts touches for every subview, which starved
+        // the revealed action buttons of their taps entirely.
+        containerView.addGestureRecognizer(pressGesture)
+
+        // Horizontal-only pan reveals the trailing pin/delete actions; the
+        // delegate gate keeps vertical table scrolling and taps unaffected.
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handleSwipePan(_:)))
+        pan.delegate = self
+        contentView.addGestureRecognizer(pan)
+        swipePanGesture = pan
+        // A zero-delay press activates at touch-down and would otherwise fire
+        // .ended on drag release, instantly closing the revealed actions.
+        // For taps the pan fails immediately (shouldBegin gate) so the press
+        // is unaffected; for drags the pan takes over and the press never
+        // fires.
+        pressGesture.require(toFail: pan)
+
+        // Action buttons sit behind the content on the trailing edge.
+        contentView.addSubview(swipeActionsStack)
+        swipeActionsStack.snp.makeConstraints { make in
+            make.trailing.equalToSuperview()
+            make.top.bottom.equalToSuperview()
+            make.width.equalTo(SwipeConstants.revealWidth)
+        }
+        pinActionButton.addTarget(self, action: #selector(pinTapped), for: .touchUpInside)
+        deleteActionButton.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
+        swipeActionsStack.isHidden = true
 
         contentView.addSubview(containerView)
         containerView.addSubview(titleLabel)
+        containerView.addSubview(pinIconView)
         containerView.addSubview(countContainer)
         countContainer.addSubview(countLabel)
         containerView.addSubview(chevronIndicator)
@@ -465,8 +541,14 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
             make.leading.trailing.equalToSuperview()
         }
 
-        titleLabel.snp.makeConstraints { make in
+        pinIconView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(ThemeTokens.Spacing.xs)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(ThemeTokens.Icons.Sizes.xs)
+        }
+
+        titleLabel.snp.makeConstraints { make in
+            make.leading.equalTo(pinIconView.snp.trailing).offset(ThemeTokens.Spacing.xs)
             make.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(countContainer.snp.leading).offset(-ThemeTokens.Spacing.sm)
         }
@@ -495,6 +577,7 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
         count: Int,
         isExpanded: Bool,
         hasUnread: Bool = false,
+        isPinned: Bool = false,
         accessibilityIdentifier: String
     ) {
         self.accessibilityIdentifier = accessibilityIdentifier
@@ -504,6 +587,16 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
         titleLabel.text = title
         countLabel.text = "\(count)"
         countContainer.isHidden = count == 0
+        pinIconView.isHidden = !isPinned
+        pinIconView.snp.updateConstraints { make in
+            make.leading.equalToSuperview().offset(isPinned ? ThemeTokens.Spacing.xs : -ThemeTokens.Icons.Sizes.xs)
+        }
+        pinActionButton.setTitle(
+            L10n.tr(isPinned ? "inbox.group.unpin" : "inbox.group.pin"),
+            for: .normal
+        )
+        pinActionButton.accessibilityIdentifier = "inbox.group.pin.\(accessibilityIdentifier)"
+        deleteActionButton.accessibilityIdentifier = "inbox.group.delete.\(accessibilityIdentifier)"
         titleLabel.font = hasUnread
             ? ThemeTokens.Typography.sectionTitle
             : ThemeTokens.Typography.rowTitle
@@ -537,7 +630,13 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
             setPressed(true)
         case .ended:
             setPressed(false)
-            onTap?()
+            if containerView.transform.tx == 0 {
+                onTap?()
+            } else {
+                // A tap while actions are revealed closes them instead of
+                // toggling the group — the standard swipe-action behavior.
+                closeActions(animated: true)
+            }
         case .cancelled, .failed:
             setPressed(false)
         default:
@@ -545,10 +644,93 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView {
         }
     }
 
+    // MARK: - Swipe actions
+
+    private func syncActionVisibility() {
+        swipeActionsStack.isHidden = containerView.transform.tx == 0
+    }
+
+    @objc private func handleSwipePan(_ gesture: UIPanGestureRecognizer) {
+        let translation = gesture.translation(in: contentView)
+        switch gesture.state {
+        case .began:
+            onSwipeReveal?()
+            swipeActionsStack.isHidden = false
+        case .changed:
+            let base = containerView.transform.tx == 0 ? 0 : -SwipeConstants.revealWidth
+            let proposed = min(0, max(-SwipeConstants.revealWidth, base + translation.x))
+            containerView.transform = CGAffineTransform(translationX: proposed, y: 0)
+        case .ended, .cancelled, .failed:
+            let velocity = gesture.velocity(in: contentView).x
+            let current = containerView.transform.tx
+            let shouldOpen = current < -SwipeConstants.revealWidth / 3 || velocity < -300
+            let target: CGFloat = shouldOpen ? -SwipeConstants.revealWidth : 0
+            UIView.animate(
+                withDuration: ThemeTokens.Animation.fast.duration + 0.05,
+                delay: 0,
+                options: [.curveEaseOut]
+            ) {
+                self.containerView.transform = CGAffineTransform(translationX: target, y: 0)
+            } completion: { _ in
+                self.syncActionVisibility()
+            }
+        default:
+            break
+        }
+    }
+
+    @objc private func pinTapped() {
+        closeActions(animated: true)
+        onPinToggle?()
+    }
+
+    @objc private func deleteTapped() {
+        closeActions(animated: true)
+        onDelete?()
+    }
+
+    func closeActions(animated: Bool) {
+        guard containerView.transform.tx != 0 else { return }
+        let apply = {
+            self.containerView.transform = .identity
+        }
+        if animated {
+            UIView.animate(
+                withDuration: ThemeTokens.Animation.fast.duration + 0.05,
+                delay: 0,
+                options: [.curveEaseOut],
+                animations: apply
+            )
+        } else {
+            apply()
+        }
+    }
+
     private func setPressed(_ pressed: Bool) {
         let highlight = ThemeTokens.Color.backgroundSecondary
         UIView.animate(withDuration: ThemeTokens.Animation.fast.duration) {
-            self.containerView.backgroundColor = pressed ? highlight : .clear
+            self.containerView.backgroundColor = pressed
+                ? highlight
+                : ThemeTokens.Color.background
         }
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        containerView.transform = .identity
+        swipeActionsStack.isHidden = true
+        appliedExpandedState = nil
+    }
+
+    /// Serves both as the pan gesture's delegate gate and UIView's hook:
+    /// only horizontal drags reveal actions; vertical pans belong to the
+    /// table's scrolling.
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === swipePanGesture,
+              let pan = gestureRecognizer as? UIPanGestureRecognizer else {
+            return super.gestureRecognizerShouldBegin(gestureRecognizer)
+        }
+        let velocity = pan.velocity(in: contentView)
+        return abs(velocity.x) > abs(velocity.y)
     }
 }

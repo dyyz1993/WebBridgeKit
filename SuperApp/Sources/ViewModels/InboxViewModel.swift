@@ -76,9 +76,55 @@ class InboxViewModel: ViewModel {
     private var currentFilter: FilterType = .all
     private var currentDisplayMode: DisplayMode = .latest
     private var searchDebounceWorkItem: DispatchWorkItem?
+    private let pinnedGroupsKey = "inbox.pinnedGroups"
+
+    override init() {
+        // Test-fixture hygiene: pin state persists across launches, which
+        // would leak ordering between UI test runs.
+        if ProcessInfo.processInfo.isWebBridgeKitUITesting {
+            UserDefaults.standard.removeObject(forKey: "inbox.pinnedGroups")
+        }
+    }
 
     var messageGroupsValue: [MessageGroup] {
         return messageGroupsRelay.value
+    }
+
+    private var pinnedGroupIdentifiers: Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: pinnedGroupsKey) ?? [])
+    }
+
+    func isGroupPinned(_ index: Int) -> Bool {
+        guard index < messageGroupsRelay.value.count else { return false }
+        return pinnedGroupIdentifiers.contains(messageGroupsRelay.value[index].identifier)
+    }
+
+    /// Pins the group to the top (persisted by group identifier, so it
+    /// survives reloads and app restarts), or unpins it.
+    func togglePinGroup(_ index: Int) {
+        guard index < messageGroupsRelay.value.count else { return }
+        let identifier = messageGroupsRelay.value[index].identifier
+        var pinned = pinnedGroupIdentifiers
+        if pinned.contains(identifier) {
+            pinned.remove(identifier)
+        } else {
+            pinned.insert(identifier)
+        }
+        UserDefaults.standard.set(Array(pinned), forKey: pinnedGroupsKey)
+        applyFilters()
+        reloadDataRelay.accept(())
+    }
+
+    /// Deletes every message in the group, then reloads.
+    func deleteGroup(_ index: Int) {
+        guard index < messageGroupsRelay.value.count else { return }
+        let identifiers = messageGroupsRelay.value[index].messages.map(\.id)
+        Task { [weak self] in
+            for identifier in identifiers {
+                await MessageEngine.shared.deleteMessage(id: identifier)
+            }
+            self?.loadMessages()
+        }
     }
 
     func transform(input: Input) -> Output {
@@ -187,6 +233,12 @@ class InboxViewModel: ViewModel {
 
     func numberOfRows() -> Int {
         return messageGroupsRelay.value.reduce(0) { $0 + $1.messages.count }
+    }
+
+    /// All messages in the current display order (groups flattened),
+    /// ignoring expansion — collapsed groups stay navigable in detail.
+    func orderedMessages() -> [StoredMessage] {
+        return messageGroupsRelay.value.flatMap(\.messages)
     }
 
     func numberOfGroups() -> Int {
@@ -342,8 +394,15 @@ class InboxViewModel: ViewModel {
                     isExpanded: previousStates[identifier] ?? true
                 )
             }.sorted { lhs, rhs in
-                if lhs.identifier == "other" { return false }
-                if rhs.identifier == "other" { return true }
+                // Pinned groups stay on top; within each bucket keep the
+                // recency ordering (and "other" last among unpinned).
+                let lhsPinned = pinnedGroupIdentifiers.contains(lhs.identifier)
+                let rhsPinned = pinnedGroupIdentifiers.contains(rhs.identifier)
+                if lhsPinned != rhsPinned { return lhsPinned }
+                if !lhsPinned {
+                    if lhs.identifier == "other" { return false }
+                    if rhs.identifier == "other" { return true }
+                }
                 return lhs.mostRecentDate > rhs.mostRecentDate
             }
         }
