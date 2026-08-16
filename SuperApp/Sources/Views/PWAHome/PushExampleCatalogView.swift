@@ -28,7 +28,7 @@ struct PushExample: Identifiable {
     let queryItems: [URLQueryItem]
     /// Optional in-card notification preview (Bark ships static screenshots
     /// for its icon/group/critical/copy cards; we render them natively).
-    var preview: Preview? = nil
+    var preview: Preview?
 
     enum Preview {
         case banner(title: String, body: String, iconURL: URL? = nil, alertStyle: Bool = false)
