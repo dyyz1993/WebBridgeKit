@@ -13,7 +13,7 @@ import WebBridgeKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
-class MessageDetailViewController: UIViewController {
+class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate {
 
     let message: StoredMessage
     private let launchResolver = HTMLAppLaunchResolver()
@@ -157,77 +157,124 @@ class MessageDetailViewController: UIViewController {
         webView.accessibilityIdentifier = "message.detail.markdown"
         setupUI()
         configure()
-        setupNavigation()
+        setupSideIndicators()
+        setupSwipeNavigation()
     }
 
     // MARK: - Peer navigation (next/previous)
 
-    private lazy var nextNavButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(LucideIcon.chevronDown.templateImage(pointSize: ThemeTokens.Icons.Sizes.md), for: .normal)
-        button.tintColor = ThemeTokens.Color.primary
-        button.accessibilityIdentifier = "message.detail.next"
-        button.accessibilityLabel = L10n.tr("message.detail.next")
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        return button
+    // MARK: - Swipe navigation indicators
+
+    /// Subtle side chevrons: left = swipe left for the next message,
+    /// right = swipe right for the previous one. The left indicator also
+    /// carries the unread red dot (next message unread).
+    private let nextIndicator: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.chevronLeft.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm)
+        iv.tintColor = ThemeTokens.Color.textTertiary
+        iv.alpha = 0.45
+        iv.contentMode = .scaleAspectFit
+        iv.isUserInteractionEnabled = false
+        iv.accessibilityIdentifier = "message.detail.indicator.next"
+        return iv
     }()
 
-    private lazy var prevNavButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(LucideIcon.arrowUp.templateImage(pointSize: ThemeTokens.Icons.Sizes.md), for: .normal)
-        button.tintColor = ThemeTokens.Color.primary
-        button.accessibilityIdentifier = "message.detail.prev"
-        button.accessibilityLabel = L10n.tr("message.detail.prev")
-        button.addTarget(self, action: #selector(prevTapped), for: .touchUpInside)
-        return button
+    private let prevIndicator: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.chevronRight.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm)
+        iv.tintColor = ThemeTokens.Color.textTertiary
+        iv.alpha = 0.45
+        iv.contentMode = .scaleAspectFit
+        iv.isUserInteractionEnabled = false
+        iv.accessibilityIdentifier = "message.detail.indicator.prev"
+        return iv
     }()
 
-    /// Unread indicator on the next button: the main cue for the fast
-    /// review loop — a red dot means more unread messages follow.
     private let nextUnreadDot: UIView = {
         let dot = UIView()
         dot.backgroundColor = ThemeTokens.Color.error
-        dot.layer.cornerRadius = 3.5
+        dot.layer.cornerRadius = 3
         dot.isHidden = true
+        dot.isUserInteractionEnabled = false
         dot.accessibilityIdentifier = "message.detail.next.unread"
         return dot
     }()
 
-    private func setupNavigation() {
+    private func setupSideIndicators() {
         guard peerMessages != nil else { return }
-        nextNavButton.addSubview(nextUnreadDot)
-        nextUnreadDot.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(2)
-            make.trailing.equalToSuperview().offset(2)
-            make.width.height.equalTo(7)
+        view.addSubview(nextIndicator)
+        view.addSubview(prevIndicator)
+        view.addSubview(nextUnreadDot)
+        nextIndicator.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(ThemeTokens.Spacing.xxs)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(ThemeTokens.Icons.Sizes.sm)
         }
-        navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(customView: nextNavButton),
-            UIBarButtonItem(customView: prevNavButton)
-        ]
+        prevIndicator.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.xxs)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(ThemeTokens.Icons.Sizes.sm)
+        }
+        nextUnreadDot.snp.makeConstraints { make in
+            make.centerX.equalTo(nextIndicator.snp.leading)
+            make.top.equalTo(nextIndicator.snp.top).offset(-4)
+            make.width.height.equalTo(6)
+        }
         refreshNavigationState()
     }
 
     private func refreshNavigationState() {
         guard let peers = peerMessages else { return }
-        prevNavButton.isEnabled = currentIndex > 0
-        prevNavButton.tintColor = prevNavButton.isEnabled
-            ? ThemeTokens.Color.primary
-            : ThemeTokens.Color.textTertiary
+        nextIndicator.isHidden = currentIndex >= peers.count - 1
+        prevIndicator.isHidden = currentIndex <= 0
         let hasNext = currentIndex < peers.count - 1
-        nextNavButton.isEnabled = hasNext
-        nextNavButton.tintColor = nextNavButton.isEnabled
-            ? ThemeTokens.Color.primary
-            : ThemeTokens.Color.textTertiary
         nextUnreadDot.isHidden = !(hasNext && !peers[currentIndex + 1].isRead)
     }
 
-    @objc private func nextTapped() {
-        advance(toOffset: 1)
+    /// Horizontal swipe navigation: left = next message (mark read and
+    /// advance), right = previous. Horizontal pans are unused in the detail
+    /// (its content scrolls vertically), so they can drive navigation the
+    /// way mail apps do. The system edge-back gesture keeps the screen edge
+    /// for exiting the detail.
+    private func setupSwipeNavigation() {
+        guard peerMessages != nil else { return }
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handleNavigationPan(_:)))
+        pan.delegate = self
+        if let edgePan = navigationController?.interactivePopGestureRecognizer {
+            // Edge swipes belong to the system back gesture; waiting for it
+            // to fail keeps mid-screen right-swipes (previous message) from
+            // racing the pop.
+            pan.require(toFail: edgePan)
+        }
+        view.addGestureRecognizer(pan)
     }
 
-    @objc private func prevTapped() {
-        advance(toOffset: -1)
+    @objc private func handleNavigationPan(_ gesture: UIPanGestureRecognizer) {
+        switch gesture.state {
+        case .changed:
+            let x = gesture.translation(in: view).x
+            // Brighten the indicator the drag is heading toward.
+            nextIndicator.alpha = x < 0 ? 1.0 : 0.45
+            prevIndicator.alpha = x > 0 ? 1.0 : 0.45
+        case .ended:
+            nextIndicator.alpha = 0.45
+            prevIndicator.alpha = 0.45
+            let translation = gesture.translation(in: view)
+            let velocity = gesture.velocity(in: view)
+            if -translation.x > 90 || -velocity.x > 900 {
+                advance(toOffset: 1)
+            } else if translation.x > 90 || velocity.x > 900 {
+                advance(toOffset: -1)
+            }
+        default:
+            break
+        }
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
+        let velocity = pan.velocity(in: view)
+        return abs(velocity.x) > abs(velocity.y) * 1.5
     }
 
     private func advance(toOffset offset: Int) {
@@ -242,9 +289,32 @@ class MessageDetailViewController: UIViewController {
         guard let navigationController = navigationController else { return }
         // Replace the top of the stack instead of pushing: reviewing many
         // messages must not pile up history that Back would walk through.
+        // The swap itself is never animated through UIKit: programmatic stack
+        // surgery with animated transitions (or a parked-then-pop trick)
+        // desynchronizes the interactivePopGestureRecognizer, which killed
+        // the edge-swipe back entirely. Instead, take a snapshot of the old
+        // screen, swap instantly, and slide the snapshot out in the swipe's
+        // direction — the transition feels native and navigation stays sane.
         var stack = navigationController.viewControllers
         stack[stack.count - 1] = replacement
-        navigationController.setViewControllers(stack, animated: true)
+        let snapshot = navigationController.view.snapshotView(afterScreenUpdates: false)
+        navigationController.setViewControllers(stack, animated: false)
+        guard let snapshot else { return }
+        navigationController.view.addSubview(snapshot)
+        snapshot.frame = navigationController.view.bounds
+        let width = navigationController.view.bounds.width
+        let exitOffset: CGFloat = offset > 0 ? -width : width
+        UIView.animate(
+            withDuration: ThemeTokens.Animation.normal.duration + 0.05,
+            delay: 0,
+            options: [.curveEaseOut],
+            animations: {
+                snapshot.frame.origin.x = exitOffset
+            },
+            completion: { _ in
+                snapshot.removeFromSuperview()
+            }
+        )
     }
 
     private func setupUI() {
