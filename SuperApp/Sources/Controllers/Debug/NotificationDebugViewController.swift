@@ -121,12 +121,15 @@ class NotificationDebugViewController: UIViewController {
         return tv
     }()
 
+    // Real iOS system alert tones (UISounds/New) bundled from the Bark
+    // distribution; names must match SuperApp/Resources/PushRingtones/*.caf.
     private let sounds = [
-        "alarm", "anticipation", "bell", "birdsong", "bloom", "calypso", "chime",
-        "choochoo", "descent", "electronic", "fanfare", "glass", "horn", "lapis",
-        "minuet", "multiway", "newmail", "noire", "paper", "payment", "pop", "pow",
-        "promotion", "rings", "sencha", "sherwood", "silo", "stargate", "synthesis",
-        "telegraph", "tidings", "tumble", "update", "vibra", "whistle"
+        "alarm", "anticipate", "bell", "birdsong", "bloom", "calypso", "chime",
+        "choo", "descent", "electronic", "fanfare", "glass", "gotosleep",
+        "healthnotification", "horn", "ladder", "mailsent", "minuet",
+        "multiwayinvitation", "newmail", "newsflash", "noir", "paymentsuccess",
+        "shake", "sherwoodforest", "silence", "spell", "suspense", "telegraph",
+        "tiptoes", "typewriters", "update"
     ]
     private let soundPicker = UIPickerView()
 
