@@ -126,6 +126,49 @@ while Apple silently rejected every request. Rules that must not regress:
   「无线局域网与蜂窝网络」(see `RealDevicePushSmokeTests` alert handling); the test runner
   process has its own copy of the same dialog.
 
+### Push Sound Tracing (三层日志追踪规范)
+
+When a push arrives but plays the wrong/default tone, do NOT guess — trace all three
+layers and diff against expectation. The notification sound on background/killed-app
+delivery is chosen by **SpringBoard** (the app executes zero code), so only system logs
+reveal the decision.
+
+**Layer 1 — server send log** (proves what Apple received):
+
+```bash
+ssh shanbox-jump "grep -a '\[APNs\] sending' /var/log/supervisor/webbridgeserver-error.log | tail -5"
+# → "[APNs] sending token=…d06e69 title=X sound=alarm level=nil"
+```
+
+**Layer 2 — device arrival & presentation verdict** (USB connection required):
+
+```bash
+nohup timeout 60 idevicesyslog > /tmp/syslog.txt 2>/dev/null &
+# ...send a push, wait ~10s, then:
+grep -a "sirens" /tmp/syslog.txt | grep -a webbridgekit
+```
+
+**Layer 3 — the exact file the speaker played**:
+
+```bash
+grep -a "soundFileURL" /tmp/syslog.txt | grep -aoE "file://[^;]*caf" | sort -u
+```
+
+**Signature lines and what they mean:**
+
+| Log line | Meaning |
+|---|---|
+| `lights and sirens YES … DID play` | System presented with sound |
+| `lights and sirens NO` (rapid pushes) | **Coalescing suppression** — stacked notifications are silenced; clear Notification Center before testing |
+| `soundFileURL = file://…/<name>.caf` (container path) | Named sound resolved and played — the goal |
+| `soundFileURL = …/ToneLibrary/…Rebound.caf` + `toneIdentifier = "texttone:Rebound"` | Named sound IGNORED; system default text tone played |
+| `Falling back to default due missing setting in Preferences` + `correspondingToneIdentifier:((null))` | ToneLibrary could not map the payload sound to a tone and no per-app preference exists → default. On iOS 18.7.3 dev-signed/sandbox builds this fires deterministically for every named sound (2026-08-17 verdict, all formats/payloads/installs exhausted); production-signed apps (App Store Bark) are the control — if they play named tones, TestFlight distribution is the fix. |
+
+Also useful: `grep -a "Play sound for notification"` shows the full tone/vibration
+decision; `topic:()` empty hints the notification was not attributed to the app topic
+in ToneLibrary's lookup. `NSLog` from the app does NOT reach `idevicesyslog` reliably —
+do not rely on app-side print diagnostics for device-side questions.
+
 ## Device Selection Policy (Simulator First)
 
 UI-related development and verification must default to the iOS Simulator:
