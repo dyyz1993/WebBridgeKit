@@ -27,7 +27,8 @@ body{font-family:var(--font);background:var(--main-bg);color:var(--text-primary)
 .sidebar{width:248px;min-width:248px;background:var(--sidebar-bg);color:var(--sidebar-text);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sidebar-header{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
 .sidebar-header .logo{display:flex;align-items:center;gap:10px}
-.sidebar-header .logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#007aff,#5856d6);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff}
+.sidebar-header .logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#4F6AF6,#8B5CF6);display:flex;align-items:center;justify-content:center;color:#fff}
+.sidebar-header .logo-icon svg{width:22px;height:22px;display:block}
 .sidebar-header h1{font-size:16px;font-weight:600;letter-spacing:-.3px;line-height:1.2}
 .sidebar-header p{font-size:11px;color:var(--sidebar-text-dim);margin-top:2px}
 .sidebar-nav{padding:10px 8px;flex:1}
@@ -227,7 +228,7 @@ textarea.form-input{resize:vertical;min-height:64px;line-height:1.5}
 <div class="app">
 <nav class="mobile-nav" id="mobileNav"></nav>
 <aside class="sidebar" id="sidebar">
-<div class="sidebar-header"><div class="logo"><div class="logo-icon">W</div><div><h1>WebBridgeKit</h1><p>推送控制台 v2</p></div></div></div>
+<div class="sidebar-header"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 512 512" fill="none" aria-label="WebBridgeKit"><path d="M214 104H166C128.445 104 98 134.445 98 172V340C98 377.555 128.445 408 166 408H214M298 104H346C383.555 104 414 134.445 414 172V340C414 377.555 383.555 408 346 408H298M190 256H322" stroke="currentColor" stroke-width="52" stroke-linecap="round"/></svg></div><div><h1>WebBridgeKit</h1><p>推送控制台 v2</p></div></div></div>
 <nav class="sidebar-nav" id="sidebarNav"></nav>
 <div class="sidebar-footer">
 <button class="nav-item" onclick="clearHistory()"><span class="icon">🗑</span> 清空历史记录</button>

@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 1024 1024" fill="none">
+  <title>WebBridgeKit test resource logo</title>
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    <linearGradient id="webbridgekit-test-gradient" x1="120" y1="88" x2="904" y2="936" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F6AF6"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
     </linearGradient>
   </defs>
-  <circle cx="100" cy="100" r="90" fill="url(#grad1)" />
-  <path d="M 60 100 L 90 130 L 140 70" stroke="white" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="100" cy="100" r="95" stroke="#2563eb" stroke-width="4" fill="none" opacity="0.3"/>
+  <rect width="1024" height="1024" rx="224" fill="url(#webbridgekit-test-gradient)"/>
+  <path d="M428 240H332C276.772 240 232 284.772 232 340V684C232 739.228 276.772 784 332 784H428M596 240H692C747.228 240 792 284.772 792 340V684C792 739.228 747.228 784 692 784H596M384 512H640" stroke="#fff" stroke-width="86" stroke-linecap="round"/>
 </svg>

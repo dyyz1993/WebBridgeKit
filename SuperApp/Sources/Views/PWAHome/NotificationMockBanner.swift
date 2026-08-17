@@ -59,11 +59,9 @@ struct NotificationMockBanner: View {
                 .resizable()
                 .scaledToFill()
         } else {
-            Image(uiImage: LucideIcon.appFill.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm) ?? UIImage())
-                .renderingMode(.template)
-                .foregroundColor(alertStyle ? Color(ThemeTokens.Color.error) : Color.appPrimary)
-                .padding(2)
-                .background(Color(ThemeTokens.Color.primarySoft))
+            Image(uiImage: WebBridgeKitBrand.image ?? UIImage())
+                .resizable()
+                .scaledToFill()
         }
     }
 

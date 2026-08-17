@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <title>WebBridgeKit mark</title>
+  <desc>Two rounded nodes joined by a bridge, representing a web-to-native connection.</desc>
+  <defs>
+    <linearGradient id="webbridgekit-gradient" x1="84" y1="96" x2="428" y2="416" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F6AF6"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- The two open nodes leave a clear channel between Web and Native. -->
+  <path
+    d="M214 104H166C128.445 104 98 134.445 98 172V340C98 377.555 128.445 408 166 408H214"
+    stroke="url(#webbridgekit-gradient)"
+    stroke-width="52"
+    stroke-linecap="round"
+  />
+  <path
+    d="M298 104H346C383.555 104 414 134.445 414 172V340C414 377.555 383.555 408 346 408H298"
+    stroke="url(#webbridgekit-gradient)"
+    stroke-width="52"
+    stroke-linecap="round"
+  />
+
+  <!-- The central bridge is intentionally shorter than the full mark width. -->
+  <path
+    d="M190 256H322"
+    stroke="url(#webbridgekit-gradient)"
+    stroke-width="52"
+    stroke-linecap="round"
+  />
+</svg>

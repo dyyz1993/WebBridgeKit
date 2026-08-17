@@ -208,9 +208,12 @@ class AboutViewController: UIViewController {
         if let appIcon = Bundle.main.icon {
             appIconImageView.image = appIcon
         } else {
-            // 如果无法获取 App 图标，使用系统图标
-            appIconImageView.image = LucideIcon.appFill.templateImage(pointSize: 60, weight: .light)
+            // 如果无法获取 AppIcon，使用正式品牌标记
+            appIconImageView.image = WebBridgeKitBrand.image
+            if appIconImageView.image == nil {
+                appIconImageView.image = LucideIcon.appFill.templateImage(pointSize: 60, weight: .light)
                 appIconImageView.tintColor = ThemeTokens.Color.primary
+            }
         }
 
         // 加载 App 名称
@@ -395,6 +398,6 @@ extension Bundle {
         }
         #endif
 
-        return nil
+        return UIImage(named: "AppIcon") ?? WebBridgeKitBrand.image
     }
 }

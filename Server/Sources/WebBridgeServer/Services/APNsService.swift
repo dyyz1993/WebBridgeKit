@@ -3,10 +3,31 @@ import Hummingbird
 import NIOCore
 import NIOHTTP1
 
+/// In-memory per-device message log so the app can fetch messages that
+/// arrived while it was backgrounded or killed (no App Groups needed).
+actor PushMessageLog {
+    private var messages: [String: [(title: String, body: String, timestamp: Int)]] = [:]
+    private let maxPerKey = 100
+
+    func record(key: String, title: String, body: String) {
+        var list = messages[key] ?? []
+        list.append((title: title, body: body, timestamp: Int(Date().timeIntervalSince1970)))
+        if list.count > maxPerKey {
+            list.removeFirst(list.count - maxPerKey)
+        }
+        messages[key] = list
+    }
+
+    func recent(key: String, since: Int = 0) -> [(title: String, body: String, timestamp: Int)] {
+        (messages[key] ?? []).filter { $0.timestamp > since }
+    }
+}
+
 final class APNsService: Sendable {
     private let configuration: ServerConfiguration
     private let tokenStore: TokenStore
     private let jwtSigner: APNsJWTSigner?
+    public let messageLog = PushMessageLog()
 
     init(configuration: ServerConfiguration, tokenStore: TokenStore) {
         self.configuration = configuration
