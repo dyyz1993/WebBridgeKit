@@ -375,6 +375,11 @@ final class PWAAppCenterViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "推送铃声", style: .default) { [weak self] _ in
             self?.showRingtonePicker()
         })
+        alert.addAction(UIAlertAction(title: "推送加密", style: .default) { [weak self] _ in
+            self?.navigationController?.pushViewController(
+                UIHostingController(rootView: PushEncryptionView()), animated: true
+            )
+        })
         alert.addAction(UIAlertAction(title: "管理自有服务", style: .default) { [weak self] _ in
             self?.navigationController?.pushViewController(GatewayConfigurationViewController(), animated: true)
         })

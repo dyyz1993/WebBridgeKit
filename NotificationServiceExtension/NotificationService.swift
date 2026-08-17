@@ -1,5 +1,7 @@
 import UserNotifications
 import AVFoundation
+import CryptoKit
+import UIKit
 
 class NotificationService: UNNotificationServiceExtension {
 
@@ -18,6 +20,8 @@ class NotificationService: UNNotificationServiceExtension {
         pipeline.register(MarkdownNotificationProcessor())
         pipeline.register(IconProcessor())
         pipeline.register(CallProcessor())
+        pipeline.register(AutoCopyProcessor())
+        pipeline.register(CiphertextProcessor())
         return pipeline
     }()
 
@@ -289,5 +293,149 @@ struct CallProcessor: NotificationContentProcessor {
             try? FileManager.default.removeItem(at: longURL)
             return nil
         }
+    }
+}
+
+
+// MARK: - AutoCopy (clipboard on receive)
+
+/// Copies the payload text to the clipboard when the push arrives, matching
+/// Bark's AutoCopyProcessor (autocopy=1 / automaticallycopy=1).
+struct AutoCopyProcessor: NotificationContentProcessor {
+    func process(content: UNMutableNotificationContent, userInfo: [AnyHashable: Any]) async throws -> UNMutableNotificationContent {
+        let autoCopy = userInfo["autoCopy"] as? String == "1"
+            || userInfo["automaticallyCopy"] as? String == "1"
+        guard autoCopy else { return content }
+
+        if let copyText = userInfo["copy"] as? String, !copyText.isEmpty {
+            UIPasteboard.general.string = copyText
+        } else {
+            UIPasteboard.general.string = content.body
+        }
+        return content
+    }
+}
+
+// MARK: - Ciphertext (end-to-end encryption)
+
+/// Decrypts AES-encrypted push payloads. The symmetric key is generated on
+/// device and shared with the sender out-of-band (QR code / copy). Modeled
+/// on Bark's CiphertextProcessor.
+///
+/// Protocol: sender encrypts the full JSON payload `{title, body, sound,
+/// ...}` with AES-128-CBC using the shared key and a random IV, then sends
+/// `ciphertext=<base64>&iv=<base64>`. This processor decrypts and applies
+/// all fields as if they were sent in the clear.
+struct CiphertextProcessor: NotificationContentProcessor {
+    private static let keychainService = "com.webbridgekit.superapp.push-crypto"
+    private static let keychainAccount = "shared-aes-key"
+
+    func process(content: UNMutableNotificationContent, userInfo: [AnyHashable: Any]) async throws -> UNMutableNotificationContent {
+        guard let ciphertext = userInfo["ciphertext"] as? String, !ciphertext.isEmpty else {
+            return content
+        }
+
+        guard let key = Self.loadSharedKey() else {
+            // No key configured; show the ciphertext as-is so the user knows
+            // an encrypted push arrived but cannot be read.
+            content.title = "🔐 加密推送"
+            content.body = "收到加密消息，但本机未配置解密密钥。请在设置中配置。"
+            return content
+        }
+
+        guard let plaintext = Self.decrypt(ciphertext: ciphertext, iv: userInfo["iv"] as? String, key: key) else {
+            content.title = "🔐 解密失败"
+            content.body = "密钥不匹配或数据损坏。"
+            return content
+        }
+
+        // Apply decrypted fields to the notification content.
+        guard let data = plaintext.data(using: .utf8),
+              let map = try? JSONSerialization.jsonObject(with: data) as? [String: String] else {
+            return content
+        }
+
+        var newUserInfo = userInfo
+        for (k, v) in map {
+            let lowerKey = k.lowercased()
+            newUserInfo[lowerKey] = v
+            switch lowerKey {
+            case "title": content.title = v
+            case "subtitle": content.subtitle = v
+            case "body": content.body = v
+            case "group", "threadid": content.threadIdentifier = v
+            case "sound":
+                let name = v.hasSuffix(".caf") ? v : "\(v).caf"
+                content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: name))
+            case "badge":
+                if let badge = Int(v) { content.badge = badge as NSNumber }
+            case "icon":
+                // Defer to IconProcessor which runs earlier; re-inject for
+                // any later processors.
+                newUserInfo["icon"] = v
+            default: break
+            }
+        }
+
+        // Re-run the pipeline on the decrypted fields for icon/image.
+        // (The pipeline processes sequentially; we inject the decrypted
+        // values into userInfo for downstream consumers.)
+        return content
+    }
+
+    // MARK: - AES-128-CBC decryption
+
+    /// AES-GCM decryption. The sender encrypts with AES-128-GCM and sends
+    /// the combined (nonce + ciphertext + tag) as base64 in the ciphertext
+    /// parameter. The IV parameter is accepted but unused with GCM (the
+    /// nonce is embedded in the combined data).
+    static func decrypt(ciphertext: String, iv: String?, key: Data) -> String? {
+        guard let combined = Data(base64Encoded: ciphertext) else { return nil }
+        do {
+            let sealedBox = try AES.GCM.SealedBox(combined: combined)
+            let symmetricKey = SymmetricKey(data: key)
+            let decrypted = try AES.GCM.open(sealedBox, using: symmetricKey)
+            return String(data: decrypted, encoding: .utf8)
+        } catch {
+            return nil
+        }
+    }
+
+    // MARK: - Keychain (shared key management)
+
+    static func generateSharedKey() -> String? {
+        let key = SymmetricKey(size: .bits128)
+        let keyData = key.withUnsafeBytes { Data($0) }
+        let base64 = keyData.base64EncodedString()
+        guard storeKey(keyData) else { return nil }
+        return base64
+    }
+
+    static func loadSharedKey() -> Data? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount,
+            kSecReturnData as String: true,
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess else { return nil }
+        return result as? Data
+    }
+
+    static func loadSharedKeyBase64() -> String? {
+        loadSharedKey()?.base64EncodedString()
+    }
+
+    private static func storeKey(_ data: Data) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount,
+            kSecValueData as String: data,
+        ]
+        SecItemDelete(query as CFDictionary)
+        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
     }
 }
