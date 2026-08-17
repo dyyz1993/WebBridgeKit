@@ -1,6 +1,7 @@
 import UserNotifications
 import AVFoundation
 import CryptoKit
+import Intents
 import UIKit
 
 class NotificationService: UNNotificationServiceExtension {
@@ -252,33 +253,94 @@ struct MarkdownNotificationProcessor: NotificationContentProcessor {
 }
 
 
-// MARK: - Icon (banner attachment)
+// MARK: - Icon (INSendMessageIntent — left-side custom avatar)
 
-/// Downloads the icon URL and attaches it so the banner renders the custom
-/// icon (modeled on Bark's IconProcessor).
+/// Replaces the notification's left-side app icon with a custom image by
+/// constructing a fake iMessage conversation via INSendMessageIntent.
+/// This is the same technique Bark uses: iOS renders "incoming message"
+/// notifications with the sender's avatar on the left, bypassing the
+/// normally immutable app icon. iOS 15+.
 struct IconProcessor: NotificationContentProcessor {
     func process(content: UNMutableNotificationContent, userInfo: [AnyHashable: Any]) async throws -> UNMutableNotificationContent {
+        guard #available(iOSApplicationExtension 15.0, *) else { return content }
+
         guard let iconURLString = userInfo["icon"] as? String,
               !iconURLString.isEmpty,
-              let iconURL = URL(string: iconURLString) else {
+              let iconURL = URL(string: iconURLString),
+              let imageData = try? await downloadIconData(from: iconURL)
+        else {
             return content
         }
-        // The URL's last path component carries the extension; fall back to png.
-        let fileName = iconURL.lastPathComponent.isEmpty ? "icon.png" : iconURL.lastPathComponent
-        let localURL = FileManager.default.temporaryDirectory.appendingPathComponent("nse-icon-\(fileName)")
+
+        // Build a fake "sender" person with the custom icon as avatar.
+        var nameComponents = PersonNameComponents()
+        nameComponents.nickname = content.title
+
+        let avatar = INImage(imageData: imageData)
+        let senderPerson = INPerson(
+            personHandle: INPersonHandle(value: "", type: .unknown),
+            nameComponents: nameComponents,
+            displayName: nameComponents.nickname,
+            image: avatar,
+            contactIdentifier: nil,
+            customIdentifier: nil,
+            isMe: false,
+            suggestionType: .none
+        )
+        // The "me" recipient (required for the message layout).
+        let mePerson = INPerson(
+            personHandle: INPersonHandle(value: "", type: .unknown),
+            nameComponents: nil,
+            displayName: nil,
+            image: nil,
+            contactIdentifier: nil,
+            customIdentifier: nil,
+            isMe: true,
+            suggestionType: .none
+        )
+        // Second placeholder recipient — required for the subtitle to
+        // render (same as Bark; do not ask why).
+        let placeholderPerson = INPerson(
+            personHandle: INPersonHandle(value: "", type: .unknown),
+            nameComponents: nameComponents,
+            displayName: nameComponents.nickname,
+            image: avatar,
+            contactIdentifier: nil,
+            customIdentifier: nil,
+            isMe: false,
+            suggestionType: .none
+        )
+
+        let intent = INSendMessageIntent(
+            recipients: [mePerson, placeholderPerson],
+            outgoingMessageType: .outgoingMessageText,
+            content: content.body,
+            speakableGroupName: INSpeakableString(spokenPhrase: content.subtitle),
+            conversationIdentifier: content.threadIdentifier,
+            serviceName: nil,
+            sender: senderPerson,
+            attachments: nil
+        )
+
+        intent.setImage(avatar, forParameterNamed: \.speakableGroupName)
+
+        let interaction = INInteraction(intent: intent, response: nil)
+        interaction.direction = .incoming
+
         do {
-            let (data, _) = try await URLSession.shared.data(from: iconURL)
-            try data.write(to: localURL)
-            let attachment = try UNNotificationAttachment(
-                identifier: "icon",
-                url: localURL,
-                options: nil
-            )
-            content.attachments += [attachment]
+            try await interaction.donate()
+            let updated = try content.updating(from: intent) as! UNMutableNotificationContent
+            return updated
         } catch {
-            // Icon is decorative; a failed download must not break delivery.
+            // Intent donation failures must not break delivery; the
+            // notification still shows with the default app icon.
+            return content
         }
-        return content
+    }
+
+    private func downloadIconData(from url: URL) async throws -> Data {
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return data
     }
 }
 
