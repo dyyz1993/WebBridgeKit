@@ -1,54 +1,63 @@
 import Foundation
-import UserNotifications
 import WebBridgeKit
 
-/// Reads push payloads recorded by the Notification Service Extension from
-/// the shared App Group directory and imports them into the MessageEngine.
-/// Called on app launch and on `applicationDidBecomeActive` so background
-/// pushes are never lost from the Inbox.
+/// Fetches messages that arrived while the app was backgrounded or killed.
+/// Queries the server's per-device message history API instead of relying
+/// on App Groups + Notification Service Extension.
 enum PendingMessageImporter {
 
-    private static let appGroupID = "group.com.xuyingzhou.bark"
+    private static let lastSyncKey = "com.webbridgekit.lastMessageSync"
 
     static func importPending() async {
-        guard let groupURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)
+        guard let serverURL = Self.serverBaseURL,
+              let identity = try? OfficialPushIdentityStore.shared.currentOrCreate()
         else { return }
 
-        let pendingDir = groupURL.appendingPathComponent("pending_messages", isDirectory: true)
-        guard FileManager.default.fileExists(atPath: pendingDir.path) else { return }
+        let lastSync = UserDefaults.standard.double(forKey: lastSyncKey)
+        let urlString = "\(serverURL)/api/v1/messages/\(identity)?since=\(Int(lastSync))"
+        guard let url = URL(string: urlString) else { return }
 
-        guard let files = try? FileManager.default.contentsOfDirectory(
-            at: pendingDir,
-            includingPropertiesForKeys: [.creationDateKey],
-            options: [.skipsHiddenFiles]
-        ) else { return }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 10
 
-        let plists = files
-            .filter { $0.pathExtension == "plist" }
-            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return }
 
-        guard !plists.isEmpty else { return }
+            let history = try JSONDecoder().decode(MessageHistory.self, from: data)
+            guard !history.messages.isEmpty else { return }
 
-        for fileURL in plists {
-            guard let dict = NSDictionary(contentsOf: fileURL) as? [String: Any] else {
-                try? FileManager.default.removeItem(at: fileURL)
-                continue
+            var latest = lastSync
+            for message in history.messages {
+                let payload = MessagePayload(
+                    title: message.title,
+                    body: message.body,
+                    channel: "apns"
+                )
+                try? await MessageEngine.shared.receive(payload)
+                latest = max(latest, Double(message.timestamp))
             }
 
-            let userInfo = dict
-            let title = userInfo["title"] as? String ?? ""
-            let body = userInfo["body"] as? String ?? ""
+            if latest > lastSync {
+                UserDefaults.standard.set(latest, forKey: lastSyncKey)
+            }
+        } catch {
+            // Network errors are expected; retry on next foreground
+        }
+    }
 
-            let payload = MessagePayload(
-                title: title,
-                body: body,
-                channel: userInfo["channel"] as? String ?? "apns"
-            )
+    private static var serverBaseURL: String? {
+        ServerConfigManager.shared.getActiveBaseURL()
+            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
+            ?? "https://wbk.shanbox.19930810.xyz:8443"
+    }
 
-            try? await MessageEngine.shared.receive(payload)
-
-            try? FileManager.default.removeItem(at: fileURL)
+    private struct MessageHistory: Codable {
+        let messages: [Item]
+        struct Item: Codable {
+            let title: String
+            let body: String
+            let timestamp: Int
         }
     }
 }
