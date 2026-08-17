@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UserNotifications
 import WebBridgeKit
 
 /// SwiftUI home presentation backed by the existing trusted-PWA runtime.
@@ -109,6 +110,34 @@ final class PWAAppCenterViewController: UIViewController {
         homeViewModel.pushURL = pushURL
         if officialPushIdentity == nil {
             prepareOfficialPushIdentity()
+        }
+
+        #if DEBUG
+        if Self.isOfficialPushUITest { return }
+        #endif
+
+        // Re-query the real system authorization on every appear: the user
+        // may have granted permission in iOS Settings after denying the
+        // in-app prompt, and the cached flag would keep showing "enable"
+        // forever without this refresh.
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                switch settings.authorizationStatus {
+                case .authorized, .provisional, .ephemeral:
+                    if UserDefaults.standard.bool(forKey: self.pushRegistrationFlag) {
+                        self.homeViewModel.pushState = .ready
+                    } else {
+                        // Permission now exists; complete the registration
+                        // that the earlier denial blocked.
+                        self.activateOfficialPush()
+                    }
+                case .denied:
+                    self.homeViewModel.pushState = .denied
+                default:
+                    self.homeViewModel.pushState = .permissionRequired
+                }
+            }
         }
     }
 

@@ -253,22 +253,76 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         switch gesture.state {
         case .changed:
             let x = gesture.translation(in: view).x
+            // The page follows the finger: translate the scroll view with a
+            // slight rotation (Tinder-card feel) and rubber-band at the edges
+            // where there is no peer to navigate to.
+            let bounded = rubberBand(x)
+            let rotation = bounded * 0.0004
+            scrollView.transform = CGAffineTransform(
+                translationX: bounded, y: 0
+            ).rotated(by: rotation)
             // Brighten the indicator the drag is heading toward.
             nextIndicator.alpha = x < 0 ? 1.0 : 0.45
             prevIndicator.alpha = x > 0 ? 1.0 : 0.45
-        case .ended:
-            nextIndicator.alpha = 0.45
-            prevIndicator.alpha = 0.45
+        case .ended, .cancelled, .failed:
             let translation = gesture.translation(in: view)
             let velocity = gesture.velocity(in: view)
-            if -translation.x > 90 || -velocity.x > 900 {
-                advance(toOffset: 1)
-            } else if translation.x > 90 || velocity.x > 900 {
-                advance(toOffset: -1)
+            let shouldAdvanceNext = -translation.x > 80 || -velocity.x > 800
+            let shouldAdvancePrev = translation.x > 80 || velocity.x > 800
+            if shouldAdvanceNext || shouldAdvancePrev {
+                // Fly the current page out in the swipe direction, then swap.
+                let flyDirection: CGFloat = shouldAdvanceNext ? -1 : 1
+                UIView.animate(
+                    withDuration: ThemeTokens.Animation.normal.duration,
+                    delay: 0,
+                    options: [.curveEaseIn],
+                    animations: {
+                        self.scrollView.transform = CGAffineTransform(
+                            translationX: flyDirection * self.view.bounds.width,
+                            y: 0
+                        ).rotated(by: flyDirection * 0.15)
+                        self.scrollView.alpha = 0
+                    },
+                    completion: { [weak self] _ in
+                        guard let self = self else { return }
+                        self.scrollView.transform = .identity
+                        self.scrollView.alpha = 1
+                        self.advance(toOffset: shouldAdvanceNext ? 1 : -1)
+                    }
+                )
+            } else {
+                // Below threshold: spring back to center.
+                UIView.animate(
+                    withDuration: ThemeTokens.Animation.modal.duration,
+                    delay: 0,
+                    usingSpringWithDamping: 0.8,
+                    initialSpringVelocity: 0.3,
+                    animations: {
+                        self.scrollView.transform = .identity
+                    }
+                )
             }
+            nextIndicator.alpha = 0.45
+            prevIndicator.alpha = 0.45
         default:
             break
         }
+    }
+
+    /// Rubber-bands the horizontal translation at the boundaries (no peer to
+    /// navigate to in that direction), so the page feels tethered.
+    private func rubberBand(_ x: CGFloat) -> CGFloat {
+        let width = view.bounds.width
+        let maxPull = width * 0.35
+        let canGoLeft = currentIndex < (peerMessages?.count ?? 0) - 1
+        let canGoRight = currentIndex > 0
+        if x < 0 && !canGoLeft { return -damped(-x, max: maxPull) }
+        if x > 0 && !canGoRight { return damped(x, max: maxPull) }
+        return x
+    }
+
+    private func damped(_ value: CGFloat, max: CGFloat) -> CGFloat {
+        max * (1 - 1 / (value / max + 1))
     }
 
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
