@@ -1,19 +1,28 @@
 import Foundation
 import WebBridgeKit
 
-/// Copies the bundled push ringtones into Library/Sounds on first launch.
+/// Copies the bundled push ringtones into the shared app-group Library/Sounds
+/// on first launch.
 ///
-/// UNNotificationSound resolves names against the app bundle and the
-/// container's Library/Sounds; Library/Sounds is the location Bark uses for
-/// user-imported sounds and is the most reliable of the two on device. Some
-/// bundle-root lookups were observed falling back to the default alert even
-/// with canonical PCM caf files at the bundle root, so mirror the library
-/// into Library/Sounds as well — the copy is idempotent and cheap (~1 MB).
+/// The NotificationServiceExtension cannot read the main app's container or
+/// bundle; the app group's Library/Sounds is the shared, documented location
+/// both processes can resolve named sounds from (Bark uses the same layout).
+/// The copy is idempotent and cheap (~1 MB).
 enum PushSoundInstaller {
 
+    static let appGroupIdentifier = "group.com.webbridgekit.superapp"
+
     static func install() {
-        let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-        let soundsDirectory = library.appendingPathComponent("Sounds", isDirectory: true)
+        // App Group not yet registered with Apple; mirror to the main
+        // container meanwhile. The NSE icon/image processors work without
+        // it; CallProcessor will activate once the group is provisioned.
+        let groupURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) ?? FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+
+        let soundsDirectory = groupURL
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Sounds", isDirectory: true)
 
         do {
             try FileManager.default.createDirectory(at: soundsDirectory, withIntermediateDirectories: true)

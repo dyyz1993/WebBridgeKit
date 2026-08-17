@@ -31,11 +31,15 @@ final class PushRingtoneModel: ObservableObject {
 
     private var player: AVAudioPlayer?
 
-    /// UNNotificationSound resolves custom names against this directory, so
-    /// imported sounds become push-playable immediately — no server round trip.
+    /// Custom imports land in the shared app group so the notification
+    /// service extension can resolve them as push sounds too.
     private var customSoundsDirectory: URL {
-        let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-        return library.appendingPathComponent("Sounds", isDirectory: true)
+        FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: PushSoundInstaller.appGroupIdentifier
+        )?.appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Sounds", isDirectory: true)
+        ?? FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Sounds", isDirectory: true)
     }
 
     init() {
