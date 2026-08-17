@@ -1,11 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 1024 1024" fill="none">
   <title>WebBridgeKit test resource logo</title>
   <defs>
-    <linearGradient id="webbridgekit-test-gradient" x1="120" y1="88" x2="904" y2="936" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4F6AF6"/>
-      <stop offset="1" stop-color="#8B5CF6"/>
+    <linearGradient id="webbridgekit-test-gradient" x1="112" y1="188" x2="912" y2="856" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3F6FF5"/><stop offset="0.52" stop-color="#4F6AF6"/><stop offset="1" stop-color="#A13DFA"/>
+    </linearGradient>
+    <linearGradient id="webbridgekit-test-bridge" x1="382" y1="494" x2="726" y2="548" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2878F4"/><stop offset="0.5" stop-color="#5E65F6"/><stop offset="1" stop-color="#B53CF3"/>
     </linearGradient>
   </defs>
-  <rect width="1024" height="1024" rx="224" fill="url(#webbridgekit-test-gradient)"/>
-  <path d="M428 240H332C276.772 240 232 284.772 232 340V684C232 739.228 276.772 784 332 784H428M596 240H692C747.228 240 792 284.772 792 340V684C792 739.228 747.228 784 692 784H596M384 512H640" stroke="#fff" stroke-width="86" stroke-linecap="round"/>
+  <rect width="1024" height="1024" fill="#FFFFFF"/>
+  <path d="M112 205C112 140 178 101 237 131L430 229C476 253 504 299 504 351V674C504 733 474 779 426 804L236 903C178 933 112 892 112 826V205Z" fill="url(#webbridgekit-test-gradient)"/>
+  <path d="M912 205C912 140 846 101 787 131L594 229C548 253 520 299 520 351V674C520 733 550 779 598 804L788 903C846 933 912 892 912 826V205Z" fill="url(#webbridgekit-test-gradient)"/>
+  <path d="M232 345C232 309 266 283 300 294L405 329C436 340 456 368 456 402V586C456 622 435 650 402 662L297 698C263 709 232 683 232 647V345Z" fill="#FFFFFF"/>
+  <path d="M792 345C792 309 758 283 724 294L619 329C588 340 568 368 568 402V586C568 622 589 650 622 662L727 698C761 709 792 683 792 647V345Z" fill="#FFFFFF"/>
+  <circle cx="208" cy="250" r="16" fill="#FFFFFF"/><circle cx="258" cy="262" r="16" fill="#FFFFFF"/><circle cx="308" cy="274" r="16" fill="#FFFFFF"/>
+  <rect x="730" y="224" width="36" height="36" rx="10" fill="#FFFFFF"/><rect x="778" y="224" width="36" height="36" rx="10" fill="#FFFFFF"/><rect x="730" y="272" width="36" height="36" rx="10" fill="#FFFFFF"/><rect x="778" y="272" width="36" height="36" rx="10" fill="#FFFFFF"/>
+  <path d="M382 448C382 413 417 390 449 405L506 433C540 449 568 449 602 433L659 405C691 390 726 413 726 448V554C726 589 691 612 659 597L602 569C568 553 540 553 506 569L449 597C417 612 382 589 382 554V448Z" fill="url(#webbridgekit-test-bridge)"/>
 </svg>
