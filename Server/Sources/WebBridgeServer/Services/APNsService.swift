@@ -132,6 +132,9 @@ final class APNsService: Sendable {
         var aps: [String: Any] = [
             "alert": alert,
             "sound": apsSound(payload),
+            // Wakes the NotificationServiceExtension (icon attachments and
+            // call=1 30-second loops are produced there, as in Bark).
+            "mutable-content": 1,
         ]
         if let badge = payload.badge { aps["badge"] = badge }
         if let threadID = payload.threadID ?? payload.group { aps["thread-id"] = threadID }

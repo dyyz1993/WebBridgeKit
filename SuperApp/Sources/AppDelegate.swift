@@ -253,6 +253,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
+        // Import push payloads recorded by the Notification Service Extension
+        // while the app was backgrounded or killed (Bark-style recovery).
+        Task {
+            await PendingMessageImporter.importPending()
+        }
         if !ProcessInfo.processInfo.isWebBridgeKitUITesting {
             TokenManager.shared.parseTokenFromClipboard()
             CommandHandler.shared.checkClipboardOnForeground()

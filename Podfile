@@ -124,6 +124,11 @@ target 'SuperAppUITests' do
   shared_pods
 end
 
+# NSE doesn't link pods directly; declared so the workspace resolves cleanly.
+target 'NotificationServiceExtension' do
+  # intentionally empty — the extension is self-contained
+end
+
 target 'AppTemplate' do
   shared_pods
 end
