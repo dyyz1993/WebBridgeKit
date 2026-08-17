@@ -8,7 +8,7 @@ import WebBridgeKit
 /// pushes are never lost from the Inbox.
 enum PendingMessageImporter {
 
-    private static let appGroupID = "group.com.webbridgekit.superapp"
+    private static let appGroupID = "group.com.xuyingzhou.bark"
 
     static func importPending() async {
         guard let groupURL = FileManager.default
