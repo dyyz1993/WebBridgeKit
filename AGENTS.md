@@ -327,6 +327,31 @@ xcrun simctl launch booted com.webbridgekit.superapp
 - `Sources/Theme/LucideIcon.swift` — 50+ case enum mapping to Lucide IDs
 - `Sources/Theme/Lucide.swift` — UIImage extension for loading Lucide icons
 
+### WebBridgeKit Brand Icon Rules
+
+- The official WebBridgeKit brand mark is the open two-node bridge symbol in
+  `SuperApp/Resources/branding/webbridgekit-mark.svg`.
+- The official app-icon artwork is
+  `SuperApp/Resources/branding/webbridgekit-app-icon.svg`; all iPhone/iPad
+  PNG sizes live in `SuperApp/Sources/Assets.xcassets/AppIcon.appiconset`.
+- Native product identity surfaces use the `WebBridgeKitBrand` image asset from
+  `SuperApp/Sources/Assets.xcassets/WebBridgeKitBrand.imageset`. Keep this
+  centralized instead of loading the old generic `appFill` icon for About,
+  Settings, notification previews, or brand fallbacks.
+- Product identity surfaces include the AppIcon, About header, Settings header,
+  notification app identity, Node admin header, and prototype About/Settings
+  hero cards. These must use the bridge mark and the WebBridgeKit blue-violet
+  palette (`#4F6AF6` to `#8B5CF6`).
+- Functional icons must remain semantic Lucide icons: navigation, search,
+  settings, cache types, permissions, push actions, and debug tools must not be
+  replaced with the brand mark.
+- `SuperApp/Resources/images/logo.svg` is a cache/static test fixture and now
+  uses the same bridge mark. Keep its path and loading contract stable; use the
+  dedicated branding SVGs as the canonical product sources.
+- When changing the brand mark, update both SVG sources, regenerate the
+  AppIcon/brand image exports, update the product surfaces above, and verify
+  the image-set JSON plus all PNG dimensions before claiming completion.
+
 ## Testing
 
 - **Coverage**: ~87% (168 test files / 193 source files)

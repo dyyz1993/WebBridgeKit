@@ -28,6 +28,19 @@ enum PushRoutes {
             try await Self.handleRegister(request: request, context: context, services: services)
         }
 
+        // Per-device message history so the app can fetch messages that
+        // arrived while backgrounded (no App Groups / NSE needed).
+        router.get("api/v1/messages/:key") { request, context in
+            guard let key = context.parameters.get("key") else {
+                throw HTTPError(.badRequest, message: "Missing key")
+            }
+            let since = Int(request.uri.query?.split(separator: "=").last ?? "0") ?? 0
+            let messages = await services.apnsService.messageLog.recent(key: key, since: since)
+            return MessageHistoryResponse(
+                messages: messages.map { .init(title: $0.title, body: $0.body, timestamp: $0.timestamp) }
+            )
+        }
+
         // Test endpoint for local verification
         // Usage: curl -X POST http://localhost:8080/api/v1/push/test \
         //   -H "Content-Type: application/json" \
@@ -49,6 +62,7 @@ enum PushRoutes {
         }
 
         let payload = makePayload(title: title, body: body, query: request.uri.query)
+        await services.apnsService.messageLog.record(key: key, title: title, body: body)
         return try await services.apnsService.sendPush(key: key, payload: payload)
     }
 
@@ -66,6 +80,7 @@ enum PushRoutes {
         }
 
         let payload = makePayload(title: "", body: content, query: request.uri.query)
+        await services.apnsService.messageLog.record(key: key, title: "", body: content)
         return try await services.apnsService.sendPush(key: key, payload: payload)
     }
 
@@ -92,6 +107,7 @@ enum PushRoutes {
         }
 
         let payload = makePayload(title: fields["title"] ?? "", body: body, query: canonicalQuery(from: fields))
+        await services.apnsService.messageLog.record(key: key, title: fields["title"] ?? "", body: body)
         return try await services.apnsService.sendPush(key: key, payload: payload)
     }
 
@@ -217,6 +233,11 @@ enum PushRoutes {
             )
         }
 
+        await services.apnsService.messageLog.record(
+            key: pushRequest.deviceKey,
+            title: pushRequest.title,
+            body: pushRequest.body
+        )
         return try await services.apnsService.sendPush(key: pushRequest.deviceKey, payload: pushRequest.payload)
     }
 

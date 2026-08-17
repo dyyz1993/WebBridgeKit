@@ -11,6 +11,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header{background:rgba(255,255,255,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100}
 .header-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px}
 .logo{font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px}
+.logo-mark{width:24px;height:24px;display:block;flex:none}
 .logo span{color:var(--primary)}
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block}
 .status-dot.off{background:var(--error)}
@@ -75,7 +76,7 @@ code{background:#f0f0f0;padding:2px 6px;border-radius:4px;font-size:12px;font-fa
 </style>
 </head>
 <body>
-<div class="header"><div class="header-inner"><div class="logo"><span class="status-dot" id="statusDot"></span> WebBridge<span>Kit</span></div><div style="font-size:13px;color:var(--text2)" id="uptimeText">--</div></div></div>
+<div class="header"><div class="header-inner"><div class="logo"><svg class="logo-mark" viewBox="0 0 512 512" fill="none" aria-label="WebBridgeKit"><defs><linearGradient id="adminBrandGradient" x1="84" y1="96" x2="428" y2="416" gradientUnits="userSpaceOnUse"><stop stop-color="#4F6AF6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><path d="M214 104H166C128.445 104 98 134.445 98 172V340C98 377.555 128.445 408 166 408H214M298 104H346C383.555 104 414 134.445 414 172V340C414 377.555 383.555 408 346 408H298M190 256H322" stroke="url(#adminBrandGradient)" stroke-width="52" stroke-linecap="round"/></svg><span class="status-dot" id="statusDot"></span> WebBridge<span>Kit</span></div><div style="font-size:13px;color:var(--text2)" id="uptimeText">--</div></div></div>
 <div class="container">
 <div class="tabs" id="tabs">
 <button class="tab active" data-tab="dashboard">&#x1F4CA; 仪表盘</button>

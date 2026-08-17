@@ -167,7 +167,7 @@ final class PWAPermissionCenterViewController: UIViewController {
         let card = ThemeCard()
         card.accessibilityIdentifier = "pwa-permission.headerCard"
 
-        let icon = UIImageView(image: LucideIcon.appFill.image())
+        let icon = UIImageView(image: WebBridgeKitBrand.image ?? LucideIcon.appFill.image())
         icon.tintColor = ThemeTokens.Color.primary
         icon.contentMode = .scaleAspectFit
         icon.translatesAutoresizingMaskIntoConstraints = false
