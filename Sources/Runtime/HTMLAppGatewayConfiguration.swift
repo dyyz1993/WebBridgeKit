@@ -10,14 +10,17 @@ import Foundation
 /// First-party gateway metadata bundled with the official app. This is public
 /// trust material, not user-imported configuration and contains no credentials.
 public enum HTMLAppGatewayDefaults {
+    /// Self-hosted production gateway on shanbox. The original tx gateway
+    /// (cloak.xbrowser.dev:5801) is retired; this gateway serves the same
+    /// contract and is verified to be reachable from China.
     public static let official = HTMLAppGatewayConfiguration(
-        id: "tx-webbridgekit",
+        id: "webbridgekit-gateway",
         name: "WebBridgeKit 官方服务",
-        baseURL: "https://cloak.xbrowser.dev:5801",
+        baseURL: "https://wbk.shanbox.19930810.xyz:8443",
         healthPath: "/health",
         manifestPath: "/api/v1/html-apps",
-        publicKeyID: "tx-ed25519-20260810",
-        publicKey: "ZDgR7vFJo7MbhRTj7H3EuYygdVv89ZqR8I6sZXUfShE"
+        publicKeyID: "wbk-self-hosted-20260816",
+        publicKey: "h860-f-Vu_IC9DNoOrGrMpnXydSZHjNqb2HprCJIcm8"
     )
 }
 

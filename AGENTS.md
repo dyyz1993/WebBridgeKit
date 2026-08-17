@@ -111,6 +111,9 @@ while Apple silently rejected every request. Rules that must not regress:
   (verified byte-identical to Bark's). Learned 2026-08-16 after exhausting file formats
   (PCM/AAC/IMA4, mono/stereo), payload minimization, and direct-to-Apple curls; a
   minimal payload still failed until the background mode landed, then everything worked.
+  (Later refined 2026-08-17: the background mode was necessary but not sufficient —
+  the final root cause of the remaining fallbacks was the missing `.caf` extension
+  in the sound name; see the tracing table below.)
   Foreground delivery dodges this via `PushAlertSoundPlayer` (AVAudioPlayer), which is
   why foreground tests can pass while system-path sounds are broken.
 - Sound files: ship Bark's original `Sounds/*.caf` byte-identical; do NOT transcode —
