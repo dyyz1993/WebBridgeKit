@@ -13,13 +13,15 @@ class NotificationService: UNNotificationServiceExtension {
         var pipeline = NotificationProcessorPipeline()
         pipeline.register(TitleProcessor())
         pipeline.register(BodyProcessor())
-        pipeline.register(SoundProcessor())
         pipeline.register(BadgeProcessor())
         pipeline.register(GroupProcessor())
         pipeline.register(ThreadProcessor())
         pipeline.register(ImageProcessor())
         pipeline.register(MarkdownNotificationProcessor())
+        // IconProcessor uses INSendMessageIntent.updating(from:) which
+        // RESETS content.sound; Sound and Call MUST run AFTER it.
         pipeline.register(IconProcessor())
+        pipeline.register(SoundProcessor())
         pipeline.register(CallProcessor())
         pipeline.register(AutoCopyProcessor())
         pipeline.register(CiphertextProcessor())
