@@ -151,7 +151,7 @@ extension PushExample {
             pushTitle: "铃声通知",
             pushBody: "这条通知会播放 alarm 提示音",
             queryItems: [
-                URLQueryItem(name: "sound", value: "alarm")
+                URLQueryItem(name: "sound", value: "alarm.caf")
             ]
         ),
         PushExample(

@@ -159,6 +159,12 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         configure()
         setupSideIndicators()
         setupSwipeNavigation()
+        // Ensure the nav bar with its back button is always visible in the
+        // detail; the inbox hides it, and a stack replacement can leave the
+        // bar hidden if the previous controller hid it. The SYSTEM back
+        // button is used — a custom leftBarButtonItem can interfere with the
+        // interactivePopGestureRecognizer that drives the edge-swipe back.
+        navigationController?.setNavigationBarHidden(false, animated: false)
     }
 
     // MARK: - Peer navigation (next/previous)
@@ -328,7 +334,10 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
         let velocity = pan.velocity(in: view)
-        return abs(velocity.x) > abs(velocity.y) * 1.5
+        // Strict horizontal gate: the drag must be overwhelmingly horizontal
+        // (3:1 ratio, not 1.5:1) to begin — otherwise vertical scrolling of
+        // long message content made the page drift sideways on every scroll.
+        return abs(velocity.x) > abs(velocity.y) * 3.0
     }
 
     private func advance(toOffset offset: Int) {

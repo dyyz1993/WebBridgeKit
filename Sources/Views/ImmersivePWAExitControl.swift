@@ -21,23 +21,34 @@ public final class ImmersivePWAExitControl: UIControl {
     public var onExit: (() -> Void)?
 
     private let size: CGFloat = 44
-    private let collapsedVisibleWidth: CGFloat = 17
+    private let collapsedVisibleWidth: CGFloat = 30
+    /// Extends the tap target beyond the clipped visible sliver so a tap on
+    /// the edge still registers instead of falling through to the PWA.
+    private let hitAreaPadding: CGFloat = 20
     private let positionStore = UserDefaults.standard
     private let edgeKey = "com.webbridgekit.immersive-exit.edge"
     private let verticalRatioKey = "com.webbridgekit.immersive-exit.vertical-ratio"
     private let arrowImageView = UIImageView()
     private lazy var panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
 
     private var edge: Edge = .left
     private var presentation: Presentation = .collapsed
     private var dragStartCenter: CGPoint = .zero
     private var isDragging = false
 
+    public override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        let hitArea = bounds.insetBy(dx: -hitAreaPadding, dy: -hitAreaPadding)
+        return hitArea.contains(point)
+    }
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
         restorePosition()
         setupAppearance()
-        addTarget(self, action: #selector(handleTap), for: .touchUpInside)
+        tapGesture.delegate = self
+        addGestureRecognizer(tapGesture)
+        panGesture.delegate = self
         addGestureRecognizer(panGesture)
     }
 
@@ -61,7 +72,7 @@ public final class ImmersivePWAExitControl: UIControl {
     }
 
     @objc private func handleTap() {
-        guard !isDragging, let superview else { return }
+        guard let superview else { return }
 
         switch presentation {
         case .collapsed:
@@ -128,7 +139,7 @@ public final class ImmersivePWAExitControl: UIControl {
         case .collapsed:
             image = (edge == .left ? LucideIcon.chevronRight : LucideIcon.chevronLeft)
                 .templateImage(pointSize: 18, weight: .semibold)
-            x = edge == .left ? 25 : 1
+            x = edge == .left ? 12 : 1
             accessibilityLabel = "显示退出 PWA"
         }
 
@@ -183,5 +194,17 @@ public final class ImmersivePWAExitControl: UIControl {
         let ratio = maxY == minY ? 0 : (frame.minY - minY) / (maxY - minY)
         positionStore.set(edge.rawValue, forKey: edgeKey)
         positionStore.set(min(max(ratio, 0), 1), forKey: verticalRatioKey)
+    }
+}
+
+extension ImmersivePWAExitControl: UIGestureRecognizerDelegate {
+    /// The pan gesture must fail before the tap fires, so a quick tap
+    /// expands the control instead of being eaten as a micro-drag.
+    public func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        guard gestureRecognizer === panGesture, otherGestureRecognizer === tapGesture else { return false }
+        return true
     }
 }

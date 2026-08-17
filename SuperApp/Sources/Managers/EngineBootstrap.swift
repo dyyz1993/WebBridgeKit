@@ -234,8 +234,32 @@ public final class EngineBootstrap {
                 WebBrowserManager.shared.openBrowser(url: url, params: params)
             }
         case .appId:
-            if let url = URL(string: target.destination) {
-                WebBrowserManager.shared.openBrowser(url: url)
+            // The appId must be resolved through the launch resolver to get
+            // the trusted manifest's actual startURL — passing the raw appId
+            // string as a URL produces an invalid scheme and a blank page.
+            let resolver = HTMLAppLaunchResolver()
+            do {
+                let route = payload.route ?? "/"
+                let launchTarget = try resolver.resolve(
+                    appID: target.destination,
+                    route: route
+                )
+                let params = WebBrowserParams(
+                    displayMode: .immersive,
+                    hideNavigationBar: true,
+                    hideStatusBar: true,
+                    hideTabBar: true,
+                    payload: launchTarget.context.bridgePayload
+                )
+                WebBrowserManager.shared.openBrowser(
+                    url: launchTarget.loaderURL,
+                    params: params
+                )
+            } catch {
+                StructuredLogger.shared.warning(
+                    "[EngineBootstrap] Failed to resolve appId route: \(error.localizedDescription)",
+                    category: .navigation
+                )
             }
         case .deeplink:
             if let url = URL(string: target.destination) {

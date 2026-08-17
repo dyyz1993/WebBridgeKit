@@ -479,7 +479,9 @@ final class PWAAppCenterViewController: UIViewController {
         openPushURL(
             title: "铃声试听",
             body: "铃声 \(sound) 的推送示例",
-            queryItems: [URLQueryItem(name: "sound", value: sound)]
+            // iOS resolves push sound names against full filenames; the extensionless
+        // Bark convention falls back to the default tone on this device.
+        queryItems: [URLQueryItem(name: "sound", value: "\(sound).caf")]
         )
     }
 
@@ -487,7 +489,9 @@ final class PWAAppCenterViewController: UIViewController {
         copyPushURL(
             title: "铃声试听",
             body: "铃声 \(sound) 的推送示例",
-            queryItems: [URLQueryItem(name: "sound", value: sound)]
+            // iOS resolves push sound names against full filenames; the extensionless
+        // Bark convention falls back to the default tone on this device.
+        queryItems: [URLQueryItem(name: "sound", value: "\(sound).caf")]
         )
     }
 
