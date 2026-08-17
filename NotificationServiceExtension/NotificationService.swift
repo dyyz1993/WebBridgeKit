@@ -32,6 +32,11 @@ class NotificationService: UNNotificationServiceExtension {
         self.contentHandler = contentHandler
         bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
 
+        // Record before any async work: icon/image downloads consume the
+        // extension's time budget, and the record must survive
+        // serviceExtensionTimeWillExpire so the Inbox never loses the push.
+        recordPendingMessage(request)
+
         guard let content = bestAttemptContent else { return }
 
         Task {
@@ -48,6 +53,73 @@ class NotificationService: UNNotificationServiceExtension {
         if let contentHandler = contentHandler, let bestAttemptContent = bestAttemptContent {
             contentHandler(bestAttemptContent)
         }
+    }
+}
+
+// MARK: - Pending message persistence
+
+extension NotificationService {
+
+    /// App Group shared with the main app; kept in sync with
+    /// PushSoundInstaller.appGroupIdentifier (the extension is deliberately
+    /// self-contained and cannot import SuperApp code).
+    private static let appGroupID = "group.com.webbridgekit.superapp"
+    private static let pendingDirName = "pending_messages"
+
+    private static let recordDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmmss.SSS"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
+    /// Persists the raw push payload into the shared App Group so the main
+    /// app can import it into the Inbox on next foreground. Background
+    /// pushes are otherwise lost: only foreground arrivals and banner taps
+    /// are recorded natively. No-op until the App Group is provisioned in
+    /// both the app's and this extension's entitlements.
+    private func recordPendingMessage(_ request: UNNotificationRequest) {
+        guard let groupURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: Self.appGroupID
+        ) else { return }
+
+        do {
+            let pendingDir = groupURL.appendingPathComponent(Self.pendingDirName, isDirectory: true)
+            try FileManager.default.createDirectory(at: pendingDir, withIntermediateDirectories: true)
+
+            // Content snapshot mirrors UNNotificationContent fallbacks; the
+            // userInfo overlay lets explicit payload fields win, matching the
+            // app's live mapping precedence.
+            var record: [String: Any] = [
+                "identifier": request.identifier,
+                "title": request.content.title,
+                "body": request.content.body
+            ]
+            if !request.content.subtitle.isEmpty {
+                record["subtitle"] = request.content.subtitle
+            }
+            if let badge = request.content.badge {
+                record["badge"] = badge
+            }
+            for (key, value) in request.content.userInfo {
+                // "identifier" is the dedup key against the app's tap path;
+                // a payload field of the same name must not overwrite it.
+                if let key = key as? String, key != "identifier", Self.isPlistValue(value) {
+                    record[key] = value
+                }
+            }
+
+            let stamp = Self.recordDateFormatter.string(from: Date())
+            let fileURL = pendingDir.appendingPathComponent("\(stamp)-\(UUID().uuidString.prefix(8)).plist")
+            (record as NSDictionary).write(to: fileURL, atomically: true)
+        } catch {
+            // Recording is best-effort; delivery itself must not fail.
+        }
+    }
+
+    private static func isPlistValue(_ value: Any) -> Bool {
+        value is String || value is NSNumber || value is Date || value is Data
+            || (value as? [Any]) != nil || (value as? [String: Any]) != nil
     }
 }
 
@@ -202,7 +274,7 @@ struct IconProcessor: NotificationContentProcessor {
                 url: localURL,
                 options: nil
             )
-            content.attachments = content.attachments + [attachment]
+            content.attachments += [attachment]
         } catch {
             // Icon is decorative; a failed download must not break delivery.
         }
@@ -416,7 +488,7 @@ struct CiphertextProcessor: NotificationContentProcessor {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: keychainAccount,
-            kSecReturnData as String: true,
+            kSecReturnData as String: true
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
@@ -433,7 +505,7 @@ struct CiphertextProcessor: NotificationContentProcessor {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: keychainAccount,
-            kSecValueData as String: data,
+            kSecValueData as String: data
         ]
         SecItemDelete(query as CFDictionary)
         return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
