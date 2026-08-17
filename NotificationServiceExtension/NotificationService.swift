@@ -23,6 +23,7 @@ class NotificationService: UNNotificationServiceExtension {
         pipeline.register(IconProcessor())
         pipeline.register(SoundProcessor())
         pipeline.register(CallProcessor())
+        pipeline.register(MuteProcessor())
         pipeline.register(AutoCopyProcessor())
         pipeline.register(CiphertextProcessor())
         return pipeline
@@ -573,5 +574,48 @@ struct CiphertextProcessor: NotificationContentProcessor {
         ]
         SecItemDelete(query as CFDictionary)
         return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+    }
+}
+
+
+// MARK: - Mute (per-group temporary silence)
+
+/// Silences notifications from a specific group until the mute expires.
+/// Settings are shared between the app and NSE via App Group UserDefaults
+/// (modeled on Bark's GroupMuteSettingManager).
+struct MuteProcessor: NotificationContentProcessor {
+    private static let muteKey = "groupMuteSettings"
+
+    private var sharedDefaults: UserDefaults? {
+        UserDefaults(suiteName: "group.com.webbridgekit.superapp")
+    }
+
+    func process(content: UNMutableNotificationContent, userInfo: [AnyHashable: Any]) async throws -> UNMutableNotificationContent {
+        let groupName = content.threadIdentifier
+        guard !groupName.isEmpty else { return content }
+
+        guard let expiry = muteExpiry(for: groupName), expiry > Date() else {
+            return content
+        }
+
+        // Silenced: deliver to notification center without sound or banner.
+        content.sound = nil
+        if #available(iOSApplicationExtension 15.0, *) {
+            content.interruptionLevel = .passive
+        }
+        return content
+    }
+
+    private func muteExpiry(for group: String) -> Date? {
+        guard let defaults = sharedDefaults,
+              let settings = defaults.dictionary(forKey: Self.muteKey) as? [String: Date] else {
+            return nil
+        }
+        // Clean expired entries.
+        var cleaned = settings.filter { $0.value > Date() }
+        if cleaned.count != settings.count {
+            defaults.set(cleaned, forKey: Self.muteKey)
+        }
+        return cleaned[group]
     }
 }

@@ -380,6 +380,11 @@ final class PWAAppCenterViewController: UIViewController {
                 UIHostingController(rootView: PushEncryptionView()), animated: true
             )
         })
+        alert.addAction(UIAlertAction(title: "分组静音", style: .default) { [weak self] _ in
+            self?.navigationController?.pushViewController(
+                UIHostingController(rootView: GroupMuteView()), animated: true
+            )
+        })
         alert.addAction(UIAlertAction(title: "管理自有服务", style: .default) { [weak self] _ in
             self?.navigationController?.pushViewController(GatewayConfigurationViewController(), animated: true)
         })

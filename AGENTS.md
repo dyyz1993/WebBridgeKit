@@ -329,25 +329,29 @@ xcrun simctl launch booted com.webbridgekit.superapp
 
 ### WebBridgeKit Brand Icon Rules
 
-- The official WebBridgeKit brand mark is the open two-node bridge symbol in
-  `SuperApp/Resources/branding/webbridgekit-mark.svg`.
+- The official WebBridgeKit brand mark is the full white-background bridge logo
+  in `SuperApp/Resources/branding/webbridgekit-mark.svg`: two rounded Web/native
+  surfaces, white inner panels, the original interface dots/tiles, and a bold
+  blue-violet bridge connector.
 - The official app-icon artwork is
   `SuperApp/Resources/branding/webbridgekit-app-icon.svg`; all iPhone/iPad
-  PNG sizes live in `SuperApp/Sources/Assets.xcassets/AppIcon.appiconset`.
+  PNG sizes live in `SuperApp/Sources/Assets.xcassets/AppIcon.appiconset` and
+  must preserve the same full logo artwork.
 - Native product identity surfaces use the `WebBridgeKitBrand` image asset from
   `SuperApp/Sources/Assets.xcassets/WebBridgeKitBrand.imageset`. Keep this
   centralized instead of loading the old generic `appFill` icon for About,
   Settings, notification previews, or brand fallbacks.
 - Product identity surfaces include the AppIcon, About header, Settings header,
   notification app identity, Node admin header, and prototype About/Settings
-  hero cards. These must use the bridge mark and the WebBridgeKit blue-violet
-  palette (`#4F6AF6` to `#8B5CF6`).
+  hero cards. These must use the full bridge logo and its blue-violet palette
+  (`#4F6AF6` to `#8B5CF6`), including the white inner panels and interface
+  details. The approved white background is part of the primary identity asset.
 - Functional icons must remain semantic Lucide icons: navigation, search,
   settings, cache types, permissions, push actions, and debug tools must not be
   replaced with the brand mark.
 - `SuperApp/Resources/images/logo.svg` is a cache/static test fixture and now
-  uses the same bridge mark. Keep its path and loading contract stable; use the
-  dedicated branding SVGs as the canonical product sources.
+  uses the same full bridge logo. Keep its path and loading contract stable; use
+  the dedicated branding SVGs as the canonical product sources.
 - When changing the brand mark, update both SVG sources, regenerate the
   AppIcon/brand image exports, update the product surfaces above, and verify
   the image-set JSON plus all PNG dimensions before claiming completion.
