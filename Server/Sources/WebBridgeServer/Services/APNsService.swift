@@ -8,7 +8,16 @@ import NIOHTTP1
 /// server-side storage (device-local only via NSE + Realm); we add this as
 /// a second recovery tier that survives app uninstall and NSE misses.
 actor PushMessageLog {
-    private var messages: [String: [(title: String, body: String, timestamp: Int)]] = [:]
+
+    struct Entry: Sendable {
+        var messageId: String?
+        var title: String
+        var body: String
+        var timestamp: Int
+        var fields: [String: String]
+    }
+
+    private var messages: [String: [Entry]] = [:]
     private let maxPerKey = 100
     private let maxAge: TimeInterval = 7 * 24 * 3600 // 7 days retention
     private let fileURL: URL?
@@ -18,6 +27,10 @@ actor PushMessageLog {
         let t: String
         let b: String
         let ts: Int
+        // Optional so history files written before rich-field logging
+        // (messageId + custom fields) still decode.
+        var m: String?
+        var f: [String: String]?
     }
 
     init(dataDir: String) {
@@ -31,13 +44,25 @@ actor PushMessageLog {
 
         let cutoff = Date().timeIntervalSince1970 - maxAge
         for item in stored where Double(item.ts) > cutoff {
-            messages[item.k, default: []].append((title: item.t, body: item.b, timestamp: item.ts))
+            messages[item.k, default: []].append(Entry(
+                messageId: item.m,
+                title: item.t,
+                body: item.b,
+                timestamp: item.ts,
+                fields: item.f ?? [:]
+            ))
         }
     }
 
-    func record(key: String, title: String, body: String) {
+    func record(key: String, messageId: String?, title: String, body: String, fields: [String: String]) {
         var list = messages[key] ?? []
-        list.append((title: title, body: body, timestamp: Int(Date().timeIntervalSince1970)))
+        list.append(Entry(
+            messageId: messageId,
+            title: title,
+            body: body,
+            timestamp: Int(Date().timeIntervalSince1970),
+            fields: fields
+        ))
         if list.count > maxPerKey {
             list.removeFirst(list.count - maxPerKey)
         }
@@ -45,7 +70,7 @@ actor PushMessageLog {
         try? persist()
     }
 
-    func recent(key: String, since: Int = 0) -> [(title: String, body: String, timestamp: Int)] {
+    func recent(key: String, since: Int = 0) -> [Entry] {
         (messages[key] ?? []).filter { $0.timestamp > since }
     }
 
@@ -55,7 +80,7 @@ actor PushMessageLog {
         var stored: [StoredMessage] = []
         for (key, list) in messages {
             for msg in list where Double(msg.timestamp) > cutoff {
-                stored.append(StoredMessage(k: key, t: msg.title, b: msg.body, ts: msg.timestamp))
+                stored.append(StoredMessage(k: key, t: msg.title, b: msg.body, ts: msg.timestamp, m: msg.messageId, f: msg.fields))
             }
         }
         if let data = try? JSONEncoder().encode(stored) {
@@ -82,6 +107,19 @@ final class APNsService: Sendable {
     }
 
     func sendPush(key: String, payload: PushPayload) async throws -> PushResponse {
+        // One id per push, shared by the APNs payload, the NSE plist the
+        // device writes, and the server history — all three recovery paths
+        // then dedupe against each other by id.
+        var payload = payload
+        payload.ensureMessageID()
+        await messageLog.record(
+            key: key,
+            messageId: payload.messageID,
+            title: payload.title,
+            body: payload.body,
+            fields: payload.customFields
+        )
+
         let devices = await tokenStore.getDevices(forKey: key)
 
         guard !devices.isEmpty || key == "test" || key == "test_resources" else {
@@ -233,6 +271,7 @@ final class APNsService: Sendable {
             if let value { result[key] = value }
         }
 
+        add("messageId", payload.messageID)
         add("subtitle", payload.subtitle)
         add("category", payload.category)
         add("markdown", payload.markdown)

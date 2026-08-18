@@ -37,7 +37,9 @@ enum PushRoutes {
             let since = Int(request.uri.query?.split(separator: "=").last ?? "0") ?? 0
             let messages = await services.apnsService.messageLog.recent(key: key, since: since)
             return MessageHistoryResponse(
-                messages: messages.map { .init(title: $0.title, body: $0.body, timestamp: $0.timestamp) }
+                messages: messages.map {
+                    .init(messageId: $0.messageId, title: $0.title, body: $0.body, timestamp: $0.timestamp, fields: $0.fields)
+                }
             )
         }
 
@@ -62,7 +64,6 @@ enum PushRoutes {
         }
 
         let payload = makePayload(title: title, body: body, query: request.uri.query)
-        await services.apnsService.messageLog.record(key: key, title: title, body: body)
         return try await services.apnsService.sendPush(key: key, payload: payload)
     }
 
@@ -80,7 +81,6 @@ enum PushRoutes {
         }
 
         let payload = makePayload(title: "", body: content, query: request.uri.query)
-        await services.apnsService.messageLog.record(key: key, title: "", body: content)
         return try await services.apnsService.sendPush(key: key, payload: payload)
     }
 
@@ -107,7 +107,6 @@ enum PushRoutes {
         }
 
         let payload = makePayload(title: fields["title"] ?? "", body: body, query: canonicalQuery(from: fields))
-        await services.apnsService.messageLog.record(key: key, title: fields["title"] ?? "", body: body)
         return try await services.apnsService.sendPush(key: key, payload: payload)
     }
 
@@ -233,11 +232,6 @@ enum PushRoutes {
             )
         }
 
-        await services.apnsService.messageLog.record(
-            key: pushRequest.deviceKey,
-            title: pushRequest.title,
-            body: pushRequest.body
-        )
         return try await services.apnsService.sendPush(key: pushRequest.deviceKey, payload: pushRequest.payload)
     }
 
