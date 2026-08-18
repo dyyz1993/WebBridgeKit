@@ -116,32 +116,50 @@ final class APNsService: Sendable {
             "[APNs] sending token=…\(deviceToken.suffix(6)) title=\(payload.title) sound=\(apsSound ?? "nil") level=\(payload.level ?? "nil")\n".utf8
         ))
 
-        let host = configuration.apnsEnvironment == "production"
-            ? "api.push.apple.com"
-            : "api.sandbox.push.apple.com"
-        let urlString = "https://\(host)/3/device/\(deviceToken)"
+        // A device token belongs to exactly one APNs environment (production for
+        // TestFlight/App Store builds, sandbox for development-signed builds).
+        // Single-user fleets flip between both, so a 400 on the configured host
+        // means "wrong environment", not "dead token": retry the other host
+        // once instead of silently dropping the push.
+        let productionHost = "api.push.apple.com"
+        let sandboxHost = "api.sandbox.push.apple.com"
+        let hosts = configuration.apnsEnvironment == "production"
+            ? [productionHost, sandboxHost]
+            : [sandboxHost, productionHost]
 
         guard let bodyData = try? JSONSerialization.data(withJSONObject: apnsPayload),
               let body = String(data: bodyData, encoding: .utf8) else { return }
 
-        // A token rejected with 429 stays blacklisted by Apple, so retry once
-        // with a freshly minted token before surfacing the error.
-        for attempt in 0...1 {
-            guard let authorizationToken = try? jwtSigner.token() else { return }
-            let status = Self.curlPost(
-                url: urlString,
-                body: body,
-                authorizationToken: authorizationToken,
-                topic: configuration.apnsTopic,
-                priority: payload.level == "passive" ? "5" : "10"
-            )
-            if status == 200 { return }
-            if status == 429, attempt == 0 {
-                jwtSigner.invalidateCachedToken()
-                continue
+        for (index, host) in hosts.enumerated() {
+            let urlString = "https://\(host)/3/device/\(deviceToken)"
+
+            // A token rejected with 429 stays blacklisted by Apple, so retry once
+            // with a freshly minted token before surfacing the error.
+            for attempt in 0...1 {
+                guard let authorizationToken = try? jwtSigner.token() else { return }
+                let status = Self.curlPost(
+                    url: urlString,
+                    body: body,
+                    authorizationToken: authorizationToken,
+                    topic: configuration.apnsTopic,
+                    priority: payload.level == "passive" ? "5" : "10"
+                )
+                if status == 200 { return }
+                if status == 429, attempt == 0 {
+                    jwtSigner.invalidateCachedToken()
+                    continue
+                }
+                // 400 BadDeviceToken on the preferred host: the token lives in
+                // the other environment — fall through to it.
+                if status == 400, index == 0, hosts.count > 1 {
+                    FileHandle.standardError.write(Data(
+                        "[APNs] status=400 on \(host), trying \(hosts[1])\n".utf8
+                    ))
+                    break
+                }
+                FileHandle.standardError.write(Data("[APNs] status=\(status)\n".utf8))
+                return
             }
-            FileHandle.standardError.write(Data("[APNs] status=\(status)\n".utf8))
-            return
         }
     }
 
