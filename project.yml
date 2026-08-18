@@ -21,7 +21,7 @@ targets:
       - Resources
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: WebBridgeKit
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.webbridgekit
@@ -63,7 +63,7 @@ targets:
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1"
       PRODUCT_NAME: SuperApp
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
@@ -137,7 +137,7 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.nse
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1"
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       CODE_SIGN_STYLE: Automatic
       DEVELOPMENT_TEAM: "B45VZCNYU3"
@@ -182,7 +182,7 @@ targets:
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1,2"
       PRODUCT_NAME: AppTemplate
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       CODE_SIGN_STYLE: Automatic
       DEVELOPMENT_TEAM: "B45VZCNYU3"
@@ -200,7 +200,7 @@ targets:
       - Sources/Message
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: WBKMessage
       PRODUCT_MODULE_NAME: WBKMessage
@@ -246,7 +246,7 @@ targets:
       - Sources/Cache
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: Cache
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Cache
@@ -292,7 +292,7 @@ targets:
       - Sources/AI
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: AI
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.AI
@@ -339,7 +339,7 @@ targets:
       - Sources/Theme
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: Theme
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Theme
@@ -366,7 +366,7 @@ targets:
       - Sources/Skills
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "2"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: Skills
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Skills

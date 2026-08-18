@@ -34,7 +34,7 @@ final class NotificationService: UNNotificationServiceExtension {
 
     private func recordPayload(_ userInfo: [AnyHashable: Any]) {
         guard let groupURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.xuyingzhou.bark")
+            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.webbridgekit.superapp")
         else { return }
 
         let pendingDir = groupURL.appendingPathComponent("pending_messages", isDirectory: true)
