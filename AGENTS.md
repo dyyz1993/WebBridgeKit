@@ -103,7 +103,15 @@ while Apple silently rejected every request. Rules that must not regress:
   left correctly.
 - **Device registrations persist** to `Server/data/device-registrations.json` (created on
   first register). Restarting the server is safe; losing the file means every phone must
-  re-activate push.
+  re-activate push. 2026-08-19: shanbox now runs `APNS_ENVIRONMENT=production`
+  (supervisord.conf) because the daily-driver phone installed the TestFlight build, whose
+  tokens are production-only — sandbox tokens sent to the production endpoint (and vice
+  versa) fail with `400 BadDeviceToken`. All 11 stale sandbox tokens were pruned from the
+  registrations file (backup `device-registrations.json.bak-sandbox-cleanup`); note two
+  supervisord.conf backups (`.wbk-*-backup-*`) still carry the old sandbox value and would
+  regress the endpoint if restored. If a dev-signed build is ever reinstalled on a test
+  phone, its sandbox token will 400 against production — flip the env or add a per-token
+  strategy before mixing fleets again.
 - **Named push sounds require `UIBackgroundModes: remote-notification`** (set via
   `INFOPLIST_KEY_UIBackgroundModes` in project.yml, mirroring Bark). Without it,
   background/killed-app delivery silently falls back to the default alert tone for EVERY
@@ -165,7 +173,7 @@ grep -a "soundFileURL" /tmp/syslog.txt | grep -aoE "file://[^;]*caf" | sort -u
 | `lights and sirens NO` (rapid pushes) | **Coalescing suppression** — stacked notifications are silenced; clear Notification Center before testing |
 | `soundFileURL = file://…/<name>.caf` (container path) | Named sound resolved and played — the goal |
 | `soundFileURL = …/ToneLibrary/…Rebound.caf` + `toneIdentifier = "texttone:Rebound"` | Named sound IGNORED; system default text tone played |
-| `Falling back to default due missing setting in Preferences` + `correspondingToneIdentifier:((null))` | ToneLibrary could not map the payload sound to a tone and no per-app preference exists → default. On iOS 18.7.3 dev-signed/sandbox builds this fires deterministically for every named sound (2026-08-17 verdict, all formats/payloads/installs exhausted); production-signed apps (App Store Bark) are the control — if they play named tones, TestFlight distribution is the fix. |
+| `Falling back to default due missing setting in Preferences` + `correspondingToneIdentifier:((null))` | ToneLibrary could not map the payload sound to a tone and no per-app preference exists → default. On iOS 18.7.3 dev-signed/sandbox builds this fires deterministically for every named sound (2026-08-17 verdict, all formats/payloads/installs exhausted); production-signed apps (App Store Bark) are the control — if they play named tones, TestFlight distribution is the fix. **RESOLVED 2026-08-19: confirmed on a TestFlight (production-signed) build, phone locked, direct-to-Apple curl — SpringBoard played the named alarm tone correctly. Two rules are final: (1) production/TestFlight signing fixes the dev-signature ToneLibrary fallback; (2) the payload sound name must carry the `.caf` extension (`sound=alarm.caf`) — an extensionless `sound=alarm` on the same build and channel still falls back to the default tone. Foreground tests are invalid for this question because `PushAlertSoundPlayer` plays the file in-process.** |
 
 Also useful: `grep -a "Play sound for notification"` shows the full tone/vibration
 decision; `topic:()` empty hints the notification was not attributed to the app topic
