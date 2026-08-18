@@ -40,11 +40,16 @@ struct PushPayload: Codable, Sendable {
     let params: [String: String]?
     let presentation: String?
     let approval: ApprovalClientPayload?
+    /// Server-assigned push id, embedded in the APNs payload as `messageId`
+    /// so the tap path, NSE plist replay, and server history replay all
+    /// reconstruct the message with the same id and dedupe against each other.
+    var messageID: String?
 
     enum CodingKeys: String, CodingKey {
         case schema, type, title, body, subtitle, category, markdown, sound, badge, icon, image
         case group, url, copy, level, volume, route, mode, display, verificationCode, expiresAt, ttl
         case actionState, contentType, qrPayload, statePath, revision, params, presentation, approval
+        case messageID = "messageId"
         case threadID = "threadId"
         case isCall = "call"
         case autoCopy
@@ -93,7 +98,8 @@ struct PushPayload: Codable, Sendable {
         revision: Int? = nil,
         params: [String: String]? = nil,
         presentation: String? = nil,
-        approval: ApprovalClientPayload? = nil
+        approval: ApprovalClientPayload? = nil,
+        messageID: String? = nil
     ) {
         self.schema = schema
         self.type = type
@@ -133,6 +139,71 @@ struct PushPayload: Codable, Sendable {
         self.params = params
         self.presentation = presentation
         self.approval = approval
+        self.messageID = messageID
+    }
+
+    /// Assigns a push id if none exists yet. Reuses the approval identity
+    /// when present so approval updates keep landing on the same message.
+    mutating func ensureMessageID() {
+        if messageID == nil {
+            messageID = replacementID ?? requestID ?? UUID().uuidString
+        }
+    }
+
+    /// Flat string form of the custom fields the client needs to rebuild the
+    /// message outside the APNs pipeline (NSE plist replay, history fetch).
+    /// Types are stringified because the payload mapper on the client parses
+    /// numeric/boolean fields from strings as well.
+    var customFields: [String: String] {
+        var fields: [String: String] = [:]
+        func put(_ key: String, _ value: String?) {
+            if let value { fields[key] = value }
+        }
+        func putDouble(_ key: String, _ value: Double?) {
+            if let value { fields[key] = String(value) }
+        }
+        func putInt(_ key: String, _ value: Int?) {
+            if let value { fields[key] = String(value) }
+        }
+        func putBool(_ key: String, _ value: Bool?) {
+            if let value { fields[key] = value ? "1" : "0" }
+        }
+        put("subtitle", subtitle)
+        put("category", category)
+        put("markdown", markdown)
+        put("sound", sound)
+        put("icon", icon)
+        put("image", image)
+        put("group", group)
+        put("threadId", threadID)
+        put("url", url)
+        put("copy", copy)
+        put("level", level)
+        putDouble("volume", volume)
+        putBool("isArchive", isArchive)
+        putBool("call", isCall)
+        putBool("autoCopy", autoCopy)
+        put("appId", appID)
+        put("route", route)
+        put("mode", mode)
+        put("display", display)
+        put("verificationCode", verificationCode)
+        put("expiresAt", expiresAt)
+        putDouble("ttl", ttl)
+        put("id", replacementID)
+        putBool("delete", isDeleted)
+        put("actionState", actionState)
+        put("state", actionState)
+        put("requestId", requestID)
+        put("contentType", contentType)
+        put("type", type)
+        put("qrPayload", qrPayload)
+        put("statePath", statePath)
+        putInt("revision", revision)
+        putInt("badge", badge)
+        put("presentation", presentation)
+        put("schema", schema)
+        return fields
     }
 
     func updatingApprovalState(_ state: ApprovalState, revision: Int) -> PushPayload {
@@ -174,7 +245,8 @@ struct PushPayload: Codable, Sendable {
             revision: revision,
             params: params,
             presentation: presentation,
-            approval: approval
+            approval: approval,
+            messageID: messageID
         )
     }
 }
