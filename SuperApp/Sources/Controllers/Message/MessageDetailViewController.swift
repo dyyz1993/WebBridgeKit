@@ -165,6 +165,13 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         // button is used — a custom leftBarButtonItem can interfere with the
         // interactivePopGestureRecognizer that drives the edge-swipe back.
         navigationController?.setNavigationBarHidden(false, animated: false)
+
+        // Opening the detail counts as reading the message — for every entry
+        // path (row tap, banner focus, cold-start deep link), not just peer
+        // swipes. Without this the banner-tap flow leaves the red dot on.
+        if !message.isRead {
+            Task { await MessageEngine.shared.markAsRead(id: message.id) }
+        }
     }
 
     // MARK: - Peer navigation (next/previous)
