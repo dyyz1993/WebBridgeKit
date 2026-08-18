@@ -4,6 +4,11 @@ import WebBridgeKit
 /// Two-tier background message recovery:
 /// 1. NSE plist files (App Group) — instant, offline, written by NotificationServiceExtension
 /// 2. Server message history API — fallback when NSE didn't fire (server restart, etc.)
+///
+/// Both tiers map their records through `NotificationPayloadMapper` — the same
+/// mapper the live banner-tap path uses — so recovered messages keep their
+/// rich fields (image, qr, route, approval) and land on the same `messageId`
+/// identity, letting MessageEngine dedupe a recovery against the tap.
 enum PendingMessageImporter {
 
     private static let appGroupID = "group.com.webbridgekit.superapp"
@@ -36,10 +41,9 @@ enum PendingMessageImporter {
                 continue
             }
 
-            let payload = MessagePayload(
-                title: dict["title"] as? String ?? "",
-                body: dict["body"] as? String ?? "",
-                channel: "apns"
+            let payload = NotificationPayloadMapper.makePayload(
+                identifier: fileURL.lastPathComponent,
+                userInfo: dict
             )
             try? await MessageEngine.shared.receive(payload)
             try? FileManager.default.removeItem(at: fileURL)
@@ -69,10 +73,17 @@ enum PendingMessageImporter {
 
             var latest = lastSync
             for message in history.messages {
-                let payload = MessagePayload(
-                    title: message.title,
-                    body: message.body,
-                    channel: "apns"
+                // Rebuild the wire-shape userInfo: custom fields plus the
+                // summary keys, so the mapper sees the same dictionary the
+                // live push carried.
+                var userInfo: [String: Any] = message.fields
+                userInfo["messageId"] = message.messageId
+                userInfo["title"] = message.title
+                userInfo["body"] = message.body
+
+                let payload = NotificationPayloadMapper.makePayload(
+                    identifier: "server-\(message.timestamp)",
+                    userInfo: userInfo
                 )
                 try? await MessageEngine.shared.receive(payload)
                 latest = max(latest, Double(message.timestamp))
@@ -95,9 +106,11 @@ enum PendingMessageImporter {
     private struct MessageHistory: Codable {
         let messages: [Item]
         struct Item: Codable {
+            let messageId: String?
             let title: String
             let body: String
             let timestamp: Int
+            let fields: [String: String]
         }
     }
 }

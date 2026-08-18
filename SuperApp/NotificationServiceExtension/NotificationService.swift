@@ -32,6 +32,10 @@ final class NotificationService: UNNotificationServiceExtension {
 
     // MARK: - Shared-file recording (Bark pattern: ArchiveProcessor)
 
+    /// Writes the complete custom payload (everything except `aps`) so the
+    /// main app can rebuild a full-fidelity message — image, qr, route,
+    /// approval, and the server-assigned `messageId` that dedupes this
+    /// replay against banner taps and server-history imports.
     private func recordPayload(_ userInfo: [AnyHashable: Any]) {
         guard let groupURL = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: "group.com.webbridgekit.superapp")
@@ -51,12 +55,18 @@ final class NotificationService: UNNotificationServiceExtension {
             "body": body,
             "timestamp": Int(Date().timeIntervalSince1970),
         ]
-        if let group = userInfo["group"] as? String { dict["group"] = group }
-        if let url = userInfo["url"] as? String { dict["url"] = url }
+        // Preserve every custom top-level key; drop `aps` and anything a
+        // plist cannot represent so the write can never fail on exotic values.
+        for (rawKey, value) in userInfo where (rawKey as? String) != "aps" {
+            guard let key = rawKey as? String,
+                  PropertyListSerialization.isValidPropertyList(value)
+            else { continue }
+            dict[key] = value
+        }
 
         let fileName = "msg-\(Int(Date().timeIntervalSince1970 * 1000)).plist"
         let fileURL = pendingDir.appendingPathComponent(fileName)
-
         NSDictionary(dictionary: dict).write(to: fileURL, atomically: true)
     }
+}
 }

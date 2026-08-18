@@ -445,7 +445,7 @@ extension TestDataSeeder {
                     group: "team-chat-linmo",
                     threadId: "chat-linmo",
                     targetAppId: "com.webbridgekit.fixture.chat",
-                    route: "/fixtures/pwa-notification/index.html",
+                    route: "/test_resources/pwa-notification/index.html",
                     targetMode: "immersive",
                     soundVolume: 6,
                     isArchive: true,

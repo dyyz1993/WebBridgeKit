@@ -120,9 +120,10 @@ extension PushExample {
                 URLQueryItem(name: "contentType", value: "chat"),
                 URLQueryItem(name: "category", value: "chat"),
                 URLQueryItem(name: "appId", value: "com.webbridgekit.fixture.chat"),
-                // 路由必须在 fixture 清单的白名单内，否则横幅点击会被
-                // 路由校验拒绝、无法进入 PWA 页面。
-                URLQueryItem(name: "route", value: "/fixtures/pwa-notification/index.html")
+                // 路由必须在网关清单的白名单内，且是 startURL 主机上真实
+                // 存在的路径（resolver 会用它替换 startURL 的 path），否则
+                // 横幅点击会被路由校验拒绝或落到 404 白屏。
+                URLQueryItem(name: "route", value: "/test_resources/pwa-notification/index.html")
             ]
         ),
         PushExample(
