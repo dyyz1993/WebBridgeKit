@@ -112,11 +112,16 @@ public final class EngineBootstrap {
         await pipeline.register(LevelProcessor())
         await pipeline.register(BadgeProcessor())
         await pipeline.register(AutoCopyProcessor())
-        await pipeline.register(ArchiveProcessor(store: persistentStore))
+        // ArchiveProcessor is deliberately NOT registered here: receive()
+        // already persists the final StoredMessage with its full payload
+        // identity (messageId, contentType, qr/otp fields). The processor's
+        // own rebuild-and-save dropped that identity and hardcoded
+        // channel="push", so every message was stored twice — one rich row
+        // and one stripped plain row (the "应用推送 + PUSH推送" duplicates).
         await pipeline.register(MuteProcessor())
         await engine.setPipeline(pipeline)
         #if DEBUG
-        print("  [OK] Message Engine: Processor pipeline configured (6 processors)")
+        print("  [OK] Message Engine: Processor pipeline configured (5 processors)")
         #endif
 
         await engine.setOnMessageReceived { storedMessage in
