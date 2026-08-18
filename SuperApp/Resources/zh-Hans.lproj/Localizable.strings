@@ -165,7 +165,11 @@
 "settings.hero.token_masked" = "Token: abcd****efgh";
 "settings.hero.copy_token" = "复制 Token";
 "settings.hero.copied_title" = "已复制";
-"settings.hero.copied_message" = "Token 已复制到剪贴板";
+"settings.hero.copied_message" = "推送密钥已复制到剪贴板";
+"settings.hero.token_format" = "Token: %@";
+"settings.hero.identity.unset" = "推送身份未配置";
+"settings.hero.unset_title" = "未配置";
+"settings.hero.unset_message" = "请先在「密钥管理」中配置 Bark 身份密钥";
 "settings.server.config" = "服务器配置";
 "settings.token.manager" = "口令管理";
 "settings.apikey.manager" = "密钥管理";

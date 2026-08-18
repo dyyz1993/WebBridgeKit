@@ -4,9 +4,25 @@ import WebBridgeKit
 struct SettingsView: View {
     private let sections = SettingsViewModel().sections
 
-    @State private var showCopiedAlert = false
+    @State private var heroAlert: HeroAlertState?
     @State private var appeared = false
     @AppStorage(SettingsPreferenceKeys.rememberLastApp) private var rememberLastApp = false
+    @AppStorage("com.webbridgekit.bark.key") private var barkKey = ""
+
+    private var heroDisplayToken: String? {
+        let trimmed = barkKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private var heroMaskedToken: String {
+        guard let token = heroDisplayToken else {
+            return L10n.tr("settings.hero.identity.unset")
+        }
+        guard token.count >= 8 else { return "****" }
+        let prefix = token.prefix(4)
+        let suffix = token.suffix(4)
+        return "\(prefix)****\(suffix)"
+    }
 
     let onNavigate: (Destination) -> Void
 
@@ -68,13 +84,29 @@ struct SettingsView: View {
         .navigationTitle(L10n.tr("tab.settings"))
         .accessibilityIdentifier("SettingsViewController")
         .onAppear { appeared = true }
-        .alert(isPresented: $showCopiedAlert) {
-            Alert(
-                title: Text(L10n.tr("settings.hero.copied_title")),
-                message: Text(L10n.tr("settings.hero.copied_message")),
-                dismissButton: .default(Text(L10n.tr("common.ok")))
-            )
+        .alert(item: $heroAlert) { state in
+            switch state {
+            case .copied:
+                return Alert(
+                    title: Text(L10n.tr("settings.hero.copied_title")),
+                    message: Text(L10n.tr("settings.hero.copied_message")),
+                    dismissButton: .default(Text(L10n.tr("common.ok")))
+                )
+            case .unset:
+                return Alert(
+                    title: Text(L10n.tr("settings.hero.unset_title")),
+                    message: Text(L10n.tr("settings.hero.unset_message")),
+                    dismissButton: .default(Text(L10n.tr("common.ok")))
+                )
+            }
         }
+    }
+
+    enum HeroAlertState: Identifiable {
+        case copied
+        case unset
+
+        var id: Self { self }
     }
 
     @ViewBuilder
@@ -100,7 +132,7 @@ struct SettingsView: View {
                 tintColor: ThemeTokens.Color.primary
             )
 
-            Text(item.title)
+            Text(L10n.tr("settings.hero.token_format", heroMaskedToken))
                 .font(Font.app(ThemeTokens.Typography.rowTitle))
                 .foregroundColor(Color.appText)
                 .lineLimit(1)
@@ -109,8 +141,12 @@ struct SettingsView: View {
 
             Button(
                 action: {
-                    UIPasteboard.general.string = "abcd1234efgh5678"
-                    showCopiedAlert = true
+                    guard let token = heroDisplayToken else {
+                        heroAlert = .unset
+                        return
+                    }
+                    UIPasteboard.general.string = token
+                    heroAlert = .copied
                 },
                 label: {
                     Image(uiImage: LucideIcon.copy.templateImage(

@@ -366,20 +366,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         routingInfo["title"] = userInfo["title"] as? String ?? content.title
         routingInfo["body"] = userInfo["body"] as? String ?? content.body
 
-        DispatchQueue.main.async { [weak self] in
-            PushNotificationManager.shared.handleNotificationTap(
-                userInfo: routingInfo,
-                rootViewController: self?.window?.rootViewController
-            )
-        }
-
-        Task {
-            let payload = makeMessagePayload(
+        // Record the message into the inbox FIRST, then route. If routing
+        // fires before the message is stored, focusMessage finds nothing and
+        // the user lands on the inbox list instead of the detail page.
+        Task { [weak self] in
+            let payload = self?.makeMessagePayload(
                 identifier: response.notification.request.identifier,
                 userInfo: userInfo,
                 content: content
             )
-            try? await MessageEngine.shared.receive(payload)
+            if let payload {
+                try? await MessageEngine.shared.receive(payload)
+            }
+
+            // Message is now in the inbox; safe to route to its detail.
+            await MainActor.run { [weak self] in
+                PushNotificationManager.shared.handleNotificationTap(
+                    userInfo: routingInfo,
+                    rootViewController: self?.window?.rootViewController
+                )
+            }
         }
 
         completionHandler()

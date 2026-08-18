@@ -7,35 +7,12 @@
 //
 
 import Foundation
-import RxCocoa
-import RxSwift
 import UIKit
 import WebBridgeKit
 
-class SettingsViewModel: ViewModel {
-
-    struct Input {
-        let itemSelect: Driver<IndexPath>
-        let copyTokenTap: Driver<Void>
-        let rememberToggle: Driver<Bool>
-    }
-
-    struct Output {
-        let navigateToServerConfig: Driver<Void>
-        let navigateToAPIKeyManage: Driver<Void>
-        let navigateToTokenManage: Driver<Void>
-        let navigateToFavorites: Driver<Void>
-        let navigateToHistory: Driver<Void>
-        let navigateToManagement: Driver<Void>
-        let navigateToAbout: Driver<Void>
-        let navigateToDebugPanel: Driver<Void>
-        let navigateToCacheDashboard: Driver<Void>
-        let navigateToAppearance: Driver<Void>
-        let openNotificationSettings: Driver<Void>
-        let clearCache: Driver<Void>
-        let exportDiagnostics: Driver<Void>
-        let copyTokenResult: Driver<Void>
-    }
+/// 设置页数据源：提供 SwiftUI `SettingsView` 渲染所需的分组与行定义。
+/// 导航分发由 `SettingsView.handleAction` -> `TabBarController.handleSettingsNavigation` 完成。
+class SettingsViewModel {
 
     enum SettingsAction: String {
         case serverConfig
@@ -80,8 +57,6 @@ class SettingsViewModel: ViewModel {
         let items: [SettingsItem]
         var isHeroSection: Bool = false
     }
-
-    private static func makeColor(_ base: UIColor, alpha: CGFloat = 0.1) -> UIColor { base.withAlphaComponent(alpha) }
 
     static var rememberLastAppEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp) }
@@ -259,14 +234,6 @@ class SettingsViewModel: ViewModel {
                 return [
                     SettingsItem(
                         icon: nil,
-                        lucideIcon: .download,
-                        title: L10n.tr("settings.export.diagnostics"),
-                        action: .exportDiagnostics,
-                        iconBackgroundColor: tb,
-                        iconTintColor: tt
-                    ),
-                    SettingsItem(
-                        icon: nil,
                         lucideIcon: .chartBar,
                         title: L10n.tr("settings.cache.dashboard"),
                         action: .cacheDashboard,
@@ -304,79 +271,5 @@ class SettingsViewModel: ViewModel {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         return formatter.string(fromByteCount: Int64(totalSize))
-    }
-
-    private let navigateToServerConfigRelay = PublishRelay<Void>()
-    private let navigateToAPIKeyManageRelay = PublishRelay<Void>()
-    private let navigateToTokenManageRelay = PublishRelay<Void>()
-    private let navigateToFavoritesRelay = PublishRelay<Void>()
-    private let navigateToHistoryRelay = PublishRelay<Void>()
-    private let navigateToManagementRelay = PublishRelay<Void>()
-    private let navigateToAboutRelay = PublishRelay<Void>()
-    private let navigateToDebugPanelRelay = PublishRelay<Void>()
-    private let navigateToCacheDashboardRelay = PublishRelay<Void>()
-    private let navigateToAppearanceRelay = PublishRelay<Void>()
-    private let openNotificationSettingsRelay = PublishRelay<Void>()
-    private let clearCacheRelay = PublishRelay<Void>()
-    private let exportDiagnosticsRelay = PublishRelay<Void>()
-    private let copyTokenResultRelay = PublishRelay<Void>()
-
-    func transform(input: Input) -> Output {
-        input.itemSelect
-            .do(onNext: { [weak self] indexPath in
-                guard let self = self else { return }
-                let item = self.sections[indexPath.section].items[indexPath.row]
-                guard let action = item.action else { return }
-                switch action {
-                case .serverConfig: self.navigateToServerConfigRelay.accept(())
-                case .tokenManager: self.navigateToTokenManageRelay.accept(())
-                case .apiKeyManage: self.navigateToAPIKeyManageRelay.accept(())
-                case .cacheManager: self.navigateToManagementRelay.accept(())
-                case .favorites: self.navigateToFavoritesRelay.accept(())
-                case .history: self.navigateToHistoryRelay.accept(())
-                case .notificationSettings: self.openNotificationSettingsRelay.accept(())
-                case .rememberLastApp: break
-                case .appearance: self.navigateToAppearanceRelay.accept(())
-                case .debugPanel: self.navigateToDebugPanelRelay.accept(())
-                case .debugCenter, .deepLinks: break
-                case .cacheDashboard: self.navigateToCacheDashboardRelay.accept(())
-                case .exportDiagnostics: self.exportDiagnosticsRelay.accept(())
-                case .about: self.navigateToAboutRelay.accept(())
-                }
-            })
-            .drive()
-            .disposed(by: rx)
-
-        input.rememberToggle
-            .do(onNext: { isOn in
-                SettingsViewModel.rememberLastAppEnabled = isOn
-            })
-            .drive()
-            .disposed(by: rx)
-
-        input.copyTokenTap
-            .do(onNext: { [weak self] in
-                UIPasteboard.general.string = "abcd1234efgh5678"
-                self?.copyTokenResultRelay.accept(())
-            })
-            .drive()
-            .disposed(by: rx)
-
-        return Output(
-            navigateToServerConfig: navigateToServerConfigRelay.asDriver(onErrorJustReturn: ()),
-            navigateToAPIKeyManage: navigateToAPIKeyManageRelay.asDriver(onErrorJustReturn: ()),
-            navigateToTokenManage: navigateToTokenManageRelay.asDriver(onErrorJustReturn: ()),
-            navigateToFavorites: navigateToFavoritesRelay.asDriver(onErrorJustReturn: ()),
-            navigateToHistory: navigateToHistoryRelay.asDriver(onErrorJustReturn: ()),
-            navigateToManagement: navigateToManagementRelay.asDriver(onErrorJustReturn: ()),
-            navigateToAbout: navigateToAboutRelay.asDriver(onErrorJustReturn: ()),
-            navigateToDebugPanel: navigateToDebugPanelRelay.asDriver(onErrorJustReturn: ()),
-            navigateToCacheDashboard: navigateToCacheDashboardRelay.asDriver(onErrorJustReturn: ()),
-            navigateToAppearance: navigateToAppearanceRelay.asDriver(onErrorJustReturn: ()),
-            openNotificationSettings: openNotificationSettingsRelay.asDriver(onErrorJustReturn: ()),
-            clearCache: clearCacheRelay.asDriver(onErrorJustReturn: ()),
-            exportDiagnostics: exportDiagnosticsRelay.asDriver(onErrorJustReturn: ()),
-            copyTokenResult: copyTokenResultRelay.asDriver(onErrorJustReturn: ())
-        )
     }
 }
