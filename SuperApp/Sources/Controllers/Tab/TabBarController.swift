@@ -41,18 +41,15 @@ class TabBarController: UITabBarController {
     }
 
     private func bindMessages() {
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            guard let self = self,
-                  let items = self.tabBar.items,
-                  let messageIndex = AppTab.allCases.firstIndex(of: .notifications),
-                  items.indices.contains(messageIndex) else { return }
-            let messageItem = items[messageIndex]
-            Task {
-                let count = await MessageEngine.shared.getUnreadCount()
-                await MainActor.run {
-                    messageItem.badgeValue = count > 0 ? "\(count)" : nil
-                }
+        // Event-driven unread sync: every engine mutation (receive / read /
+        // delete / clear) refreshes both the tab badge and the home-screen
+        // icon badge. Replaces the old 2s polling timer, which stalls while
+        // the inbox scroll view keeps the run loop in tracking mode.
+        Task { [weak self] in
+            await MessageEngine.shared.setOnStoreChanged { [weak self] in
+                Task { await self?.syncUnreadBadges() }
             }
+            await self?.syncUnreadBadges()
         }
 
         NotificationCenter.default.rx.notification(.didReceivePushMessage)
@@ -60,6 +57,22 @@ class TabBarController: UITabBarController {
                 self?.handlePushJump(notification)
             })
             .disposed(by: disposeBag)
+    }
+
+    /// Unread count drives every badge surface: the notifications tab item
+    /// and the app icon. Bark deliberately never tracks the icon badge (it
+    /// only clears it with -1 on foreground); WebBridgeKit owns an inbox,
+    /// so the icon badge mirrors the inbox unread count instead.
+    private func syncUnreadBadges() async {
+        let count = await MessageEngine.shared.getUnreadCount()
+        await MainActor.run { [weak self] in
+            guard let self = self,
+                  let items = self.tabBar.items,
+                  let messageIndex = AppTab.allCases.firstIndex(of: .notifications),
+                  items.indices.contains(messageIndex) else { return }
+            items[messageIndex].badgeValue = count > 0 ? "\(count)" : nil
+        }
+        await DefaultBadgeManager().setBadge(count)
     }
 
     private func handlePushJump(_ notification: Notification) {
