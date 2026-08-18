@@ -400,6 +400,10 @@ class InboxViewController: BaseViewController<InboxViewModel> {
                 Self.pendingFocus = nil
                 let title = notification.userInfo?["title"] as? String
                 let body = notification.userInfo?["body"] as? String
+                // 前台收到的消息还没进列表快照（收件箱已可见不会触发
+                // viewWillAppear 刷新），先刷数据再定位，否则找不到目标
+                // 会停在列表而不是进入详情。
+                self?.viewModel.refreshData()
                 // 点击路径同时会写入消息，稍等一拍再定位；找不到再补一次
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     guard let self, !self.focusMessage(title: title, body: body) else { return }
@@ -418,6 +422,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private func consumePendingFocusIfAny() {
         guard let pending = Self.pendingFocus else { return }
         Self.pendingFocus = nil
+        // 冷启动/切页路径同样先刷新，覆盖 viewWillAppear 未触发的场景
+        viewModel.refreshData()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
             guard let self else { return }
             if !self.focusMessage(title: pending.title, body: pending.body) {

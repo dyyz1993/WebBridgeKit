@@ -37,9 +37,19 @@ public actor MessageEngine: MessageEngineProtocol {
     /// Message received callback
     public var onMessageReceived: (@Sendable (StoredMessage) -> Void)?
 
+    /// Store-changed callback: fired after every receive / mark-as-read /
+    /// delete / clear so badge surfaces (tab bar, app icon) can resync
+    /// immediately instead of relying on polling timers.
+    public var onStoreChanged: (@Sendable () -> Void)?
+
     /// Set the message received callback from outside the actor
     public func setOnMessageReceived(_ callback: (@Sendable (StoredMessage) -> Void)?) {
         onMessageReceived = callback
+    }
+
+    /// Set the store-changed callback from outside the actor
+    public func setOnStoreChanged(_ callback: (@Sendable () -> Void)?) {
+        onStoreChanged = callback
     }
 
     /// Set the route callback from outside the actor
@@ -150,6 +160,7 @@ public actor MessageEngine: MessageEngineProtocol {
                 await store.delete(id: existingMessage.id)
             }
             statistics.recordReceived(channelId: payload.channel)
+            onStoreChanged?()
             return
         }
 
@@ -202,6 +213,7 @@ public actor MessageEngine: MessageEngineProtocol {
         try await store.save(storedMessage)
 
         statistics.recordReceived(channelId: payload.channel)
+        onStoreChanged?()
 
         // Notify handlers
         if let category = payload.category, let handler = handlers[category] {
@@ -245,17 +257,20 @@ public actor MessageEngine: MessageEngineProtocol {
     /// Mark message as read
     public func markAsRead(id: String) async {
         await store.markAsRead(id: id)
+        onStoreChanged?()
     }
 
     /// Delete a message
     public func deleteMessage(id: String) async {
         await store.delete(id: id)
+        onStoreChanged?()
     }
 
     /// Clear all messages
     public func clearAllMessages() async {
         await store.deleteAll()
         statistics.reset()
+        onStoreChanged?()
     }
 
     // MARK: - Statistics
