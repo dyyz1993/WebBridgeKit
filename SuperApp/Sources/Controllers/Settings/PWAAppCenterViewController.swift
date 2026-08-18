@@ -58,6 +58,7 @@ final class PWAAppCenterViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: animated)
         refreshPushState()
         reloadApps()
+        observeDidBecomeActive()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -75,6 +76,20 @@ final class PWAAppCenterViewController: UIViewController {
         guard let officialPushIdentity, !officialPushIdentity.isEmpty else { return "" }
         let base = pushServerURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         return "\(base)/\(officialPushIdentity)"
+    }
+
+    /// Re-checks push permission when the app becomes active. Without this,
+    /// returning from iOS Settings after enabling notifications doesn't fire
+    /// `viewWillAppear` (the view was already visible under the Settings app),
+    /// so the push card would keep showing "enable" forever.
+    private func observeDidBecomeActive() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshPushState()
+        }
     }
 
     private func installHomeView() {
@@ -129,7 +144,10 @@ final class PWAAppCenterViewController: UIViewController {
                         self.homeViewModel.pushState = .ready
                     } else {
                         // Permission now exists; complete the registration
-                        // that the earlier denial blocked.
+                        // that the earlier denial blocked. Clear the stale
+                        // .denied state FIRST, otherwise activateOfficialPush()
+                        // re-opens Settings and traps the user in a loop.
+                        self.homeViewModel.pushState = .registering
                         self.activateOfficialPush()
                     }
                 case .denied:

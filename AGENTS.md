@@ -337,6 +337,10 @@ xcrun simctl launch booted com.webbridgekit.superapp
   `SuperApp/Resources/branding/webbridgekit-app-icon.svg`; all iPhone/iPad
   PNG sizes live in `SuperApp/Sources/Assets.xcassets/AppIcon.appiconset` and
   must preserve the same full logo artwork.
+- `SuperApp/Resources/branding/webbridgekit-approved-source.png` is the approved
+  white-background visual reference for raster exports. If the brand artwork is
+  revised, update this reference and regenerate the brand image set/AppIcon
+  sizes together.
 - Native product identity surfaces use the `WebBridgeKitBrand` image asset from
   `SuperApp/Sources/Assets.xcassets/WebBridgeKitBrand.imageset`. Keep this
   centralized instead of loading the old generic `appFill` icon for About,
@@ -490,6 +494,7 @@ bash scripts/scan-crash-logs.sh --fix
 
 | 日期 | 类型 | 原因 | 定位 | 修复 |
 |------|------|------|------|------|
+| 2026-08-17 | SIGSEGV ×2 | 21 个 ModuleAvailabilityTests 单进程全量重跑再次触发 XCUITest 高日志量隔离（栈顶 `XCTAutomationSupport runtime_issue_os_log_fault_callback`，与 2026-06-02/03、2026-08-10 记录同型），同轮 7 例失败为连锁；小批隔离重跑后仅剩分支既有失败（Home×3/通知卡/PWA 中心/TokenPush，均与设置无关） | `SuperAppUITests/ModuleAvailabilityTests.swift` 全量运行；crash_1786977990/1786978343（已清理，容器重装导致双份） | 分小批隔离重跑；`assertSettingsRowsNavigate` 导航等待 3s→8s（Cache Dashboard 首次推入时 AX 快照就绪慢，基线同样失败）后该测试转绿 |
 | 2026-08-10 | UITableView termination | 消息分组收起时先变更数据源，随后按变更后的零行数删除，导致 UITableView 的批量更新与数据源不一致并退出 | SuperApp/Sources/Controllers/Tab/InboxViewController.swift:viewForHeaderInSection | 切换前保存消息总数，使用 `performBatchUpdates` 对同一批行插入/删除，并原地刷新分组头状态；分组展开/收起 UI 回归必须通过 |
 | 2026-08-10 | SIGTRAP | Markdown 消息详情的 `WKWebView` 加载完成后，SnapKit 尝试更新一个只以 `greaterThanOrEqualTo` 创建的高度约束，触发 `updateConstraints` 断言 | SuperApp/Sources/Controllers/Message/MessageDetailViewController.swift:didFinish | 保留初始等值高度约束并通过保存的 `Constraint` 更新实际内容高度；消息详情、未读和应用筛选 UI 回归必须通过，随后重新扫描崩溃日志 |
 | 2026-08-10 | SIGSEGV | 历史 ModuleAvailabilityTests 全量运行触发 XCUITest 高日志量隔离；崩溃发生在 `XCTAutomationSupport` 可访问性快照查询，不在通知渲染路径 | `Documents/crash_logs/crash_1786347228.json`; `runtime_issue_os_log_fault_callback` | 本轮仅保留目标化通知回归（2/2 通过），避免全量快照扫描；已按 `scan-crash-logs.sh --fix` 清理历史记录并复扫 |

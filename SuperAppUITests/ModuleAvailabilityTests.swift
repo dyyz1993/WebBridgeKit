@@ -591,9 +591,11 @@ final class ModuleAvailabilityTests: XCTestCase {
         for row in rows {
             assertTab("tab.settings", opens: "SettingsViewController")
             tapElement(row)
+            // 8s: Cache Dashboard 首次推入会做 Realm 聚合与表头布局，
+            // 低负载模拟器上 3s 内 AX 快照可能尚未就绪（历史隔离问题）
             XCTAssertTrue(
-                app.navigationBars.firstMatch.waitForExistence(timeout: 3)
-                    || app.sheets.firstMatch.waitForExistence(timeout: 3),
+                app.navigationBars.firstMatch.waitForExistence(timeout: 8)
+                    || app.sheets.firstMatch.waitForExistence(timeout: 8),
                 "\(row) should navigate to a concrete screen."
             )
             dismissCurrentPresentation()

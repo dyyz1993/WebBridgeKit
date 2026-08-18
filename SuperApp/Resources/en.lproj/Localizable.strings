@@ -165,7 +165,11 @@
 "settings.hero.token_masked" = "Token: abcd****efgh";
 "settings.hero.copy_token" = "Copy Token";
 "settings.hero.copied_title" = "Copied";
-"settings.hero.copied_message" = "Token copied to clipboard";
+"settings.hero.copied_message" = "Push key copied to clipboard";
+"settings.hero.token_format" = "Token: %@";
+"settings.hero.identity.unset" = "Push identity not configured";
+"settings.hero.unset_title" = "Not configured";
+"settings.hero.unset_message" = "Configure your Bark identity key in Key Manager first.";
 "settings.server.config" = "Server Configuration";
 "settings.token.manager" = "Token Manager";
 "settings.apikey.manager" = "API Key Manager";

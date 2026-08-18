@@ -15,6 +15,7 @@ interface details from the approved visual direction:
 
 - `SuperApp/Resources/branding/webbridgekit-mark.svg` — primary white-background logo
 - `SuperApp/Resources/branding/webbridgekit-app-icon.svg` — white-background iOS app-icon artwork
+- `SuperApp/Resources/branding/webbridgekit-approved-source.png` — approved white-background visual reference used for raster exports
 - `SuperApp/Sources/Assets.xcassets/AppIcon.appiconset` — exported iPhone/iPad app-icon sizes
 
 `SuperApp/Resources/images/logo.svg` remains at its existing cache/test-fixture
