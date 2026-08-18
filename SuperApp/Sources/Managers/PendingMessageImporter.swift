@@ -6,7 +6,7 @@ import WebBridgeKit
 /// 2. Server message history API — fallback when NSE didn't fire (server restart, etc.)
 enum PendingMessageImporter {
 
-    private static let appGroupID = "group.com.xuyingzhou.bark"
+    private static let appGroupID = "group.com.webbridgekit.superapp"
     private static let lastSyncKey = "com.webbridgekit.lastMessageSync"
 
     static func importPending() async {
