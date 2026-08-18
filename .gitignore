@@ -143,3 +143,4 @@ docs/design-tokens-v2-backup.json
 .data/
 .uploads/
 Server/data/
+!test_resources/push-render-catalog.html
