@@ -3,11 +3,37 @@ import Hummingbird
 import NIOCore
 import NIOHTTP1
 
-/// In-memory per-device message log so the app can fetch messages that
-/// arrived while it was backgrounded or killed (no App Groups needed).
+/// Per-device message log with disk persistence. The app fetches messages
+/// that arrived while it was backgrounded or killed. Bark does not have
+/// server-side storage (device-local only via NSE + Realm); we add this as
+/// a second recovery tier that survives app uninstall and NSE misses.
 actor PushMessageLog {
     private var messages: [String: [(title: String, body: String, timestamp: Int)]] = [:]
     private let maxPerKey = 100
+    private let maxAge: TimeInterval = 7 * 24 * 3600 // 7 days retention
+    private let fileURL: URL?
+
+    private struct StoredMessage: Codable {
+        let k: String
+        let t: String
+        let b: String
+        let ts: Int
+    }
+
+    init(dataDir: String) {
+        self.fileURL = URL(fileURLWithPath: dataDir, isDirectory: true)
+            .appendingPathComponent("message-log.json")
+
+        guard let fileURL,
+              let data = try? Data(contentsOf: fileURL),
+              let stored = try? JSONDecoder().decode([StoredMessage].self, from: data)
+        else { return }
+
+        let cutoff = Date().timeIntervalSince1970 - maxAge
+        for item in stored where Double(item.ts) > cutoff {
+            messages[item.k, default: []].append((title: item.t, body: item.b, timestamp: item.ts))
+        }
+    }
 
     func record(key: String, title: String, body: String) {
         var list = messages[key] ?? []
@@ -16,10 +42,25 @@ actor PushMessageLog {
             list.removeFirst(list.count - maxPerKey)
         }
         messages[key] = list
+        try? persist()
     }
 
     func recent(key: String, since: Int = 0) -> [(title: String, body: String, timestamp: Int)] {
         (messages[key] ?? []).filter { $0.timestamp > since }
+    }
+
+    private func persist() {
+        guard let fileURL else { return }
+        let cutoff = Date().timeIntervalSince1970 - maxAge
+        var stored: [StoredMessage] = []
+        for (key, list) in messages {
+            for msg in list where Double(msg.timestamp) > cutoff {
+                stored.append(StoredMessage(k: key, t: msg.title, b: msg.body, ts: msg.timestamp))
+            }
+        }
+        if let data = try? JSONEncoder().encode(stored) {
+            try? data.write(to: fileURL)
+        }
     }
 }
 
@@ -27,11 +68,12 @@ final class APNsService: Sendable {
     private let configuration: ServerConfiguration
     private let tokenStore: TokenStore
     private let jwtSigner: APNsJWTSigner?
-    public let messageLog = PushMessageLog()
+    public let messageLog: PushMessageLog
 
     init(configuration: ServerConfiguration, tokenStore: TokenStore) {
         self.configuration = configuration
         self.tokenStore = tokenStore
+        self.messageLog = PushMessageLog(dataDir: configuration.dataDir)
         self.jwtSigner = try? APNsJWTSigner(
             keyID: configuration.apnsKeyID,
             teamID: configuration.apnsTeamID,
