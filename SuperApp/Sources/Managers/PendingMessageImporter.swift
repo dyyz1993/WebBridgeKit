@@ -1,15 +1,55 @@
 import Foundation
 import WebBridgeKit
 
-/// Fetches messages that arrived while the app was backgrounded or killed.
-/// Queries the server's per-device message history API instead of relying
-/// on App Groups + Notification Service Extension.
+/// Two-tier background message recovery:
+/// 1. NSE plist files (App Group) — instant, offline, written by NotificationServiceExtension
+/// 2. Server message history API — fallback when NSE didn't fire (server restart, etc.)
 enum PendingMessageImporter {
 
+    private static let appGroupID = "group.com.xuyingzhou.bark"
     private static let lastSyncKey = "com.webbridgekit.lastMessageSync"
 
     static func importPending() async {
-        guard let serverURL = Self.serverBaseURL,
+        await importFromAppGroup()
+        await importFromServer()
+    }
+
+    // MARK: - Tier 1: NSE plist files (Bark pattern)
+
+    private static func importFromAppGroup() async {
+        guard let groupURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)
+        else { return }
+
+        let pendingDir = groupURL.appendingPathComponent("pending_messages", isDirectory: true)
+        guard FileManager.default.fileExists(atPath: pendingDir.path) else { return }
+
+        let files = (try? FileManager.default.contentsOfDirectory(
+            at: pendingDir,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ))?.filter { $0.pathExtension == "plist" } ?? []
+
+        for fileURL in files.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            guard let dict = NSDictionary(contentsOf: fileURL) as? [String: Any] else {
+                try? FileManager.default.removeItem(at: fileURL)
+                continue
+            }
+
+            let payload = MessagePayload(
+                title: dict["title"] as? String ?? "",
+                body: dict["body"] as? String ?? "",
+                channel: "apns"
+            )
+            try? await MessageEngine.shared.receive(payload)
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+    }
+
+    // MARK: - Tier 2: Server message history (fallback)
+
+    private static func importFromServer() async {
+        guard let serverURL = serverBaseURL,
               let identity = try? OfficialPushIdentityStore.shared.currentOrCreate()
         else { return }
 
@@ -42,7 +82,7 @@ enum PendingMessageImporter {
                 UserDefaults.standard.set(latest, forKey: lastSyncKey)
             }
         } catch {
-            // Network errors are expected; retry on next foreground
+            // Offline or server unreachable; NSE tier already covered local case
         }
     }
 
