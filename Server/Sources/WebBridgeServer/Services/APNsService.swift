@@ -90,7 +90,7 @@ actor PushMessageLog {
 }
 
 final class APNsService: Sendable {
-    private let configuration: ServerConfiguration
+    let configuration: ServerConfiguration
     private let tokenStore: TokenStore
     private let jwtSigner: APNsJWTSigner?
     public let messageLog: PushMessageLog
@@ -112,13 +112,15 @@ final class APNsService: Sendable {
         // then dedupe against each other by id.
         var payload = payload
         payload.ensureMessageID()
-        await messageLog.record(
-            key: key,
-            messageId: payload.messageID,
-            title: payload.title,
-            body: payload.body,
-            fields: payload.customFields
-        )
+        if configuration.messageHistoryEnabled {
+            await messageLog.record(
+                key: key,
+                messageId: payload.messageID,
+                title: payload.title,
+                body: payload.body,
+                fields: payload.customFields
+            )
+        }
 
         let devices = await tokenStore.getDevices(forKey: key)
 

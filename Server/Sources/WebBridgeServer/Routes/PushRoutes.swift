@@ -35,7 +35,11 @@ enum PushRoutes {
                 throw HTTPError(.badRequest, message: "Missing key")
             }
             let since = Int(request.uri.query?.split(separator: "=").last ?? "0") ?? 0
-            let messages = await services.apnsService.messageLog.recent(key: key, since: since)
+            // History replay is opt-in; when disabled the server keeps no
+            // message content and the endpoint reports an empty timeline.
+            let messages = services.apnsService.configuration.messageHistoryEnabled
+                ? await services.apnsService.messageLog.recent(key: key, since: since)
+                : []
             return MessageHistoryResponse(
                 messages: messages.map {
                     .init(messageId: $0.messageId, title: $0.title, body: $0.body, timestamp: $0.timestamp, fields: $0.fields)

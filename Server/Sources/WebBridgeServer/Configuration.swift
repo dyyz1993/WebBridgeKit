@@ -17,6 +17,10 @@ struct ServerConfiguration: Sendable {
     let gatewayPublicBaseURL: String
     let gatewayKeyID: String
     let gatewayPrivateKey: String
+    /// Server-side message history is OFF by default, matching Bark's
+    /// privacy stance (the server never stores message content). Self-hosters
+    /// who want reinstall/multi-device recovery opt in with MESSAGE_HISTORY_ENABLED=1.
+    let messageHistoryEnabled: Bool
 
     init() {
         let env = Environment()
@@ -34,6 +38,7 @@ struct ServerConfiguration: Sendable {
         self.gatewayPublicBaseURL = env.get("GATEWAY_PUBLIC_BASE_URL") ?? "http://localhost:\(self.port)"
         self.gatewayKeyID = env.get("GATEWAY_KEY_ID") ?? ""
         self.gatewayPrivateKey = env.get("GATEWAY_PRIVATE_KEY") ?? ""
+        self.messageHistoryEnabled = env.get("MESSAGE_HISTORY_ENABLED") == "1"
         let originsRaw: String? = env.get("CORS_ALLOWED_ORIGINS")
         self.allowedCORSOrigins = originsRaw.map {
             $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
