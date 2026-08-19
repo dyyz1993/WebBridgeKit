@@ -78,6 +78,12 @@ public final class EngineBootstrap {
     // MARK: - Message
 
     private func bootstrapMessage() async {
+        // Resurrect the push-encryption key on every launch: the keychain
+        // original survives reinstalls, but the app-group mirrors the NSE
+        // reads do not — heal them silently so encrypted pushes decrypt
+        // without the user ever visiting the key page.
+        _ = PushCipher.sharedKey()
+
         let engine = MessageEngine.shared
 
         let persistentStore = UserDefaultsMessageStore(key: "SuperCache_Messages")

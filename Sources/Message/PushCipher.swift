@@ -1,4 +1,5 @@
 import CryptoKit
+import Security
 import Foundation
 
 /// Pure end-to-end encryption primitives for push payloads.
@@ -80,11 +81,37 @@ public enum PushCipher {
             .containerURL(forSecurityApplicationGroupIdentifier: sharedDefaultsSuite)
         else { return nil }
         let url = container.appendingPathComponent(keyFileSubpath)
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        // Heal the defaults mirror from the file.
-        UserDefaults(suiteName: sharedDefaultsSuite)?
-            .set(data, forKey: sharedDefaultsKey)
-        return data
+        if let data = try? Data(contentsOf: url) {
+            // Heal the defaults mirror from the file.
+            UserDefaults(suiteName: sharedDefaultsSuite)?
+                .set(data, forKey: sharedDefaultsKey)
+            return data
+        }
+        // Third tier: the keychain original survives app deletion (iOS
+        // platform behavior), so after a delete+reinstall the key
+        // resurrects from here into both mirrors — the user never loses
+        // their key by reinstalling.
+        if let data = keychainCopy() {
+            storeSharedKey(data)
+            return data
+        }
+        return nil
+    }
+
+    /// Reads the keychain original written by PushEncryptionView. Keychain
+    /// items outlive the app itself; only the main app can read this item
+    /// (default access group), which is exactly who performs resurrection.
+    private static func keychainCopy() -> Data? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.webbridgekit.superapp.push-crypto",
+            kSecAttrAccount as String: "shared-aes-key",
+            kSecReturnData as String: true
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess else { return nil }
+        return result as? Data
     }
 
     private static func ensureFileMirror(_ data: Data) {
