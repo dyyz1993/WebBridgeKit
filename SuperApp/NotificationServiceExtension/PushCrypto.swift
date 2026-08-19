@@ -1,17 +1,12 @@
-import CryptoKit
 import Foundation
 import UserNotifications
+import WebBridgeKit
 
-/// End-to-end encrypted push decryption (NSE side).
-///
-/// Contract (v1):
-/// - The sender encrypts the full message-field JSON object with AES-GCM
-///   using the 128-bit key shared out-of-band (shown in PushEncryptionView).
-/// - The push carries only `{"ciphertext": "<base64(nonce||ct||tag)>"}`.
-/// - The NSE decrypts with the key mirrored into the app-group defaults,
-///   applies the plaintext fields to the notification, and records the
-///   DECRYPTED payload so the inbox stores the readable message — the
-///   server never sees plaintext, matching Bark's ciphertext flow.
+/// NSE glue for end-to-end encrypted pushes: reads the shared key from the
+/// app-group defaults, decrypts via the framework's PushCipher contract,
+/// and publishes the plaintext through both the notification content and
+/// the plist recorder — so banners, taps, and inbox imports all see the
+/// same decrypted fields while the server only ever relayed ciphertext.
 enum PushCrypto {
 
     static let ciphertextField = "ciphertext"
@@ -31,23 +26,18 @@ enum PushCrypto {
             return (content, userInfo)
         }
 
-        guard let keyData = sharedKeyValue(),
-              let key = try? AES.GCM.Key(keyData: keyData),
-              let sealed = try? AES.GCM.SealedBox(combined: Data(base64Encoded: ciphertext)),
-              let plainData = try? AES.GCM.open(sealed, using: key),
-              let plain = (try? JSONSerialization.jsonObject(with: plainData)) as? [String: Any]
-        else {
-            content.title = "解密失败"
-            content.body = "无法解密这条加密推送（密钥不匹配或载荷损坏）"
-            return (content, ["title": content.title, "body": content.body])
+        guard let keyData = sharedKeyValue() else {
+            return failure(content, reason: "密钥未在本机配置")
         }
 
-        var decrypted = userInfo
-        decrypted.removeValue(forKey: ciphertextField)
-        for (rawKey, value) in plain {
-            guard let key = rawKey as? String else { continue }
-            decrypted[key] = value
+        let plain: [String: Any]
+        do {
+            plain = try PushCipher.decrypt(ciphertextBase64: ciphertext, keyData: keyData)
+        } catch {
+            return failure(content, reason: "无法解密这条加密推送（密钥不匹配或载荷损坏）")
         }
+
+        let decrypted = PushCipher.merging(plaintext: plain, onto: userInfo)
 
         let aps = plain["aps"] as? [String: Any]
         let alert = aps?["alert"] as? [String: Any]
@@ -75,6 +65,15 @@ enum PushCrypto {
         // lands with the raw empty fields.
         content.userInfo = decrypted
         return (content, decrypted)
+    }
+
+    private static func failure(
+        _ content: UNMutableNotificationContent,
+        reason: String
+    ) -> (content: UNMutableNotificationContent, recordedUserInfo: [AnyHashable: Any]) {
+        content.title = "解密失败"
+        content.body = reason
+        return (content, ["title": content.title, "body": content.body])
     }
 
     private static func sharedKeyValue() -> Data? {

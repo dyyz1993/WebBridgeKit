@@ -158,6 +158,11 @@ public final class EngineBootstrap {
     // MARK: - AI
 
     private func bootstrapAI() async {
+        // The local AI HTTP server is a development tool. Running it in
+        // production builds burns a socket, widens the attack surface
+        // (0.0.0.0 binding), and its accept loop once spun a device at
+        // 100% CPU — keep it out of TestFlight/App Store builds entirely.
+        #if DEBUG
         let server = AIHTTPServer(port: 8765)
         await server.registerDefaultRoutes()
 
@@ -171,14 +176,11 @@ public final class EngineBootstrap {
 
         do {
             try await server.start()
-            #if DEBUG
             print("  [OK] AI Engine: HTTP server started on port 8765")
-            #endif
         } catch {
-            #if DEBUG
             print("  [WARN] AI Engine: Failed to start HTTP server: \(error)")
-            #endif
         }
+        #endif
     }
 
     // MARK: - Skills
