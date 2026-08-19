@@ -393,6 +393,18 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             })
             .disposed(by: rx)
 
+        // 引擎任何变更（后台导入、收消息、已读、删除）都要反映到列表：
+        // 进场时首次加载可能与 NSE 导入竞态——列表先读到的还是空的，
+        // 导入完成后没人通知它刷新，用户只能靠切换过滤器"救"回来。
+        // 订阅引擎广播并防抖刷新，保证列表始终跟随存储真实状态。
+        NotificationCenter.default.rx.notification(MessageEngine.storeDidChangeNotification)
+            .observe(on: MainScheduler.instance)
+            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
+                self?.viewModel.refreshData()
+            })
+            .disposed(by: rx)
+
         // 横幅点击（无显式路由的推送）会切到本页并请求定位到对应消息
         NotificationCenter.default.rx.notification(.focusInboxMessage)
             .subscribe(onNext: { [weak self] notification in
