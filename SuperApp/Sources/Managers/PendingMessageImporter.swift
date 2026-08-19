@@ -43,7 +43,7 @@ enum PendingMessageImporter {
 
             let payload = NotificationPayloadMapper.makePayload(
                 identifier: fileURL.lastPathComponent,
-                userInfo: dict
+                userInfo: PushCipher.decryptingUserInfoIfEncrypted(dict)
             )
             try? await MessageEngine.shared.receive(payload)
             try? FileManager.default.removeItem(at: fileURL)
@@ -83,7 +83,7 @@ enum PendingMessageImporter {
 
                 let payload = NotificationPayloadMapper.makePayload(
                     identifier: "server-\(message.timestamp)",
-                    userInfo: userInfo
+                    userInfo: PushCipher.decryptingUserInfoIfEncrypted(userInfo)
                 )
                 try? await MessageEngine.shared.receive(payload)
                 latest = max(latest, Double(message.timestamp))

@@ -54,4 +54,31 @@ public enum PushCipher {
         }
         return merged
     }
+
+    /// App-group container shared by the app and the notification service
+    /// extension, where the symmetric key is mirrored for both processes.
+    public static let sharedDefaultsSuite = "group.com.webbridgekit.superapp"
+    private static let sharedDefaultsKey = "wbk.push-crypto.aes-key"
+
+    /// Consumer-side decryption: given ANY wire userInfo dict (from a
+    /// notification handler or a replayed plist), decrypt it in place if it
+    /// still carries a ciphertext envelope. First-principles rule: every
+    /// consumer decrypts for itself instead of trusting the NSE's modified
+    /// content.userInfo to survive delivery — so the banner path, the tap
+    /// path, and both replay tiers all converge on plaintext no matter
+    /// which hop dropped the decryption. Returns the input unchanged when
+    /// no envelope is present.
+    public static func decryptingUserInfoIfEncrypted(
+        _ userInfo: [AnyHashable: Any]
+    ) -> [AnyHashable: Any] {
+        guard let ciphertext = userInfo["ciphertext"] as? String,
+              !ciphertext.isEmpty
+        else { return userInfo }
+        guard let keyData = UserDefaults(suiteName: sharedDefaultsSuite)?
+            .data(forKey: sharedDefaultsKey)
+        else { return userInfo }
+        guard let plain = try? decrypt(ciphertextBase64: ciphertext, keyData: keyData)
+        else { return userInfo }
+        return merging(plaintext: plain, onto: userInfo)
+    }
 }
