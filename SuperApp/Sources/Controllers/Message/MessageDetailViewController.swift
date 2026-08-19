@@ -649,7 +649,7 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
 
     private func makeEncryptionOnboardingCard() -> UIView {
         let button = UIButton(type: .system)
-        button.setTitle("🔐 这是一条加密消息 — 点击配置解密密钥", for: .normal)
+        button.setTitle("这是一条加密消息 — 点击配置解密密钥", for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.rowTitle
         button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 12, bottom: 14, right: 12)
