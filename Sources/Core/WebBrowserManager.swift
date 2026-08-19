@@ -162,6 +162,19 @@ public class WebBrowserManager: WebBrowserManaging {
         }
 
         os_log("[OK] 找到 NavigationController", log: OSLog.default, type: .info)
+
+        // Safari-style reuse: when the user is already inside a browser
+        // (e.g. testing the push catalog in the in-app browser and tapping
+        // a push banner), load the new URL in place instead of stacking a
+        // second browser layer the user must close twice to leave.
+        if let top = navController.topViewController,
+           let existing = top as? WebBrowserViewController {
+            os_log("栈顶已是浏览器，原地加载新 URL", log: OSLog.default, type: .info)
+            existing.loadURLDirect(url, forceRefresh: forceRefresh)
+            currentBrowser = existing
+            return
+        }
+
         let webVC = createWebViewController(for: url, params: params)
         addToNavigationStack(webVC, url: url, params: params)
 
