@@ -160,7 +160,8 @@ enum PushRoutes {
             contentType: extractQueryParam(from: query, name: "contentType"),
             qrPayload: extractQueryParam(from: query, name: "qrPayload"),
             statePath: extractQueryParam(from: query, name: "statePath"),
-            revision: intQueryParam(from: query, name: "revision")
+            revision: intQueryParam(from: query, name: "revision"),
+            ciphertext: extractQueryParam(from: query, name: "ciphertext")
         )
     }
 

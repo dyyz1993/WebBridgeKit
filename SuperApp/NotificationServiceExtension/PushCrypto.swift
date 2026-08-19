@@ -69,6 +69,11 @@ enum PushCrypto {
         // fine, NSE-assigned ones are not). The decrypted sound still reaches
         // the inbox payload for display; delivery plays the original.
 
+        // Publish the decrypted fields through userInfo too: the app's
+        // willPresent/didReceive recorders read userInfo (not title/body),
+        // so without this the banner shows plaintext while the inbox row
+        // lands with the raw empty fields.
+        content.userInfo = decrypted
         return (content, decrypted)
     }
 
