@@ -173,6 +173,23 @@
   <div class="expect"><b>预期：</b>App 图标角标数字清零。</div>
 </div>
 
+<section><h2>端到端加密</h2></section>
+
+<div class="card" id="enc-card">
+  <div class="row"><h3>加密推送<small>浏览器现场 AES-GCM 加密，服务器只见密文</small></h3></div>
+  <div class="expect" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+    <input id="enc-key" placeholder="粘贴 App 设置→通知→推送加密 里的密钥 (Base64)" spellcheck="false"
+           style="font-size:12px;font-family:ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)">
+    <input id="enc-title" value="🔐 加密目录卡" spellcheck="false"
+           style="font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)">
+    <input id="enc-body" value="浏览器加密 → 服务器盲转 → 手机解密显示明文" spellcheck="false"
+           style="font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)">
+    <button id="enc-send">发送加密推送</button>
+  </div>
+  <div class="expect"><b>预期：</b>手机横幅与消息列表显示上面填写的<b>明文</b>标题/正文；服务器日志与载荷预览里只有密文字段 ciphertext。密钥不匹配时手机显示「解密失败」。</div>
+  <details><summary>载荷</summary><pre>发送后显示实际密文</pre></details>
+</div>
+
 <footer>
   发送端点：POST https://wbk.shanbox.19930810.xyz:8443/&#123;key&#125;<br>
   点击卡片下方「载荷」可展开查看该条实际发送的 JSON
@@ -220,6 +237,36 @@ document.querySelectorAll(".card").forEach(card => {
 
   if (mainBtn && cardPayload) wire(mainBtn, cardPayload);
   card.querySelectorAll(".pair button[data-payload]").forEach(b => wire(b, b.dataset.payload));
+});
+
+// 加密推送卡：WebCrypto AES-GCM 128，密文 = base64(iv||ct||tag)，与 NSE 的 CryptoKit 契约一致
+document.getElementById("enc-send").addEventListener("click", async () => {
+  const btn = document.getElementById("enc-send");
+  const keyB64 = document.getElementById("enc-key").value.trim();
+  const title = document.getElementById("enc-title").value;
+  const body = document.getElementById("enc-body").value;
+  const pre = document.querySelector("#enc-card pre");
+  btn.disabled = true;
+  try {
+    const raw = Uint8Array.from(atob(keyB64), c => c.charCodeAt(0));
+    const cryptoKey = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt"]);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const plaintext = new TextEncoder().encode(JSON.stringify({ title, body, sound: "alarm" }));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, plaintext));
+    const combined = new Uint8Array(iv.length + ct.length);
+    combined.set(iv); combined.set(ct, iv.length);
+    const b64 = btoa(String.fromCharCode(...combined));
+    const payload = JSON.stringify({ ciphertext: b64 });
+    pre.textContent = payload;
+    const pushKey = document.getElementById("key").value.trim();
+    const res = await fetch(`${BASE}/${encodeURIComponent(pushKey)}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: payload
+    });
+    btn.textContent = res.ok ? "✓ 已发送(密文)" : "✗ " + res.status;
+  } catch (e) {
+    btn.textContent = "✗ " + (e.message || "失败");
+  }
+  setTimeout(() => { btn.textContent = "发送加密推送"; btn.disabled = false; }, 1800);
 });
 </script>
 </body>
