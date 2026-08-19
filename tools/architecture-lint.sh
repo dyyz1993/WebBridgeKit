@@ -20,14 +20,26 @@ echo "║  Architecture Lint                       ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 
-# Rule 1: File size limits (500 ERROR, 300 WARNING)
+# Rule 1: File size limits (500 ERROR, 300 WARNING) — ratchet baseline.
+# Oversized files grandfathered in tools/architecture-lint-baseline.txt are
+# tolerated at their recorded size but fail the moment they GROW; new files
+# must satisfy the limit outright. Shrink a file below 500 and remove its
+# baseline entry to tighten the ratchet.
+BASELINE_FILE="$(dirname "$0")/architecture-lint-baseline.txt"
+
 echo "📋 Rule 1: File size limits (300w / 500e)"
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
     lines=$(wc -l < "$file" | tr -d ' ')
     if [ "$lines" -gt 500 ]; then
-        echo -e "  ${RED}ERROR${NC} $file has ${lines} lines (max 500)"
-        ((ERRORS++)) || true
+        allowed=$(awk -v f="$file" '$1==f {print $2}' "$BASELINE_FILE" 2>/dev/null)
+        allowed=${allowed:-0}
+        if [ "$lines" -le "$allowed" ]; then
+            echo -e "  ${YELLOW}DEBT${NC}  $file has ${lines} lines (baseline $allowed, do not grow)"
+        else
+            echo -e "  ${RED}ERROR${NC} $file has ${lines} lines (baseline $allowed / max 500)"
+            ((ERRORS++)) || true
+        fi
     elif [ "$lines" -gt 300 ]; then
         echo -e "  ${YELLOW}WARN${NC}  $file has ${lines} lines (consider splitting, soft max 300)"
         ((WARNINGS++)) || true
