@@ -244,9 +244,15 @@ final class APNsService: Sendable {
     /// testable prevents optional Push v2 fields from being accepted by the HTTP API
     /// and then silently discarded before device delivery.
     static func makeAPNsPayload(_ payload: PushPayload) -> [String: Any] {
+        // Ciphertext-only pushes carry no plaintext alert; iOS hides
+        // notifications whose alert is empty. Ship a placeholder the NSE
+        // overwrites after decrypting — and that remains visible (instead
+        // of an invisible fallback) if the NSE never runs.
+        let hasPlaintextAlert = !payload.title.isEmpty || !payload.body.isEmpty
+        let isCiphertextOnly = payload.ciphertext?.isEmpty == false && !hasPlaintextAlert
         var alert: [String: Any] = [
-            "title": payload.title,
-            "body": payload.body,
+            "title": isCiphertextOnly ? "加密消息" : payload.title,
+            "body": isCiphertextOnly ? "🔒 已加密内容，设备将自动解密" : payload.body,
         ]
         if let subtitle = payload.subtitle { alert["subtitle"] = subtitle }
 
