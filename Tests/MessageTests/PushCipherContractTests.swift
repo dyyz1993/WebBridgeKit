@@ -90,4 +90,28 @@ final class PushCipherContractTests: XCTestCase {
         XCTAssertEqual(stored.first?.payload.verificationCode, "135790")
         await store.deleteAll()
     }
+
+    /// Consumer-side rule: a RAW wire userInfo (as delivered when the NSE's
+    /// modified userInfo does not survive) must still decrypt in place.
+    func testConsumerDecryptsRawWireUserInfoInPlace() throws {
+        UserDefaults(suiteName: PushCipher.sharedDefaultsSuite)?
+            .set(Self.vectorKey, forKey: "wbk.push-crypto.aes-key")
+
+        let raw: [AnyHashable: Any] = [
+            "title": "",
+            "body": "",
+            "ciphertext": Self.vectorCiphertext,
+            "messageId": "vec-consumer-1"
+        ]
+        let healed = PushCipher.decryptingUserInfoIfEncrypted(raw)
+        XCTAssertEqual(healed["title"] as? String, "🔐 契约向量")
+        XCTAssertEqual(healed["body"] as? String, "自动化解密验证")
+        XCTAssertNil(healed["ciphertext"])
+        XCTAssertEqual(healed["messageId"] as? String, "vec-consumer-1")
+
+        // 无信封时原样返回
+        let plain: [AnyHashable: Any] = ["title": "普通消息"]
+        let unchanged = PushCipher.decryptingUserInfoIfEncrypted(plain)
+        XCTAssertEqual(unchanged["title"] as? String, "普通消息")
+    }
 }

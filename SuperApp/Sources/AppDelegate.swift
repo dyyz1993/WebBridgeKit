@@ -333,10 +333,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         let request = notification.request
+        // Consumer-side decryption: do not trust the NSE's modified
+        // userInfo to survive delivery — decrypt here if the wire envelope
+        // is still present.
+        let wireUserInfo = PushCipher.decryptingUserInfoIfEncrypted(request.content.userInfo)
         Task {
             let payload = makeMessagePayload(
                 identifier: request.identifier,
-                userInfo: request.content.userInfo,
+                userInfo: wireUserInfo,
                 content: request.content
             )
             try? await MessageEngine.shared.receive(payload)
@@ -360,7 +364,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        let userInfo = response.notification.request.content.userInfo
+        var userInfo = PushCipher.decryptingUserInfoIfEncrypted(
+            response.notification.request.content.userInfo
+        )
         let content = response.notification.request.content
         var routingInfo = userInfo
         routingInfo["title"] = userInfo["title"] as? String ?? content.title
