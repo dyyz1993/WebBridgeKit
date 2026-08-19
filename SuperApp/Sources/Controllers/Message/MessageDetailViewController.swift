@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SwiftUI
 import SnapKit
 import WebKit
 import WebBridgeKit
@@ -412,6 +413,14 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
             contentStackView.addArrangedSubview(makeApprovalStateCard())
         }
 
+        // Encrypted messages with no configured key degrade to a friendly
+        // onboarding card — first-time users have never seen the key page
+        // and must not be greeted by a raw failure.
+        if message.payload.userInfo?["ciphertext"] != nil,
+           message.payload.title.isEmpty || message.payload.body.isEmpty {
+            contentStackView.addArrangedSubview(makeEncryptionOnboardingCard())
+        }
+
         if let verificationCode = message.payload.verificationCode {
             contentStackView.addArrangedSubview(
                 makeVerificationCodeCard(code: verificationCode, expiresAt: message.payload.expiresAt)
@@ -636,6 +645,25 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
             })
             self.present(alert, animated: true)
         }
+    }
+
+    private func makeEncryptionOnboardingCard() -> UIView {
+        let button = UIButton(type: .system)
+        button.setTitle("🔐 这是一条加密消息 — 点击配置解密密钥", for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.rowTitle
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 12, bottom: 14, right: 12)
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.card
+        button.clipsToBounds = true
+        button.backgroundColor = ThemeTokens.Color.primarySoft
+        button.addTarget(self, action: #selector(openEncryptionSettings), for: .touchUpInside)
+        return button
+    }
+
+    @objc private func openEncryptionSettings() {
+        let vc = UIHostingController(rootView: PushEncryptionView())
+        vc.title = "推送加密"
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func addMetaRow(label: String, value: String) {
