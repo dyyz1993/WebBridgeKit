@@ -453,6 +453,10 @@ class TabBarController: UITabBarController {
             nav.pushViewController(vc, animated: true)
         case .notificationSettings:
             NotificationSettingsOpener.open()
+        case .pushEncryption:
+            let vc = UIHostingController(rootView: PushEncryptionView())
+            vc.title = "推送加密"
+            nav.pushViewController(vc, animated: true)
         case .appearance:
             let vc = UIHostingController(rootView: AppearanceSettingsView())
             vc.title = L10n.tr("settings.appearance")

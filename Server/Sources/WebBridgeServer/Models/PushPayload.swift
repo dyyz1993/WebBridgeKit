@@ -44,12 +44,16 @@ struct PushPayload: Codable, Sendable {
     /// so the tap path, NSE plist replay, and server history replay all
     /// reconstruct the message with the same id and dedupe against each other.
     var messageID: String?
+    /// Opaque end-to-end encrypted payload passthrough. The server never
+    /// sees the plaintext; the device NSE decrypts with the shared key.
+    let ciphertext: String?
 
     enum CodingKeys: String, CodingKey {
         case schema, type, title, body, subtitle, category, markdown, sound, badge, icon, image
         case group, url, copy, level, volume, route, mode, display, verificationCode, expiresAt, ttl
         case actionState, contentType, qrPayload, statePath, revision, params, presentation, approval
         case messageID = "messageId"
+        case ciphertext
         case threadID = "threadId"
         case isCall = "call"
         case autoCopy
@@ -99,7 +103,8 @@ struct PushPayload: Codable, Sendable {
         params: [String: String]? = nil,
         presentation: String? = nil,
         approval: ApprovalClientPayload? = nil,
-        messageID: String? = nil
+        messageID: String? = nil,
+        ciphertext: String? = nil
     ) {
         self.schema = schema
         self.type = type
@@ -140,6 +145,7 @@ struct PushPayload: Codable, Sendable {
         self.presentation = presentation
         self.approval = approval
         self.messageID = messageID
+        self.ciphertext = ciphertext
     }
 
     /// Assigns a push id if none exists yet. Reuses the approval identity
@@ -203,6 +209,7 @@ struct PushPayload: Codable, Sendable {
         putInt("badge", badge)
         put("presentation", presentation)
         put("schema", schema)
+        put("ciphertext", ciphertext)
         return fields
     }
 
@@ -246,7 +253,8 @@ struct PushPayload: Codable, Sendable {
             params: params,
             presentation: presentation,
             approval: approval,
-            messageID: messageID
+            messageID: messageID,
+            ciphertext: ciphertext
         )
     }
 }

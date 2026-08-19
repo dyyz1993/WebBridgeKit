@@ -34,6 +34,7 @@ struct SettingsView: View {
         case favorites
         case history
         case notificationSettings
+        case pushEncryption
         case appearance
         case debugPanel
         case exportDiagnostics
@@ -204,6 +205,7 @@ struct SettingsView: View {
         case .favorites: onNavigate(.favorites)
         case .history: onNavigate(.history)
         case .notificationSettings: onNavigate(.notificationSettings)
+        case .pushEncryption: onNavigate(.pushEncryption)
         case .rememberLastApp: break
         case .appearance: onNavigate(.appearance)
         case .debugPanel: onNavigate(.debugPanel)

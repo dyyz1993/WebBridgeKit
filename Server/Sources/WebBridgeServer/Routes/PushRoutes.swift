@@ -106,11 +106,19 @@ enum PushRoutes {
             ? jsonBodyFields(from: raw)
             : formBodyFields(from: raw)
 
-        guard let body = fields["body"], !body.isEmpty else {
-            throw HTTPError(.badRequest, message: "body is required")
+        // End-to-end encrypted pushes carry only `ciphertext` — the server
+        // must not require a plaintext body it is not supposed to see.
+        if fields["ciphertext"]?.isEmpty != false {
+            guard let body = fields["body"], !body.isEmpty else {
+                throw HTTPError(.badRequest, message: "body is required")
+            }
         }
 
-        let payload = makePayload(title: fields["title"] ?? "", body: body, query: canonicalQuery(from: fields))
+        let payload = makePayload(
+            title: fields["title"] ?? "",
+            body: fields["body"] ?? "",
+            query: canonicalQuery(from: fields)
+        )
         return try await services.apnsService.sendPush(key: key, payload: payload)
     }
 
