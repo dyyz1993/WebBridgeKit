@@ -69,6 +69,11 @@ public enum PushCipher {
     public static func sharedKey() -> Data? {
         if let data = UserDefaults(suiteName: sharedDefaultsSuite)?
             .data(forKey: sharedDefaultsKey) {
+            // Bidirectional healing: a defaults hit must also guarantee the
+            // file mirror exists — the NSE falls back to the file when the
+            // defaults plist is unreadable while locked, and nothing else
+            // would ever create it for keys written before the mirror.
+            ensureFileMirror(data)
             return data
         }
         guard let container = FileManager.default
@@ -80,6 +85,19 @@ public enum PushCipher {
         UserDefaults(suiteName: sharedDefaultsSuite)?
             .set(data, forKey: sharedDefaultsKey)
         return data
+    }
+
+    private static func ensureFileMirror(_ data: Data) {
+        guard let container = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: sharedDefaultsSuite)
+        else { return }
+        let url = container.appendingPathComponent(keyFileSubpath)
+        if FileManager.default.fileExists(atPath: url.path) { return }
+        try? data.write(to: url, options: [.atomic])
+        try? FileManager.default.setAttributes(
+            [.protectionKey: "NSFileProtectionCompleteUntilFirstUserUnlock"],
+            ofItemAtPath: url.path
+        )
     }
 
     /// Writes the key to both mirrors with until-first-unlock protection.
