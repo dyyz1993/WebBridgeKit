@@ -1,5 +1,4 @@
 import Foundation
-import WebBridgeKit
 
 /// Shared mapping from a push notification's userInfo into `MessagePayload`.
 ///
@@ -8,18 +7,18 @@ import WebBridgeKit
 /// records) must produce identical payload ids — `messageId ?? id ?? request
 /// identifier` — so MessageEngine's `findExistingMessage` dedups a banner
 /// tap against the later import instead of storing the push twice.
-enum NotificationPayloadMapper {
+public enum NotificationPayloadMapper {
 
     /// Values used when the userInfo lacks the field. The live path supplies
     /// them from `UNNotificationContent`; the replay path supplies them from
     /// the content snapshot persisted by the extension.
-    struct ContentFallbacks {
-        var title: String?
-        var body: String?
-        var subtitle: String?
-        var badge: Int?
+    public struct ContentFallbacks {
+        public var title: String?
+        public var body: String?
+        public var subtitle: String?
+        public var badge: Int?
 
-        init(title: String? = nil, body: String? = nil, subtitle: String? = nil, badge: Int? = nil) {
+        public init(title: String? = nil, body: String? = nil, subtitle: String? = nil, badge: Int? = nil) {
             self.title = title
             self.body = body
             self.subtitle = subtitle
@@ -27,7 +26,7 @@ enum NotificationPayloadMapper {
         }
     }
 
-    static func makePayload(
+    public static func makePayload(
         identifier: String,
         userInfo: [AnyHashable: Any],
         fallbacks: ContentFallbacks = ContentFallbacks()
