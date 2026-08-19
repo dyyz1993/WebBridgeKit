@@ -294,6 +294,45 @@ xcrun simctl launch booted com.webbridgekit.superapp
 - `WebBridgeKit.xcodeproj/` is generated and ignored. Treat `project.yml` as the source of truth.
 - After changing `project.yml`, run `xcodegen generate && pod install` before any build, device install, or verification gate. Skipping `pod install` after regeneration can make CocoaPods modules such as SnapKit, RxCocoa, RealmSwift, or ZIPFoundation fail to resolve.
 
+### Shadow-Source Traps (learned 2026-08-19, cost: a full day)
+
+XcodeGen compiles exactly what `project.yml` target `sources:` globs match.
+Files that match NO target are simply ignored — zero warnings, zero errors.
+That silence enabled a day-long ghost hunt:
+
+- The **NotificationServiceExtension target compiles the ROOT
+  `NotificationServiceExtension/` directory** — not
+  `SuperApp/NotificationServiceExtension/`. An earlier session edited the
+  SuperApp/ path (a plausible-looking guess), creating a shadow copy that
+  never compiled while every build stayed green. The shipped NSE silently
+  ran stale code: its keychain-based crypto read failed forever
+  ("密钥未在本机配置"), and its bundled call=1 ringtone synthesis was the
+  real SpringBoard respring culprit. Root cause found only by forensics,
+  not by reading source.
+
+Rules that must not regress:
+
+1. **NSE source of truth is ROOT `NotificationServiceExtension/`.** Never
+   create or edit `SuperApp/NotificationServiceExtension/` (deleted
+   2026-08-19; do not resurrect it). The same trap previously bit the
+   entitlements files (root vs SuperApp copies must stay identical).
+2. **"Edited the code but behavior is unchanged" → suspect target
+   membership FIRST, before process caches or restarts:**
+   `grep '<File>.swift in Sources' WebBridgeKit.xcodeproj/project.pbxproj`
+   (0 matches = your edit compiled into nothing).
+3. **Verify shipped binaries, not source:** App Store/TestFlight IPAs are
+   FairPlay-encrypted (useless for `strings`); use the unencrypted archive
+   products instead:
+   `strings -a /tmp/wbk-archive/.../PlugIns/*.appex/* | grep <marker>`
+   Every NSE change should ship with an ASCII marker string worth grepping.
+4. The NSE must stay **self-contained** (no `import WebBridgeKit`) —
+   importing the framework drags its CocoaPods graph into the extension
+   target. Crypto lives inline in `PushCrypto.swift`, mirroring the
+   `PushCipher` contract locked by `PushCipherContractTests`.
+5. Multi-tier fallbacks (server history, app-group plist) can MASK a dead
+   tier for days. When a tier's code is touched, verify THAT tier's
+   artifact directly (rule 3), not just the user-visible outcome.
+
 ## Project Structure
 
 - `Server/` - Swift Hummingbird backend (SPM)
