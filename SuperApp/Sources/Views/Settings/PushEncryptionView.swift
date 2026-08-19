@@ -103,6 +103,12 @@ struct PushEncryptionView: View {
     }
 
     private func loadKey() {
+        // Prefer the shared mirror (what the NSE actually reads); fall back
+        // to the keychain copy and migrate it into the mirror for older keys.
+        if let shared = Self.sharedDefaults?.data(forKey: Self.sharedDefaultsKey) {
+            keyBase64 = shared.base64EncodedString()
+            return
+        }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: "com.webbridgekit.superapp.push-crypto",
@@ -112,9 +118,18 @@ struct PushEncryptionView: View {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecSuccess, let data = result as? Data {
+            Self.sharedDefaults?.set(data, forKey: Self.sharedDefaultsKey)
             keyBase64 = data.base64EncodedString()
         }
     }
+
+    // The Notification Service Extension decrypts encrypted pushes. It cannot
+    // read the app's default keychain access group, so the key is mirrored
+    // into the shared app-group defaults where both processes can read it.
+    private static var sharedDefaults: UserDefaults? {
+        UserDefaults(suiteName: "group.com.webbridgekit.superapp")
+    }
+    private static let sharedDefaultsKey = "wbk.push-crypto.aes-key"
 
     private func generateKey() {
         let key = SymmetricKey(size: .bits128)
@@ -127,6 +142,7 @@ struct PushEncryptionView: View {
         ]
         SecItemDelete(query as CFDictionary)
         if SecItemAdd(query as CFDictionary, nil) == errSecSuccess {
+            Self.sharedDefaults?.set(keyData, forKey: Self.sharedDefaultsKey)
             keyBase64 = keyData.base64EncodedString()
             HUDService.shared.showSuccess(withStatus: "密钥已生成")
         }

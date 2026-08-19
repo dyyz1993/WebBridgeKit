@@ -20,17 +20,21 @@ final class NotificationService: UNNotificationServiceExtension {
         self.contentHandler = contentHandler
         self.bestAttempt = (request.content.mutableCopy() as? UNMutableNotificationContent)
 
-        // Write the full payload to the App Group shared container so the
-        // main app can import it even if the user never taps the notification.
-        recordPayload(request.content.userInfo)
+        // Encrypted pushes are decrypted first so both the presented banner
+        // and the recorded plist carry the readable fields; the server only
+        // ever saw the ciphertext.
+        let (content, recordedUserInfo) = PushCrypto.process(
+            self.bestAttempt ?? UNMutableNotificationContent(),
+            userInfo: request.content.userInfo
+        )
+        self.bestAttempt = content
 
-        // call=1 long-ringtone substitution is DISABLED pending a SpringBoard
-        // crash investigation: delivering the synthesized 30s caf crashed
-        // SpringBoard on iOS 18.7.3 (black screen + respring) while Bark's
-        // equivalent works. Do not re-enable until the synthesized format is
-        // verified against a device crash log — see wbk.sounds.30s cleanup
-        // in PushSoundInstaller.
-        contentHandler(request.content)
+        // Write the full (decrypted when applicable) payload to the App
+        // Group shared container so the main app can import it even if the
+        // user never taps the notification.
+        recordPayload(recordedUserInfo)
+
+        contentHandler(content)
     }
 
     override func serviceExtensionTimeWillExpire() {

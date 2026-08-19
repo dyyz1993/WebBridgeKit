@@ -22,6 +22,7 @@ class SettingsViewModel {
         case favorites
         case history
         case notificationSettings
+        case pushEncryption
         case rememberLastApp
         case appearance
         case debugPanel
@@ -158,6 +159,14 @@ class SettingsViewModel {
                     lucideIcon: .bell,
                     title: L10n.tr("settings.notification.settings"),
                     action: .notificationSettings,
+                    iconBackgroundColor: eb,
+                    iconTintColor: et
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .key,
+                    title: "推送加密",
+                    action: .pushEncryption,
                     iconBackgroundColor: eb,
                     iconTintColor: et
                 )

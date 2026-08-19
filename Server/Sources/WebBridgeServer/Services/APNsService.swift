@@ -274,6 +274,7 @@ final class APNsService: Sendable {
         }
 
         add("messageId", payload.messageID)
+        add("ciphertext", payload.ciphertext)
         add("subtitle", payload.subtitle)
         add("category", payload.category)
         add("markdown", payload.markdown)
