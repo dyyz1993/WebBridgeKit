@@ -1,8 +1,13 @@
+import AudioToolbox
+import AVFAudio
+import Foundation
 import UserNotifications
 
 /// Records incoming push payloads to shared plist files so the main app can
 /// import them into its message store on next foreground — mirroring Bark's
-/// Notification Service Extension approach.
+/// Notification Service Extension approach — and extends `call=1` pushes
+/// with a synthesized 30-second looping ringtone (Bark CallProcessor pattern)
+/// so they ring like a phone call instead of a single alert chime.
 final class NotificationService: UNNotificationServiceExtension {
 
     private var contentHandler: ((UNNotificationContent) -> Void)?
@@ -19,14 +24,133 @@ final class NotificationService: UNNotificationServiceExtension {
         // main app can import it even if the user never taps the notification.
         recordPayload(request.content.userInfo)
 
-        // Pass through unmodified; rich processing (decrypt, images) can be
-        // added later without changing the recording contract.
+        // call=1 long-ringtone substitution is DISABLED pending a SpringBoard
+        // crash investigation: delivering the synthesized 30s caf crashed
+        // SpringBoard on iOS 18.7.3 (black screen + respring) while Bark's
+        // equivalent works. Do not re-enable until the synthesized format is
+        // verified against a device crash log — see wbk.sounds.30s cleanup
+        // in PushSoundInstaller.
         contentHandler(request.content)
     }
 
     override func serviceExtensionTimeWillExpire() {
         if let contentHandler, let bestAttempt {
             contentHandler(bestAttempt)
+        }
+    }
+
+    // MARK: - Call=1 long ringtone (Bark CallProcessor pattern)
+
+    private static func isCall(userInfo: [AnyHashable: Any]) -> Bool {
+        switch userInfo["call"] {
+        case let value as String:
+            return value == "1" || value.lowercased() == "true"
+        case let value as NSNumber:
+            return value.boolValue
+        default:
+            return false
+        }
+    }
+
+    /// Named sounds live in the app group's Library/Sounds (mirrored there by
+    /// PushSoundInstaller) because this extension cannot read the main app's
+    /// bundle. Loop-synthesized 30s variants are cached next to them.
+    private static var sharedSoundsDirectory: URL? {
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.webbridgekit.superapp")?
+            .appendingPathComponent("Library/Sounds")
+    }
+
+    private static let longSoundPrefix = "wbk.sounds.30s"
+    private static let fallbackSoundName = "multiwayinvitation"
+
+    private static func applyLongRingtone(
+        to content: UNMutableNotificationContent,
+        userInfo: [AnyHashable: Any]
+    ) -> UNMutableNotificationContent {
+        let rawSound = ((userInfo["aps"] as? [String: Any])?["sound"] as? String) ?? content.sound
+        // Named sounds carry the .caf extension (project rule); anything else
+        // falls back to Bark's default call tone.
+        let components = rawSound.split(separator: ".")
+        let soundName: String
+        if components.count == 2, let last = components.last, last.lowercased() == "caf" {
+            soundName = String(components.first!)
+        } else {
+            soundName = fallbackSoundName
+        }
+
+        guard let longSoundURL = longSoundURL(for: soundName) else { return content }
+        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: longSoundURL.lastPathComponent))
+        return content
+    }
+
+    private static func longSoundURL(for soundName: String) -> URL? {
+        guard let soundsDirectory = sharedSoundsDirectory else { return nil }
+        try? FileManager.default.createDirectory(at: soundsDirectory, withIntermediateDirectories: true)
+
+        let longURL = soundsDirectory.appendingPathComponent("\(longSoundPrefix).\(soundName).caf")
+        if FileManager.default.fileExists(atPath: longURL.path) {
+            return longURL
+        }
+
+        // The shared mirror is the primary source; the extension bundle also
+        // carries the ringtones as a fallback.
+        var sourceURL = soundsDirectory.appendingPathComponent("\(soundName).caf")
+        if !FileManager.default.fileExists(atPath: sourceURL.path) {
+            sourceURL = Bundle.main.url(forResource: soundName, withExtension: "caf") ?? sourceURL
+        }
+        guard FileManager.default.fileExists(atPath: sourceURL.path) else { return nil }
+
+        return loopToDuration(inputFile: sourceURL, outputFile: longURL)
+    }
+
+    /// Repeats the source audio until it reaches the target duration
+    /// (AVAudioFile read-loop, truncating the final pass) — the same
+    /// synthesis Bark's CallProcessor uses to synthesize 30s ringtones.
+    private static func loopToDuration(
+        inputFile: URL,
+        outputFile: URL,
+        targetDuration: TimeInterval = 30
+    ) -> URL? {
+        do {
+            let audioFile = try AVAudioFile(forReading: inputFile)
+            let format = audioFile.processingFormat
+            let sampleRate = format.sampleRate
+            let targetFrames = AVAudioFramePosition(targetDuration * sampleRate)
+            var writtenFrames: AVAudioFramePosition = 0
+            let outputAudioFile = try AVAudioFile(forWriting: outputFile, settings: format.settings)
+
+            while writtenFrames < targetFrames {
+                guard let buffer = AVAudioPCMBuffer(
+                    pcmFormat: format,
+                    frameCapacity: AVAudioFrameCount(audioFile.length)
+                ) else { return nil }
+                try audioFile.read(into: buffer)
+
+                let remainingFrames = targetFrames - writtenFrames
+                if AVAudioFramePosition(buffer.frameLength) > remainingFrames {
+                    guard let truncated = AVAudioPCMBuffer(
+                        pcmFormat: format,
+                        frameCapacity: AVAudioFrameCount(remainingFrames)
+                    ) else { return nil }
+                    let channelCount = Int(format.channelCount)
+                    for channel in 0..<channelCount {
+                        guard let source = buffer.floatChannelData?[channel],
+                              let destination = truncated.floatChannelData?[channel] else { continue }
+                        memcpy(destination, source, Int(remainingFrames) * MemoryLayout<Float>.size)
+                    }
+                    truncated.frameLength = AVAudioFrameCount(remainingFrames)
+                    try outputAudioFile.write(from: truncated)
+                    break
+                } else {
+                    try outputAudioFile.write(from: buffer)
+                    writtenFrames += AVAudioFramePosition(buffer.frameLength)
+                }
+                audioFile.framePosition = 0
+            }
+            return outputFile
+        } catch {
+            return nil
         }
     }
 
@@ -68,5 +192,4 @@ final class NotificationService: UNNotificationServiceExtension {
         let fileURL = pendingDir.appendingPathComponent(fileName)
         NSDictionary(dictionary: dict).write(to: fileURL, atomically: true)
     }
-}
 }
