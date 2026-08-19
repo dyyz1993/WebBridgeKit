@@ -77,7 +77,6 @@ enum PushCrypto {
     }
 
     private static func sharedKeyValue() -> Data? {
-        UserDefaults(suiteName: "group.com.webbridgekit.superapp")?
-            .data(forKey: sharedDefaultsKey)
+        PushCipher.sharedKey()
     }
 }

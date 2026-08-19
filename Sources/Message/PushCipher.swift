@@ -59,6 +59,43 @@ public enum PushCipher {
     /// extension, where the symmetric key is mirrored for both processes.
     public static let sharedDefaultsSuite = "group.com.webbridgekit.superapp"
     private static let sharedDefaultsKey = "wbk.push-crypto.aes-key"
+    /// File mirror of the key inside the app-group container. The service
+    /// extension sometimes cannot read the shared UserDefaults plist while
+    /// the device is locked (file protection); a plain file with
+    /// until-first-unlock protection is readable in every push scenario.
+    public static let keyFileSubpath = "push-crypto.key"
+
+    /// Reads the shared key from both mirrors (defaults first, file second).
+    public static func sharedKey() -> Data? {
+        if let data = UserDefaults(suiteName: sharedDefaultsSuite)?
+            .data(forKey: sharedDefaultsKey) {
+            return data
+        }
+        guard let container = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: sharedDefaultsSuite)
+        else { return nil }
+        let url = container.appendingPathComponent(keyFileSubpath)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        // Heal the defaults mirror from the file.
+        UserDefaults(suiteName: sharedDefaultsSuite)?
+            .set(data, forKey: sharedDefaultsKey)
+        return data
+    }
+
+    /// Writes the key to both mirrors with until-first-unlock protection.
+    public static func storeSharedKey(_ data: Data) {
+        UserDefaults(suiteName: sharedDefaultsSuite)?
+            .set(data, forKey: sharedDefaultsKey)
+        guard let container = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: sharedDefaultsSuite)
+        else { return }
+        let url = container.appendingPathComponent(keyFileSubpath)
+        try? data.write(to: url, options: [.atomic])
+        try? FileManager.default.setAttributes(
+            [.protectionKey: "NSFileProtectionCompleteUntilFirstUserUnlock"],
+            ofItemAtPath: url.path
+        )
+    }
 
     /// Consumer-side decryption: given ANY wire userInfo dict (from a
     /// notification handler or a replayed plist), decrypt it in place if it
@@ -74,9 +111,7 @@ public enum PushCipher {
         guard let ciphertext = userInfo["ciphertext"] as? String,
               !ciphertext.isEmpty
         else { return userInfo }
-        guard let keyData = UserDefaults(suiteName: sharedDefaultsSuite)?
-            .data(forKey: sharedDefaultsKey)
-        else { return userInfo }
+        guard let keyData = sharedKey() else { return userInfo }
         guard let plain = try? decrypt(ciphertextBase64: ciphertext, keyData: keyData)
         else { return userInfo }
         return merging(plaintext: plain, onto: userInfo)

@@ -105,7 +105,7 @@ struct PushEncryptionView: View {
     private func loadKey() {
         // Prefer the shared mirror (what the NSE actually reads); fall back
         // to the keychain copy and migrate it into the mirror for older keys.
-        if let shared = Self.sharedDefaults?.data(forKey: Self.sharedDefaultsKey) {
+        if let shared = PushCipher.sharedKey() {
             keyBase64 = shared.base64EncodedString()
             return
         }
@@ -118,7 +118,7 @@ struct PushEncryptionView: View {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecSuccess, let data = result as? Data {
-            Self.sharedDefaults?.set(data, forKey: Self.sharedDefaultsKey)
+            PushCipher.storeSharedKey(data)
             keyBase64 = data.base64EncodedString()
         }
     }
@@ -142,7 +142,7 @@ struct PushEncryptionView: View {
         ]
         SecItemDelete(query as CFDictionary)
         if SecItemAdd(query as CFDictionary, nil) == errSecSuccess {
-            Self.sharedDefaults?.set(keyData, forKey: Self.sharedDefaultsKey)
+            PushCipher.storeSharedKey(keyData)
             keyBase64 = keyData.base64EncodedString()
             HUDService.shared.showSuccess(withStatus: "密钥已生成")
         }
