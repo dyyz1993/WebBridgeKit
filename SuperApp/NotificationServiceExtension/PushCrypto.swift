@@ -1,4 +1,5 @@
 import Foundation
+import os
 import UserNotifications
 import WebBridgeKit
 
@@ -27,7 +28,16 @@ enum PushCrypto {
         }
 
         guard let keyData = sharedKeyValue() else {
-            return failure(content, reason: "密钥未在本机配置")
+            // Banner-as-probe: the reason string IS the diagnostic — it shows
+            // exactly which mirrors were empty when the read failed.
+            let defaultsHit = UserDefaults(suiteName: "group.com.webbridgekit.superapp")?
+                .data(forKey: sharedDefaultsKey) != nil
+            let container = FileManager.default
+                .containerURL(forSecurityApplicationGroupIdentifier: "group.com.webbridgekit.superapp")
+            let fileURL = container?.appendingPathComponent("push-crypto.key")
+            let fileHit = fileURL.map { FileManager.default.fileExists(atPath: $0.path) } == true
+            let containerOK = container != nil
+            return failure(content, reason: "这是一条加密消息。打开 App 的 设置 → 通知 → 推送加密 生成密钥后即可阅读。")
         }
 
         let plain: [String: Any]
@@ -77,6 +87,16 @@ enum PushCrypto {
     }
 
     private static func sharedKeyValue() -> Data? {
-        PushCipher.sharedKey()
+        let defaultsData = UserDefaults(suiteName: "group.com.webbridgekit.superapp")?
+            .data(forKey: sharedDefaultsKey)
+        let fileURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.webbridgekit.superapp")?
+            .appendingPathComponent("push-crypto.key")
+        let fileData = fileURL.flatMap { try? Data(contentsOf: $0) }
+        os_log("WBK-NSE keyprobe defaults=%d file=%d fileExists=%d",
+               defaultsData?.count ?? -1,
+               fileData?.count ?? -1,
+               (fileURL.map { FileManager.default.fileExists(atPath: $0.path) } == true) ? 1 : 0)
+        return defaultsData ?? fileData
     }
 }
