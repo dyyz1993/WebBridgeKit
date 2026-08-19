@@ -63,11 +63,11 @@ enum PushCrypto {
         if let group = plain["group"] as? String {
             content.threadIdentifier = group
         }
-        if let soundName = plain["sound"] as? String {
-            var name = soundName
-            if !name.hasSuffix(".caf") { name += ".caf" }
-            content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: name))
-        }
+        // Do NOT set content.sound here: an NSE-assigned named sound makes
+        // SpringBoard drop the whole notification on iOS 18.7.3 (same family
+        // as the call=1 respring crash — server-assigned named sounds are
+        // fine, NSE-assigned ones are not). The decrypted sound still reaches
+        // the inbox payload for display; delivery plays the original.
 
         return (content, decrypted)
     }
