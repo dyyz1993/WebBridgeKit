@@ -24,6 +24,19 @@ enum PushSoundInstaller {
             .appendingPathComponent("Library", isDirectory: true)
             .appendingPathComponent("Sounds", isDirectory: true)
 
+        // Remove synthesized 30s call ringtones: delivering one crashed
+        // SpringBoard on iOS 18.7.3 (respring on push arrival). Cached
+        // copies must not linger — any of them could take SpringBoard down
+        // again on the next call=1 delivery attempt.
+        if let cached = try? FileManager.default.contentsOfDirectory(
+            at: soundsDirectory,
+            includingPropertiesForKeys: nil
+        ) {
+            for url in cached where url.lastPathComponent.hasPrefix("wbk.sounds.30s") {
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
+
         do {
             try FileManager.default.createDirectory(at: soundsDirectory, withIntermediateDirectories: true)
         } catch {
