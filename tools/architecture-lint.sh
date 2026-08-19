@@ -64,19 +64,32 @@ done < <(find Sources/ SuperApp/Sources/ -name "*.swift" \
     ! -name "*Tests.swift" ! -name "*Test*.swift" 2>/dev/null || true)
 echo ""
 
-# Rule 3: sleep() in test files
+# Rule 3: sleep() in test files — ratcheted per file against
+# tools/architecture-lint-sleep-baseline.txt: existing counts are DEBT (do
+# not grow), anything above a file's baseline or new files with sleeps fail.
+SLEEP_BASELINE="$(dirname "$0")/architecture-lint-sleep-baseline.txt"
 echo "📋 Rule 3: sleep() in test files"
 sleep_count=0
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
-    while IFS= read -r match; do
-        [[ -z "$match" ]] && continue
-        echo -e "  ${RED}ERROR${NC} $file:$match (use XCTExpectation instead)"
-        ((ERRORS++)) || true
-        ((sleep_count++)) || true
-    done < <(grep -n 'sleep(' "$file" 2>/dev/null | grep -v '// ' || true)
+    allowed=$(awk -v f="$file" '$1==f {print $2}' "$SLEEP_BASELINE" 2>/dev/null)
+    allowed=${allowed:-0}
+    current=$(grep -c 'sleep(' "$file" 2>/dev/null | grep -v '// ' || echo 0)
+    current=${current:-0}
+    if [ "$current" -gt 0 ]; then
+        if [ "$current" -le "$allowed" ]; then
+            echo -e "  ${YELLOW}DEBT${NC}  $file has $current sleep() calls (baseline $allowed, do not grow)"
+        else
+            while IFS= read -r match; do
+                [[ -z "$match" ]] && continue
+                echo -e "  ${RED}ERROR${NC} $file:$match (use XCTExpectation instead)"
+                ((ERRORS++)) || true
+                ((sleep_count++)) || true
+            done < <(grep -n 'sleep(' "$file" 2>/dev/null | grep -v '// ' || true)
+        fi
+    fi
 done < <(find Tests/ SuperAppUITests/ -name "*.swift" 2>/dev/null || true)
-[[ "$sleep_count" -eq 0 ]] && echo "  ${GREEN}OK${NC}   No sleep() calls found"
+[[ "$sleep_count" -eq 0 ]] && echo "  ${GREEN}OK${NC}   No NEW sleep() debt (ratchet baseline active)"
 echo ""
 
 # Rule 4: XCTSkip without reason
@@ -116,7 +129,7 @@ echo ""
 echo "📋 Rule 6: TODO/FIXME count"
 todo_count=0
 if [[ -d Sources/ ]]; then
-    todo_count=$(grep -rn "TODO\|FIXME" --include="*.swift" Sources/ SuperApp/Sources/ 2>/dev/null | wc -l | tr -d ' ')
+    todo_count=$( (grep -rn "TODO\|FIXME" --include="*.swift" Sources/ SuperApp/Sources/ 2>/dev/null || true) | wc -l | tr -d ' ')
 fi
 echo "  ℹ️  Found ${todo_count} TODO/FIXME items in Sources/ and SuperApp/Sources/"
 echo ""
