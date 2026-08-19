@@ -42,6 +42,11 @@ public actor MessageEngine: MessageEngineProtocol {
     /// immediately instead of relying on polling timers.
     public var onStoreChanged: (@Sendable () -> Void)?
 
+    /// In-process broadcast of the same event, for surfaces the single
+    /// callback slot cannot serve (inbox list refresh, widgets, …).
+    /// Observers must hop to the main thread themselves.
+    public static let storeDidChangeNotification = Notification.Name("WebBridgeKitMessageStoreDidChange")
+
     /// Set the message received callback from outside the actor
     public func setOnMessageReceived(_ callback: (@Sendable (StoredMessage) -> Void)?) {
         onMessageReceived = callback
@@ -50,6 +55,11 @@ public actor MessageEngine: MessageEngineProtocol {
     /// Set the store-changed callback from outside the actor
     public func setOnStoreChanged(_ callback: (@Sendable () -> Void)?) {
         onStoreChanged = callback
+    }
+
+    private func notifyStoreChanged() {
+        onStoreChanged?()
+        NotificationCenter.default.post(name: Self.storeDidChangeNotification, object: nil)
     }
 
     /// Set the route callback from outside the actor
@@ -160,7 +170,7 @@ public actor MessageEngine: MessageEngineProtocol {
                 await store.delete(id: existingMessage.id)
             }
             statistics.recordReceived(channelId: payload.channel)
-            onStoreChanged?()
+            notifyStoreChanged()
             return
         }
 
@@ -213,7 +223,7 @@ public actor MessageEngine: MessageEngineProtocol {
         try await store.save(storedMessage)
 
         statistics.recordReceived(channelId: payload.channel)
-        onStoreChanged?()
+        notifyStoreChanged()
 
         // Notify handlers
         if let category = payload.category, let handler = handlers[category] {
@@ -257,20 +267,20 @@ public actor MessageEngine: MessageEngineProtocol {
     /// Mark message as read
     public func markAsRead(id: String) async {
         await store.markAsRead(id: id)
-        onStoreChanged?()
+        notifyStoreChanged()
     }
 
     /// Delete a message
     public func deleteMessage(id: String) async {
         await store.delete(id: id)
-        onStoreChanged?()
+        notifyStoreChanged()
     }
 
     /// Clear all messages
     public func clearAllMessages() async {
         await store.deleteAll()
         statistics.reset()
-        onStoreChanged?()
+        notifyStoreChanged()
     }
 
     // MARK: - Statistics
