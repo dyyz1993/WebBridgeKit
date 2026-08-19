@@ -114,4 +114,22 @@ final class PushCipherContractTests: XCTestCase {
         let unchanged = PushCipher.decryptingUserInfoIfEncrypted(plain)
         XCTAssertEqual(unchanged["title"] as? String, "普通消息")
     }
+
+    /// Dual-channel key storage: defaults mirror plus a protected file the
+    /// NSE can read even when the shared UserDefaults plist is unavailable.
+    func testDualChannelKeyStorageRoundTrip() {
+        let suite = UserDefaults(suiteName: PushCipher.sharedDefaultsSuite)
+        suite?.removeObject(forKey: "wbk.push-crypto.aes-key")
+        suite?.set(Self.vectorKey, forKey: "wbk.push-crypto.aes-key")
+
+        // defaults mirror hit
+        XCTAssertEqual(PushCipher.sharedKey(), Self.vectorKey)
+
+        // defaults empty → file mirror serves and heals defaults
+        suite?.removeObject(forKey: "wbk.push-crypto.aes-key")
+        PushCipher.storeSharedKey(Self.vectorKey)
+        suite?.removeObject(forKey: "wbk.push-crypto.aes-key")
+        XCTAssertEqual(PushCipher.sharedKey(), Self.vectorKey)
+        XCTAssertEqual(suite?.data(forKey: "wbk.push-crypto.aes-key"), Self.vectorKey)
+    }
 }
