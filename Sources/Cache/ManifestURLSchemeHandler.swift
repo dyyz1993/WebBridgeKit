@@ -13,6 +13,12 @@ import WebKit
 /// 拦截 custom:// 请求，从 manifest.json 查找真实 URL 并返回资源
 public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
+    /// scheme-handler 交付了页面文档（.html）时广播（userInfo: relativePath）。
+    /// 这类文档提交不触发 WKNavigationDelegate 回调，页面间跳转的历史记录
+    /// 只能由消费方监听本通知自行维护。
+    public static let didLoadDocumentNotification = Notification.Name("ManifestSchemeHandlerDidLoadDocument")
+
+
     // MARK: - Properties
 
     private var activeTasks: [String: WKURLSchemeTask] = [:]
@@ -66,6 +72,15 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
                 NSLog("   [OK] Delivered: %@", relativePath)
                 self.deliverResource(resource, to: urlSchemeTask, originalURL: url)
                 self.removeTask(forID: taskID)
+                if relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm") {
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(
+                            name: ManifestURLSchemeHandler.didLoadDocumentNotification,
+                            object: nil,
+                            userInfo: ["relativePath": relativePath]
+                        )
+                    }
+                }
 
                 // 发送通知用于 UI 更新
                 DispatchQueue.main.async {
@@ -92,6 +107,15 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
                         if let data = data {
                             let resource = ResourceData(relativePath: relativePath, data: data, mimeType: mimeType)
                             self.deliverResource(resource, to: urlSchemeTask, originalURL: url)
+                            if relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm") {
+                                DispatchQueue.main.async {
+                                    NotificationCenter.default.post(
+                                        name: ManifestURLSchemeHandler.didLoadDocumentNotification,
+                                        object: nil,
+                                        userInfo: ["relativePath": relativePath]
+                                    )
+                                }
+                            }
                         } else {
                             let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
                             if isPageRequest {

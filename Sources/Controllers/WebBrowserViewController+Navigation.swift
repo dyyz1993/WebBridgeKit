@@ -92,6 +92,36 @@ extension WebBrowserViewController: WKNavigationDelegate {
     /// 页面加载完成 - 检查是否需要自动缓存页面
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         HUDService.shared.dismiss()
+        // custom:// 导航：维护 App 层历史栈（WebKit 不为这类加载建后退历史），
+        // 并做一次确定性的返回按钮同步（canGoBack 的 KVO 对 scheme 加载不可靠）。
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if let url = webView.url, url.scheme?.lowercased() == "custom" {
+                var relative = url.path
+                if relative.hasPrefix("/") { relative.removeFirst() }
+                // 根文档（loadHTMLString 注入，custom:// 路径为空）：把真实页面
+                // URL 垫为栈底，后续页间跳转才有「上一页」可回。
+                if relative.isEmpty {
+                    if let current = self.currentURL, self.customNavStack.isEmpty {
+                        self.customNavStack = [current]
+                    }
+                } else if let base = self.customNavStack.last ?? self.currentURL,
+                          let real = URL(string: relative, relativeTo: base.deletingLastPathComponent())?.absoluteURL,
+                          real != self.customNavStack.last {
+                    if self.customNavStack.isEmpty, let current = self.currentURL {
+                        self.customNavStack = [current]
+                    }
+                    self.customNavStack.append(real)
+                }
+            } else if let url = webView.url, url.scheme?.hasPrefix("http") == true {
+                // 普通网络文档加载：重置栈
+                if self.customNavStack.last != url { self.customNavStack = [url] }
+            }
+
+            let canGoBack = webView.canGoBack || self.customNavStack.count > 1
+            self.backBarButton?.isEnabled = canGoBack
+            self.backBarButton?.tintColor = canGoBack ? ThemeTokens.Color.text : .clear
+        }
 
         guard let url = webView.url else { return }
 

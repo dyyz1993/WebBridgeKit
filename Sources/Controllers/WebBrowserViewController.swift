@@ -125,6 +125,11 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// 当前 URL
     var currentURL: URL?
 
+    /// custom:// 页间导航栈（真实 https URL）。
+    /// WebKit 对 loadHTMLString+custom:// 的文档加载不建后退历史（canGoBack
+    /// 恒 false，2026-08-20 实测），懒加载页面间的跳转历史由 App 层维护。
+    var customNavStack: [URL] = []
+
     /// 当前缓存来源标识
     var currentCacheSource: String = "LIVE"
 
@@ -437,16 +442,12 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             self.immersiveExitControl.updateLayout(in: self.view)
 
             if !hidden {
-                let canGoBack = self.webView.canGoBack
-                if canGoBack {
-                    if let backBtn = self.backBarButton, let closeBtn = self.closeBarButton {
-                        self.navigationItem.leftBarButtonItems = [backBtn, closeBtn]
-                    }
-                } else {
-                    if let closeBtn = self.closeBarButton {
-                        self.navigationItem.leftBarButtonItems = [closeBtn]
-                    }
-                }
+                // 左列固定 [back, close]（configureNavigationBar），这里只同步
+                // 返回按钮状态；custom:// 页面 canGoBack 恒 false，历史判断
+                // 要看 App 层栈。
+                let canGoBack = self.webView.canGoBack || self.customNavStack.count > 1
+                self.backBarButton?.isEnabled = canGoBack
+                self.backBarButton?.tintColor = canGoBack ? ThemeTokens.Color.text : .clear
             }
 
             self.webView.snp.remakeConstraints { make in
@@ -522,6 +523,27 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             })
             .disposed(by: rx)
 
+        // scheme-handler 交付页面文档不触发导航代理回调，页面间跳转历史
+        // 靠该通知维护（customNavStack），返回按钮据此出现。
+        NotificationCenter.default.rx.notification(ManifestURLSchemeHandler.didLoadDocumentNotification)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] note in
+                guard let self else { return }
+                let relative = note.userInfo?["relativePath"] as? String ?? ""
+                guard !relative.isEmpty else { return }
+                let base = self.customNavStack.last ?? self.currentURL
+                guard let base,
+                      let real = URL(string: relative, relativeTo: base.deletingLastPathComponent())?.absoluteURL,
+                      real != self.customNavStack.last else { return }
+                if self.customNavStack.isEmpty { self.customNavStack = [base] }
+                self.customNavStack.append(real)
+                let canGoBack = self.webView.canGoBack || self.customNavStack.count > 1
+                self.backBarButton?.isEnabled = canGoBack
+                self.backBarButton?.tintColor = canGoBack ? ThemeTokens.Color.text : .clear
+                self.navigationItem.prompt = nil
+            })
+            .disposed(by: rx)
+
         output.canGoBack
             .drive(onNext: { [weak self] canGoBack in
                 guard let self = self else { return }
@@ -534,17 +556,6 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
                     self.backBarButton?.tintColor = .clear
                 }
 
-                if self.hideNavBar == false {
-                    if canGoBack {
-                        if let backBtn = self.backBarButton, let closeBtn = self.closeBarButton {
-                            self.navigationItem.leftBarButtonItems = [backBtn, closeBtn]
-                        }
-                    } else {
-                        if let closeBtn = self.closeBarButton {
-                            self.navigationItem.leftBarButtonItems = [closeBtn]
-                        }
-                    }
-                }
             })
             .disposed(by: rx)
 

@@ -271,5 +271,15 @@ final class CustomLinkNavTests: XCTestCase {
         sleep(9)
         let att2 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         att2.name = "after-card-tap"; att2.lifetime = .keepAlways; add(att2)
+        let navDump = XCTAttachment(string: "NAVBAR BUTTONS:\n" + app.navigationBars.buttons.debugDescription)
+        navDump.name = "navbar-dump"; navDump.lifetime = .keepAlways; add(navDump)
+        // 点返回：应回到测试中心
+        let back = app.buttons["browserManager.backButton"]
+        if back.waitForExistence(timeout: 4) && back.isEnabled {
+            back.tap()
+            sleep(8)
+            let att4 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            att4.name = "after-back-tap"; att4.lifetime = .keepAlways; add(att4)
+        }
     }
 }

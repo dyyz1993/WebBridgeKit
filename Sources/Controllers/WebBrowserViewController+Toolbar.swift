@@ -66,7 +66,9 @@ extension WebBrowserViewController {
         backBtn.accessibilityLabel = "返回"
         self.backBarButton = backBtn
 
-        navigationItem.leftBarButtonItems = [closeBtn]
+        // 返回按钮常驻（懒加载 custom:// 页的历史由 App 层维护，canGoBack
+        // KVO 不可靠；反复换 items 会被其他路径重置，只用 enable/tint 控制）
+        navigationItem.leftBarButtonItems = [backBtn, closeBtn]
         navigationItem.rightBarButtonItem = menuBtn
 
         backBtn.isEnabled = false
@@ -78,7 +80,25 @@ extension WebBrowserViewController {
     }
 
     @objc func backButtonTapped() {
-        webView.goBack()
+        if webView.canGoBack {
+            webView.goBack()
+            return
+        }
+        // custom:// 页间导航没有 WebKit 后退历史，走 App 层栈：
+        // 弹掉当前页，加载上一页（didFinish 里的去重保证栈不回涨）。
+        guard customNavStack.count > 1 else { return }
+        customNavStack.removeLast()
+        if let previous = customNavStack.last,
+           let scheme = previous.scheme?.lowercased(),
+           scheme == "http" || scheme == "https" {
+            // 直载（不走 smartLoad 管线）：http 文档加载会重置 App 层栈，
+            // 之后的页内跳转回到 WebKit 原生历史，语义一致且无竞态。
+            loadURLDirect(previous)
+        } else {
+            // 根条目异常（空路径污染）时兜底：收起浏览器回宿主页面
+            customNavStack.removeAll()
+            closeButtonTapped()
+        }
     }
 
     @objc func menuButtonTapped() {
