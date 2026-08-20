@@ -30,6 +30,7 @@ struct SettingsView: View {
         case serverConfig
         case tokenManage
         case apiKeyManage
+        case webGrants
         case cacheManagement
         case favorites
         case history
@@ -201,6 +202,7 @@ struct SettingsView: View {
         case .serverConfig: onNavigate(.serverConfig)
         case .tokenManager: onNavigate(.tokenManage)
         case .apiKeyManage: onNavigate(.apiKeyManage)
+        case .webGrants: onNavigate(.webGrants)
         case .cacheManager: onNavigate(.cacheManagement)
         case .favorites: onNavigate(.favorites)
         case .history: onNavigate(.history)

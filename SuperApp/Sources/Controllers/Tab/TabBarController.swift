@@ -453,6 +453,9 @@ class TabBarController: UITabBarController {
             nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
         case .apiKeyManage:
             nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+        case .webGrants:
+            let vc = UIHostingController(rootView: WebOriginGrantsView())
+            nav.pushViewController(vc, animated: true)
         case .cacheManagement:
             nav.pushViewController(ManagementViewController(), animated: true)
         case .favorites:

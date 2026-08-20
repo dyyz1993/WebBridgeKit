@@ -398,6 +398,8 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Settings | Server config | `设置` -> `服务器配置` (`settings.cell.serverConfig`) | `ServerConfigViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Token manager | `设置` -> `口令管理` (`settings.cell.tokenManager`) | `TokenManageViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | API key manager | `设置` -> `密钥管理` (`settings.cell.apiKeyManage`) | `APIKeyManageViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | Push encryption | `设置` -> `通知` -> `推送加密` (`settings.cell.pushEncryption`) | `PushEncryptionView.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | Web origin grants | `设置` -> `安全` -> `网页授权管理` (`settings.cell.webGrants`) | `WebOriginGrantsView.swift` | Manual: opens screen listing grants grouped by origin; requires a page grant to be non-empty | Available | |
 | Settings | Cache manager | `设置` -> `缓存管理` (`settings.cell.cacheManager`) | `ManagementViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Favorites | `设置` -> `收藏夹` (`settings.cell.favorites`) | `FavoriteViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Recent history | `设置` -> `最近访问` (`settings.cell.history`) | `RecentAccessHistoryView.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
