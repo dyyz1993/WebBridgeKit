@@ -261,8 +261,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             await PendingMessageImporter.importPending()
         }
         if !ProcessInfo.processInfo.isWebBridgeKitUITesting {
-            TokenManager.shared.parseTokenFromClipboard()
-            CommandHandler.shared.checkClipboardOnForeground()
+            // Clipboard reads must stay off the activation transition: reading
+            // UIPasteboard.string can trigger a slow HTML→text coercion in the
+            // pasteboard daemon (synchronous XPC). On the main thread during
+            // didBecomeActive that froze the app permanently (watchdog kill,
+            // see SuperApp-2026-08-20 hang reports). Defer past the scene
+            // transition and read on a background queue instead.
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                guard let self else { return }
+                TokenManager.shared.parseTokenFromClipboard()
+                CommandHandler.shared.checkClipboardOnForeground()
+            }
         }
     }
 
