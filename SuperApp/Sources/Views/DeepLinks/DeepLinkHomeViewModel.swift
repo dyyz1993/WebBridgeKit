@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import UIKit
 import WebBridgeKit
@@ -198,3 +199,5 @@ final class DeepLinkHomeViewModel: ObservableObject {
         ]
     }
 }
+
+#endif

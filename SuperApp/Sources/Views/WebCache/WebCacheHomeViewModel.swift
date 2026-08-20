@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import WebBridgeKit
 
@@ -119,3 +120,5 @@ final class WebCacheHomeViewModel: ObservableObject {
         }
     }
 }
+
+#endif

@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import UIKit
 import WebBridgeKit
@@ -185,3 +186,5 @@ final class BridgeLabViewModel: ObservableObject {
         ]
     }
 }
+
+#endif

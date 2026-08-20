@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import WebBridgeKit
 
@@ -328,5 +329,7 @@ private struct ActivityShareSheet: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
+
+#endif
 
 #endif

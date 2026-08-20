@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  NetworkDebugViewController.swift
 //  SuperApp
 //
@@ -257,5 +259,7 @@ class MockNetworkRequestStore {
         requests.removeAll()
     }
 }
+
+#endif
 
 #endif

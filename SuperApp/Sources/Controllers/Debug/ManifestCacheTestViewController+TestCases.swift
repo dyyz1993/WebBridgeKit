@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  ManifestCacheTestViewController+TestCases.swift
 //  SuperApp
 //
@@ -324,3 +326,5 @@ extension ManifestCacheTestViewController {
     }
 
 }
+
+#endif

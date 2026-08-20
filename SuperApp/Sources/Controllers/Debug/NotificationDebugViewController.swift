@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  NotificationDebugViewController.swift
 //  SuperApp
 //
@@ -580,5 +582,7 @@ extension NotificationDebugViewController: UIPickerViewDataSource, UIPickerViewD
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int { sounds.count }
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? { sounds[row] }
 }
+
+#endif
 
 #endif

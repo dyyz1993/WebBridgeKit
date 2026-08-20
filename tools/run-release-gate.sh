@@ -41,6 +41,7 @@ run_gate "Build Debug" "xcodebuild build -workspace WebBridgeKit.xcworkspace -sc
 run_gate "Crash scan" "bash scripts/scan-crash-logs.sh --json | grep '\"total\": 0'"
 run_gate "Archive Release" "xcodebuild archive -workspace WebBridgeKit.xcworkspace -scheme SuperApp -archivePath '$ARCHIVE_PATH' -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO SKIP_INSTALL=NO"
 run_gate "No Release test HTML" "if [ -d '$ARCHIVE_PATH/Products/Applications/SuperApp.app' ]; then ! find '$ARCHIVE_PATH/Products/Applications/SuperApp.app' -iname '*test*.html' | grep -q .; else exit 1; fi"
+run_gate "No DEBUG-only code in Release" "bash tools/verify-release-no-debug.sh '$ARCHIVE_PATH/Products/Applications/SuperApp.app'"
 
 {
     echo "# Release Gate Report"

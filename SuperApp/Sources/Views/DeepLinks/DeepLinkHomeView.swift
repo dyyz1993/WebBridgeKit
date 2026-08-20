@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import WebBridgeKit
 
@@ -209,3 +210,5 @@ struct DeepLinkHomeView: View {
         .buttonStyle(PressScaleButtonStyle())
     }
 }
+
+#endif

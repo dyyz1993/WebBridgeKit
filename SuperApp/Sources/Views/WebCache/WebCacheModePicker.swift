@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import WebBridgeKit
 
@@ -25,3 +26,5 @@ struct WebCacheModePicker: View {
         }
     }
 }
+
+#endif

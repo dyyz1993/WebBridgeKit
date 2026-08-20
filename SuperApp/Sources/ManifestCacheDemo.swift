@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  ManifestCacheDemo.swift
 //  SuperApp
 //
@@ -311,3 +313,5 @@ extension ManifestCacheDemo {
     static func demonstrateUsage() {
     }
 }
+
+#endif

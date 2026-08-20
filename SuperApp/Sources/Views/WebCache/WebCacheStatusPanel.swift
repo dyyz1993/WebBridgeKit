@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import WebBridgeKit
 
@@ -44,3 +45,5 @@ struct WebCacheStatusPanel: View {
         ]
     }
 }
+
+#endif

@@ -808,6 +808,31 @@ jobs:
       - name: Run Design System Lint
         run: bash tools/ci-lint.sh
 
+  # ─── Job 8b: Release Purity (DEBUG-only code must not ship) ────
+  # Builds Release and scans the binary for DEBUG-only markers, plus the
+  # architecture-lint Rule 9 (DEBUG-only files must be file-level #if DEBUG).
+  release-purity:
+    name: 🔒 Release Purity
+    runs-on: macos-15
+    timeout-minutes: 20
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+
+      - name: Verify Release binary has no DEBUG-only code
+        run: bash tools/verify-release-no-debug.sh
+
+      - name: Architecture lint (includes DEBUG-wrap Rule 9)
+        run: bash tools/architecture-lint.sh
+
   # ─── Job 9: Server on Linux ──────────────────────────────────────
   # The Swift Hummingbird backend deploys to a Linux host (shanbox).
   # Building and testing it on Linux catches Foundation/URLSession,
