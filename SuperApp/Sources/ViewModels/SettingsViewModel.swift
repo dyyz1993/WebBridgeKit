@@ -18,6 +18,7 @@ class SettingsViewModel {
         case serverConfig
         case tokenManager
         case apiKeyManage
+        case webGrants
         case cacheManager
         case favorites
         case history
@@ -124,6 +125,14 @@ class SettingsViewModel {
                     action: .apiKeyManage,
                     iconBackgroundColor: pubg,
                     iconTintColor: put
+                ),
+                SettingsItem(
+                    icon: nil,
+                    lucideIcon: .globe,
+                    title: "网页授权管理",
+                    action: .webGrants,
+                    iconBackgroundColor: sb,
+                    iconTintColor: st
                 )
             ]),
             SettingsSection(header: L10n.tr("settings.section.storage"), items: [
