@@ -40,6 +40,24 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         return label
     }()
 
+    /// Remote push `icon` avatar shown beside the title when the message
+    /// carries one (push-render-catalog 自定义图标 card).
+    private let iconAvatarView: UIImageView = {
+        let view = UIImageView()
+        view.contentMode = .scaleAspectFill
+        view.clipsToBounds = true
+        view.layer.cornerRadius = 18
+        view.backgroundColor = ThemeTokens.Color.backgroundSecondary
+        view.accessibilityIdentifier = "message.detail.iconAvatar"
+        return view
+    }()
+
+    private var iconLoadTask: URLSessionDataTask?
+
+    deinit {
+        iconLoadTask?.cancel()
+    }
+
     private let webView: WKWebView = {
         let config = WKWebViewConfiguration()
         let webview = WKWebView(frame: .zero, configuration: config)
@@ -404,7 +422,21 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         }
 
         if message.bodyType != "markdown" {
-            contentStackView.addArrangedSubview(titleLabel)
+            if let iconSource = message.payload.iconURL,
+               !iconSource.isEmpty,
+               URL(string: iconSource) != nil {
+                let header = UIStackView(arrangedSubviews: [iconAvatarView, titleLabel])
+                header.axis = .horizontal
+                header.alignment = .top
+                header.spacing = ThemeTokens.Spacing.md
+                iconAvatarView.snp.makeConstraints { make in
+                    make.width.height.equalTo(36)
+                }
+                contentStackView.addArrangedSubview(header)
+                loadIconAvatar(from: iconSource)
+            } else {
+                contentStackView.addArrangedSubview(titleLabel)
+            }
         }
 
         if message.payload.actionState != nil
@@ -868,6 +900,17 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         let context = CIContext(options: nil)
         guard let image = context.createCGImage(output, from: output.extent) else { return nil }
         return UIImage(cgImage: image)
+    }
+
+    private func loadIconAvatar(from source: String) {
+        guard let url = URL(string: source) else { return }
+        iconLoadTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let data, let image = UIImage(data: data) else { return }
+            DispatchQueue.main.async {
+                self?.iconAvatarView.image = image
+            }
+        }
+        iconLoadTask?.resume()
     }
 
     private func makeMediaCard() -> UIView {

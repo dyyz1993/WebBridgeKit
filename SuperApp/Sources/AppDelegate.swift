@@ -347,7 +347,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         let mode = notification.request.content.userInfo["mode"] as? String
-        if mode == "silent" || mode == "passive" {
+        // passive 静默语义对齐：apns interruption-level=passive 的推送在前台
+        // 同样不弹横幅（catalog 被动通知卡发的是 level 而非 mode）。
+        if mode == "silent" || mode == "passive"
+            || notification.request.content.interruptionLevel == .passive {
             completionHandler([])
             return
         }
