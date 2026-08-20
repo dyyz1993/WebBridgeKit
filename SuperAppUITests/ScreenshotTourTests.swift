@@ -271,6 +271,15 @@ final class CustomLinkNavTests: XCTestCase {
         sleep(9)
         let att2 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         att2.name = "after-card-tap"; att2.lifetime = .keepAlways; add(att2)
+        // 第二次访问（缓存命中路径）：返回 hub 再点同一张卡
+        let back1 = app.buttons["browserManager.backButton"]
+        if back1.exists && back1.isEnabled { back1.tap(); sleep(6) }
+        if openLinks.element(boundBy: 2).exists {
+            openLinks.element(boundBy: 2).tap()
+            sleep(9)
+            let att5 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            att5.name = "second-visit"; att5.lifetime = .keepAlways; add(att5)
+        }
         let navDump = XCTAttachment(string: "NAVBAR BUTTONS:\n" + app.navigationBars.buttons.debugDescription)
         navDump.name = "navbar-dump"; navDump.lifetime = .keepAlways; add(navDump)
         // 点返回：应回到测试中心

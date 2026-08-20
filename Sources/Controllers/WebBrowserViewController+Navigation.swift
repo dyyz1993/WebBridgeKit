@@ -59,6 +59,19 @@ extension WebBrowserViewController: WKNavigationDelegate {
             return .cancel
         }
 
+        // 浏览器内链接跳转（linkActivated 的 http(s) 主文档导航）统一改道
+        // 我们的加载管线：WKWebView 裸加载会吃它自己的 HTTP 缓存（曾交付
+        // 过语法坏掉的旧副本且无法刷新），smartLoad 路径缓存可控、离线优先。
+        if navigationAction.navigationType == .linkActivated,
+           let linkScheme = url.scheme?.lowercased(),
+           linkScheme == "http" || linkScheme == "https",
+           navigationAction.targetFrame?.isMainFrame == true {
+            DispatchQueue.main.async { [weak self] in
+                self?.loadURLWithCache(url)
+            }
+            return .cancel
+        }
+
         // 懒加载清单页内的主文档导航（如测试中心点卡片跳 permissions_ui.html）
         // 会被解析成 custom:///xxx.html 丢给 scheme handler，而 handler 只认
         // manifest 列出的子资源 → 页面链接全部 "Resource not found"。这里把
