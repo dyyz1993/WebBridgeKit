@@ -374,6 +374,29 @@ Rules that must not regress:
 - `scripts/` - Utility scripts (services.sh, test_server.py)
 - `docs/design-tokens.json` - Single source of truth for design tokens
 
+## DEBUG-Only Features (Debug 功能不进 Release 包)
+
+Debug 工具（调试中心、调试面板、Bridge 实验室、Web 缓存调试、Push 调试、协议跳转、
+导出诊断、Manifest 缓存用例）必须**编译期裁剪**，不能只隐藏入口。2026-08-20 实证发现
+`.debugCenter`/`.deepLinks` 路由与 AppDelegate `runalltests` 未门控，Debug 代码真实
+进入了 Release 二进制（不只是元数据残留），已修复并建立以下规则：
+
+1. **文件级 `#if DEBUG`**：DEBUG-only 的视图/VM/控制器整个文件包 `#if DEBUG ... #endif`。
+   目前覆盖：`Views/DebugCenter/`、`Views/BridgeLab/`、`Views/WebCache/`、`Views/TokenPush/`、
+   `Views/DeepLinks/`、`Views/DiagnosticsView.swift`、`Controllers/Debug/`（6 个）、
+   `ManifestCacheDemo.swift`。
+2. **路由 case + handler 门控**：`TabBarController` 的 debug case 用 `#if DEBUG` +
+   `#else showAppShellInfo(...)` 回退文案（Release 被路由到时给提示而不是静默）；
+   `handleXxxAction` 私有 handler 同样包裹（含 `PWAAppCenterViewController.handleTokenPushAction`）。
+3. **入口门控**：设置「开发者」分组等入口行 `#if DEBUG`（`SettingsViewModel.swift`）。
+4. **验证门**：`bash tools/verify-release-no-debug.sh`（不传参自动构建 Release 并扫描），
+   对二进制 `strings` 断言 18 个 marker（类型名 + 页面标题）0 命中；已挂进
+   `tools/run-release-gate.sh`（Archive 后扫描真机架构包）。**新增 DEBUG-only 页面时必须
+   往脚本 `MARKERS` 数组追加特征串**，否则门形同虚设。
+5. **Release 保留的例外**（面向用户而非开发者）：`cacheDashboard`（存储管理）。
+   `exportDiagnostics`（DiagnosticsView，已脱敏设计）当前是 DEBUG-only，将来面向用户
+   排障时可移出门控——那是产品决策，移动时同步删掉它的 MARKER。
+
 ## i18n
 
 - `SuperApp/Resources/zh-Hans.lproj/Localizable.strings` - Chinese (primary)

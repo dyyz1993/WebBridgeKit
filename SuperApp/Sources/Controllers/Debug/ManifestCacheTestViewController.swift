@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  ManifestCacheTestViewController.swift
 //  SuperApp
 //
@@ -628,3 +630,5 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
 
 //  WKNavigationDelegate 扩展已删除 - 底部 WebView 不再需要
 // 页面验证和展示功能已移至全屏模式下的 WebView
+
+#endif

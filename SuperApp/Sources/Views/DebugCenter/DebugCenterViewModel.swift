@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import UIKit
 import WebBridgeKit
@@ -91,3 +92,5 @@ final class DebugCenterViewModel: ObservableObject {
         return files.filter { $0.pathExtension == "json" }.count
     }
 }
+
+#endif

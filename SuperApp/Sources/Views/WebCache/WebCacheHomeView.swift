@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import WebBridgeKit
 
@@ -155,3 +156,5 @@ struct WebCacheHomeView: View {
         UIPasteboard.general.string = viewModel.resultDetail
     }
 }
+
+#endif

@@ -103,6 +103,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         //  Support automated testing via launch arguments
+        #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if let tabBarController = self.window?.rootViewController as? UITabBarController {
@@ -114,6 +115,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
             }
         }
+        #endif
 
         if !isUITesting {
             DispatchQueue.global(qos: .utility).async {
@@ -298,6 +300,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
                 return true
             } else if url.host == "runalltests" {
+                #if DEBUG
                 if let tabBarController = window?.rootViewController as? UITabBarController,
                    let nav = tabBarController.viewControllers?[1] as? UINavigationController,
                    let testVC = nav.viewControllers.first as? ManifestTestCasesViewController {
@@ -306,6 +309,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     testVC.runAllTests()
                     return true
                 }
+                #endif
             }
         }
 

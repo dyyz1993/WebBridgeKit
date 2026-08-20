@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import WebBridgeKit
 
@@ -185,3 +186,5 @@ struct TokenPushHomeView: View {
         }
     }
 }
+
+#endif

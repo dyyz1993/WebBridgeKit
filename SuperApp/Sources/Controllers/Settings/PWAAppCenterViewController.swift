@@ -421,6 +421,7 @@ final class PWAAppCenterViewController: UIViewController {
         present(alert, animated: true)
     }
 
+    #if DEBUG
     private func handleTokenPushAction(_ action: TokenPushAction) {
         switch action {
         case .openTokenManager:
@@ -433,6 +434,7 @@ final class PWAAppCenterViewController: UIViewController {
             #endif
         }
     }
+    #endif
 
     private func openPushExample(
         _ example: PushExample,

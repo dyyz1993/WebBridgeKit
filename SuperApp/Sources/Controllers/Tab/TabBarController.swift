@@ -213,6 +213,7 @@ class TabBarController: UITabBarController {
         }
     }
 
+    #if DEBUG
     private func handleWebCacheAction(_ action: WebCacheHomeAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
@@ -226,7 +227,9 @@ class TabBarController: UITabBarController {
             nav.pushViewController(ManagementViewController(), animated: true)
         }
     }
+    #endif
 
+    #if DEBUG
     private func handleBridgeLabAction(_ action: BridgeLabAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
@@ -248,7 +251,9 @@ class TabBarController: UITabBarController {
             #endif
         }
     }
+    #endif
 
+    #if DEBUG
     private func handleTokenPushAction(_ action: TokenPushAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
@@ -265,7 +270,9 @@ class TabBarController: UITabBarController {
             #endif
         }
     }
+    #endif
 
+    #if DEBUG
     private func handleDebugCenterAction(_ action: DebugCenterAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
@@ -335,7 +342,9 @@ class TabBarController: UITabBarController {
             #endif
         }
     }
+    #endif
 
+    #if DEBUG
     private func handleDeepLinkAction(_ action: DeepLinkAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
@@ -352,6 +361,7 @@ class TabBarController: UITabBarController {
             selectedIndex = max(0, min(index, AppTab.allCases.count - 1))
         }
     }
+    #endif
 
     private func handleAppShellAction(_ action: AppShellAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
@@ -477,6 +487,7 @@ class TabBarController: UITabBarController {
         case .cacheDashboard:
             nav.pushViewController(CacheDashboardViewController(viewModel: CacheDashboardViewModel()), animated: true)
         case .debugCenter:
+            #if DEBUG
             let vc = UIHostingController(
                 rootView: DebugCenterHomeView { [weak self] action in
                     self?.handleDebugCenterAction(action)
@@ -484,7 +495,11 @@ class TabBarController: UITabBarController {
             )
             vc.title = "Debug"
             nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Center is available in DEBUG builds.")
+            #endif
         case .deepLinks:
+            #if DEBUG
             let vc = UIHostingController(
                 rootView: DeepLinkHomeView { [weak self] action in
                     self?.handleDeepLinkAction(action)
@@ -492,6 +507,9 @@ class TabBarController: UITabBarController {
             )
             vc.title = "Links"
             nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Links", message: "Deep Link tools are available in DEBUG builds.")
+            #endif
         case .about:
             let vc = UIHostingController(rootView: AboutView())
             vc.title = L10n.tr("about.title")

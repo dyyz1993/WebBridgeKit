@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import RealmSwift
 import UIKit
@@ -158,3 +159,5 @@ final class TokenPushHomeViewModel: ObservableObject {
     }
     """
 }
+
+#endif

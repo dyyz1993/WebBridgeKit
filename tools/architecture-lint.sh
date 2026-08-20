@@ -163,6 +163,26 @@ done < <(find Sources/Handlers/ -name "*.swift" 2>/dev/null || true)
 [[ "$handler_issues" -eq 0 ]] && echo "  ${GREEN}OK${NC}   All handlers have proper completion paths"
 echo ""
 
+# Rule 9: DEBUG-only 文件必须有文件级 #if DEBUG（Release 编译期裁剪的硬约束）
+echo "📋 Rule 9: DEBUG-only files must be wrapped in file-level #if DEBUG"
+debug_unwrapped=0
+while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    wrap_line=$(grep -n -m1 '^#if DEBUG' "$file" 2>/dev/null | cut -d: -f1)
+    if [[ -z "$wrap_line" || "${wrap_line:-99}" -gt 8 ]]; then
+        echo -e "  ${RED}ERROR${NC} $file 不在文件级 #if DEBUG 内（头 8 行内未找到）"
+        ((ERRORS++)) || true
+        ((debug_unwrapped++)) || true
+    fi
+done < <(find SuperApp/Sources/Views/DebugCenter SuperApp/Sources/Views/BridgeLab \
+              SuperApp/Sources/Views/WebCache SuperApp/Sources/Views/TokenPush \
+              SuperApp/Sources/Views/DeepLinks SuperApp/Sources/Controllers/Debug \
+              -name "*.swift" 2>/dev/null; \
+         echo SuperApp/Sources/Views/DiagnosticsView.swift; \
+         echo SuperApp/Sources/ManifestCacheDemo.swift)
+[[ "$debug_unwrapped" -eq 0 ]] && echo -e "  ${GREEN}OK${NC}   All DEBUG-only files are compile-time stripped"
+echo ""
+
 # Summary
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e "  Errors:   ${RED}${ERRORS}${NC}"

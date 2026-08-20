@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import WebBridgeKit
 
@@ -164,3 +165,5 @@ struct BridgeLabHomeView: View {
         }
     }
 }
+
+#endif

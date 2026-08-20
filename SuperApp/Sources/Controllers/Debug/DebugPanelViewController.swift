@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  DebugPanelViewController.swift
 //  SuperApp
 //
@@ -691,5 +693,7 @@ private extension Dictionary where Key == String {
         return string
     }
 }
+
+#endif
 
 #endif
