@@ -55,6 +55,11 @@ extension WebBrowserViewController: WKNavigationDelegate {
             return .cancel
         }
 
+        // 懒加载清单页内的主文档导航（如测试中心点卡片跳 permissions_ui.html）
+        // 会被解析成 custom:///xxx.html 丢给 scheme handler，而 handler 只认
+        // manifest 列出的子资源 → 页面链接全部 "Resource not found"。这里把
+        // 主框架的 custom:// 链接还原为当前页真实基址下的 http(s) URL，走
+        // 标准加载管线；子资源请求不受影响。
         StructuredLogger.shared.debug("Allowed navigation: \(url.absoluteString)", category: .navigation)
         return .allow
     }

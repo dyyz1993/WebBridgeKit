@@ -244,3 +244,32 @@ private extension XCUIElement {
         if exists { tap() }
     }
 }
+
+/// bridge-hub 卡片相对链接：懒加载 custom:// 基址下主框架导航应还原为 https 加载
+final class CustomLinkNavTests: XCTestCase {
+    func testHubCardNavigation() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        sleep(5)
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=https%3A%2F%2Fae8fcb.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fbridge-hub.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(12)
+        let att1 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        att1.name = "hub-loaded"; att1.lifetime = .keepAlways; add(att1)
+        let dumpAtt = XCTAttachment(string: "LINKS:\n" + app.links.debugDescription + "\nBUTTONS:\n" + app.buttons.debugDescription + "\nWEBVIEWS:\n" + app.webViews.debugDescription + "\nOTHERS:\n" + app.otherElements.debugDescription)
+        dumpAtt.name = "hub-dump"; dumpAtt.lifetime = .keepAlways; add(dumpAtt)
+        // 点「权限 UI 测试」卡片（WebView 链接暴露为 links/buttons）
+        let openLinks = app.links.matching(NSPredicate(format: "label == '打开'"))
+        if openLinks.element(boundBy: 2).waitForExistence(timeout: 6) {
+            openLinks.element(boundBy: 2).tap()  // 第 3 张卡 = 权限 UI 测试
+        } else {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.55, dy: 0.22)).tap()
+        }
+        sleep(9)
+        let att2 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        att2.name = "after-card-tap"; att2.lifetime = .keepAlways; add(att2)
+    }
+}
