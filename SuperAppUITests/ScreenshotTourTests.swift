@@ -292,3 +292,74 @@ final class CustomLinkNavTests: XCTestCase {
         }
     }
 }
+
+/// 权限授权流端到端：点权限项 → 是否弹品牌面板（判定链实证）→ 授权 →
+/// 原生网页授权管理验证账本 → 撤销 → 再触发应重弹面板。
+final class PermissionFlowTests: XCTestCase {
+    private func shoot(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        sleep(1)
+    }
+
+    func testPermissionChain() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        sleep(5)
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=https%3A%2F%2Fae8fcb.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fbridge-hub.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(12)
+
+        // 点「权限 UI 测试」卡（第 3 个打开链接）
+        let openLinks = app.links.matching(NSPredicate(format: "label == '打开'"))
+        if openLinks.element(boundBy: 2).waitForExistence(timeout: 6) {
+            openLinks.element(boundBy: 2).tap()
+        }
+        sleep(9)
+        shoot("perm-page")
+
+        // 点「相机权限」行（WebView 内 div）
+        let cameraRow = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '相机'")).firstMatch
+        if cameraRow.waitForExistence(timeout: 5) {
+            cameraRow.tap()
+            sleep(4)
+        }
+        // 品牌面板是否出现
+        let panel = app.otherElements["pwa.permission.prompt"]
+        let panelShown = panel.waitForExistence(timeout: 4)
+        shoot("after-camera-tap-panel=\(panelShown)")
+        let treeAtt = XCTAttachment(string: app.debugDescription)
+        treeAtt.name = "perm-tree"; treeAtt.lifetime = .keepAlways; add(treeAtt)
+
+        if panelShown {
+            // 选「始终允许」→ 系统弹窗 → 允许 → 刷新
+            let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+            if always.exists { always.tap() }
+            sleep(2)
+            let sysAllow = springboard.buttons["允许"].exists ? springboard.buttons["允许"] : springboard.buttons["OK"]
+            if sysAllow.waitForExistence(timeout: 6) { sysAllow.tap() }
+            sleep(4)
+            shoot("after-system-grant")
+        }
+
+        // 原生网页授权管理页验证账本
+        app.buttons["browserManager.closeButton"].tapIfExistsCompat()
+        sleep(2)
+        let settingsTab = app.tabBars.buttons["设置"]
+        if settingsTab.waitForExistence(timeout: 5) { settingsTab.tap(); sleep(2) }
+        let grantsRow = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '网页授权管理'")).firstMatch
+        if grantsRow.waitForExistence(timeout: 5) {
+            grantsRow.tap(); sleep(3)
+            shoot("web-origin-grants")
+        }
+    }
+}
+
+private extension XCUIElement {
+    func tapIfExistsCompat() { if exists { tap() } }
+}

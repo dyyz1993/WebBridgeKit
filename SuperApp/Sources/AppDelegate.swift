@@ -170,9 +170,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     private func registerBridgePermissionFixtureIfRequested() {
         guard ProcessInfo.processInfo.arguments.contains("--register-pwa-permission-fixture") else { return }
         let runtime = HTMLAppRuntimeCenter.shared
-        // The fixture has no imported gateway, so use a deterministic test
-        // identity to exercise the same subject-bound flow as a real gateway.
-        runtime.gatewayIdentity = "test-gateway"
+        // Register the fixture under the ACTIVE gateway identity when one is
+        // configured: the permission center syncs runtime.gatewayIdentity to
+        // the active gateway on open, and that sync wipes grants recorded
+        // under any other identity (removeGrants on change). Seeding under
+        // "test-gateway" made the grant vanish the moment the center opened
+        // on a device with a configured gateway. Fall back to the test
+        // identity only when no gateway is active.
+        let activeGateway = HTMLAppGatewayRegistry().activeGateway()
+        let fixtureIdentity = activeGateway
+            .map { "\($0.id)#\($0.publicKeyID ?? "unsigned")" }
+            ?? "test-gateway"
+        runtime.gatewayIdentity = fixtureIdentity
         runtime.permissionLedger.revokeAll(appID: "com.webbridgekit.fixture.permissions")
         let origin = ProcessInfo.processInfo.environment["WBK_PWA_PERMISSION_ORIGIN"] ?? "http://localhost:8081"
         let route = "/test_resources/pwa-permission/index.html"
