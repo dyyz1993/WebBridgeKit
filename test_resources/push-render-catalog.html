@@ -192,7 +192,8 @@
 
 <footer>
   发送端点：POST https://wbk.shanbox.19930810.xyz:8443/&#123;key&#125;<br>
-  点击卡片下方「载荷」可展开查看该条实际发送的 JSON
+  点击卡片下方「载荷」可展开查看该条实际发送的 JSON<br>
+  <span id="server-version" style="font-family:ui-monospace,monospace">服务端版本获取中…</span>
 </footer>
 
 <script>
@@ -222,8 +223,10 @@ document.querySelectorAll(".card").forEach(card => {
           headers: { "Content-Type": "application/json" },
           body: payloadStr
         });
-        const json = await res.json();
-        const ok = res.ok && (json.code === 200 || json.message);
+        // 400 等错误响应可能不是 JSON —— 解析失败不该误报成「网络错误」
+        let json = null;
+        try { json = await res.json(); } catch {}
+        const ok = res.ok && json && (json.code === 200 || json.message);
         btn.textContent = ok ? "✓ 已发送" : "✗ " + res.status;
         btn.classList.add(ok ? "sent" : "err");
       } catch (e) {
@@ -268,6 +271,18 @@ document.getElementById("enc-send").addEventListener("click", async () => {
   }
   setTimeout(() => { btn.textContent = "发送加密推送"; btn.disabled = false; }, 1800);
 });
+
+// 页脚显示服务端版本 —— 每次测试前先核对，避免「服务器没更新」造成的假问题
+(async () => {
+  const el = document.getElementById("server-version");
+  try {
+    const res = await fetch(`${BASE}/health`);
+    const json = await res.json();
+    el.textContent = json.version ? `服务端版本：${json.version}` : "服务端未暴露版本号（需更新）";
+  } catch {
+    el.textContent = "服务端版本获取失败（后端不可达？）";
+  }
+})();
 </script>
 </body>
 </html>
