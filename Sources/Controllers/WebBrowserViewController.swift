@@ -28,13 +28,14 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         return progressView
     }()
 
-    /// 缓存状态标签
+    /// 缓存状态标签（内边距 + 居中 + 随文本自适应宽度）
     let cacheStatusLabel: UILabel = {
-        let label = UILabel()
+        let label = PaddedStatusLabel()
         label.font = ThemeTokens.Typography.tabLabel
         label.textColor = ThemeTokens.Color.onPrimary
         label.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         label.clipsToBounds = true
+        label.textAlignment = .center
         label.text = "LIVE"
         label.isHidden = false
         return label
@@ -608,5 +609,26 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         isViewModelBinded = false
 
         StructuredLogger.shared.debug("[CLEAN] [WebBrowserVC] Cleaned up with proper memory management", category: .ui)
+    }
+}
+
+/// 缓存角标专用标签：水平内边距让胶囊紧贴文字（替代旧的固定 60pt 宽 +
+/// 左对齐导致的"LIVE 偏左漂、CHECKING 溢出"问题）。
+final class PaddedStatusLabel: UILabel {
+    private let horizontalPadding: CGFloat = 6
+
+    override func drawText(in rect: CGRect) {
+        let inset = CGRect(
+            x: rect.minX + horizontalPadding,
+            y: rect.minY,
+            width: rect.width - horizontalPadding * 2,
+            height: rect.height
+        )
+        super.drawText(in: inset)
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(width: size.width + horizontalPadding * 2, height: size.height)
     }
 }

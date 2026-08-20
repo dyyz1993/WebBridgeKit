@@ -26,7 +26,8 @@ extension WebBrowserViewController {
         cacheStatusLabel.snp.makeConstraints { make in
             make.left.equalTo(titleLabel.snp.right).offset(6)
             make.centerY.equalTo(titleLabel)
-            make.width.equalTo(60)
+            make.right.lessThanOrEqualToSuperview()
+            make.width.greaterThanOrEqualTo(34)
             make.height.equalTo(18)
         }
 
