@@ -31,3 +31,4 @@ Tests/ServicesTests/MockHistoryServiceAdvancedTests.swift 3
 Tests/UtilsTests/PerformanceMonitorTests.swift 24
 Tests/UtilsTests/RequestDeduplicatorTests.swift 5
 Tests/WebBridgeKitTests/ThreadSafetyTests.swift 5
+SuperAppUITests/ScreenshotTourTests.swift 42
