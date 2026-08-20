@@ -271,7 +271,7 @@ final class CustomLinkNavTests: XCTestCase {
         sleep(9)
         let att2 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         att2.name = "after-card-tap"; att2.lifetime = .keepAlways; add(att2)
-        // 第二次访问（缓存命中路径）：返回 hub 再点同一张卡
+        // 第二次访问：返回 hub 再点同一张卡
         let back1 = app.buttons["browserManager.backButton"]
         if back1.exists && back1.isEnabled { back1.tap(); sleep(6) }
         if openLinks.element(boundBy: 2).exists {
@@ -279,6 +279,17 @@ final class CustomLinkNavTests: XCTestCase {
             sleep(9)
             let att5 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
             att5.name = "second-visit"; att5.lifetime = .keepAlways; add(att5)
+            // 回归用例：第二次进入后返回按钮必须仍可用，且能退回 hub
+            let back2 = app.buttons["browserManager.backButton"]
+            let secondBackEnabled = back2.exists && back2.isEnabled
+            let att6 = XCTAttachment(string: "SECOND_BACK_ENABLED=\(secondBackEnabled)")
+            att6.name = "second-back-state"; att6.lifetime = .keepAlways; add(att6)
+            if secondBackEnabled {
+                back2.tap()
+                sleep(7)
+                let att7 = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+                att7.name = "after-second-back"; att7.lifetime = .keepAlways; add(att7)
+            }
         }
         let navDump = XCTAttachment(string: "NAVBAR BUTTONS:\n" + app.navigationBars.buttons.debugDescription)
         navDump.name = "navbar-dump"; navDump.lifetime = .keepAlways; add(navDump)
