@@ -13,13 +13,18 @@ extension HTMLAppCapability {
     /// Default Chinese display names; hosts can override per context if needed.
     public var localizedName: String {
         switch self {
+        case .biometrics: return "身份验证"
         case .bluetooth: return "蓝牙"
         case .camera: return "相机"
         case .clipboard: return "剪贴板"
+        case .contacts: return "通讯录"
+        case .deviceControl: return "设备控制"
+        case .displayStatus: return "投屏状态"
         case .fileExport: return "文件导出"
         case .fileImport: return "文件导入"
         case .location: return "位置"
         case .microphone: return "麦克风"
+        case .motion: return "运动传感器"
         case .notification: return "通知"
         case .photoLibrary: return "照片图库"
         case .scan: return "扫码"
@@ -29,13 +34,18 @@ extension HTMLAppCapability {
 
     public var panelIcon: LucideIcon {
         switch self {
+        case .biometrics: return .key
         case .bluetooth: return .network
         case .camera: return .camera
         case .clipboard: return .clipboard
+        case .contacts: return .appBadge
+        case .deviceControl: return .settings
+        case .displayStatus: return .network
         case .fileExport: return .download
         case .fileImport: return .upload
         case .location: return .pin
         case .microphone: return .mic
+        case .motion: return .compass
         case .notification: return .bell
         case .photoLibrary: return .image
         case .scan: return .scan

@@ -253,4 +253,60 @@ final class HTMLAppRuntimeTests: XCTestCase {
         )
         XCTAssertEqual(undeclared.failureReason, .undeclaredCapability)
     }
+
+    func testGatewayCancellationConsumesOnlyTheMatchingPendingRequest() throws {
+        let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
+        let manifest = makeManifest()
+        try registry.register(manifest)
+        let gateway = HTMLAppCapabilityGateway(
+            trustRegistry: registry,
+            permissionLedger: HTMLAppPermissionLedger(storage: MemoryStorage()),
+            nativeAuthorizationProvider: NativeAuthorizationProvider()
+        )
+        let request = makeRequest(scope: .always)
+        let documentURL = try XCTUnwrap(URL(string: manifest.startURL))
+        let subject = HTMLAppPermissionSubject(
+            gatewayIdentity: "test-gateway",
+            appID: manifest.appID,
+            origin: try XCTUnwrap(HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL))
+        )
+
+        XCTAssertEqual(
+            gateway.requestAuthorization(subject: subject, documentURL: documentURL, request: request).status,
+            .notDetermined
+        )
+        gateway.cancelPendingRequests(subject: subject)
+        let completion = expectation(description: "cancelled request")
+        gateway.resolveUserConsent(
+            subject: subject,
+            documentURL: documentURL,
+            request: request,
+            approvedScope: .always,
+            granted: true
+        ) { result in
+            XCTAssertEqual(result.status, .denied)
+            completion.fulfill()
+        }
+        wait(for: [completion], timeout: 1)
+    }
+
+    func testBridgeCapabilityPolicyMapsProtectedActionsAndDynamicFileOperations() {
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "camera", body: [:]), .camera)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "scan", body: [:]), .scan)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(
+            for: "file",
+            body: [:]
+        ), .fileImport)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(
+            for: "media",
+            body: ["params": ["action": "saveFile"]]
+        ), .fileExport)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(
+            for: "systemExtra",
+            body: ["params": ["action": "authenticate"]]
+        ), .biometrics)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "sensors", body: [:]), .motion)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "screen", body: [:]), .deviceControl)
+        XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "getSystemInfo", body: [:]))
+    }
 }

@@ -119,6 +119,12 @@ extension WebBrowserViewController {
             make.height.equalTo(2)
         }
 
+        immersiveMenuButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(ThemeTokens.Spacing.sm)
+            make.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(ThemeTokens.Spacing.md)
+            make.size.equalTo(ThemeTokens.ComponentContract.TapTarget.minimumHeight)
+        }
+
     }
 
     func setupActions() {

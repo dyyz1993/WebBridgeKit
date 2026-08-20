@@ -10,6 +10,18 @@
 (function() {
     'use strict';
 
+    function nativeModuleUnavailable(action) {
+        const message = '\u5f53\u524d\u5bb9\u5668\u672a\u63d0\u4f9b ' + action + ' \u539f\u751f\u6a21\u5757\uff0c\u8bf7\u5728 WebBridgeKit \u4e2d\u6253\u5f00\u3002';
+        return {
+            success: false,
+            available: false,
+            code: 'NATIVE_MODULE_UNAVAILABLE',
+            module: action,
+            error: message,
+            message: message
+        };
+    }
+
     // 确保 BarkBridge 只初始化一次
     if (window.BarkBridge) {
         return;
@@ -30,6 +42,11 @@
          */
         callNative: function(action, params) {
             return new Promise((resolve, reject) => {
+                if (!this.isAvailable()) {
+                    resolve(nativeModuleUnavailable(action));
+                    return;
+                }
+
                 const messageId = 'msg_' + Date.now() + '_' + (this.messageId++);
 
                 // 保存回调
@@ -53,8 +70,8 @@
                 if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.BarkBridge) {
                     window.webkit.messageHandlers.BarkBridge.postMessage(message);
                 } else {
-                    console.error('BarkBridge not available');
-                    reject(new Error('BarkBridge not available'));
+                    delete this.callbacks[messageId];
+                    resolve(nativeModuleUnavailable(action));
                 }
             });
         },
@@ -85,9 +102,9 @@
             if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.BarkBridge) {
                 window.webkit.messageHandlers.BarkBridge.postMessage(message);
             } else {
-                console.error('BarkBridge not available');
                 if (callback) {
-                    callback({ success: false, error: 'BarkBridge not available' });
+                    callback(nativeModuleUnavailable(action));
+                    delete this.callbacks[messageId];
                 }
             }
         },
@@ -213,6 +230,13 @@
     // ===== WebBridgeKit API =====
     // 提供更现代化的 Promise-based API
     window.WebBridgeKit = {
+        /**
+         * Call a native module. In a normal browser this resolves to a
+         * structured unavailable result instead of throwing a TypeError.
+         */
+        callNative: function(action, params) {
+            return BarkBridge.callNative(action, params);
+        },
         /**
          * 权限管理
          * @param {object} params - { type: 'camera' | 'microphone' | 'location' }

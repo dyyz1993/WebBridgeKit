@@ -42,6 +42,8 @@ public class WebBrowserViewModel: ViewModel {
     private let webView: WKWebView
     private let jsBridge: WebJavaScriptBridge
     public let initialURL: URL?
+    public private(set) var managedHTMLAppID: String?
+    public private(set) var managedHTMLAppDocumentURL: URL?
     public let disposeBag = DisposeBag()
 
     // MARK: - Relay
@@ -180,6 +182,23 @@ public class WebBrowserViewModel: ViewModel {
     /// 获取 WebView（用于 ViewController）
     public func getWebView() -> WKWebView {
         return webView
+    }
+
+    public func configureManagedHTMLApp(appID: String?, documentURL: URL?) {
+        managedHTMLAppID = appID
+        managedHTMLAppDocumentURL = documentURL
+        jsBridge.configureManagedHTMLApp(appID: appID, documentURL: documentURL)
+    }
+
+    public func updateManagedHTMLAppDocumentURL(_ documentURL: URL?) {
+        managedHTMLAppDocumentURL = documentURL
+        jsBridge.updateManagedHTMLAppDocumentURL(documentURL)
+    }
+
+    public func endManagedHTMLAppSession() {
+        jsBridge.endManagedHTMLAppSession()
+        managedHTMLAppID = nil
+        managedHTMLAppDocumentURL = nil
     }
 }
 

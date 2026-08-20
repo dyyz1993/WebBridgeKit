@@ -36,15 +36,8 @@ extension WebViewController {
             return
         }
 
-        // 使用 getHandler 方法支持懒加载
-        guard let handler = bridge.getHandler(for: action) else {
-            StructuredLogger.shared.error("[FAIL] [BarkWebVC] No handler for: \(action)", category: .handler)
-            bridge.sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
-            return
-        }
-
-        handler.handle(body: body) { [weak self] result in
-            self?.bridge.sendResultToJS(result, callbackId: callbackId)
+        bridge.handle(body: body) { [weak self] result, resolvedCallbackID in
+            self?.bridge.sendResultToJS(result, callbackId: resolvedCallbackID ?? callbackId)
         }
     }
 

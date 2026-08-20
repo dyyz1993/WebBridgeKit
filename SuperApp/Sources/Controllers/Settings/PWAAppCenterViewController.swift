@@ -33,6 +33,7 @@ final class PWAAppCenterViewController: UIViewController {
         super.viewDidLoad()
         title = "首页"
         view.backgroundColor = ThemeTokens.Color.background
+        syncRuntimeGatewayIdentity()
         installAppSettingsHandoff()
         installHomeView()
         prepareOfficialPushIdentity()
@@ -56,9 +57,16 @@ final class PWAAppCenterViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        syncRuntimeGatewayIdentity()
         refreshPushState()
         reloadApps()
         observeDidBecomeActive()
+    }
+
+    private func syncRuntimeGatewayIdentity() {
+        if let active = gatewayRegistry.activeGateway() {
+            runtime.gatewayIdentity = "\(active.id)#\(active.publicKeyID ?? "unsigned")"
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {

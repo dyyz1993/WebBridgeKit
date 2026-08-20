@@ -228,6 +228,7 @@ final class PWAPermissionCenterViewController: UIViewController {
 
     private func makeCapabilityCard(row: RowModel, subject: HTMLAppPermissionSubject) -> UIView {
         let card = ThemeCard()
+        card.accessibilityIdentifier = "pwa-permission.capability.\(row.capability.rawValue)"
 
         let icon = UIImageView(image: row.capability.panelIcon.image())
         icon.tintColor = ThemeTokens.Color.textSecondary

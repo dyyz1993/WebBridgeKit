@@ -22,6 +22,12 @@ extension WebBrowserViewController {
             self?.webView.reload()
         })
 
+        if viewModel.managedHTMLAppID != nil {
+            alertController.addAction(UIAlertAction(title: "应用设置", style: .default) { [weak self] _ in
+                self?.showManagedHTMLAppSettings()
+            })
+        }
+
         let toggleTitle = hideNavBar ? "[PIN] 显示导航栏" : "[TARGET] 隐藏导航栏"
         alertController.addAction(UIAlertAction(title: NSLocalizedString(toggleTitle, comment: ""), style: .default) { [weak self] _ in
             self?.setNavigationBarHidden(!(self?.hideNavBar ?? false))
@@ -103,6 +109,25 @@ extension WebBrowserViewController {
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
 
         present(alertController, animated: true)
+    }
+
+    private func showManagedHTMLAppSettings() {
+        guard let appID = viewModel.managedHTMLAppID,
+              let settings = HTMLAppHostUI.settingsViewControllerProvider?
+                .makeHTMLAppSettingsViewController(
+                    appID: appID,
+                    documentURL: webView.url ?? viewModel.managedHTMLAppDocumentURL
+                ) else {
+            let alert = UIAlertController(
+                title: "设置模块不可用",
+                message: "当前宿主没有提供这个 PWA 的应用设置页面。",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "知道了", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        navigationController?.pushViewController(settings, animated: true)
     }
 
     private func showBookmarks() {
