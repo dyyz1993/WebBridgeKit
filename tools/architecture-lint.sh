@@ -20,14 +20,26 @@ echo "║  Architecture Lint                       ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 
-# Rule 1: File size limits (500 ERROR, 300 WARNING)
+# Rule 1: File size limits (500 ERROR, 300 WARNING) — ratchet baseline.
+# Oversized files grandfathered in tools/architecture-lint-baseline.txt are
+# tolerated at their recorded size but fail the moment they GROW; new files
+# must satisfy the limit outright. Shrink a file below 500 and remove its
+# baseline entry to tighten the ratchet.
+BASELINE_FILE="$(dirname "$0")/architecture-lint-baseline.txt"
+
 echo "📋 Rule 1: File size limits (300w / 500e)"
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
     lines=$(wc -l < "$file" | tr -d ' ')
     if [ "$lines" -gt 500 ]; then
-        echo -e "  ${RED}ERROR${NC} $file has ${lines} lines (max 500)"
-        ((ERRORS++)) || true
+        allowed=$(awk -v f="$file" '$1==f {print $2}' "$BASELINE_FILE" 2>/dev/null)
+        allowed=${allowed:-0}
+        if [ "$lines" -le "$allowed" ]; then
+            echo -e "  ${YELLOW}DEBT${NC}  $file has ${lines} lines (baseline $allowed, do not grow)"
+        else
+            echo -e "  ${RED}ERROR${NC} $file has ${lines} lines (baseline $allowed / max 500)"
+            ((ERRORS++)) || true
+        fi
     elif [ "$lines" -gt 300 ]; then
         echo -e "  ${YELLOW}WARN${NC}  $file has ${lines} lines (consider splitting, soft max 300)"
         ((WARNINGS++)) || true
@@ -52,19 +64,32 @@ done < <(find Sources/ SuperApp/Sources/ -name "*.swift" \
     ! -name "*Tests.swift" ! -name "*Test*.swift" 2>/dev/null || true)
 echo ""
 
-# Rule 3: sleep() in test files
+# Rule 3: sleep() in test files — ratcheted per file against
+# tools/architecture-lint-sleep-baseline.txt: existing counts are DEBT (do
+# not grow), anything above a file's baseline or new files with sleeps fail.
+SLEEP_BASELINE="$(dirname "$0")/architecture-lint-sleep-baseline.txt"
 echo "📋 Rule 3: sleep() in test files"
 sleep_count=0
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
-    while IFS= read -r match; do
-        [[ -z "$match" ]] && continue
-        echo -e "  ${RED}ERROR${NC} $file:$match (use XCTExpectation instead)"
-        ((ERRORS++)) || true
-        ((sleep_count++)) || true
-    done < <(grep -n 'sleep(' "$file" 2>/dev/null | grep -v '// ' || true)
+    allowed=$(awk -v f="$file" '$1==f {print $2}' "$SLEEP_BASELINE" 2>/dev/null)
+    allowed=${allowed:-0}
+    current=$(grep -c 'sleep(' "$file" 2>/dev/null | grep -v '// ' || echo 0)
+    current=${current:-0}
+    if [ "$current" -gt 0 ]; then
+        if [ "$current" -le "$allowed" ]; then
+            echo -e "  ${YELLOW}DEBT${NC}  $file has $current sleep() calls (baseline $allowed, do not grow)"
+        else
+            while IFS= read -r match; do
+                [[ -z "$match" ]] && continue
+                echo -e "  ${RED}ERROR${NC} $file:$match (use XCTExpectation instead)"
+                ((ERRORS++)) || true
+                ((sleep_count++)) || true
+            done < <(grep -n 'sleep(' "$file" 2>/dev/null | grep -v '// ' || true)
+        fi
+    fi
 done < <(find Tests/ SuperAppUITests/ -name "*.swift" 2>/dev/null || true)
-[[ "$sleep_count" -eq 0 ]] && echo "  ${GREEN}OK${NC}   No sleep() calls found"
+[[ "$sleep_count" -eq 0 ]] && echo "  ${GREEN}OK${NC}   No NEW sleep() debt (ratchet baseline active)"
 echo ""
 
 # Rule 4: XCTSkip without reason
@@ -104,7 +129,7 @@ echo ""
 echo "📋 Rule 6: TODO/FIXME count"
 todo_count=0
 if [[ -d Sources/ ]]; then
-    todo_count=$(grep -rn "TODO\|FIXME" --include="*.swift" Sources/ SuperApp/Sources/ 2>/dev/null | wc -l | tr -d ' ')
+    todo_count=$( (grep -rn "TODO\|FIXME" --include="*.swift" Sources/ SuperApp/Sources/ 2>/dev/null || true) | wc -l | tr -d ' ')
 fi
 echo "  ℹ️  Found ${todo_count} TODO/FIXME items in Sources/ and SuperApp/Sources/"
 echo ""
@@ -136,6 +161,26 @@ while IFS= read -r file; do
     fi
 done < <(find Sources/Handlers/ -name "*.swift" 2>/dev/null || true)
 [[ "$handler_issues" -eq 0 ]] && echo "  ${GREEN}OK${NC}   All handlers have proper completion paths"
+echo ""
+
+# Rule 9: DEBUG-only 文件必须有文件级 #if DEBUG（Release 编译期裁剪的硬约束）
+echo "📋 Rule 9: DEBUG-only files must be wrapped in file-level #if DEBUG"
+debug_unwrapped=0
+while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    wrap_line=$(grep -n -m1 '^#if DEBUG' "$file" 2>/dev/null | cut -d: -f1)
+    if [[ -z "$wrap_line" || "${wrap_line:-99}" -gt 8 ]]; then
+        echo -e "  ${RED}ERROR${NC} $file 不在文件级 #if DEBUG 内（头 8 行内未找到）"
+        ((ERRORS++)) || true
+        ((debug_unwrapped++)) || true
+    fi
+done < <(find SuperApp/Sources/Views/DebugCenter SuperApp/Sources/Views/BridgeLab \
+              SuperApp/Sources/Views/WebCache SuperApp/Sources/Views/TokenPush \
+              SuperApp/Sources/Views/DeepLinks SuperApp/Sources/Controllers/Debug \
+              -name "*.swift" 2>/dev/null; \
+         echo SuperApp/Sources/Views/DiagnosticsView.swift; \
+         echo SuperApp/Sources/ManifestCacheDemo.swift)
+[[ "$debug_unwrapped" -eq 0 ]] && echo -e "  ${GREEN}OK${NC}   All DEBUG-only files are compile-time stripped"
 echo ""
 
 # Summary

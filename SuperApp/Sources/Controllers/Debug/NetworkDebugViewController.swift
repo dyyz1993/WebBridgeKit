@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  NetworkDebugViewController.swift
 //  SuperApp
 //
@@ -19,10 +21,12 @@ class NetworkDebugViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "网络请求"
+        view.accessibilityIdentifier = "networkDebug.root"
         view.backgroundColor = ThemeTokens.Color.background
 
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.accessibilityIdentifier = "networkDebug.tableView"
         tableView.register(NetworkRequestCell.self, forCellReuseIdentifier: "RequestCell")
         tableView.contentInsetAdjustmentBehavior = .never
 
@@ -37,6 +41,7 @@ class NetworkDebugViewController: UIViewController {
             target: self,
             action: #selector(clearRequests)
         )
+        navigationItem.rightBarButtonItem?.accessibilityIdentifier = "networkDebug.clearButton"
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -65,6 +70,7 @@ extension NetworkDebugViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "RequestCell", for: indexPath) as! NetworkRequestCell
         let request = requests[indexPath.row]
         cell.configure(with: request)
+        cell.accessibilityIdentifier = "networkDebug.cell.\(indexPath.row)"
         return cell
     }
 }
@@ -253,5 +259,7 @@ class MockNetworkRequestStore {
         requests.removeAll()
     }
 }
+
+#endif
 
 #endif

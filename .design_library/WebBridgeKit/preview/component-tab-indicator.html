@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tab Indicator - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); color: var(--color-text); }
+.stage { display: flex; flex-direction: column; gap: 12px; }
+.variant-label { font: 500 13px/1.4 var(--wbk-font-family); color: var(--color-text-secondary); letter-spacing: .3px; }
+
+/* @component-css-start */
+.tab-indicator { display: flex; flex-direction: row; height: 40px; border-bottom: 1px solid var(--color-separator); position: relative; }
+.tab-indicator__tab { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: var(--color-text-secondary); cursor: default; position: relative; }
+.tab-indicator__tab--active { color: var(--color-primary); }
+.tab-indicator__indicator { position: absolute; bottom: 0; left: 0; height: 2px; border-radius: 1px; background: var(--color-primary); transition: left .25s; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="variant-label">2 标签</div>
+  <div class="tab-indicator">
+    <span class="tab-indicator__tab tab-indicator__tab--active">
+      概述
+      <span class="tab-indicator__indicator" style="left:17.5%;width:15%"></span>
+    </span>
+    <span class="tab-indicator__tab">详情</span>
+  </div>
+
+  <div class="variant-label">4 标签</div>
+  <div class="tab-indicator">
+    <span class="tab-indicator__tab tab-indicator__tab--active">
+      全部
+      <span class="tab-indicator__indicator" style="left:8.75%;width:7.5%"></span>
+    </span>
+    <span class="tab-indicator__tab">错误</span>
+    <span class="tab-indicator__tab">信息</span>
+    <span class="tab-indicator__tab">警告</span>
+  </div>
+</div>
+</body>
+</html>

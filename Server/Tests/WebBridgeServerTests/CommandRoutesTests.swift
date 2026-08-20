@@ -101,6 +101,9 @@ struct CommandRoutesTests {
                    let token = json["token"] as? String {
                     generatedId = id
                     generatedToken = token
+                    #expect(!token.contains("+"))
+                    #expect(!token.contains("/"))
+                    #expect(!token.contains("="))
                 }
             }
 

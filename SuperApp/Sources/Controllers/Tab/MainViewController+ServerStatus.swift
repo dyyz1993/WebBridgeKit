@@ -57,6 +57,7 @@ final class ServerStatusBlock: UIView {
         label.textColor = ThemeTokens.Color.primary
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingMiddle
+        label.accessibilityIdentifier = "home.token_card.token_label"
         return label
     }()
 
@@ -68,6 +69,7 @@ final class ServerStatusBlock: UIView {
         button.backgroundColor = ThemeTokens.Color.primarySoft
         button.layer.cornerRadius = ThemeTokens.CornerRadius.card
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
+        button.accessibilityIdentifier = "home.token_card.copy_button"
         return button
     }()
 
@@ -80,6 +82,7 @@ final class ServerStatusBlock: UIView {
         button.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         button.isHidden = true
+        button.accessibilityIdentifier = "home.token_card.register_button"
         return button
     }()
 

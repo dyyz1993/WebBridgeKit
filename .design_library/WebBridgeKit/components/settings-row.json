@@ -1,0 +1,33 @@
+{
+  "slug": "settings-row",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["settings", "info"],
+  "variantDimensions": ["hasIcon", "hasValue", "hasChevron"],
+  "representativeVariants": [
+    { "name": "带图标+值+箭头", "props": { "hasIcon": true, "hasValue": true, "hasChevron": true } },
+    { "name": "仅标题+箭头", "props": { "hasIcon": false, "hasValue": false, "hasChevron": true } }
+  ],
+  "anatomy": [
+    { "name": "row", "role": "container", "type": "element" },
+    { "name": "iconBox", "role": "icon container", "type": "optional" },
+    { "name": "icon", "role": "icon", "type": "optional" },
+    { "name": "label", "role": "text label", "type": "element" },
+    { "name": "value", "role": "value text", "type": "optional" },
+    { "name": "chevron", "role": "disclosure indicator", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "minHeight": 54,
+    "maxHeight": 64,
+    "gap": 12,
+    "paddingH": 16,
+    "cornerRadius": { "ref": "--radius-md" },
+    "iconBoxSize": 32,
+    "iconSize": 20,
+    "chevronSize": 16
+  },
+  "usageHints": ["设置页面行标准组件", "iconBox 使用对应语义的 soft 背景色", "value 使用 text-secondary 颜色", "chevron 使用 text-tertiary 40%"],
+  "doNotInvent": ["不要改变行高，严格使用 54-64px 范围", "不要移除 separator 分隔线"],
+  "unknowns": []
+}

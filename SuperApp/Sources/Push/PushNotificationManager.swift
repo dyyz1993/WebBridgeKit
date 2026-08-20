@@ -6,6 +6,13 @@
 import Foundation
 import UIKit
 import UserNotifications
+import WebBridgeKit
+
+enum OfficialPushActivationResult {
+    case ready
+    case denied
+    case failed(String)
+}
 
 /// 推送通知管理器
 /// 负责 APNs 注册、Token 管理、通知权限请求
@@ -20,11 +27,80 @@ class PushNotificationManager: NSObject {
     var barkServerURL: String?
     var barkKey: String?
 
+    private struct PendingOfficialRegistration {
+        let serverURL: String
+        let key: String
+        let completion: (OfficialPushActivationResult) -> Void
+    }
+
+    private var pendingOfficialRegistration: PendingOfficialRegistration?
+
     private override init() {
         super.init()
     }
 
     // MARK: - Registration
+
+    func activateOfficialPush(
+        serverURL: String,
+        key: String,
+        completion: @escaping (OfficialPushActivationResult) -> Void
+    ) {
+        barkServerURL = serverURL
+        barkKey = key
+        UserDefaults.standard.set(serverURL, forKey: "com.webbridgekit.bark.server")
+
+        #if DEBUG
+        if isOfficialPushUITest {
+            activateOfficialPushForUITest(completion: completion)
+            return
+        }
+        #endif
+
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            guard let self else { return }
+            switch settings.authorizationStatus {
+            case .notDetermined:
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+                    DispatchQueue.main.async {
+                        if let error {
+                            completion(.failed(error.localizedDescription))
+                        } else if granted {
+                            self.beginRemoteRegistration(serverURL: serverURL, key: key, completion: completion)
+                        } else {
+                            completion(.denied)
+                        }
+                    }
+                }
+            case .authorized, .provisional, .ephemeral:
+                DispatchQueue.main.async {
+                    self.beginRemoteRegistration(serverURL: serverURL, key: key, completion: completion)
+                }
+            case .denied:
+                DispatchQueue.main.async { completion(.denied) }
+            @unknown default:
+                DispatchQueue.main.async { completion(.failed(L10n.tr("official.push.error.permission"))) }
+            }
+        }
+    }
+
+    private func beginRemoteRegistration(
+        serverURL: String,
+        key: String,
+        completion: @escaping (OfficialPushActivationResult) -> Void
+    ) {
+        pendingOfficialRegistration = PendingOfficialRegistration(
+            serverURL: serverURL,
+            key: key,
+            completion: completion
+        )
+        if let deviceToken {
+            registerTokenToBarkServer(token: deviceToken, serverURL: serverURL, key: key, completion: completion)
+            pendingOfficialRegistration = nil
+        } else {
+            UIApplication.shared.registerForRemoteNotifications()
+        }
+    }
 
     /// 请求通知权限并注册 APNs
     /// - Parameter completion: 注册完成回调，success=true 代表注册成功
@@ -80,25 +156,43 @@ class PushNotificationManager: NSObject {
         let token = deviceToken.map { String(format: "%02x", $0) }.joined()
         self.deviceToken = token
         #if DEBUG
-        print("[PushManager] Device token: \(token.prefix(8))...")
+        print("[PushManager] Device token: \(token)")
         #endif
 
-        registerTokenToBarkServer(token: token)
+        if let pending = pendingOfficialRegistration {
+            pendingOfficialRegistration = nil
+            registerTokenToBarkServer(
+                token: token,
+                serverURL: pending.serverURL,
+                key: pending.key,
+                completion: pending.completion
+            )
+        } else {
+            registerTokenToBarkServer(token: token)
+        }
     }
 
     // MARK: - Bark Registration
 
-    private func registerTokenToBarkServer(token: String) {
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
+    private func registerTokenToBarkServer(
+        token: String,
+        serverURL: String? = nil,
+        key explicitKey: String? = nil,
+        completion: ((OfficialPushActivationResult) -> Void)? = nil
+    ) {
+        let server = serverURL
+            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
             ?? barkServerURL
             ?? "https://wbk.shanbox.19930810.xyz:8443"
-        let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key")
+        let key = explicitKey
+            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key")
             ?? barkKey
 
         guard let key, !key.isEmpty else {
             #if DEBUG
             print("[PushManager] Bark key not configured, skip token registration")
             #endif
+            completion?(.failed(L10n.tr("official.push.error.identity")))
             return
         }
 
@@ -106,6 +200,7 @@ class PushNotificationManager: NSObject {
             #if DEBUG
             print("[PushManager] Invalid Bark server URL: \(server)")
             #endif
+            completion?(.failed(L10n.tr("official.push.error.server")))
             return
         }
 
@@ -125,6 +220,7 @@ class PushNotificationManager: NSObject {
                 #if DEBUG
                 print("[PushManager] Bark register failed: \(error.localizedDescription)")
                 #endif
+                DispatchQueue.main.async { completion?(.failed(error.localizedDescription)) }
                 return
             }
             if let httpResponse = response as? HTTPURLResponse,
@@ -132,11 +228,13 @@ class PushNotificationManager: NSObject {
                 #if DEBUG
                 print("[PushManager] Bark register success (POST)")
                 #endif
+                DispatchQueue.main.async { completion?(.ready) }
             } else {
                 let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
                 #if DEBUG
                 print("[PushManager] Bark register failed with status: \(statusCode)")
                 #endif
+                DispatchQueue.main.async { completion?(.failed(L10n.tr("official.push.error.server"))) }
             }
         }.resume()
     }
@@ -146,7 +244,25 @@ class PushNotificationManager: NSObject {
         #if DEBUG
         print("[PushManager] Failed to register: \(error)")
         #endif
+        let completion = pendingOfficialRegistration?.completion
+        pendingOfficialRegistration = nil
+        completion?(.failed(error.localizedDescription))
     }
+
+    #if DEBUG
+    private var isOfficialPushUITest: Bool {
+        return ProcessInfo.processInfo.isWebBridgeKitUITesting
+            && ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] != nil
+    }
+
+    private func activateOfficialPushForUITest(completion: @escaping (OfficialPushActivationResult) -> Void) {
+        switch ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] {
+        case "denied": completion(.denied)
+        case "error": completion(.failed(L10n.tr("official.push.error.server")))
+        default: completion(.ready)
+        }
+    }
+    #endif
 
     // MARK: - Incoming Notification
 

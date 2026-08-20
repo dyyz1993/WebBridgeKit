@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card — WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.specimen { max-width: 480px; margin: 0 auto; }
+.story { margin-bottom: 16px; }
+.story-label { display: block; font: var(--wbk-text-section-title); color: var(--color-text-secondary); margin-bottom: 12px; }
+.rail { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; gap: 12px; align-items: center; margin-bottom: 0; flex-wrap: wrap; }
+.label { font: var(--wbk-text-caption); color: var(--color-text-tertiary); letter-spacing: .5px; min-width: 64px; flex-shrink: 0; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 12px 0; }
+
+/* @component-css-start */
+.card { display: flex; flex-direction: column; gap: 12px; width: 100%; border-radius: var(--radius-lg); background: var(--color-card); padding: var(--space-md); box-sizing: border-box; }
+.card.shadow { box-shadow: var(--shadow-card); }
+.card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-title { font: var(--wbk-text-card-title); color: var(--color-text); display: flex; align-items: center; gap: 6px; }
+.card-content { display: flex; flex-direction: column; gap: 8px; }
+.card-meta { font: var(--wbk-text-metadata); color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
+.card-action { font: var(--wbk-text-button); color: var(--color-primary); cursor: default; padding: 2px 0; transition: color .15s; }
+.card-action:hover { color: var(--color-primary-pressed); }
+.badge { display: inline-flex; align-items: center; gap: 4px; font: var(--wbk-text-badge); padding: 2px 8px; border-radius: var(--wbk-radius-pill); text-transform: uppercase; }
+.badge-success { background: var(--wbk-success-soft); color: var(--wbk-success); }
+.badge-warning { background: var(--wbk-warning-soft); color: var(--wbk-warning); }
+.text-mono { font: var(--wbk-text-monospace-body); color: var(--color-text); }
+.key-value { display: flex; align-items: center; gap: 8px; font: var(--wbk-text-body); color: var(--color-text); }
+.key-value .key { color: var(--color-text-secondary); min-width: 80px; flex-shrink: 0; }
+.resource-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; font: var(--wbk-text-card-title); color: var(--color-primary); flex-shrink: 0; }
+.resource-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.resource-name { font: var(--wbk-text-card-title); color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resource-meta { font: var(--wbk-text-caption); color: var(--color-text-secondary); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+.stat-item { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: var(--radius-sm); background: var(--color-bg-secondary); }
+.stat-value { font: 700 20px/1.2 var(--wbk-font-family); color: var(--color-text); }
+.stat-label { font: var(--wbk-text-caption); color: var(--color-text-secondary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+  <div class="stage">
+
+    <div class="story">
+      <span class="story-label">内容卡片</span>
+      <div class="rail">
+        <div class="row">
+          <span class="label">Token</span>
+          <div class="card shadow" data-evidence-sample="Token 卡片">
+            <div class="card-header">
+              <span class="card-title">服务器令牌</span>
+              <span class="badge badge-success">活跃</span>
+            </div>
+            <div class="card-content">
+              <div class="key-value"><span class="key">API Key</span><span class="text-mono">sk-...x7f3</span></div>
+              <div class="key-value"><span class="key">创建时间</span>2026-01-15</div>
+              <div class="key-value"><span class="key">过期时间</span>2026-07-15</div>
+              <div style="display:flex;gap:12px;margin-top:4px;">
+                <span class="card-action">复制密钥</span>
+                <span class="card-action">刷新令牌</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="label">资源</span>
+          <div class="card" data-evidence-sample="资源卡片">
+            <div class="card-header">
+              <span class="card-title">资源包</span>
+            </div>
+            <div class="card-content">
+              <div style="display:flex;gap:12px;align-items:center;">
+                <div class="resource-icon">WB</div>
+                <div class="resource-info">
+                  <span class="resource-name">WebBridgeCore v2.3.1</span>
+                  <span class="resource-meta">大小 4.2 MB · 更新 2026-06-28</span>
+                </div>
+              </div>
+              <div style="margin-top:2px;"><span class="card-action">安装资源</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="story">
+      <span class="story-label">数据卡片</span>
+      <div class="rail">
+        <div class="row">
+          <span class="label">统计</span>
+          <div class="card" data-evidence-sample="统计卡片">
+            <div class="card-header">
+              <span class="card-title">服务概览</span>
+            </div>
+            <div class="card-content">
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-value">12,480</span>
+                  <span class="stat-label">总请求数</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value">892</span>
+                  <span class="stat-label">活跃用户</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value">0.3%</span>
+                  <span class="stat-label">错误率</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value">45ms</span>
+                  <span class="stat-label">平均响应</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,900 @@
+{
+  "data": [
+    {
+      "id": "page-home",
+      "title": "首页",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783019400000,
+      "canvasData": {
+        "x": 0,
+        "y": 1419,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/home.html",
+        "interactions": [
+          {
+            "domId": "tab-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "当前页面"
+          },
+          {
+            "domId": "tab-inbox",
+            "targetPageId": "page-inbox",
+            "hideEdge": true,
+            "transitionLabel": "切换到收件箱"
+          },
+          {
+            "domId": "tab-discover",
+            "targetPageId": "page-discover",
+            "hideEdge": true,
+            "transitionLabel": "切换到发现"
+          },
+          {
+            "domId": "tab-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "切换到设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-inbox",
+      "title": "收件箱",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783019400000,
+      "canvasData": {
+        "x": 420,
+        "y": 1419,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/inbox.html",
+        "interactions": [
+          {
+            "domId": "tab-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "切换到首页"
+          },
+          {
+            "domId": "tab-inbox",
+            "targetPageId": "page-inbox",
+            "hideEdge": true,
+            "transitionLabel": "当前页面"
+          },
+          {
+            "domId": "tab-discover",
+            "targetPageId": "page-discover",
+            "hideEdge": true,
+            "transitionLabel": "切换到发现"
+          },
+          {
+            "domId": "tab-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "切换到设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-discover",
+      "title": "发现",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783019400000,
+      "canvasData": {
+        "x": 840,
+        "y": 1419,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/discover.html",
+        "interactions": [
+          {
+            "domId": "tab-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "切换到首页"
+          },
+          {
+            "domId": "tab-inbox",
+            "targetPageId": "page-inbox",
+            "hideEdge": true,
+            "transitionLabel": "切换到收件箱"
+          },
+          {
+            "domId": "tab-discover",
+            "targetPageId": "page-discover",
+            "hideEdge": true,
+            "transitionLabel": "当前页面"
+          },
+          {
+            "domId": "tab-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "切换到设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-settings",
+      "title": "设置",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783019400000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/settings.html",
+        "interactions": [
+          {
+            "domId": "tab-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "切换到首页"
+          },
+          {
+            "domId": "tab-inbox",
+            "targetPageId": "page-inbox",
+            "hideEdge": true,
+            "transitionLabel": "切换到收件箱"
+          },
+          {
+            "domId": "tab-discover",
+            "targetPageId": "page-discover",
+            "hideEdge": true,
+            "transitionLabel": "切换到发现"
+          },
+          {
+            "domId": "tab-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "当前页面"
+          },
+          {
+            "domId": "nav-debug",
+            "targetPageId": "page-debug",
+            "hideEdge": false,
+            "transitionLabel": "打开调试面板"
+          },
+          {
+            "domId": "nav-server-api",
+            "targetPageId": "page-server-config",
+            "hideEdge": true,
+            "transitionLabel": "服务器配置"
+          },
+          {
+            "domId": "nav-device-token",
+            "targetPageId": "page-token-manage",
+            "hideEdge": true,
+            "transitionLabel": "设备令牌"
+          },
+          {
+            "domId": "nav-bark-key",
+            "targetPageId": "page-apikey-manage",
+            "hideEdge": true,
+            "transitionLabel": "API Key"
+          },
+          {
+            "domId": "nav-notification-permission",
+            "targetPageId": "page-notification-debug",
+            "hideEdge": true,
+            "transitionLabel": "通知调试"
+          },
+          {
+            "domId": "nav-network-diag",
+            "targetPageId": "page-network-debug",
+            "hideEdge": true,
+            "transitionLabel": "网络诊断"
+          },
+          {
+            "domId": "nav-crash-report",
+            "targetPageId": "page-diagnostics",
+            "hideEdge": true,
+            "transitionLabel": "诊断信息"
+          },
+          {
+            "domId": "nav-about",
+            "targetPageId": "page-about",
+            "hideEdge": true,
+            "transitionLabel": "关于"
+          },
+          {
+            "domId": "nav-licenses",
+            "targetPageId": "page-licenses",
+            "hideEdge": true,
+            "transitionLabel": "开源许可"
+          },
+          {
+            "domId": "nav-cache-size",
+            "targetPageId": "page-cache-dashboard",
+            "hideEdge": true,
+            "transitionLabel": "缓存仪表盘"
+          },
+          {
+            "domId": "nav-offline-resources",
+            "targetPageId": "page-cache-management",
+            "hideEdge": true,
+            "transitionLabel": "缓存管理"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-debug",
+      "title": "调试面板",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783019400000,
+      "canvasData": {
+        "x": 420,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/debug.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-server-config",
+      "title": "服务器配置",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 1260,
+        "y": 1419,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/server-config.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-token-manage",
+      "title": "设备令牌管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 1680,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/token-manage.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-apikey-manage",
+      "title": "API Key 管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 2100,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/apikey-manage.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-notification-debug",
+      "title": "通知调试",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 2520,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/notification-debug.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-network-debug",
+      "title": "网络诊断",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 2940,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/network-debug.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-diagnostics",
+      "title": "诊断信息",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 3360,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/diagnostics.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-about",
+      "title": "关于",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 3780,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/about.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-licenses",
+      "title": "开源许可",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 4200,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/licenses.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-cache-dashboard",
+      "title": "缓存仪表盘",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 4620,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/cache-dashboard.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-cache-management",
+      "title": "缓存管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 5040,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/cache-management.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-cache-subsystem",
+      "title": "缓存子系统详情",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 5460,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/cache-subsystem.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-cache-dashboard",
+            "hideEdge": true,
+            "transitionLabel": "返回缓存仪表盘"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-preset-url",
+      "title": "预设 URL 目录",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 5880,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/preset-url.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-cache-dashboard",
+            "hideEdge": true,
+            "transitionLabel": "返回缓存仪表盘"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-message-detail",
+      "title": "消息详情",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 6300,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/message-detail.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-inbox",
+            "hideEdge": true,
+            "transitionLabel": "返回收件箱"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-web-browser",
+      "title": "WebView 浏览器",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 6720,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/web-browser.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-bookmarks",
+      "title": "网页收藏",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 7140,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/bookmarks.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-web-history",
+      "title": "网页历史",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 7560,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/web-history.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-qr-scanner",
+      "title": "QR 扫码",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 7980,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/qr-scanner.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-manifest-test",
+      "title": "Manifest 缓存测试",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 8400,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/manifest-test.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-debug",
+            "hideEdge": true,
+            "transitionLabel": "返回调试面板"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-license-detail",
+      "title": "许可详情",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783021409000,
+      "canvasData": {
+        "x": 8820,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/license-detail.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-licenses",
+            "hideEdge": true,
+            "transitionLabel": "返回开源许可"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-favorites",
+      "title": "收藏管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 9240,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/favorites.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-web-access",
+      "title": "网页访问",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 9660,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/web-access.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-token-generate",
+      "title": "令牌生成",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 10080,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/token-generate.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-token-manage",
+            "hideEdge": true,
+            "transitionLabel": "返回令牌管理"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-apikey-example",
+      "title": "API Key 示例",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 10500,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/apikey-example.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-apikey-manage",
+            "hideEdge": true,
+            "transitionLabel": "返回 API Key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-pinned-url",
+      "title": "固定 URL 管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 10920,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/pinned-url.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-cache-dashboard",
+            "hideEdge": true,
+            "transitionLabel": "返回缓存仪表盘"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-cache-history",
+      "title": "缓存访问历史",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 11340,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/cache-history.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-cache-dashboard",
+            "hideEdge": true,
+            "transitionLabel": "返回缓存仪表盘"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-appearance",
+      "title": "外观设置",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 11760,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/appearance.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-notification-settings",
+      "title": "通知权限设置",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783022500000,
+      "canvasData": {
+        "x": 12180,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/notification-settings.html",
+        "interactions": [
+          {
+            "domId": "nav-back",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "返回设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-visual-spec",
+      "title": "视觉规范",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783225972000,
+      "canvasData": {
+        "x": 12600,
+        "y": 1419,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/visual-spec.html",
+        "interactions": []
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "mobile",
+    "projectName": "WebBridgeKit App",
+    "designLibrary": null
+  }
+}

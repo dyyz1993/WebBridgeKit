@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缓存管理</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+
+<style>
+/* === Cache Management Page Shell === */
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wbk-status-bar-icons svg { color: var(--wbk-text); }
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.wbk-nav-header {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  position: relative;
+}
+.wbk-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--wbk-primary);
+  font: var(--wbk-text-body);
+  font-size: 17px;
+  padding: 0;
+  transition: opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-nav-back:active { opacity: 0.6; }
+.wbk-nav-back i { width: 20px; height: 20px; }
+.wbk-nav-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font: var(--wbk-text-row-title);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  white-space: nowrap;
+}
+.wbk-safe-bottom {
+  height: env(safe-area-inset-bottom, 34px);
+  background: var(--wbk-background);
+}
+/* Cache Management specific */
+.wbk-segmented-control {
+  display: flex;
+  align-items: center;
+  margin: var(--wbk-spacing-sm) var(--wbk-spacing-lg);
+  background: var(--wbk-background-tertiary);
+  border-radius: var(--wbk-radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+.wbk-segment {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: 7px;
+  font: var(--wbk-text-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--wbk-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--wbk-duration-fast) var(--wbk-easing), background var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-segment--active {
+  background: var(--wbk-card-background);
+  color: var(--wbk-text);
+  box-shadow: 0 0.5px 1px rgba(17, 24, 39, 0.05);
+}
+.wbk-segment:active { opacity: 0.7; }
+.wbk-tab-content { display: none; }
+.wbk-tab-content--active { display: block; }
+.wbk-search-bar {
+  margin: var(--wbk-spacing-md) var(--wbk-spacing-lg) var(--wbk-spacing-sm);
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--wbk-spacing-md);
+  background: var(--wbk-background-secondary);
+  border-radius: var(--wbk-radius-sm);
+  gap: var(--wbk-spacing-sm);
+}
+.wbk-search-bar i {
+  width: 16px;
+  height: 16px;
+  color: var(--wbk-text-tertiary);
+  flex-shrink: 0;
+}
+.wbk-search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  font: var(--wbk-text-body);
+  font-size: 14px;
+  color: var(--wbk-text);
+  outline: none;
+  min-width: 0;
+}
+.wbk-search-input::placeholder { color: var(--wbk-placeholder); }
+.wbk-filter-pills {
+  display: flex;
+  gap: var(--wbk-spacing-sm);
+  padding: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-md);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.wbk-filter-pills::-webkit-scrollbar { display: none; }
+.wbk-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 var(--wbk-spacing-md);
+  border-radius: var(--wbk-radius-sm);
+  font: var(--wbk-text-caption);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border: 1px solid var(--wbk-separator);
+  background: var(--wbk-card-background);
+  color: var(--wbk-text-secondary);
+  transition: background var(--wbk-duration-fast) var(--wbk-easing), color var(--wbk-duration-fast) var(--wbk-easing), border-color var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-pill--active {
+  background: var(--wbk-primary-soft);
+  color: var(--wbk-primary);
+  border-color: var(--wbk-primary-soft);
+}
+.wbk-pill:active { opacity: 0.7; }
+.wbk-resource-list {
+  padding: 0 var(--wbk-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--wbk-spacing-sm);
+}
+.wbk-resource-card {
+  display: flex;
+  align-items: center;
+  padding: var(--wbk-spacing-md) var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  border: 1px solid var(--wbk-separator);
+  border-radius: var(--wbk-radius-md);
+  min-height: 72px;
+  gap: var(--wbk-spacing-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-resource-card:active { background: var(--wbk-background-secondary); }
+.wbk-resource-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--wbk-radius-sm);
+  background: var(--wbk-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.wbk-resource-icon i { width: 18px; height: 18px; color: var(--wbk-primary); }
+.wbk-resource-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wbk-resource-name {
+  font: var(--wbk-text-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wbk-resource-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+}
+.wbk-resource-size {
+  font: var(--wbk-text-caption);
+  font-size: 12px;
+  color: var(--wbk-text-secondary);
+}
+.wbk-resource-date {
+  font: var(--wbk-text-caption);
+  font-size: 12px;
+  color: var(--wbk-text-tertiary);
+}
+.wbk-resource-right {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  flex-shrink: 0;
+}
+.wbk-resource-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--wbk-spacing-sm);
+  border-radius: var(--wbk-radius-xs);
+  font: var(--wbk-text-caption);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wbk-badge-persistent { background: var(--wbk-info-soft); color: var(--wbk-info); }
+.wbk-badge-cached { background: var(--wbk-success-soft); color: var(--wbk-success); }
+.wbk-badge-needsUpdate { background: var(--wbk-warning-soft); color: var(--wbk-warning); }
+.wbk-badge-notCached { background: var(--wbk-error-soft); color: var(--wbk-error); }
+.wbk-resource-chevron {
+  color: var(--wbk-text-tertiary);
+}
+.wbk-resource-chevron i { width: 16px; height: 16px; }
+.wbk-bottom-action {
+  padding: var(--wbk-spacing-lg);
+}
+.wbk-btn-secondary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  background: var(--wbk-card-background);
+  color: var(--wbk-primary);
+  border: 1px solid var(--wbk-separator);
+  border-radius: var(--wbk-radius-md);
+  font: var(--wbk-text-button);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+.wbk-btn-secondary:active { opacity: 0.7; }
+</style>
+
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/>
+        <path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/>
+        <rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+
+    <!-- Navigation Header -->
+    <div class="wbk-nav-header">
+      <button class="wbk-nav-back" data-dom-id="nav-back" aria-label="返回设置">
+        <i data-lucide="chevron-left"></i>
+        <span>设置</span>
+      </button>
+      <span class="wbk-nav-title">缓存管理</span>
+    </div>
+
+    <!-- Segmented Control -->
+    <div class="wbk-segmented-control">
+      <button class="wbk-segment wbk-segment--active" data-tab="tab-resources">资源</button>
+      <button class="wbk-segment" data-tab="tab-history">历史</button>
+      <button class="wbk-segment" data-tab="tab-settings">设置</button>
+    </div>
+
+    <!-- Tab: 资源 -->
+    <div class="wbk-tab-content wbk-tab-content--active" id="tab-resources">
+
+      <!-- Search Bar -->
+      <div class="wbk-search-bar">
+        <i data-lucide="search"></i>
+        <input class="wbk-search-input" type="text" placeholder="搜索资源">
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="wbk-filter-pills">
+        <button class="wbk-pill wbk-pill--active">全部</button>
+        <button class="wbk-pill">persistent</button>
+        <button class="wbk-pill">cached</button>
+        <button class="wbk-pill">needsUpdate</button>
+        <button class="wbk-pill">notCached</button>
+      </div>
+
+      <!-- Resource List -->
+      <div class="wbk-resource-list">
+
+        <div class="wbk-resource-card" data-dom-id="resource-bridge-hub">
+          <div class="wbk-resource-icon"><i data-lucide="globe"></i></div>
+          <div class="wbk-resource-info">
+            <div class="wbk-resource-name">bridge-hub.html</div>
+            <div class="wbk-resource-meta">
+              <span class="wbk-resource-size">245 KB</span>
+              <span class="wbk-resource-date">2024-05-08</span>
+            </div>
+          </div>
+          <div class="wbk-resource-right">
+            <span class="wbk-resource-badge wbk-badge-persistent">persistent</span>
+            <span class="wbk-resource-chevron"><i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+        <div class="wbk-resource-card" data-dom-id="resource-bridge-promise">
+          <div class="wbk-resource-icon"><i data-lucide="globe"></i></div>
+          <div class="wbk-resource-info">
+            <div class="wbk-resource-name">bridge-promise.html</div>
+            <div class="wbk-resource-meta">
+              <span class="wbk-resource-size">89 KB</span>
+              <span class="wbk-resource-date">2024-05-07</span>
+            </div>
+          </div>
+          <div class="wbk-resource-right">
+            <span class="wbk-resource-badge wbk-badge-cached">cached</span>
+            <span class="wbk-resource-chevron"><i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+        <div class="wbk-resource-card" data-dom-id="resource-cache-showcase">
+          <div class="wbk-resource-icon"><i data-lucide="globe"></i></div>
+          <div class="wbk-resource-info">
+            <div class="wbk-resource-name">cache-showcase.html</div>
+            <div class="wbk-resource-meta">
+              <span class="wbk-resource-size">156 KB</span>
+              <span class="wbk-resource-date">2024-05-06</span>
+            </div>
+          </div>
+          <div class="wbk-resource-right">
+            <span class="wbk-resource-badge wbk-badge-cached">cached</span>
+            <span class="wbk-resource-chevron"><i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+        <div class="wbk-resource-card" data-dom-id="resource-manifest">
+          <div class="wbk-resource-icon"><i data-lucide="file-json"></i></div>
+          <div class="wbk-resource-info">
+            <div class="wbk-resource-name">manifest.json</div>
+            <div class="wbk-resource-meta">
+              <span class="wbk-resource-size">12 KB</span>
+              <span class="wbk-resource-date">2024-05-08</span>
+            </div>
+          </div>
+          <div class="wbk-resource-right">
+            <span class="wbk-resource-badge wbk-badge-persistent">persistent</span>
+            <span class="wbk-resource-chevron"><i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+        <div class="wbk-resource-card" data-dom-id="resource-test-hub">
+          <div class="wbk-resource-icon"><i data-lucide="globe"></i></div>
+          <div class="wbk-resource-info">
+            <div class="wbk-resource-name">test-hub.html</div>
+            <div class="wbk-resource-meta">
+              <span class="wbk-resource-size">67 KB</span>
+              <span class="wbk-resource-date">2024-05-01</span>
+            </div>
+          </div>
+          <div class="wbk-resource-right">
+            <span class="wbk-resource-badge wbk-badge-needsUpdate">needsUpdate</span>
+            <span class="wbk-resource-chevron"><i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+        <div class="wbk-resource-card" data-dom-id="resource-js-bridge">
+          <div class="wbk-resource-icon"><i data-lucide="file-code"></i></div>
+          <div class="wbk-resource-info">
+            <div class="wbk-resource-name">js-bridge.js</div>
+            <div class="wbk-resource-meta">
+              <span class="wbk-resource-size">34 KB</span>
+              <span class="wbk-resource-date">--</span>
+            </div>
+          </div>
+          <div class="wbk-resource-right">
+            <span class="wbk-resource-badge wbk-badge-notCached">notCached</span>
+            <span class="wbk-resource-chevron"><i data-lucide="chevron-right"></i></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Action -->
+      <div class="wbk-bottom-action">
+        <button class="wbk-btn-secondary" data-dom-id="btn-clean-unused">清理未使用</button>
+      </div>
+
+    </div>
+
+    <!-- Tab: 历史 -->
+    <div class="wbk-tab-content" id="tab-history">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px var(--wbk-spacing-lg); text-align: center;">
+        <i data-lucide="clock" style="width: 48px; height: 48px; color: var(--wbk-text-tertiary); margin-bottom: var(--wbk-spacing-lg);"></i>
+        <div style="font: var(--wbk-text-body); font-size: 15px; color: var(--wbk-text-secondary); margin-bottom: var(--wbk-spacing-xs);">暂无历史记录</div>
+        <div style="font: var(--wbk-text-caption); font-size: 13px; color: var(--wbk-text-tertiary);">缓存操作历史将在这里显示</div>
+      </div>
+    </div>
+
+    <!-- Tab: 设置 -->
+    <div class="wbk-tab-content" id="tab-settings">
+      <div style="padding: var(--wbk-spacing-sm) var(--wbk-spacing-lg);">
+        <div style="background: var(--wbk-card-background); border: 1px solid var(--wbk-separator); border-radius: var(--wbk-radius-md); overflow: hidden;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--wbk-spacing-md) var(--wbk-spacing-lg); min-height: 48px;">
+            <span style="font: var(--wbk-text-body); font-size: 15px; color: var(--wbk-text);">缓存大小限制</span>
+            <span style="font: var(--wbk-text-metadata); font-size: 13px; color: var(--wbk-text-secondary);">50 MB</span>
+          </div>
+          <div style="border-top: 1px solid var(--wbk-separator); display: flex; align-items: center; justify-content: space-between; padding: var(--wbk-spacing-md) var(--wbk-spacing-lg); min-height: 48px;">
+            <span style="font: var(--wbk-text-body); font-size: 15px; color: var(--wbk-text);">自动清理过期</span>
+            <span style="font: var(--wbk-text-metadata); font-size: 13px; color: var(--wbk-success);">已开启</span>
+          </div>
+          <div style="border-top: 1px solid var(--wbk-separator); display: flex; align-items: center; justify-content: space-between; padding: var(--wbk-spacing-md) var(--wbk-spacing-lg); min-height: 48px;">
+            <span style="font: var(--wbk-text-body); font-size: 15px; color: var(--wbk-text);">过期时间</span>
+            <span style="font: var(--wbk-text-metadata); font-size: 13px; color: var(--wbk-text-secondary);">7 天</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Safe Area Bottom -->
+    <div class="wbk-safe-bottom"></div>
+
+  </div>
+
+</div>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

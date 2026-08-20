@@ -1,0 +1,40 @@
+{
+  "slug": "context-menu",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["context-menu", "popover-menu", "dropdown"],
+  "variantDimensions": ["hasIcons"],
+  "representativeVariants": [
+    { "name": "带图标", "props": { "hasIcons": true } },
+    { "name": "纯文字", "props": { "hasIcons": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "menu card", "type": "element" },
+    { "name": "item", "role": "menu row", "type": "element" },
+    { "name": "itemIcon", "role": "leading icon", "type": "optional" },
+    { "name": "itemLabel", "role": "menu text", "type": "element" },
+    { "name": "itemShortcut", "role": "keyboard shortcut hint", "type": "optional" },
+    { "name": "separator", "role": "divider between groups", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "background": { "ref": "--color-surface-elevated" },
+    "cornerRadius": 12,
+    "paddingV": 4,
+    "shadow": { "ref": "--shadow-card" },
+    "itemHeight": 36,
+    "itemPaddingH": 12,
+    "itemIconSize": 16,
+    "itemFontSize": 14,
+    "itemFontWeight": 400,
+    "itemColor": { "ref": "--color-text" },
+    "shortcutSize": 12,
+    "shortcutColor": { "ref": "--color-text-tertiary" },
+    "separatorColor": { "ref": "--color-separator" },
+    "separatorHeight": 1,
+    "separatorInsetH": 12
+  },
+  "usageHints": ["长按菜单、右键弹出菜单", "圆角卡片 + 阴影，分组间分隔线"],
+  "doNotInvent": ["不要添加多级子菜单", "不要添加勾选标记"],
+  "unknowns": []
+}

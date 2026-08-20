@@ -31,6 +31,7 @@ public struct MutableMessageContent: @unchecked Sendable {
     public var threadId: String?
     public var targetURL: String?
     public var targetAppId: String?
+    public var route: String?
     public var targetMode: String?
     public var imageURL: String?
     public var iconURL: String?
@@ -40,6 +41,9 @@ public struct MutableMessageContent: @unchecked Sendable {
     public var isArchive: Bool
     public var isCall: Bool
     public var volume: Double?
+    public var ttl: TimeInterval?
+    public var replacementID: String?
+    public var isDeleted: Bool
     public var userInfo: [String: Any]
     public var ciphertext: String?
     public var cryptoAlgorithm: String?
@@ -58,6 +62,7 @@ public struct MutableMessageContent: @unchecked Sendable {
         threadId: String? = nil,
         targetURL: String? = nil,
         targetAppId: String? = nil,
+        route: String? = nil,
         targetMode: String? = nil,
         imageURL: String? = nil,
         iconURL: String? = nil,
@@ -67,6 +72,9 @@ public struct MutableMessageContent: @unchecked Sendable {
         isArchive: Bool = true,
         isCall: Bool = false,
         volume: Double? = nil,
+        ttl: TimeInterval? = nil,
+        replacementID: String? = nil,
+        isDeleted: Bool = false,
         userInfo: [String: Any] = [:],
         ciphertext: String? = nil
     ) {
@@ -80,6 +88,7 @@ public struct MutableMessageContent: @unchecked Sendable {
         self.threadId = threadId
         self.targetURL = targetURL
         self.targetAppId = targetAppId
+        self.route = route
         self.targetMode = targetMode
         self.imageURL = imageURL
         self.iconURL = iconURL
@@ -89,6 +98,9 @@ public struct MutableMessageContent: @unchecked Sendable {
         self.isArchive = isArchive
         self.isCall = isCall
         self.volume = volume
+        self.ttl = ttl
+        self.replacementID = replacementID
+        self.isDeleted = isDeleted
         self.userInfo = userInfo
         self.ciphertext = ciphertext
     }
@@ -105,6 +117,7 @@ public struct MutableMessageContent: @unchecked Sendable {
         self.threadId = userInfo["thread-id"] as? String
         self.targetURL = userInfo["url"] as? String
         self.targetAppId = userInfo["appid"] as? String ?? userInfo["appId"] as? String
+        self.route = userInfo["route"] as? String
         self.targetMode = userInfo["mode"] as? String
         self.imageURL = userInfo["image"] as? String
         self.iconURL = userInfo["icon"] as? String
@@ -113,6 +126,9 @@ public struct MutableMessageContent: @unchecked Sendable {
         self.isArchive = (userInfo["isArchive"] as? String) == "1"
         self.isCall = (userInfo["call"] as? String) == "1"
         self.volume = userInfo["volume"] as? Double
+        self.ttl = (userInfo["ttl"] as? NSNumber)?.doubleValue
+        self.replacementID = userInfo["id"] as? String
+        self.isDeleted = (userInfo["delete"] as? String) == "1"
         
         if let levelString = userInfo["level"] as? String {
             self.level = MessageInterruptionLevel(rawValue: levelString) ?? .active

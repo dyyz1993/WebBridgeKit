@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收件箱</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+
+<style>
+/* === Inbox Page Styles === */
+
+/* Navigation bar */
+.inbox-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--wbk-spacing-md) var(--wbk-spacing-lg);
+}
+
+.inbox-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--wbk-radius-sm);
+  background: none;
+  border: none;
+  color: var(--wbk-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.inbox-nav-btn:active {
+  background: var(--wbk-background-tertiary);
+}
+
+.inbox-nav-btn-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+}
+
+.inbox-nav-btn-hint span {
+  font: var(--wbk-text-metadata);
+  color: var(--wbk-text-secondary);
+}
+
+/* Page title */
+.inbox-page-title {
+  font: var(--wbk-text-display);
+  color: var(--wbk-text);
+  padding: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-md);
+  text-wrap: balance;
+  word-break: keep-all;
+}
+
+/* Search bar */
+.inbox-search {
+  margin: 0 var(--wbk-spacing-lg) var(--wbk-spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  border-radius: var(--wbk-radius-md);
+  border: 1px solid var(--wbk-separator);
+}
+
+.inbox-search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--wbk-placeholder);
+}
+
+.inbox-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: var(--wbk-text-body);
+  color: var(--wbk-text);
+}
+
+.inbox-search-input::placeholder {
+  color: var(--wbk-placeholder);
+}
+
+/* Filter pills */
+.inbox-filters {
+  display: flex;
+  flex-nowrap;
+  overflow-x: auto;
+  gap: var(--wbk-spacing-sm);
+  padding: 0 var(--wbk-spacing-lg) var(--wbk-spacing-md);
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.inbox-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.inbox-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--wbk-radius-md);
+  border: none;
+  font: var(--wbk-text-body);
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing), color var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.inbox-pill--active {
+  background: var(--wbk-primary);
+  color: var(--wbk-text-on-color);
+}
+
+.inbox-pill--inactive {
+  background: var(--wbk-badge-background);
+  color: var(--wbk-badge-text);
+}
+
+.inbox-pill:active {
+  opacity: 0.7;
+}
+
+/* Group header */
+.inbox-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-xs);
+  padding: var(--wbk-spacing-lg) var(--wbk-spacing-lg) var(--wbk-spacing-sm);
+}
+
+.inbox-group-label {
+  font: var(--wbk-text-section-title);
+  color: var(--wbk-text);
+}
+
+.inbox-group-label--has-unread {
+  font-weight: 700;
+  color: var(--wbk-text);
+}
+
+.inbox-group-meta {
+  font: var(--wbk-text-metadata);
+  color: var(--wbk-text-tertiary);
+}
+
+.inbox-group-unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-primary-soft);
+  color: var(--wbk-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.inbox-group-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  color: var(--wbk-text-tertiary);
+  transition: transform var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.inbox-group-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+/* Message list */
+.inbox-message-list {
+  padding: 0 var(--wbk-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--wbk-spacing-sm);
+}
+
+/* Message cell — border only, no shadow */
+.inbox-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wbk-spacing-md);
+  padding: var(--wbk-spacing-md) var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  border-radius: var(--wbk-radius-md);
+  border: 1px solid var(--wbk-separator);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.inbox-cell:active {
+  transform: scale(0.98);
+}
+
+/* Unread dot */
+.inbox-unread-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-primary);
+  margin-top: 5px;
+}
+
+.inbox-unread-dot--read {
+  background: transparent;
+}
+
+/* Cell content */
+.inbox-cell-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.inbox-cell-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wbk-spacing-sm);
+  margin-bottom: var(--wbk-spacing-xs);
+}
+
+/* Source pills */
+.inbox-source-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--wbk-radius-full);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.inbox-source-pill--apns {
+  background: var(--wbk-primary-soft);
+  color: var(--wbk-primary);
+}
+
+.inbox-source-pill--bark {
+  background: var(--wbk-success-soft);
+  color: var(--wbk-success);
+}
+
+.inbox-source-pill--bridge {
+  background: var(--wbk-warning-soft);
+  color: var(--wbk-warning);
+}
+
+.inbox-source-pill--system {
+  background: var(--wbk-background-tertiary);
+  color: var(--wbk-text-secondary);
+}
+
+/* Cell time */
+.inbox-cell-time {
+  font: var(--wbk-text-caption);
+  color: var(--wbk-text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Cell title */
+.inbox-cell-title {
+  font: var(--wbk-text-row-title);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.inbox-cell-title--read {
+  color: var(--wbk-text-secondary);
+}
+
+/* Cell body */
+.inbox-cell-body {
+  font: var(--wbk-text-metadata);
+  color: var(--wbk-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-clamp: 2;
+}
+
+.inbox-cell-body--read {
+  color: var(--wbk-text-tertiary);
+}
+
+/* FAB */
+.inbox-fab {
+  position: fixed;
+  bottom: 104px;
+  right: var(--wbk-spacing-xl);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-primary);
+  color: var(--wbk-text-on-color);
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--wbk-shadow-fab);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--wbk-duration-fast) var(--wbk-easing), background var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.inbox-fab:active {
+  transform: scale(0.92);
+  background: var(--wbk-primary-pressed);
+}
+
+.inbox-fab-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Empty state */
+.inbox-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--wbk-spacing-xxxl) var(--wbk-spacing-lg);
+  font: var(--wbk-text-caption);
+  color: var(--wbk-text-tertiary);
+}
+
+/* Bottom spacer */
+.inbox-bottom-spacer {
+  height: 100px;
+}
+</style>
+
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/>
+        <path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/>
+        <rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+
+    <!-- 1. Navigation Bar: check-mark-all left, empty right -->
+    <div class="inbox-nav">
+      <div class="inbox-nav-btn-hint">
+        <button class="inbox-nav-btn" aria-label="全部已读">
+          <i data-lucide="check-check" style="width:20px;height:20px;"></i>
+        </button>
+        <span>全部已读</span>
+      </div>
+      <div style="width:40px;"></div>
+    </div>
+
+    <!-- 2. Page Title -->
+    <h1 class="inbox-page-title">收件箱</h1>
+
+    <!-- 3. Search Bar -->
+    <div class="inbox-search">
+      <span class="inbox-search-icon">
+        <i data-lucide="search" style="width:18px;height:18px;"></i>
+      </span>
+      <input type="text" class="inbox-search-input" placeholder="搜索消息或发件人" aria-label="搜索消息或发件人">
+    </div>
+
+    <!-- 4. Filter Pills -->
+    <div class="inbox-filters" role="tablist" aria-label="消息筛选">
+      <button class="inbox-pill inbox-pill--active" role="tab" aria-selected="true">全部</button>
+      <button class="inbox-pill inbox-pill--inactive" role="tab" aria-selected="false">未读</button>
+      <button class="inbox-pill inbox-pill--inactive" role="tab" aria-selected="false">APNs</button>
+      <button class="inbox-pill inbox-pill--inactive" role="tab" aria-selected="false">Bark</button>
+      <button class="inbox-pill inbox-pill--inactive" role="tab" aria-selected="false">Bridge</button>
+      <button class="inbox-pill inbox-pill--inactive" role="tab" aria-selected="false">系统</button>
+    </div>
+
+    <!-- 5. MESSAGE GROUP 1: 推送通知 (3) · 2 未读 — Expanded -->
+    <div class="inbox-group-header">
+      <h2 class="inbox-group-label inbox-group-label--has-unread">推送通知</h2>
+      <span class="inbox-group-meta">3</span>
+      <span class="inbox-group-unread-badge">2 未读</span>
+      <span class="inbox-group-chevron" aria-hidden="true">
+        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+      </span>
+    </div>
+
+    <div class="inbox-message-list">
+
+      <!-- Message 1: APNs - UNREAD -->
+      <div class="inbox-cell" data-dom-id="msg-apns-deploy">
+        <span class="inbox-unread-dot" aria-label="未读"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--apns">APNs</span>
+            <span class="inbox-cell-time">05-08 14:30</span>
+          </div>
+          <p class="inbox-cell-title">新部署通知</p>
+          <p class="inbox-cell-body">应用已部署到生产环境，所有健康检查已通过</p>
+        </div>
+      </div>
+
+      <!-- Message 2: Bark - UNREAD -->
+      <div class="inbox-cell" data-dom-id="msg-bark-alert">
+        <span class="inbox-unread-dot" aria-label="未读"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--bark">Bark</span>
+            <span class="inbox-cell-time">05-08 12:15</span>
+          </div>
+          <p class="inbox-cell-title">服务器告警</p>
+          <p class="inbox-cell-body">生产服务器 CPU 使用率超过 90%，请立即检查</p>
+        </div>
+      </div>
+
+      <!-- Message 3: Bridge - READ (dimmer) -->
+      <div class="inbox-cell" data-dom-id="msg-bridge-build">
+        <span class="inbox-unread-dot inbox-unread-dot--read" aria-hidden="true"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--bridge">Bridge</span>
+            <span class="inbox-cell-time">05-07 09:30</span>
+          </div>
+          <p class="inbox-cell-title inbox-cell-title--read">构建完成</p>
+          <p class="inbox-cell-body inbox-cell-body--read">iOS 构建 #42 成功完成，准备分发</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 6. MESSAGE GROUP 2: 系统消息 (2) — Collapsed -->
+    <div class="inbox-group-header">
+      <h2 class="inbox-group-label">系统消息</h2>
+      <span class="inbox-group-meta">2</span>
+      <span class="inbox-group-chevron inbox-group-chevron--collapsed" aria-hidden="true">
+        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+      </span>
+    </div>
+
+    <!-- Collapsed messages (not visible, but present for structure) -->
+    <div class="inbox-message-list" style="display:none;">
+
+      <!-- Message 4: System - READ -->
+      <div class="inbox-cell" data-dom-id="msg-system-cache">
+        <span class="inbox-unread-dot inbox-unread-dot--read" aria-hidden="true"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--system">系统</span>
+            <span class="inbox-cell-time">05-06 18:00</span>
+          </div>
+          <p class="inbox-cell-title inbox-cell-title--read">缓存清理</p>
+          <p class="inbox-cell-body inbox-cell-body--read">自动清理移除了 12 个过期资源，释放 8.3 MB</p>
+        </div>
+      </div>
+
+      <!-- Message 5: System - READ -->
+      <div class="inbox-cell" data-dom-id="msg-system-update">
+        <span class="inbox-unread-dot inbox-unread-dot--read" aria-hidden="true"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--system">系统</span>
+            <span class="inbox-cell-time">05-05 10:00</span>
+          </div>
+          <p class="inbox-cell-title inbox-cell-title--read">应用更新</p>
+          <p class="inbox-cell-body inbox-cell-body--read">WebBridgeKit 已更新到版本 1.0.1</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 7. MESSAGE GROUP 3: Bridge 命令 (2) — Collapsed -->
+    <div class="inbox-group-header">
+      <h2 class="inbox-group-label">Bridge 命令</h2>
+      <span class="inbox-group-meta">2</span>
+      <span class="inbox-group-chevron inbox-group-chevron--collapsed" aria-hidden="true">
+        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+      </span>
+    </div>
+
+    <!-- Collapsed messages -->
+    <div class="inbox-message-list" style="display:none;">
+
+      <!-- Message 6: Bridge - READ -->
+      <div class="inbox-cell" data-dom-id="msg-bridge-token">
+        <span class="inbox-unread-dot inbox-unread-dot--read" aria-hidden="true"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--bridge">Bridge</span>
+            <span class="inbox-cell-time">05-04 16:45</span>
+          </div>
+          <p class="inbox-cell-title inbox-cell-title--read">口令解析</p>
+          <p class="inbox-cell-body inbox-cell-body--read">成功解析口令：MyApp，正在打开...</p>
+        </div>
+      </div>
+
+      <!-- Message 7: Bridge - READ -->
+      <div class="inbox-cell" data-dom-id="msg-bridge-manifest">
+        <span class="inbox-unread-dot inbox-unread-dot--read" aria-hidden="true"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--bridge">Bridge</span>
+            <span class="inbox-cell-time">05-04 14:20</span>
+          </div>
+          <p class="inbox-cell-title inbox-cell-title--read">Manifest 获取</p>
+          <p class="inbox-cell-body inbox-cell-body--read">远程 Manifest 获取成功，包含 15 个资源</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 8. MESSAGE GROUP 4: 调试日志 (1) — Collapsed -->
+    <div class="inbox-group-header">
+      <h2 class="inbox-group-label">调试日志</h2>
+      <span class="inbox-group-meta">1</span>
+      <span class="inbox-group-chevron inbox-group-chevron--collapsed" aria-hidden="true">
+        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+      </span>
+    </div>
+
+    <!-- Collapsed messages -->
+    <div class="inbox-message-list" style="display:none;">
+
+      <!-- Message 8: System - READ -->
+      <div class="inbox-cell" data-dom-id="msg-system-crash">
+        <span class="inbox-unread-dot inbox-unread-dot--read" aria-hidden="true"></span>
+        <div class="inbox-cell-content">
+          <div class="inbox-cell-top">
+            <span class="inbox-source-pill inbox-source-pill--system">系统</span>
+            <span class="inbox-cell-time">05-03 09:15</span>
+          </div>
+          <p class="inbox-cell-title inbox-cell-title--read">崩溃日志</p>
+          <p class="inbox-cell-body inbox-cell-body--read">检测到 SIGSEGV 崩溃，已生成报告</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 10. Empty state area -->
+    <div class="inbox-empty-state">没有更多消息</div>
+
+    <!-- Bottom Spacer for FAB + Tab Bar -->
+    <div class="inbox-bottom-spacer"></div>
+
+  </div>
+
+  <!-- 9. FAB -->
+  <button class="inbox-fab" aria-label="发送">
+    <i data-lucide="plus" class="inbox-fab-icon"></i>
+  </button>
+
+  <!-- Bottom Tab Bar — Inbox active -->
+  <nav class="wbk-tab-bar" role="tablist" aria-label="主导航">
+    <button class="wbk-tab" data-dom-id="tab-home" role="tab" aria-selected="false" aria-label="首页">
+      <span class="wbk-tab-icon">
+        <i data-lucide="house"></i>
+      </span>
+      <span class="wbk-tab-label">首页</span>
+    </button>
+    <button class="wbk-tab wbk-tab--active" data-dom-id="tab-inbox" role="tab" aria-selected="true" aria-label="收件箱">
+      <span class="wbk-tab-icon">
+        <i data-lucide="inbox"></i>
+        <span class="wbk-tab-badge" aria-hidden="true"></span>
+      </span>
+      <span class="wbk-tab-label">收件箱</span>
+    </button>
+    <button class="wbk-tab" data-dom-id="tab-discover" role="tab" aria-selected="false" aria-label="发现">
+      <span class="wbk-tab-icon">
+        <i data-lucide="compass"></i>
+      </span>
+      <span class="wbk-tab-label">发现</span>
+    </button>
+    <button class="wbk-tab" data-dom-id="tab-settings" role="tab" aria-selected="false" aria-label="设置">
+      <span class="wbk-tab-icon">
+        <i data-lucide="settings"></i>
+      </span>
+      <span class="wbk-tab-label">设置</span>
+    </button>
+  </nav>
+
+</div>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "slug": "tab-bar",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["navigation", "bottom-navigation"],
+  "variantDimensions": ["activeTab"],
+  "representativeVariants": [
+    { "name": "首页激活", "props": { "activeTab": "home" } },
+    { "name": "收件箱激活", "props": { "activeTab": "inbox" } }
+  ],
+  "anatomy": [
+    { "name": "tabBar", "role": "container", "type": "element" },
+    { "name": "tab", "role": "tab button", "type": "array" },
+    { "name": "icon", "role": "tab icon", "type": "element" },
+    { "name": "label", "role": "tab label", "type": "element" },
+    { "name": "badge", "role": "unread badge", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "height": 83,
+    "paddingTop": 8,
+    "paddingBottom": 34,
+    "iconSize": 23,
+    "labelSize": 11,
+    "backgroundColor": { "ref": "--color-bg" },
+    "backdropFilter": "blur(20px)",
+    "activeColor": { "ref": "--color-primary" },
+    "inactiveColor": { "ref": "--wbk-text-tertiary" }
+  },
+  "usageHints": ["底部 4 个 Tab：首页/收件箱/发现/设置", "激活 Tab 使用 primary 颜色", "收件箱 Tab 可显示未读小红点"],
+  "doNotInvent": ["不要改变底部安全区域 34px 的外间距", "不要在不同 Tab 间添加装饰性分割线"],
+  "unknowns": []
+}

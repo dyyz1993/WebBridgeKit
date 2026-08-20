@@ -1,0 +1,27 @@
+{
+  "slug": "progress-bar",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["progress", "storage-bar"],
+  "variantDimensions": ["value", "color"],
+  "representativeVariants": [
+    { "name": "缓存使用进度", "props": { "value": 48, "color": "primary" } },
+    { "name": "完成进度", "props": { "value": 100, "color": "success" } }
+  ],
+  "anatomy": [
+    { "name": "track", "role": "background track", "type": "element" },
+    { "name": "fill", "role": "filled progress", "type": "element" },
+    { "name": "label", "role": "stat label", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "trackHeight": 8,
+    "trackRadius": 4,
+    "trackColor": { "ref": "--wbk-background-tertiary" },
+    "fillRadius": 4,
+    "animationDuration": "0.4s"
+  },
+  "usageHints": ["缓存仪表盘中使用", "标签显示 '已用 48% (2.4 MB / 50 MB)'"],
+  "doNotInvent": ["不要添加圆形进度变体", "不要添加不确定进度条动画"],
+  "unknowns": []
+}

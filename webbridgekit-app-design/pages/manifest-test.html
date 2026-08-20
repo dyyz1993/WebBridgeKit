@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifest 缓存测试</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/><path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/><rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/><rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+
+    <!-- Nav Header -->
+    <header class="flex items-center justify-between px-4 py-3" style="background: var(--wbk-background);">
+      <button class="flex items-center gap-1.5 py-1" style="color: var(--wbk-primary);" data-dom-id="nav-back" aria-label="返回调试面板">
+        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        <span style="font: var(--wbk-text-body); color: var(--wbk-primary);">调试面板</span>
+      </button>
+      <h1 style="font: var(--wbk-text-section-title); color: var(--wbk-text);">Manifest 缓存测试</h1>
+      <div class="w-16"></div>
+    </header>
+
+    <div class="px-4">
+
+      <!-- Test Header with Run Button -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 style="font: var(--wbk-text-section-title); color: var(--wbk-text);">测试用例</h2>
+        <button class="flex items-center gap-1.5 px-3 py-1.5" style="background: var(--wbk-primary); border-radius: var(--wbk-radius-md); color: var(--wbk-text-on-color); font: var(--wbk-text-button); font-size: 13px;" data-dom-id="run-all-tests">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i>
+          <span>运行全部</span>
+        </button>
+      </div>
+
+      <!-- Test Summary Card -->
+      <div class="flex gap-2 mb-5">
+        <div class="flex-1 flex flex-col items-center py-3" style="background: var(--wbk-success-soft); border-radius: var(--wbk-radius-md);">
+          <div class="flex items-center justify-center mb-1" style="width: 24px; height: 24px; border-radius: var(--wbk-radius-full); background: var(--wbk-success);">
+            <i data-lucide="check" class="w-3.5 h-3.5" style="color: var(--wbk-text-on-color);"></i>
+          </div>
+          <span class="whitespace-nowrap" style="font-size: 20px; font-weight: 700; color: var(--wbk-success); font-variant-numeric: tabular-nums;">3</span>
+          <span class="whitespace-nowrap" style="font: var(--wbk-text-caption); color: var(--wbk-success);">通过</span>
+        </div>
+        <div class="flex-1 flex flex-col items-center py-3" style="background: var(--wbk-error-soft); border-radius: var(--wbk-radius-md);">
+          <div class="flex items-center justify-center mb-1" style="width: 24px; height: 24px; border-radius: var(--wbk-radius-full); background: var(--wbk-error);">
+            <i data-lucide="x" class="w-3.5 h-3.5" style="color: var(--wbk-text-on-color);"></i>
+          </div>
+          <span class="whitespace-nowrap" style="font-size: 20px; font-weight: 700; color: var(--wbk-error); font-variant-numeric: tabular-nums;">0</span>
+          <span class="whitespace-nowrap" style="font: var(--wbk-text-caption); color: var(--wbk-error);">失败</span>
+        </div>
+        <div class="flex-1 flex flex-col items-center py-3" style="background: var(--wbk-warning-soft); border-radius: var(--wbk-radius-md);">
+          <div class="flex items-center justify-center mb-1" style="width: 24px; height: 24px; border-radius: var(--wbk-radius-full); background: var(--wbk-warning);">
+            <i data-lucide="clock" class="w-3.5 h-3.5" style="color: var(--wbk-text-on-color);"></i>
+          </div>
+          <span class="whitespace-nowrap" style="font-size: 20px; font-weight: 700; color: var(--wbk-warning); font-variant-numeric: tabular-nums;">1</span>
+          <span class="whitespace-nowrap" style="font: var(--wbk-text-caption); color: var(--wbk-warning);">等待中</span>
+        </div>
+      </div>
+
+      <!-- Test Case List -->
+      <div class="flex flex-col gap-3 mb-6">
+
+        <!-- Test 1: Passed -->
+        <div class="flex items-start gap-3 px-3.5 py-3" style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); box-shadow: var(--wbk-shadow-sm);">
+          <div class="flex items-center justify-center shrink-0 mt-0.5" style="width: 24px; height: 24px; border-radius: var(--wbk-radius-full); background: var(--wbk-success);">
+            <i data-lucide="check" class="w-3.5 h-3.5" style="color: var(--wbk-text-on-color);"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate" style="font: var(--wbk-text-row-title); font-size: 15px; font-weight: 500; color: var(--wbk-text);">获取远程 Manifest</p>
+              <span class="shrink-0 whitespace-nowrap" style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-tertiary);">89ms</span>
+            </div>
+            <p class="mt-1" style="font-size: 12px; color: var(--wbk-text-secondary); line-height: 1.4;">成功获取包含 15 个资源的 manifest</p>
+          </div>
+        </div>
+
+        <!-- Test 2: Passed -->
+        <div class="flex items-start gap-3 px-3.5 py-3" style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); box-shadow: var(--wbk-shadow-sm);">
+          <div class="flex items-center justify-center shrink-0 mt-0.5" style="width: 24px; height: 24px; border-radius: var(--wbk-radius-full); background: var(--wbk-success);">
+            <i data-lucide="check" class="w-3.5 h-3.5" style="color: var(--wbk-text-on-color);"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate" style="font: var(--wbk-text-row-title); font-size: 15px; font-weight: 500; color: var(--wbk-text);">缓存写入验证</p>
+              <span class="shrink-0 whitespace-nowrap" style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-tertiary);">12ms</span>
+            </div>
+            <p class="mt-1" style="font-size: 12px; color: var(--wbk-text-secondary); line-height: 1.4;">资源已正确写入本地缓存</p>
+          </div>
+        </div>
+
+        <!-- Test 3: Passed -->
+        <div class="flex items-start gap-3 px-3.5 py-3" style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); box-shadow: var(--wbk-shadow-sm);">
+          <div class="flex items-center justify-center shrink-0 mt-0.5" style="width: 24px; height: 24px; border-radius: var(--wbk-radius-full); background: var(--wbk-success);">
+            <i data-lucide="check" class="w-3.5 h-3.5" style="color: var(--wbk-text-on-color);"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate" style="font: var(--wbk-text-row-title); font-size: 15px; font-weight: 500; color: var(--wbk-text);">离线读取验证</p>
+              <span class="shrink-0 whitespace-nowrap" style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-tertiary);">34ms</span>
+            </div>
+            <p class="mt-1" style="font-size: 12px; color: var(--wbk-text-secondary); line-height: 1.4;">断网状态下成功读取缓存</p>
+          </div>
+        </div>
+
+        <!-- Test 4: Pending -->
+        <div class="flex items-start gap-3 px-3.5 py-3" style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); box-shadow: var(--wbk-shadow-sm);">
+          <div class="flex items-center justify-center shrink-0 mt-0.5" style="width: 24px; height: 24px; border-radius: var(--wbk-radius-full); background: var(--wbk-warning);">
+            <i data-lucide="clock" class="w-3.5 h-3.5" style="color: var(--wbk-text-on-color);"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate" style="font: var(--wbk-text-row-title); font-size: 15px; font-weight: 500; color: var(--wbk-text);">版本比对测试</p>
+              <span class="shrink-0 whitespace-nowrap" style="font: var(--wbk-text-mono-meta); color: var(--wbk-text-tertiary);">--</span>
+            </div>
+            <p class="mt-1" style="font-size: 12px; color: var(--wbk-text-secondary); line-height: 1.4;">等待执行</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3 pb-8">
+        <button class="flex-1 flex items-center justify-center gap-1.5 py-3" style="background: var(--wbk-card-background); border-radius: var(--wbk-radius-md); color: var(--wbk-primary); font: var(--wbk-text-button); font-size: 14px; box-shadow: var(--wbk-shadow-sm);" data-dom-id="export-report">
+          <i data-lucide="file-down" class="w-4 h-4"></i>
+          <span>导出报告</span>
+        </button>
+        <button class="flex-1 flex items-center justify-center gap-1.5 py-3" style="border: 1px solid var(--wbk-border); border-radius: var(--wbk-radius-md); color: var(--wbk-text-secondary); font: var(--wbk-text-button); font-size: 14px; background: transparent;" data-dom-id="reset-results">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          <span>重置结果</span>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filter Pill — WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.specimen { display: flex; flex-direction: column; gap: var(--space-sm); }
+.stage { display: flex; flex-direction: column; gap: var(--space-sm); }
+.story { display: flex; gap: var(--space-sm); align-items: center; }
+.story-label { font: var(--wbk-text-caption); color: var(--color-text-secondary); min-width: 56px; white-space: nowrap; flex-shrink: 0; }
+.rail { display: flex; gap: var(--space-sm); align-items: center; overflow-x: auto; padding: 0 0 2px; flex: 1; min-width: 0; }
+/* @component-css-start */
+/* Component definitions — extracted to components.css by deterministic script */
+.filter-pill { display: inline-flex; align-items: center; justify-content: center; height: var(--wbk-filter-pill-height); min-width: var(--wbk-filter-pill-min-width); padding: 0 var(--wbk-filter-pill-horizontal-padding); border-radius: var(--radius-full); white-space: nowrap; font: var(--wbk-text-metadata); cursor: pointer; border: none; transition: background .15s; flex-shrink: 0; }
+.filter-pill.active { background: var(--color-primary); color: var(--wbk-text-on-color); }
+.filter-pill.active:hover { filter: brightness(1.08); }
+.filter-pill.inactive { background: var(--wbk-badge-background); color: var(--wbk-badge-text); }
+.filter-pill.inactive:hover { filter: brightness(1.08); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+<div class="stage">
+<div class="story">
+<span class="story-label">激活标签</span>
+<div class="rail">
+<button class="filter-pill active">全部</button>
+<button class="filter-pill active">文章</button>
+<button class="filter-pill active">视频</button>
+<button class="filter-pill active">音频</button>
+<button class="filter-pill active">项目</button>
+</div>
+</div>
+<div class="story">
+<span class="story-label">非激活标签</span>
+<div class="rail">
+<button class="filter-pill inactive">全部</button>
+<button class="filter-pill inactive">文章</button>
+<button class="filter-pill inactive">视频</button>
+<button class="filter-pill inactive">音频</button>
+<button class="filter-pill inactive">项目</button>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

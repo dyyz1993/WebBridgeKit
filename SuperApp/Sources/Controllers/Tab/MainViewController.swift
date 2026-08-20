@@ -212,6 +212,7 @@ class MainViewController: BaseViewController<MainViewModel> {
         Log.debug("viewDidAppear", category: .ui)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
+            guard !ProcessInfo.processInfo.isWebBridgeKitUITesting else { return }
             PassphraseManager.shared.checkClipboard(from: self)
             self.checkClipboardForCommand()
         }
@@ -485,8 +486,8 @@ class MainViewController: BaseViewController<MainViewModel> {
             }
             return
         }
-        if UserDefaults.standard.bool(forKey: "EnableLastAppMemory") {
-            UserDefaults.standard.set(url.absoluteString, forKey: "LastOpenedURL")
+        if UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp) {
+            UserDefaults.standard.set(url.absoluteString, forKey: SettingsPreferenceKeys.lastOpenedURL)
             UserDefaults.standard.synchronize()
         }
         WebBrowserManager.shared.openBrowser(

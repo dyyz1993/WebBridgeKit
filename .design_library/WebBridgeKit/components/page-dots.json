@@ -1,0 +1,30 @@
+{
+  "slug": "page-dots",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["page-indicator", "page-dots", "carousel-dots"],
+  "variantDimensions": ["dotCount"],
+  "representativeVariants": [
+    { "name": "3 页", "props": { "dotCount": 3 } },
+    { "name": "5 页", "props": { "dotCount": 5 } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "dots wrapper", "type": "element" },
+    { "name": "dot", "role": "single dot", "type": "element" },
+    { "name": "dotActive", "role": "current page dot", "type": "element" }
+  ],
+  "structurePatterns": {
+    "dotSize": 6,
+    "activeDotSize": 6,
+    "activeDotWidth": 18,
+    "dotRadius": 3,
+    "dotColor": { "ref": "--color-bg-tertiary" },
+    "activeDotColor": { "ref": "--color-primary" },
+    "dotGap": 6,
+    "containerHeight": 24
+  },
+  "usageHints": ["引导页、轮播图分页指示器", "active dot 使用胶囊形，其余为圆形"],
+  "doNotInvent": ["不要添加数字标签", "不要添加动画过渡"],
+  "unknowns": []
+}

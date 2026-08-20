@@ -6,15 +6,30 @@
 //
 
 import WebKit
+import os.log
 
 // MARK: - WKNavigationDelegate - Auto-Capture by Rules
 extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 处理导航策略，防止系统弹窗和外部跳转
     public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        decisionHandler(navigationPolicy(for: navigationAction, in: webView))
+    }
+
+    @available(iOS 13.0, *)
+    public func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        preferences: WKWebpagePreferences,
+        decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void
+    ) {
+        preferences.allowsContentJavaScript = true
+        decisionHandler(navigationPolicy(for: navigationAction, in: webView), preferences)
+    }
+
+    private func navigationPolicy(for navigationAction: WKNavigationAction, in webView: WKWebView) -> WKNavigationActionPolicy {
         guard let url = navigationAction.request.url else {
-            decisionHandler(.allow)
-            return
+            return .allow
         }
 
         //  Security: Block dangerous URL schemes
@@ -25,26 +40,23 @@ extension WebBrowserViewController: WKNavigationDelegate {
             if blockedSchemes.contains(scheme) {
                 Log.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
                 StructuredLogger.shared.error("Blocked dangerous URL scheme: \(scheme) - \(url.absoluteString)", category: .navigation)
-                decisionHandler(.cancel)
-                return
+                return .cancel
             }
 
             if !allowedSchemes.contains(scheme) {
                 Log.warning("Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)", category: .general)
                 StructuredLogger.shared.warning("Blocked unknown URL scheme: \(scheme) - \(url.absoluteString)", category: .navigation)
-                decisionHandler(.cancel)
-                return
+                return .cancel
             }
         }
 
         if navigationAction.targetFrame == nil {
             webView.load(navigationAction.request)
-            decisionHandler(.cancel)
-            return
+            return .cancel
         }
 
         StructuredLogger.shared.debug("Allowed navigation: \(url.absoluteString)", category: .navigation)
-        decisionHandler(.allow)
+        return .allow
     }
 
     public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
@@ -153,6 +165,25 @@ extension WebBrowserViewController: WKNavigationDelegate {
     }
 
     // MARK: - Cache Support
+
+    /// Load a standard PWA without probing WebBridgeKit's resource manifest.
+    /// WKWebsiteDataStore.default() still persists cookies, localStorage,
+    /// IndexedDB, Cache Storage, and service-worker state.
+    public func loadURLDirect(_ url: URL, forceRefresh: Bool = false) {
+        performDirectLoad(url, forceRefresh: forceRefresh)
+    }
+
+    func performDirectLoad(_ url: URL, forceRefresh: Bool) {
+        os_log("Starting standard PWA navigation", log: OSLog.default, type: .info)
+        currentURL = url
+        loadStartTime = Date()
+        injectDebugScript(for: url)
+        updateCacheStatus(source: "LIVE")
+
+        let policy: URLRequest.CachePolicy = forceRefresh ? .reloadIgnoringLocalCacheData : .useProtocolCachePolicy
+        webView.load(URLRequest(url: url, cachePolicy: policy, timeoutInterval: 30))
+        StructuredLogger.shared.info("Loading standard PWA directly: \(url.absoluteString)", category: .navigation)
+    }
 
     /// 使用 Manifest 缓存加载 URL
     public func loadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
@@ -281,14 +312,19 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
     /// 加载错误提示页面
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        let nsError = error as NSError
+        os_log("PWA navigation failed: %{public}@/%{public}ld", log: OSLog.default, type: .error, nsError.domain, nsError.code)
         HUDService.shared.showError(withStatus: error.localizedDescription)
     }
 
     public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        let nsError = error as NSError
+        os_log("PWA provisional navigation failed: %{public}@/%{public}ld", log: OSLog.default, type: .error, nsError.domain, nsError.code)
         HUDService.shared.showError(withStatus: error.localizedDescription)
     }
 
     public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        os_log("PWA provisional navigation started", log: OSLog.default, type: .info)
         loadStartTime = Date()
         HUDService.shared.show()
     }

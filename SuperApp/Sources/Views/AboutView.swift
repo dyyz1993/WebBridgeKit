@@ -2,7 +2,7 @@ import SwiftUI
 import WebBridgeKit
 
 struct AboutView: View {
-    private let appIcon: UIImage? = Bundle.main.icon
+    private let appIcon: UIImage? = Bundle.main.icon ?? WebBridgeKitBrand.image
     private let appName: String = Bundle.main.displayName
     private let versionText: String = {
         if let version = Bundle.main.version, let build = Bundle.main.build {
@@ -29,6 +29,7 @@ struct AboutView: View {
         .appListStyle()
         .listStyle(InsetGroupedListStyle())
         .navigationTitle(L10n.tr("about.title"))
+        .accessibilityIdentifier("about.root")
         .onAppear { appeared = true }
     }
 
@@ -40,10 +41,8 @@ struct AboutView: View {
                         Image(uiImage: icon)
                             .resizable()
                     } else {
-                        Image(uiImage: LucideIcon.appFill.templateImage(pointSize: 60, weight: .light) ?? UIImage())
+                        Image(uiImage: WebBridgeKitBrand.image ?? UIImage())
                             .resizable()
-                            .renderingMode(.template)
-                            .foregroundColor(Color.appPrimary)
                     }
                 }
                 .aspectRatio(contentMode: .fit)
@@ -93,10 +92,11 @@ struct AboutView: View {
     private var licenseSection: some View {
         Section(header: Text(L10n.tr("about.section.license")).font(Font.app(ThemeTokens.Typography.headline))) {
             NavigationLink(destination: ThirdPartyLicensesWrapperView()) {
-                Text("MIT License")
+                Text(L10n.tr("about.third_party_licenses"))
                     .font(Font.app(ThemeTokens.Typography.callout))
                     .foregroundColor(Color.appPrimary)
             }
+            .accessibilityIdentifier("about.cell.license.0")
             .listRowBackground(Color.appCardBackground)
         }
     }

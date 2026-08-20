@@ -1,0 +1,27 @@
+{
+  "slug": "web-view",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["webview", "browser", "content-area"],
+  "variantDimensions": ["hasProgressBar"],
+  "representativeVariants": [
+    { "name": "带进度条", "props": { "hasProgressBar": true } },
+    { "name": "纯内容", "props": { "hasProgressBar": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "web content area", "type": "element" },
+    { "name": "progressBar", "role": "loading progress indicator", "type": "optional" },
+    { "name": "content", "role": "web page content", "type": "element" }
+  ],
+  "structurePatterns": {
+    "progressBarHeight": 2,
+    "progressBarColor": { "ref": "--color-primary" },
+    "progressBarBackground": "transparent",
+    "contentBackground": { "ref": "--color-bg" },
+    "loadingPlaceholder": { "ref": "--color-bg-tertiary" }
+  },
+  "usageHints": ["应用内浏览器区域，对应源码 WebViewDisplayViewController", "顶部 2px 进度条指示加载状态"],
+  "doNotInvent": ["不要添加地址栏", "不要添加导航按钮"],
+  "unknowns": []
+}

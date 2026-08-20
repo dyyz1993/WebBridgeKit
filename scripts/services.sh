@@ -61,6 +61,75 @@ _wait_for_http_status() {
     return 1
 }
 
+_xml_escape() {
+    python3 -c 'import html, sys; print(html.escape(sys.stdin.read(), quote=True))'
+}
+
+_launchctl_domain() {
+    printf "gui/%s" "$UID"
+}
+
+_launchctl_label() {
+    printf "com.webbridgekit.local.%s" "$1"
+}
+
+_launchctl_plist() {
+    printf "%s/%s.plist" "$PID_DIR" "$1"
+}
+
+_bootout_service() {
+    local name="$1"
+    local label
+    local plist
+    label=$(_launchctl_label "$name")
+    plist=$(_launchctl_plist "$name")
+
+    launchctl bootout "$(_launchctl_domain)/$label" >/dev/null 2>&1 || true
+    if [ -f "$plist" ]; then
+        launchctl bootout "$(_launchctl_domain)" "$plist" >/dev/null 2>&1 || true
+    fi
+}
+
+_launch_service() {
+    local name="$1"
+    local script="$2"
+    local stdout="$3"
+    local stderr="$4"
+    local label
+    local plist
+    local escaped_script
+    label=$(_launchctl_label "$name")
+    plist=$(_launchctl_plist "$name")
+    escaped_script=$(printf "%s" "$script" | _xml_escape)
+
+    _bootout_service "$name"
+
+    cat > "$plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>$label</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>$escaped_script</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>$stdout</string>
+    <key>StandardErrorPath</key>
+    <string>$stderr</string>
+</dict>
+</plist>
+EOF
+
+    launchctl bootstrap "$(_launchctl_domain)" "$plist"
+}
+
 start_backend() {
     local pid
     pid=$(_port_pid "$SWIFT_PORT")
@@ -82,16 +151,16 @@ start_backend() {
         swift build 2>&1 | tail -3
     fi
 
-    SERVER_PORT=$SWIFT_PORT \
-    ADMIN_API_KEY=test-admin-key \
-    DATA_DIR="$PROJECT_ROOT/.data" \
-    nohup .build/debug/WebBridgeServer > "$PID_DIR/backend.log" 2>&1 < /dev/null &
-    echo $! > "$PID_DIR/backend.pid"
+    _launch_service "backend" \
+        "cd '$PROJECT_ROOT/Server' && SERVER_PORT=$SWIFT_PORT ADMIN_API_KEY=test-admin-key DATA_DIR='$PROJECT_ROOT/.data' exec .build/debug/WebBridgeServer" \
+        "$PID_DIR/backend.log" \
+        "$PID_DIR/backend.log"
 
     pid=$(_port_pid "$SWIFT_PORT")
     local status_code
     if status_code=$(_wait_for_http_status "http://localhost:$SWIFT_PORT/health" "200 204" 10); then
         pid=$(_port_pid "$SWIFT_PORT")
+        echo "$pid" > "$PID_DIR/backend.pid"
         ok "Backend running on :$SWIFT_PORT (PID $pid, /health -> $status_code)"
     else
         fail "Backend failed health check (/health -> $status_code). See $PID_DIR/backend.log"
@@ -110,7 +179,7 @@ start_http() {
 
     log "Starting test HTTP server on :$HTTP_PORT ..."
     cd "$PROJECT_ROOT"
-    nohup python3 -c "
+    _launch_service "http" "exec python3 - <<'PY'
 import http.server, socketserver, os
 os.chdir('$PROJECT_ROOT')
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -121,13 +190,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 ReusableTCPServer(('', $HTTP_PORT), Handler).serve_forever()
-" > "$PID_DIR/http.log" 2>&1 < /dev/null &
-    echo $! > "$PID_DIR/http.pid"
+PY
+" "$PID_DIR/http.log" "$PID_DIR/http.log"
 
     pid=$(_port_pid "$HTTP_PORT")
     local status_code
     if status_code=$(_wait_for_http_status "http://localhost:$HTTP_PORT/" "200" 10); then
         pid=$(_port_pid "$HTTP_PORT")
+        echo "$pid" > "$PID_DIR/http.pid"
         ok "Test HTTP server running on :$HTTP_PORT (PID $pid, / -> $status_code)"
     else
         fail "Test HTTP server failed health check (/ -> $status_code). See $PID_DIR/http.log"
@@ -146,7 +216,7 @@ start_prototype() {
 
     log "Starting prototype HTML server on :$PROTO_PORT ..."
     cd "$PROJECT_ROOT/docs/prototype"
-    nohup python3 -c "
+    _launch_service "prototype" "exec python3 - <<'PY'
 import http.server, socketserver, os
 os.chdir('$PROJECT_ROOT/docs/prototype')
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -156,13 +226,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 ReusableTCPServer(('', $PROTO_PORT), Handler).serve_forever()
-" > "$PID_DIR/prototype.log" 2>&1 < /dev/null &
-    echo $! > "$PID_DIR/prototype.pid"
+PY
+" "$PID_DIR/prototype.log" "$PID_DIR/prototype.log"
 
     pid=$(_port_pid "$PROTO_PORT")
     local status_code
     if status_code=$(_wait_for_http_status "http://localhost:$PROTO_PORT/index.html" "200" 10); then
         pid=$(_port_pid "$PROTO_PORT")
+        echo "$pid" > "$PID_DIR/prototype.pid"
         ok "Prototype server running on :$PROTO_PORT (PID $pid, /index.html -> $status_code)"
     else
         fail "Prototype server failed health check (/index.html -> $status_code). See $PID_DIR/prototype.log"
@@ -183,6 +254,7 @@ start_all() {
 stop_service() {
     local name="$1" port="$2" pidfile="$PID_DIR/$3.pid"
     local pid
+    _bootout_service "$3"
     pid=$(_port_pid "$port")
     if [ -n "$pid" ]; then
         log "Stopping $name (PID $pid, port $port) ..."

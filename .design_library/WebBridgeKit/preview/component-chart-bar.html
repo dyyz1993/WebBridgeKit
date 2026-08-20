@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Chart Bar - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; background:var(--wbk-surface); padding:12px; border-radius:var(--wbk-radius-card); box-shadow:var(--wbk-shadow-card); }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; }
+
+/* @component-css-start */
+.chart-bar { position:relative; display:flex; flex-direction:column; width:100%; }
+.chart-bar__grid { position:relative; flex:1; min-height:200px; }
+.chart-bar__y-label { position:absolute; left:0; font-size:11px; color:var(--wbk-text-tertiary); transform:translateY(-50%); line-height:1; }
+.chart-bar__grid-line { position:absolute; left:28px; right:0; height:1px; background:var(--wbk-background-tertiary); }
+.chart-bar__bars { position:absolute; left:28px; right:0; bottom:0; top:0; display:flex; align-items:flex-end; justify-content:space-around; }
+.chart-bar__bar { flex:1; max-width:32px; margin:0 4px; background:var(--wbk-primary); border-radius:4px 4px 0 0; }
+.chart-bar__x-labels { display:flex; justify-content:space-around; padding-left:28px; margin-top:8px; }
+.chart-bar__x-label { font-size:11px; color:var(--wbk-text-tertiary); text-align:center; flex:1; max-width:32px; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">推送数据 - 本周概览</div>
+    <div class="chart-bar">
+      <div class="chart-bar__grid" style="height:200px;">
+        <!-- Y-axis labels + grid lines -->
+        <span class="chart-bar__y-label" style="top:100%;">0</span>
+        <span class="chart-bar__y-label" style="top:75%;">25</span>
+        <span class="chart-bar__y-label" style="top:50%;">50</span>
+        <span class="chart-bar__y-label" style="top:25%;">75</span>
+        <span class="chart-bar__y-label" style="top:0%;">100</span>
+
+        <div class="chart-bar__grid-line" style="bottom:0%;"></div>
+        <div class="chart-bar__grid-line" style="bottom:25%;"></div>
+        <div class="chart-bar__grid-line" style="bottom:50%;"></div>
+        <div class="chart-bar__grid-line" style="bottom:75%;"></div>
+        <div class="chart-bar__grid-line" style="bottom:100%;"></div>
+
+        <!-- Bars -->
+        <div class="chart-bar__bars">
+          <div class="chart-bar__bar" style="height:40%;"></div>
+          <div class="chart-bar__bar" style="height:65%;"></div>
+          <div class="chart-bar__bar" style="height:30%;"></div>
+          <div class="chart-bar__bar" style="height:85%;"></div>
+          <div class="chart-bar__bar" style="height:55%;"></div>
+          <div class="chart-bar__bar" style="height:70%;"></div>
+          <div class="chart-bar__bar" style="height:45%;"></div>
+        </div>
+      </div>
+
+      <!-- X-axis labels -->
+      <div class="chart-bar__x-labels">
+        <span class="chart-bar__x-label">周一</span>
+        <span class="chart-bar__x-label">周二</span>
+        <span class="chart-bar__x-label">周三</span>
+        <span class="chart-bar__x-label">周四</span>
+        <span class="chart-bar__x-label">周五</span>
+        <span class="chart-bar__x-label">周六</span>
+        <span class="chart-bar__x-label">周日</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

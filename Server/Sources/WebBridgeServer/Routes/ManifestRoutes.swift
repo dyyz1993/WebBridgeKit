@@ -8,7 +8,7 @@ struct ManifestRoutes {
         let apiGroup = router.group("api/v1/manifests")
 
         apiGroup.get { _, _ in
-            try await services.manifestService.list()
+            await services.manifestService.list()
         }
 
         apiGroup.get("/:appId") { _, context in

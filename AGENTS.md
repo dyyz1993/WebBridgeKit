@@ -1,14 +1,291 @@
 # WebBridgeKit Project
 
+## Deliverable Boundaries
+
+This repository ships three distinct deliverables. Keep their responsibilities
+separate in source, documentation, and verification:
+
+- `Sources/` is the reusable WebBridgeKit SDK. It owns generic runtime models,
+  protocols, services, security, routing, cache, message, and Bridge behavior.
+- `AppTemplate/` is a safe minimal starter for developers building another host
+  app. It may demonstrate stable public SDK APIs, but it must not copy SuperApp
+  product screens, contain credentials, auto-start local servers, or expose a
+  showcase-heavy primary navigation.
+- `SuperApp/` is the complete WebBridgeKit product App. It owns end-user
+  journeys, product copy, navigation, Inbox, App Center, settings, and the
+  official-hosted/self-hosted experience.
+- `Server/` and `docs/api/` own shared gateway, push, approval, and callback
+  contracts. AppTemplate is not the self-hosted client.
+
+Before adding a reusable feature, prove the contract in `Sources/` or `Server/`,
+then complete the product journey in `SuperApp/`. Update AppTemplate only after
+the public API is stable and only with the minimum integration example. Run
+`bash tools/verify-deliverable-boundaries.sh` after boundary-related changes,
+`bash tools/run-template-gate.sh` for AppTemplate, and keep the SuperApp release
+gate independent.
+
+## Open Gateway Configuration
+
+WebBridgeKit is an open-source HTML app runtime. Users must be able to add or
+switch a compatible gateway without rebuilding the app. The host app must offer
+both QR-code import and paste-based import for gateway configuration.
+
+- The portable onboarding payload is a JSON document or `webbridgekit://gateway`
+  URL containing the gateway base URL, health endpoint, manifest endpoint,
+  display name, and production Ed25519 public-key identifier plus public key.
+  Never put APNs device tokens, API secrets, or private keys in a QR payload.
+- Validate every imported endpoint before saving it. Production gateways require
+  exact HTTPS origins; local HTTP endpoints are development-only and must never
+  be silently accepted in a release build.
+- Fetch and validate the health endpoint and every returned HTML app manifest,
+  then show a native confirmation screen. Persist and activate the gateway only
+  after the user confirms the successful validation report.
+- Store gateway settings separately from per-HTML-app manifests and permission
+  grants. Changing a gateway must not carry over trust or capability grants to a
+  different app identity.
+- Show the imported host and endpoints for explicit user confirmation. Users can
+  edit, switch, or remove a configured gateway at any time.
+- Verify the configured gateway locally first. Deploy to shanbox only after the
+  server exposes the generic gateway contract and local/simulator regression is
+  green.
+
+## Bark Reference Implementation
+
+A local checkout of the open-source Bark app lives at
+`/Users/xuyingzhou/Project/temporary/Bark/Bark/`. WebBridgeKit's
+Bark-compatible push surface is modeled on it — when push behavior, sound
+handling, or example-UX questions come up, consult this source first instead
+of guessing.
+
+Key references:
+
+- `Controller/HomeViewModel.swift` — `previews: [PreviewModel]` defines the
+  API example cards (title / description / `queryParameter` / preview image /
+  `moreInfo` link) that our capability catalog mirrors.
+- `Controller/SoundsViewModel.swift` + `SoundFileStorage` — ringtone
+  library: default sounds come from `Bundle.main` caf files; user imports
+  land in Library/Sounds (Bark uses its app-group container because it
+  keeps a real notification extension; we copy into the main container).
+- `Sounds/` — 32 alert tones at the app bundle root (AAC-in-CAF in the
+  repo; Apple's originals are Int16 PCM and can be re-extracted from the
+  local simulator runtime volume
+  `/Library/Developer/CoreSimulator/Volumes/iOS_*/…/RuntimeRoot/System/Library/Audio/UISounds{,/New}`).
+  Push sound names are sent extensionless (`sound=alarm`).
+- `notificationContentExtension/` — a real content-extension target that
+  renders rich banners; ours is still dead code
+  (`NotificationServiceExtension/` is not in any target).
+- `Bark/Intents/` — Siri shortcut intents for sending pushes.
+- `kBarkSoundPrefix` ("bark.sounds.30s", `Common/SharedDefines.swift`) —
+  Bark synthesizes 30-second looped versions of each sound so `call=1`
+  keeps ringing like a phone call.
+
+## APNs Push Delivery Rules (shanbox WebBridgeServer)
+
+Learned the hard way on 2026-08-15: the server answered `{"code":200,"Push sent"}` for weeks
+while Apple silently rejected every request. Rules that must not regress:
+
+- **APNs only speaks HTTP/2.** The AsyncHTTPClient version pinned on shanbox has no HTTP/2
+  support, so `APNsService` sends via `URLSession` (libcurl-backed, negotiates h2 via ALPN).
+  Do not "simplify" this back to `HTTPClient` — HTTP/1.1 requests get `403` with no visible
+  route error.
+- **Provider JWT (ES256) must be cached and reused.** Sign once, cache ~50 minutes (Apple
+  honors ≤1h), re-sign only on expiry. Signing per push triggers `429
+  TooManyProviderTokenUpdates`; the penalty survives 10 minutes of cooldown and needs
+  ~25 minutes of total silence (no pushes, no direct curl) to clear. Debugging curls that
+  mint fresh tokens count against the same key.
+- **`Push sent (200)` only means the route accepted the request.** Real delivery failures
+  print `APNs error: <code>` / `APNs send error:` to stdout, which is block-buffered under
+  supervisord — check `/var/log/supervisor/webbridgeserver.log` and expect flush delay.
+- **Isolating faults:** sign the JWT locally (python + cryptography, ES256 raw r||s) and
+  `curl --http2 https://api.sandbox.push.apple.com/3/device/<token>` with the real device
+  token. A fake token should return `400 BadDeviceToken` (auth OK); `403` means the
+  credentials/JWT are wrong; no response line in the server log means the request never
+  left correctly.
+- **Device registrations persist** to `Server/data/device-registrations.json` (created on
+  first register). Restarting the server is safe; losing the file means every phone must
+  re-activate push. 2026-08-19: shanbox now runs `APNS_ENVIRONMENT=production`
+  (supervisord.conf) because the daily-driver phone installed the TestFlight build, whose
+  tokens are production-only — sandbox tokens sent to the production endpoint (and vice
+  versa) fail with `400 BadDeviceToken`. All 11 stale sandbox tokens were pruned from the
+  registrations file (backup `device-registrations.json.bak-sandbox-cleanup`); note two
+  supervisord.conf backups (`.wbk-*-backup-*`) still carry the old sandbox value and would
+  regress the endpoint if restored. If a dev-signed build is ever reinstalled on a test
+  phone, its sandbox token will 400 against production — flip the env or add a per-token
+  strategy before mixing fleets again.
+- **Named push sounds require `UIBackgroundModes: remote-notification`** (set via
+  `INFOPLIST_KEY_UIBackgroundModes` in project.yml, mirroring Bark). Without it,
+  background/killed-app delivery silently falls back to the default alert tone for EVERY
+  named sound — no error anywhere, Apple returns 200, and the files are fine
+  (verified byte-identical to Bark's). Learned 2026-08-16 after exhausting file formats
+  (PCM/AAC/IMA4, mono/stereo), payload minimization, and direct-to-Apple curls; a
+  minimal payload still failed until the background mode landed, then everything worked.
+  (Later refined 2026-08-17: the background mode was necessary but not sufficient —
+  the final root cause of the remaining fallbacks was the missing `.caf` extension
+  in the sound name; see the tracing table below.)
+  Foreground delivery dodges this via `PushAlertSoundPlayer` (AVAudioPlayer), which is
+  why foreground tests can pass while system-path sounds are broken.
+- Sound files: ship Bark's original `Sounds/*.caf` byte-identical; do NOT transcode —
+  hand-transcoded variants (mono IMA4, PCM) failed on device even though `afinfo`
+  showed valid formats.
+- **Inbox recording semantics (iOS):** a push is stored only when it arrives while the app
+  is foreground (`willPresent`) or the user taps the banner (`didReceive`). Background
+  delivery without a tap is lost to the Inbox until the `/ws/stream` SSE relay exists on
+  the Swift backend (currently 404). Design UI tests accordingly: return the app to the
+  foreground before the push is expected to land.
+- **China-region iPhones gate every fresh install** behind a「允许使用无线数据」dialog that
+  silently kills all app traffic. Real-device UI tests must auto-tap
+  「无线局域网与蜂窝网络」(see `RealDevicePushSmokeTests` alert handling); the test runner
+  process has its own copy of the same dialog.
+
+### Push Sound Tracing (三层日志追踪规范)
+
+When a push arrives but plays the wrong/default tone, do NOT guess — trace all three
+layers and diff against expectation. The notification sound on background/killed-app
+delivery is chosen by **SpringBoard** (the app executes zero code), so only system logs
+reveal the decision.
+
+**Layer 1 — server send log** (proves what Apple received):
+
+```bash
+ssh shanbox-jump "grep -a '\[APNs\] sending' /var/log/supervisor/webbridgeserver-error.log | tail -5"
+# → "[APNs] sending token=…d06e69 title=X sound=alarm level=nil"
+```
+
+**Layer 2 — device arrival & presentation verdict** (USB connection required):
+
+```bash
+nohup timeout 60 idevicesyslog > /tmp/syslog.txt 2>/dev/null &
+# ...send a push, wait ~10s, then:
+grep -a "sirens" /tmp/syslog.txt | grep -a webbridgekit
+```
+
+**Layer 3 — the exact file the speaker played**:
+
+```bash
+grep -a "soundFileURL" /tmp/syslog.txt | grep -aoE "file://[^;]*caf" | sort -u
+```
+
+**Signature lines and what they mean:**
+
+| Log line | Meaning |
+|---|---|
+| `lights and sirens YES … DID play` | System presented with sound |
+| `lights and sirens NO` (rapid pushes) | **Coalescing suppression** — stacked notifications are silenced; clear Notification Center before testing |
+| `soundFileURL = file://…/<name>.caf` (container path) | Named sound resolved and played — the goal |
+| `soundFileURL = …/ToneLibrary/…Rebound.caf` + `toneIdentifier = "texttone:Rebound"` | Named sound IGNORED; system default text tone played |
+| `Falling back to default due missing setting in Preferences` + `correspondingToneIdentifier:((null))` | ToneLibrary could not map the payload sound to a tone and no per-app preference exists → default. On iOS 18.7.3 dev-signed/sandbox builds this fires deterministically for every named sound (2026-08-17 verdict, all formats/payloads/installs exhausted); production-signed apps (App Store Bark) are the control — if they play named tones, TestFlight distribution is the fix. **RESOLVED 2026-08-19: confirmed on a TestFlight (production-signed) build, phone locked, direct-to-Apple curl — SpringBoard played the named alarm tone correctly. Two rules are final: (1) production/TestFlight signing fixes the dev-signature ToneLibrary fallback; (2) the payload sound name must carry the `.caf` extension (`sound=alarm.caf`) — an extensionless `sound=alarm` on the same build and channel still falls back to the default tone. Foreground tests are invalid for this question because `PushAlertSoundPlayer` plays the file in-process.** |
+
+Also useful: `grep -a "Play sound for notification"` shows the full tone/vibration
+decision; `topic:()` empty hints the notification was not attributed to the app topic
+in ToneLibrary's lookup. `NSLog` from the app does NOT reach `idevicesyslog` reliably —
+do not rely on app-side print diagnostics for device-side questions.
+
+## Device Selection Policy (Simulator First)
+
+UI-related development and verification must default to the iOS Simulator:
+
+- **Simulator first, always.** Any work that can be verified in the simulator —
+  builds, UI tests, screenshots, visual regression, interactive acceptance,
+  cache/manifest/JSBridge flows against local services — must be completed and
+  signed off on the simulator before anything else is requested.
+- **Real device is the last step, not a shortcut.** Only ask for a physical
+  iPhone after every functional item that the simulator can cover has passed
+  there, and only for what the simulator genuinely cannot prove (APNs/Bark
+  end-to-end delivery, lock-screen/background notification behavior,
+  China-region network permission dialogs, phone-specific LAN reachability).
+  Never jump to a real device for work the simulator already covers.
+- **Sole exception: host resources.** If the Mac lacks free memory or disk
+  space to run the simulator reliably (see the 2026-08-10 disk-exhaustion
+  crash), free resources first — remove only rebuildable `/tmp/wbk-*`
+  DerivedData artifacts — then resume the simulator-first flow instead of
+  migrating the work to a real device.
+
+### Automation First, Device Assist Last（自动化自测优先，真机协助兜底）
+
+排查与修复必须按此顺序收敛，不得跳级请求用户真机：
+
+1. **能自动化的全部自动化**：本地/模拟器构建、单元与 UI 测试、`Server && swift test`、
+   各 verify 脚本、模拟器安装+启动+`scan-crash-logs.sh`、以及可直连 shanbox 的服务端
+   行为验证（curl 假设备 key + 服务端日志第一层证据）。这些都绿了才进入下一步。
+2. **明确列出「只有用户能做」的环节**并说明原因（如 TestFlight 上传需要 App Store Connect
+   凭据；APNs 锁屏/后台投递、来电式响铃、China 网络弹窗只能真机验证）。
+3. **请求用户真机协助时，必须同时给出**：
+   - **操作流程**：逐步的、可照做的步骤（打开哪个页面、点哪张卡、手机处于什么状态）；
+   - **预期现象**：每一步应该看到/听到什么（含判定标准，如「应持续响约 30 秒而非一声短响」）；
+   - **不达标时的取证方式**：如三层日志追踪规范的具体命令，让用户或下一轮排查有证据可查。
+4. 真机结果要回填到 `docs/verification/module-availability-verification.md` 或 AGENTS.md
+   对应章节，注明命令、通过/失败数与报告路径。
+
 ## Services
 
-Three services must be running for testing/verification:
+Three local services must be running for simulator development and local regression testing:
 
 | Service | Port | URL | Description |
 |---------|------|-----|-------------|
 | Backend (Swift) | 8080 | http://localhost:8080 | WebBridgeServer - Hummingbird, routes: /health /push /manifest /command |
 | Test HTTP | 8081 | http://localhost:8081 | Static file server for cache testing (project root + test_resources/) |
 | Prototype | 8083 | http://localhost:8083 | HTML prototype (index.html, v2-current-implementation.html) |
+
+### Environment Selection Rule
+
+Do **not** use one URL for every workflow. Pick the endpoint by device and evidence type:
+
+- **Simulator/local regression**: start `scripts/services.sh` and use `localhost` (`:8080`, `:8081`, `:8083`).
+- **Physical iPhone / Bark / public backend verification**: use `https://wbk.shanbox.19930810.xyz:8443`.
+- **Physical iPhone cache and JSBridge fixture pages**: use `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/`.
+- **HTML prototype comparison**: use local `http://localhost:8083` unless a specific public prototype deployment is being verified.
+
+Quick rule:
+
+- If the app is installed on the user's physical iPhone, prefer the public shanbox URLs because the phone cannot reliably reach agent-local `localhost`.
+- If the app is running in Simulator, CI, or local Xcode regression, keep using `scripts/services.sh` and the three local ports because tests depend on deterministic local fixtures and logs.
+- If the task says "Bark", "real push", "public server", "phone", or "shanbox", run the shanbox verification scripts instead of only checking local services.
+
+### Public shanbox Backend
+
+Do **not** replace the local services above with the public URL. They serve different verification scopes.
+
+### Server Version First（排查第一步）
+
+shanbox 是手工 rsync 的源码部署（`/root/WebBridgeKit` 无 git remote），「服务器没更新」曾多次
+造成假差异排查（2026-08-20：撤回/清角标卡 400、passive 带铃声，都是手机测到旧服务端代码）。
+规则：
+
+- 服务端在 `/health` 暴露 `version` 字段，来源 `Server/Sources/WebBridgeServer/Models/ServerVersion.swift`
+  的 `ServerVersion.current`。**每次向 shanbox 部署行为变更后必须 bump 该常量**并在注释里记一行变更摘要。
+- **排查任何「前端/手机行为与服务端代码不一致」的问题时，第一步先核对版本**：
+  `curl -k https://wbk.shanbox.19930810.xyz:8443/health | grep version`
+  版本不对 = 服务端没部署新代码，先部署再复测，不要直接怀疑客户端。
+- `tools/verify-shanbox-backend.sh` 会断言 `/health` 的 `version` 非空；本地 `curl http://localhost:8080/health`
+  同样适用。推送渲染目录页（`test_resources/push-render-catalog.html`）页脚会实时显示服务端版本。
+- 客户端修复（NSE、App 侧）与服务端修复是两条发布线：服务端部署 ≠ 手机更新。排查时分别核对
+  `/health` 版本（服务端线）和 TestFlight 构建时间（客户端线）。
+
+| Environment | URL | Use For | Do Not Use For |
+|-------------|-----|---------|----------------|
+| Local backend | http://localhost:8080 | Simulator tests, local route debugging, cache/manifest/command regression | Proving public deployment or phone reachability |
+| Local test HTTP | http://localhost:8081 | Static fixtures for cache tests and offline/cache HTML validation | Production/Bark route checks |
+| Local prototype | http://localhost:8083 | HTML design prototype comparison | Backend/API validation |
+| Public shanbox Swift backend | https://wbk.shanbox.19930810.xyz:8443 | Real-phone/server config, Bark-compatible route checks, public `/health`, `/register`, `/push`, `/test`, `/api/v1/commands` verification | Local fixture tests, prototype viewing, APNs delivery proof by itself |
+| Public shanbox static fixtures | https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/ | Real-phone cache/offline/JSBridge demo pages and externally reachable WebView fixtures | Backend, Bark, push, command, or admin route checks |
+| Public shanbox Node admin console | https://wbk.shanbox.19930810.xyz:8443/admin | Real-phone/browser admin console checks; public `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` verification | Local source-only admin checks |
+| Public tx HTML app gateway | https://cloak.xbrowser.dev:5801 | Production-style HTTPS gateway import, signed HTML app manifests, and physical-phone gateway reachability | APNs delivery, shanbox Bark routes, or static fixture hosting |
+| Local Node admin console | http://127.0.0.1:{dynamic-port} | Source-level admin console checks for `/admin`, `/admin-push`, `/admin/api/*`, `/ws/status`, `/messages`, `/packages` | Proving the Node admin console is deployed on public shanbox |
+
+Use the public URL when validating the deployed backend or configuring the app on a physical iPhone:
+
+```bash
+bash tools/verify-shanbox-backend.sh
+WBK_SHANBOX_URL=https://wbk.shanbox.19930810.xyz:8443 bash tools/verify-shanbox-backend.sh
+bash tools/verify-shanbox-supervision.sh
+bash tools/verify-node-admin-local.sh
+curl -k https://wbk.shanbox.19930810.xyz:8443/health
+curl -k https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html
+```
+
+The public shanbox backend check is route-level evidence only. It does not prove APNs registration, real Bark delivery, lock-screen/background notification behavior, phone LAN behavior, or process supervision. Use `tools/verify-shanbox-supervision.sh` for SSH-level process supervision evidence.
+
+`tools/verify-node-admin-local.sh` starts `Server/node/server.js` on a temporary local port and verifies the Node admin console routes locally. Public deployment is separately proven by `tools/verify-shanbox-backend.sh`, which checks the `wbk.shanbox` admin paths, and `tools/verify-shanbox-supervision.sh`, which checks the supervised `webbridge-node-admin` process.
 
 ### Management
 
@@ -23,7 +300,9 @@ bash scripts/services.sh logs      # Show recent logs
 
 Run `bash scripts/services.sh` without args for full usage.
 
-**IMPORTANT**: Always run `bash scripts/services.sh start` before testing the app in simulator. The backend is required for push notification, command handling, and manifest features to work correctly.
+`services.sh start/restart` uses per-user `launchctl` jobs under `.services/*.plist`, so the services keep running across separate agent shell commands. Use `bash scripts/services.sh stop` when the local verification session is finished.
+
+**IMPORTANT**: Always run `bash scripts/services.sh start` before testing the app in simulator. The local backend is required for simulator push-route, command, manifest, cache, and prototype workflows. Use `tools/verify-shanbox-backend.sh` separately for public deployment evidence.
 
 ## Build & Run
 
@@ -42,6 +321,55 @@ xcrun simctl launch booted com.webbridgekit.superapp
 
 - If using XcodeBuildMCP, use the installed XcodeBuildMCP skill before calling XcodeBuildMCP tools.
 
+## Project Generation
+
+- `WebBridgeKit.xcodeproj/` is generated and ignored. Treat `project.yml` as the source of truth.
+- After changing `project.yml`, run `xcodegen generate && pod install` before any build, device install, or verification gate. Skipping `pod install` after regeneration can make CocoaPods modules such as SnapKit, RxCocoa, RealmSwift, or ZIPFoundation fail to resolve.
+
+### Shadow-Source Traps (learned 2026-08-19, cost: a full day)
+
+XcodeGen compiles exactly what `project.yml` target `sources:` globs match.
+Files that match NO target are simply ignored — zero warnings, zero errors.
+That silence enabled a day-long ghost hunt:
+
+- The **NotificationServiceExtension target compiles the ROOT
+  `NotificationServiceExtension/` directory** — not
+  `SuperApp/NotificationServiceExtension/`. An earlier session edited the
+  SuperApp/ path (a plausible-looking guess), creating a shadow copy that
+  never compiled while every build stayed green. The shipped NSE silently
+  ran stale code: its keychain-based crypto read failed forever
+  ("密钥未在本机配置"), and its bundled call=1 ringtone synthesis was the
+  real SpringBoard respring culprit. Root cause found only by forensics,
+  not by reading source.
+
+Rules that must not regress:
+
+1. **NSE source of truth is ROOT `NotificationServiceExtension/`.** Never
+   create or edit `SuperApp/NotificationServiceExtension/` (deleted
+   2026-08-19; do not resurrect it). The same trap previously bit the
+   entitlements files (root vs SuperApp copies must stay identical).
+2. **"Edited the code but behavior is unchanged" → suspect target
+   membership FIRST, before process caches or restarts:**
+   `grep '<File>.swift in Sources' WebBridgeKit.xcodeproj/project.pbxproj`
+   (0 matches = your edit compiled into nothing).
+3. **Verify shipped binaries, not source:** App Store/TestFlight IPAs are
+   FairPlay-encrypted (useless for `strings`); use the unencrypted archive
+   products instead:
+   `strings -a /tmp/wbk-archive/.../PlugIns/*.appex/* | grep <marker>`
+   Every NSE change should ship with an ASCII marker string worth grepping.
+   **Marker 必须≥16 字节**（2026-08-20 教训）：Swift 小字符串优化会把 ≤15 字节的
+   字面量编码成立即数、不落数据段，`strings` 永远看不到（`wbk.sounds.30s` 14 字节
+   在二进制里存在却 0 命中）。此时改查 dSYM 符号：
+   `strings -a <dSYM>/.../DWARF/<name> | grep <funcName>`——函数名在 DWARF 里
+   保留，`applyLongRingtone`/`loopToDuration` 等符号在场即证明代码进包。
+4. The NSE must stay **self-contained** (no `import WebBridgeKit`) —
+   importing the framework drags its CocoaPods graph into the extension
+   target. Crypto lives inline in `PushCrypto.swift`, mirroring the
+   `PushCipher` contract locked by `PushCipherContractTests`.
+5. Multi-tier fallbacks (server history, app-group plist) can MASK a dead
+   tier for days. When a tier's code is touched, verify THAT tier's
+   artifact directly (rule 3), not just the user-visible outcome.
+
 ## Project Structure
 
 - `Server/` - Swift Hummingbird backend (SPM)
@@ -50,6 +378,29 @@ xcrun simctl launch booted com.webbridgekit.superapp
 - `docs/prototype/` - HTML design prototypes
 - `scripts/` - Utility scripts (services.sh, test_server.py)
 - `docs/design-tokens.json` - Single source of truth for design tokens
+
+## DEBUG-Only Features (Debug 功能不进 Release 包)
+
+Debug 工具（调试中心、调试面板、Bridge 实验室、Web 缓存调试、Push 调试、协议跳转、
+导出诊断、Manifest 缓存用例）必须**编译期裁剪**，不能只隐藏入口。2026-08-20 实证发现
+`.debugCenter`/`.deepLinks` 路由与 AppDelegate `runalltests` 未门控，Debug 代码真实
+进入了 Release 二进制（不只是元数据残留），已修复并建立以下规则：
+
+1. **文件级 `#if DEBUG`**：DEBUG-only 的视图/VM/控制器整个文件包 `#if DEBUG ... #endif`。
+   目前覆盖：`Views/DebugCenter/`、`Views/BridgeLab/`、`Views/WebCache/`、`Views/TokenPush/`、
+   `Views/DeepLinks/`、`Views/DiagnosticsView.swift`、`Controllers/Debug/`（6 个）、
+   `ManifestCacheDemo.swift`。
+2. **路由 case + handler 门控**：`TabBarController` 的 debug case 用 `#if DEBUG` +
+   `#else showAppShellInfo(...)` 回退文案（Release 被路由到时给提示而不是静默）；
+   `handleXxxAction` 私有 handler 同样包裹（含 `PWAAppCenterViewController.handleTokenPushAction`）。
+3. **入口门控**：设置「开发者」分组等入口行 `#if DEBUG`（`SettingsViewModel.swift`）。
+4. **验证门**：`bash tools/verify-release-no-debug.sh`（不传参自动构建 Release 并扫描），
+   对二进制 `strings` 断言 18 个 marker（类型名 + 页面标题）0 命中；已挂进
+   `tools/run-release-gate.sh`（Archive 后扫描真机架构包）。**新增 DEBUG-only 页面时必须
+   往脚本 `MARKERS` 数组追加特征串**，否则门形同虚设。
+5. **Release 保留的例外**（面向用户而非开发者）：`cacheDashboard`（存储管理）。
+   `exportDiagnostics`（DiagnosticsView，已脱敏设计）当前是 DEBUG-only，将来面向用户
+   排障时可移出门控——那是产品决策，移动时同步删掉它的 MARKER。
 
 ## i18n
 
@@ -83,12 +434,109 @@ xcrun simctl launch booted com.webbridgekit.superapp
 - `Sources/Theme/LucideIcon.swift` — 50+ case enum mapping to Lucide IDs
 - `Sources/Theme/Lucide.swift` — UIImage extension for loading Lucide icons
 
+### WebBridgeKit Brand Icon Rules
+
+- The official WebBridgeKit brand mark is the full white-background bridge logo
+  in `SuperApp/Resources/branding/webbridgekit-mark.svg`: two rounded Web/native
+  surfaces, white inner panels, the original interface dots/tiles, and a bold
+  blue-violet bridge connector.
+- The official app-icon artwork is
+  `SuperApp/Resources/branding/webbridgekit-app-icon.svg`; all iPhone/iPad
+  PNG sizes live in `SuperApp/Sources/Assets.xcassets/AppIcon.appiconset` and
+  must preserve the same full logo artwork.
+- `SuperApp/Resources/branding/webbridgekit-approved-source.png` is the approved
+  white-background visual reference for raster exports. If the brand artwork is
+  revised, update this reference and regenerate the brand image set/AppIcon
+  sizes together.
+- Native product identity surfaces use the `WebBridgeKitBrand` image asset from
+  `SuperApp/Sources/Assets.xcassets/WebBridgeKitBrand.imageset`. Keep this
+  centralized instead of loading the old generic `appFill` icon for About,
+  Settings, notification previews, or brand fallbacks.
+- Product identity surfaces include the AppIcon, About header, Settings header,
+  notification app identity, Node admin header, and prototype About/Settings
+  hero cards. These must use the full bridge logo and its blue-violet palette
+  (`#4F6AF6` to `#8B5CF6`), including the white inner panels and interface
+  details. The approved white background is part of the primary identity asset.
+- Functional icons must remain semantic Lucide icons: navigation, search,
+  settings, cache types, permissions, push actions, and debug tools must not be
+  replaced with the brand mark.
+- `SuperApp/Resources/images/logo.svg` is a cache/static test fixture and now
+  uses the same full bridge logo. Keep its path and loading contract stable; use
+  the dedicated branding SVGs as the canonical product sources.
+- When changing the brand mark, update both SVG sources, regenerate the
+  AppIcon/brand image exports, update the product surfaces above, and verify
+  the image-set JSON plus all PNG dimensions before claiming completion.
+
 ## Testing
 
 - **Coverage**: ~87% (168 test files / 193 source files)
 - **UITesting**: `--ui-testing --show-component-catalog` launch arguments
 - **Component Catalog**: Settings → 框架展示 OR launch arg `--show-component-catalog`
 - **Visual Regression**: `tools/diff-screenshots.sh` (PIL-based, HTML report)
+
+## Essential Verification Scripts
+
+Use these scripts as the repeatable evidence source before declaring a module "available". Most scripts write reports/logs under `build/reports/`; treat those as verification artifacts, not source files to commit unless the user explicitly asks.
+
+### Basic Gates
+
+| Script | Purpose | Pass Signal | When To Run |
+|--------|---------|-------------|-------------|
+| `bash scripts/services.sh start` | Starts backend `:8080`, test HTTP `:8081`, prototype `:8083` | All 3 services running | Before simulator app tests, cache tests, manifest tests, push/command route checks |
+| `bash scripts/services.sh verify` | Curl health check for the 3 local services | Backend `/health` 200/204, test HTTP 200, prototype 200 | After starting services or when a network/cache/push feature looks broken |
+| `bash scripts/scan-crash-logs.sh --json` | Scans app crash logs, diagnostic reports, simulator logs, OOM/jetsam signals | JSON contains `"total": 0` | After launch, UI tests, real-device/simulator smoke, or when user asks about crashes |
+| `swiftlint --quiet` | SwiftLint quality gate | No output, exit 0 | Before every commit |
+| `bash tools/ci-lint.sh` | Design-system lint wrapper: colors, icons, fonts, `.opencode`, crash logs, token JSON, touch targets, deliverable boundaries | `17 passed, 0 failed`; warnings may remain documented debt | Before UI/design commits and release gates |
+
+### Module Regression Gates
+
+| Script / Command | Purpose | Pass Signal | Notes |
+|------------------|---------|-------------|-------|
+| `bash tools/run-cache-regression.sh` | Cache module regression: services, `CacheTests`, cache handler tests, cache dashboard UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
+| `bash tools/run-jsbridge-regression.sh` | JSBridge regression: core bridge tests, `BridgeTests`, handler tests, functional UI tests | `Summary: ... failed` must be 0 | Requires a booted simulator for the UI portion |
+| `xcodebuild test ... -only-testing:SuperAppUITests/ModuleAvailabilityTests` | Current information architecture/module availability UI gate | 14 tests, 0 failures | Verifies `Web`, `Push`, `Bridge`, real WebView JSBridge Promise execution, `Settings`, Debug Center concrete child entries, Debug Center diagnostics/network/manifest child-tool content/actions, Deep Links, About/Legal, appearance preferences, remember-last-app, iOS Settings handoff |
+| `bash tools/verify-module-availability-report.sh` | Guards `docs/verification/module-availability-verification.md` coverage: required sections, core modules, all `SettingsAction` entries, real WebView JSBridge evidence, Debug Center concrete-screen/content/action evidence, shanbox fixture evidence, shanbox command token semantics, and known unavailable markers | `100 passed, 0 failed` | Run after changing Settings navigation, module IA, availability docs, public fixture checks, shanbox command checks, or known unavailable status |
+| `cd Server && swift test` | Swift Hummingbird backend route semantics | All `Manifest Routes`, `Push Routes`, `Command Routes` tests pass | Does not prove public shanbox deployment or APNs delivery |
+
+### UI And Visual Gates
+
+| Script | Purpose | Pass Signal | Notes |
+|--------|---------|-------------|-------|
+| `bash tools/verify-inbox-accordion-animation.sh` | Animation gate for the inbox group accordion: builds, records the simulator screen while `InboxGroupAnimationTests` runs, then verifies each collapse/expand anchor produced a continuous multi-frame animation (no snap, no freeze) via frame-burst analysis | `Summary: N passed, 0 failed`, exit 0 | Requires a booted simulator (`WBK_ANIM_SIM`, default iPhone 17 Pro Max) and ffmpeg; `--analyze-only` re-verifies an existing recording; deep-scroll positions are verified manually — synthetic XCUITest interaction at scrolled positions races iOS 26 snapshot resolution |
+| `bash tools/run-ui-v4-regression.sh` | Aggregated UI v4 gate: services, SwiftLint, design lint, static visual checks, crash scan, screenshots, visual regression | `Summary: ... failed` must be 0 | Requires a booted simulator for screenshot/visual gates |
+| `bash tools/visual-checks.sh` | Static UI contract checks: UILabel wrapping, search placeholder, row/card/pill heights, empty-state action, hardcoded component colors | `FAIL=0` | Warnings are acceptable only if documented |
+| `bash tools/capture-screenshots.sh --build` | Builds/installs app, captures light/dark screenshots to `docs/screenshots/ui-redesign/` | Screenshots written successfully | Requires a booted simulator |
+| `bash tools/run-visual-regression.sh` | Compares screenshot directories with threshold, writes HTML/JSON diff report | Exit 0, no screenshots over threshold | Use `--threshold N`, `--output-dir PATH`, `--screenshots-dir PATH` as needed |
+| `bash tools/diff-screenshots.sh` | Low-level PIL screenshot diff engine | Exit 0 within threshold | Normally called by `run-visual-regression.sh` |
+
+### External, Release, And Device Gates
+
+| Script | Purpose | Pass Signal | Notes |
+|--------|---------|-------------|-------|
+| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, encoded Bark query paths, command token URL-safe payload semantics, `/health` server version exposure, and public Node admin routes | `28 passed, 0 failed, 0 unavailable` | Route-level and command-token semantic evidence only; fake device token does not prove APNs delivery |
+| `WBK_GATEWAY_URL=https://cloak.xbrowser.dev:5801 bash tools/verify-open-gateway.sh` | Verifies the portable gateway document, signed HTML app manifest shape, per-app lookup, health route, and anonymous mutation rejection | `5 passed, 0 failed` | Public HTTPS gateway evidence; this still does not prove APNs delivery |
+| `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` and `webbridge-node-admin` processes and whether they are supervised | `process=PASS, supervision=PASS, node_admin=PASS` | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; exits 1 if Swift backend or Node admin supervision is missing |
+| `bash tools/verify-shanbox-fixtures.sh` | Verifies public shanbox static fixture pages for physical-phone WebView/cache/JSBridge checks, including `bridge-hub.html`, `bridge-promise-smoke.html`, `cache-showcase.html`, `WebBridge.js`, manifest, CSS/JS/image resources | `18 passed, 0 failed` | Static reachability/content-marker evidence only; does not prove native Bridge execution, APNs delivery, or offline cache behavior on a physical iPhone |
+| `bash tools/verify-node-admin-local.sh` | Starts local `Server/node/server.js` and verifies Node admin, admin API, WebSocket status, messages, and packages routes | `11 passed, 0 failed` | Source/local evidence only; public deployment is covered by `verify-shanbox-backend.sh` |
+| `bash tools/run-real-device-smoke.sh` | Auto-discovers paired/available iPhone, builds for device, installs, launches `com.webbridgekit.superapp` | Production pass signal: `4 passed, 0 failed`; current Personal Team evidence: `1 passed, 2 failed` | Proves physical build/install/launch only, not APNs/Bark delivery; current failure is expected until a Push-capable Apple Developer Program team/profile is used |
+| `bash tools/verify-real-device-push-readiness.sh` | Verifies real-device push prerequisites: iPhone availability, backend/supervision, app install/launch, APNs entitlement, provisioning profile Push capability, token forwarding, default Bark server | Production pass signal: `0 failed`; current Personal Team evidence: `6 passed, 3 failed, 4 manual` | Current project is expected to fail under Personal Development Teams because Push Notifications requires an Apple Developer Program team/App ID/profile with `aps-environment`; manual notification receipt items must still be observed after automatic gates pass |
+| `bash tools/run-release-gate.sh` | Release readiness: services, SwiftLint, design lint, Debug build, crash scan, Release archive, no test HTML in app bundle | `Summary: ... failed` must be 0 | Use before release/archive handoff |
+| `bash tools/validate-cache-html.sh` | Validates cache-related HTML resources | Exit 0 | Use after changing test resources or cached HTML fixtures |
+
+### Availability Evidence Rules
+
+- Do not mark APNs registration, Bark end-to-end delivery, lock-screen/background notification behavior, or phone-specific LAN reachability as fully available from simulator-only evidence.
+- iOS Settings handoff can be simulator-verified by proving `UIApplication.openSettingsURLString` opens `com.apple.Preferences`; require a physical confirmation only when release criteria explicitly demand a real-device Settings handoff check.
+- `tools/verify-shanbox-backend.sh` proves public route behavior, Node admin public routes, and command token URL-safe payload semantics. It does not prove APNs delivery to a real iPhone.
+- `tools/verify-shanbox-fixtures.sh` proves public static fixture reachability and content markers for `ae8fcb.shanbox.19930810.xyz:8443/test_resources`. It does not prove native Bridge execution, offline cache completion, APNs delivery, or phone-specific network behavior by itself.
+- `tools/verify-node-admin-local.sh` proves local/source Node admin route availability only. Use `tools/verify-shanbox-backend.sh` and `tools/verify-shanbox-supervision.sh` before marking public shanbox Node admin deployment available.
+- `tools/verify-shanbox-supervision.sh` proves whether the public Swift backend and Node admin have restart supervision. Current shanbox evidence is `process=PASS, supervision=PASS, node_admin=PASS` via supervisord; route checks and supervision checks should both stay green for production handoff.
+- `tools/run-real-device-smoke.sh` proves the app can build, install, and launch on a paired iPhone. It does not prove notification permission, APNs token registration, or notification receipt.
+- `tools/verify-real-device-push-readiness.sh` proves automatic APNs/Bark prerequisites and separates real iPhone notification observation into MANUAL rows. Do not mark APNs/Bark end-to-end available while this script has FAIL rows.
+- `SuperApp/SuperApp.entitlements` is required for APNs production readiness. Do not remove `aps-environment` merely to make a Personal Development Team build pass; if `xcodebuild` reports that the team/profile does not support Push Notifications, mark APNs/Bark as unavailable and switch to a paid Apple Developer Program team/App ID/provisioning profile with Push Notifications enabled.
+- As of 2026-06-03, command-line no-push smoke attempts with `CODE_SIGN_ENTITLEMENTS=` and temporary bundle id `com.webbridgekit.superapp.nopush` still fail because Xcode requires the Push Notifications capability for the SuperApp target. Do not claim real-device SuperApp install/launch until `run-real-device-smoke.sh` produces and launches `SuperApp.app`.
+- When updating `docs/verification/module-availability-verification.md`, cite the exact command, pass/fail count, and report/log path.
+- After updating `docs/verification/module-availability-verification.md`, run `bash tools/verify-module-availability-report.sh`. It intentionally fails if any `SettingsAction` exists in source without a corresponding `settings.cell.*` row in the report.
 
 ## Prototypes
 
@@ -153,6 +601,13 @@ bash scripts/scan-crash-logs.sh --fix
 
 | 日期 | 类型 | 原因 | 定位 | 修复 |
 |------|------|------|------|------|
+| 2026-08-17 | SIGSEGV ×2 | 21 个 ModuleAvailabilityTests 单进程全量重跑再次触发 XCUITest 高日志量隔离（栈顶 `XCTAutomationSupport runtime_issue_os_log_fault_callback`，与 2026-06-02/03、2026-08-10 记录同型），同轮 7 例失败为连锁；小批隔离重跑后仅剩分支既有失败（Home×3/通知卡/PWA 中心/TokenPush，均与设置无关） | `SuperAppUITests/ModuleAvailabilityTests.swift` 全量运行；crash_1786977990/1786978343（已清理，容器重装导致双份） | 分小批隔离重跑；`assertSettingsRowsNavigate` 导航等待 3s→8s（Cache Dashboard 首次推入时 AX 快照就绪慢，基线同样失败）后该测试转绿 |
+| 2026-08-10 | UITableView termination | 消息分组收起时先变更数据源，随后按变更后的零行数删除，导致 UITableView 的批量更新与数据源不一致并退出 | SuperApp/Sources/Controllers/Tab/InboxViewController.swift:viewForHeaderInSection | 切换前保存消息总数，使用 `performBatchUpdates` 对同一批行插入/删除，并原地刷新分组头状态；分组展开/收起 UI 回归必须通过 |
+| 2026-08-10 | SIGTRAP | Markdown 消息详情的 `WKWebView` 加载完成后，SnapKit 尝试更新一个只以 `greaterThanOrEqualTo` 创建的高度约束，触发 `updateConstraints` 断言 | SuperApp/Sources/Controllers/Message/MessageDetailViewController.swift:didFinish | 保留初始等值高度约束并通过保存的 `Constraint` 更新实际内容高度；消息详情、未读和应用筛选 UI 回归必须通过，随后重新扫描崩溃日志 |
+| 2026-08-10 | SIGSEGV | 历史 ModuleAvailabilityTests 全量运行触发 XCUITest 高日志量隔离；崩溃发生在 `XCTAutomationSupport` 可访问性快照查询，不在通知渲染路径 | `Documents/crash_logs/crash_1786347228.json`; `runtime_issue_os_log_fault_callback` | 本轮仅保留目标化通知回归（2/2 通过），避免全量快照扫描；已按 `scan-crash-logs.sh --fix` 清理历史记录并复扫 |
+| 2026-08-10 | SIGTRAP / disk exhaustion | Simulator disk had only 116 MB available; Realm initialization in the page-cache stats path threw through `try!` while Cache Dashboard data loaded | `PageCacheRuleManager.getRealm`; `CacheStatsAggregator.syncAggregate`; `CacheDashboardViewModelObservable.loadData` | Removed only rebuildable `/tmp/wbk-*` DerivedData artifacts, restored 8.5 GB free space, then rebuilt before resuming PWA notification regression |
+| 2026-06-03 | SIGSEGV / scanner cleanup bug | Debug Center coverage expansion briefly reintroduced heavy XCUITest snapshot/navigation queries, and `scan-crash-logs.sh --fix` could not clean app crash JSON details because scan functions ran in command-substitution subshells and lost the `CRASHES` array | SuperAppUITests/ModuleAvailabilityTests.swift:421-453; scripts/scan-crash-logs.sh | Reduced broad navigation/scroll snapshot queries, added stable Debug Center child-screen identifiers, changed scanner functions to preserve `CRASHES`/`WARNINGS` state via `SCAN_COUNT`; focused Settings row and full ModuleAvailabilityTests 14/14 passed, crash scan returned `total: 0` |
+| 2026-06-02 | SIGSEGV | `ModuleAvailabilityTests` 旧版单个超长 Settings row 用例产生大量 XCUITest snapshot/log 查询，`XCTAutomationSupport` 触发 high logging volume quarantine，CrashLogManager 记录为 SIGSEGV | SuperAppUITests/ModuleAvailabilityTests.swift:testSettingsOperationalRowsAreReachable; crash stack top: `XCTAutomationSupport runtime_issue_os_log_fault_callback` | 拆分为 `testSettingsCoreRowsAreReachable` 与 `testSettingsDebugAndSupportRowsAreReachable`，About 保留独立 deep-drill；完整 ModuleAvailabilityTests 11/11 通过，crash scan 回到 `total: 0` |
 | 2026-05-20 | SIGTRAP | Notification Debug section header 未加入 card 视图层级就使用 SnapKit `equalToSuperview()`，触发 assertionFailure | SuperApp/Sources/Controllers/Debug/NotificationDebugViewController.swift:219 | 在约束 header 前补 `card.addSubview(header)` |
 
 ## Command History Access
@@ -262,6 +717,9 @@ xcrun simctl launch booted com.webbridgekit.superapp --show-component-catalog
 
 | Commit | Description |
 |--------|-------------|
+| `e75dccb` | test(device): harden real-device smoke gate |
+| `ab062a2` | test(ui): verify about legal deep link path |
+| `4b2382e` | test(server): add shanbox backend verification gate |
 | `3608f0e` | feat(ui): add screenshot capture tests, visual check scripts, CI design lint |
 | `ef2874e` | feat(ui): v3 UI redesign — token system, 11 WBK components, 4 page redesigns (#2) |
 | `3d79ccf` | fix(ui): inbox search bar shadow + home bookmark tap opens URL instead of camera |

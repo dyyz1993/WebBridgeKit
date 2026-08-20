@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Divider - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:32px; max-width:480px; margin:0 auto; }
+.section-title { font:var(--wbk-text-body); font-weight:600; color:var(--wbk-text); margin-bottom:12px; }
+
+/* @component-css-start */
+.wbk-divider {
+  height:1px;
+  background:var(--color-separator);
+  border:none;
+  margin:8px 0;
+}
+.wbk-divider--inset {
+  margin-left:16px;
+  margin-right:16px;
+}
+
+/* Sample context rows */
+.wbk-context-row {
+  display:flex;
+  align-items:center;
+  padding:14px 16px;
+  background:var(--color-surface);
+  font:var(--wbk-text-row-title);
+  color:var(--wbk-text);
+}
+.wbk-context-row + .wbk-context-row {
+  border-top:1px solid var(--color-separator);
+}
+.wbk-context-group {
+  background:var(--color-surface);
+  border-radius:var(--wbk-radius-card);
+  overflow:hidden;
+}
+.wbk-context-group .wbk-context-row {
+  border-top:none;
+}
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- Variant 1: Full-width divider -->
+  <div>
+    <div class="section-title">全宽</div>
+    <div style="background:var(--color-surface);border-radius:var(--wbk-radius-card);padding:16px;">
+      <div style="font:var(--wbk-text-row-title);color:var(--wbk-text);">通知设置</div>
+      <hr class="wbk-divider">
+      <div style="font:var(--wbk-text-body);color:var(--wbk-text-secondary);">开启后接收推送通知</div>
+      <hr class="wbk-divider">
+      <div style="font:var(--wbk-text-row-title);color:var(--wbk-text);">声音与震动</div>
+    </div>
+  </div>
+
+  <!-- Variant 2: Inset divider -->
+  <div>
+    <div class="section-title">左右缩进</div>
+    <div style="background:var(--color-surface);border-radius:var(--wbk-radius-card);overflow:hidden;">
+      <div class="wbk-context-row">Wi-Fi</div>
+      <hr class="wbk-divider wbk-divider--inset">
+      <div class="wbk-context-row">蓝牙</div>
+      <hr class="wbk-divider wbk-divider--inset">
+      <div class="wbk-context-row">蜂窝网络</div>
+    </div>
+  </div>
+
+  <!-- Context 3: Mixed usage -->
+  <div>
+    <div class="section-title">混合场景</div>
+    <div style="background:var(--color-surface);border-radius:var(--wbk-radius-card);overflow:hidden;">
+      <div class="wbk-context-row" style="gap:12px;">
+        <span style="flex:1;">用户名</span>
+        <span style="color:var(--wbk-text-tertiary);">admin</span>
+      </div>
+      <hr class="wbk-divider wbk-divider--inset">
+      <div class="wbk-context-row" style="gap:12px;">
+        <span style="flex:1;">邮箱</span>
+        <span style="color:var(--wbk-text-tertiary);">user@example.com</span>
+      </div>
+    </div>
+    <hr class="wbk-divider" style="margin:16px 0;">
+    <div style="background:var(--color-surface);border-radius:var(--wbk-radius-card);overflow:hidden;">
+      <div class="wbk-context-row" style="gap:12px;">
+        <span style="flex:1;">版本</span>
+        <span style="color:var(--wbk-text-tertiary);">1.0.0</span>
+      </div>
+      <hr class="wbk-divider wbk-divider--inset">
+      <div class="wbk-context-row" style="gap:12px;">
+        <span style="flex:1;">构建号</span>
+        <span style="color:var(--wbk-text-tertiary);">2024.06.01</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

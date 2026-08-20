@@ -96,10 +96,10 @@ extension TestDataSeeder {
 
     // MARK: - Messages
 
-    static func seedMessages() {
+    static func seedMessages(forceRefresh: Bool = false) {
         let defaults = UserDefaults.standard
         let key = "SuperCache_Messages"
-        if defaults.data(forKey: key) != nil { return }
+        if !forceRefresh, defaults.data(forKey: key) != nil { return }
 
         let now = Date()
         let hour1Ago = now.addingTimeInterval(-3600)
@@ -109,6 +109,8 @@ extension TestDataSeeder {
         let day1Ago = now.addingTimeInterval(-86400)
         let day2Ago = now.addingTimeInterval(-172800)
         let day3Ago = now.addingTimeInterval(-259200)
+        let nativeApprovalRequestID = ProcessInfo.processInfo.environment["WBK_UI_APPROVAL_REQUEST_ID"]
+            ?? "approval-native-demo-016"
 
         let messages: [StoredMessage] = [
             StoredMessage(
@@ -182,6 +184,7 @@ extension TestDataSeeder {
                     category: "system",
                     priority: .low,
                     group: "system-notices",
+                    contentType: .plain,
                     createdAt: hour4Ago
                 ),
                 isRead: true,
@@ -302,6 +305,226 @@ extension TestDataSeeder {
                 ),
                 isRead: false,
                 receivedAt: day3Ago
+            ),
+            StoredMessage(
+                id: "stored-markdown-011",
+                payload: MessagePayload(
+                    id: "msg-markdown-011",
+                    title: "运行任务已完成",
+                    body: "任务输出摘要已生成",
+                    markdown: """
+                    # 发布任务已完成
+
+                    > 生产环境已完成发布。建议在观察窗口结束前关注核心指标，并保留回滚通道。
+
+                    ## 执行清单
+
+                    - [x] 数据库迁移
+                    - [x] 生产包上传
+                    - [ ] 灰度观察（30 分钟）
+
+                    ## 关键指标
+
+                    | 指标 | 当前值 | 阈值 |
+                    | :--- | ---: | ---: |
+                    | 错误率 | 0.02% | < 0.10% |
+                    | P95 延迟 | 184 ms | < 250 ms |
+                    | 发布耗时 | 2 分 18 秒 | < 5 分钟 |
+
+                    ## 回滚命令
+
+                    ```bash
+                    wbk deploy rollback --release 2026.08.12.1
+                    ```
+
+                    任务标识：`run-20260510`。结果：**成功**，无需人工干预。
+
+                    [打开 Agent Console](https://example.com/agent-console)
+                    """,
+                    subtitle: "PWA · Agent Console",
+                    channel: "bridge",
+                    category: "task",
+                    priority: .normal,
+                    group: "agent-tasks",
+                    targetAppId: "agent-console",
+                    contentType: .markdown,
+                    userInfo: ["taskId": "run-20260510", "status": "completed"],
+                    createdAt: day3Ago.addingTimeInterval(-1800)
+                ),
+                isRead: false,
+                receivedAt: day3Ago.addingTimeInterval(-1800),
+                bodyType: "markdown"
+            ),
+            StoredMessage(
+                id: "stored-verification-012",
+                payload: MessagePayload(
+                    id: "msg-verification-012",
+                    title: "登录验证码",
+                    body: "验证码 482 901，5 分钟内有效。请勿泄露给他人。",
+                    subtitle: "WebBridgeKit",
+                    channel: "system",
+                    category: "verification",
+                    priority: .high,
+                    group: "verification-codes",
+                    verificationCode: "482 901",
+                    expiresAt: now.addingTimeInterval(5 * 60),
+                    contentType: .otp,
+                    createdAt: now.addingTimeInterval(-120)
+                ),
+                isRead: false,
+                receivedAt: now.addingTimeInterval(-120)
+            ),
+            StoredMessage(
+                id: "stored-qr-015",
+                payload: MessagePayload(
+                    id: "msg-qr-015",
+                    title: "桌面端登录二维码",
+                    body: "请使用已登录设备扫码确认，本二维码 10 分钟内有效。",
+                    subtitle: "WebBridgeKit",
+                    channel: "system",
+                    category: "login",
+                    priority: .normal,
+                    group: "login-requests",
+                    expiresAt: now.addingTimeInterval(10 * 60),
+                    replacementID: "login-20260811",
+                    contentType: .qr,
+                    qrPayload: "webbridgekit://login?requestId=login-20260811",
+                    createdAt: now.addingTimeInterval(-450)
+                ),
+                isRead: false,
+                receivedAt: now.addingTimeInterval(-450)
+            ),
+            StoredMessage(
+                id: "stored-image-017",
+                payload: MessagePayload(
+                    id: "msg-image-017",
+                    title: "设计稿预览已生成",
+                    body: "通知中心新版视觉预览已经生成，可在详情中查看图片。",
+                    subtitle: "PWA · Design Review",
+                    channel: "apns",
+                    category: "design",
+                    priority: .normal,
+                    group: "design-reviews",
+                    imageURL: "http://localhost:8081/test_resources/images/photo1.jpg",
+                    contentType: .image,
+                    createdAt: now.addingTimeInterval(-420)
+                ),
+                isRead: false,
+                receivedAt: now.addingTimeInterval(-420)
+            ),
+            StoredMessage(
+                id: "stored-image-failure-018",
+                payload: MessagePayload(
+                    id: "msg-image-failure-018",
+                    title: "图片加载失败示例",
+                    body: "即使远端图片不可用，通知正文和其他操作仍然可以正常使用。",
+                    subtitle: "WebBridgeKit",
+                    channel: "system",
+                    category: "design",
+                    priority: .low,
+                    group: "design-reviews",
+                    imageURL: "https://127.0.0.1:1/missing.png",
+                    contentType: .image,
+                    createdAt: now.addingTimeInterval(-410)
+                ),
+                isRead: true,
+                readAt: now.addingTimeInterval(-400),
+                receivedAt: now.addingTimeInterval(-410)
+            ),
+            StoredMessage(
+                id: "stored-chat-route-013",
+                payload: MessagePayload(
+                    id: "msg-chat-route-013",
+                    title: "林默发来新消息",
+                    body: "刚刚把部署日志补充好了，你方便时看一下。",
+                    subtitle: "PWA · Team Chat",
+                    channel: "apns",
+                    category: "chat",
+                    priority: .normal,
+                    sound: "default",
+                    group: "team-chat-linmo",
+                    threadId: "chat-linmo",
+                    targetAppId: "com.webbridgekit.fixture.chat",
+                    route: "/test_resources/pwa-notification/index.html",
+                    targetMode: "immersive",
+                    soundVolume: 6,
+                    isArchive: true,
+                    contentType: .chat,
+                    userInfo: ["conversationId": "linmo", "messageId": "chat-108"],
+                    createdAt: now.addingTimeInterval(-300)
+                ),
+                isRead: false,
+                receivedAt: now.addingTimeInterval(-300)
+            ),
+            StoredMessage(
+                id: "stored-approval-native-016",
+                payload: MessagePayload(
+                    id: "msg-approval-native-016",
+                    title: "确认部署到生产环境",
+                    body: "版本 2.4.0 已通过自动化测试，等待你决定是否继续发布。",
+                    subtitle: "PWA · Agent Console",
+                    channel: "apns",
+                    category: "approval",
+                    priority: .high,
+                    group: "agent-approvals",
+                    replacementID: nativeApprovalRequestID,
+                    actionState: .pending,
+                    requestID: nativeApprovalRequestID,
+                    contentType: .approval,
+                    revision: 1,
+                    presentation: .native,
+                    approval: MessageApproval(actions: [
+                        MessageApprovalAction(
+                            id: "approve",
+                            title: "通过并发布",
+                            style: .primary,
+                            resultState: .approved
+                        ),
+                        MessageApprovalAction(
+                            id: "reject",
+                            title: "拒绝",
+                            style: .destructive,
+                            requiresReason: true,
+                            resultState: .rejected
+                        )
+                    ]),
+                    createdAt: now.addingTimeInterval(-540)
+                ),
+                isRead: false,
+                receivedAt: now.addingTimeInterval(-540)
+            ),
+            StoredMessage(
+                id: "stored-approval-media-014",
+                payload: MessagePayload(
+                    id: "msg-approval-media-014",
+                    title: "需要确认生产发布",
+                    body: "远程任务已完成预检。打开审批页后，请手动确认是否继续发布。",
+                    subtitle: "PWA · Agent Console",
+                    channel: "bridge",
+                    category: "approval",
+                    priority: .high,
+                    sound: "alarm.caf",
+                    group: "agent-approvals",
+                    targetAppId: "com.webbridgekit.fixture.agent-console",
+                    route: "/test_resources/pwa-agent-console/approval.html",
+                    targetMode: "modal",
+                    imageURL: "https://cloak.xbrowser.dev:5801/fixtures/pwa-agent-console/icon-192.png",
+                    interruptionLevel: .timeSensitive,
+                    soundVolume: 8,
+                    copyText: "approval-42",
+                    isArchive: true,
+                    ttl: 24 * 60 * 60,
+                    replacementID: "approval-42",
+                    actionState: .pending,
+                    requestID: "approval-42",
+                    contentType: .approval,
+                    statePath: "/api/approvals/approval-42",
+                    revision: 1,
+                    userInfo: ["requestId": "approval-42", "source": "remote-task"],
+                    createdAt: now.addingTimeInterval(-600)
+                ),
+                isRead: false,
+                receivedAt: now.addingTimeInterval(-600)
             ),
             StoredMessage(
                 id: "stored-sys-update",

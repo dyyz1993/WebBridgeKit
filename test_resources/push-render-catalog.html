@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebBridgeKit 推送渲染目录</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #fff; --ink: #1a1d26; --sub: #6b7280;
+    --line: #e5e7eb; --brand: #4f6af6; --brand2: #8b5cf6;
+    --ok: #10b981; --warn: #f59e0b; --code-bg: #f3f4f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111318; --card:#1b1f27; --ink:#e5e7eb; --sub:#9ca3af; --line:#2a2f3a; --code-bg:#141821; }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "PingFang SC", sans-serif; background: var(--bg); color: var(--ink); padding: 16px; max-width: 720px; margin: 0 auto; }
+  header { text-align: center; padding: 20px 0 12px; }
+  header h1 { font-size: 20px; background: linear-gradient(90deg, var(--brand), var(--brand2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header p { font-size: 13px; color: var(--sub); margin-top: 6px; }
+  .keybar { position: sticky; top: 8px; z-index: 10; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; gap: 8px; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-bottom: 14px; }
+  .keybar label { font-size: 12px; color: var(--sub); white-space: nowrap; }
+  .keybar input { flex: 1; font-size: 12px; font-family: ui-monospace, monospace; border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; background: var(--bg); color: var(--ink); min-width: 0; }
+  section { margin: 22px 0 10px; }
+  section > h2 { font-size: 14px; color: var(--sub); font-weight: 600; letter-spacing: .5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 10px 0; }
+  .card .row { display: flex; align-items: center; gap: 10px; }
+  .card h3 { font-size: 15px; flex: 1; }
+  .card h3 small { display: block; font-weight: 400; color: var(--sub); font-size: 12px; margin-top: 2px; }
+  button { border: none; border-radius: 999px; padding: 9px 18px; font-size: 13px; font-weight: 600; color: #fff; background: linear-gradient(135deg, var(--brand), var(--brand2)); cursor: pointer; white-space: nowrap; }
+  button:active { transform: scale(.97); }
+  button.sent { background: var(--ok); }
+  button.err { background: #ef4444; }
+  .expect { margin-top: 10px; font-size: 13px; line-height: 1.6; }
+  .expect b { color: var(--brand); }
+  details { margin-top: 8px; }
+  details summary { font-size: 11px; color: var(--sub); cursor: pointer; user-select: none; }
+  pre { margin-top: 6px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 11px; line-height: 1.5; overflow-x: auto; font-family: ui-monospace, monospace; }
+  .pair { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .pair button { flex: 1; min-width: 130px; }
+  .pair button.ghost { background: var(--sub); }
+  footer { text-align: center; font-size: 11px; color: var(--sub); padding: 24px 0 40px; line-height: 1.8; }
+</style>
+</head>
+<body>
+<header>
+  <h1>WebBridgeKit 推送渲染目录</h1>
+  <p>逐张点「发送」→ 到 App 里对照「预期效果」验证渲染</p>
+</header>
+
+<div class="keybar">
+  <label>推送 Key</label>
+  <input id="key" value="i0wWZf6U65RiiQ4H1dmVEbpWKAvYRo_MHJXh-FK4t3w" spellcheck="false">
+</div>
+
+<section><h2>内容类型</h2></section>
+
+<div class="card" data-payload='{"title":"普通通知","body":"你好，这是一条来自 WebBridgeKit 的消息"}'>
+  <div class="row"><h3>普通通知<small>标题 + 纯文本正文</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>横幅显示标题和正文；详情页纯文本展示，无富文本格式。</div>
+</div>
+
+<div class="card" data-payload='{"title":"部署完成","body":"## 构建结果\n\n- 状态：**成功**\n- 环境：生产\n\n```swift\nprint(\"hello\")\n```","markdown":"1"}'>
+  <div class="row"><h3>Markdown 富文本<small>标题 / 列表 / 加粗 / 代码块</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页把正文渲染为富文本 —— 二级标题、圆点列表、<b>加粗</b>、等宽代码块。若显示的是原始 <code>##</code> 字符即未渲染。</div>
+</div>
+
+<div class="card" data-payload='{"title":"登录验证码","body":"验证码 482901，5 分钟内有效","contentType":"otp","category":"otp","verificationCode":"482901","ttl":300}'>
+  <div class="row"><h3>验证码 OTP<small>大号验证码 + 复制 + 有效期</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页突出显示 482901（大字号/专用样式），有复制入口；5 分钟后标记过期。</div>
+</div>
+
+<div class="card" data-payload='{"title":"扫码登录","body":"使用 WebBridgeKit 扫描此二维码","contentType":"qr","qrPayload":"webbridgekit://login/example"}'>
+  <div class="row"><h3>二维码 QR<small>宿主生成可扫描二维码</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页显示由 App 生成的二维码图案，用另一台手机扫码应读出 <code>webbridgekit://login/example</code>。</div>
+</div>
+
+<div class="card" data-payload='{"title":"图片预览","body":"远程图片加载测试","contentType":"image","image":"https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/photo1.jpg"}'>
+  <div class="row"><h3>图片（正常）<small>HTTPS 远程图加载</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页内嵌显示这张照片（风光图）。</div>
+</div>
+
+<div class="card" data-payload='{"title":"图片加载失败","body":"死链降级测试","contentType":"image","image":"https://example.com/definitely-missing.png"}'>
+  <div class="row"><h3>图片（失败降级）<small>死链 → 可读的错误状态</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页不白屏不空白，显示可读的「图片加载失败」类提示，正文正常可见。</div>
+</div>
+
+<div class="card" data-payload='{"title":"Team Chat 新消息","body":"部署日志已经补充好了","contentType":"chat","category":"chat","appId":"com.webbridgekit.fixture.chat","route":"/test_resources/pwa-notification/index.html"}'>
+  <div class="row"><h3>聊天深链<small>点击横幅直进 PWA 会话</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>点击横幅 → 直接进入 PWA 聊天页（WebBridgeKit Notification Demo），而不是普通详情页。</div>
+</div>
+
+<div class="card" data-payload='{"title":"需要确认生产发布","body":"版本已经通过检查，等待你的决定","contentType":"approval","category":"approval","requestId":"approval-browser-example","actionState":"pending"}'>
+  <div class="row"><h3>审批预览<small>待确认状态</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页显示「待确认 / pending」状态标识。（完整批准/拒绝交互走 Approval v1 流程。）</div>
+</div>
+
+<section><h2>呈现参数</h2></section>
+
+<div class="card" data-payload='{"title":"铃声通知","body":"这条通知会播放 alarm 警报音","sound":"alarm.caf"}'>
+  <div class="row"><h3>命名声音 · alarm<small>系统链路播放警报音</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>锁屏/后台收到时播放急促警报声（非默认三音）。<i>注意：开发签名构建可能回退默认音 —— 命名声音请以 TestFlight 版为准。</i></div>
+</div>
+
+<div class="card" data-payload='{"title":"铃声通知","body":"这条通知会播放 birdsong 鸟鸣","sound":"birdsong.caf"}'>
+  <div class="row"><h3>命名声音 · birdsong<small>验证不止 alarm 一枚</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>播放鸟鸣音（区别于上一条的警报声）。</div>
+</div>
+
+<div class="card" data-payload='{"title":"时间敏感通知","body":"需要立即关注的事件","level":"timeSensitive"}'>
+  <div class="row"><h3>时间敏感<small>interruption-level: timeSensitive</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>横幅以时间敏感样式呈现，可突破专注模式（需系统设置允许）。</div>
+</div>
+
+<div class="card" data-payload='{"title":"被动通知","body":"不打扰，进通知中心即可","level":"passive"}'>
+  <div class="row"><h3>被动通知<small>interruption-level: passive</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>不响铃不点亮屏幕横幅（静默投递），在通知中心/消息列表可见。</div>
+</div>
+
+<div class="card" data-payload='{"title":"来电式持续响铃","body":"应该像电话一样持续响 30 秒","call":true,"sound":"alarm.caf"}'>
+  <div class="row"><h3>来电模式 call=1<small>30 秒循环响铃（Bark 语义）</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>像来电一样持续响铃约 30 秒（循环播放声音），而不是一声短响。<i>同样以 TestFlight 版为准。</i></div>
+</div>
+
+<div class="card" data-payload='{"title":"带副标题的通知","body":"正文内容","subtitle":"这是副标题"}'>
+  <div class="row"><h3>副标题<small>subtitle 字段</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>横幅与详情的标题下方出现一行较小的副标题文字。</div>
+</div>
+
+<div class="card" data-payload='{"title":"角标测试","body":"App 图标角标应变为 3","badge":3}'>
+  <div class="row"><h3>角标 badge=3<small>图标数字角标</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>主屏 App 图标右上角出现数字 3（清除通知或进 App 后消除）。</div>
+</div>
+
+<div class="card" data-payload='{"title":"自定义图标","body":"详情应显示自定义图标","icon":"https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/logo.png"}'>
+  <div class="row"><h3>自定义图标 icon<small>远程图标 URL</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页消息头像位置显示该 logo 图（横幅附件渲染依赖 NSE 富处理，暂以详情页为准）。</div>
+</div>
+
+<div class="card">
+  <div class="row"><h3>通知分组<small>同 group 两条 → 折叠</small></h3></div>
+  <div class="pair">
+    <button data-payload='{"title":"分组消息 1","body":"同一 group 的第一条","group":"demo-group"}'>发第一条</button>
+    <button class="ghost" data-payload='{"title":"分组消息 2","body":"同一 group 的第二条","group":"demo-group"}'>发第二条</button>
+  </div>
+  <div class="expect"><b>预期：</b>两条先后发完后，通知中心里折叠为「demo-group」一组显示 (2)，消息列表里按同组相邻。</div>
+</div>
+
+<section><h2>行为参数</h2></section>
+
+<div class="card" data-payload='{"title":"点击自动复制","body":"点击横幅后剪贴板应出现这段内容","copy":"CLIPBOARD-8f2k","autoCopy":true}'>
+  <div class="row"><h3>点击复制<small>copy + autoCopy</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>点击横幅后 <code>CLIPBOARD-8f2k</code> 自动进入剪贴板（去任意输入框粘贴验证），详情页有复制按钮。</div>
+</div>
+
+<div class="card" data-payload='{"title":"链接跳转","body":"详情/点击应打开链接","url":"https://demo.xbrowser.dev/"}'>
+  <div class="row"><h3>链接跳转<small>url 字段</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>详情页显示可点击链接，点击（或点横幅）打开 Demo Chat 页面。</div>
+</div>
+
+<div class="card">
+  <div class="row"><h3>消息替换与撤回<small>相同 replacementID 更新/删除同一条</small></h3></div>
+  <div class="pair">
+    <button data-payload='{"id":"demo-replace-1","title":"版本 v1","body":"这条会被原地替换"}'>发 v1</button>
+    <button class="ghost" data-payload='{"id":"demo-replace-1","title":"版本 v2（已替换）","body":"同一条消息被更新了，不新增条目"}'>替换成 v2</button>
+    <button class="ghost" data-payload='{"id":"demo-replace-1","title":"撤回","body":"","delete":true}'>撤回</button>
+  </div>
+  <div class="expect"><b>预期：</b>v1 出现一条 → 点「替换成 v2」后列表里<b>还是一条</b>、内容变为 v2 → 点「撤回」后该条消失。</div>
+</div>
+
+<div class="card" data-payload='{"title":"清角标","body":"","badge":0}'>
+  <div class="row"><h3>清除角标<small>badge=0</small></h3><button>发送</button></div>
+  <div class="expect"><b>预期：</b>App 图标角标数字清零。</div>
+</div>
+
+<section><h2>端到端加密</h2></section>
+
+<div class="card" id="enc-card">
+  <div class="row"><h3>加密推送<small>浏览器现场 AES-GCM 加密，服务器只见密文</small></h3></div>
+  <div class="expect" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+    <input id="enc-key" placeholder="粘贴 App 设置→通知→推送加密 里的密钥 (Base64)" spellcheck="false"
+           style="font-size:12px;font-family:ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)">
+    <input id="enc-title" value="🔐 加密目录卡" spellcheck="false"
+           style="font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)">
+    <input id="enc-body" value="浏览器加密 → 服务器盲转 → 手机解密显示明文" spellcheck="false"
+           style="font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)">
+    <button id="enc-send">发送加密推送</button>
+  </div>
+  <div class="expect"><b>预期：</b>手机横幅与消息列表显示上面填写的<b>明文</b>标题/正文；服务器日志与载荷预览里只有密文字段 ciphertext。密钥不匹配时手机显示「解密失败」。</div>
+  <details><summary>载荷</summary><pre>发送后显示实际密文</pre></details>
+</div>
+
+<footer>
+  发送端点：POST https://wbk.shanbox.19930810.xyz:8443/&#123;key&#125;<br>
+  点击卡片下方「载荷」可展开查看该条实际发送的 JSON<br>
+  <span id="server-version" style="font-family:ui-monospace,monospace">服务端版本获取中…</span>
+</footer>
+
+<script>
+const BASE = "https://wbk.shanbox.19930810.xyz:8443";
+
+// 每张卡片：注入可展开的载荷预览 + 绑定发送
+document.querySelectorAll(".card").forEach(card => {
+  const buttons = card.querySelectorAll("button[data-payload], button[data-payload], .card > .row button");
+  // 主按钮：卡片自身 data-payload（pair 卡的按钮各自带 data-payload，由选择器分别绑定）
+  const mainBtn = card.querySelector(":scope > .row button");
+  const cardPayload = card.dataset.payload;
+
+  const wire = (btn, payloadStr) => {
+    // 载荷预览
+    const details = document.createElement("details");
+    details.innerHTML = "<summary>载荷</summary><pre></pre>";
+    try { details.querySelector("pre").textContent = JSON.stringify(JSON.parse(payloadStr), null, 1); }
+    catch { details.querySelector("pre").textContent = payloadStr; }
+    card.appendChild(details);
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      const key = document.getElementById("key").value.trim();
+      try {
+        const res = await fetch(`${BASE}/${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payloadStr
+        });
+        // 400 等错误响应可能不是 JSON —— 解析失败不该误报成「网络错误」
+        let json = null;
+        try { json = await res.json(); } catch {}
+        const ok = res.ok && json && (json.code === 200 || json.message);
+        btn.textContent = ok ? "✓ 已发送" : "✗ " + res.status;
+        btn.classList.add(ok ? "sent" : "err");
+      } catch (e) {
+        btn.textContent = "✗ 网络错误";
+        btn.classList.add("err");
+      }
+      setTimeout(() => { btn.textContent = btn.dataset.label || "发送"; btn.classList.remove("sent","err"); btn.disabled = false; }, 1800);
+    });
+    btn.dataset.label = btn.textContent;
+  };
+
+  if (mainBtn && cardPayload) wire(mainBtn, cardPayload);
+  card.querySelectorAll(".pair button[data-payload]").forEach(b => wire(b, b.dataset.payload));
+});
+
+// 加密推送卡：WebCrypto AES-GCM 128，密文 = base64(iv||ct||tag)，与 NSE 的 CryptoKit 契约一致
+document.getElementById("enc-send").addEventListener("click", async () => {
+  const btn = document.getElementById("enc-send");
+  const keyB64 = document.getElementById("enc-key").value.trim();
+  const title = document.getElementById("enc-title").value;
+  const body = document.getElementById("enc-body").value;
+  const pre = document.querySelector("#enc-card pre");
+  btn.disabled = true;
+  try {
+    const raw = Uint8Array.from(atob(keyB64), c => c.charCodeAt(0));
+    const cryptoKey = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt"]);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const plaintext = new TextEncoder().encode(JSON.stringify({ title, body, sound: "alarm" }));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, plaintext));
+    const combined = new Uint8Array(iv.length + ct.length);
+    combined.set(iv); combined.set(ct, iv.length);
+    const b64 = btoa(String.fromCharCode(...combined));
+    const payload = JSON.stringify({ ciphertext: b64 });
+    pre.textContent = payload;
+    const pushKey = document.getElementById("key").value.trim();
+    const res = await fetch(`${BASE}/${encodeURIComponent(pushKey)}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: payload
+    });
+    btn.textContent = res.ok ? "✓ 已发送(密文)" : "✗ " + res.status;
+  } catch (e) {
+    btn.textContent = "✗ " + (e.message || "失败");
+  }
+  setTimeout(() => { btn.textContent = "发送加密推送"; btn.disabled = false; }, 1800);
+});
+
+// 页脚显示服务端版本 —— 每次测试前先核对，避免「服务器没更新」造成的假问题
+(async () => {
+  const el = document.getElementById("server-version");
+  try {
+    const res = await fetch(`${BASE}/health`);
+    const json = await res.json();
+    el.textContent = json.version ? `服务端版本：${json.version}` : "服务端未暴露版本号（需更新）";
+  } catch {
+    el.textContent = "服务端版本获取失败（后端不可达？）";
+  }
+})();
+</script>
+</body>
+</html>

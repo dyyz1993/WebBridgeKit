@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>IconButton - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font: var(--type-body); color: var(--color-text); }
+.row { display: flex; gap: 24px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+.label { width: 92px; font: var(--type-caption); color: var(--color-text-secondary); text-transform: uppercase; flex-shrink: 0; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 12px 0; }
+
+/* @component-css-start */
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--radius-md); border: none; cursor: pointer; transition: background .12s, opacity .12s; flex-shrink: 0; }
+.icon-btn svg { width: 20px; height: 20px; pointer-events: none; }
+.icon-btn--default { background: transparent; color: var(--color-text); }
+.icon-btn--default:hover { background: var(--color-bg-tertiary); }
+.icon-btn--primary { background: var(--color-primary); color: #fff; }
+.icon-btn--primary:hover { filter: brightness(1.08); }
+.icon-btn--primary:active { filter: brightness(0.92); }
+.icon-btn--ghost { background: var(--color-bg-tertiary); color: var(--color-text-secondary); }
+.icon-btn--ghost:hover { background: var(--color-bg-secondary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="row">
+  <span class="label">默认</span>
+  <button class="icon-btn icon-btn--default"><i data-lucide="settings"></i></button>
+  <button class="icon-btn icon-btn--default"><i data-lucide="share-2"></i></button>
+  <button class="icon-btn icon-btn--default"><i data-lucide="bookmark"></i></button>
+</div>
+
+<div class="row">
+  <span class="label">Primary</span>
+  <button class="icon-btn icon-btn--primary"><i data-lucide="settings"></i></button>
+  <button class="icon-btn icon-btn--primary"><i data-lucide="share-2"></i></button>
+  <button class="icon-btn icon-btn--primary"><i data-lucide="bookmark"></i></button>
+</div>
+
+<div class="row">
+  <span class="label">Ghost</span>
+  <button class="icon-btn icon-btn--ghost"><i data-lucide="settings"></i></button>
+  <button class="icon-btn icon-btn--ghost"><i data-lucide="share-2"></i></button>
+  <button class="icon-btn icon-btn--ghost"><i data-lucide="bookmark"></i></button>
+</div>
+
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://webbridgekit.dev/schemas/message-v1.schema.json",
+  "title": "WebBridgeKit Message v1",
+  "type": "object",
+  "required": ["schema", "type", "deviceKey", "title", "body"],
+  "properties": {
+    "schema": { "const": "webbridgekit.message.v1" },
+    "type": { "enum": ["plain", "markdown", "image", "qr", "otp", "chat", "approval"] },
+    "deviceKey": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9._:-]+$", "minLength": 1, "maxLength": 128 },
+    "requestId": { "type": "string", "pattern": "^[A-Za-z0-9._:-]+$", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "state": { "enum": ["pending", "approved", "rejected", "cancelled", "expired"] },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "subtitle": { "type": "string", "maxLength": 200 },
+    "body": { "type": "string", "maxLength": 10000 },
+    "category": { "type": "string", "maxLength": 64 },
+    "markdown": { "type": "string", "minLength": 1, "maxLength": 100000 },
+    "image": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "icon": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "verificationCode": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "qrPayload": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "group": { "type": "string", "maxLength": 128 },
+    "threadId": { "type": "string", "maxLength": 128 },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "presentation": { "enum": ["native", "web", "pwa"] },
+    "url": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "appId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "route": { "type": "string", "pattern": "^/", "maxLength": 2048 },
+    "params": {
+      "type": "object",
+      "description": "Route parameters are strings so the same payload is preserved by APNs, native routing, and URL query construction.",
+      "additionalProperties": { "type": "string" }
+    },
+    "display": { "enum": ["sheet", "full", "inline"] },
+    "approval": { "$ref": "#/$defs/approval" },
+    "html": false
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "approval" } }, "required": ["type"] },
+      "then": { "required": ["id", "requestId", "revision", "state", "presentation"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "markdown" } }, "required": ["type"] },
+      "then": { "required": ["markdown"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "image" } }, "required": ["type"] },
+      "then": { "required": ["image"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "qr" } }, "required": ["type"] },
+      "then": { "required": ["qrPayload"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "otp" } }, "required": ["type"] },
+      "then": { "required": ["verificationCode"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "chat" } }, "required": ["type"] },
+      "then": { "required": ["appId", "route"] }
+    },
+    {
+      "if": { "properties": { "presentation": { "const": "native" } }, "required": ["presentation"] },
+      "then": { "required": ["approval"] }
+    },
+    {
+      "if": { "properties": { "presentation": { "const": "web" } }, "required": ["presentation"] },
+      "then": { "required": ["url"], "not": { "required": ["approval"] } }
+    },
+    {
+      "if": { "properties": { "presentation": { "const": "pwa" } }, "required": ["presentation"] },
+      "then": { "required": ["appId", "route"], "not": { "required": ["approval"] } }
+    }
+  ],
+  "$defs": {
+    "approval": {
+      "type": "object",
+      "required": ["actions", "responseMode"],
+      "properties": {
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/action" }
+        },
+        "responseMode": { "enum": ["poll", "webhook"] },
+        "responseURL": { "type": "string", "format": "uri", "pattern": "^https://" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "responseMode": { "const": "webhook" } }, "required": ["responseMode"] },
+          "then": { "required": ["responseURL"] },
+          "else": { "not": { "required": ["responseURL"] } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": ["id", "title", "resultState"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 64 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "style": { "enum": ["primary", "default", "destructive"] },
+        "requiresReason": { "type": "boolean" },
+        "resultState": { "enum": ["approved", "rejected", "cancelled"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

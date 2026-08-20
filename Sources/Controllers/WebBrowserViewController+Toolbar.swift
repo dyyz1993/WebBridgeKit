@@ -97,10 +97,11 @@ extension WebBrowserViewController {
             make.left.right.equalToSuperview()
             make.height.equalTo(2)
         }
+
     }
 
     func setupActions() {
-        // Buttons use target-action pattern in configureNavigationBar()
+        // Bar buttons use target-action in configureNavigationBar().
     }
 
     func setupGestures() {
@@ -118,4 +119,5 @@ extension WebBrowserViewController {
             dismissOrPop()
         }
     }
+
 }

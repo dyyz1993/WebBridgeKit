@@ -59,6 +59,7 @@ class AboutViewController: UIViewController {
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         tableView.separatorStyle = .singleLine
+        tableView.accessibilityIdentifier = "about.tableView"
         return tableView
     }()
 
@@ -91,6 +92,19 @@ class AboutViewController: UIViewController {
             }
         }
 
+        var accessibilityKey: String {
+            switch self {
+            case .introduction:
+                return "introduction"
+            case .features:
+                return "features"
+            case .license:
+                return "license"
+            case .feedback:
+                return "feedback"
+            }
+        }
+
         var items: [String] {
             switch self {
             case .introduction:
@@ -98,7 +112,7 @@ class AboutViewController: UIViewController {
             case .features:
                 return [L10n.tr("about.feature.cache"), L10n.tr("about.feature.favorite"), L10n.tr("about.feature.token"), L10n.tr("about.feature.api_key")]
             case .license:
-                return ["MIT License"]
+                return [L10n.tr("about.third_party_licenses")]
             case .feedback:
                 return [L10n.tr("about.feedback.github"), L10n.tr("about.feedback.email")]
             }
@@ -135,6 +149,7 @@ class AboutViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("about.title")
+        view.accessibilityIdentifier = "about.root"
         setupUI()
         loadAppInfo()
     }
@@ -193,9 +208,12 @@ class AboutViewController: UIViewController {
         if let appIcon = Bundle.main.icon {
             appIconImageView.image = appIcon
         } else {
-            // 如果无法获取 App 图标，使用系统图标
-            appIconImageView.image = LucideIcon.appFill.templateImage(pointSize: 60, weight: .light)
+            // 如果无法获取 AppIcon，使用正式品牌标记
+            appIconImageView.image = WebBridgeKitBrand.image
+            if appIconImageView.image == nil {
+                appIconImageView.image = LucideIcon.appFill.templateImage(pointSize: 60, weight: .light)
                 appIconImageView.tintColor = ThemeTokens.Color.primary
+            }
         }
 
         // 加载 App 名称
@@ -293,6 +311,7 @@ extension AboutViewController: UITableViewDataSource {
         }
 
         cell.contentConfiguration = content
+        cell.accessibilityIdentifier = "about.cell.\(section.accessibilityKey).\(indexPath.row)"
 
         return cell
     }
@@ -379,6 +398,6 @@ extension Bundle {
         }
         #endif
 
-        return nil
+        return UIImage(named: "AppIcon") ?? WebBridgeKitBrand.image
     }
 }

@@ -139,10 +139,10 @@ final class UIAuditTest: XCTestCase {
         dumpUITree(app, depth: 0)
     }
 
-    func testAuditHomePage() {
-        app.tabBars.buttons["首页"].tap()
+    func testAuditAppsPage() {
+        app.tabBars.buttons["tab.apps"].tap()
         sleep(2)
-        runAudit(page: "首页 (Home)")
+        runAudit(page: "Apps")
     }
 
     func testAuditSettingsTab() {
@@ -195,6 +195,7 @@ final class UIAuditTest: XCTestCase {
         let typeName = elementTypeString(element.elementType)
 
         let children = element.children(matching: .any)
+        // swiftlint:disable:next empty_count -- XCUIElementQuery has no isEmpty API.
         let hasChildren = children.count > 0
 
         if hasChildren {
@@ -261,7 +262,6 @@ final class UIAuditTest: XCTestCase {
         case .decrementArrow: return "DecrementArrow"
         case .popover: return "Popover"
         case .handle: return "Handle"
-        case .picker: return "Picker"
         case .touchBar: return "TouchBar"
         case .statusItem: return "StatusItem"
         @unknown default: return "Unknown(\(type.rawValue))"

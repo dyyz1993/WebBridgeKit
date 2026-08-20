@@ -11,6 +11,7 @@ public final class ClipboardMonitor: Sendable {
 
     private let commandPrefix = "【WebBridgeKit】"
     private let urlSchemePrefix = "wbsk://command"
+    private let appCommandURLPrefix = "webbridgekit://command"
     private let minBase64Length = 16
 
     private init() {}
@@ -34,6 +35,10 @@ public final class ClipboardMonitor: Sendable {
         }
 
         if trimmed.lowercased().hasPrefix(urlSchemePrefix) {
+            return true
+        }
+
+        if trimmed.lowercased().hasPrefix(appCommandURLPrefix) {
             return true
         }
 

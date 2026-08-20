@@ -35,6 +35,7 @@ final class PersistentManifestLoaderTests: XCTestCase {
         let state = loader.getCurrentState()
         switch state {
         case .idle, .fetchingManifest, .downloadingResources, .preparingHTML,
+             .validatingPackage, .installingPackage, .usingPreviousVersion,
              .loadingWebView, .completed, .failed:
             break
         }

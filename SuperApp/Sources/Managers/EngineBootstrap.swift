@@ -53,6 +53,10 @@ public final class EngineBootstrap {
 
     private func bootstrapTheme(in window: UIWindow?) async {
         let themeManager = ThemeManager.shared
+        let storedMode = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.appearanceMode)
+            .flatMap(ThemeMode.init(rawValue:)) ?? .system
+
+        await themeManager.apply(storedMode)
         let theme = await themeManager.getTheme()
 
         if let window = window {
@@ -74,6 +78,12 @@ public final class EngineBootstrap {
     // MARK: - Message
 
     private func bootstrapMessage() async {
+        // Resurrect the push-encryption key on every launch: the keychain
+        // original survives reinstalls, but the app-group mirrors the NSE
+        // reads do not — heal them silently so encrypted pushes decrypt
+        // without the user ever visiting the key page.
+        _ = PushCipher.sharedKey()
+
         let engine = MessageEngine.shared
 
         let persistentStore = UserDefaultsMessageStore(key: "SuperCache_Messages")
@@ -108,11 +118,16 @@ public final class EngineBootstrap {
         await pipeline.register(LevelProcessor())
         await pipeline.register(BadgeProcessor())
         await pipeline.register(AutoCopyProcessor())
-        await pipeline.register(ArchiveProcessor(store: persistentStore))
+        // ArchiveProcessor is deliberately NOT registered here: receive()
+        // already persists the final StoredMessage with its full payload
+        // identity (messageId, contentType, qr/otp fields). The processor's
+        // own rebuild-and-save dropped that identity and hardcoded
+        // channel="push", so every message was stored twice — one rich row
+        // and one stripped plain row (the "应用推送 + PUSH推送" duplicates).
         await pipeline.register(MuteProcessor())
         await engine.setPipeline(pipeline)
         #if DEBUG
-        print("  [OK] Message Engine: Processor pipeline configured (6 processors)")
+        print("  [OK] Message Engine: Processor pipeline configured (5 processors)")
         #endif
 
         await engine.setOnMessageReceived { storedMessage in
@@ -149,6 +164,11 @@ public final class EngineBootstrap {
     // MARK: - AI
 
     private func bootstrapAI() async {
+        // The local AI HTTP server is a development tool. Running it in
+        // production builds burns a socket, widens the attack surface
+        // (0.0.0.0 binding), and its accept loop once spun a device at
+        // 100% CPU — keep it out of TestFlight/App Store builds entirely.
+        #if DEBUG
         let server = AIHTTPServer(port: 8765)
         await server.registerDefaultRoutes()
 
@@ -162,14 +182,11 @@ public final class EngineBootstrap {
 
         do {
             try await server.start()
-            #if DEBUG
             print("  [OK] AI Engine: HTTP server started on port 8765")
-            #endif
         } catch {
-            #if DEBUG
             print("  [WARN] AI Engine: Failed to start HTTP server: \(error)")
-            #endif
         }
+        #endif
     }
 
     // MARK: - Skills
@@ -200,14 +217,7 @@ public final class EngineBootstrap {
     // MARK: - CommandParser
 
     private func bootstrapCommandParser() async {
-        let config = CommandParserConfiguration(
-            maxPayloadSize: 4096,
-            maxAge: 300,
-            allowedSchemes: ["http", "https"],
-            enableSignatureVerification: false,
-            enableTimestampValidation: false
-        )
-        await CommandParser.shared.setConfiguration(config)
+        await CommandHandler.configureParserForAppCommands()
         #if DEBUG
         print("  [OK] CommandParser Engine: initialized (clipboard monitoring active)")
         #endif
@@ -237,8 +247,32 @@ public final class EngineBootstrap {
                 WebBrowserManager.shared.openBrowser(url: url, params: params)
             }
         case .appId:
-            if let url = URL(string: target.destination) {
-                WebBrowserManager.shared.openBrowser(url: url)
+            // The appId must be resolved through the launch resolver to get
+            // the trusted manifest's actual startURL — passing the raw appId
+            // string as a URL produces an invalid scheme and a blank page.
+            let resolver = HTMLAppLaunchResolver()
+            do {
+                let route = payload.route ?? "/"
+                let launchTarget = try resolver.resolve(
+                    appID: target.destination,
+                    route: route
+                )
+                let params = WebBrowserParams(
+                    displayMode: .immersive,
+                    hideNavigationBar: true,
+                    hideStatusBar: true,
+                    hideTabBar: true,
+                    payload: launchTarget.context.bridgePayload
+                )
+                WebBrowserManager.shared.openBrowser(
+                    url: launchTarget.loaderURL,
+                    params: params
+                )
+            } catch {
+                StructuredLogger.shared.warning(
+                    "[EngineBootstrap] Failed to resolve appId route: \(error.localizedDescription)",
+                    category: .navigation
+                )
             }
         case .deeplink:
             if let url = URL(string: target.destination) {

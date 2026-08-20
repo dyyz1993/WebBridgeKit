@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untitled</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+<style>
+/* === Project Shell Styles === */
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS Status Bar */
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wbk-status-bar-icons svg {
+  color: var(--wbk-text);
+}
+
+/* Page Content Area */
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bottom Tab Bar */
+.wbk-tab-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: 83px;
+  padding-top: 8px;
+  padding-bottom: 34px;
+  background: var(--wbk-background);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--wbk-separator);
+}
+
+.wbk-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--wbk-text-tertiary);
+  transition: color var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-tab:active {
+  opacity: 0.6;
+}
+
+.wbk-tab.wbk-tab--active {
+  color: var(--wbk-primary);
+}
+
+.wbk-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 23px;
+  height: 23px;
+  position: relative;
+}
+
+.wbk-tab-icon i {
+  width: 23px;
+  height: 23px;
+}
+
+.wbk-tab-label {
+  font: var(--wbk-text-tab-label);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Unread Badge */
+.wbk-tab-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-error);
+  border: 1.5px solid var(--wbk-background);
+  pointer-events: none;
+}
+
+/* === Settings Page Styles === */
+.wbk-settings-page {
+  padding: var(--wbk-spacing-sm) var(--wbk-spacing-lg) var(--wbk-spacing-xxl);
+}
+
+.wbk-settings-title {
+  font: var(--wbk-text-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--wbk-text);
+  padding: var(--wbk-spacing-sm) 0 var(--wbk-spacing-xl);
+  word-break: keep-all;
+}
+
+.wbk-settings-section {
+  margin-top: var(--wbk-spacing-xl);
+}
+
+.wbk-settings-section-header {
+  font: var(--wbk-text-metadata);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--wbk-text-secondary);
+  padding: 20px 16px 8px;
+}
+
+.wbk-settings-group {
+  background: var(--wbk-card-background);
+  border-radius: var(--wbk-radius-md);
+  overflow: hidden;
+}
+
+.wbk-settings-row {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-md);
+  min-height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-settings-row:active {
+  background: var(--wbk-background-secondary);
+}
+
+.wbk-settings-row + .wbk-settings-row {
+  border-top: 0.5px solid var(--wbk-separator);
+}
+
+.wbk-settings-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.wbk-settings-row-icon i {
+  width: 18px;
+  height: 18px;
+}
+
+.wbk-settings-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.wbk-settings-row-title {
+  font: var(--wbk-text-body);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--wbk-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-settings-row-value {
+  font: var(--wbk-text-body);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--wbk-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wbk-settings-row-value--success {
+  color: var(--wbk-success);
+}
+
+.wbk-settings-row-value--error {
+  color: var(--wbk-error);
+}
+
+.wbk-settings-row-value--tertiary {
+  color: var(--wbk-text-tertiary);
+}
+
+.wbk-settings-row-value--mono {
+  font-family: var(--wbk-font-mono);
+  font-size: 12px;
+}
+
+.wbk-settings-row-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.4;
+  color: var(--wbk-text-tertiary);
+}
+
+.wbk-settings-row-chevron i {
+  width: 16px;
+  height: 16px;
+}
+
+/* Icon color variants */
+.wbk-settings-row-icon--primary {
+  background: var(--wbk-primary-soft);
+  color: var(--wbk-primary);
+}
+
+.wbk-settings-row-icon--success {
+  background: var(--wbk-success-soft);
+  color: var(--wbk-success);
+}
+
+.wbk-settings-row-icon--warning {
+  background: var(--wbk-warning-soft);
+  color: var(--wbk-warning);
+}
+
+.wbk-settings-row-icon--error {
+  background: var(--wbk-error-soft);
+  color: var(--wbk-error);
+}
+
+.wbk-settings-row-icon--info {
+  background: var(--wbk-info-soft);
+  color: var(--wbk-info);
+}
+
+.wbk-settings-row-icon--neutral {
+  background: var(--wbk-background-tertiary);
+  color: var(--wbk-text-secondary);
+}
+
+.wbk-settings-row-icon--purple {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8B5CF6;
+}
+
+.wbk-settings-row-icon--green {
+  background: var(--wbk-success-soft);
+  color: var(--wbk-success);
+}
+
+.wbk-settings-row-icon--orange {
+  background: var(--wbk-warning-soft);
+  color: var(--wbk-warning);
+}
+
+.wbk-settings-row-icon--gray {
+  background: var(--wbk-background-tertiary);
+  color: var(--wbk-text-secondary);
+}
+
+.wbk-settings-row-icon--blue {
+  background: var(--wbk-primary-soft);
+  color: var(--wbk-primary);
+}
+
+.wbk-settings-row-icon--red {
+  background: var(--wbk-error-soft);
+  color: var(--wbk-error);
+}
+
+.wbk-settings-row-icon--teal {
+  background: var(--wbk-info-soft);
+  color: var(--wbk-info);
+}
+
+/* Toggle switch visual (static off state) */
+.wbk-toggle {
+  position: relative;
+  display: inline-block;
+  width: 51px;
+  height: 31px;
+  flex-shrink: 0;
+}
+
+.wbk-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-background-tertiary);
+  transition: background var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: var(--wbk-radius-full);
+  background: var(--wbk-surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.08);
+  transition: transform var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-settings-footer {
+  text-align: center;
+  padding: var(--wbk-spacing-xxl) var(--wbk-spacing-lg) var(--wbk-spacing-xxxl);
+  font: var(--wbk-text-caption);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--wbk-text-tertiary);
+}
+</style>
+
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/>
+        <path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/>
+        <rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+    <div class="wbk-settings-page">
+
+      <!-- 1. Page Title -->
+      <h1 class="wbk-settings-title">设置</h1>
+
+      <!-- 2. Section: 服务器配置 -->
+      <div class="wbk-settings-section">
+        <h2 class="wbk-settings-section-header">服务器配置</h2>
+        <div class="wbk-settings-group">
+          <div class="wbk-settings-row" data-dom-id="nav-server-api">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--blue">
+              <i data-lucide="server"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">API 服务器</div>
+            </div>
+            <span class="wbk-settings-row-value">api.day.app</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-bark-key">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--purple">
+              <i data-lucide="key"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">Bark Key</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--mono">AbCd****EfGh</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-device-token">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--green">
+              <i data-lucide="smartphone"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">设备令牌</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--mono">a1b2****e5f6</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Section: 推送通知 -->
+      <div class="wbk-settings-section">
+        <h2 class="wbk-settings-section-header">推送通知</h2>
+        <div class="wbk-settings-group">
+          <div class="wbk-settings-row" data-dom-id="nav-push-service">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--orange">
+              <i data-lucide="bell"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">推送服务</div>
+            </div>
+            <span class="wbk-settings-row-value">Bark</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-notification-permission">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--green">
+              <i data-lucide="shield-check"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">通知权限</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--success">已开启</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-push-url">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--blue">
+              <i data-lucide="send"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">推送地址</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--mono" style="max-width: 140px;">https://api.day.app/AbCdEfGh</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-silent-push">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--purple">
+              <i data-lucide="moon"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">静默推送</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--tertiary">关闭</span>
+            <div class="wbk-toggle" aria-label="静默推送开关">
+              <div class="wbk-toggle-track"></div>
+              <div class="wbk-toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Section: 缓存管理 -->
+      <div class="wbk-settings-section">
+        <h2 class="wbk-settings-section-header">缓存管理</h2>
+        <div class="wbk-settings-group">
+          <div class="wbk-settings-row" data-dom-id="nav-cache-size">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--blue">
+              <i data-lucide="hard-drive"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">缓存总大小</div>
+            </div>
+            <span class="wbk-settings-row-value">2.4 MB</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-offline-resources">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--gray">
+              <i data-lucide="wifi-off"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">离线资源</div>
+            </div>
+            <span class="wbk-settings-row-value">8 个资源</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-page-history">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--green">
+              <i data-lucide="history"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">页面历史</div>
+            </div>
+            <span class="wbk-settings-row-value">23 条记录</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-image-cache">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--orange">
+              <i data-lucide="image"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">图片缓存</div>
+            </div>
+            <span class="wbk-settings-row-value">1.8 MB</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-clear-cache">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--red">
+              <i data-lucide="trash-2"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">清除缓存</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--error" style="margin-left: auto;">清除</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Section: Bridge 功能 -->
+      <div class="wbk-settings-section">
+        <h2 class="wbk-settings-section-header">Bridge 功能</h2>
+        <div class="wbk-settings-group">
+          <div class="wbk-settings-row" data-dom-id="nav-jsbridge">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--purple">
+              <i data-lucide="code"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">JSBridge</div>
+            </div>
+            <span class="wbk-settings-row-value">12 个处理器</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-webview-pool">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--blue">
+              <i data-lucide="layers"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">WebView 池</div>
+            </div>
+            <span class="wbk-settings-row-value">3 个实例</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-network-intercept">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--green">
+              <i data-lucide="network"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">网络拦截</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--success">已启用</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-offline-mode">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--orange">
+              <i data-lucide="wifi"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">离线模式</div>
+            </div>
+            <span class="wbk-settings-row-value">自动</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Section: 调试工具 -->
+      <div class="wbk-settings-section">
+        <h2 class="wbk-settings-section-header">调试工具</h2>
+        <div class="wbk-settings-group">
+          <div class="wbk-settings-row" data-dom-id="nav-debug">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--purple">
+              <i data-lucide="bug"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">调试面板</div>
+            </div>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-log-viewer">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--blue">
+              <i data-lucide="file-text"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">日志查看</div>
+            </div>
+            <span class="wbk-settings-row-value">1,234 条</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-network-diag">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--green">
+              <i data-lucide="activity"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">网络诊断</div>
+            </div>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-crash-report">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--red">
+              <i data-lucide="alert-triangle"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">崩溃报告</div>
+            </div>
+            <span class="wbk-settings-row-value wbk-settings-row-value--success">0 个崩溃</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-perf-monitor">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--orange">
+              <i data-lucide="gauge"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">性能监控</div>
+            </div>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Section: 外观 -->
+      <div class="wbk-settings-section">
+        <h2 class="wbk-settings-section-header">外观</h2>
+        <div class="wbk-settings-group">
+          <div class="wbk-settings-row" data-dom-id="nav-theme">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--purple">
+              <i data-lucide="sun-moon"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">主题模式</div>
+            </div>
+            <span class="wbk-settings-row-value">跟随系统</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-icon-style">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--blue">
+              <i data-lucide="palette"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">图标样式</div>
+            </div>
+            <span class="wbk-settings-row-value">Lucide</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Section: 关于 -->
+      <div class="wbk-settings-section">
+        <h2 class="wbk-settings-section-header">关于</h2>
+        <div class="wbk-settings-group">
+          <div class="wbk-settings-row" data-dom-id="nav-about">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--blue">
+              <i data-lucide="info"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">关于 WebBridgeKit</div>
+            </div>
+            <span class="wbk-settings-row-value">v1.0.0</span>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-licenses">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--gray">
+              <i data-lucide="scale"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">开源许可</div>
+            </div>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-privacy">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--green">
+              <i data-lucide="lock"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">隐私政策</div>
+            </div>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+          <div class="wbk-settings-row" data-dom-id="nav-feedback">
+            <div class="wbk-settings-row-icon wbk-settings-row-icon--orange">
+              <i data-lucide="message-circle"></i>
+            </div>
+            <div class="wbk-settings-row-body">
+              <div class="wbk-settings-row-title">反馈与帮助</div>
+            </div>
+            <div class="wbk-settings-row-chevron">
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Version Footer -->
+      <div class="wbk-settings-footer">
+        WebBridgeKit v1.0.0 (1) &middot; Build 2024.05.08
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <nav class="wbk-tab-bar" role="tablist" aria-label="主导航">
+    <button class="wbk-tab" data-dom-id="tab-home" role="tab" aria-selected="false" aria-label="首页">
+      <span class="wbk-tab-icon">
+        <i data-lucide="house"></i>
+      </span>
+      <span class="wbk-tab-label">首页</span>
+    </button>
+
+    <button class="wbk-tab" data-dom-id="tab-inbox" role="tab" aria-selected="false" aria-label="收件箱">
+      <span class="wbk-tab-icon">
+        <i data-lucide="inbox"></i>
+        <span class="wbk-tab-badge" aria-hidden="true"></span>
+      </span>
+      <span class="wbk-tab-label">收件箱</span>
+    </button>
+
+    <button class="wbk-tab" data-dom-id="tab-discover" role="tab" aria-selected="false" aria-label="发现">
+      <span class="wbk-tab-icon">
+        <i data-lucide="compass"></i>
+      </span>
+      <span class="wbk-tab-label">发现</span>
+    </button>
+
+    <button class="wbk-tab wbk-tab--active" data-dom-id="tab-settings" role="tab" aria-selected="true" aria-label="设置">
+      <span class="wbk-tab-icon">
+        <i data-lucide="settings"></i>
+      </span>
+      <span class="wbk-tab-label">设置</span>
+    </button>
+  </nav>
+
+</div>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

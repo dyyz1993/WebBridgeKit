@@ -41,7 +41,7 @@ jobs:
       - name: Run SwiftLint
         run: |
           brew install swiftlint
-          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/
+          swiftlint lint --config .swiftlint.yml --reporter github-actions-logging Sources/ SuperApp/Sources/ AppTemplate/Sources/
 
   # ─── Job 2: Build ───────────────────────────────────────────────
   build:
@@ -51,6 +51,12 @@ jobs:
     needs: []
     steps:
       - uses: actions/checkout@v4
+
+      # The shell verification gates (deliverable boundaries, template gate,
+      # design lint) rely on ripgrep, which is not preinstalled on the
+      # macos-15 runner image.
+      - name: Install ripgrep
+        run: brew install ripgrep
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -66,7 +72,10 @@ jobs:
           path: Server/.build
           key: spm-server-${{ runner.os }}-${{ hashFiles('Server/Package.resolved') }}
 
-      - name: Build
+      - name: Verify deliverable boundaries
+        run: bash tools/verify-deliverable-boundaries.sh
+
+      - name: Build complete App
         run: |
           set -o pipefail
           xcodebuild build \
@@ -81,12 +90,29 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
+      - name: Build AppTemplate starter
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace WebBridgeKit.xcworkspace \
+            -scheme AppTemplate \
+            -sdk iphonesimulator \
+            -arch arm64 \
+            -configuration Debug \
+            -resultBundlePath build/AppTemplateBuildResults.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+
       - name: Upload Build Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-results
-          path: build/BuildResults.xcresult
+          path: |
+            build/BuildResults.xcresult
+            build/AppTemplateBuildResults.xcresult
           retention-days: 7
 
       - name: Upload DerivedData
@@ -781,3 +807,51 @@ jobs:
 
       - name: Run Design System Lint
         run: bash tools/ci-lint.sh
+
+  # ─── Job 8b: Release Purity (DEBUG-only code must not ship) ────
+  # Builds Release and scans the binary for DEBUG-only markers, plus the
+  # architecture-lint Rule 9 (DEBUG-only files must be file-level #if DEBUG).
+  release-purity:
+    name: 🔒 Release Purity
+    runs-on: macos-15
+    timeout-minutes: 20
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+
+      - name: Verify Release binary has no DEBUG-only code
+        run: bash tools/verify-release-no-debug.sh
+
+      - name: Architecture lint (includes DEBUG-wrap Rule 9)
+        run: bash tools/architecture-lint.sh
+
+  # ─── Job 9: Server on Linux ──────────────────────────────────────
+  # The Swift Hummingbird backend deploys to a Linux host (shanbox).
+  # Building and testing it on Linux catches Foundation/URLSession,
+  # Sendable, and glibc incompatibilities before they reach production.
+  server-linux:
+    name: 🐧 Server Build & Tests (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SPM Server build
+        uses: actions/cache@v4
+        with:
+          path: Server/.build
+          key: spm-server-linux-${{ hashFiles('Server/Package.resolved') }}
+
+      - name: Build (Release)
+        run: cd Server && swift build -c release
+
+      - name: Run Server Tests
+        run: cd Server && swift test

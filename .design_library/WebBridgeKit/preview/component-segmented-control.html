@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Segmented Control - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; align-items:center; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; align-items:center; gap:12px; width:100%; }
+.story-label { font:var(--wbk-text-metadata); color:var(--wbk-text-secondary); letter-spacing:0.5px; align-self:flex-start; }
+
+/* @component-css-start */
+.seg-track { display:inline-flex; height:32px; background:var(--color-bg-tertiary); border-radius:8px; padding:2px; position:relative; }
+.seg-segment { display:inline-flex; align-items:center; justify-content:center; padding:0 16px; height:28px; border-radius:7px; position:relative; z-index:2; font-size:13px; font-weight:500; color:var(--color-text-secondary); cursor:pointer; white-space:nowrap; user-select:none; }
+.seg-segment--active { background:var(--color-surface); color:var(--color-text); box-shadow:var(--shadow-sm); z-index:3; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="story">
+    <span class="story-label">2 段</span>
+    <div class="seg-track">
+      <span class="seg-segment seg-segment--active">概述</span>
+      <span class="seg-segment">详情</span>
+    </div>
+  </div>
+
+  <div class="story">
+    <span class="story-label">3 段</span>
+    <div class="seg-track">
+      <span class="seg-segment seg-segment--active">全部</span>
+      <span class="seg-segment">错误</span>
+      <span class="seg-segment">信息</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

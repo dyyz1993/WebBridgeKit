@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1",
+  "appId": "com.webbridgekit.fixture.chat",
+  "name": "WebBridgeKit Notification Demo",
+  "startURL": "https://cloak.xbrowser.dev:5801/fixtures/pwa-notification/index.html",
+  "allowedOrigins": [
+    "https://cloak.xbrowser.dev:5801"
+  ],
+  "capabilities": [
+    "notification"
+  ],
+  "routes": [
+    "/fixtures/pwa-notification/index.html",
+    "/fixtures/pwa-notification/approval.html"
+  ],
+  "cache": {
+    "strategy": "manifest",
+    "version": "2026.08.10-tx.1",
+    "persistent": true,
+    "restoresLastState": true
+  }
+}

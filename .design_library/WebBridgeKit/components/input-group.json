@@ -1,0 +1,33 @@
+{
+  "slug": "input-group",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["form-group", "input-group", "field"],
+  "variantDimensions": ["hasDescription"],
+  "representativeVariants": [
+    { "name": "标准表单", "props": { "hasDescription": true } },
+    { "name": "紧凑", "props": { "hasDescription": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "form group wrapper", "type": "element" },
+    { "name": "label", "role": "field label above input", "type": "element" },
+    { "name": "description", "role": "hint text below label", "type": "optional" },
+    { "name": "input", "role": "text input field", "type": "element" },
+    { "name": "error", "role": "error message below input", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "labelSize": 14,
+    "labelWeight": 600,
+    "labelColor": { "ref": "--color-text" },
+    "descriptionSize": 12,
+    "descriptionColor": { "ref": "--color-text-secondary" },
+    "gapVertical": 6,
+    "gapBetween": 12,
+    "errorSize": 12,
+    "errorColor": { "ref": "--color-error" }
+  },
+  "usageHints": ["服务器配置表单、API Key 设置、Token 名称编辑"],
+  "doNotInvent": ["不要添加 inline 标签+输入布局", "不要添加图标"],
+  "unknowns": []
+}

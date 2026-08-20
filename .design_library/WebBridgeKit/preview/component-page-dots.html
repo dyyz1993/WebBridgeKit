@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Page Dots - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); color: var(--color-text); }
+.stage { display: flex; flex-direction: column; gap: 12px; }
+.variant-label { font: 500 13px/1.4 var(--wbk-font-family); color: var(--color-text-secondary); letter-spacing: .3px; }
+
+/* @component-css-start */
+.page-dots { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 6px; height: 24px; }
+.page-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-bg-tertiary); flex-shrink: 0; transition: all .2s; }
+.page-dot--active { width: 18px; border-radius: 3px; background: var(--color-primary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="variant-label">3 页 · 第 2 页激活</div>
+  <div class="page-dots">
+    <span class="page-dot"></span>
+    <span class="page-dot page-dot--active"></span>
+    <span class="page-dot"></span>
+  </div>
+
+  <div class="variant-label">5 页 · 第 3 页激活</div>
+  <div class="page-dots">
+    <span class="page-dot"></span>
+    <span class="page-dot"></span>
+    <span class="page-dot page-dot--active"></span>
+    <span class="page-dot"></span>
+    <span class="page-dot"></span>
+  </div>
+</div>
+</body>
+</html>

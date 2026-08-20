@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试面板</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+
+<style>
+/* === Debug Panel Shell === */
+.wbk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--wbk-background);
+  font-family: var(--wbk-font-family);
+  color: var(--wbk-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS Status Bar */
+.wbk-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 var(--wbk-spacing-lg);
+  padding-top: 14px;
+  background: var(--wbk-background);
+}
+
+.wbk-status-bar-time {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wbk-text);
+  min-width: 54px;
+}
+
+.wbk-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wbk-status-bar-icons svg {
+  color: var(--wbk-text);
+}
+
+/* Page Content */
+.wbk-page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Navigation Header */
+.wbk-nav-header {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  position: relative;
+}
+
+.wbk-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--wbk-primary);
+  font: var(--wbk-text-body);
+  font-size: 17px;
+  padding: 0;
+  transition: opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-nav-back:active {
+  opacity: 0.6;
+}
+
+.wbk-nav-back i {
+  width: 20px;
+  height: 20px;
+}
+
+.wbk-nav-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font: var(--wbk-text-row-title);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--wbk-text);
+  white-space: nowrap;
+}
+
+/* Segmented Control */
+.wbk-segmented-control {
+  display: flex;
+  align-items: center;
+  margin: var(--wbk-spacing-sm) var(--wbk-spacing-lg);
+  background: var(--wbk-background-tertiary);
+  border-radius: var(--wbk-radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.wbk-segment {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: 7px;
+  font: var(--wbk-text-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--wbk-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--wbk-duration-fast) var(--wbk-easing),
+              background var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-segment--active {
+  background: var(--wbk-card-background);
+  color: var(--wbk-text);
+  box-shadow: 0 0.5px 1px rgba(17, 24, 39, 0.05);
+}
+
+.wbk-segment:active {
+  opacity: 0.7;
+}
+
+/* Tab Content */
+.wbk-tab-content {
+  display: none;
+}
+
+.wbk-tab-content--active {
+  display: block;
+}
+
+/* Handler Section */
+.wbk-handler-section {
+  padding: 0 var(--wbk-spacing-lg);
+  margin-bottom: var(--wbk-spacing-lg);
+}
+
+.wbk-handler-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--wbk-spacing-sm) 0;
+}
+
+.wbk-handler-section-title {
+  font: var(--wbk-text-section-title);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wbk-text);
+}
+
+.wbk-handler-section-action {
+  font: var(--wbk-text-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--wbk-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-handler-section-action:active {
+  opacity: 0.6;
+}
+
+.wbk-handler-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--wbk-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--wbk-separator);
+}
+
+.wbk-handler-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--wbk-spacing-md) var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  min-height: 48px;
+}
+
+.wbk-handler-row + .wbk-handler-row {
+  border-top: 1px solid var(--wbk-separator);
+}
+
+.wbk-handler-name {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--wbk-text);
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.wbk-handler-action {
+  font: var(--wbk-text-mono-meta);
+  font-size: 13px;
+  color: var(--wbk-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: var(--wbk-spacing-md);
+}
+
+/* Notification Form */
+.wbk-form-card {
+  margin: var(--wbk-spacing-sm) var(--wbk-spacing-lg);
+  padding: var(--wbk-spacing-lg);
+  background: var(--wbk-card-background);
+  border-radius: var(--wbk-radius-md);
+  border: 1px solid var(--wbk-separator);
+}
+
+.wbk-form-group {
+  margin-bottom: var(--wbk-spacing-lg);
+}
+
+.wbk-form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.wbk-form-label {
+  display: block;
+  font: var(--wbk-text-metadata);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--wbk-text-secondary);
+  margin-bottom: var(--wbk-spacing-sm);
+}
+
+.wbk-form-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  background: var(--wbk-background-secondary);
+  border: none;
+  border-radius: var(--wbk-radius-sm);
+  font: var(--wbk-text-body);
+  font-size: 15px;
+  color: var(--wbk-text);
+  outline: none;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wbk-form-input::placeholder {
+  color: var(--wbk-placeholder);
+}
+
+.wbk-form-input:focus {
+  box-shadow: 0 0 0 2px var(--wbk-primary-soft);
+}
+
+.wbk-form-select {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--wbk-spacing-lg);
+  background: var(--wbk-background-secondary);
+  border: none;
+  border-radius: var(--wbk-radius-sm);
+  font: var(--wbk-text-body);
+  font-size: 15px;
+  color: var(--wbk-text);
+  outline: none;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.wbk-form-select:focus {
+  box-shadow: 0 0 0 2px var(--wbk-primary-soft);
+}
+
+.wbk-form-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--wbk-spacing-sm) 0;
+}
+
+.wbk-form-toggle-label {
+  font: var(--wbk-text-row-title);
+  font-size: 15px;
+  color: var(--wbk-text);
+}
+
+.wbk-toggle {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  background: var(--wbk-background-tertiary);
+  border-radius: var(--wbk-radius-full);
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing);
+  flex-shrink: 0;
+}
+
+.wbk-toggle--on {
+  background: var(--wbk-primary);
+}
+
+.wbk-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  background: var(--wbk-surface);
+  border-radius: var(--wbk-radius-full);
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.15);
+  transition: transform var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-toggle--on .wbk-toggle-knob {
+  transform: translateX(20px);
+}
+
+.wbk-form-button {
+  width: 100%;
+  height: 44px;
+  margin-top: var(--wbk-spacing-xxl);
+  background: var(--wbk-primary);
+  color: var(--wbk-text-on-color);
+  border: none;
+  border-radius: var(--wbk-radius-md);
+  font: var(--wbk-text-button);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--wbk-duration-fast) var(--wbk-easing),
+              opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-form-button:active {
+  background: var(--wbk-primary-pressed);
+  opacity: 0.85;
+}
+
+/* Log Toolbar */
+.wbk-log-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--wbk-spacing-sm);
+  padding: var(--wbk-spacing-lg);
+}
+
+.wbk-log-toolbar-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  border-radius: var(--wbk-radius-sm);
+  font: var(--wbk-text-body);
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--wbk-duration-fast) var(--wbk-easing);
+}
+
+.wbk-log-toolbar-btn:active {
+  opacity: 0.7;
+}
+
+.wbk-log-toolbar-btn--primary {
+  background: var(--wbk-primary);
+  color: var(--wbk-text-on-color);
+}
+
+.wbk-log-toolbar-btn--secondary {
+  background: var(--wbk-card-background);
+  color: var(--wbk-primary);
+  border: 1px solid var(--wbk-separator);
+}
+
+.wbk-log-toolbar-btn--error {
+  background: var(--wbk-error-soft);
+  color: var(--wbk-error);
+}
+
+/* Log Console */
+.wbk-log-console {
+  margin: 0 var(--wbk-spacing-lg);
+  padding: var(--wbk-spacing-lg);
+  background: var(--wbk-background-secondary);
+  border-radius: var(--wbk-radius-md);
+  overflow-x: auto;
+}
+
+.wbk-log-line {
+  font: var(--wbk-text-mono-meta);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+  padding: 3px 0;
+}
+
+.wbk-log-line + .wbk-log-line {
+  border-top: 1px solid var(--wbk-separator);
+  padding-top: 7px;
+}
+
+.wbk-log-level-info {
+  color: var(--wbk-text-secondary);
+}
+
+.wbk-log-level-debug {
+  color: var(--wbk-text-tertiary);
+}
+
+.wbk-log-level-warn {
+  color: var(--wbk-warning);
+}
+
+.wbk-log-level-error {
+  color: var(--wbk-error);
+}
+
+/* Stats Bar */
+.wbk-stats-bar {
+  text-align: center;
+  padding: var(--wbk-spacing-lg) var(--wbk-spacing-lg) var(--wbk-spacing-xxl);
+  font: var(--wbk-text-caption);
+  font-size: 12px;
+  color: var(--wbk-text-tertiary);
+}
+
+/* Environment Info Card */
+.wbk-env-card {
+  margin: var(--wbk-spacing-sm) var(--wbk-spacing-lg);
+  padding: var(--wbk-spacing-lg);
+  background: var(--wbk-background-secondary);
+  border-radius: var(--wbk-radius-md);
+}
+
+.wbk-env-text {
+  font: var(--wbk-text-mono-meta);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--wbk-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.wbk-env-text .wbk-env-header {
+  color: var(--wbk-text);
+  font-weight: 600;
+}
+
+.wbk-env-text .wbk-env-value {
+  color: var(--wbk-text-secondary);
+}
+
+.wbk-env-text .wbk-env-success {
+  color: var(--wbk-success);
+}
+
+/* Safe Area */
+.wbk-safe-bottom {
+  height: env(safe-area-inset-bottom, 34px);
+  background: var(--wbk-background);
+}
+</style>
+
+<div class="wbk-shell">
+
+  <!-- iOS Status Bar -->
+  <div class="wbk-status-bar" aria-hidden="true">
+    <span class="wbk-status-bar-time">9:41</span>
+    <div class="wbk-status-bar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="9" width="3" height="3" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="4.5" y="6" width="3" height="6" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="9" y="3" width="3" height="9" rx="0.5" fill="currentColor" opacity="1"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 10.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor"/>
+        <path d="M4.93 8.47a4.37 4.37 0 016.14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M2.1 5.64a8.13 8.13 0 0111.8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="2.5" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+        <rect x="25" y="4" width="1.5" height="5" rx="0.75" fill="currentColor" opacity="0.4"/>
+        <rect x="2" y="2" width="20" height="9" rx="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="wbk-page-content">
+
+    <!-- Navigation Header -->
+    <div class="wbk-nav-header">
+      <button class="wbk-nav-back" data-dom-id="nav-back" aria-label="返回设置">
+        <i data-lucide="chevron-left"></i>
+        <span>设置</span>
+      </button>
+      <span class="wbk-nav-title">调试面板</span>
+    </div>
+
+    <!-- Segmented Control (4 tabs) -->
+    <div class="wbk-segmented-control">
+      <button class="wbk-segment wbk-segment--active" data-tab="tab-handlers">处理器</button>
+      <button class="wbk-segment" data-tab="tab-notification">通知测试</button>
+      <button class="wbk-segment" data-tab="tab-logs">日志</button>
+      <button class="wbk-segment" data-tab="tab-env">环境</button>
+    </div>
+
+    <!-- ===== Tab 1: 处理器 (Handlers) ===== -->
+    <div class="wbk-tab-content wbk-tab-content--active" id="tab-handlers">
+
+      <!-- 通用 (3) -->
+      <div class="wbk-handler-section">
+        <div class="wbk-handler-section-header">
+          <span class="wbk-handler-section-title">通用 (3)</span>
+          <button class="wbk-handler-section-action">执行测试</button>
+        </div>
+        <div class="wbk-handler-list">
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">打开链接</span>
+            <span class="wbk-handler-action">openURL</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">复制内容</span>
+            <span class="wbk-handler-action">copy</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">分享</span>
+            <span class="wbk-handler-action">share</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 媒体 (2) -->
+      <div class="wbk-handler-section">
+        <div class="wbk-handler-section-header">
+          <span class="wbk-handler-section-title">媒体 (2)</span>
+        </div>
+        <div class="wbk-handler-list">
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">拍照</span>
+            <span class="wbk-handler-action">camera</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">选择图片</span>
+            <span class="wbk-handler-action">photo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 存储 (2) -->
+      <div class="wbk-handler-section">
+        <div class="wbk-handler-section-header">
+          <span class="wbk-handler-section-title">存储 (2)</span>
+        </div>
+        <div class="wbk-handler-list">
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">保存数据</span>
+            <span class="wbk-handler-action">store</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">读取数据</span>
+            <span class="wbk-handler-action">retrieve</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 导航 (2) -->
+      <div class="wbk-handler-section">
+        <div class="wbk-handler-section-header">
+          <span class="wbk-handler-section-title">导航 (2)</span>
+        </div>
+        <div class="wbk-handler-list">
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">返回上一页</span>
+            <span class="wbk-handler-action">goBack</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">打开新页面</span>
+            <span class="wbk-handler-action">openPage</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设备 (3) -->
+      <div class="wbk-handler-section">
+        <div class="wbk-handler-section-header">
+          <span class="wbk-handler-section-title">设备 (3)</span>
+        </div>
+        <div class="wbk-handler-list">
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">获取系统信息</span>
+            <span class="wbk-handler-action">systemInfo</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">震动</span>
+            <span class="wbk-handler-action">vibrate</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">获取位置</span>
+            <span class="wbk-handler-action">getLocation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 通知 (2) -->
+      <div class="wbk-handler-section">
+        <div class="wbk-handler-section-header">
+          <span class="wbk-handler-section-title">通知 (2)</span>
+        </div>
+        <div class="wbk-handler-list">
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">发送通知</span>
+            <span class="wbk-handler-action">sendNotification</span>
+          </div>
+          <div class="wbk-handler-row">
+            <span class="wbk-handler-name">请求权限</span>
+            <span class="wbk-handler-action">requestPermission</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== Tab 2: 通知测试 ===== -->
+    <div class="wbk-tab-content" id="tab-notification">
+
+      <div class="wbk-form-card">
+        <!-- 标题 -->
+        <div class="wbk-form-group">
+          <label class="wbk-form-label">标题</label>
+          <input class="wbk-form-input" type="text" value="测试通知" placeholder="通知标题">
+        </div>
+
+        <!-- 正文 -->
+        <div class="wbk-form-group">
+          <label class="wbk-form-label">正文</label>
+          <input class="wbk-form-input" type="text" value="这是一条测试通知" placeholder="通知内容">
+        </div>
+
+        <!-- URL (可选) -->
+        <div class="wbk-form-group">
+          <label class="wbk-form-label">URL（可选）</label>
+          <input class="wbk-form-input" type="url" value="https://example.com" placeholder="点击通知打开的链接">
+        </div>
+
+        <!-- 级别 -->
+        <div class="wbk-form-group">
+          <label class="wbk-form-label">级别</label>
+          <select class="wbk-form-select">
+            <option>高优先级</option>
+            <option selected>普通</option>
+            <option>静默</option>
+          </select>
+        </div>
+
+        <!-- 声音 -->
+        <div class="wbk-form-group">
+          <div class="wbk-form-toggle-row">
+            <span class="wbk-form-toggle-label">声音</span>
+            <button class="wbk-toggle wbk-toggle--on" aria-label="声音开关">
+              <span class="wbk-toggle-knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 发送按钮 -->
+        <button class="wbk-form-button">发送测试通知</button>
+      </div>
+
+    </div>
+
+    <!-- ===== Tab 3: 日志 ===== -->
+    <div class="wbk-tab-content" id="tab-logs">
+
+      <!-- Toolbar -->
+      <div class="wbk-log-toolbar">
+        <button class="wbk-log-toolbar-btn wbk-log-toolbar-btn--primary">全部</button>
+        <button class="wbk-log-toolbar-btn wbk-log-toolbar-btn--error">错误</button>
+        <button class="wbk-log-toolbar-btn wbk-log-toolbar-btn--secondary">复制全部</button>
+        <button class="wbk-log-toolbar-btn wbk-log-toolbar-btn--secondary">导出 JSON</button>
+      </div>
+
+      <!-- Log Console -->
+      <div class="wbk-log-console">
+        <div class="wbk-log-line wbk-log-level-info">[INFO] 2026-05-08 14:32:00 ui ViewDidLoad called</div>
+        <div class="wbk-log-line wbk-log-level-debug">[DEBUG] 2026-05-08 14:32:01 ui CollectionView reloaded</div>
+        <div class="wbk-log-line wbk-log-level-info">[INFO] 2026-05-08 14:32:02 network Fetching manifest...</div>
+        <div class="wbk-log-line wbk-log-level-warn">[WARN] 2026-05-08 14:32:03 cache Cache size exceeds threshold</div>
+        <div class="wbk-log-line wbk-log-level-error">[ERROR] 2026-05-08 14:32:05 network Request timeout: /api/manifest</div>
+        <div class="wbk-log-line wbk-log-level-info">[INFO] 2026-05-08 14:32:06 ui History updated</div>
+        <div class="wbk-log-line wbk-log-level-info">[INFO] 2026-05-08 14:32:08 bridge JSBridge initialized with 12 handlers</div>
+        <div class="wbk-log-line wbk-log-level-debug">[DEBUG] 2026-05-08 14:32:10 cache Prefetching 3 resources</div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="wbk-stats-bar">共 8 条日志 · 5 INFO · 1 WARN · 1 ERROR · 1 DEBUG</div>
+
+    </div>
+
+    <!-- ===== Tab 4: 环境 ===== -->
+    <div class="wbk-tab-content" id="tab-env">
+
+      <div class="wbk-env-card">
+        <div class="wbk-env-text"><span class="wbk-env-header">=== App Info ===</span>
+Bundle ID: <span class="wbk-env-value">com.webbridgekit.superapp</span>
+Version: <span class="wbk-env-value">1.0 (1)</span>
+Device: <span class="wbk-env-value">iPhone 15 Pro</span>
+iOS: <span class="wbk-env-value">18.0</span>
+Screen: <span class="wbk-env-value">393&times;852 @3x</span>
+
+<span class="wbk-env-header">=== Handlers ===</span>
+<span class="wbk-env-value">通用: 3  媒体: 2  存储: 2
+导航: 2  设备: 3  通知: 2
+Total: 14</span>
+
+<span class="wbk-env-header">=== Diagnostic ===</span>
+<span class="wbk-env-success">All systems operational &#10003;</span></div>
+      </div>
+
+    </div>
+
+    <!-- Safe Area Bottom -->
+    <div class="wbk-safe-bottom"></div>
+
+  </div>
+
+</div>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

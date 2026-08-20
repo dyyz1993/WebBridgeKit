@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  ManifestCacheTestViewController.swift
 //  SuperApp
 //
@@ -125,6 +127,7 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
         label.font = ThemeTokens.Typography.monospaceMeta
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
+        label.accessibilityIdentifier = "manifest_test.stats_label"
         return label
     }()
 
@@ -195,6 +198,8 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
         super.viewDidLoad()
 
         title = "Manifest 缓存测试"
+        view.accessibilityIdentifier = "manifestCacheTest.root"
+        scrollView.accessibilityIdentifier = "manifest_test.scroll_view"
         view.backgroundColor = ThemeTokens.Color.background
 
         setupUI()
@@ -625,3 +630,5 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
 
 //  WKNavigationDelegate 扩展已删除 - 底部 WebView 不再需要
 // 页面验证和展示功能已移至全屏模式下的 WebView
+
+#endif

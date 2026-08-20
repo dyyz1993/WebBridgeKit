@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Avatar - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.section-title { font:var(--wbk-text-body); font-weight:600; color:var(--wbk-text); margin-bottom:12px; }
+.avatar-row { display:flex; align-items:flex-end; gap:12px; }
+.avatar-item { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.avatar-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); }
+
+/* @component-css-start */
+.wbk-avatar { position:relative; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; border:2px solid var(--color-surface); box-sizing:border-box; }
+.wbk-avatar-initials { font-family:var(--wbk-font-family); font-weight:600; line-height:1; user-select:none; }
+.wbk-avatar--lg { width:48px; height:48px; }
+.wbk-avatar--lg .wbk-avatar-initials { font-size:18px; }
+.wbk-avatar--md { width:32px; height:32px; }
+.wbk-avatar--md .wbk-avatar-initials { font-size:13px; }
+.wbk-avatar--sm { width:24px; height:24px; }
+.wbk-avatar--sm .wbk-avatar-initials { font-size:10px; }
+.wbk-avatar__status { position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; border:2px solid var(--color-surface); box-sizing:border-box; }
+.wbk-avatar__status--online { background-color:var(--color-success); }
+.wbk-avatar__status--offline { background-color:var(--wbk-text-tertiary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div>
+    <div class="section-title">尺寸</div>
+    <div class="avatar-row">
+      <div class="avatar-item">
+        <div class="wbk-avatar wbk-avatar--lg" style="background:var(--color-primary-soft);">
+          <span class="wbk-avatar-initials" style="color:var(--color-primary);">W</span>
+        </div>
+        <span class="avatar-label">大 48px</span>
+      </div>
+      <div class="avatar-item">
+        <div class="wbk-avatar wbk-avatar--md" style="background:var(--color-primary-soft);">
+          <span class="wbk-avatar-initials" style="color:var(--color-primary);">W</span>
+        </div>
+        <span class="avatar-label">中 32px</span>
+      </div>
+      <div class="avatar-item">
+        <div class="wbk-avatar wbk-avatar--sm" style="background:var(--color-primary-soft);">
+          <span class="wbk-avatar-initials" style="color:var(--color-primary);">W</span>
+        </div>
+        <span class="avatar-label">小 24px</span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="section-title">状态指示</div>
+    <div class="avatar-row">
+      <div class="avatar-item">
+        <div class="wbk-avatar wbk-avatar--md" style="background:var(--color-primary-soft);">
+          <span class="wbk-avatar-initials" style="color:var(--color-primary);">W</span>
+          <span class="wbk-avatar__status wbk-avatar__status--online"></span>
+        </div>
+        <span class="avatar-label">在线</span>
+      </div>
+      <div class="avatar-item">
+        <div class="wbk-avatar wbk-avatar--md" style="background:var(--color-primary-soft);">
+          <span class="wbk-avatar-initials" style="color:var(--color-primary);">W</span>
+          <span class="wbk-avatar__status wbk-avatar__status--offline"></span>
+        </div>
+        <span class="avatar-label">离线</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Chip Input - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; }
+.phone-frame { width:100%; background:var(--wbk-background); border-radius:var(--wbk-radius-card); overflow:hidden; box-shadow:var(--wbk-shadow-card); padding:var(--wbk-spacing-lg); }
+
+/* @component-css-start */
+.chip-input { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.chip-input__chip { display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:14px; background:var(--wbk-primary-soft); color:var(--wbk-primary); font-size:13px; font-weight:500; white-space:nowrap; gap:4px; flex-shrink:0; }
+.chip-input__text { line-height:1; }
+.chip-input__remove { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; background:none; border:none; color:var(--wbk-primary); cursor:pointer; padding:0; margin-left:2px; flex-shrink:0; opacity:0.6; }
+.chip-input__remove:hover { opacity:1; }
+.chip-input__remove svg { width:12px; height:12px; }
+.chip-input__field { flex:1; min-width:80px; height:28px; border:none; outline:none; background:transparent; font:var(--wbk-text-metadata); color:var(--wbk-text); padding:0 4px; }
+.chip-input__field::placeholder { color:var(--wbk-text-tertiary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">只读标签组</div>
+    <div class="phone-frame">
+      <div class="chip-input">
+        <div class="chip-input__chip">
+          <span class="chip-input__text">JavaScript</span>
+        </div>
+        <div class="chip-input__chip">
+          <span class="chip-input__text">Swift</span>
+        </div>
+        <div class="chip-input__chip">
+          <span class="chip-input__text">HTTP</span>
+        </div>
+        <div class="chip-input__chip">
+          <span class="chip-input__text">WebSocket</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">可添加</div>
+    <div class="phone-frame">
+      <div class="chip-input">
+        <div class="chip-input__chip">
+          <span class="chip-input__text">JavaScript</span>
+        </div>
+        <div class="chip-input__chip">
+          <span class="chip-input__text">Swift</span>
+        </div>
+        <div class="chip-input__chip">
+          <span class="chip-input__text">HTTP</span>
+        </div>
+        <div class="chip-input__chip">
+          <span class="chip-input__text">WebSocket</span>
+        </div>
+        <div class="chip-input__chip">
+          <span class="chip-input__text">JSON</span>
+          <button class="chip-input__remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input class="chip-input__field" type="text" placeholder="添加标签...">
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

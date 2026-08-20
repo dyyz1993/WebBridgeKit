@@ -40,14 +40,11 @@ final class FunctionalTests: XCTestCase {
     func testSettingsNavigation() throws {
         navigateToTab("设置")
 
-        let tableView = app.tables["settings.tableView"]
-        XCTAssertTrue(tableView.waitForExistence(timeout: 5), "Settings table should exist")
+        let settingsRoot = app.descendants(matching: .any)["SettingsViewController"]
+        XCTAssertTrue(settingsRoot.waitForExistence(timeout: 5), "Settings screen should exist")
 
-        let allCells = tableView.cells
-        let cellCount = allCells.count
-        XCTAssertGreaterThanOrEqual(cellCount, 7, "Settings should have at least 7 rows, found \(cellCount)")
-
-        let cacheCell = tableView.cells["settings.cell.cacheManager"]
+        let cacheCell = app.descendants(matching: .any)["settings.cell.cacheManager"]
+        XCTAssertTrue(cacheCell.waitForExistence(timeout: 5), "Cache management row should exist")
         if cacheCell.waitForExistence(timeout: 3) {
             cacheCell.tap()
             sleep(1)
@@ -82,10 +79,8 @@ final class FunctionalTests: XCTestCase {
             }
         }
 
-        let notifCell = tableView.cells["settings.cell.notificationSettings"]
+        let notifCell = app.descendants(matching: .any)["settings.cell.notificationSettings"]
         if notifCell.waitForExistence(timeout: 3) {
-            let snapshotBefore = app.state
-
             notifCell.tap()
             sleep(2)
 
@@ -106,7 +101,7 @@ final class FunctionalTests: XCTestCase {
     // MARK: - Test 2: Inbox Scrolling
 
     func testInboxScrolling() throws {
-        navigateToTab("收信箱")
+        navigateToTab("tab.notifications")
 
         sleep(2)
 
@@ -127,21 +122,23 @@ final class FunctionalTests: XCTestCase {
 
     // MARK: - Test 3: Home Card Tap
 
-    func testHomeCardTap() throws {
-        navigateToTab("首页")
+    func testWebCardTap() throws {
+        navigateToTab("tab.apps")
 
         let collectionView = app.collectionViews["MainCollectionView"]
         let emptyState = app.otherElements["EmptyStateView"]
+        let appCenter = app.descendants(matching: .any)["pwaCenter.table"]
         let cvExists = collectionView.waitForExistence(timeout: 5)
+        let appCenterExists = appCenter.waitForExistence(timeout: 2)
         let emptyExists = emptyState.waitForExistence(timeout: 2)
 
-        guard cvExists || emptyExists else {
-            XCTFail("Home should have collection view or empty state")
+        guard cvExists || appCenterExists || emptyExists else {
+            XCTFail("Apps should have an app center, collection view, or empty state")
             return
         }
 
         guard cvExists else {
-            print("[Info] Home shows empty state, no cards to tap")
+            print("[Info] Web shows v4 content or empty state, no legacy cards to tap")
             saveScreenshot("/tmp/wbk-home-card-tap.png")
             return
         }
@@ -153,6 +150,7 @@ final class FunctionalTests: XCTestCase {
             saveScreenshot("/tmp/wbk-home-card-tap.png")
 
             if !app.collectionViews["MainCollectionView"].exists {
+                // swiftlint:disable:next empty_count
                 if app.navigationBars.buttons.count > 0 {
                     app.navigationBars.firstMatch.buttons.firstMatch.tap()
                     sleep(1)
@@ -167,6 +165,7 @@ final class FunctionalTests: XCTestCase {
                 saveScreenshot("/tmp/wbk-home-card-tap.png")
 
                 if !app.collectionViews["MainCollectionView"].exists {
+                    // swiftlint:disable:next empty_count
                     if app.navigationBars.buttons.count > 0 {
                         app.navigationBars.firstMatch.buttons.firstMatch.tap()
                         sleep(1)

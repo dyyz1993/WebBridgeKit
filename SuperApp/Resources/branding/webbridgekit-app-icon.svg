@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <title>WebBridgeKit app icon</title>
+  <desc>WebBridgeKit full bridge logo on a white app-icon background.</desc>
+  <defs>
+    <linearGradient id="webbridgekit-logo-gradient" x1="112" y1="188" x2="912" y2="856" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3F6FF5"/>
+      <stop offset="0.52" stop-color="#4F6AF6"/>
+      <stop offset="1" stop-color="#A13DFA"/>
+    </linearGradient>
+    <linearGradient id="webbridgekit-bridge-gradient" x1="382" y1="494" x2="726" y2="548" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2878F4"/>
+      <stop offset="0.5" stop-color="#5E65F6"/>
+      <stop offset="1" stop-color="#B53CF3"/>
+    </linearGradient>
+    <filter id="webbridgekit-soft-shadow" x="-20%" y="-20%" width="140%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="10" dy="14" stdDeviation="12" flood-color="#2435C7" flood-opacity="0.26"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="224" fill="#FFFFFF"/>
+  <path d="M112 205C112 140 178 101 237 131L430 229C476 253 504 299 504 351V674C504 733 474 779 426 804L236 903C178 933 112 892 112 826V205Z" fill="url(#webbridgekit-logo-gradient)"/>
+  <path d="M912 205C912 140 846 101 787 131L594 229C548 253 520 299 520 351V674C520 733 550 779 598 804L788 903C846 933 912 892 912 826V205Z" fill="url(#webbridgekit-logo-gradient)"/>
+  <path d="M232 361C232 325 266 299 300 310L405 345C436 356 456 384 456 418V602C456 638 435 666 402 678L297 714C263 725 232 699 232 663V361Z" fill="#2A42CF" opacity="0.25" transform="translate(16 16)"/>
+  <path d="M792 361C792 325 758 299 724 310L619 345C588 356 568 384 568 418V602C568 638 589 666 622 678L727 714C761 725 792 699 792 663V361Z" fill="#2A42CF" opacity="0.25" transform="translate(16 16)"/>
+  <path d="M232 345C232 309 266 283 300 294L405 329C436 340 456 368 456 402V586C456 622 435 650 402 662L297 698C263 709 232 683 232 647V345Z" fill="#FFFFFF"/>
+  <path d="M792 345C792 309 758 283 724 294L619 329C588 340 568 368 568 402V586C568 622 589 650 622 662L727 698C761 709 792 683 792 647V345Z" fill="#FFFFFF"/>
+  <circle cx="208" cy="250" r="16" fill="#FFFFFF"/><circle cx="258" cy="262" r="16" fill="#FFFFFF"/><circle cx="308" cy="274" r="16" fill="#FFFFFF"/>
+  <rect x="730" y="224" width="36" height="36" rx="10" fill="#FFFFFF"/><rect x="778" y="224" width="36" height="36" rx="10" fill="#FFFFFF"/><rect x="730" y="272" width="36" height="36" rx="10" fill="#FFFFFF"/><rect x="778" y="272" width="36" height="36" rx="10" fill="#FFFFFF"/>
+  <path d="M382 460C382 425 417 402 449 417L506 445C540 461 568 461 602 445L659 417C691 402 726 425 726 460V566C726 601 691 624 659 609L602 581C568 565 540 565 506 581L449 609C417 624 382 601 382 566V460Z" fill="#273FC7" opacity="0.32" transform="translate(8 12)" filter="url(#webbridgekit-soft-shadow)"/>
+  <path d="M382 448C382 413 417 390 449 405L506 433C540 449 568 449 602 433L659 405C691 390 726 413 726 448V554C726 589 691 612 659 597L602 569C568 553 540 553 506 569L449 597C417 612 382 589 382 554V448Z" fill="url(#webbridgekit-bridge-gradient)"/>
+</svg>

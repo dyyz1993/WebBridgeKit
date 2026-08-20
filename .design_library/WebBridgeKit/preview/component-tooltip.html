@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tooltip - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:48px; max-width:480px; margin:0 auto; }
+.section-title { font:var(--wbk-text-body); font-weight:600; color:var(--wbk-text); margin-bottom:12px; }
+
+/* @component-css-start */
+.wbk-tooltip {
+  display:inline-flex;
+  align-items:center;
+  background:var(--wbk-text);
+  color:var(--wbk-background);
+  font-size:12px;
+  font-weight:500;
+  padding:8px 12px;
+  border-radius:6px;
+  max-width:200px;
+  line-height:1.4;
+  white-space:nowrap;
+}
+
+/* Tooltip placement wrappers */
+.wbk-tooltip-demo {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.wbk-tooltip-demo--top {
+  flex-direction:column;
+}
+.wbk-tooltip-demo--bottom {
+  flex-direction:column;
+}
+
+/* Sample trigger button */
+.wbk-tooltip-trigger {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  border-radius:var(--radius-md);
+  background:var(--color-primary-soft);
+  color:var(--color-primary);
+  border:none;
+  cursor:pointer;
+}
+.wbk-tooltip-trigger--text {
+  width:auto;
+  padding:0 16px;
+  gap:8px;
+  font:var(--wbk-text-button);
+  color:var(--wbk-background);
+  background:var(--color-primary);
+  border-radius:var(--radius-md);
+}
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- Variant 1: Above (上方) -->
+  <div>
+    <div class="section-title">上方</div>
+    <div style="display:flex;gap:40px;justify-content:center;padding:40px 0 60px;">
+
+      <!-- Tooltip above icon button -->
+      <div class="wbk-tooltip-demo wbk-tooltip-demo--top">
+        <div class="wbk-tooltip">复制到剪贴板</div>
+        <button class="wbk-tooltip-trigger">
+          <i data-lucide="copy" style="width:20px;height:20px;"></i>
+        </button>
+      </div>
+
+      <!-- Tooltip above text button -->
+      <div class="wbk-tooltip-demo wbk-tooltip-demo--top">
+        <div class="wbk-tooltip">删除此项目</div>
+        <button class="wbk-tooltip-trigger wbk-tooltip-trigger--text">
+          <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+          删除
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Variant 2: Below (下方) -->
+  <div>
+    <div class="section-title">下方</div>
+    <div style="display:flex;gap:40px;justify-content:center;padding:60px 0 40px;">
+
+      <!-- Tooltip below icon button -->
+      <div class="wbk-tooltip-demo wbk-tooltip-demo--bottom">
+        <button class="wbk-tooltip-trigger">
+          <i data-lucide="heart" style="width:20px;height:20px;"></i>
+        </button>
+        <div class="wbk-tooltip">添加到收藏</div>
+      </div>
+
+      <!-- Tooltip below text button -->
+      <div class="wbk-tooltip-demo wbk-tooltip-demo--bottom">
+        <button class="wbk-tooltip-trigger wbk-tooltip-trigger--text">
+          <i data-lucide="share-2" style="width:16px;height:16px;"></i>
+          分享
+        </button>
+        <div class="wbk-tooltip">分享到其他应用</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

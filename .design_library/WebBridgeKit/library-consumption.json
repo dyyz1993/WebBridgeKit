@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "tokenSource": "css.json",
+  "componentEvidenceIndex": "components/index.json",
+  "uikitPlan": "uikit-plan.json",
+  "uikitPlanNote": "uikit-plan.json has not been generated yet. This field is reserved for future iOS UIKit component mapping.",
+  "readOrder": [
+    "README.md",
+    "colors_and_type.css",
+    "components/index.json",
+    "preview/"
+  ]
+}

@@ -1,26 +1,21 @@
 #!/bin/bash
-# WebBridgeKit UI Screenshot Capture
-# Usage: bash tools/capture-screenshots.sh
-# Requires: booted simulator with app installed
+# WebBridgeKit UI screenshot capture.
+# Usage: bash tools/capture-screenshots.sh [--build]
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-OUTPUT_DIR="$PROJECT_DIR/docs/screenshots/ui-redesign"
-DERIVED_DATA="/tmp/wbk-dd-screenshots"
-BUNDLE_ID="com.webbridgekit.superapp"
-
-mkdir -p "$OUTPUT_DIR"
+OUTPUT_DIR="${WBK_SCREENSHOT_OUTPUT_DIR:-$PROJECT_DIR/build/screenshots/ui-redesign}"
+DERIVED_DATA="${WBK_SCREENSHOT_DERIVED_DATA:-/tmp/wbk-dd-screenshots}"
+TEST_OUTPUT_DIR="/tmp/wbk-screenshots"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 NC='\033[0m'
 
-log()  { echo -e "${GREEN}[INFO]${NC} $1"; }
-warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-err()  { echo -e "${RED}[ERROR]${NC} $1"; }
+log() { echo -e "${GREEN}[INFO]${NC} $1"; }
+err() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 check_simulator() {
     if ! xcrun simctl list devices booted 2>/dev/null | grep -q "Booted"; then
@@ -31,90 +26,59 @@ check_simulator() {
     log "Simulator ready: $(xcrun simctl list devices booted | grep Booted | head -1)"
 }
 
-build_and_install() {
-    log "Building SuperApp..."
-    xcodebuild build \
+set_appearance() {
+    xcrun simctl ui booted appearance "$1" 2>/dev/null || true
+}
+
+run_capture_test() {
+    local test_name="$1"
+    local log_path="$PROJECT_DIR/build/reports/screenshot-${test_name}.log"
+    mkdir -p "$(dirname "$log_path")"
+    log "Running ScreenshotCaptureTests/$test_name..."
+    xcodebuild test \
         -workspace "$PROJECT_DIR/WebBridgeKit.xcworkspace" \
         -scheme SuperApp \
-        -sdk iphonesimulator \
-        -arch arm64 \
+        -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
         -derivedDataPath "$DERIVED_DATA" \
-        CODE_SIGNING_ALLOWED=NO \
-        -quiet 2>&1 | tail -5
-
-    APP=$(find "$DERIVED_DATA" -name "SuperApp.app" -maxdepth 5 | head -1)
-    if [ -z "$APP" ]; then
-        err "Build failed: SuperApp.app not found"
-        exit 1
-    fi
-    log "Built: $APP"
-
-    log "Installing to simulator..."
-    xcrun simctl install booted "$APP"
-    log "Installed"
+        -only-testing:"SuperAppUITests/ScreenshotCaptureTests/$test_name" \
+        >"$log_path" 2>&1
 }
-
-capture_screen() {
-    local name="$1"
-    local path="$OUTPUT_DIR/$name.png"
-    xcrun simctl io booted screenshot "$path" 2>/dev/null
-    if [ -f "$path" ]; then
-        local size
-        size=$(stat -f%z "$path" 2>/dev/null || stat -c%s "$path" 2>/dev/null || echo "0")
-        log "Captured: $name.png ($(( size / 1024 ))KB)"
-    else
-        warn "Failed to capture: $name"
-    fi
-}
-
-set_appearance() {
-    local mode="$1"
-    xcrun simctl ui booted appearance "$mode" 2>/dev/null || true
-}
-
-launch_app() {
-    xcrun simctl terminate booted "$BUNDLE_ID" 2>/dev/null || true
-    sleep 1
-    xcrun simctl launch booted "$BUNDLE_ID" --ui-testing 2>/dev/null || true
-    sleep 3
-}
-
-# ── Main ──
 
 log "=== WebBridgeKit Screenshot Capture ==="
 check_simulator
-
-if [ "${1:-}" = "--build" ] || [ ! -d "$DERIVED_DATA" ]; then
-    build_and_install
+SIMULATOR_UDID=$(xcrun simctl list devices booted | sed -n 's/.*(\([0-9A-F-]\{36\}\)) (Booted).*/\1/p' | head -1)
+if [ -z "$SIMULATOR_UDID" ]; then
+    err "Unable to resolve booted simulator UDID"
+    exit 1
 fi
 
-# ── Light Mode ──
+mkdir -p "$OUTPUT_DIR"
+find "$OUTPUT_DIR" -maxdepth 1 -type f -name '*.png' -delete
+EXPECTED_SCREENSHOTS=(
+    01-home-light.png 02-inbox-light.png 03-settings-light.png
+    04-home-dark.png 05-inbox-dark.png 06-settings-dark.png
+)
+for name in "${EXPECTED_SCREENSHOTS[@]}"; do
+    rm -f "$TEST_OUTPUT_DIR/$name"
+done
+
 log "=== Light Mode Screenshots ==="
 set_appearance light
-launch_app
-capture_screen "01-home-light"
-sleep 1
+run_capture_test "testLightModeScreenshots"
 
-# ── Dark Mode ──
 log "=== Dark Mode Screenshots ==="
 set_appearance dark
-sleep 2
-launch_app
-capture_screen "02-home-dark"
-sleep 1
+run_capture_test "testDarkModeScreenshots"
 
-# ── Reset ──
 set_appearance light
-xcrun simctl terminate booted "$BUNDLE_ID" 2>/dev/null || true
+for name in "${EXPECTED_SCREENSHOTS[@]}"; do
+    if [ ! -s "$TEST_OUTPUT_DIR/$name" ]; then
+        err "Missing screenshot: $TEST_OUTPUT_DIR/$name"
+        exit 1
+    fi
+    cp "$TEST_OUTPUT_DIR/$name" "$OUTPUT_DIR/$name"
+done
 
 log "=== Done ==="
 log "Screenshots saved to: $OUTPUT_DIR"
 ls -la "$OUTPUT_DIR"
-
-echo ""
-echo "For full tab navigation screenshots, run XCUITest:"
-echo "  xcodebuild test \\"
-echo "    -workspace WebBridgeKit.xcworkspace \\"
-echo "    -scheme SuperApp \\"
-echo "    -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \\"
-echo "    -only-testing:SuperAppUITests/ScreenshotCaptureTests"

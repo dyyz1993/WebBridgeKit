@@ -103,6 +103,7 @@ final class VerifyFixesTests: XCTestCase {
             let cacheSeg = segCtrl.buttons["缓存"]
             if cacheSeg.waitForExistence(timeout: 3) {
                 cacheSeg.tap(); sleep(2)
+            // swiftlint:disable:next empty_count -- XCUIElementQuery has no isEmpty API.
             } else if segCtrl.buttons.count > 0 {
                 segCtrl.buttons.element(boundBy: 0).tap(); sleep(2)
             }
@@ -112,12 +113,12 @@ final class VerifyFixesTests: XCTestCase {
     }
 
     func testInboxMessageDetail() throws {
-        tapTabNamed("收信箱")
+        tapTabNamed("tab.notifications")
         sleep(2)
 
         let tableView = app.tables.firstMatch
         XCTAssertTrue(tableView.waitForExistence(timeout: 5), "Inbox table should exist")
-        XCTAssertTrue(tableView.cells.count > 0, "Inbox should have messages")
+        XCTAssertGreaterThan(tableView.cells.count, 0, "Inbox should have messages")
 
         let firstCell = tableView.cells.element(boundBy: 0)
         XCTAssertTrue(firstCell.waitForExistence(timeout: 3), "First message cell should exist")

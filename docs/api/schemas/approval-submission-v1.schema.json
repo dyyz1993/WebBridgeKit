@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://webbridgekit.dev/schemas/approval-submission-v1.schema.json",
+  "title": "WebBridgeKit Approval Submission v1",
+  "type": "object",
+  "required": ["actionId", "expectedRevision", "values"],
+  "properties": {
+    "actionId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "expectedRevision": { "type": "integer", "minimum": 1 },
+    "values": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

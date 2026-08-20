@@ -25,23 +25,38 @@ public class ModalWebViewController: UIViewController {
     private var maskView: UIView!
     private var webViewVC: WebViewController!
     private var config: WebBrowserParams.ModalConfig
+    private let initialURL: URL?
+    private let initialHTMLName: String?
+    private let browserParams: WebBrowserParams
+    private var hasLoadedInitialContent = false
 
     // MARK: - Initialization
 
     public init(htmlName: String, config: WebBrowserParams.ModalConfig = .default) {
         self.config = config
+        self.initialURL = nil
+        self.initialHTMLName = htmlName
+        self.browserParams = .default
         super.init(nibName: nil, bundle: nil)
-        loadLocalHTML(named: htmlName)
     }
 
-    public init(url: URL, config: WebBrowserParams.ModalConfig = .default) {
+    public init(
+        url: URL,
+        config: WebBrowserParams.ModalConfig = .default,
+        browserParams: WebBrowserParams = .default
+    ) {
         self.config = config
+        self.initialURL = url
+        self.initialHTMLName = nil
+        self.browserParams = browserParams
         super.init(nibName: nil, bundle: nil)
-        loadRemoteURL(url)
     }
 
     required init?(coder: NSCoder) {
         self.config = .default
+        self.initialURL = nil
+        self.initialHTMLName = nil
+        self.browserParams = .default
         super.init(coder: coder)
     }
 
@@ -65,6 +80,8 @@ public class ModalWebViewController: UIViewController {
                 self.maskView?.alpha = 1
             }
         }
+
+        loadInitialContentIfNeeded()
     }
 
     // MARK: - Setup
@@ -131,6 +148,14 @@ public class ModalWebViewController: UIViewController {
         webView = webVC.webView
         webView.accessibilityIdentifier = "modalBrowser.webView"
         bridge = webVC.bridge
+        webVC.configure(with: browserParams)
+
+        // The child WebView is only ready after it has been attached to the
+        // modal hierarchy. Queue the first navigation for the next main-loop
+        // turn; viewDidAppear keeps the same path as a fallback.
+        DispatchQueue.main.async { [weak self] in
+            self?.loadInitialContentIfNeeded()
+        }
 
         // 关闭按钮
         if config.clickMaskCloses {
@@ -212,6 +237,17 @@ public class ModalWebViewController: UIViewController {
 
     // MARK: - Public Methods
 
+    private func loadInitialContentIfNeeded() {
+        guard !hasLoadedInitialContent else { return }
+        hasLoadedInitialContent = true
+
+        if let initialURL {
+            webViewVC.loadURL(initialURL, preferCachedContent: browserParams.preferCachedContent)
+        } else if let initialHTMLName {
+            webViewVC.loadLocalHTML(named: initialHTMLName)
+        }
+    }
+
     public func loadLocalHTML(named htmlName: String) {
         DispatchQueue.main.async { [weak self] in
             self?.webViewVC?.loadLocalHTML(named: htmlName)
@@ -220,7 +256,7 @@ public class ModalWebViewController: UIViewController {
 
     public func loadRemoteURL(_ url: URL) {
         DispatchQueue.main.async { [weak self] in
-            self?.webViewVC?.loadURL(url)
+            self?.webViewVC?.loadURL(url, preferCachedContent: self?.browserParams.preferCachedContent ?? false)
         }
     }
 

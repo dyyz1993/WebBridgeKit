@@ -18,6 +18,13 @@ struct TestDataSeeder {
 
     static func populateIfNeeded() {
         let needsSeed = !UserDefaults.standard.bool(forKey: seededKey)
+        let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
+
+        if isUITesting {
+            UserDefaults.standard.set("test", forKey: "com.webbridgekit.bark.key")
+            UserDefaults.standard.set(Self.uiTestPushServerOverride ?? "http://localhost:8080",
+                                      forKey: "com.webbridgekit.bark.server")
+        }
 
         if needsSeed {
 
@@ -29,16 +36,29 @@ struct TestDataSeeder {
             seedAPIKeys()
             seedCacheRules()
             seedPageCacheRules()
-            seedMessages()
+            seedMessages(forceRefresh: isUITesting)
 
             UserDefaults.standard.set(true, forKey: seededKey)
 
-        } else {
+        } else if isUITesting {
+            // UI tests need a deterministic fixture set even when the simulator keeps prior defaults.
+            seedMessages(forceRefresh: true)
         }
 
         seedManifestCaches()
 
         seedPinnedURLs()
+    }
+
+    /// Real-device push UI tests pass `--push-server=<url>` to point the seeded
+    /// Bark server at a reachable public backend instead of `localhost:8080`.
+    private static var uiTestPushServerOverride: String? {
+        let prefix = "--push-server="
+        for argument in ProcessInfo.processInfo.arguments where argument.hasPrefix(prefix) {
+            let value = String(argument.dropFirst(prefix.count))
+            return value.isEmpty ? nil : value
+        }
+        return nil
     }
 
     // MARK: - Server Configs

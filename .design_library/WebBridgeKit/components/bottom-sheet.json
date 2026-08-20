@@ -1,0 +1,33 @@
+{
+  "slug": "bottom-sheet",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["sheet", "modal", "overlay"],
+  "variantDimensions": ["hasDragHandle"],
+  "representativeVariants": [
+    { "name": "标准弹窗", "props": { "hasDragHandle": true } }
+  ],
+  "anatomy": [
+    { "name": "scrim", "role": "dimmed overlay", "type": "element" },
+    { "name": "sheet", "role": "bottom sheet panel", "type": "element" },
+    { "name": "handle", "role": "drag indicator bar", "type": "element" },
+    { "name": "header", "role": "sheet title", "type": "optional" },
+    { "name": "content", "role": "sheet body", "type": "element" }
+  ],
+  "structurePatterns": {
+    "sheetBackground": { "ref": "--color-surface" },
+    "sheetCornerRadius": { "ref": "--wbk-radius-sheet" },
+    "scrimColor": { "ref": "--color-overlay" },
+    "handleWidth": 36,
+    "handleHeight": 5,
+    "handleRadius": 3,
+    "handleColor": { "ref": "--color-separator" },
+    "paddingH": 16,
+    "headerSize": 17,
+    "headerWeight": 600
+  },
+  "usageHints": ["底部弹出的操作面板或详情面板", "拖拽手柄 36x5 圆角胶囊"],
+  "doNotInvent": ["不要添加全屏高度变体", "不要添加底部安全区按钮行"],
+  "unknowns": []
+}
