@@ -80,6 +80,10 @@ inject_pinned_data.swift
 node_modules/
 test-results/
 test_resources/*
+!test_resources/pwa-notification/
+!test_resources/pwa-notification/**
+!test_resources/pwa-agent-console/
+!test_resources/pwa-agent-console/**
 !test_resources/cache-html-validation/
 !test_resources/cache-html-validation/**
 package.json
@@ -133,3 +137,10 @@ TestResults_*/*
 .ui-tester/
 .xcodebuildmcp/
 docs/design-tokens-v2-backup.json
+
+# local agent state and runtime data
+.brainstorm/
+.data/
+.uploads/
+Server/data/
+!test_resources/push-render-catalog.html

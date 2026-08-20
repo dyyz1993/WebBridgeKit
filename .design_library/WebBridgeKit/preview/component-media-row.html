@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Media Row - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); color: var(--color-text); }
+.stage { display: flex; flex-direction: column; gap: 12px; }
+.variant-label { font: 500 13px/1.4 var(--wbk-font-family); color: var(--color-text-secondary); letter-spacing: .3px; }
+.card { background: var(--color-surface); border-radius: var(--radius-md); }
+
+/* @component-css-start */
+.media-row { display: flex; flex-direction: row; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; }
+.media-row__thumb { width: 44px; height: 44px; border-radius: 8px; background: var(--color-bg-tertiary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--color-text-tertiary); }
+.media-row__thumb i { width: 20px; height: 20px; }
+.media-row__info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.media-row__title { font-size: 14px; font-weight: 500; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.media-row__subtitle { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.media-row__duration { font-size: 11px; color: var(--color-text-tertiary); flex-shrink: 0; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="variant-label">带时长</div>
+  <div class="card">
+    <div class="media-row">
+      <div class="media-row__thumb"><i data-lucide="file-text"></i></div>
+      <div class="media-row__info">
+        <div class="media-row__title">API 设计文档</div>
+        <div class="media-row__subtitle">2026-07-05 · 2.4 MB</div>
+      </div>
+      <span class="media-row__duration">12:30</span>
+    </div>
+    <div class="media-row">
+      <div class="media-row__thumb"><i data-lucide="bar-chart-3"></i></div>
+      <div class="media-row__info">
+        <div class="media-row__title">缓存分析报告</div>
+        <div class="media-row__subtitle">2026-07-04 · 856 KB</div>
+      </div>
+      <span class="media-row__duration">08:15</span>
+    </div>
+    <div class="media-row">
+      <div class="media-row__thumb"><i data-lucide="activity"></i></div>
+      <div class="media-row__info">
+        <div class="media-row__title">网络抓包记录</div>
+        <div class="media-row__subtitle">2026-07-03 · 3.1 MB</div>
+      </div>
+      <span class="media-row__duration">24:07</span>
+    </div>
+  </div>
+
+  <div class="variant-label">纯内容</div>
+  <div class="card">
+    <div class="media-row">
+      <div class="media-row__thumb"><i data-lucide="file-text"></i></div>
+      <div class="media-row__info">
+        <div class="media-row__title">API 设计文档</div>
+        <div class="media-row__subtitle">2026-07-05 · 2.4 MB</div>
+      </div>
+    </div>
+    <div class="media-row">
+      <div class="media-row__thumb"><i data-lucide="bar-chart-3"></i></div>
+      <div class="media-row__info">
+        <div class="media-row__title">缓存分析报告</div>
+        <div class="media-row__subtitle">2026-07-04 · 856 KB</div>
+      </div>
+    </div>
+    <div class="media-row">
+      <div class="media-row__thumb"><i data-lucide="activity"></i></div>
+      <div class="media-row__info">
+        <div class="media-row__title">网络抓包记录</div>
+        <div class="media-row__subtitle">2026-07-03 · 3.1 MB</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

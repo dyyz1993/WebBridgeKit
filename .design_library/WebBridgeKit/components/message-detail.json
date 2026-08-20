@@ -1,0 +1,28 @@
+{
+  "slug": "message-detail",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["detail", "content-view"],
+  "variantDimensions": ["messageType"],
+  "representativeVariants": [
+    { "name": "APNs 通知详情", "props": { "messageType": "APNs" } }
+  ],
+  "anatomy": [
+    { "name": "header", "role": "source+time row", "type": "element" },
+    { "name": "title", "role": "message title", "type": "element" },
+    { "name": "body", "role": "full message body", "type": "element" },
+    { "name": "metadata", "role": "metadata row group", "type": "element" },
+    { "name": "actions", "role": "action buttons", "type": "element" }
+  ],
+  "structurePatterns": {
+    "bodyFontSize": 15,
+    "bodyLineHeight": 1.5,
+    "padding": 16,
+    "backgroundColor": { "ref": "--color-card" },
+    "cornerRadius": { "ref": "--radius-md" }
+  },
+  "usageHints": ["从 message-cell 点击进入", "metadata 行展示发送者/类型/优先级/主题"],
+  "doNotInvent": ["不要添加附件上传UI", "不要添加回复功能"],
+  "unknowns": []
+}

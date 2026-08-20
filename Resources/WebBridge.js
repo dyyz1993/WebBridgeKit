@@ -45,7 +45,8 @@
                 const message = {
                     action: action,
                     params: params || {},
-                    messageId: messageId
+                    messageId: messageId,
+                    callbackId: messageId
                 };
 
                 // 发送消息到原生
@@ -76,7 +77,8 @@
             const message = {
                 action: action,
                 params: params || {},
-                messageId: messageId
+                messageId: messageId,
+                callbackId: messageId
             };
 
             // 发送消息到原生
@@ -95,10 +97,11 @@
          * @param {object} result - 结果对象
          */
         receiveResult: function(result) {
-            if (result.messageId && this.callbacks[result.messageId]) {
-                const callback = this.callbacks[result.messageId];
+            const callbackId = result.callbackId || result.messageId;
+            if (callbackId && this.callbacks[callbackId]) {
+                const callback = this.callbacks[callbackId];
                 callback(result);
-                delete this.callbacks[result.messageId];
+                delete this.callbacks[callbackId];
             }
         },
 
@@ -280,6 +283,16 @@
          */
         navigation: function(params) {
             return BarkBridge.callNative('navigation', params);
+        },
+
+        /** Return from the current native PWA screen. */
+        back: function() {
+            return BarkBridge.callNative('goBack', { steps: 1 });
+        },
+
+        /** Close the current native PWA screen and return to the host. */
+        close: function() {
+            return BarkBridge.callNative('closePage', { animated: true, reason: 'javascript' });
         },
 
         /**

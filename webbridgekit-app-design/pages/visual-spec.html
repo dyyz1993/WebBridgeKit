@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视觉规范 - WebBridgeKit</title>
+    <style id="theme-vars">
+:root {
+  /* === WBK Brand Colors (Light) === */
+  --wbk-background: #F8F9FC;
+  --wbk-background-secondary: #F0F2F7;
+  --wbk-background-tertiary: #E8EBF2;
+  --wbk-surface: #FFFFFF;
+  --wbk-surface-elevated: #FFFFFF;
+  --wbk-card-background: #FFFFFF;
+  --wbk-text: #1A1D2E;
+  --wbk-text-secondary: #6B7394;
+  --wbk-text-tertiary: #9CA3C4;
+  --wbk-placeholder: #A5ADBA;
+  --wbk-border: #D8DEE8;
+  --wbk-separator: #E6EAF0;
+  --wbk-primary: #4F6AF6;
+  --wbk-primary-pressed: #3D56E0;
+  --wbk-primary-soft: #EEF1FE;
+  --wbk-success: #16A34A;
+  --wbk-success-soft: #EAF8EF;
+  --wbk-warning: #D97706;
+  --wbk-warning-soft: #FFF4E5;
+  --wbk-error: #DC2626;
+  --wbk-error-soft: #FEECEC;
+  --wbk-info: #0F766E;
+  --wbk-info-soft: #E7F6F4;
+  --wbk-overlay: rgba(17,24,39,0.42);
+  --wbk-shadow: rgba(17,24,39,0.10);
+  --wbk-text-on-color: #FFFFFF;
+  --wbk-badge-background: #EEF1FE;
+  --wbk-badge-text: #6B7394;
+  --wbk-gradient-start: rgba(79,106,246,0.85);
+  --wbk-gradient-end: rgba(139,92,246,0.85);
+
+  /* === Typography === */
+  --wbk-font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', system-ui, 'Helvetica Neue', sans-serif;
+  --wbk-font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --wbk-text-display-large: 700 34px/1.2 var(--wbk-font-family);
+  --wbk-text-display: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-screen-title: 700 28px/1.2 var(--wbk-font-family);
+  --wbk-text-compact-title: 700 24px/1.3 var(--wbk-font-family);
+  --wbk-text-section-title: 600 17px/1.3 var(--wbk-font-family);
+  --wbk-text-row-title: 500 16px/1.4 var(--wbk-font-family);
+  --wbk-text-card-title: 600 16px/1.3 var(--wbk-font-family);
+  --wbk-text-body: 400 15px/1.5 var(--wbk-font-family);
+  --wbk-text-metadata: 400 13px/1.4 var(--wbk-font-family);
+  --wbk-text-caption: 400 12px/1.4 var(--wbk-font-family);
+  --wbk-text-tab-label: 500 11px/1.3 var(--wbk-font-family);
+  --wbk-text-button: 600 15px/1.3 var(--wbk-font-family);
+  --wbk-text-badge: 700 10px/1.3 var(--wbk-font-family);
+  --wbk-text-mono-meta: 400 12px/1.4 var(--wbk-font-mono);
+
+  /* === Spacing === */
+  --wbk-spacing-xxs: 2px;
+  --wbk-spacing-xs: 4px;
+  --wbk-spacing-sm: 8px;
+  --wbk-spacing-md: 12px;
+  --wbk-spacing-lg: 16px;
+  --wbk-spacing-xl: 20px;
+  --wbk-spacing-xxl: 24px;
+  --wbk-spacing-xxxl: 32px;
+  --wbk-spacing-section: 32px;
+  --wbk-spacing-screen-h: 16px;
+
+  /* === Radius === */
+  --wbk-radius-xs: 6px;
+  --wbk-radius-sm: 8px;
+  --wbk-radius-md: 12px;
+  --wbk-radius-lg: 16px;
+  --wbk-radius-full: 9999px;
+
+  /* === Shadows === */
+  --wbk-shadow-none: none;
+  --wbk-shadow-sm: 0 1px 3px rgba(17,24,39,0.08);
+  --wbk-shadow-md: 0 2px 8px rgba(17,24,39,0.10);
+  --wbk-shadow-card: 0 4px 16px rgba(17,24,39,0.08);
+  --wbk-shadow-fab: 0 8px 24px rgba(17,24,39,0.20);
+
+  /* === Animation === */
+  --wbk-duration-fast: 0.15s;
+  --wbk-duration-normal: 0.25s;
+  --wbk-duration-slow: 0.4s;
+  --wbk-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wbk-background: #0F1117;
+    --wbk-background-secondary: #1A1D28;
+    --wbk-background-tertiary: #252A38;
+    --wbk-surface: #13171D;
+    --wbk-surface-elevated: #191E26;
+    --wbk-card-background: #1E2233;
+    --wbk-text: #F0F2F7;
+    --wbk-text-secondary: #8892B0;
+    --wbk-text-tertiary: #5C6585;
+    --wbk-placeholder: #667085;
+    --wbk-border: #2A323D;
+    --wbk-separator: #232A34;
+    --wbk-primary: #6B82F8;
+    --wbk-primary-pressed: #4F6AF6;
+    --wbk-primary-soft: rgba(107,130,248,0.14);
+    --wbk-success: #4ADE80;
+    --wbk-success-soft: rgba(74,222,128,0.13);
+    --wbk-warning: #FBBF24;
+    --wbk-warning-soft: rgba(251,191,36,0.14);
+    --wbk-error: #F87171;
+    --wbk-error-soft: rgba(248,113,113,0.14);
+    --wbk-info: #2DD4BF;
+    --wbk-info-soft: rgba(45,212,191,0.13);
+    --wbk-overlay: rgba(0,0,0,0.58);
+    --wbk-shadow: rgba(0,0,0,0.30);
+    --wbk-text-on-color: #FFFFFF;
+    --wbk-badge-background: rgba(107,130,248,0.14);
+    --wbk-badge-text: #8892B0;
+    --wbk-gradient-start: rgba(51,77,153,0.90);
+    --wbk-gradient-end: rgba(102,51,128,0.90);
+    --wbk-shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+    --wbk-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --wbk-shadow-card: 0 4px 16px rgba(0,0,0,0.30);
+    --wbk-shadow-fab: 0 8px 24px rgba(0,0,0,0.40);
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--wbk-background);
+    --color-primary: var(--wbk-primary);
+    --color-border: var(--wbk-border);
+  }
+  @layer base {
+    body { background: var(--wbk-background); color: var(--wbk-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+
+    <!-- ===== Nav Header ===== -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-[var(--wbk-separator)]">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+        <button data-dom-id="nav-back" class="w-9 h-9 inline-flex items-center justify-center rounded-xl hover:bg-[var(--wbk-background-secondary)] transition-colors shrink-0">
+          <i data-lucide="arrow-left" class="w-5 h-5 text-[var(--wbk-text-secondary)]"></i>
+        </button>
+        <span class="flex-1 text-center text-[var(--wbk-text)] text-[17px] font-semibold truncate">视觉规范</span>
+        <div class="w-9 shrink-0"></div>
+      </div>
+    </nav>
+
+    <!-- ===== Hero Section ===== -->
+    <section class="relative overflow-hidden" style="background: linear-gradient(135deg, var(--wbk-primary) 0%, #8B5CF6 100%);">
+      <div class="absolute inset-0 pointer-events-none opacity-10">
+        <div class="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_30%_50%,white_0%,transparent_60%)]"></div>
+      </div>
+      <div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-28 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm mb-6 shadow-lg">
+          <i data-lucide="palette" class="w-8 h-8 text-white"></i>
+        </div>
+        <h1 class="text-white text-[34px] sm:text-[42px] md:text-[48px] font-bold leading-tight mb-3" style="text-wrap: balance; word-break: keep-all;">WebBridgeKit 视觉规范</h1>
+        <p class="text-white/80 text-base sm:text-lg font-medium mb-2">Design Token v4.0</p>
+        <p class="text-white/60 text-xs sm:text-sm max-w-md mx-auto">设计系统统一规范 · 所有组件和页面遵循的视觉标准</p>
+      </div>
+      <div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[var(--wbk-background)] to-transparent pointer-events-none"></div>
+    </section>
+
+    <!-- ===== 设计原则 ===== -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+      <div class="flex items-center gap-3 mb-6 sm:mb-8">
+        <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+        <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">设计原则</h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <!-- Card 1 -->
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 sm:p-6 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] hover:shadow-[var(--wbk-shadow-md)] transition-shadow duration-[var(--wbk-duration-fast)]">
+          <div class="w-10 h-10 rounded-xl bg-[var(--wbk-primary-soft)] flex items-center justify-center mb-4">
+            <i data-lucide="crown" class="w-5 h-5 text-[var(--wbk-primary)]"></i>
+          </div>
+          <h3 class="text-[var(--wbk-text)] text-base font-semibold mb-1">产品调性</h3>
+          <p class="text-[var(--wbk-text-secondary)] text-sm">Premium 消费级应用</p>
+        </div>
+        <!-- Card 2 -->
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 sm:p-6 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] hover:shadow-[var(--wbk-shadow-md)] transition-shadow duration-[var(--wbk-duration-fast)]">
+          <div class="w-10 h-10 rounded-xl bg-[var(--wbk-primary-soft)] flex items-center justify-center mb-4">
+            <i data-lucide="maximize" class="w-5 h-5 text-[var(--wbk-primary)]"></i>
+          </div>
+          <h3 class="text-[var(--wbk-text)] text-base font-semibold mb-1">间距</h3>
+          <p class="text-[var(--wbk-text-secondary)] text-sm">宽敞透气</p>
+        </div>
+        <!-- Card 3 -->
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 sm:p-6 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] hover:shadow-[var(--wbk-shadow-md)] transition-shadow duration-[var(--wbk-duration-fast)]">
+          <div class="w-10 h-10 rounded-xl bg-[var(--wbk-primary-soft)] flex items-center justify-center mb-4">
+            <i data-lucide="grid" class="w-5 h-5 text-[var(--wbk-primary)]"></i>
+          </div>
+          <h3 class="text-[var(--wbk-text)] text-base font-semibold mb-1">图标</h3>
+          <p class="text-[var(--wbk-text-secondary)] text-sm">Lucide 图标体系</p>
+        </div>
+        <!-- Card 4 -->
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 sm:p-6 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] hover:shadow-[var(--wbk-shadow-md)] transition-shadow duration-[var(--wbk-duration-fast)]">
+          <div class="w-10 h-10 rounded-xl bg-[var(--wbk-primary-soft)] flex items-center justify-center mb-4">
+            <i data-lucide="radius" class="w-5 h-5 text-[var(--wbk-primary)]"></i>
+          </div>
+          <h3 class="text-[var(--wbk-text)] text-base font-semibold mb-1">圆角</h3>
+          <p class="text-[var(--wbk-text-secondary)] text-sm">大半径设计语言</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 色彩体系 ===== -->
+    <section class="bg-[var(--wbk-background-secondary)]">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+        <div class="flex items-center gap-3 mb-6 sm:mb-8">
+          <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+          <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">色彩体系</h2>
+          <span class="text-[var(--wbk-text-tertiary)] text-sm font-normal ml-auto">Light 模式</span>
+        </div>
+
+        <!-- Background -->
+        <div class="mb-8">
+          <h3 class="text-[var(--wbk-text)] text-sm font-semibold uppercase tracking-wider mb-3">背景色 Background</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-background); border: 1px solid var(--wbk-border);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">background</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#F8F9FC</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-background-secondary); border: 1px solid var(--wbk-border);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">backgroundSecondary</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#F0F2F7</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-background-tertiary); border: 1px solid var(--wbk-border);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">backgroundTertiary</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#E8EBF2</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Surface -->
+        <div class="mb-8">
+          <h3 class="text-[var(--wbk-text)] text-sm font-semibold uppercase tracking-wider mb-3">表面色 Surface</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-surface); border: 1px solid var(--wbk-border);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">surface</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#FFFFFF</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-surface-elevated); border: 1px solid var(--wbk-border);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">surfaceElevated</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#FFFFFF</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-card-background); border: 1px solid var(--wbk-border);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">cardBackground</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#FFFFFF</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text -->
+        <div class="mb-8">
+          <h3 class="text-[var(--wbk-text)] text-sm font-semibold uppercase tracking-wider mb-3">文字色 Text</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2 flex items-center justify-center text-xs font-medium" style="background: var(--wbk-text); color: white;">Aa</div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">text</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#1A1D2E</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2 flex items-center justify-center text-xs font-medium" style="background: var(--wbk-text-secondary); color: white;">Aa</div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">textSecondary</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#6B7394</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2 flex items-center justify-center text-xs font-medium" style="background: var(--wbk-text-tertiary); color: white;">Aa</div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">textTertiary</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#9CA3C4</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2 flex items-center justify-center text-xs font-medium" style="background: var(--wbk-placeholder); color: white;">Aa</div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">placeholder</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#A5ADBA</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Border -->
+        <div class="mb-8">
+          <h3 class="text-[var(--wbk-text)] text-sm font-semibold uppercase tracking-wider mb-3">边框色 Border</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-border);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">border</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#D8DEE8</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-separator);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">separator</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#E6EAF0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brand -->
+        <div class="mb-8">
+          <h3 class="text-[var(--wbk-text)] text-sm font-semibold uppercase tracking-wider mb-3">品牌色 Brand</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-primary);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">primary</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#4F6AF6</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-primary-pressed);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">primaryPressed</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#3D56E0</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-primary-soft);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">primarySoft</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#EEF1FE</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-accent, #8B5CF6);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">accent</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#8B5CF6</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-accent-soft, #F3EFFE);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">accentSoft</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#F3EFFE</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Semantic -->
+        <div class="mb-8">
+          <h3 class="text-[var(--wbk-text)] text-sm font-semibold uppercase tracking-wider mb-3">语义色 Semantic</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-success);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">success</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#16A34A</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-success-soft);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">successSoft</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#EAF8EF</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-warning);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">warning</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#D97706</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-warning-soft);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">warningSoft</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#FFF4E5</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-error);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">error</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#DC2626</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-error-soft);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">errorSoft</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#FEECEC</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-info);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">info</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#0F766E</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-info-soft);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">infoSoft</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">#E7F6F4</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Miscellaneous -->
+        <div>
+          <h3 class="text-[var(--wbk-text)] text-sm font-semibold uppercase tracking-wider mb-3">其他 Miscellaneous</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: var(--wbk-overlay);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">overlay</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">rgba(17,24,39,0.42)</p>
+            </div>
+            <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+              <div class="h-12 rounded-lg mb-2" style="background: rgba(17,24,39,0.10);"></div>
+              <p class="text-[var(--wbk-text)] text-xs font-medium">shadow</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">rgba(17,24,39,0.10)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 字体系统 ===== -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+      <div class="flex items-center gap-3 mb-6 sm:mb-8">
+        <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+        <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">字体系统</h2>
+      </div>
+      <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] overflow-hidden">
+        <div class="divide-y divide-[var(--wbk-separator)]">
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">displayLarge</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">34px Bold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-display-large);">WebBridgeKit 视觉规范</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">display</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">28px Bold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-display);">设计系统展示</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">screenTitle</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">28px Bold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-screen-title);">页面标题</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">compactTitle</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">24px Bold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-compact-title);">紧凑标题</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">sectionTitle</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">17px Semibold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-section-title);">区块标题</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">rowTitle</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">16px Medium</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-row-title);">行标题</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">cardTitle</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">16px Semibold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-card-title);">卡片标题</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">body</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">15px Regular</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-body);">这是正文内容，用于展示应用程序的主要文本信息。</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">metadata</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">13px Regular</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text-secondary)] truncate" style="font: var(--wbk-text-metadata);">2026年7月5日 · 辅助信息</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">caption</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">12px Regular</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text-tertiary)] truncate" style="font: var(--wbk-text-caption);">说明文字 · 用于辅助提示</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">tabLabel</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">11px Medium</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text)] truncate" style="font: var(--wbk-text-tab-label);">首页</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">button</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">15px Semibold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-primary)] truncate" style="font: var(--wbk-text-button);">确认</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">badge</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">10px Bold</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[var(--wbk-text-on-color)]" style="font: var(--wbk-text-badge); background: var(--wbk-error);">NEW</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <div class="w-36 sm:w-44 shrink-0">
+              <p class="text-[var(--wbk-text)] text-xs font-medium">monospaceMeta</p>
+              <p class="text-[var(--wbk-text-tertiary)] text-[10px]">12px Regular Mono</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[var(--wbk-text-secondary)] truncate" style="font: var(--wbk-text-mono-meta);">console.log("Hello World")</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 间距系统 ===== -->
+    <section class="bg-[var(--wbk-background-secondary)]">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+        <div class="flex items-center gap-3 mb-6 sm:mb-8">
+          <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+          <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">间距系统</h2>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xxs 2px</span>
+            <div class="h-4 rounded-sm" style="width: 2px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xs 4px</span>
+            <div class="h-4 rounded-sm" style="width: 4px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">sm 8px</span>
+            <div class="h-5 rounded-sm" style="width: 8px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">md 12px</span>
+            <div class="h-5 rounded-sm" style="width: 12px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">lg 16px</span>
+            <div class="h-6 rounded-sm" style="width: 16px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xl 20px</span>
+            <div class="h-6 rounded-sm" style="width: 20px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xxl 24px</span>
+            <div class="h-7 rounded-sm" style="width: 24px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xxxl 32px</span>
+            <div class="h-7 rounded-sm" style="width: 32px; background: var(--wbk-primary);"></div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">section 32px</span>
+            <div class="h-7 rounded-sm" style="width: 32px; background: var(--wbk-accent, #8B5CF6);"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 圆角系统 ===== -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+      <div class="flex items-center gap-3 mb-6 sm:mb-8">
+        <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+        <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">圆角系统</h2>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 mx-auto mb-3 max-w-[160px]" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6); border-radius: var(--wbk-radius-xs, 6px);"></div>
+          <p class="text-[var(--wbk-text)] text-sm font-medium">xs 6px</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">最小圆角</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 mx-auto mb-3 max-w-[160px]" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6); border-radius: var(--wbk-radius-sm, 8px);"></div>
+          <p class="text-[var(--wbk-text)] text-sm font-medium">sm 8px</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">row 共用</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 mx-auto mb-3 max-w-[160px]" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6); border-radius: var(--wbk-radius-md, 12px);"></div>
+          <p class="text-[var(--wbk-text)] text-sm font-medium">md 12px</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">搜索框/筛选</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 mx-auto mb-3 max-w-[160px]" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6); border-radius: var(--wbk-radius-lg, 16px);"></div>
+          <p class="text-[var(--wbk-text)] text-sm font-medium">card 16px</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">资源卡片</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 mx-auto mb-3 max-w-[160px]" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6); border-radius: 20px;"></div>
+          <p class="text-[var(--wbk-text)] text-sm font-medium">sheet 20px</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">底部面板</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 mx-auto mb-3 max-w-[160px]" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6); border-radius: 24px;"></div>
+          <p class="text-[var(--wbk-text)] text-sm font-medium">xl 24px</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">大面积圆角</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 mx-auto mb-3 max-w-[160px]" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6); border-radius: 999px;"></div>
+          <p class="text-[var(--wbk-text)] text-sm font-medium">full 999px</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">全圆角</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 阴影系统 ===== -->
+    <section class="bg-[var(--wbk-background-secondary)]">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+        <div class="flex items-center gap-3 mb-6 sm:mb-8">
+          <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+          <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">阴影系统</h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] text-center">
+            <div class="h-12 rounded-lg bg-[var(--wbk-background)] mb-3"></div>
+            <p class="text-[var(--wbk-text)] text-xs font-medium">none</p>
+            <p class="text-[var(--wbk-text-tertiary)] text-[10px]">无阴影</p>
+          </div>
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 text-center shadow-[var(--wbk-shadow-sm)]">
+            <div class="h-12 rounded-lg bg-[var(--wbk-background)] mb-3"></div>
+            <p class="text-[var(--wbk-text)] text-xs font-medium">sm</p>
+            <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0 1 3</p>
+          </div>
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 text-center shadow-[var(--wbk-shadow-md)]">
+            <div class="h-12 rounded-lg bg-[var(--wbk-background)] mb-3"></div>
+            <p class="text-[var(--wbk-text)] text-xs font-medium">md</p>
+            <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0 2 8</p>
+          </div>
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 text-center shadow-[var(--wbk-shadow-card)]">
+            <div class="h-12 rounded-lg bg-[var(--wbk-background)] mb-3"></div>
+            <p class="text-[var(--wbk-text)] text-xs font-medium">card</p>
+            <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0 4 16</p>
+          </div>
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 text-center shadow-[var(--wbk-shadow-fab)]">
+            <div class="h-12 rounded-lg bg-[var(--wbk-background)] mb-3"></div>
+            <p class="text-[var(--wbk-text)] text-xs font-medium">fab</p>
+            <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0 8 24</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 图标系统 ===== -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+      <div class="flex items-center gap-3 mb-6 sm:mb-8">
+        <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+        <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">图标系统</h2>
+      </div>
+      <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] overflow-hidden">
+        <div class="divide-y divide-[var(--wbk-separator)]">
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xs 14</span>
+            <i data-lucide="circle" class="text-[var(--wbk-primary)]" style="width:14px;height:14px;"></i>
+            <span class="text-[var(--wbk-text-tertiary)] text-xs">标签/标记</span>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">sm 16</span>
+            <i data-lucide="circle" class="text-[var(--wbk-primary)]" style="width:16px;height:16px;"></i>
+            <span class="text-[var(--wbk-text-tertiary)] text-xs">行内图标/chevron</span>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">md 20</span>
+            <i data-lucide="circle" class="text-[var(--wbk-primary)]" style="width:20px;height:20px;"></i>
+            <span class="text-[var(--wbk-text-tertiary)] text-xs">设置/导航</span>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">lg 24</span>
+            <i data-lucide="circle" class="text-[var(--wbk-primary)]" style="width:24px;height:24px;"></i>
+            <span class="text-[var(--wbk-text-tertiary)] text-xs">Tab 栏图标</span>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xl 24</span>
+            <i data-lucide="circle" class="text-[var(--wbk-primary)]" style="width:24px;height:24px;"></i>
+            <span class="text-[var(--wbk-text-tertiary)] text-xs">大图标</span>
+          </div>
+          <div class="flex items-center gap-4 sm:gap-6 px-5 py-4 sm:px-6">
+            <span class="w-20 sm:w-24 shrink-0 text-[var(--wbk-text-secondary)] text-xs font-medium">xxl 48</span>
+            <i data-lucide="circle" class="text-[var(--wbk-primary)]" style="width:48px;height:48px;"></i>
+            <span class="text-[var(--wbk-text-tertiary)] text-xs">空状态/大图</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 组件规范 ===== -->
+    <section class="bg-[var(--wbk-background-secondary)]">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+        <div class="flex items-center gap-3 mb-6 sm:mb-8">
+          <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+          <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">组件规范</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Screen -->
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-[var(--wbk-primary-soft)] flex items-center justify-center">
+                <i data-lucide="smartphone" class="w-4 h-4 text-[var(--wbk-primary)]"></i>
+              </div>
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">Screen</h3>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">hInset</span><span class="text-[var(--wbk-text)] font-medium">16</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">interSection</span><span class="text-[var(--wbk-text)] font-medium">24</span></div>
+            </div>
+          </div>
+          <!-- TabBar -->
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-[var(--wbk-primary-soft)] flex items-center justify-center">
+                <i data-lucide="columns" class="w-4 h-4 text-[var(--wbk-primary)]"></i>
+              </div>
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">TabBar</h3>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">height</span><span class="text-[var(--wbk-text)] font-medium">56</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">icon</span><span class="text-[var(--wbk-text)] font-medium">23</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">label</span><span class="text-[var(--wbk-text)] font-medium">11pt</span></div>
+            </div>
+          </div>
+          <!-- SettingsRow -->
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-[var(--wbk-primary-soft)] flex items-center justify-center">
+                <i data-lucide="menu" class="w-4 h-4 text-[var(--wbk-primary)]"></i>
+              </div>
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">SettingsRow</h3>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">minH</span><span class="text-[var(--wbk-text)] font-medium">54</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">iconBox</span><span class="text-[var(--wbk-text)] font-medium">32</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">chevron</span><span class="text-[var(--wbk-text)] font-medium">16</span></div>
+            </div>
+          </div>
+          <!-- SearchField -->
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-[var(--wbk-primary-soft)] flex items-center justify-center">
+                <i data-lucide="search" class="w-4 h-4 text-[var(--wbk-primary)]"></i>
+              </div>
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">SearchField</h3>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">height</span><span class="text-[var(--wbk-text)] font-medium">44</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">radius</span><span class="text-[var(--wbk-text)] font-medium">12</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">icon</span><span class="text-[var(--wbk-text)] font-medium">18</span></div>
+            </div>
+          </div>
+          <!-- FilterPill -->
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-[var(--wbk-primary-soft)] flex items-center justify-center">
+                <i data-lucide="filter" class="w-4 h-4 text-[var(--wbk-primary)]"></i>
+              </div>
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">FilterPill</h3>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">height</span><span class="text-[var(--wbk-text)] font-medium">34</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">paddingH</span><span class="text-[var(--wbk-text)] font-medium">14</span></div>
+            </div>
+          </div>
+          <!-- ResourceCard -->
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-[var(--wbk-primary-soft)] flex items-center justify-center">
+                <i data-lucide="layout-grid" class="w-4 h-4 text-[var(--wbk-primary)]"></i>
+              </div>
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">ResourceCard</h3>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">minH</span><span class="text-[var(--wbk-text)] font-medium">92</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">radius</span><span class="text-[var(--wbk-text)] font-medium">16</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">padding</span><span class="text-[var(--wbk-text)] font-medium">16</span></div>
+            </div>
+          </div>
+          <!-- Button -->
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-lg bg-[var(--wbk-primary-soft)] flex items-center justify-center">
+                <i data-lucide="square" class="w-4 h-4 text-[var(--wbk-primary)]"></i>
+              </div>
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">Button</h3>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">height</span><span class="text-[var(--wbk-text)] font-medium">48</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">radius</span><span class="text-[var(--wbk-text)] font-medium">12</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--wbk-text-secondary)]">paddingH</span><span class="text-[var(--wbk-text)] font-medium">20</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 渐变 ===== -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+      <div class="flex items-center gap-3 mb-6 sm:mb-8">
+        <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+        <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">渐变</h2>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, var(--wbk-primary), #8B5CF6);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">brand</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #3B82F6, #06B6D4);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">blue</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #16A34A, #4ADE80);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">green</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #F59E0B, #F97316);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">orange</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #EC4899, #F472B6);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">pink</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #8B5CF6, #A78BFA);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">purple</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #0EA5E9, #38BDF8);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">sky</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #D97706, #FDE68A);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">peach</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-3 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-16 rounded-lg mb-2" style="background: linear-gradient(135deg, #0F766E, #2DD4BF);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">cyan</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 动画曲线 ===== -->
+    <section class="bg-[var(--wbk-background-secondary)]">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+        <div class="flex items-center gap-3 mb-6 sm:mb-8">
+          <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+          <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">动画曲线</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">fast</h3>
+              <span class="text-[var(--wbk-text-tertiary)] text-xs">0.15s</span>
+            </div>
+            <div class="h-2 rounded-full bg-[var(--wbk-background-tertiary)] overflow-hidden">
+              <div class="h-full rounded-full bg-[var(--wbk-primary)] w-1/4" style="transition: width 0.15s ease;" onmouseover="this.style.width='100%'" onmouseout="this.style.width='25%'"></div>
+            </div>
+          </div>
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">normal</h3>
+              <span class="text-[var(--wbk-text-tertiary)] text-xs">0.25s</span>
+            </div>
+            <div class="h-2 rounded-full bg-[var(--wbk-background-tertiary)] overflow-hidden">
+              <div class="h-full rounded-full bg-[var(--wbk-primary)] w-1/4" style="transition: width 0.25s ease;" onmouseover="this.style.width='100%'" onmouseout="this.style.width='25%'"></div>
+            </div>
+          </div>
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">slow</h3>
+              <span class="text-[var(--wbk-text-tertiary)] text-xs">0.4s</span>
+            </div>
+            <div class="h-2 rounded-full bg-[var(--wbk-background-tertiary)] overflow-hidden">
+              <div class="h-full rounded-full bg-[var(--wbk-primary)] w-1/4" style="transition: width 0.4s ease;" onmouseover="this.style.width='100%'" onmouseout="this.style.width='25%'"></div>
+            </div>
+          </div>
+          <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-lg)] p-5 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)]">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-[var(--wbk-text)] text-sm font-semibold">spring</h3>
+              <span class="text-[var(--wbk-text-tertiary)] text-xs">0.5s · 0.85 damp</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-[var(--wbk-primary)]" style="transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);" onmouseover="this.style.transform='translateX(80px)'" onmouseout="this.style.transform='translateX(0)'"></div>
+              <span class="text-[var(--wbk-text-tertiary)] text-[10px]">悬停运动</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 不透明度 ===== -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+      <div class="flex items-center gap-3 mb-6 sm:mb-8">
+        <div class="w-1 h-6 rounded-full bg-[var(--wbk-primary)]"></div>
+        <h2 class="text-[var(--wbk-text)] text-xl sm:text-[22px] font-bold">不透明度</h2>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-4 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-10 rounded-lg bg-[var(--wbk-text)] mb-2" style="opacity: 0.36;"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">disabled</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0.36</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-4 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-10 rounded-lg bg-[var(--wbk-text)] mb-2" style="opacity: 0.72;"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">pressed</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0.72</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-4 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-10 rounded-lg bg-[var(--wbk-text)] mb-2" style="opacity: 0.88;"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">hover</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0.88</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-4 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-10 rounded-lg bg-[var(--wbk-text)] mb-2" style="opacity: 0.72;"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">separator</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0.72</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-4 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-10 rounded-lg mb-2" style="background: var(--wbk-primary); opacity: 0.14;"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">badge</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0.14</p>
+        </div>
+        <div class="bg-[var(--wbk-surface)] rounded-[var(--wbk-radius-md)] p-4 border border-[var(--wbk-border)] shadow-[var(--wbk-shadow-sm)] text-center">
+          <div class="h-10 rounded-lg mb-2" style="background: var(--wbk-overlay);"></div>
+          <p class="text-[var(--wbk-text)] text-xs font-medium">scrim</p>
+          <p class="text-[var(--wbk-text-tertiary)] text-[10px]">0.42</p>
+        </div>
+      </div>
+    </section>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

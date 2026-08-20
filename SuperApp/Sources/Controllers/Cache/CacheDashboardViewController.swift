@@ -90,6 +90,7 @@ class CacheDashboardViewController: BaseViewController<CacheDashboardViewModel> 
 
     override func makeUI() {
         title = "缓存仪表盘"
+        view.accessibilityIdentifier = "cacheDashboard.root"
         view.backgroundColor = ThemeTokens.Color.background
 
         setupTableView()

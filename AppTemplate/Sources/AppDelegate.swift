@@ -5,48 +5,32 @@ import WebBridgeKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    private let configuration = AppTemplateConfiguration.safeDefaults
+    #if DEBUG
+    private var diagnosticsServer: AIHTTPServer?
+    #endif
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        WebBridgeKit.shared.initialize()
+        WebBridgeKitManager.shared.initialize()
 
-        Task {
-            await MessageEngine.shared.registerChannel(BarkChannel(key: "test_key"))
-            await MessageEngine.shared.registerChannel(WebhookChannel(port: 8765))
-            await MessageEngine.shared.startAll()
-        }
-
-        Task {
-            let config = CommandParserConfiguration(
-                maxPayloadSize: 4096,
-                maxAge: 300,
-                allowedSchemes: ["http", "https"],
-                commandPrefix: "【WebBridgeKit】",
-                urlSchemePrefix: "wbsk://command",
-                enableSignatureVerification: false,
-                enableTimestampValidation: false
-            )
-            await CommandParser.shared.setConfiguration(config)
-        }
-
-        Task {
-            let server = AIHTTPServer(port: 8765)
-            await server.registerDefaultRoutes()
-            try? await server.start()
-        }
+        startConfiguredServices()
 
         window = UIWindow(frame: UIScreen.main.bounds)
 
-        let tabBarController = TabBarController()
+        let tabBarController = TabBarController(configuration: configuration)
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
 
         Task { @MainActor in
-            await ThemeManager.shared.applyToWindow(window!)
+            if let window {
+                await ThemeManager.shared.applyToWindow(window)
+            }
         }
 
         #if DEBUG
+        DebugPanelBridge.shared.configure(with: configuration)
         setupDebugPanel()
         #endif
 
@@ -73,8 +57,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func showDebugPanelViaTabSwitch() {
-        guard let tabBarController = window?.rootViewController as? TabBarController else { return }
-        tabBarController.selectedIndex = 5
+        DebugTrigger.shared.showDebugPanel(from: window?.rootViewController)
     }
     #endif
+
+    private func startConfiguredServices() {
+        if let barkDeviceKey = configuration.barkDeviceKey {
+            Task {
+                let channel = BarkChannel(
+                    serverURL: configuration.barkServerURL,
+                    key: barkDeviceKey
+                )
+                await MessageEngine.shared.registerChannel(channel)
+                await MessageEngine.shared.startAll()
+            }
+        }
+
+        if configuration.enablesSignedCommandValidation {
+            Task {
+                await CommandParser.shared.setConfiguration(.default)
+            }
+        }
+
+        #if DEBUG
+        if let port = configuration.localDiagnosticsPort {
+            let server = AIHTTPServer(port: port)
+            diagnosticsServer = server
+            Task {
+                await server.registerDefaultRoutes()
+                try? await server.start()
+            }
+        }
+        #endif
+    }
 }

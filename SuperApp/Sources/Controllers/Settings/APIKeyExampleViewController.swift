@@ -22,15 +22,15 @@ class APIKeyExampleViewController: UIViewController {
             title: NSLocalizedString("apikey.example.bark_basic", tableName: "Localizable", bundle: .main, value: "Bark 基础推送", comment: ""),
             language: "URL",
             code: """
-            https://api.day.app/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit
+            https://wbk.shanbox.19930810.xyz:8443/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit
             """,
-            description: NSLocalizedString("apikey.example.bark_basic_desc", tableName: "Localizable", bundle: .main, value: "最简单的推送方式，只需拼接 URL 即可发送通知", comment: "")
+            description: NSLocalizedString("apikey.example.bark_basic_desc", tableName: "Localizable", bundle: .main, value: "通过 WebBridgeKit Bark 兼容服务发送通知，只需拼接 URL 即可", comment: "")
         ),
         CodeExample(
             title: NSLocalizedString("apikey.example.bark_autocopy", tableName: "Localizable", bundle: .main, value: "自动复制推送", comment: ""),
             language: "URL",
             code: """
-            https://api.day.app/YOUR_KEY_HERE/复制测试?copy=测试内容&autoCopy=1
+            https://wbk.shanbox.19930810.xyz:8443/YOUR_KEY_HERE/复制测试/复制内容?copy=测试内容&autoCopy=1
             """,
             description: NSLocalizedString("apikey.example.bark_autocopy_desc", tableName: "Localizable", bundle: .main, value: "推送到达后自动复制指定内容到剪贴板", comment: "")
         ),
@@ -38,7 +38,7 @@ class APIKeyExampleViewController: UIViewController {
             title: NSLocalizedString("apikey.example.bark_critical", tableName: "Localizable", bundle: .main, value: "严重警告推送", comment: ""),
             language: "URL",
             code: """
-            https://api.day.app/YOUR_KEY_HERE/严重警告?level=critical&volume=5
+            https://wbk.shanbox.19930810.xyz:8443/YOUR_KEY_HERE/严重警告/请立即查看?level=critical&volume=5
             """,
             description: NSLocalizedString("apikey.example.bark_critical_desc", tableName: "Localizable", bundle: .main, value: "使用时区和重要性级别发送紧急通知", comment: "")
         ),
@@ -46,7 +46,7 @@ class APIKeyExampleViewController: UIViewController {
             title: NSLocalizedString("apikey.example.bark_icon", tableName: "Localizable", bundle: .main, value: "自定义图标推送", comment: ""),
             language: "URL",
             code: """
-            https://api.day.app/YOUR_KEY_HERE/图标测试?icon=https://day.app/assets/images/avatar.jpg&badge=1
+            https://wbk.shanbox.19930810.xyz:8443/YOUR_KEY_HERE/图标测试/角标更新?icon=https://wbk.shanbox.19930810.xyz:8443/favicon.ico&badge=1
             """,
             description: NSLocalizedString("apikey.example.bark_icon_desc", tableName: "Localizable", bundle: .main, value: "自定义推送图标和角标", comment: "")
         ),
@@ -56,8 +56,8 @@ class APIKeyExampleViewController: UIViewController {
             code: """
             import Alamofire
 
-            let headers = ["X-API-Key": "YOUR_KEY_HERE"]
-            AF.request("https://wbk.shanbox.19930810.xyz:8443/v1/pages", headers: headers)
+            let headers = ["Authorization": "Bearer YOUR_ADMIN_API_KEY"]
+            AF.request("https://wbk.shanbox.19930810.xyz:8443/api/v1/manifests", headers: headers)
                 .responseJSON { response in
                     // 处理响应
                 }
@@ -68,8 +68,8 @@ class APIKeyExampleViewController: UIViewController {
             title: NSLocalizedString("apikey.example.curl", tableName: "Localizable", bundle: .main, value: "cURL 示例", comment: ""),
             language: "Bash",
             code: """
-            curl -H "X-API-Key: YOUR_KEY_HERE" \\
-                 https://wbk.shanbox.19930810.xyz:8443/v1/pages
+            curl -H "Authorization: Bearer YOUR_ADMIN_API_KEY" \\
+                 https://wbk.shanbox.19930810.xyz:8443/api/v1/manifests
             """,
             description: NSLocalizedString("apikey.example.curl_desc", tableName: "Localizable", bundle: .main, value: "使用 cURL 命令行调用 API", comment: "")
         )

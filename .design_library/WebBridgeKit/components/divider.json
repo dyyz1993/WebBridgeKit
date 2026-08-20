@@ -1,0 +1,25 @@
+{
+  "slug": "divider",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["divider", "separator", "hr"],
+  "variantDimensions": ["inset"],
+  "representativeVariants": [
+    { "name": "全宽", "props": { "inset": false } },
+    { "name": "左右缩进", "props": { "inset": true } }
+  ],
+  "anatomy": [
+    { "name": "line", "role": "horizontal separator", "type": "element" }
+  ],
+  "structurePatterns": {
+    "height": 1,
+    "color": { "ref": "--color-separator" },
+    "insetH": 16,
+    "marginTop": 8,
+    "marginBottom": 8
+  },
+  "usageHints": ["列表行间分隔、section 间视觉分隔"],
+  "doNotInvent": ["不要添加文字标签", "不要添加渐变"],
+  "unknowns": []
+}

@@ -41,15 +41,15 @@ class TabBarController: UITabBarController {
     }
 
     private func bindMessages() {
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            guard let self = self, let items = self.tabBar.items, items.count > 1 else { return }
-            let messageItem = items[1]
-            Task {
-                let count = await MessageEngine.shared.getUnreadCount()
-                await MainActor.run {
-                    messageItem.badgeValue = count > 0 ? "\(count)" : nil
-                }
+        // Event-driven unread sync: every engine mutation (receive / read /
+        // delete / clear) refreshes both the tab badge and the home-screen
+        // icon badge. Replaces the old 2s polling timer, which stalls while
+        // the inbox scroll view keeps the run loop in tracking mode.
+        Task { [weak self] in
+            await MessageEngine.shared.setOnStoreChanged { [weak self] in
+                Task { await self?.syncUnreadBadges() }
             }
+            await self?.syncUnreadBadges()
         }
 
         NotificationCenter.default.rx.notification(.didReceivePushMessage)
@@ -57,6 +57,22 @@ class TabBarController: UITabBarController {
                 self?.handlePushJump(notification)
             })
             .disposed(by: disposeBag)
+    }
+
+    /// Unread count drives every badge surface: the notifications tab item
+    /// and the app icon. Bark deliberately never tracks the icon badge (it
+    /// only clears it with -1 on foreground); WebBridgeKit owns an inbox,
+    /// so the icon badge mirrors the inbox unread count instead.
+    private func syncUnreadBadges() async {
+        let count = await MessageEngine.shared.getUnreadCount()
+        await MainActor.run { [weak self] in
+            guard let self = self,
+                  let items = self.tabBar.items,
+                  let messageIndex = AppTab.allCases.firstIndex(of: .notifications),
+                  items.indices.contains(messageIndex) else { return }
+            items[messageIndex].badgeValue = count > 0 ? "\(count)" : nil
+        }
+        await DefaultBadgeManager().setBadge(count)
     }
 
     private func handlePushJump(_ notification: Notification) {
@@ -77,10 +93,12 @@ class TabBarController: UITabBarController {
         if Static.hasChecked { return }
         Static.hasChecked = true
 
-        let isEnabled = UserDefaults.standard.bool(forKey: "EnableLastAppMemory")
+        SettingsPreferenceKeys.migrateLegacyValuesIfNeeded()
+
+        let isEnabled = UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp)
 
         if isEnabled,
-           let lastURLString = UserDefaults.standard.string(forKey: "LastOpenedURL"),
+           let lastURLString = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.lastOpenedURL),
            let url = URL(string: lastURLString) {
 
             if let mainNav = viewControllers?.first as? UINavigationController {
@@ -97,45 +115,22 @@ class TabBarController: UITabBarController {
     // MARK: - Setup
 
     private func setupTabs() {
-        let mainVC = createMainViewController()
-        let inboxVC = createInboxViewController()
-        let discoverVC = createDiscoverViewController()
-        let settingsVC = createSettingsViewController()
-
-        mainVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.home"),
-            image: LucideIcon.home.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.home.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        mainVC.tabBarItem.accessibilityIdentifier = "tab.home"
-
-        inboxVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.inbox"),
-            image: LucideIcon.inbox.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.inbox.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        inboxVC.tabBarItem.accessibilityIdentifier = "tab.inbox"
-
-        discoverVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.discover"),
-            image: LucideIcon.compass.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.compass.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        discoverVC.tabBarItem.accessibilityIdentifier = "tab.discover"
-
-        settingsVC.tabBarItem = UITabBarItem(
-            title: L10n.tr("tab.settings"),
-            image: LucideIcon.settings.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab),
-            selectedImage: LucideIcon.settings.templateImage(pointSize: ThemeTokens.Icons.Sizes.tab)
-        )
-        settingsVC.tabBarItem.accessibilityIdentifier = "tab.settings"
-
-        viewControllers = [
-            UINavigationController(rootViewController: mainVC),
-            UINavigationController(rootViewController: inboxVC),
-            UINavigationController(rootViewController: discoverVC),
-            UINavigationController(rootViewController: settingsVC)
-        ]
+        viewControllers = AppTab.allCases.map { tab in
+            let root: UIViewController
+            switch tab {
+            case .apps:
+                root = PWAAppCenterViewController()
+            case .notifications:
+                root = createInboxViewController()
+            case .settings:
+                root = createSettingsViewController()
+            }
+            let nav = UINavigationController(rootViewController: root)
+            // UINavigationController adopts its visible root item's title unless
+            // the root owns the item, which would make the tab read "PWA 应用".
+            root.tabBarItem = tab.makeTabBarItem()
+            return nav
+        }
     }
 
     private func setupAppearance() {
@@ -185,12 +180,275 @@ class TabBarController: UITabBarController {
         return hostingVC
     }
 
+    private func createAppShellViewController(tab: AppTab) -> UIViewController {
+        let view: AnyView
+        if tab == .settings {
+            view = AnyView(
+                SettingsView { [weak self] destination in
+                    self?.handleSettingsNavigation(destination)
+                }
+            )
+        } else {
+            view = AnyView(
+                AppShellView(tab: tab) { [weak self] action in
+                    self?.handleAppShellAction(action)
+                }
+            )
+        }
+        let hostingVC = UIHostingController(rootView: view)
+        hostingVC.title = tab.title
+        hostingVC.view.accessibilityIdentifier = rootAccessibilityIdentifier(for: tab)
+        hostingVC.tabBarItem = tab.makeTabBarItem()
+        return hostingVC
+    }
+
+    private func rootAccessibilityIdentifier(for tab: AppTab) -> String {
+        switch tab {
+        case .apps:
+            return "pwaCenter.table"
+        case .notifications:
+            return "InboxViewController"
+        case .settings:
+            return "SettingsViewController"
+        }
+    }
+
+    #if DEBUG
+    private func handleWebCacheAction(_ action: WebCacheHomeAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openCacheDashboard:
+            nav.pushViewController(
+                CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
+                animated: true
+            )
+        case .openCacheManagement:
+            nav.pushViewController(ManagementViewController(), animated: true)
+        }
+    }
+    #endif
+
+    #if DEBUG
+    private func handleBridgeLabAction(_ action: BridgeLabAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openLegacyShowcase:
+            #if DEBUG
+            nav.pushViewController(BridgeShowcaseViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Bridge", message: "Bridge Showcase is available in DEBUG builds.")
+            #endif
+        case .openDebugLogs:
+            #if DEBUG
+            let debugPanel = DebugPanelViewController()
+            let debugNav = UINavigationController(rootViewController: debugPanel)
+            debugNav.modalPresentationStyle = .fullScreen
+            nav.present(debugNav, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
+            #endif
+        }
+    }
+    #endif
+
+    #if DEBUG
+    private func handleTokenPushAction(_ action: TokenPushAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openTokenManager:
+            nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
+        case .openAPIKeyManager:
+            nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+        case .openNotificationDebug:
+            #if DEBUG
+            nav.pushViewController(NotificationDebugViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
+            #endif
+        }
+    }
+    #endif
+
+    #if DEBUG
+    private func handleDebugCenterAction(_ action: DebugCenterAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openDebugPanel:
+            #if DEBUG
+            let debugPanel = DebugPanelViewController()
+            let debugNav = UINavigationController(rootViewController: debugPanel)
+            debugNav.modalPresentationStyle = .fullScreen
+            nav.present(debugNav, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
+            #endif
+        case .openDiagnostics:
+            #if DEBUG
+            let vc = UIHostingController(rootView: DiagnosticsView())
+            vc.title = L10n.tr("settings.diagnostics.title")
+            nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Diagnostics", message: "Diagnostics are available in DEBUG builds.")
+            #endif
+        case .openNetworkInspector:
+            #if DEBUG
+            nav.pushViewController(NetworkDebugViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Network", message: "Network inspector is available in DEBUG builds.")
+            #endif
+        case .openCacheDashboard:
+            nav.pushViewController(
+                CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
+                animated: true
+            )
+        case .openManifestCacheTests:
+            #if DEBUG
+            nav.pushViewController(ManifestCacheTestViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Manifest", message: "Manifest cache tests are available in DEBUG builds.")
+            #endif
+        case .openWebCache:
+            #if DEBUG
+            let vc = UIHostingController(rootView: WebCacheHomeView { [weak self] action in
+                self?.handleWebCacheAction(action)
+            })
+            vc.title = "Web 缓存调试"
+            nav.pushViewController(vc, animated: true)
+            #endif
+        case .showCrashScanGuide:
+            showAppShellInfo(
+                title: "崩溃扫描",
+                message: "在项目根目录执行 bash scripts/scan-crash-logs.sh --json，要求 total 为 0。"
+            )
+        case .openBridgeLab:
+            #if DEBUG
+            let vc = UIHostingController(rootView: BridgeLabHomeView { [weak self] action in
+                self?.handleBridgeLabAction(action)
+            })
+            vc.title = "Bridge 调试"
+            nav.pushViewController(vc, animated: true)
+            #endif
+        case .openPushTools:
+            #if DEBUG
+            let vc = UIHostingController(rootView: TokenPushHomeView { [weak self] action in
+                self?.handleTokenPushAction(action)
+            })
+            vc.title = "Push 调试"
+            nav.pushViewController(vc, animated: true)
+            #endif
+        }
+    }
+    #endif
+
+    #if DEBUG
+    private func handleDeepLinkAction(_ action: DeepLinkAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openTarget(let url, let mode):
+            WebBrowserManager.shared.openBrowser(
+                url: url,
+                params: WebBrowserParams(displayMode: mode),
+                from: nav
+            )
+        case .openScheme(let url):
+            UIApplication.shared.open(url)
+        case .switchTab(let index):
+            selectedIndex = max(0, min(index, AppTab.allCases.count - 1))
+        }
+    }
+    #endif
+
+    private func handleAppShellAction(_ action: AppShellAction) {
+        guard let nav = selectedViewController as? UINavigationController else { return }
+
+        switch action {
+        case .openWebCatalog:
+            nav.pushViewController(
+                PresetURLCatalogViewController(viewModel: PresetURLCatalogViewModel()),
+                animated: true
+            )
+        case .openCacheDashboard:
+            nav.pushViewController(
+                CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
+                animated: true
+            )
+        case .openCacheManagement:
+            nav.pushViewController(ManagementViewController(), animated: true)
+        case .openBridgeShowcase:
+            #if DEBUG
+            nav.pushViewController(BridgeShowcaseViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Bridge", message: "Bridge Showcase is available in DEBUG builds.")
+            #endif
+        case .openTokenManager:
+            nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
+        case .openAPIKeyManager:
+            nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+        case .openNotificationDebug:
+            #if DEBUG
+            nav.pushViewController(NotificationDebugViewController(), animated: true)
+            #else
+            showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
+            #endif
+        case .openMessageHistory:
+            if let inboxIndex = AppTab.allCases.firstIndex(of: .notifications) {
+                selectedIndex = inboxIndex
+            }
+        case .openDebugPanel:
+            #if DEBUG
+            let debugPanel = DebugPanelViewController()
+            let debugNav = UINavigationController(rootViewController: debugPanel)
+            debugNav.modalPresentationStyle = .fullScreen
+            nav.present(debugNav, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
+            #endif
+        case .openDiagnostics:
+            #if DEBUG
+            let vc = UIHostingController(rootView: DiagnosticsView())
+            vc.title = L10n.tr("settings.diagnostics.title")
+            nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Diagnostics", message: "Diagnostics are available in DEBUG builds.")
+            #endif
+        case .openDeepLinkExamples:
+            showDeepLinkExamples()
+        case .openCommandExamples:
+            showAppShellInfo(
+                title: "UI v4",
+                message: "This entry is reserved for the next module pass. The detailed implementation contract is in docs/ui-v4/SCREEN_SPECS.md."
+            )
+        }
+    }
+
+    private func showDeepLinkExamples() {
+        showAppShellInfo(
+            title: "协议跳转模板",
+            message: """
+            webbridgekit://open?url=https%3A%2F%2Fexample.com
+            webbridgekit://tab?index=0
+            webbridgekit://command/<token>
+            """
+        )
+    }
+
+    private func showAppShellInfo(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "知道了", style: .default))
+        selectedViewController?.present(alert, animated: true)
+    }
+
     private func handleSettingsNavigation(_ destination: SettingsView.Destination) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
         switch destination {
         case .serverConfig:
-            nav.pushViewController(ServerConfigViewController(viewModel: ServerConfigViewModel()), animated: true)
+            nav.pushViewController(GatewayConfigurationViewController(), animated: true)
         case .tokenManage:
             nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
         case .apiKeyManage:
@@ -204,11 +462,15 @@ class TabBarController: UITabBarController {
             vc.title = "最近访问"
             nav.pushViewController(vc, animated: true)
         case .notificationSettings:
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
+            NotificationSettingsOpener.open()
+        case .pushEncryption:
+            let vc = UIHostingController(rootView: PushEncryptionView())
+            vc.title = "推送加密"
+            nav.pushViewController(vc, animated: true)
         case .appearance:
-            break
+            let vc = UIHostingController(rootView: AppearanceSettingsView())
+            vc.title = L10n.tr("settings.appearance")
+            nav.pushViewController(vc, animated: true)
         case .debugPanel:
             #if DEBUG
             let debugPanel = DebugPanelViewController()
@@ -224,6 +486,30 @@ class TabBarController: UITabBarController {
             #endif
         case .cacheDashboard:
             nav.pushViewController(CacheDashboardViewController(viewModel: CacheDashboardViewModel()), animated: true)
+        case .debugCenter:
+            #if DEBUG
+            let vc = UIHostingController(
+                rootView: DebugCenterHomeView { [weak self] action in
+                    self?.handleDebugCenterAction(action)
+                }
+            )
+            vc.title = "Debug"
+            nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Debug", message: "Debug Center is available in DEBUG builds.")
+            #endif
+        case .deepLinks:
+            #if DEBUG
+            let vc = UIHostingController(
+                rootView: DeepLinkHomeView { [weak self] action in
+                    self?.handleDeepLinkAction(action)
+                }
+            )
+            vc.title = "Links"
+            nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Links", message: "Deep Link tools are available in DEBUG builds.")
+            #endif
         case .about:
             let vc = UIHostingController(rootView: AboutView())
             vc.title = L10n.tr("about.title")

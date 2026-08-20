@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Radio Group - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { max-width:480px; margin:0 auto; }
+.section-label { font-size:13px; color:var(--color-text-secondary); margin-bottom:12px; letter-spacing:0.5px; }
+
+/* @component-css-start */
+.radio-group { display:flex; flex-direction:column; background:var(--color-surface); border-radius:var(--wbk-radius-card); box-shadow:var(--shadow-card); overflow:hidden; }
+.radio-option { display:flex; align-items:center; height:44px; padding:0 16px; gap:12px; cursor:pointer; }
+.radio-option:not(:last-child) { border-bottom:1px solid var(--color-separator); }
+.radio-option__circle { width:20px; height:20px; border-radius:50%; border:2px solid var(--color-separator); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:border-color 0.2s; }
+.radio-option--selected .radio-option__circle { border-color:var(--color-primary); }
+.radio-option__circle--selected { width:10px; height:10px; border-radius:50%; background:var(--color-primary); }
+.radio-option__inner { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+.radio-option__label { font-size:15px; color:var(--color-text); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="section-label">外观模式</div>
+  <div class="radio-group">
+    <div class="radio-option">
+      <div class="radio-option__circle"></div>
+      <div class="radio-option__inner">
+        <span class="radio-option__label">浅色模式</span>
+      </div>
+    </div>
+    <div class="radio-option radio-option--selected">
+      <div class="radio-option__circle"><div class="radio-option__circle--selected"></div></div>
+      <div class="radio-option__inner">
+        <span class="radio-option__label">暗色模式</span>
+      </div>
+    </div>
+    <div class="radio-option">
+      <div class="radio-option__circle"></div>
+      <div class="radio-option__inner">
+        <span class="radio-option__label">跟随系统</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

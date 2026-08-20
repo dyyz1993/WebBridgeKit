@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Nav Header - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; margin-bottom:4px; text-transform:uppercase; }
+.phone-frame { width:100%; background:var(--wbk-background); border-radius:var(--wbk-radius-card); overflow:hidden; box-shadow:var(--wbk-shadow-card); }
+
+/* @component-css-start */
+.nav-header { display:flex; align-items:center; height:44px; padding:0 16px; background:var(--color-bg); position:relative; }
+.nav-header::after { content:''; position:absolute; bottom:0; left:16px; right:16px; height:1px; background:var(--color-separator); }
+.nav-header__back { display:inline-flex; align-items:center; gap:2px; background:none; border:none; color:var(--color-primary); cursor:pointer; padding:4px 0; font-family:inherit; }
+.nav-header__back-icon { width:24px; height:24px; flex-shrink:0; }
+.nav-header__back-label { font-size:15px; font-weight:400; }
+.nav-header__title { position:absolute; left:50%; transform:translateX(-50%); font-size:17px; font-weight:600; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%; }
+.nav-header__title--left { position:static; transform:none; left:auto; margin-left:var(--space-sm); }
+.nav-header__actions { margin-left:auto; display:flex; align-items:center; gap:var(--space-sm); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div>
+    <div class="story-label">有返回按钮</div>
+    <div class="phone-frame">
+      <div class="nav-header">
+        <button class="nav-header__back">
+          <i data-lucide="chevron-left" class="nav-header__back-icon"></i>
+          <span class="nav-header__back-label">返回</span>
+        </button>
+        <span class="nav-header__title">消息详情</span>
+        <div class="nav-header__actions">
+          <i data-lucide="share" style="width:20px;height:20px;color:var(--color-primary)"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="story-label">仅标题</div>
+    <div class="phone-frame">
+      <div class="nav-header">
+        <span class="nav-header__title">设置</span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="story-label">标题左对齐</div>
+    <div class="phone-frame">
+      <div class="nav-header">
+        <span class="nav-header__title nav-header__title--left">调试中心</span>
+        <div class="nav-header__actions">
+          <i data-lucide="more-horizontal" style="width:20px;height:20px;color:var(--color-primary)"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

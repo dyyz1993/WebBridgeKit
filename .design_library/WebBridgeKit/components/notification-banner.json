@@ -1,0 +1,39 @@
+{
+  "slug": "notification-banner",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["notification", "in-app-notification", "toast-banner"],
+  "variantDimensions": ["hasImage"],
+  "representativeVariants": [
+    { "name": "纯文字", "props": { "hasImage": false } },
+    { "name": "带头像", "props": { "hasImage": true } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "banner card", "type": "element" },
+    { "name": "avatar", "role": "sender image", "type": "optional" },
+    { "name": "content", "role": "title + body column", "type": "element" },
+    { "name": "title", "role": "sender name / app name", "type": "element" },
+    { "name": "body", "role": "notification message", "type": "element" },
+    { "name": "time", "role": "timestamp", "type": "optional" },
+    { "name": "close", "role": "dismiss button", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "background": { "ref": "--color-surface" },
+    "cornerRadius": { "ref": "--radius-md" },
+    "padding": 12,
+    "shadow": { "ref": "--shadow-card" },
+    "avatarSize": 36,
+    "titleSize": 13,
+    "titleWeight": 600,
+    "titleColor": { "ref": "--color-text" },
+    "bodySize": 13,
+    "bodyColor": { "ref": "--color-text-secondary" },
+    "timeSize": 11,
+    "timeColor": { "ref": "--color-text-tertiary" },
+    "maxWidth": 380
+  },
+  "usageHints": ["应用内通知横幅，从顶部/底部弹出", "对应 iOS UNUserNotificationCenter 横幅样式"],
+  "doNotInvent": ["不要添加操作按钮", "不要添加滑动交互"],
+  "unknowns": []
+}

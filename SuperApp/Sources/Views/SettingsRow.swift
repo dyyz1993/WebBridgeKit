@@ -6,18 +6,44 @@ struct SettingsRow: View {
     let iconBackgroundColor: UIColor
     let iconTintColor: UIColor
     let title: String
-    var trailingText: String? = nil
+    var trailingText: String?
     var showChevron: Bool = true
     var isToggle: Bool = false
     @Binding var isToggleOn: Bool
     var isDestructive: Bool = false
-    var badge: String? = nil
-    var onTap: (() -> Void)? = nil
+    var badge: String?
+    var toggleAccessibilityIdentifier: String?
+    var onTap: (() -> Void)?
 
     @State private var isPressed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        Group {
+            if isToggle {
+                Button(
+                    action: { isToggleOn.toggle() },
+                    label: { rowContent.allowsHitTesting(false) }
+                )
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityAddTraits(.isButton)
+            } else {
+                Button(
+                    action: { onTap?() },
+                    label: { rowContent }
+                )
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityAddTraits(.isButton)
+            }
+        }
+        .scaleEffect(reduceMotion ? 1.0 : (isPressed ? 0.97 : 1.0))
+        .animation(reduceMotion ? .none : .easeOut(duration: ThemeTokens.Animation.fast.duration), value: isPressed)
+        .onLongPressGesture(minimumDuration: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
+    }
+
+    private var rowContent: some View {
         HStack(spacing: ThemeTokens.Spacing.md) {
             SettingsIconBox(
                 image: icon,
@@ -51,6 +77,7 @@ struct SettingsRow: View {
             if isToggle {
                 Toggle("", isOn: $isToggleOn)
                     .labelsHidden()
+                    .accessibilityIdentifier(toggleAccessibilityIdentifier ?? "settings.toggle")
             } else if showChevron {
                 Image(systemName: "chevron.right")
                     .font(.system(size: ThemeTokens.Icons.Sizes.chevron, weight: .semibold))
@@ -59,14 +86,6 @@ struct SettingsRow: View {
         }
         .padding(.vertical, ThemeTokens.Spacing.sm)
         .contentShape(Rectangle())
-        .scaleEffect(reduceMotion ? 1.0 : (isPressed ? 0.97 : 1.0))
-        .animation(reduceMotion ? .none : .easeOut(duration: ThemeTokens.Animation.fast.duration), value: isPressed)
-        .onTapGesture {
-            if !isToggle { onTap?() }
-        }
-        .onLongPressGesture(minimumDuration: .infinity, pressing: { pressing in
-            isPressed = pressing
-        }, perform: {})
     }
 }
 

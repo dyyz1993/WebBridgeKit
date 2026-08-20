@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  DebugPanelViewController.swift
 //  SuperApp
 //
@@ -57,6 +59,7 @@ class DebugPanelViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("debug.panel.title")
+        view.accessibilityIdentifier = "debugPanel.root"
         view.backgroundColor = ThemeTokens.Color.background
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
@@ -213,10 +216,12 @@ private class HandlerDebugListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.accessibilityIdentifier = "debugPanel.handlers.root"
         view.backgroundColor = ThemeTokens.Color.background
 
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.accessibilityIdentifier = "debugPanel.handlers.tableView"
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "HandlerCell")
 
         view.addSubview(tableView)
@@ -688,5 +693,7 @@ private extension Dictionary where Key == String {
         return string
     }
 }
+
+#endif
 
 #endif

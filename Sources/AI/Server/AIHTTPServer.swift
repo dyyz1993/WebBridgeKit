@@ -121,11 +121,21 @@ public actor AIHTTPServer {
             var clientAddrLen = socklen_t(MemoryLayout.size(ofValue: clientAddr))
 
             let clientSocket = accept(serverSocket, &clientAddr, &clientAddrLen)
-            guard clientSocket >= 0 else { continue }
-
-            Task {
-                await handleClient(socket: clientSocket)
+            if clientSocket >= 0 {
+                Task {
+                    await handleClient(socket: clientSocket)
+                }
+                continue
             }
+            // accept failed. Fatal socket errors end the loop; transient
+            // ones back off — the original `continue` retry spun a device
+            // at 100% CPU for 90+ seconds whenever accept kept failing
+            // (backgrounding, fd exhaustion, aborted connections).
+            let errnoValue = errno
+            if !isRunning || errnoValue == EBADF || errnoValue == EINVAL || errnoValue == ENOTSOCK {
+                break
+            }
+            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms backoff
         }
     }
 

@@ -12,6 +12,7 @@ class LicenseDetailViewController: UIViewController {
         tv.backgroundColor = ThemeTokens.Color.background
         tv.font = ThemeTokens.Typography.footnote
         tv.textColor = ThemeTokens.Color.text
+        tv.accessibilityIdentifier = "licenseDetail.textView"
         tv.textContainerInset = UIEdgeInsets(
             top: ThemeTokens.Spacing.md,
             left: ThemeTokens.Spacing.md,
@@ -35,6 +36,7 @@ class LicenseDetailViewController: UIViewController {
         super.viewDidLoad()
         title = entry.name
         view.backgroundColor = ThemeTokens.Color.background
+        view.accessibilityIdentifier = "licenseDetail.root"
 
         view.addSubview(textView)
         textView.snp.makeConstraints { make in

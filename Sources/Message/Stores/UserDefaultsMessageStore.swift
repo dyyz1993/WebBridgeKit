@@ -13,6 +13,7 @@ public actor UserDefaultsMessageStore: MessageStore {
 
     public func save(_ message: StoredMessage) async throws {
         var messages = loadAll()
+        messages.removeAll { $0.id == message.id }
         messages.insert(message, at: 0)
         if messages.count > maxMessages {
             messages = Array(messages.prefix(maxMessages))

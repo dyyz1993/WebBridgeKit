@@ -50,7 +50,7 @@ def compare_images(ref_path, act_path, threshold):
     if total_pixels == 0:
         return 0.0, diff.convert("RGB"), "PASS"
 
-    sum_diff = sum(i * v for i, v in enumerate(histogram))
+    sum_diff = sum((i % 256) * v for i, v in enumerate(histogram))
     diff_pct = (sum_diff / (total_pixels * 255 * 3)) * 100
 
     # Generate visual diff with red highlight on differences
@@ -92,6 +92,7 @@ def main():
     total_pass = 0
     total_fail = 0
     total_new = 0
+    total_removed = 0
 
     for fname in sorted(actual_files):
         act_path = os.path.join(act_dir, fname)
@@ -125,6 +126,7 @@ def main():
     # Check for removed references
     for fname in sorted(ref_files - set(actual_files)):
         if fname.lower().endswith(".png"):
+            total_removed += 1
             results.append({
                 "name": fname,
                 "status": "REMOVED",
@@ -142,7 +144,8 @@ def main():
             "pass": total_pass,
             "fail": total_fail,
             "new": total_new,
-            "overall_status": "FAIL" if total_fail > 0 else "PASS"
+            "removed": total_removed,
+            "overall_status": "FAIL" if total_fail > 0 or total_new > 0 or total_removed > 0 else "PASS"
         },
         "results": results
     }
@@ -152,7 +155,7 @@ def main():
         json.dump(report, f, indent=2)
 
     print(json.dumps(report))
-    sys.exit(1 if total_fail > 0 else 0)
+    sys.exit(1 if total_fail > 0 or total_new > 0 or total_removed > 0 else 0)
 
 
 def null_val():
@@ -308,3 +311,7 @@ HTMLEOF
 echo ""
 echo "Report saved to: $OUTPUT_DIR/index.html"
 echo "Results JSON:   $OUTPUT_DIR/results.json"
+
+if [ "${DIFF_FAILED:-false}" = "true" ]; then
+    exit 1
+fi

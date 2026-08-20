@@ -49,7 +49,7 @@ actor CommandService {
         tokens[id] = token
 
         let encodedPayload = try JSONEncoder().encode(payload)
-        let tokenString = "\(id).\(encodedPayload.base64EncodedString())"
+        let tokenString = "\(id).\(Self.base64URLEncodedString(encodedPayload))"
 
         return CommandGenerateResponse(
             id: id,
@@ -101,7 +101,7 @@ actor CommandService {
         tokens[id] = token
 
         let encodedPayload = try JSONEncoder().encode(token.payload)
-        let tokenString = "\(id).\(encodedPayload.base64EncodedString())"
+        let tokenString = "\(id).\(Self.base64URLEncodedString(encodedPayload))"
         let shareURL = "webbridgekit://command/\(tokenString)"
         let expiresText = token.expiresAt ?? "永不过期"
         let shareText = "【WebBridgeKit】共享口令: \(id)\n\(shareURL)\n有效期至: \(expiresText)"
@@ -143,5 +143,12 @@ actor CommandService {
         case .plainText:
             return payload.data
         }
+    }
+
+    private static func base64URLEncodedString(_ data: Data) -> String {
+        data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
     }
 }

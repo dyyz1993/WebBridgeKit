@@ -23,6 +23,7 @@ BUNDLE_ID="com.webbridgekit.superapp"
 REMOTE_SERVER="${WBK_SERVER_URL:-https://wbk.shanbox.19930810.xyz:8443}"
 CRASHES=()
 WARNINGS=()
+SCAN_COUNT=0
 
 # ============================================================
 # Function Definitions (must be before calls)
@@ -39,19 +40,19 @@ scan_diagnostic_reports() {
       count=$((count + 1))
     fi
   done < <(find "$dir" -name "*.ips" -print0 2>/dev/null)
-  echo "$count"
+  SCAN_COUNT=$count
 }
 
 scan_simulator_crash_logs() {
   local sim_data_dir
   sim_data_dir=$(xcrun simctl get_app_container booted "$BUNDLE_ID" data 2>/dev/null || true)
   if [[ -z "$sim_data_dir" || ! -d "$sim_data_dir" ]]; then
-    echo "0"
+    SCAN_COUNT=0
     return
   fi
   local crash_dir="$sim_data_dir/Documents/crash_logs"
   if [[ ! -d "$crash_dir" ]]; then
-    echo "0"
+    SCAN_COUNT=0
     return
   fi
   local count=0
@@ -59,7 +60,7 @@ scan_simulator_crash_logs() {
     CRASHES+=("APP:$f")
     count=$((count + 1))
   done < <(find "$crash_dir" -name "*.json" -print0 2>/dev/null)
-  echo "$count"
+  SCAN_COUNT=$count
 }
 
 scan_simulator_system_log() {
@@ -75,7 +76,7 @@ scan_simulator_system_log() {
     WARNINGS+=("SYSLOG ($count errors in last hour):\n$top_errors")
   fi
   rm -f "$log_tmp"
-  echo "$count"
+  SCAN_COUNT=$count
 }
 
 scan_memory_warnings() {
@@ -89,7 +90,7 @@ scan_memory_warnings() {
     WARNINGS+=("MEMORY ($count memory events in last hour)")
   fi
   rm -f "$log_tmp"
-  echo "$count"
+  SCAN_COUNT=$count
 }
 
 scan_remote_crashes() {
@@ -173,8 +174,10 @@ except: print('  (parse error)')
 # ============================================================
 
 if [[ "$JSON_MODE" == true ]]; then
-  diag_count=$(scan_diagnostic_reports)
-  app_count=$(scan_simulator_crash_logs)
+  scan_diagnostic_reports
+  diag_count=$SCAN_COUNT
+  scan_simulator_crash_logs
+  app_count=$SCAN_COUNT
   echo "{\"diagnostic_reports\": $diag_count, \"app_crash_logs\": $app_count, \"total\": $((diag_count + app_count))}"
   exit 0
 fi
@@ -183,10 +186,14 @@ echo ""
 echo "=== Crash Log Scanner ==="
 echo ""
 
-diag_count=$(scan_diagnostic_reports)
-app_count=$(scan_simulator_crash_logs)
-syslog_count=$(scan_simulator_system_log)
-mem_count=$(scan_memory_warnings)
+scan_diagnostic_reports
+diag_count=$SCAN_COUNT
+scan_simulator_crash_logs
+app_count=$SCAN_COUNT
+scan_simulator_system_log
+syslog_count=$SCAN_COUNT
+scan_memory_warnings
+mem_count=$SCAN_COUNT
 
 echo "Results:"
 echo "  DiagnosticReports (.ips):  $diag_count"

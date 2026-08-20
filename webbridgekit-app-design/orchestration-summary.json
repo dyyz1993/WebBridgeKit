@@ -1,0 +1,141 @@
+{
+  "project": {
+    "name": "WebBridgeKit App",
+    "operation": "create",
+    "deviceType": "mobile",
+    "operatingMode": "free-explore",
+    "styleDefinitionBrief": "iOS premium developer tool, indigo-violet primary, SF Pro + PingFang SC, spacious card-based layout, layered surfaces",
+    "designRead": "mobile app / iOS developers / technical-professional / information-dense / generic-safe",
+    "designDials": { "layoutVariance": 3, "motionIntensity": 2, "visualDensity": 3 },
+    "styleContinuityAnchors": {
+      "colorSystem": { "primary": "#4F6AF6", "surface": "white on #F8F9FC", "text": "#1A1D2E" },
+      "shapeSystem": { "radiusSm": 8, "radiusMd": 12, "radiusLg": 16, "radiusFull": 9999 },
+      "typographySystem": {
+        "titleStack": "-apple-system, SF Pro Display, PingFang SC, Noto Sans SC, system-ui, sans-serif",
+        "bodyStack": "-apple-system, SF Pro Text, PingFang SC, Noto Sans SC, system-ui, sans-serif",
+        "monoStack": "SF Mono, ui-monospace, Menlo, monospace"
+      },
+      "spacingSystem": { "base": 8, "screenH": 16, "section": 32 },
+      "componentLanguage": "iOS-native card+row patterns, grouped settings rows, pill filters, token display cards",
+      "surfaceAndDepth": { "cardShadow": "0 4px 16px rgba(17,24,39,0.08)", "elevation": "surface layering with subtle shadows" },
+      "imageryAndIconography": { "iconSystem": "Lucide line icons", "imagery": "minimal, icon-driven" },
+      "interactionTone": "iOS-native spring animations, press-scale feedback"
+    },
+    "sharedProjectShellContract": {
+      "navigationModel": "bottom tab bar with 4 tabs + debug panel entry from settings",
+      "primaryColor": "var(--wbk-primary)",
+      "cardRadius": "var(--wbk-radius-lg)",
+      "rowHeight": "54-64px",
+      "tabBarStyle": "frosted glass with separator",
+      "statusBar": "standard iOS status bar mock"
+    },
+    "generationTree": {
+      "nodeId": "gen-project-shell",
+      "kind": "project-shell",
+      "pageIds": ["page-home", "page-inbox", "page-discover", "page-settings", "page-debug"],
+      "output": "partials/project-shell.html",
+      "sharedRegions": ["iOS status bar", "bottom tab bar with 4 tabs", "brand color system", "font system", "radius/shadow model", "dark mode support"],
+      "privateRegions": [],
+      "status": "planned",
+      "children": [
+        { "nodeId": "gen-page-home", "kind": "page-leaf", "pageIds": ["page-home"], "output": "pages/home.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+        { "nodeId": "gen-page-inbox", "kind": "page-leaf", "pageIds": ["page-inbox"], "output": "pages/inbox.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+        { "nodeId": "gen-page-discover", "kind": "page-leaf", "pageIds": ["page-discover"], "output": "pages/discover.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+        { "nodeId": "gen-page-settings", "kind": "page-leaf", "pageIds": ["page-settings"], "output": "pages/settings.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] },
+        { "nodeId": "gen-page-debug", "kind": "page-leaf", "pageIds": ["page-debug"], "output": "pages/debug.html", "sharedRegions": [], "privateRegions": ["full page body"], "status": "planned", "children": [] }
+      ]
+    }
+  },
+  "designSource": {
+    "operatingMode": "free-explore",
+    "styleConstraints": { "radiusMax": 16, "staticShadowAlphaMax": 0.05 },
+    "brandCSSPath": "colors_and_type.css",
+    "brandPrefix": "wbk",
+    "libraryIdentity": null
+  },
+  "pages": [
+    {
+      "nodeId": "page-home",
+      "title": "首页",
+      "htmlSrc": "pages/home.html",
+      "pageIndex": 1,
+      "pageType": "information-dense",
+      "visualNorthStar": "iOS developer dashboard with token card, quick action grid, app cards, and command banner",
+      "compositionPattern": "vertical-card-stack",
+      "componentPlan": ["token-card", "quick-action-grid", "app-card-grid", "command-banner"],
+      "imagePlan": [],
+      "continuityAnchors": ["bottom tab bar active state: home", "brand indigo-violet primary", "card 16px radius", "spacious 16px screen padding"]
+    },
+    {
+      "nodeId": "page-inbox",
+      "title": "收件箱",
+      "htmlSrc": "pages/inbox.html",
+      "pageIndex": 2,
+      "pageType": "information-dense",
+      "visualNorthStar": "iOS message inbox with search bar, filter pills, grouped message cells, and FAB",
+      "compositionPattern": "list-with-header",
+      "componentPlan": ["search-field", "filter-pills", "message-cells", "floating-action-button"],
+      "imagePlan": [],
+      "continuityAnchors": ["bottom tab bar active state: inbox", "search field 44px height 12px radius", "message cells 72-96px height", "pill filters 34px height"]
+    },
+    {
+      "nodeId": "page-discover",
+      "title": "发现",
+      "htmlSrc": "pages/discover.html",
+      "pageIndex": 3,
+      "pageType": "information-dense",
+      "visualNorthStar": "iOS discover page with 2-column resource card grid, status badges, and section headers",
+      "compositionPattern": "grid-with-sections",
+      "componentPlan": ["resource-card-grid", "status-badges", "section-headers"],
+      "imagePlan": [],
+      "continuityAnchors": ["bottom tab bar active state: discover", "2-column card grid", "resource cards 92-116px min-height", "gradient icon backgrounds"]
+    },
+    {
+      "nodeId": "page-settings",
+      "title": "设置",
+      "htmlSrc": "pages/settings.html",
+      "pageIndex": 4,
+      "pageType": "information-dense",
+      "visualNorthStar": "iOS settings page with grouped section rows, icon boxes, chevrons, and version footer",
+      "compositionPattern": "grouped-row-list",
+      "componentPlan": ["settings-section-rows", "icon-boxes", "chevron-indicators", "version-footer"],
+      "imagePlan": [],
+      "continuityAnchors": ["bottom tab bar active state: settings", "grouped rows 54-64px height", "32px icon boxes", "16px chevrons", "section headers uppercase 13px"]
+    },
+    {
+      "nodeId": "page-debug",
+      "title": "调试面板",
+      "htmlSrc": "pages/debug.html",
+      "pageIndex": 5,
+      "pageType": "information-dense",
+      "visualNorthStar": "iOS debug panel with segmented tabs (handlers/tools/logs), handler list, and log console",
+      "compositionPattern": "tabbed-content",
+      "componentPlan": ["segmented-tabs", "handler-list", "log-console", "toolbar-actions"],
+      "imagePlan": [],
+      "continuityAnchors": ["segmented tabs with active pill", "handler rows 44px min", "monospace log console", "toolbar buttons"]
+    }
+  ],
+  "assets": [],
+  "wiringPlan": [
+    { "fromPageId": "page-home", "domId": "tab-inbox", "toPageId": "page-inbox", "hideEdge": true, "label": "切换到收件箱" },
+    { "fromPageId": "page-home", "domId": "tab-discover", "toPageId": "page-discover", "hideEdge": true, "label": "切换到发现" },
+    { "fromPageId": "page-home", "domId": "tab-settings", "toPageId": "page-settings", "hideEdge": true, "label": "切换到设置" },
+    { "fromPageId": "page-inbox", "domId": "tab-home", "toPageId": "page-home", "hideEdge": true, "label": "切换到首页" },
+    { "fromPageId": "page-inbox", "domId": "tab-discover", "toPageId": "page-discover", "hideEdge": true, "label": "切换到发现" },
+    { "fromPageId": "page-inbox", "domId": "tab-settings", "toPageId": "page-settings", "hideEdge": true, "label": "切换到设置" },
+    { "fromPageId": "page-discover", "domId": "tab-home", "toPageId": "page-home", "hideEdge": true, "label": "切换到首页" },
+    { "fromPageId": "page-discover", "domId": "tab-inbox", "toPageId": "page-inbox", "hideEdge": true, "label": "切换到收件箱" },
+    { "fromPageId": "page-discover", "domId": "tab-settings", "toPageId": "page-settings", "hideEdge": true, "label": "切换到设置" },
+    { "fromPageId": "page-settings", "domId": "tab-home", "toPageId": "page-home", "hideEdge": true, "label": "切换到首页" },
+    { "fromPageId": "page-settings", "domId": "tab-inbox", "toPageId": "page-inbox", "hideEdge": true, "label": "切换到收件箱" },
+    { "fromPageId": "page-settings", "domId": "tab-discover", "toPageId": "page-discover", "hideEdge": true, "label": "切换到发现" },
+    { "fromPageId": "page-settings", "domId": "nav-debug", "toPageId": "page-debug", "hideEdge": false, "label": "打开调试面板" },
+    { "fromPageId": "page-debug", "domId": "nav-back", "toPageId": "page-settings", "hideEdge": true, "label": "返回设置" }
+  ],
+  "hiddenInteractionPlan": [
+    { "fromPageId": "page-home", "domId": "tab-home", "toPageId": "page-home", "hideEdge": true, "label": "当前页面" },
+    { "fromPageId": "page-inbox", "domId": "tab-inbox", "toPageId": "page-inbox", "hideEdge": true, "label": "当前页面" },
+    { "fromPageId": "page-discover", "domId": "tab-discover", "toPageId": "page-discover", "hideEdge": true, "label": "当前页面" },
+    { "fromPageId": "page-settings", "domId": "tab-settings", "toPageId": "page-settings", "hideEdge": true, "label": "当前页面" }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "screensGenerated": 3,
+  "coreComponentsUsed": ["button", "card", "filter-pill", "search-field", "settings-row"],
+  "supportComponentsUsed": [],
+  "previewClassReuseRate": 0.85,
+  "hasProductContext": true,
+  "inventedComponents": [],
+  "renderedFromEvidence": [],
+  "warnings": [
+    "aesthetics-files-not-found: screen-craft.md, self-check.md, index.md not available; applied toolkit defaults per dashboard kitType",
+    "support-component-tab-bar: tab-bar is specified in uikit-plan supportEvidenceComponents but not rendered; dashboard layout uses sidebar navigation instead of bottom tab bar, which is appropriate for dashboard kitType"
+  ]
+}

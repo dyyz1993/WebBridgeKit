@@ -8,6 +8,7 @@ import UserNotifications
 import WebBridgeKit
 
 struct SSEPushPayload {
+    let id: String
     let title: String
     let body: String
     let subtitle: String?
@@ -18,7 +19,9 @@ struct SSEPushPayload {
     let category: String?
     let thread: String?
     let appid: String?
+    let route: String?
     let mode: String?
+    let display: String?
     let icon: String?
     let markdownBody: String?
     let level: String?
@@ -29,8 +32,22 @@ struct SSEPushPayload {
     let ciphertext: String?
     let iv: String?
     let call: String?
+    let verificationCode: String?
+    let expiresAt: String?
+    let ttl: Any?
+    let isDeleted: Any?
+    let actionState: String?
+    let requestID: String?
+    let contentType: String?
+    let qrPayload: String?
+    let statePath: String?
+    let revision: Any?
+    let params: [String: Any]?
+    let presentation: String?
+    let approval: [String: Any]?
 
     init(data: [String: Any]) {
+        id = data["id"] as? String ?? UUID().uuidString
         title = data["title"] as? String ?? "通知"
         body = data["body"] as? String ?? ""
         subtitle = data["subtitle"] as? String
@@ -39,9 +56,11 @@ struct SSEPushPayload {
         badge = data["badge"] as? Int ?? 0
         group = data["group"] as? String
         category = data["category"] as? String
-        thread = data["thread"] as? String
-        appid = data["appid"] as? String
+        thread = data["threadId"] as? String ?? data["thread"] as? String
+        appid = data["appId"] as? String ?? data["appid"] as? String
+        route = data["route"] as? String
         mode = data["mode"] as? String
+        display = data["display"] as? String
         icon = data["icon"] as? String
         markdownBody = data["markdown"] as? String
         level = data["level"] as? String
@@ -52,6 +71,19 @@ struct SSEPushPayload {
         ciphertext = data["ciphertext"] as? String
         iv = data["iv"] as? String
         call = data["call"] as? String
+        verificationCode = data["verificationCode"] as? String
+        expiresAt = data["expiresAt"] as? String
+        ttl = data["ttl"]
+        isDeleted = data["delete"]
+        actionState = data["state"] as? String ?? data["actionState"] as? String
+        requestID = data["requestId"] as? String
+        contentType = data["type"] as? String ?? data["contentType"] as? String
+        qrPayload = data["qrPayload"] as? String
+        statePath = data["statePath"] as? String
+        revision = data["revision"]
+        params = data["params"] as? [String: Any]
+        presentation = data["presentation"] as? String
+        approval = data["approval"] as? [String: Any]
     }
 }
 
@@ -175,7 +207,9 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         var userInfo: [String: Any] = ["channel": "ws-push"]
         if !p.url.isEmpty { userInfo["url"] = p.url }
         if let appid = p.appid { userInfo["appid"] = appid }
+        if let route = p.route { userInfo["route"] = route }
         if let mode = p.mode { userInfo["mode"] = mode }
+        if let display = p.display { userInfo["display"] = display }
         if let md = p.markdownBody, !md.isEmpty { userInfo["markdown"] = md }
         if let level = p.level { userInfo["level"] = level }
         if let image = p.image { userInfo["image"] = image }
@@ -185,6 +219,20 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         if let ciphertext = p.ciphertext { userInfo["ciphertext"] = ciphertext }
         if let iv = p.iv { userInfo["iv"] = iv }
         if let call = p.call { userInfo["call"] = call }
+        userInfo["id"] = p.id
+        if let verificationCode = p.verificationCode { userInfo["verificationCode"] = verificationCode }
+        if let expiresAt = p.expiresAt { userInfo["expiresAt"] = expiresAt }
+        if let ttl = p.ttl { userInfo["ttl"] = ttl }
+        if let isDeleted = p.isDeleted { userInfo["delete"] = isDeleted }
+        if let actionState = p.actionState { userInfo["actionState"] = actionState }
+        if let requestID = p.requestID { userInfo["requestId"] = requestID }
+        if let contentType = p.contentType { userInfo["contentType"] = contentType }
+        if let qrPayload = p.qrPayload { userInfo["qrPayload"] = qrPayload }
+        if let statePath = p.statePath { userInfo["statePath"] = statePath }
+        if let revision = p.revision { userInfo["revision"] = revision }
+        if let params = p.params { userInfo["params"] = params }
+        if let presentation = p.presentation { userInfo["presentation"] = presentation }
+        if let approval = p.approval { userInfo["approval"] = approval }
         content.userInfo = userInfo
 
         let threadId = p.thread ?? p.group
@@ -195,16 +243,16 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         if let category = p.category { content.categoryIdentifier = category }
 
         if let iconStr = p.icon, !iconStr.isEmpty, let iconURL = URL(string: iconStr) {
-            deliverWithIcon(content: content, iconURL: iconURL)
+            deliverWithIcon(content: content, iconURL: iconURL, identifier: p.id)
         } else {
-            deliverNow(content: content)
+            deliverNow(content: content, identifier: p.id)
         }
     }
 
-    private func deliverWithIcon(content: UNMutableNotificationContent, iconURL: URL) {
+    private func deliverWithIcon(content: UNMutableNotificationContent, iconURL: URL, identifier: String) {
         URLSession.shared.downloadTask(with: iconURL) { tempURL, _, error in
             let finalContent = content
-            defer { self.deliverNow(content: finalContent) }
+            defer { self.deliverNow(content: finalContent, identifier: identifier) }
             guard let tempURL = tempURL, error == nil else { return }
             let ext = iconURL.pathExtension.isEmpty ? "png" : iconURL.pathExtension
             let dest = FileManager.default.temporaryDirectory
@@ -222,8 +270,8 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         }.resume()
     }
 
-    private func deliverNow(content: UNMutableNotificationContent) {
-        let req = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+    private func deliverNow(content: UNMutableNotificationContent, identifier: String) {
+        let req = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(req) { err in
             if let err = err {
                 #if DEBUG

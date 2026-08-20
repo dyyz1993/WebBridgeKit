@@ -1,0 +1,27 @@
+{
+  "slug": "card",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["token", "resource", "stats", "settings"],
+  "variantDimensions": ["cardType", "withShadow"],
+  "representativeVariants": [
+    { "name": "Token 卡片", "props": { "cardType": "token", "withShadow": true } },
+    { "name": "资源卡片", "props": { "cardType": "resource", "withShadow": false } },
+    { "name": "统计卡片", "props": { "cardType": "stats", "withShadow": false } }
+  ],
+  "anatomy": [
+    { "name": "card", "role": "container", "type": "element" },
+    { "name": "header", "role": "title row", "type": "optional" },
+    { "name": "content", "role": "content area", "type": "element" }
+  ],
+  "structurePatterns": {
+    "cornerRadius": { "ref": "--radius-lg" },
+    "backgroundColor": { "ref": "--color-card" },
+    "padding": 16,
+    "shadow": { "ref": "--shadow-card", "condition": "withShadow" }
+  },
+  "usageHints": ["Token 卡片展示服务器/令牌状态", "资源卡片在发现页 2 列网格中使用", "统计卡片用 2x2 数据平铺布局"],
+  "doNotInvent": ["不要合并不同卡片类型的结构", "不要为卡片添加不存在的交互状态"],
+  "unknowns": ["不同卡片类型的 header 高度存在差异"]
+}

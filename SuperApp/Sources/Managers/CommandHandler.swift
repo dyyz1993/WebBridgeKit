@@ -13,12 +13,24 @@ import WebBridgeKit
 final class CommandHandler {
 
     static let shared = CommandHandler()
+    static let appCommandAllowedSchemes: Set<String> = ["http", "https", "webbridgekit"]
 
     private var lastProcessedClipboardHash: String?
     private var pendingPayload: CommandPayload?
     private weak var bannerViewController: UIViewController?
 
     private init() {}
+
+    static func configureParserForAppCommands() async {
+        let config = CommandParserConfiguration(
+            maxPayloadSize: 4096,
+            maxAge: 300,
+            allowedSchemes: appCommandAllowedSchemes,
+            enableSignatureVerification: false,
+            enableTimestampValidation: false
+        )
+        await CommandParser.shared.setConfiguration(config)
+    }
 
     func checkClipboardOnForeground() {
         let clipboardText = ClipboardMonitor.shared.readClipboard()
@@ -34,6 +46,7 @@ final class CommandHandler {
 
         Task {
             do {
+                await Self.configureParserForAppCommands()
                 let payload = try await CommandParser.shared.parse(text)
                 self.pendingPayload = payload
                 self.showDetectionBanner(for: payload)

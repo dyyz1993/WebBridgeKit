@@ -40,6 +40,8 @@ public class WebClipboardHandler: BaseWebNativeHandler {
 
     private static var isTestEnvironment: Bool {
         ProcessInfo.processInfo.arguments.contains("-UITesting")
+            || ProcessInfo.processInfo.arguments.contains("--UITesting")
+            || ProcessInfo.processInfo.arguments.contains("--ui-testing")
             || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || Bundle.main.bundlePath.contains("xctest")
     }

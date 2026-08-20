@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Toggle Switch - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.label { width: 92px; font: var(--wbk-text-body); color: var(--color-text); flex-shrink: 0; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 16px 0; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--color-separator); }
+.settings-row:last-child { border-bottom: none; }
+.settings-label { font: var(--wbk-text-row-title); color: var(--color-text); }
+/* @component-css-start */
+.toggle { display: inline-flex; flex-shrink: 0; }
+.toggle-track { position: relative; width: 51px; height: 31px; border-radius: 16px; cursor: pointer; transition: background var(--wbk-animation-fast-duration); }
+.toggle-track:hover { filter: brightness(1.08); }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFF; transition: transform var(--wbk-animation-fast-duration); }
+.toggle.on .toggle-track { background: var(--color-primary); }
+.toggle.on .toggle-thumb { transform: translateX(20px); }
+.toggle.off .toggle-track { background: var(--wbk-text-tertiary); }
+.toggle.off .toggle-thumb { transform: translateX(0); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+
+<div class="row">
+  <span class="label">允许通知</span>
+  <div class="toggle on">
+    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+  </div>
+</div>
+
+<div class="row">
+  <span class="label">免打扰</span>
+  <div class="toggle off">
+    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="settings-row">
+  <span class="settings-label">APNs 推送</span>
+  <div class="toggle on">
+    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+  </div>
+</div>
+
+<div class="settings-row">
+  <span class="settings-label">Bark 推送</span>
+  <div class="toggle on">
+    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+  </div>
+</div>
+
+<div class="settings-row">
+  <span class="settings-label">本地通知</span>
+  <div class="toggle off">
+    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+  </div>
+</div>
+
+<div class="settings-row">
+  <span class="settings-label">免打扰模式</span>
+  <div class="toggle off">
+    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Progress Bar - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; background:var(--wbk-background); padding:16px; border-radius:var(--wbk-radius-card); box-shadow:var(--wbk-shadow-card); }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; }
+.story-meta { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+.story-meta__title { font:var(--wbk-text-body); color:var(--wbk-text); }
+.story-meta__value { font:var(--wbk-text-metadata); color:var(--wbk-text-secondary); }
+
+/* @component-css-start */
+.progress-bar { display:flex; flex-direction:column; gap:6px; width:100%; }
+.progress-bar__track { width:100%; height:8px; border-radius:4px; background:var(--color-bg-tertiary); overflow:hidden; }
+.progress-bar__fill { height:100%; border-radius:4px; background:var(--color-primary); transition:width 0.4s ease; }
+.progress-bar__fill--success { background:var(--color-success); }
+.progress-bar__fill--warning { background:var(--color-warning); }
+.progress-bar__fill--error { background:var(--color-error); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">缓存使用进度</div>
+    <div class="story-meta">
+      <span class="story-meta__title">缓存存储</span>
+      <span class="story-meta__value">48% (2.4 MB / 5.0 MB)</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar__track">
+        <div class="progress-bar__fill" style="width:48%"></div>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">完成进度</div>
+    <div class="story-meta">
+      <span class="story-meta__title">文件下载</span>
+      <span class="story-meta__value">100%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar__track">
+        <div class="progress-bar__fill progress-bar__fill--success" style="width:100%"></div>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">警告进度</div>
+    <div class="story-meta">
+      <span class="story-meta__title">存储空间</span>
+      <span class="story-meta__value">82%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar__track">
+        <div class="progress-bar__fill progress-bar__fill--warning" style="width:82%"></div>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">错误/失败</div>
+    <div class="story-meta">
+      <span class="story-meta__title">同步失败</span>
+      <span class="story-meta__value">3/10 项失败</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar__track">
+        <div class="progress-bar__fill progress-bar__fill--error" style="width:30%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

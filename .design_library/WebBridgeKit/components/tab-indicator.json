@@ -1,0 +1,33 @@
+{
+  "slug": "tab-indicator",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["tab", "tab-indicator", "segment-line"],
+  "variantDimensions": ["tabCount"],
+  "representativeVariants": [
+    { "name": "2 标签", "props": { "tabCount": 2 } },
+    { "name": "4 标签", "props": { "tabCount": 4 } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "tab bar", "type": "element" },
+    { "name": "tab", "role": "tab item", "type": "element" },
+    { "name": "label", "role": "tab text", "type": "element" },
+    { "name": "indicator", "role": "active underline", "type": "element" }
+  ],
+  "structurePatterns": {
+    "height": 40,
+    "paddingH": 0,
+    "labelSize": 14,
+    "labelWeight": 500,
+    "activeColor": { "ref": "--color-primary" },
+    "inactiveColor": { "ref": "--color-text-secondary" },
+    "indicatorHeight": 2,
+    "indicatorColor": { "ref": "--color-primary" },
+    "indicatorWidth": "30%",
+    "separatorColor": { "ref": "--color-separator" }
+  },
+  "usageHints": ["缓存仪表板「概述 / 详情」标签切换", "不同于 segmented-control（iOS 风格段控），此为 Web/Android 风格的下划线标签"],
+  "doNotInvent": ["不要添加图标", "不要添加背景色"],
+  "unknowns": []
+}

@@ -1,0 +1,33 @@
+{
+  "slug": "segmented-control",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["segment", "tab", "switcher"],
+  "variantDimensions": ["segmentCount"],
+  "representativeVariants": [
+    { "name": "2 段", "props": { "segmentCount": 2 } },
+    { "name": "3 段", "props": { "segmentCount": 3 } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "track background", "type": "element" },
+    { "name": "selection", "role": "active indicator", "type": "element" },
+    { "name": "segment", "role": "tap target", "type": "element" },
+    { "name": "label", "role": "segment text", "type": "element" }
+  ],
+  "structurePatterns": {
+    "trackHeight": 32,
+    "trackBackground": { "ref": "--color-bg-tertiary" },
+    "trackCornerRadius": 8,
+    "selectionBackground": { "ref": "--color-surface" },
+    "selectionShadow": { "ref": "--shadow-sm" },
+    "selectionCornerRadius": 7,
+    "labelSize": 13,
+    "labelWeight": 500,
+    "activeColor": { "ref": "--color-text" },
+    "inactiveColor": { "ref": "--color-text-secondary" }
+  },
+  "usageHints": ["缓存仪表板中「概述 / 详情」切换", "调试面板日志过滤"],
+  "doNotInvent": ["不要添加图标段", "不要添加超过 4 段"],
+  "unknowns": []
+}

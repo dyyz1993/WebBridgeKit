@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="stylesheet" href="../colors_and_type.css">
+<title>Settings Row — WebBridgeKit</title>
+<style>
+/* Page scaffold — NOT extracted */
+body { margin: 0; padding: 12px; background: var(--wbk-background-secondary); font-family: var(--wbk-font-family); }
+.specimen { max-width: 400px; }
+.story { margin-bottom: 8px; }
+.story-label { font: var(--wbk-text-caption); color: var(--color-text-tertiary); letter-spacing: 0.5px; margin-bottom: 4px; }
+.divider { border: none; border-top: 1px solid var(--color-separator); margin: 12px 0; }
+
+/* @component-css-start */
+/* Component definitions — extracted to components.css by deterministic script */
+.settings-row { display: flex; align-items: center; gap: 12px; min-height: var(--wbk-settings-row-min-height); max-height: var(--wbk-settings-row-max-height); padding: 0 var(--wbk-settings-row-horizontal-padding); background: var(--color-surface); border-bottom: 1px solid var(--color-separator); cursor: pointer; transition: background .15s; width: 100%; box-sizing: border-box; }
+.settings-row:hover { filter: brightness(0.97); }
+.settings-row .icon-box { width: var(--wbk-settings-row-icon-box); height: var(--wbk-settings-row-icon-box); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.settings-row .icon-box svg { width: var(--wbk-settings-row-icon-size); height: var(--wbk-settings-row-icon-size); display: block; }
+.settings-row .label-text { font: var(--wbk-text-row-title); color: var(--color-text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.settings-row .value-text { font: var(--wbk-text-body); color: var(--color-text-secondary); flex-shrink: 0; }
+.settings-row .chevron { width: var(--wbk-settings-row-chevron-size); height: var(--wbk-settings-row-chevron-size); flex-shrink: 0; color: var(--color-text-tertiary); opacity: 0.4; display: block; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="specimen">
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="icon-hard-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></symbol>
+  <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+</svg>
+
+<div class="story">
+  <div class="story-label">带图标行</div>
+  <div class="settings-row">
+    <div class="icon-box" style="background: var(--color-primary-soft);"><svg width="20" height="20"><use href="#icon-bell"/></svg></div>
+    <span class="label-text">通知</span>
+    <span class="value-text">开启</span>
+    <svg class="chevron"><use href="#icon-chevron"/></svg>
+  </div>
+  <div class="settings-row">
+    <div class="icon-box" style="background: var(--wbk-info-soft);"><svg width="20" height="20"><use href="#icon-hard-drive"/></svg></div>
+    <span class="label-text">存储空间</span>
+    <span class="value-text">12.4 GB</span>
+    <svg class="chevron"><use href="#icon-chevron"/></svg>
+  </div>
+  <div class="settings-row">
+    <div class="icon-box" style="background: var(--wbk-success-soft);"><svg width="20" height="20"><use href="#icon-shield"/></svg></div>
+    <span class="label-text">隐私与安全</span>
+    <span class="value-text">已保护</span>
+    <svg class="chevron"><use href="#icon-chevron"/></svg>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="story">
+  <div class="story-label">仅标题行</div>
+  <div class="settings-row">
+    <span class="label-text">通用</span>
+    <svg class="chevron"><use href="#icon-chevron"/></svg>
+  </div>
+  <div class="settings-row">
+    <span class="label-text">辅助功能</span>
+    <svg class="chevron"><use href="#icon-chevron"/></svg>
+  </div>
+  <div class="settings-row">
+    <span class="label-text">关于本机</span>
+    <svg class="chevron"><use href="#icon-chevron"/></svg>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

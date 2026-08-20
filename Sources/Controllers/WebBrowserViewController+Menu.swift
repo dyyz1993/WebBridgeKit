@@ -61,6 +61,15 @@ extension WebBrowserViewController {
             self?.loadGamePage()
         })
 
+        if let appID = htmlAppID,
+           let manifest = HTMLAppRuntimeCenter.shared.trustRegistry.manifest(for: appID),
+           let presenter = WebBrowserManager.shared.appPermissionSettingsPresenter {
+            alertController.addAction(UIAlertAction(title: NSLocalizedString("[SETTINGS] 应用设置", comment: ""), style: .default) { [weak self] _ in
+                guard let self else { return }
+                presenter(self, manifest)
+            })
+        }
+
         alertController.addAction(UIAlertAction(title: NSLocalizedString("[AUTH] Permissions", comment: ""), style: .default) { [weak self] _ in
             self?.loadPermissionsPage()
         })

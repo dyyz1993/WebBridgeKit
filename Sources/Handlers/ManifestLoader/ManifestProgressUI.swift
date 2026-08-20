@@ -21,17 +21,17 @@ extension PersistentManifestLoader {
         NSLog("[WEB] [ProgressUI] loadFileURL: %@, readAccessTo: %@", indexFile.path, cacheDir.path)
 
         guard FileManager.default.fileExists(atPath: indexFile.path) else {
-            NSLog("[WEB] [ProgressUI] ⚠️ index.html NOT FOUND at: %@, falling back to loadHTMLString", indexFile.path)
+            NSLog("[WEB] [ProgressUI] index.html NOT FOUND at: %@, falling back to loadHTMLString", indexFile.path)
             guard let baseURL = URL(string: "\(scheme)://\(cacheID)/") else {
                 throw LoaderError.invalidManifestFormat
             }
-            try await MainActor.run {
+            _ = await MainActor.run {
                 webView.loadHTMLString(html, baseURL: baseURL)
             }
             return
         }
 
-        try await MainActor.run {
+        _ = await MainActor.run {
             webView.loadFileURL(indexFile, allowingReadAccessTo: cacheDir)
         }
     }

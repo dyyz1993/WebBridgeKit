@@ -126,8 +126,35 @@ final class CommandParserTests: XCTestCase {
         }
     }
 
-    func testParseMissingAppid() async throws {
+    func testParseURLWithoutAppid() async throws {
         let payload: [String: Any] = ["url": "https://example.com"]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        let base64 = data.base64EncodedString()
+
+        let result = try await parser.parse(base64)
+        XCTAssertEqual(result.appid, "")
+        XCTAssertEqual(result.url, "https://example.com")
+    }
+
+    func testParseAppSchemeURLWhenExplicitlyAllowed() async throws {
+        let config = CommandParserConfiguration(
+            allowedSchemes: ["http", "https", "webbridgekit"],
+            enableSignatureVerification: false,
+            enableTimestampValidation: false
+        )
+        await parser.setConfiguration(config)
+
+        let payload: [String: Any] = ["url": "webbridgekit://tab?index=2"]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        let base64 = data.base64EncodedString()
+
+        let result = try await parser.parse(base64)
+        XCTAssertEqual(result.appid, "")
+        XCTAssertEqual(result.url, "webbridgekit://tab?index=2")
+    }
+
+    func testParseMissingRouteTarget() async throws {
+        let payload: [String: Any] = ["title": "No route"]
         let data = try JSONSerialization.data(withJSONObject: payload)
         let base64 = data.base64EncodedString()
 
@@ -142,7 +169,7 @@ final class CommandParserTests: XCTestCase {
         }
     }
 
-    func testParseEmptyAppid() async throws {
+    func testParseEmptyAppidWithoutURL() async throws {
         let payload: [String: Any] = ["appid": ""]
         let data = try JSONSerialization.data(withJSONObject: payload)
         let base64 = data.base64EncodedString()
@@ -306,6 +333,11 @@ final class CommandParserTests: XCTestCase {
     func testClipboardMonitorDetectsURLScheme() {
         let monitor = ClipboardMonitor.shared
         XCTAssertTrue(monitor.looksLikeCommand("wbsk://command?data=dGVzdA=="))
+    }
+
+    func testClipboardMonitorDetectsAppCommandURL() {
+        let monitor = ClipboardMonitor.shared
+        XCTAssertTrue(monitor.looksLikeCommand("webbridgekit://command/id.payload"))
     }
 
     func testClipboardMonitorRejectsNormalText() {

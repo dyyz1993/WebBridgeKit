@@ -1,0 +1,31 @@
+{
+  "slug": "button",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["primary", "secondary", "outline", "ghost"],
+  "variantDimensions": ["hierarchy", "state", "withIcon"],
+  "representativeVariants": [
+    { "name": "主要按钮", "props": { "hierarchy": "primary", "state": "normal", "withIcon": false } },
+    { "name": "次要按钮", "props": { "hierarchy": "secondary", "state": "normal", "withIcon": false } },
+    { "name": "图标按钮", "props": { "hierarchy": "icon-only", "state": "normal", "withIcon": true } }
+  ],
+  "anatomy": [
+    { "name": "button", "role": "container", "type": "element" },
+    { "name": "icon", "role": "leading icon", "type": "optional" },
+    { "name": "label", "role": "text label", "type": "element" }
+  ],
+  "structurePatterns": {
+    "display": "inline-flex",
+    "alignment": "center",
+    "minHeight": 44,
+    "height": 48,
+    "gap": 8,
+    "paddingH": 20,
+    "cornerRadius": { "ref": "--radius-md" },
+    "font": { "ref": "--type-button" }
+  },
+  "usageHints": ["使用 --color-primary 作为主要按钮背景", "禁用态使用 opacity: var(--wbk-opacity-disabled)", "图标按钮宽高相等"],
+  "doNotInvent": ["不要自动生成不同圆角的按钮变体", "不要添加不存在的尺寸变体"],
+  "unknowns": ["secondary/outline/ghost 层级的具体间距值与当前 primary 略有差异"]
+}

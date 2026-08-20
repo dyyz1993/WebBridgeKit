@@ -10,7 +10,7 @@ FAIL=0
 check() {
     local name="$1"
     local result
-    result=$(eval "$2" 2>&1)
+    result=$(eval "$2" 2>&1 || true)
     if [ -z "$result" ]; then
         echo "  PASS  $name"
         ((PASS++)) || true
@@ -83,7 +83,18 @@ check "No SF Symbols in feature code" \
 check "No buttons with height < 40pt" \
     'rg "height.*equalTo\(([2-3][0-9]|[0-9])\)" Sources/ SuperApp/ --glob "*.swift" -n | grep -i "button\|tap\|click" || true'
 
-# 14. Design system lint (comprehensive)
+# 14. Deliverable boundaries
+echo ""
+echo "=== Deliverable Boundaries ==="
+if bash tools/verify-deliverable-boundaries.sh; then
+    echo "  PASS  Deliverable boundaries"
+    ((PASS++)) || true
+else
+    echo "  FAIL  Deliverable boundaries"
+    ((FAIL++)) || true
+fi
+
+# 15. Design system lint (comprehensive)
 echo ""
 echo "=== Design System Lint (comprehensive) ==="
 bash tools/design-lint.sh --ci

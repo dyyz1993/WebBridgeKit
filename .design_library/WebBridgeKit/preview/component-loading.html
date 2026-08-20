@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Loading - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; }
+.story-label { font:var(--wbk-text-caption); color:var(--wbk-text-secondary); letter-spacing:0.5px; text-transform:uppercase; }
+.phone-frame { width:100%; min-height:200px; background:var(--wbk-background); border-radius:var(--wbk-radius-card); overflow:hidden; box-shadow:var(--wbk-shadow-card); display:flex; flex-direction:column; }
+.fullpage-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+.inline-row { display:flex; align-items:center; justify-content:center; gap:12px; padding:20px; }
+
+/* @component-css-start */
+.loading { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+.loading__spinner { border-radius:50%; border:3px solid var(--color-bg-tertiary); border-top-color:var(--color-primary); animation:loading-spin 0.6s linear infinite; }
+.loading__spinner--large { width:32px; height:32px; border-width:3px; }
+.loading__spinner--small { width:20px; height:20px; border-width:2px; }
+.loading__label { font-size:13px; color:var(--color-text-secondary); white-space:nowrap; }
+@keyframes loading-spin { to { transform:rotate(360deg); } }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <div class="story-label">页面加载 (全屏)</div>
+    <div class="phone-frame">
+      <div class="fullpage-center">
+        <div class="loading">
+          <div class="loading__spinner loading__spinner--large"></div>
+          <span class="loading__label">正在加载...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">行内加载 (小)</div>
+    <div class="phone-frame">
+      <div class="inline-row">
+        <div class="loading__spinner loading__spinner--small"></div>
+        <span class="loading__label">请稍候</span>
+      </div>
+    </div>
+  </div>
+  <div class="story">
+    <div class="story-label">按钮内加载</div>
+    <div class="phone-frame" style="min-height:auto; padding:20px;">
+      <div class="inline-row">
+        <div style="display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:var(--wbk-radius-md);background:var(--wbk-primary);color:#fff;font:var(--wbk-text-button);">
+          <div class="loading__spinner loading__spinner--small" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></div>
+          <span>发送中...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

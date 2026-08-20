@@ -38,8 +38,8 @@ final class LayoutGuardTests: XCTestCase {
 
     // MARK: - Combined Layout Checks
 
-    func testHomeLayoutIntegrity() {
-        navigateToTab(identifier: "tab.home", zhName: "首页", enName: "Home")
+    func testAppsLayoutIntegrity() {
+        navigateToTab(identifier: "tab.apps", zhName: "应用", enName: "Apps")
 
         let cards = app.otherElements.matching(NSPredicate(format: "identifier == 'wbk_resource_card'")).allElementsBoundByIndex
         for card in cards.prefix(5) where card.isHittable {
@@ -48,7 +48,11 @@ final class LayoutGuardTests: XCTestCase {
             XCTAssertLessThanOrEqual(h, 140, "Card height \(h) > 140")
         }
 
-        checkVisibleElementsNoZeroFrame(on: "Home")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["pwaCenter.table"].waitForExistence(timeout: 3),
+            "PWA app center should exist"
+        )
+        checkVisibleElementsNoZeroFrame(on: "Apps")
 
         let wbkButtons = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'wbk_'")).allElementsBoundByIndex
         for button in wbkButtons.prefix(10) where button.isHittable {
@@ -59,8 +63,8 @@ final class LayoutGuardTests: XCTestCase {
         }
     }
 
-    func testInboxLayoutIntegrity() {
-        navigateToTab(identifier: "tab.inbox", zhName: "收信箱", enName: "Inbox")
+    func testNotificationsLayoutIntegrity() {
+        navigateToTab(identifier: "tab.notifications", zhName: "通知", enName: "Notifications")
 
         let searchField = app.otherElements["wbk_search_field"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 3), "Inbox search field should exist")
@@ -71,7 +75,7 @@ final class LayoutGuardTests: XCTestCase {
         let windowFrame = app.windows.firstMatch.frame
         XCTAssertTrue(windowFrame.contains(searchField.frame), "Search field not fully visible")
 
-        checkVisibleElementsNoZeroFrame(on: "Inbox")
+        checkVisibleElementsNoZeroFrame(on: "Notifications")
 
         let screenWidth = windowFrame.width
         let pills = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH 'filter_'")).allElementsBoundByIndex
@@ -80,10 +84,7 @@ final class LayoutGuardTests: XCTestCase {
         }
     }
 
-    func testDiscoverAndSettingsLayoutIntegrity() {
-        navigateToTab(identifier: "tab.discover", zhName: "发现", enName: "Discover")
-        checkVisibleElementsNoZeroFrame(on: "Discover")
-
+    func testSettingsLayoutIntegrity() {
         navigateToTab(identifier: "tab.settings", zhName: "设置", enName: "Settings")
         let settingsView = app.otherElements["SettingsViewController"]
         XCTAssertTrue(settingsView.waitForExistence(timeout: 3), "Settings view should exist")
@@ -117,9 +118,8 @@ final class LayoutGuardTests: XCTestCase {
             "Tab bar overlaps home indicator area")
 
         let tabs: [(String, String, String)] = [
-            ("tab.home", "首页", "Home"),
-            ("tab.inbox", "收信箱", "Inbox"),
-            ("tab.discover", "发现", "Discover"),
+            ("tab.apps", "应用", "Apps"),
+            ("tab.notifications", "通知", "Notifications"),
             ("tab.settings", "设置", "Settings")
         ]
         for (id, zh, en) in tabs {
@@ -143,7 +143,7 @@ final class LayoutGuardTests: XCTestCase {
     // MARK: - Empty State
 
     func testEmptyStateActionVisibleAboveTabBar() {
-        navigateToTab(identifier: "tab.discover", zhName: "发现", enName: "Discover")
+        navigateToTab(identifier: "tab.apps", zhName: "应用", enName: "Apps")
 
         let wbkEmptyState = app.otherElements["wbk_empty_state"]
         let legacyEmptyState = app.otherElements["EmptyStateView"]
@@ -159,7 +159,7 @@ final class LayoutGuardTests: XCTestCase {
         } else {
             let tabBar = app.tabBars.firstMatch
             XCTAssertTrue(tabBar.exists, "Tab bar should exist even when no empty state is shown")
-            XCTAssertTrue(app.staticTexts.count > 0, "Discover should have visible content when empty state is absent")
+            XCTAssertGreaterThan(app.staticTexts.count, 0, "Apps should have visible content when empty state is absent")
         }
     }
 
@@ -203,14 +203,14 @@ final class LayoutGuardTests: XCTestCase {
                 "Tab button '\(btn.identifier)' extends beyond SE screen width \(screen.width)")
         }
 
-        navigateToTab(identifier: "tab.home", zhName: "首页", enName: "Home")
+        navigateToTab(identifier: "tab.apps", zhName: "应用", enName: "Apps")
         let searchField = app.otherElements["wbk_search_field"]
         if searchField.waitForExistence(timeout: 3) {
             XCTAssertLessThanOrEqual(searchField.frame.maxX, screen.width,
                 "Search field extends beyond SE screen")
         }
 
-        navigateToTab(identifier: "tab.inbox", zhName: "收信箱", enName: "Inbox")
+        navigateToTab(identifier: "tab.notifications", zhName: "通知", enName: "Notifications")
         let pills = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH 'filter_'")).allElementsBoundByIndex
         for pill in pills where pill.isHittable {
             XCTAssertLessThanOrEqual(pill.frame.maxX, screen.width,
@@ -246,7 +246,7 @@ final class ComponentCatalogLayoutTests: XCTestCase {
             sv.swipeUp()
         }
         let allOtherElements = sv.otherElements.allElementsBoundByIndex
-        XCTAssertTrue(allOtherElements.count > 0, "ComponentCatalog should have at least one element")
+        XCTAssertGreaterThan(allOtherElements.count, 0, "ComponentCatalog should have at least one element")
         let last = allOtherElements.last!
         XCTAssertTrue(last.waitForExistence(timeout: 3), "Last item should exist after scrolling")
         XCTAssertTrue(last.isHittable, "Last item not hittable after scrolling")

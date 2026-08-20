@@ -1,0 +1,40 @@
+{
+  "slug": "step-indicator",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["stepper", "progress-steps", "wizard"],
+  "variantDimensions": ["variant"],
+  "representativeVariants": [
+    { "name": "步骤条", "props": { "variant": "horizontal" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "steps wrapper", "type": "element" },
+    { "name": "step", "role": "single step", "type": "element" },
+    { "name": "circle", "role": "step number circle", "type": "element" },
+    { "name": "label", "role": "step name", "type": "element" },
+    { "name": "line", "role": "connector between steps", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "circleSize": 24,
+    "circleRadius": 12,
+    "circleFontSize": 12,
+    "circleFontWeight": 600,
+    "completedBackground": { "ref": "--color-primary" },
+    "completedTextColor": "#ffffff",
+    "activeBackground": { "ref": "--color-primary" },
+    "activeTextColor": "#ffffff",
+    "pendingBackground": { "ref": "--color-bg-tertiary" },
+    "pendingTextColor": { "ref": "--color-text-tertiary" },
+    "lineColor": { "ref": "--color-separator" },
+    "lineCompletedColor": { "ref": "--color-primary" },
+    "lineHeight": 2,
+    "labelSize": 12,
+    "labelColor": { "ref": "--color-text-secondary" },
+    "labelActiveColor": { "ref": "--color-text" },
+    "gap": 0
+  },
+  "usageHints": ["引导流程、配置向导步骤指示"],
+  "doNotInvent": ["不要添加图标步骤", "不要添加垂直变体"],
+  "unknowns": []
+}

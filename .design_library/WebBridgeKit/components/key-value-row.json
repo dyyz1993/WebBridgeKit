@@ -1,0 +1,32 @@
+{
+  "slug": "key-value-row",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["detail-row", "key-value", "info-row"],
+  "variantDimensions": ["alignment"],
+  "representativeVariants": [
+    { "name": "左键右值", "props": { "alignment": "side" } },
+    { "name": "上键下值", "props": { "alignment": "stacked" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "info row", "type": "element" },
+    { "name": "key", "role": "label / field name", "type": "element" },
+    { "name": "value", "role": "field value", "type": "element" },
+    { "name": "copy", "role": "copy action", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "minHeight": 40,
+    "paddingH": 16,
+    "keySize": 13,
+    "keyColor": { "ref": "--color-text-secondary" },
+    "valueSize": 15,
+    "valueColor": { "ref": "--color-text" },
+    "valueMono": { "ref": "--wbk-text-monospace-body" },
+    "copyIconSize": 16,
+    "copyIconColor": { "ref": "--color-text-tertiary" }
+  },
+  "usageHints": ["设备详情、Token 信息、API 配置参数", "等宽字体显示 code/ID 类值"],
+  "doNotInvent": ["不要添加边框", "不要添加背景色"],
+  "unknowns": []
+}

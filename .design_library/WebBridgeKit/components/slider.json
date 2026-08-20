@@ -1,0 +1,36 @@
+{
+  "slug": "slider",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["slider", "range", "seekbar"],
+  "variantDimensions": ["hasLabel"],
+  "representativeVariants": [
+    { "name": "带数值", "props": { "hasLabel": true } },
+    { "name": "纯轨道", "props": { "hasLabel": false } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "slider wrapper", "type": "element" },
+    { "name": "label", "role": "value/text label", "type": "optional" },
+    { "name": "track", "role": "slider track", "type": "element" },
+    { "name": "fill", "role": "active portion", "type": "element" },
+    { "name": "thumb", "role": "draggable knob", "type": "element" }
+  ],
+  "structurePatterns": {
+    "trackHeight": 4,
+    "trackRadius": 2,
+    "trackBackground": { "ref": "--color-bg-tertiary" },
+    "fillColor": { "ref": "--color-primary" },
+    "thumbSize": 24,
+    "thumbRadius": 12,
+    "thumbBackground": { "ref": "--color-surface" },
+    "thumbShadow": { "ref": "--shadow-sm" },
+    "thumbBorderColor": { "ref": "--color-separator" },
+    "thumbBorderWidth": 1,
+    "labelSize": 13,
+    "labelColor": { "ref": "--color-text-secondary" }
+  },
+  "usageHints": ["进度/音量/亮度调节、数值范围选择"],
+  "doNotInvent": ["不要添加步进值标记", "不要添加垂直方向"],
+  "unknowns": []
+}

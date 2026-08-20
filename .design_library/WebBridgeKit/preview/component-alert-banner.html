@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Alert Banner - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:12px; align-items:stretch; max-width:480px; margin:0 auto; }
+.story { display:flex; flex-direction:column; gap:8px; width:100%; }
+.story-label { font-size:12px; font-weight:400; color:var(--color-text-tertiary); letter-spacing:0.5px; }
+
+/* @component-css-start */
+.alert-banner { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:var(--radius-md); }
+.alert-banner--warning { background:var(--wbk-warning-soft); }
+.alert-banner--error { background:var(--wbk-error-soft); }
+.alert-banner--info { background:var(--wbk-info-soft); }
+.alert-banner__icon { width:20px; height:20px; flex-shrink:0; display:inline-block; }
+.alert-banner__text { font-size:14px; font-weight:400; color:var(--wbk-text); line-height:1.4; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="story">
+    <span class="story-label">警告</span>
+    <div class="alert-banner alert-banner--warning">
+      <i data-lucide="alert-triangle" class="alert-banner__icon" style="color:var(--wbk-warning)"></i>
+      <span class="alert-banner__text">存储空间不足，请清理缓存</span>
+    </div>
+  </div>
+  <div class="story">
+    <span class="story-label">错误</span>
+    <div class="alert-banner alert-banner--error">
+      <i data-lucide="x-circle" class="alert-banner__icon" style="color:var(--wbk-error)"></i>
+      <span class="alert-banner__text">连接失败，请检查网络设置</span>
+    </div>
+  </div>
+  <div class="story">
+    <span class="story-label">信息</span>
+    <div class="alert-banner alert-banner--info">
+      <i data-lucide="info" class="alert-banner__icon" style="color:var(--wbk-info)"></i>
+      <span class="alert-banner__text">新版本 v2.1.0 已发布</span>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebBridgeKit 设计系统展示 - 控制台</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="../../components.css">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ===== Layout (page-level only) ===== */
+.uikit-shell{width:100%;max-width:1184px;margin:0 auto;overflow:hidden;display:grid;grid-template-columns:var(--uikit-sidebar-w,220px) minmax(0,1fr);gap:var(--space-lg);min-height:100vh;--uikit-sidebar-w:220px}
+.uikit-sidebar,.uikit-main,.uikit-toolbar{min-width:0}
+.uikit-sidebar{overflow:hidden;max-width:100%;background:var(--color-surface);border-right:1px solid var(--color-separator);display:flex;flex-direction:column}
+[data-component]{min-width:0;max-width:100%;overflow:hidden}
+.uikit-main{overflow-y:auto;padding:var(--space-xxl) var(--space-xl) var(--space-xxxl) 0}
+.uikit-toolbar{display:flex;align-items:center;gap:var(--space-sm);flex-wrap:wrap}
+.uikit-responsive-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-lg)}
+.uikit-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.uikit-truncate{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uikit-nowrap{white-space:nowrap;flex-shrink:0}
+.uikit-action-cell{display:flex;align-items:center;gap:8px;min-width:0;max-width:160px;overflow:hidden}
+.uikit-action{min-width:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ===== Sidebar ===== */
+.sidebar-header{padding:var(--space-lg);border-bottom:1px solid var(--color-separator)}
+.sidebar-logo{font:var(--wbk-text-card-title);color:var(--color-text);display:flex;align-items:center;gap:var(--space-sm)}
+.sidebar-nav{flex:1;padding:var(--space-xs) 0;overflow-y:auto}
+.sidebar-nav-item{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-sm) var(--space-lg);cursor:pointer;color:var(--color-text-secondary);font:var(--wbk-text-body);border-left:3px solid transparent;transition:background .15s,color .15s,border-color .15s;min-width:0}
+.sidebar-nav-item:hover{background:var(--color-primary-soft);color:var(--color-primary)}
+.sidebar-nav-item.active{border-left-color:var(--color-primary);background:var(--color-primary-soft);color:var(--color-primary);font-weight:600}
+.sidebar-nav-item .nav-icon{width:20px;height:20px;flex-shrink:0}
+.sidebar-footer{padding:var(--space-md) var(--space-lg);border-top:1px solid var(--color-separator)}
+/* ===== Page Content ===== */
+.page-header{margin-bottom:var(--space-xxl);display:flex;align-items:center;justify-content:space-between;gap:var(--space-lg);flex-wrap:wrap}
+.page-title{font:var(--wbk-text-display);color:var(--color-text);margin:0;word-break:keep-all}
+.section{margin-bottom:var(--space-xxxl)}
+.section-title{font:var(--wbk-text-section-title);color:var(--color-text);margin:0 0 var(--space-md);word-break:keep-all}
+/* ===== Chart ===== */
+.chart-section{padding:var(--space-md) 0 0}
+.chart-wrap{display:flex;align-items:flex-end;gap:var(--space-xs);height:160px;padding:0 var(--space-xs)}
+.chart-bar{flex:1;min-width:6px;border-radius:var(--radius-xs) var(--radius-xs) 0 0;background:linear-gradient(to top,var(--color-primary),var(--color-primary-soft));position:relative;transition:opacity .2s;cursor:pointer}
+.chart-bar:hover{opacity:0.75}
+.chart-bar .chart-tip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--color-text);color:var(--color-card);padding:2px 6px;border-radius:var(--radius-xs);font:var(--wbk-text-monospace-small);white-space:nowrap;pointer-events:none;margin-bottom:4px}
+.chart-bar:hover .chart-tip{display:block}
+.chart-labels{display:flex;gap:var(--space-xs);margin-top:var(--space-sm);padding:0 var(--space-xs)}
+.chart-label{flex:1;text-align:center;font:var(--wbk-text-caption);color:var(--color-text-secondary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Bar heights (finite classes per Rule 9) */
+.bar-h-1{height:10%}.bar-h-2{height:20%}.bar-h-3{height:30%}.bar-h-4{height:40%}.bar-h-5{height:50%}
+.bar-h-6{height:60%}.bar-h-7{height:70%}.bar-h-8{height:80%}.bar-h-9{height:90%}.bar-h-10{height:100%}
+/* ===== Command History ===== */
+.cmd-list{display:flex;flex-direction:column;gap:1px;background:var(--color-separator);border-radius:var(--radius-md);overflow:hidden}
+.cmd-list>.settings-row{background:var(--color-card)}.cmd-list>.settings-row:first-child{border-radius:var(--radius-md) var(--radius-md) 0 0}
+.cmd-list>.settings-row:last-child{border-radius:0 0 var(--radius-md) var(--radius-md);border-bottom:none}
+/* Status Dot */
+.status-dot{width:8px;height:8px;border-radius:var(--radius-full);flex-shrink:0;display:inline-block}
+.status-dot.online,.status-dot.active{background:var(--color-success)}
+.status-dot.warning{background:var(--color-warning)}
+.status-dot.offline{background:var(--color-text-tertiary)}
+/* ===== Responsive ===== */
+@media (max-width:900px){.uikit-shell{grid-template-columns:minmax(0,1fr)}.uikit-responsive-grid{grid-template-columns:minmax(0,1fr)}.uikit-main{padding:var(--space-lg)}}
+@media (max-width:640px){.uikit-toolbar{flex-direction:column;align-items:stretch}.uikit-responsive-grid{grid-template-columns:minmax(0,1fr)}.page-header{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+// ── Utility ──
+const barClass = v => 'bar-h-' + Math.max(1, Math.min(10, Math.round(v / 12)));
+
+// ── Sidebar ──
+const NAV = [
+  { key:'overview', icon:'layout-dashboard', label:'系统概览' },
+  { key:'servers',  icon:'server',            label:'服务器' },
+  { key:'push',     icon:'send',              label:'推送监控' },
+];
+function Sidebar({ active, onSelect }) {
+  return (
+    <aside className="uikit-sidebar">
+      <div className="sidebar-header">
+        <div className="sidebar-logo">
+          <i data-lucide="boxes" style={{width:24,height:24,color:'var(--color-primary)',flexShrink:0}}></i>
+          <span className="uikit-truncate">WebBridgeKit</span>
+        </div>
+      </div>
+      <nav className="sidebar-nav">
+        {NAV.map(n => (
+          <div key={n.key}
+            className={`sidebar-nav-item${active===n.key?' active':''}`}
+            onClick={()=>onSelect(n.key)}
+            data-component="settings-row"
+          >
+            <i data-lucide={n.icon} className="nav-icon"></i>
+            <span className="uikit-truncate">{n.label}</span>
+          </div>
+        ))}
+      </nav>
+      <div className="sidebar-footer">
+        <div className="sidebar-nav-item" data-component="settings-row">
+          <i data-lucide="settings" className="nav-icon"></i>
+          <span className="uikit-truncate">设置</span>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// ── View: 系统概览 ──
+function Overview() {
+  const [pill, setPill] = useState(1);
+  const pills = ['今天','本周','本月'];
+  const stats = [
+    { value:'12', label:'服务器' },
+    { value:'8',  label:'活跃令牌' },
+    { value:'1,247', label:'今日推送' },
+    { value:'3,891', label:'已执行命令' },
+  ];
+  const services = [
+    { name:'网关节点 01', icon:'hard-drive', status:'在线',   meta:'192.168.1.10 · v2.1.3' },
+    { name:'推送服务',    icon:'zap',         status:'活跃',   meta:'今日发送 847 条' },
+    { name:'令牌管理器',  icon:'key',         status:'警告',   meta:'7 条令牌即将过期' },
+    { name:'缓存集群',    icon:'server',      status:'在线',   meta:'命中率 94.2%' },
+  ];
+  const chartVals = [4,8,6,9,5,10,9,7,12,10,7,11];
+  const chartLbls = ['5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/01','6/02','6/03','6/04'];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title uikit-truncate">系统概览</h1>
+        <div className="uikit-toolbar">
+          <div className="search-field" data-component="search-field">
+            <i data-lucide="search" className="search-field-icon"></i>
+            <input type="search" placeholder="搜索指标..." />
+          </div>
+          {pills.map((p,i) => (
+            <button key={i} data-component="filter-pill"
+              className={"filter-pill "+(i===pill?'active':'inactive')}
+              onClick={()=>setPill(i)}>{p}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section-title">核心指标</h2>
+        <div className="uikit-responsive-grid" style={{gridTemplateColumns:'repeat(4,minmax(0,1fr))'}}>
+          {stats.map((s,i) => (
+            <div key={i} className="card shadow" data-component="card" style={{padding:'var(--space-md)'}}>
+              <div className="stat-value">{s.value}</div>
+              <div className="stat-label">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section-title">服务状态</h2>
+        <div className="uikit-responsive-grid">
+          {services.map((s,i) => (
+            <div key={i} className="card" data-component="card">
+              <div style={{display:'flex',alignItems:'center',gap:'12px',minWidth:0}}>
+                <div className="resource-icon"><i data-lucide={s.icon} style={{width:20,height:20}}></i></div>
+                <div className="resource-info">
+                  <div className="resource-name uikit-truncate">{s.name}</div>
+                  <div className="resource-meta uikit-truncate">{s.meta}</div>
+                </div>
+                <span className={"badge "+(s.status==='警告'?'badge-warning':'badge-success')}>{s.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'var(--space-md)'}}>
+          <h2 className="section-title" style={{margin:0}}>推送趋势</h2>
+          <button className="btn btn-ghost" data-component="button" style={{flexShrink:0}}>
+            <i data-lucide="refresh-cw" style={{width:16,height:16}}></i>
+            刷新
+          </button>
+        </div>
+        <div className="card shadow" data-component="card">
+          <div className="chart-section">
+            <div className="chart-wrap">
+              {chartVals.map((v,i) => (
+                <div key={i} className={"chart-bar "+barClass(v)}>
+                  <span className="chart-tip">{v*12}</span>
+                </div>
+              ))}
+            </div>
+            <div className="chart-labels">
+              {chartLbls.map((l,i) => (
+                <span key={i} className="chart-label">{l}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{display:'flex',justifyContent:'flex-end'}}>
+        <button className="btn btn-primary" data-component="button"
+          onClick={()=>alert('面板数据已刷新')}>
+          <i data-lucide="refresh-cw" style={{width:18,height:18}}></i>
+          刷新面板
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── View: 服务器 ──
+function Servers() {
+  const [pill, setPill] = useState(0);
+  const pills = ['全部','在线','离线','维护中'];
+  const servers = [
+    { name:'主网关节点', ip:'192.168.1.10', ver:'v2.1.3', status:'在线', cpu:'23%', mem:'1.8/8G' },
+    { name:'API 代理',   ip:'192.168.1.11', ver:'v2.1.3', status:'在线', cpu:'45%', mem:'3.2/8G' },
+    { name:'推送中继',   ip:'192.168.1.12', ver:'v2.0.9', status:'警告', cpu:'78%', mem:'6.1/8G' },
+    { name:'日志采集器', ip:'192.168.1.13', ver:'v2.1.0', status:'在线', cpu:'12%', mem:'0.9/8G' },
+  ];
+  const cmds = [
+    { action:'push_notification', token:'tok_a1b2...c3d4', time:'09:32:15', duration:'127ms', status:'成功' },
+    { action:'get_manifest',      token:'tok_e5f6...g7h8', time:'09:28:03', duration:'89ms',  status:'成功' },
+    { action:'register_device',   token:'tok_i9j0...k1l2', time:'09:15:44', duration:'210ms', status:'成功' },
+    { action:'push_notification', token:'tok_m3n4...o5p6', time:'08:57:22', duration:'503ms', status:'超时' },
+    { action:'update_config',     token:'tok_q7r8...s9t0', time:'08:42:11', duration:'156ms', status:'成功' },
+    { action:'push_notification', token:'tok_u1v2...w3x4', time:'08:30:00', duration:'98ms',  status:'成功' },
+  ];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title uikit-truncate">服务器状态</h1>
+        <div className="uikit-toolbar">
+          <div className="search-field" data-component="search-field" style={{maxWidth:260}}>
+            <i data-lucide="search" className="search-field-icon"></i>
+            <input type="search" placeholder="搜索服务器..." />
+          </div>
+          {pills.map((p,i) => (
+            <button key={i} data-component="filter-pill"
+              className={"filter-pill "+(i===pill?'active':'inactive')}
+              onClick={()=>setPill(i)}>{p}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section-title">节点列表</h2>
+        <div className="uikit-responsive-grid" style={{gridTemplateColumns:'repeat(2,minmax(0,1fr))',marginBottom:'var(--space-xxl)'}}>
+          {servers.map((s,i) => (
+            <div key={i} className="card shadow" data-component="card">
+              <div className="card-header">
+                <span className="card-title uikit-truncate">
+                  <i data-lucide="server" style={{width:18,height:18,color:'var(--color-primary)'}}></i>
+                  {s.name}
+                </span>
+                <span className={"badge "+(s.status==='警告'?'badge-warning':'badge-success')}>{s.status}</span>
+              </div>
+              <div className="card-content">
+                <div className="key-value"><span className="key">地址</span><span className="text-mono">{s.ip}</span></div>
+                <div className="key-value"><span className="key">版本</span><span className="text-mono">{s.ver}</span></div>
+                <div className="key-value"><span className="key">CPU</span><span className="uikit-nowrap">{s.cpu}</span><span className="key" style={{marginLeft:'var(--space-md)'}}>内存</span><span className="uikit-nowrap">{s.mem}</span></div>
+                <div style={{display:'flex',gap:'var(--space-xs)',marginTop:'var(--space-xs)'}}>
+                  <button className="btn btn-outline" data-component="button" style={{flex:1,font:'var(--wbk-text-metadata)',height:36}}>详情</button>
+                  <button className="btn btn-ghost" data-component="button" style={{flex:1,font:'var(--wbk-text-metadata)',height:36}} disabled={s.status!=='在线'}>重启</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section-title">最近命令</h2>
+        <div className="uikit-table-wrap">
+          <div className="cmd-list">
+            {cmds.map((c,i) => (
+              <div key={i} className="settings-row" data-component="settings-row" style={{cursor:'default'}}>
+                <span className={"status-dot "+(c.status==='成功'?'active':c.status==='超时'?'warning':'offline')}></span>
+                <span className="label-text uikit-truncate" style={{font:'var(--wbk-text-monospace-body)',flex:'0 0 190px'}}>{c.action}</span>
+                <span className="label-text uikit-truncate" style={{flex:'1'}}>{c.token}</span>
+                <span className="value-text uikit-nowrap">{c.time}</span>
+                <span className="value-text uikit-nowrap" style={{font:'var(--wbk-text-monospace-meta)'}}>{c.duration}</span>
+                <span className={"badge "+(c.status==='成功'?'badge-success':c.status==='超时'?'badge-warning':'')} style={{marginLeft:'var(--space-xs)'}}>{c.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{display:'flex',justifyContent:'flex-end'}}>
+        <button className="btn btn-primary" data-component="button"
+          onClick={()=>alert('添加服务器向导已打开')}>
+          <i data-lucide="plus" style={{width:18,height:18}}></i>
+          添加服务器
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── View: 推送监控 ──
+function Push() {
+  const [pill, setPill] = useState(0);
+  const pills = ['全部','成功','失败','待发送'];
+  const metrics = [
+    { value:'12,847', label:'本月发送' },
+    { value:'11,923', label:'成功' },
+    { value:'689',    label:'失败' },
+    { value:'235',    label:'待发送' },
+  ];
+  const configRows = [
+    { icon:'bell',       label:'推送通知',   value:'已开启' },
+    { icon:'volume-2',   label:'声音提醒',   value:'默认' },
+    { icon:'clock',      label:'免打扰时段', value:'23:00-08:00' },
+    { icon:'refresh-cw', label:'自动重试',   value:'3 次' },
+  ];
+  const history = [
+    { title:'推送通知 · 版本更新',  app:'SuperApp', time:'09:32:15', status:'成功' },
+    { title:'静默推送 · 配置同步', app:'WebBridgeKit', time:'09:28:03', status:'成功' },
+    { title:'推送通知 · 新消息',   app:'SuperApp', time:'09:15:44', status:'成功' },
+    { title:'推送通知 · 安全提醒', app:'SuperApp', time:'08:57:22', status:'失败' },
+    { title:'静默推送 · 令牌刷新', app:'WebBridgeKit', time:'08:42:11', status:'成功' },
+    { title:'推送通知 · 维护公告', app:'SuperApp', time:'08:30:00', status:'成功' },
+  ];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1 className="page-title uikit-truncate">推送监控</h1>
+        <div className="uikit-toolbar">
+          {pills.map((p,i) => (
+            <button key={i} data-component="filter-pill"
+              className={"filter-pill "+(i===pill?'active':'inactive')}
+              onClick={()=>setPill(i)}>{p}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section-title">发送统计</h2>
+        <div className="uikit-responsive-grid" style={{gridTemplateColumns:'repeat(4,minmax(0,1fr))'}}>
+          {metrics.map((m,i) => (
+            <div key={i} className="card shadow" data-component="card" style={{padding:'var(--space-md)'}}>
+              <div className="stat-value" style={{color:i===2?'var(--color-error)':''}}>{m.value}</div>
+              <div className="stat-label">{m.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section-title">通知配置</h2>
+        <div className="card" data-component="card" style={{padding:'var(--space-xs) 0'}}>
+          {configRows.map((r,i) => (
+            <div key={i} className="settings-row" data-component="settings-row">
+              <div className="icon-box" style={{background:'var(--color-primary-soft)',color:'var(--color-primary)'}}>
+                <i data-lucide={r.icon} style={{width:20,height:20}}></i>
+              </div>
+              <span className="label-text uikit-truncate">{r.label}</span>
+              <span className="value-text uikit-nowrap">{r.value}</span>
+              <svg className="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section-title">推送记录</h2>
+        <div className="uikit-table-wrap">
+          <div className="cmd-list">
+            {history.map((h,i) => (
+              <div key={i} className="settings-row" data-component="settings-row" style={{cursor:'default'}}>
+                <span className={"status-dot "+(h.status==='成功'?'active':'offline')}></span>
+                <span className="label-text uikit-truncate" style={{flex:'1'}}>{h.title}</span>
+                <span className="value-text uikit-nowrap">{h.app}</span>
+                <span className="value-text uikit-nowrap" style={{minWidth:60,textAlign:'right'}}>{h.time}</span>
+                <span className={"badge "+(h.status==='成功'?'badge-success':'badge-warning')} style={{marginLeft:'var(--space-xs)'}}>{h.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="uikit-action-cell" style={{marginLeft:'auto',maxWidth:'none'}}>
+        <button className="btn btn-primary" data-component="button"
+          onClick={()=>alert('测试推送已发送')}>
+          <i data-lucide="send" style={{width:18,height:18}}></i>
+          发送测试推送
+        </button>
+        <button className="btn btn-ghost" data-component="button" disabled>
+          <i data-lucide="trash-2" style={{width:16,height:16}}></i>
+          清空记录
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── App ──
+function App() {
+  const [view, setView] = useState('overview');
+  return (
+    <div className="uikit-shell" data-layout-guard="uikit-v1" style={{'--uikit-sidebar-w':'240px'}}>
+      <Sidebar active={view} onSelect={setView} />
+      <main className="uikit-main">
+        {view==='overview' && <Overview />}
+        {view==='servers'  && <Servers />}
+        {view==='push'     && <Push />}
+      </main>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+lucide.createIcons();
+</script>
+</body>
+</html>

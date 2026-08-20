@@ -1,4 +1,6 @@
 //
+
+#if DEBUG
 //  ManifestTestCasesViewController.swift
 //  SuperApp
 //
@@ -342,3 +344,5 @@ class TestWebViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
 }
+
+#endif

@@ -1,0 +1,30 @@
+{
+  "slug": "filter-pill",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["chip", "badge", "filter"],
+  "variantDimensions": ["active", "colorScheme"],
+  "representativeVariants": [
+    { "name": "激活标签", "props": { "active": true } },
+    { "name": "非激活标签", "props": { "active": false } }
+  ],
+  "anatomy": [
+    { "name": "pill", "role": "container", "type": "element" },
+    { "name": "label", "role": "text label", "type": "element" }
+  ],
+  "structurePatterns": {
+    "height": 34,
+    "paddingH": 14,
+    "minWidth": 56,
+    "cornerRadius": { "ref": "--radius-full" },
+    "activeBg": { "ref": "--color-primary" },
+    "activeText": "white",
+    "inactiveBg": { "ref": "--wbk-badge-background" },
+    "inactiveText": { "ref": "--wbk-badge-text" },
+    "fontSize": 13
+  },
+  "usageHints": ["水平滚动容器内使用", "激活态使用 primary 背景白字", "非激活态使用 badge-background"],
+  "doNotInvent": ["不要改变 34px 高度", "不要添加圆形以外的形态"],
+  "unknowns": []
+}

@@ -1,6 +1,8 @@
 // Tab Bar
 "tab.home" = "Home";
-"tab.inbox" = "Inbox";
+"tab.inbox" = "Notifications";
+"tab.apps" = "Apps";
+"tab.notifications" = "Notifications";
 "tab.discover" = "Discover";
 "tab.settings" = "Settings";
 
@@ -54,22 +56,40 @@
 "home.test_cases_entry" = "🧪 Automated Test Cases";
 
 // Inbox
-"inbox.title" = "Inbox";
-"inbox.search.placeholder" = "Search Messages";
+"inbox.title" = "Notifications";
+"inbox.search.placeholder" = "Search Notifications";
 "inbox.filter.all" = "All";
 "inbox.filter.unread" = "Unread";
 "inbox.filter.apps" = "Apps";
-"inbox.empty.title" = "No Messages";
-"inbox.empty.description" = "Push messages will appear here";
+"inbox.filter.action_required" = "Actions";
+"inbox.mark_all_read" = "Mark all read";
+"inbox.empty.title" = "No Notifications";
+"inbox.empty.description" = "App notifications, follow-ups, and approval reminders will appear here";
 "inbox.swipe.delete" = "Delete";
 "inbox.clear_all" = "Clear All";
-"inbox.send_test" = "Send Test";
+"inbox.send_test" = "Send Test Notification";
 "inbox.group.unread_format" = "%@ unread";
-"inbox.group.ungrouped" = "Ungrouped";
+"inbox.group.ungrouped" = "Other Messages";
+"inbox.group.other" = "Other Messages";
+"inbox.group.verification" = "Verification Codes";
+"inbox.group.team_chat" = "Team Chat";
+"inbox.group.login" = "Login Requests";
+"inbox.group.approvals" = "Approvals";
+"inbox.group.tasks" = "Task Updates";
+"inbox.group.design_reviews" = "Design Reviews";
+"inbox.group.security" = "Security Alerts";
+"inbox.group.server" = "Server Alerts";
+"inbox.group.system" = "System Notices";
+"inbox.group.weather" = "Weather Updates";
+"inbox.group.orders" = "Order Updates";
+"inbox.group.promotion" = "Promotions";
+"inbox.group.invites" = "Game Invites";
+"inbox.display.latest" = "Latest";
+"inbox.display.groups" = "Groups";
 "inbox.test.title" = "Test Notification";
 "inbox.test.body_format" = "This is a test message, sent at %@";
 "inbox.test.group" = "Test Messages";
-"inbox.swipe.hint" = "Tap a message to view details";
+"inbox.swipe.hint" = "Tap for details. Swipe left to delete.";
 
 // Discover
 "discover.title" = "Discover";
@@ -145,7 +165,11 @@
 "settings.hero.token_masked" = "Token: abcd****efgh";
 "settings.hero.copy_token" = "Copy Token";
 "settings.hero.copied_title" = "Copied";
-"settings.hero.copied_message" = "Token copied to clipboard";
+"settings.hero.copied_message" = "Push key copied to clipboard";
+"settings.hero.token_format" = "Token: %@";
+"settings.hero.identity.unset" = "Push identity not configured";
+"settings.hero.unset_title" = "Not configured";
+"settings.hero.unset_message" = "Configure your Bark identity key in Key Manager first.";
 "settings.server.config" = "Server Configuration";
 "settings.token.manager" = "Token Manager";
 "settings.apikey.manager" = "API Key Manager";
@@ -155,6 +179,11 @@
 "settings.remember.last.app" = "Remember Last App";
 "settings.appearance" = "Appearance";
 "settings.appearance.system" = "System";
+"settings.appearance.light" = "Light";
+"settings.appearance.dark" = "Dark";
+"settings.appearance.system.description" = "Follow the iOS system appearance and switch between light and dark automatically.";
+"settings.appearance.light.description" = "Always use light mode for bright environments.";
+"settings.appearance.dark.description" = "Always use dark mode for night or low-light use.";
 "settings.debug.panel" = "Debug Panel";
 "settings.debug.badge" = "DEBUG";
 "settings.export.diagnostics" = "Export Diagnostics";
@@ -200,10 +229,52 @@
 "message.detail.copy_content" = "Copy Content";
 "message.detail.open_link" = "Open Link";
 "message.detail.open_app" = "Open App";
+"message.detail.open_conversation" = "Open Conversation";
 "message.detail.delete" = "Delete";
 "message.detail.confirm_delete_title" = "Confirm Delete";
 "message.detail.confirm_delete_message" = "Are you sure you want to delete this message?";
 "message.detail.copied" = "Copied to clipboard";
+"message.detail.verification_code" = "Verification Code";
+"message.detail.verification_expires_at" = "Valid until %@";
+"message.detail.verification_expired" = "Verification code expired";
+"message.detail.copy_verification_code" = "Copy Verification Code";
+"message.detail.verification_copied" = "Verification code copied";
+"message.detail.interruption" = "Interruption";
+"message.detail.sound" = "Sound";
+"message.detail.call" = "Call Alert";
+"message.detail.route" = "PWA Route";
+"message.detail.expiry" = "Expires";
+"message.detail.expired" = "Expired";
+"message.detail.archive" = "Archive";
+"message.detail.replace_id" = "Replacement ID";
+"message.detail.enabled" = "Enabled";
+"message.detail.copy_value" = "Copy Attached Value";
+"message.detail.media_attachment" = "Image Attachment";
+"message.detail.media_loading" = "Loading image";
+"message.detail.media_unavailable" = "Image unavailable";
+"message.detail.technical_info" = "Technical Information";
+"message.detail.open_app_failed" = "Unable to Open PWA";
+"message.detail.open_approval" = "Open Approval Page";
+"message.detail.approval_safety_note" = "The notification only locates the request. Confirm inside the target app after it revalidates the state.";
+"message.detail.approval_native_note" = "The action is submitted to the configured WebBridgeKit approval service; the first valid response wins.";
+"message.detail.approval_reason_prompt" = "Enter a reason for this action.";
+"message.detail.approval_reason_placeholder" = "Reason";
+"message.detail.approval_reason_required" = "A reason is required";
+"message.detail.approval_confirm_title" = "Confirm action";
+"message.detail.approval_invalid" = "The approval is missing requestId or revision";
+"message.detail.approval_submitted" = "Approval submitted";
+"message.detail.request_id" = "Request ID";
+"message.detail.state_path" = "State Path";
+"message.detail.revision" = "Revision";
+"message.detail.qr_code" = "QR Code";
+"message.detail.copy_qr_value" = "Copy QR Value";
+"message.action.pending" = "Pending confirmation";
+"message.action.approved" = "Approved";
+"message.action.rejected" = "Rejected";
+"message.action.cancelled" = "Cancelled";
+"message.action.expired" = "Expired";
+"message.action.unspecified" = "Approval state not provided";
+"message.action.submitting" = "Submitting…";
 
 // Token Management
 "token.manage.title" = "Token Management";
@@ -324,6 +395,7 @@
 "notif_debug.field.image" = "Image";
 "notif_debug.field.url" = "Jump URL";
 "notif_debug.field.group" = "Group";
+"notif_debug.field.copy" = "Copy Content";
 "notif_debug.field.auto_copy" = "Auto Copy";
 "notif_debug.field.archive" = "Archive";
 "notif_debug.field.notif_id" = "Notification ID";
@@ -331,6 +403,8 @@
 "notif_debug.field.method" = "Method";
 "notif_debug.button.send" = "Send";
 "notif_debug.button.done" = "Done";
+"notif_debug.button.copy_url" = "Copy Push URL";
+"notif_debug.copied" = "Push URL copied";
 "notif_debug.waiting" = "Waiting to send...";
 "notif_debug.sending" = "Sending...";
 "notif_debug.error_no_key" = "Error: Bark Key not configured\nPlease configure in Settings";
@@ -394,7 +468,7 @@
 "apikey.manage.temporary_keys_desc" = "Temporary keys have an expiration time and will be auto-deleted";
 "apikey.manage.bark_config_title" = "Bark Push Config";
 "apikey.manage.bark_key_placeholder" = "Enter Bark Key";
-"apikey.manage.bark_server_placeholder" = "https://api.day.app";
+"apikey.manage.bark_server_placeholder" = "https://wbk.shanbox.19930810.xyz:8443";
 "apikey.manage.save_config" = "Save Config";
 "apikey.manage.empty_title" = "No Keys";
 "apikey.manage.empty_description" = "Tap + in the top-right corner to create a new key";
@@ -502,3 +576,81 @@
 // Third Party Licenses
 "about.third_party_licenses" = "Open Source Licenses";
 "about.license_detail" = "License Details";
+
+/* Official hosted push first run */
+"official.push.status.preparing" = "Preparing notifications";
+"official.push.status.permission_required" = "Enable to receive notifications";
+"official.push.status.registering" = "Enabling notifications";
+"official.push.status.ready" = "Ready to receive notifications";
+"official.push.status.denied" = "Notifications are disabled";
+"official.push.action.enable" = "Enable Notifications";
+"official.push.action.registering" = "Enabling…";
+"official.push.action.settings" = "Open System Settings";
+"official.push.action.preparing" = "Preparing…";
+"official.push.action.send_safari" = "Send Test in Safari";
+"official.push.help.enable" = "No server setup required; enable notifications once to begin";
+"official.push.address.pending" = "Shown after notifications are enabled";
+"official.push.permission.denied" = "Allow notifications in System Settings, then return and try again.";
+"official.push.error.identity" = "A secure push identity could not be created. Try again.";
+"official.push.error.storage" = "The push identity could not be stored securely. Check device storage and retry.";
+"official.push.error.permission" = "Notifications are not available right now. Try again later.";
+"official.push.error.server" = "The notification service is temporarily unavailable. Try again later.";
+"gateway.title" = "Gateway Management";
+"gateway.current.title" = "Current Gateway";
+"gateway.current.none" = "No self-hosted service enabled";
+"gateway.scan" = "Scan QR Code";
+"gateway.scan.tip" = "Scan a WebBridgeKit gateway code";
+"gateway.paste" = "Paste Configuration";
+"gateway.input.title" = "JSON or webbridgekit://gateway";
+"gateway.validate" = "Validate Configuration";
+"gateway.validating" = "Validating health, origin, and signatures…";
+"gateway.report.title" = "Validation Passed";
+"gateway.report.host" = "Host";
+"gateway.report.health" = "Health Endpoint";
+"gateway.report.manifest" = "Manifest Endpoint";
+"gateway.report.key" = "Public Key ID";
+"gateway.report.debug" = "Development mode (unsigned)";
+"gateway.report.apps" = "Discovered Apps";
+"gateway.activate" = "Enable This Gateway";
+"gateway.activated" = "%@ enabled";
+"gateway.saved" = "Saved Gateways";
+"gateway.switch" = "Validate and Switch";
+"gateway.remove" = "Remove";
+"gateway.remove.title" = "Remove Gateway?";
+"gateway.remove.message" = "App trust and capability grants created by this gateway will also be removed.";
+"gateway.camera.denied.title" = "Camera Unavailable";
+"gateway.camera.denied.message" = "You can still paste a gateway configuration or allow camera access in Settings.";
+"gateway.settings" = "Settings";
+"gateway.cancel" = "Cancel";
+
+/* Inbox group swipe actions */
+"inbox.group.pin" = "Pin";
+"inbox.group.unpin" = "Unpin";
+"inbox.group.delete" = "Delete";
+"inbox.group.delete.title" = "Delete Group";
+"inbox.group.delete.message" = "This deletes all %d messages in \"%@\". This cannot be undone.";
+"inbox.group.delete.confirm" = "Delete";
+"inbox.group.delete.cancel" = "Cancel";
+
+/* Message detail navigation */
+"message.detail.next" = "Next";
+"message.detail.prev" = "Previous";
+
+/* Quick review (card triage) */
+"review.title" = "Quick Review";
+"review.entry" = "Review";
+"review.empty" = "No unread messages";
+"review.mark_read" = "Read";
+"review.skip" = "Skip";
+"review.delete" = "Delete";
+"review.tap_for_detail" = "Tap the card for details";
+"review.done.title" = "All Done";
+"review.done.summary" = "%d read · %d deleted · %d skipped";
+"review.done.finish" = "Done";
+"review.next" = "Next";
+"review.coach.title" = "Swipe Gestures";
+"review.coach.start" = "Start Reviewing";
+"review.coach.back" = "Swipe from the left edge to exit anytime";
+"review.coach.next.hint" = "Mark read and go to the next";
+"review.coach.skip.hint" = "Skip, keep unread";
+"review.coach.delete.hint" = "Delete this message";

@@ -9,6 +9,13 @@ import UIKit
 import UserNotifications
 import WebBridgeKit
 
+extension ProcessInfo {
+    var isWebBridgeKitUITesting: Bool {
+        let supportedArguments = ["-UITesting", "--UITesting", "--ui-testing"]
+        return supportedArguments.contains { arguments.contains($0) }
+    }
+}
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
@@ -25,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             CrashLogManager.shared.uploadPendingCrashReports()
         }
 
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("-UITesting") || ProcessInfo.processInfo.arguments.contains("--UITesting")
+        let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
         if isUITesting {
             TestDataSeeder.populateIfNeeded()
             Self.cleanupInvalidHistoryURLs()
@@ -36,12 +43,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         }
 
+        // APNs sandbox tokens rotate across reinstalls; refresh silently on
+        // every launch so the server always holds the current one.
+        if !isUITesting {
+            // Mirror bundled ringtones into Library/Sounds so named push
+            // sounds resolve even if bundle-root lookup misbehaves on device.
+            DispatchQueue.global(qos: .utility).async {
+                PushSoundInstaller.install()
+            }
+            DispatchQueue.main.async {
+                Self.refreshOfficialPushRegistration()
+            }
+        }
+
         // Removed startup clearAll() — it was deleting PersistentCache files that should survive app restarts.
         // Cache cleanup is now handled by WebCacheManager.scheduleAutoCleanup() which respects persistence.
 
         // 初始化 WebBridgeKit（异步执行，避免偶尔阻塞主线程导致卡 loading）
         // UI 测试时禁用 WebBridgeKit 预热，减少主线程压力和 WebKit 进程消耗
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !isUITesting {
             DispatchQueue.global(qos: .userInitiated).async {
                 WebBridgeKitManager.shared.initialize()
             }
@@ -69,9 +89,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         // 注册推送通知
-        #if !targetEnvironment(simulator)
-        registerForPushNotifications(application)
-        #endif
+        UNUserNotificationCenter.current().delegate = self
 
         //  Support UI Fidelity Testing — show Component Catalog
         if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
@@ -85,6 +103,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         //  Support automated testing via launch arguments
+        #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if let tabBarController = self.window?.rootViewController as? UITabBarController {
@@ -96,8 +115,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
             }
         }
+        #endif
 
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        if !isUITesting {
             DispatchQueue.global(qos: .utility).async {
                 PushRelayManager.shared.connect()
             }
@@ -106,8 +126,125 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let duration = Date().timeIntervalSince(start)
         Log.info("App launch took \(String(format: "%.3f", duration))s", category: .performance)
 
+        #if DEBUG
+        registerNotificationFixtureIfRequested()
+        showPWAAppCenterIfRequested()
+        #endif
+
         return true
     }
+
+    #if DEBUG
+    private func registerNotificationFixtureIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--register-pwa-notification-fixture") else { return }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in }
+        let fixture = notificationFixture()
+        let manifest = HTMLAppManifest(
+            appID: fixture.appID,
+            name: fixture.name,
+            startURL: "\(fixture.origin)\(fixture.route)",
+            allowedOrigins: [fixture.origin],
+            capabilities: [.notification],
+            routes: fixture.routes,
+            cache: HTMLAppCachePolicy(
+                strategy: .manifest,
+                version: "2026.08.10",
+                persistent: true,
+                restoresLastState: true
+            )
+        )
+        do {
+            try HTMLAppTrustRegistry().register(manifest)
+            StructuredLogger.shared.info("Registered APNs route fixture", category: .navigation)
+            openNotificationFixtureIfRequested()
+        } catch {
+            StructuredLogger.shared.error(
+                "Unable to register APNs route fixture: \(error.localizedDescription)",
+                category: .navigation
+            )
+        }
+    }
+
+    private func openNotificationFixtureIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--open-pwa-notification-fixture") else { return }
+        let fixture = notificationFixture()
+        let userInfo: [AnyHashable: Any] = [
+            "version": "1",
+            "appId": fixture.appID,
+            "route": fixture.route,
+            "title": fixture.notificationTitle,
+            "body": fixture.notificationBody,
+            "params": fixture.parameters
+        ]
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            PushNotificationManager.shared.handleNotificationTap(
+                userInfo: userInfo,
+                rootViewController: self?.window?.rootViewController
+            )
+        }
+    }
+
+    private func notificationFixture() -> NotificationFixture {
+        NotificationFixture(processInfo: ProcessInfo.processInfo)
+    }
+
+    private struct NotificationFixture {
+        let origin: String
+        let appID: String
+        let name: String
+        let route: String
+        let routes: [String]
+        let parameters: [String: String]
+        let notificationTitle: String
+        let notificationBody: String
+
+        init(processInfo: ProcessInfo) {
+            origin = processInfo.environment["WBK_PWA_FIXTURE_ORIGIN"] ?? "http://localhost:8081"
+            let requestedCase = processInfo.environment["WBK_PWA_FIXTURE_CASE"]
+
+            switch requestedCase {
+            case "task":
+                appID = "com.webbridgekit.fixture.agent-console"
+                name = "Agent Console Fixture"
+                route = "/test_resources/pwa-agent-console/index.html"
+                routes = [route, "/test_resources/pwa-agent-console/approval.html"]
+                parameters = ["taskId": "run-20260810", "status": "completed"]
+                notificationTitle = "运行任务已完成"
+                notificationBody = "点击查看任务输出并继续处理"
+            case "approval":
+                appID = "com.webbridgekit.fixture.agent-console"
+                name = "Agent Console Fixture"
+                route = "/test_resources/pwa-agent-console/approval.html"
+                routes = ["/test_resources/pwa-agent-console/index.html", route]
+                parameters = ["requestId": "approval-42", "source": "remote-task"]
+                notificationTitle = "需要你的确认"
+                notificationBody = "打开审批页面后仍需手动确认"
+            default:
+                appID = "com.webbridgekit.fixture.chat"
+                name = "Chat Fixture"
+                route = processInfo.environment["WBK_PWA_FIXTURE_ROUTE"] ?? "/test_resources/pwa-notification/index.html"
+                routes = Array(Set([
+                    route,
+                    "/test_resources/pwa-notification/index.html",
+                    "/test_resources/pwa-notification/approval.html"
+                ])).sorted()
+                parameters = ["conversationId": "user-42", "messageId": "message-7"]
+                notificationTitle = "收到一条新消息"
+                notificationBody = "点击回到与 User 42 的对话"
+            }
+        }
+    }
+
+    private func showPWAAppCenterIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--show-pwa-app-center") else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            guard let tabBarController = self?.window?.rootViewController as? TabBarController else { return }
+            tabBarController.selectedIndex = 0
+            guard let navigationController = tabBarController.selectedViewController as? UINavigationController else { return }
+            navigationController.pushViewController(PWAAppCenterViewController(), animated: false)
+        }
+    }
+    #endif
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         Log.info("App entering foreground", category: .general)
@@ -118,7 +255,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        if !ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        // Import push payloads recorded by the Notification Service Extension
+        // while the app was backgrounded or killed (Bark-style recovery).
+        Task {
+            await PendingMessageImporter.importPending()
+        }
+        if !ProcessInfo.processInfo.isWebBridgeKitUITesting {
             TokenManager.shared.parseTokenFromClipboard()
             CommandHandler.shared.checkClipboardOnForeground()
         }
@@ -158,6 +300,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
                 return true
             } else if url.host == "runalltests" {
+                #if DEBUG
                 if let tabBarController = window?.rootViewController as? UITabBarController,
                    let nav = tabBarController.viewControllers?[1] as? UINavigationController,
                    let testVC = nav.viewControllers.first as? ManifestTestCasesViewController {
@@ -166,6 +309,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     testVC.runAllTests()
                     return true
                 }
+                #endif
             }
         }
 
@@ -174,34 +318,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     // MARK: - Push Notifications
 
-    private func registerForPushNotifications(_ application: UIApplication) {
-        if ProcessInfo.processInfo.arguments.contains("-UITesting") {
-            return
-        }
-
-        UNUserNotificationCenter.current().delegate = self
-
-        #if !targetEnvironment(simulator)
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, _ in
-            if granted {
-                DispatchQueue.main.async {
-                    application.registerForRemoteNotifications()
-                }
-            }
-        }
-        #endif
-    }
-
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         _ = tokenParts.joined()
+        PushNotificationManager.shared.didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
 
         // 将 Token 发送给服务器
         // APIKeyManager.shared.updateDeviceToken(token)
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        PushNotificationManager.shared.didFailToRegisterForRemoteNotifications(error: error)
     }
 
     // MARK: - UNUserNotificationCenterDelegate
@@ -209,39 +336,106 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        let mode = notification.request.content.userInfo["mode"] as? String
-        if mode == "silent" || mode == "passive" {
-            completionHandler([])
-        } else {
-            completionHandler([.banner, .list, .sound, .badge])
+        let request = notification.request
+        // Consumer-side decryption: do not trust the NSE's modified
+        // userInfo to survive delivery — decrypt here if the wire envelope
+        // is still present.
+        let wireUserInfo = PushCipher.decryptingUserInfoIfEncrypted(request.content.userInfo)
+        Task {
+            let payload = makeMessagePayload(
+                identifier: request.identifier,
+                userInfo: wireUserInfo,
+                content: request.content
+            )
+            try? await MessageEngine.shared.receive(payload)
         }
+
+        let mode = notification.request.content.userInfo["mode"] as? String
+        // passive 静默语义对齐：apns interruption-level=passive 的推送在前台
+        // 同样不弹横幅（catalog 被动通知卡发的是 level 而非 mode）。
+        if mode == "silent" || mode == "passive"
+            || notification.request.content.interruptionLevel == .passive {
+            completionHandler([])
+            return
+        }
+
+        // Bark parity: foreground notifications present silently. The iOS
+        // foreground pipeline mangles named sounds every way we tried
+        // (SystemSound rejects AAC, AVAudioPlayer plays silently, .sound
+        // falls back to the default tone), and Bark itself returns plain
+        // .alert here. Named sounds play via the system path when the app
+        // is backgrounded or locked — the normal push usage.
+        completionHandler([.banner, .list, .badge])
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        let userInfo = response.notification.request.content.userInfo
+        var userInfo = PushCipher.decryptingUserInfoIfEncrypted(
+            response.notification.request.content.userInfo
+        )
+        let content = response.notification.request.content
+        var routingInfo = userInfo
+        routingInfo["title"] = userInfo["title"] as? String ?? content.title
+        routingInfo["body"] = userInfo["body"] as? String ?? content.body
 
-        Task {
-            let payload = MessagePayload(
-                title: userInfo["title"] as? String ?? response.notification.request.content.title,
-                body: userInfo["body"] as? String ?? response.notification.request.content.body,
-                channel: userInfo["channel"] as? String ?? "apns",
-                targetURL: userInfo["url"] as? String,
-                targetAppId: userInfo["appid"] as? String,
-                targetMode: userInfo["mode"] as? String,
-                userInfo: userInfo as? [String: String] ?? [:]
+        // Record the message into the inbox FIRST, then route. If routing
+        // fires before the message is stored, focusMessage finds nothing and
+        // the user lands on the inbox list instead of the detail page.
+        Task { [weak self] in
+            let payload = self?.makeMessagePayload(
+                identifier: response.notification.request.identifier,
+                userInfo: userInfo,
+                content: content
             )
-            try? await MessageEngine.shared.receive(payload)
+            if let payload {
+                try? await MessageEngine.shared.receive(payload)
+            }
+
+            // Message is now in the inbox; safe to route to its detail.
+            await MainActor.run { [weak self] in
+                PushNotificationManager.shared.handleNotificationTap(
+                    userInfo: routingInfo,
+                    rootViewController: self?.window?.rootViewController
+                )
+            }
         }
 
         completionHandler()
+    }
+
+    private func makeMessagePayload(
+        identifier: String,
+        userInfo: [AnyHashable: Any],
+        content: UNNotificationContent
+    ) -> MessagePayload {
+        NotificationPayloadMapper.makePayload(
+            identifier: identifier,
+            userInfo: userInfo,
+            fallbacks: NotificationPayloadMapper.ContentFallbacks(
+                title: content.title,
+                body: content.body,
+                subtitle: content.subtitle,
+                badge: content.badge?.intValue
+            )
+        )
     }
 
     // MARK: - DEBUG Helpers
 
     /// 注入测试URL到历史记录（仅DEBUG模式）
     private func injectTestURLsForDebugging() {
+    }
+
+    /// Re-registers the current APNs token with the official push identity on
+    /// every launch. iOS rotates sandbox device tokens across reinstalls, and
+    /// the server must always hold the latest token for the push address to work.
+    private static func refreshOfficialPushRegistration() {
+        guard let identity = try? OfficialPushIdentityStore.shared.currentOrCreate() else { return }
+        let serverURL = ServerConfigManager.shared.getActiveBaseURL()
+            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
+            ?? "https://wbk.shanbox.19930810.xyz:8443"
+        PushNotificationManager.shared.activateOfficialPush(serverURL: serverURL, key: identity) { _ in }
     }
 
     private static func cleanupInvalidHistoryURLs() {

@@ -18,11 +18,15 @@ public struct MessageRouter: Sendable {
 
         // 2. Route by appId (mini app)
         if let appId = payload.targetAppId, !appId.isEmpty {
+            var params = payload.userInfo ?? [:]
+            if let route = payload.route, !route.isEmpty {
+                params["route"] = route
+            }
             return RouteTarget(
                 type: .appId,
                 destination: appId,
                 mode: payload.targetMode,
-                params: payload.userInfo
+                params: params
             )
         }
 

@@ -1,0 +1,32 @@
+{
+  "slug": "nav-header",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["navigation-bar", "header", "top-bar"],
+  "variantDimensions": ["hasBack"],
+  "representativeVariants": [
+    { "name": "有返回按钮", "props": { "hasBack": true } },
+    { "name": "仅标题", "props": { "hasBack": false } }
+  ],
+  "anatomy": [
+    { "name": "header", "role": "container", "type": "element" },
+    { "name": "backButton", "role": "back chevron", "type": "optional" },
+    { "name": "backLabel", "role": "back text label", "type": "optional" },
+    { "name": "title", "role": "centered title", "type": "element" },
+    { "name": "actions", "role": "right action buttons", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "height": 44,
+    "paddingH": 16,
+    "titleSize": 17,
+    "titleWeight": 600,
+    "backIconSize": 24,
+    "backLabelSize": 15,
+    "backgroundColor": { "ref": "--color-bg" },
+    "separator": { "ref": "--color-separator" }
+  },
+  "usageHints": ["子页面详情页使用", "返回按钮 = chevron-left + 父页面名"],
+  "doNotInvent": ["不要添加大标题样式", "不要改变 44px 高度"],
+  "unknowns": []
+}

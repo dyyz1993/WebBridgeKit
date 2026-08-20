@@ -45,6 +45,11 @@ final class ClipboardMonitorTests: XCTestCase {
         XCTAssertTrue(result)
     }
 
+    func testLooksLikeCommand_withAppCommandURLPrefix_returnsTrue() {
+        let result = ClipboardMonitor.shared.looksLikeCommand("webbridgekit://command/id.payload")
+        XCTAssertTrue(result)
+    }
+
     // MARK: - looksLikeCommand - Base64
 
     func testLooksLikeCommand_withValidBase64String_returnsTrue() {

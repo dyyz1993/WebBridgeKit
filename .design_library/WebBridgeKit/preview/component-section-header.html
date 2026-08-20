@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Section Header - WebBridgeKit</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold — NOT extracted */
+body { margin:0; padding:12px; background:var(--wbk-background-secondary); font-family:var(--wbk-font-family); }
+.stage { display:flex; flex-direction:column; gap:32px; max-width:480px; margin:0 auto; }
+.section-title { font:var(--wbk-text-body); font-weight:600; color:var(--wbk-text); margin-bottom:12px; }
+
+/* @component-css-start */
+.wbk-section-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:24px 16px 8px;
+  margin:0;
+}
+.wbk-section-header__title {
+  font-size:13px;
+  font-weight:600;
+  color:var(--color-text-secondary);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  line-height:1;
+}
+.wbk-section-header__action {
+  font-size:13px;
+  font-weight:500;
+  color:var(--color-primary);
+  text-decoration:none;
+  line-height:1;
+}
+
+/* Sample list row context */
+.wbk-list-row {
+  display:flex;
+  align-items:center;
+  padding:14px 16px;
+  background:var(--color-surface);
+  gap:12px;
+}
+.wbk-list-row + .wbk-list-row {
+  border-top:1px solid var(--color-separator);
+}
+.wbk-list-row__icon {
+  width:32px;
+  height:32px;
+  border-radius:var(--radius-sm);
+  background:var(--color-primary-soft);
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--color-primary);
+}
+.wbk-list-row__content {
+  flex:1;
+  min-width:0;
+}
+.wbk-list-row__title {
+  font:var(--wbk-text-row-title);
+  color:var(--wbk-text);
+}
+.wbk-list-row__subtitle {
+  font:var(--wbk-text-caption);
+  color:var(--wbk-text-tertiary);
+  margin-top:2px;
+}
+.wbk-list-row__chevron {
+  color:var(--wbk-text-tertiary);
+  flex-shrink:0;
+}
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- Variant 1: Standard -->
+  <div>
+    <div class="section-title">标准</div>
+    <div class="wbk-section-header">
+      <span class="wbk-section-header__title">常用工具</span>
+    </div>
+    <div style="background:var(--color-surface);border-radius:var(--wbk-radius-card);overflow:hidden;">
+      <div class="wbk-list-row">
+        <div class="wbk-list-row__icon"><i data-lucide="search" style="width:16px;height:16px"></i></div>
+        <div class="wbk-list-row__content">
+          <div class="wbk-list-row__title">搜索</div>
+          <div class="wbk-list-row__subtitle">快速查找内容和功能</div>
+        </div>
+        <svg class="wbk-list-row__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="wbk-list-row">
+        <div class="wbk-list-row__icon"><i data-lucide="bookmark" style="width:16px;height:16px"></i></div>
+        <div class="wbk-list-row__content">
+          <div class="wbk-list-row__title">书签</div>
+          <div class="wbk-list-row__subtitle">已保存的网页和资源</div>
+        </div>
+        <svg class="wbk-list-row__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variant 2: With Action -->
+  <div>
+    <div class="section-title">带操作</div>
+    <div class="wbk-section-header">
+      <span class="wbk-section-header__title">最近消息</span>
+      <a class="wbk-section-header__action" href="#">查看全部</a>
+    </div>
+    <div style="background:var(--color-surface);border-radius:var(--wbk-radius-card);overflow:hidden;">
+      <div class="wbk-list-row">
+        <div class="wbk-list-row__icon" style="background:var(--wbk-success-soft);color:var(--color-success);"><i data-lucide="bell" style="width:16px;height:16px"></i></div>
+        <div class="wbk-list-row__content">
+          <div class="wbk-list-row__title">系统通知</div>
+          <div class="wbk-list-row__subtitle">应用更新已就绪</div>
+        </div>
+        <svg class="wbk-list-row__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="wbk-list-row">
+        <div class="wbk-list-row__icon" style="background:var(--wbk-info-soft);color:var(--color-info);"><i data-lucide="message-circle" style="width:16px;height:16px"></i></div>
+        <div class="wbk-list-row__content">
+          <div class="wbk-list-row__title">消息推送</div>
+          <div class="wbk-list-row__subtitle">2 条未读消息</div>
+        </div>
+        <svg class="wbk-list-row__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

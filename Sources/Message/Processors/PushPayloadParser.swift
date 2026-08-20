@@ -44,11 +44,15 @@ public struct PushPayloadParser: Sendable {
         }
         
         if let url = query["url"] { content.targetURL = url }
+        if let appID = query["appid"] ?? query["appId"] { content.targetAppId = appID }
+        if let route = query["route"] { content.route = route }
         if let group = query["group"] { content.group = group }
         if let icon = query["icon"] { content.iconURL = icon }
         if let sound = query["sound"] { content.sound = sound }
         if let image = query["image"] { content.imageURL = image }
         if let copy = query["copy"] { content.copyText = copy }
+        if let threadID = query["threadId"] { content.threadId = threadID }
+        if let mode = query["mode"] { content.targetMode = mode }
         
         if query["call"] == "1" { content.isCall = true }
         if query["isArchive"] == "1" { content.isArchive = true }
@@ -64,6 +68,11 @@ public struct PushPayloadParser: Sendable {
         if let volume = query["volume"], let volumeDouble = Double(volume) {
             content.volume = min(max(volumeDouble, 0), 10)
         }
+        if let ttl = query["ttl"], let ttlValue = Double(ttl) {
+            content.ttl = max(ttlValue, 0)
+        }
+        content.replacementID = query["id"]
+        content.isDeleted = query["delete"] == "1"
         
         return content
     }

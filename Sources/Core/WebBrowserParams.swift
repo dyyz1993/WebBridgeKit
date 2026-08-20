@@ -83,6 +83,15 @@ public struct WebBrowserParams {
     public let allowJavaScriptClose: Bool
     public let customTitle: String?
 
+    /// Strong-offline packages use the native manifest loader. Standard PWAs
+    /// load directly so their service worker, localStorage, and IndexedDB keep
+    /// their normal WebKit semantics.
+    public let useManifestLoader: Bool
+
+    /// Partial-offline PWAs restore the last cached document immediately and
+    /// only use the network when no cached response exists.
+    public let preferCachedContent: Bool
+
     ///  调试模式：启用时会显示错误页面而不是白屏
     public var debugMode: Bool = false
 
@@ -105,7 +114,9 @@ public struct WebBrowserParams {
         allowJavaScriptClose: Bool = true,
         customTitle: String? = nil,
         debugMode: Bool = false,
-        payload: [String: String]? = nil
+        payload: [String: String]? = nil,
+        useManifestLoader: Bool = true,
+        preferCachedContent: Bool = false
     ) {
         self.displayMode = displayMode
         self.modalSize = modalSize
@@ -121,6 +132,8 @@ public struct WebBrowserParams {
         self.customTitle = customTitle
         self.debugMode = debugMode
         self.payload = payload
+        self.useManifestLoader = useManifestLoader
+        self.preferCachedContent = preferCachedContent
     }
 
     // MARK: - Factory Methods

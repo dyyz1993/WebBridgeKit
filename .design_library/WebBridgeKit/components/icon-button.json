@@ -1,0 +1,31 @@
+{
+  "slug": "icon-button",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "high",
+  "semanticTypeCandidates": ["icon-button", "fab", "action"],
+  "variantDimensions": ["variant", "size"],
+  "representativeVariants": [
+    { "name": "默认", "props": { "variant": "default", "size": 44 } },
+    { "name": "Primary", "props": { "variant": "primary", "size": 44 } },
+    { "name": "Ghost", "props": { "variant": "ghost", "size": 44 } }
+  ],
+  "anatomy": [
+    { "name": "button", "role": "touchable area", "type": "element" },
+    { "name": "icon", "role": "icon graphic", "type": "element" }
+  ],
+  "structurePatterns": {
+    "size": 44,
+    "iconSize": 20,
+    "cornerRadius": { "ref": "--radius-md" },
+    "defaultBackground": "transparent",
+    "defaultIconColor": { "ref": "--color-text" },
+    "primaryBackground": { "ref": "--color-primary" },
+    "primaryIconColor": { "ref": "--wbk-text-on-color" },
+    "ghostBackground": { "ref": "--color-bg-tertiary" },
+    "ghostIconColor": { "ref": "--color-text-secondary" }
+  },
+  "usageHints": ["导航栏右侧操作、卡片操作按钮、FAB"],
+  "doNotInvent": ["不要添加 badge 叠加", "不要添加文字标签"],
+  "unknowns": []
+}

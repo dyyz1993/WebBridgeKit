@@ -15,20 +15,20 @@ targets:
   WebBridgeKit:
     type: framework
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Sources
       - Resources
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: WebBridgeKit
-      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.WebBridgeKit
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.webbridgekit
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
       TARGETED_DEVICE_FAMILY: "1,2"
-      IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
       DEFINES_MODULE: YES
       BUILD_LIBRARY_FOR_DISTRIBUTION: YES
       ENABLE_PREVIEWS: YES
@@ -49,7 +49,7 @@ targets:
   SuperApp:
     type: application
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - SuperApp/Sources
       - SuperApp/Resources
@@ -63,7 +63,7 @@ targets:
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1"
       PRODUCT_NAME: SuperApp
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       FRAMEWORK_SEARCH_PATHS:
         - $(inherited)
@@ -72,9 +72,12 @@ targets:
         - $(inherited)
       CODE_SIGN_STYLE: Automatic
       DEVELOPMENT_TEAM: "B45VZCNYU3"
+      CODE_SIGN_ENTITLEMENTS: SuperApp/SuperApp.entitlements
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
       INFOPLIST_KEY_NSAppTransportSecurity: YES
+      # Bark declares remote-notification background mode; align with it.
+      INFOPLIST_KEY_UIBackgroundModes: remote-notification
     postBuildScripts:
       - name: Strip Test Resources from Release
         outputFiles:
@@ -97,16 +100,61 @@ targets:
           fi
           mkdir -p "${DERIVED_FILE_DIR}"
           touch "${DERIVED_FILE_DIR}/strip-test-resources.stamp"
+
+      - name: Embed Notification Service Extension
+        outputFiles:
+          - $(DERIVED_FILE_DIR)/embed-nse.stamp
+        script: |
+          NSE_NAME="NotificationServiceExtension.appex"
+          NSE_PATH="$(find "${BUILT_PRODUCTS_DIR}" -name "${NSE_NAME}" -maxdepth 2 | head -1)"
+          if [ -n "${NSE_PATH}" ] && [ -d "${NSE_PATH}" ]; then
+            mkdir -p "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/PlugIns"
+            cp -R "${NSE_PATH}" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/PlugIns/"
+            echo "Embedded ${NSE_NAME} into PlugIns"
+          else
+            echo "WARNING: ${NSE_NAME} not found in ${BUILT_PRODUCTS_DIR}"
+          fi
+          mkdir -p "${DERIVED_FILE_DIR}"
+          touch "${DERIVED_FILE_DIR}/embed-nse.stamp"
     dependencies:
       - target: WebBridgeKit
         embed: true
       - target: Message
         embed: true
+      - target: NotificationServiceExtension
+        embed: true
+
+  NotificationServiceExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: NotificationServiceExtension
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.nse
+      SWIFT_VERSION: "5.0"
+      TARGETED_DEVICE_FAMILY: "1"
+      CURRENT_PROJECT_VERSION: "9"
+      MARKETING_VERSION: "1.0"
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: "B45VZCNYU3"
+      CODE_SIGN_ENTITLEMENTS: NotificationServiceExtension/NotificationServiceExtension.entitlements
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_CFBundleExecutable: $(EXECUTABLE_NAME)
+      INFOPLIST_KEY_CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+      INFOPLIST_KEY_CFBundlePackageType: XPC!
+      INFOPLIST_KEY_CFBundleShortVersionString: $(MARKETING_VERSION)
+      INFOPLIST_KEY_CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+      INFOPLIST_KEY_NSExtensionPointIdentifier: com.apple.usernotifications.service
+      INFOPLIST_KEY_NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationService
 
   SuperAppUITests:
     type: bundle.ui-testing
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - SuperAppUITests
     settings:
@@ -118,13 +166,15 @@ targets:
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: NO
       ENABLE_PREVIEWS: NO
       ENABLE_SWIFT_TESTING: NO
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: "B45VZCNYU3"
     dependencies:
       - target: SuperApp
 
   AppTemplate:
     type: application
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - AppTemplate/Sources
     settings:
@@ -132,7 +182,7 @@ targets:
       SWIFT_VERSION: "5.0"
       TARGETED_DEVICE_FAMILY: "1,2"
       PRODUCT_NAME: AppTemplate
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       CODE_SIGN_STYLE: Automatic
       DEVELOPMENT_TEAM: "B45VZCNYU3"
@@ -145,20 +195,20 @@ targets:
   Message:
     type: framework
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Sources/Message
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: WBKMessage
       PRODUCT_MODULE_NAME: WBKMessage
-      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.WBKMessage
+      PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.message
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
       TARGETED_DEVICE_FAMILY: "1,2"
-      IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
       DEFINES_MODULE: YES
       BUILD_LIBRARY_FOR_DISTRIBUTION: YES
       ENABLE_PREVIEWS: NO
@@ -173,7 +223,7 @@ targets:
   MessageTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/MessageTests
     settings:
@@ -191,19 +241,19 @@ targets:
   Cache:
     type: framework
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Sources/Cache
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: Cache
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Cache
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
       TARGETED_DEVICE_FAMILY: "1,2"
-      IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
       DEFINES_MODULE: YES
       BUILD_LIBRARY_FOR_DISTRIBUTION: YES
       ENABLE_PREVIEWS: NO
@@ -218,7 +268,7 @@ targets:
   CacheTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/CacheTests
       - Tests/CacheDashboard
@@ -237,19 +287,19 @@ targets:
   AI:
     type: framework
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Sources/AI
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: AI
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.AI
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
       TARGETED_DEVICE_FAMILY: "1,2"
-      IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
       DEFINES_MODULE: YES
       BUILD_LIBRARY_FOR_DISTRIBUTION: YES
       ENABLE_PREVIEWS: NO
@@ -266,7 +316,7 @@ targets:
   AITests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/AITests
     settings:
@@ -284,19 +334,19 @@ targets:
   Theme:
     type: framework
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Sources/Theme
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: Theme
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Theme
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
       TARGETED_DEVICE_FAMILY: "1,2"
-      IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
       DEFINES_MODULE: YES
       BUILD_LIBRARY_FOR_DISTRIBUTION: YES
       ENABLE_PREVIEWS: NO
@@ -311,19 +361,19 @@ targets:
   Skills:
     type: framework
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Sources/Skills
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      CURRENT_PROJECT_VERSION: "1"
+      CURRENT_PROJECT_VERSION: "9"
       MARKETING_VERSION: "1.0"
       PRODUCT_NAME: Skills
       PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.Skills
       SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
       TARGETED_DEVICE_FAMILY: "1,2"
-      IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
       DEFINES_MODULE: YES
       BUILD_LIBRARY_FOR_DISTRIBUTION: YES
       ENABLE_PREVIEWS: NO
@@ -338,7 +388,7 @@ targets:
   SkillsTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/SkillsTests
     settings:
@@ -356,7 +406,7 @@ targets:
   HandlerTests-Part1:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - path: Tests/HandlerTests
         excludes:
@@ -396,7 +446,7 @@ targets:
   HandlerTests-Part2:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - path: Tests/HandlerTests
         includes:
@@ -437,7 +487,7 @@ targets:
   HandlerTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/HandlerTests
     settings:
@@ -455,7 +505,7 @@ targets:
   BridgeTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/BridgeTests
     settings:
@@ -473,7 +523,7 @@ targets:
   CoreTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/CoreTests
     settings:
@@ -491,7 +541,7 @@ targets:
   ModelsTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/ModelsTests
     settings:
@@ -509,7 +559,7 @@ targets:
   UtilsTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/UtilsTests
     settings:
@@ -527,7 +577,7 @@ targets:
   ServicesTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/ServicesTests
     settings:
@@ -545,7 +595,7 @@ targets:
   CommandParserTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/CommandParserTests
     settings:
@@ -563,7 +613,7 @@ targets:
   ThemeTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/ThemeTests
     settings:
@@ -581,7 +631,7 @@ targets:
   InfrastructureTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/Infrastructure
     settings:
@@ -599,7 +649,7 @@ targets:
   ViewModelTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/ViewModelTests
     settings:
@@ -617,7 +667,7 @@ targets:
   WebBridgeKitTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/WebBridgeKitTests
     settings:
@@ -635,7 +685,7 @@ targets:
   WebSocketTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/WebSocketTests
     settings:
@@ -653,7 +703,7 @@ targets:
   BaseTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/BaseTests
     settings:
@@ -671,7 +721,7 @@ targets:
   ExtensionsTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/ExtensionsTests
     settings:
@@ -689,7 +739,7 @@ targets:
   ManagersTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "14.0"
+    deploymentTarget: "15.0"
     sources:
       - Tests/ManagersTests
     settings:

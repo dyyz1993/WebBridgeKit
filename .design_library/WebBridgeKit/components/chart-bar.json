@@ -1,0 +1,30 @@
+{
+  "slug": "chart-bar",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["chart", "bar-chart", "data-visualization"],
+  "variantDimensions": ["orientation"],
+  "representativeVariants": [
+    { "name": "垂直柱状图", "props": { "orientation": "vertical" } }
+  ],
+  "anatomy": [
+    { "name": "container", "role": "chart area", "type": "element" },
+    { "name": "axis", "role": "x/y axis lines", "type": "optional" },
+    { "name": "bar", "role": "data bar", "type": "element" },
+    { "name": "label", "role": "bar value label", "type": "optional" },
+    { "name": "legend", "role": "chart legend", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "barCornerRadius": 4,
+    "barGap": 8,
+    "axisColor": { "ref": "--color-separator" },
+    "labelSize": 11,
+    "labelColor": { "ref": "--color-text-tertiary" },
+    "defaultBarColor": { "ref": "--color-primary" },
+    "gridColor": { "ref": "--color-bg-tertiary" }
+  },
+  "usageHints": ["推送统计数据可视化，对应源码 BarChartView"],
+  "doNotInvent": ["不要添加动画", "不要添加堆叠变体"],
+  "unknowns": []
+}

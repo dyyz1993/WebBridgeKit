@@ -1,0 +1,32 @@
+{
+  "slug": "avatar",
+  "schemaVersion": 2,
+  "sourceKind": "structured-spec",
+  "confidence": "medium",
+  "semanticTypeCandidates": ["avatar", "user-image", "profile"],
+  "variantDimensions": ["size", "hasStatus"],
+  "representativeVariants": [
+    { "name": "大头像", "props": { "size": 48, "hasStatus": false } },
+    { "name": "带状态", "props": { "size": 32, "hasStatus": true } },
+    { "name": "小头像", "props": { "size": 24, "hasStatus": false } }
+  ],
+  "anatomy": [
+    { "name": "image", "role": "avatar image circle", "type": "element" },
+    { "name": "initials", "role": "fallback text", "type": "optional" },
+    { "name": "statusDot", "role": "online/offline indicator", "type": "optional" }
+  ],
+  "structurePatterns": {
+    "radius": { "ref": "--wbk-radius-avatar" },
+    "borderColor": { "ref": "--color-surface" },
+    "borderWidth": 2,
+    "initialsBackground": { "ref": "--color-primary-soft" },
+    "initialsColor": { "ref": "--color-primary" },
+    "initialsFont": { "ref": "--wbk-text-caption" },
+    "statusDotSize": 10,
+    "statusDotOnline": { "ref": "--color-success" },
+    "statusDotOffline": { "ref": "--wbk-text-tertiary" }
+  },
+  "usageHints": ["设备信息、用户头像、来源应用图标占位"],
+  "doNotInvent": ["不要添加方形变体", "不要添加 Group Avatar"],
+  "unknowns": []
+}
