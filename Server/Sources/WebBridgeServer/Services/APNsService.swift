@@ -258,11 +258,15 @@ final class APNsService: Sendable {
 
         var aps: [String: Any] = [
             "alert": alert,
-            "sound": apsSound(payload),
             // Wakes the NotificationServiceExtension (icon attachments and
             // call=1 30-second loops are produced there, as in Bark).
             "mutable-content": 1,
         ]
+        // passive 静默投递：iOS 会照播 payload 里显式存在的 sound 键，
+        // 「不响铃」的承诺要求 passive 推送根本不带该键（Bark 同语义）。
+        if apnsInterruptionLevel(payload.level) != "passive" {
+            aps["sound"] = apsSound(payload)
+        }
         if let badge = payload.badge { aps["badge"] = badge }
         if let threadID = payload.threadID ?? payload.group { aps["thread-id"] = threadID }
         if let level = apnsInterruptionLevel(payload.level) { aps["interruption-level"] = level }

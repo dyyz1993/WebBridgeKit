@@ -108,8 +108,17 @@ enum PushRoutes {
 
         // End-to-end encrypted pushes carry only `ciphertext` — the server
         // must not require a plaintext body it is not supposed to see.
+        // Bark also accepts body-less pushes that still carry a title or an
+        // action field (badge clear, recall via id+delete) — e.g. the
+        // push-render-catalog 撤回/清角标 cards. Reject only pushes with no
+        // user-visible content and no action at all.
         if fields["ciphertext"]?.isEmpty != false {
-            guard let body = fields["body"], !body.isEmpty else {
+            let hasTitle = !(fields["title"] ?? "").isEmpty
+            let hasBody = !(fields["body"] ?? "").isEmpty
+            let hasAction = fields["badge"] != nil
+                || fields["delete"] != nil
+                || fields["id"] != nil
+            guard hasTitle || hasBody || hasAction else {
                 throw HTTPError(.badRequest, message: "body is required")
             }
         }
