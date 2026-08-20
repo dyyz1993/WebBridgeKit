@@ -18,7 +18,19 @@ public class WebCacheDebugHandler: BaseWebNativeHandler {
 
     public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
         let params = body["params"] as? [String: Any] ?? body
-        let action = params["action"] as? String ?? ""
+        let rawAction = params["action"] as? String ?? ""
+        // 语义别名：外部测试页/第三方页面常用的自然命名统一映射到实现名
+        let action: String
+        switch rawAction {
+        case "getStats":
+            action = "getInfo"
+        case "listRules":
+            action = "getPageRules"
+        case "listCachedURLs":
+            action = "getEntriesGroupedByDomain"
+        default:
+            action = rawAction
+        }
 
         switch action {
         // MARK: - 压缩缓存相关 (保留)
