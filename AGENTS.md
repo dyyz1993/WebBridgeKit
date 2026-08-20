@@ -200,6 +200,22 @@ UI-related development and verification must default to the iOS Simulator:
   DerivedData artifacts — then resume the simulator-first flow instead of
   migrating the work to a real device.
 
+### Automation First, Device Assist Last（自动化自测优先，真机协助兜底）
+
+排查与修复必须按此顺序收敛，不得跳级请求用户真机：
+
+1. **能自动化的全部自动化**：本地/模拟器构建、单元与 UI 测试、`Server && swift test`、
+   各 verify 脚本、模拟器安装+启动+`scan-crash-logs.sh`、以及可直连 shanbox 的服务端
+   行为验证（curl 假设备 key + 服务端日志第一层证据）。这些都绿了才进入下一步。
+2. **明确列出「只有用户能做」的环节**并说明原因（如 TestFlight 上传需要 App Store Connect
+   凭据；APNs 锁屏/后台投递、来电式响铃、China 网络弹窗只能真机验证）。
+3. **请求用户真机协助时，必须同时给出**：
+   - **操作流程**：逐步的、可照做的步骤（打开哪个页面、点哪张卡、手机处于什么状态）；
+   - **预期现象**：每一步应该看到/听到什么（含判定标准，如「应持续响约 30 秒而非一声短响」）；
+   - **不达标时的取证方式**：如三层日志追踪规范的具体命令，让用户或下一轮排查有证据可查。
+4. 真机结果要回填到 `docs/verification/module-availability-verification.md` 或 AGENTS.md
+   对应章节，注明命令、通过/失败数与报告路径。
+
 ## Services
 
 Three local services must be running for simulator development and local regression testing:
@@ -228,6 +244,22 @@ Quick rule:
 ### Public shanbox Backend
 
 Do **not** replace the local services above with the public URL. They serve different verification scopes.
+
+### Server Version First（排查第一步）
+
+shanbox 是手工 rsync 的源码部署（`/root/WebBridgeKit` 无 git remote），「服务器没更新」曾多次
+造成假差异排查（2026-08-20：撤回/清角标卡 400、passive 带铃声，都是手机测到旧服务端代码）。
+规则：
+
+- 服务端在 `/health` 暴露 `version` 字段，来源 `Server/Sources/WebBridgeServer/Models/ServerVersion.swift`
+  的 `ServerVersion.current`。**每次向 shanbox 部署行为变更后必须 bump 该常量**并在注释里记一行变更摘要。
+- **排查任何「前端/手机行为与服务端代码不一致」的问题时，第一步先核对版本**：
+  `curl -k https://wbk.shanbox.19930810.xyz:8443/health | grep version`
+  版本不对 = 服务端没部署新代码，先部署再复测，不要直接怀疑客户端。
+- `tools/verify-shanbox-backend.sh` 会断言 `/health` 的 `version` 非空；本地 `curl http://localhost:8080/health`
+  同样适用。推送渲染目录页（`test_resources/push-render-catalog.html`）页脚会实时显示服务端版本。
+- 客户端修复（NSE、App 侧）与服务端修复是两条发布线：服务端部署 ≠ 手机更新。排查时分别核对
+  `/health` 版本（服务端线）和 TestFlight 构建时间（客户端线）。
 
 | Environment | URL | Use For | Do Not Use For |
 |-------------|-----|---------|----------------|
@@ -453,7 +485,7 @@ Use these scripts as the repeatable evidence source before declaring a module "a
 
 | Script | Purpose | Pass Signal | Notes |
 |--------|---------|-------------|-------|
-| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, encoded Bark query paths, command token URL-safe payload semantics, and public Node admin routes | `27 passed, 0 failed, 0 unavailable` | Route-level and command-token semantic evidence only; fake device token does not prove APNs delivery |
+| `bash tools/verify-shanbox-backend.sh` | Verifies public shanbox Swift backend routes, response JSON semantics, Bark-compatible GET/POST, encoded Bark query paths, command token URL-safe payload semantics, `/health` server version exposure, and public Node admin routes | `28 passed, 0 failed, 0 unavailable` | Route-level and command-token semantic evidence only; fake device token does not prove APNs delivery |
 | `WBK_GATEWAY_URL=https://cloak.xbrowser.dev:5801 bash tools/verify-open-gateway.sh` | Verifies the portable gateway document, signed HTML app manifest shape, per-app lookup, health route, and anonymous mutation rejection | `5 passed, 0 failed` | Public HTTPS gateway evidence; this still does not prove APNs delivery |
 | `bash tools/verify-shanbox-supervision.sh` | Verifies remote `WebBridgeServer` and `webbridge-node-admin` processes and whether they are supervised | `process=PASS, supervision=PASS, node_admin=PASS` | Requires SSH alias `shanbox` or `WBK_SHANBOX_SSH_HOST`; exits 1 if Swift backend or Node admin supervision is missing |
 | `bash tools/verify-shanbox-fixtures.sh` | Verifies public shanbox static fixture pages for physical-phone WebView/cache/JSBridge checks, including `bridge-hub.html`, `bridge-promise-smoke.html`, `cache-showcase.html`, `WebBridge.js`, manifest, CSS/JS/image resources | `18 passed, 0 failed` | Static reachability/content-marker evidence only; does not prove native Bridge execution, APNs delivery, or offline cache behavior on a physical iPhone |
