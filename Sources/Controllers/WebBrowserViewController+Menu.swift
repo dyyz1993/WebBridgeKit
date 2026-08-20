@@ -53,6 +53,9 @@ extension WebBrowserViewController {
             self?.showBookmarks()
         })
 
+        // 开发者工具仅在 DEBUG 构建进入浏览器菜单；Release 用户菜单只保留
+        // 面向使用者的操作（刷新/显隐/收藏/书签/应用设置/权限/缓存统计）。
+        #if DEBUG
         alertController.addAction(UIAlertAction(title: NSLocalizedString("[BRIDGE] JS Bridge Test", comment: ""), style: .default) { [weak self] _ in
             self?.loadJSBridgeTestPage()
         })
@@ -60,6 +63,7 @@ extension WebBrowserViewController {
         alertController.addAction(UIAlertAction(title: NSLocalizedString("[EMOJI] Voice Game", comment: ""), style: .default) { [weak self] _ in
             self?.loadGamePage()
         })
+        #endif
 
         if let appID = htmlAppID,
            let manifest = HTMLAppRuntimeCenter.shared.trustRegistry.manifest(for: appID),
@@ -78,6 +82,7 @@ extension WebBrowserViewController {
             self?.showSystemCacheStatistics()
         })
 
+        #if DEBUG
         alertController.addAction(UIAlertAction(title: NSLocalizedString("[FOLDER] Cache Debug", comment: ""), style: .default) { [weak self] _ in
             self?.showCacheDebugPanel()
         })
@@ -93,6 +98,7 @@ extension WebBrowserViewController {
         alertController.addAction(UIAlertAction(title: NSLocalizedString("[HOME] Welcome Page", comment: ""), style: .default) { [weak self] _ in
             self?.loadWelcomePage()
         })
+        #endif
 
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
 
