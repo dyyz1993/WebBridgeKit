@@ -303,7 +303,10 @@ private final class HUDContainerView: UIView {
         indicator.widthAnchor.constraint(equalToConstant: 36).isActive = true
         indicator.heightAnchor.constraint(equalToConstant: 36).isActive = true
 
-        iconView.isHidden = true
+        // iconView 保持参与布局（image 为 nil 即不可见）作为指示器的居中锚点；
+        // 若 isHidden=true，UIStackView 会把它踢出布局，指示器漂向容器角落。
+        iconView.image = nil
+        iconView.isHidden = false
         activityIndicator = indicator
     }
 
