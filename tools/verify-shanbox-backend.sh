@@ -91,6 +91,39 @@ PY
     fi
 }
 
+expect_json_nonempty() {
+    local name="$1"
+    local evidence="$2"
+    local key="$3"
+    local actual
+
+    echo "== $name =="
+    actual="$("$PYTHON3" - "$evidence" "$key" <<'PY'
+import json
+import sys
+
+path, key = sys.argv[1], sys.argv[2]
+try:
+    with open(path, "r", encoding="utf-8") as handle:
+        value = json.load(handle)
+    for part in key.split("."):
+        value = value[part]
+    print(value if isinstance(value, str) and value else "")
+except Exception:
+    print("")
+PY
+)"
+    if [ -n "$actual" ]; then
+        add_row "$name" "PASS" "GET" "/health" "non-empty json.$key" "$actual" "$evidence"
+        PASS=$((PASS + 1))
+        echo "PASS ($key=$actual)"
+    else
+        add_row "$name" "FAIL" "GET" "/health" "non-empty json.$key" "(empty)" "$evidence"
+        FAIL=$((FAIL + 1))
+        echo "FAIL (json.$key is empty; $evidence)"
+    fi
+}
+
 expect_command_token_semantics() {
     local evidence="$1"
     local expected_data="$2"
@@ -247,6 +280,7 @@ command_body="{\"type\":\"plainText\",\"data\":\"public command ${timestamp}\"}"
 echo "Verifying shanbox backend: $BASE_URL"
 
 expect_status "Health" "GET" "/health" "200"
+expect_json_nonempty "Health exposes server version" "$REPORT_DIR/shanbox-health.json" "version"
 expect_status "Stats" "GET" "/api/v1/stats" "200"
 expect_status "Manifest list" "GET" "/api/v1/manifests" "200"
 expect_status "Register fake device" "POST" "/register" "200" "$register_body"
