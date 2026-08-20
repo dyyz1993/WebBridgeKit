@@ -34,7 +34,8 @@ public class WebPermissionHandler: BaseWebNativeHandler {
     ///   - body: 包含 type (如 "camera", "notification")
     ///   - completion: 结果回调
     public override func handle(body: [String: Any], completion: @escaping (Any) -> Void) {
-        guard let typeString = body["type"] as? String,
+        let params = body["params"] as? [String: Any] ?? body
+        guard let typeString = params["type"] as? String ?? params["permission"] as? String,
               let type = PermissionType(rawValue: typeString) else {
             reject(error: "Invalid permission type", completion: completion)
             return

@@ -11,6 +11,10 @@ import os.log
 // MARK: - WKNavigationDelegate - Auto-Capture by Rules
 extension WebBrowserViewController: WKNavigationDelegate {
 
+    public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        viewModel.updateManagedHTMLAppDocumentURL(webView.url)
+    }
+
     /// 处理导航策略，防止系统弹窗和外部跳转
     public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         decisionHandler(navigationPolicy(for: navigationAction, in: webView))
@@ -89,6 +93,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
         HUDService.shared.dismiss()
 
         guard let url = webView.url else { return }
+        viewModel.updateManagedHTMLAppDocumentURL(url)
 
         guard let start = loadStartTime else { return }
         let duration = Date().timeIntervalSince(start)

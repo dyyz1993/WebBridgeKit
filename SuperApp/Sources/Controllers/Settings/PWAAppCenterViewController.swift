@@ -5,7 +5,7 @@ import WebBridgeKit
 /// SwiftUI home presentation backed by the existing trusted-PWA runtime.
 final class PWAAppCenterViewController: UIViewController {
     private let trustRegistry = HTMLAppTrustRegistry()
-    private let permissionLedger = HTMLAppPermissionLedger()
+    private let permissionLedger = HTMLAppPermissionLedger.shared
     private let launchResolver = HTMLAppLaunchResolver()
     private let gatewayRegistry = HTMLAppGatewayRegistry()
     private lazy var onboardingService = HTMLAppGatewayOnboardingService(
@@ -233,27 +233,13 @@ final class PWAAppCenterViewController: UIViewController {
 
     private func showAppDetails(appID: String) {
         guard let manifest = manifests.first(where: { $0.appID == appID }) else { return }
-        let grants = permissionLedger.grants(for: manifest.appID)
-        let offline = manifest.cache.persistent ? "强离线包" : (manifest.cache.restoresLastState ? "缓存优先" : "在线")
-        let message = """
-        App ID：\(manifest.appID)
-        离线策略：\(offline)（\(manifest.cache.version)）
-        已声明能力：\(manifest.capabilities.map(\.rawValue).joined(separator: "、").ifEmpty("无"))
-        已授予能力：\(grants.map { $0.capability.rawValue }.joined(separator: "、").ifEmpty("无"))
-
-        推送只能定位到页面；权限和敏感操作仍需用户在应用内确认。
-        """
-        let alert = UIAlertController(title: manifest.name, message: message, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "打开应用", style: .default) { [weak self] _ in self?.launch(manifest) })
-        alert.addAction(UIAlertAction(title: "管理应用服务", style: .default) { [weak self] _ in
-            self?.showGatewayManagement()
-        })
-        alert.addAction(UIAlertAction(title: "关闭", style: .cancel))
-        if let popover = alert.popoverPresentationController {
-            popover.sourceView = view
-            popover.sourceRect = view.bounds
-        }
-        present(alert, animated: true)
+        let details = PWAAppDetailViewController(
+            manifest: manifest,
+            permissionLedger: permissionLedger,
+            onOpen: { [weak self] in self?.launch(manifest) },
+            onManageService: { [weak self] in self?.showGatewayManagement() }
+        )
+        navigationController?.pushViewController(details, animated: true)
     }
 
     private func launch(_ manifest: HTMLAppManifest) {

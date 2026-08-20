@@ -10,6 +10,18 @@
 (function() {
     'use strict';
 
+    function nativeModuleUnavailable(action) {
+        const message = '\u5f53\u524d\u5bb9\u5668\u672a\u63d0\u4f9b ' + action + ' \u539f\u751f\u6a21\u5757\uff0c\u8bf7\u5728 WebBridgeKit \u4e2d\u6253\u5f00\u3002';
+        return {
+            success: false,
+            available: false,
+            code: 'NATIVE_MODULE_UNAVAILABLE',
+            module: action,
+            error: message,
+            message: message
+        };
+    }
+
     // 确保 BarkBridge 只初始化一次
     if (window.BarkBridge) {
         return;
@@ -30,6 +42,11 @@
          */
         callNative: function(action, params) {
             return new Promise((resolve, reject) => {
+                if (!this.isAvailable()) {
+                    resolve(nativeModuleUnavailable(action));
+                    return;
+                }
+
                 // 调试日志
                 console.log('=== BarkBridge.callNative ===');
                 console.log('Action:', action, 'Type:', typeof action, 'IsEmpty:', action === '');
@@ -60,8 +77,8 @@
                 if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.BarkBridge) {
                     window.webkit.messageHandlers.BarkBridge.postMessage(message);
                 } else {
-                    console.error('BarkBridge not available');
-                    reject(new Error('BarkBridge not available'));
+                    delete this.callbacks[messageId];
+                    resolve(nativeModuleUnavailable(action));
                 }
             });
         },
@@ -92,9 +109,9 @@
             if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.BarkBridge) {
                 window.webkit.messageHandlers.BarkBridge.postMessage(message);
             } else {
-                console.error('BarkBridge not available');
                 if (callback) {
-                    callback({ success: false, error: 'BarkBridge not available' });
+                    callback(nativeModuleUnavailable(action));
+                    delete this.callbacks[messageId];
                 }
             }
         },
@@ -226,6 +243,9 @@
 
     // Keep the public PWA API consistent with the framework bundle.
     window.WebBridgeKit = window.WebBridgeKit || {
+        callNative: function(action, params) {
+            return BarkBridge.callNative(action, params);
+        },
         navigation: {
             back: function() { return BarkBridge.goBack(); },
             close: function() { return BarkBridge.closePage(); }

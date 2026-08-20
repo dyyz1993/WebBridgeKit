@@ -183,24 +183,51 @@ public final class HTMLAppTrustRegistry {
 
 public struct HTMLAppPermissionGrant: Codable, Equatable, Sendable {
     public let appID: String
+    public let origin: String
     public let capability: HTMLAppCapability
     public let scope: HTMLAppPermissionScope
     public let grantedAt: Date
 
     public init(
         appID: String,
+        origin: String,
         capability: HTMLAppCapability,
         scope: HTMLAppPermissionScope,
         grantedAt: Date = Date()
     ) {
         self.appID = appID
+        self.origin = origin
         self.capability = capability
         self.scope = scope
         self.grantedAt = grantedAt
     }
 }
 
+public struct HTMLAppPermissionRevocation: Equatable, Sendable {
+    public let appID: String
+    public let origin: String
+    public let capability: HTMLAppCapability
+
+    public init(appID: String, origin: String, capability: HTMLAppCapability) {
+        self.appID = appID
+        self.origin = origin
+        self.capability = capability
+    }
+}
+
+public extension Notification.Name {
+    static let htmlAppPermissionDidRevoke = Notification.Name(
+        "com.webbridgekit.html-app-runtime.permission-did-revoke"
+    )
+}
+
+public enum HTMLAppPermissionRevocationNotification {
+    public static let payloadKey = "revocation"
+}
+
 public final class HTMLAppPermissionLedger {
+    public static let shared = HTMLAppPermissionLedger()
+
     private let storage: HTMLAppRuntimeStorage
     private let storageKey: String
     private let lock = NSLock()
@@ -219,17 +246,19 @@ public final class HTMLAppPermissionLedger {
     @discardableResult
     public func grant(
         appID: String,
+        origin: String,
         capability: HTMLAppCapability,
         scope: HTMLAppPermissionScope,
         grantedAt: Date = Date()
     ) -> HTMLAppPermissionGrant {
         let grant = HTMLAppPermissionGrant(
             appID: appID,
+            origin: origin,
             capability: capability,
             scope: scope,
             grantedAt: grantedAt
         )
-        let key = Self.key(appID: appID, capability: capability)
+        let key = Self.key(appID: appID, origin: origin, capability: capability)
 
         lock.lock()
         defer { lock.unlock() }
@@ -248,8 +277,8 @@ public final class HTMLAppPermissionLedger {
         return grant
     }
 
-    public func grant(for appID: String, capability: HTMLAppCapability) -> HTMLAppPermissionGrant? {
-        let key = Self.key(appID: appID, capability: capability)
+    public func grant(for appID: String, origin: String, capability: HTMLAppCapability) -> HTMLAppPermissionGrant? {
+        let key = Self.key(appID: appID, origin: origin, capability: capability)
         lock.lock()
         defer { lock.unlock() }
         return sessionGrants[key] ?? persistentGrants[key]
@@ -260,21 +289,28 @@ public final class HTMLAppPermissionLedger {
         defer { lock.unlock() }
         return (Array(sessionGrants.values) + Array(persistentGrants.values))
             .filter { $0.appID == appID }
-            .sorted { $0.capability.rawValue < $1.capability.rawValue }
+            .sorted {
+                $0.origin == $1.origin
+                    ? $0.capability.rawValue < $1.capability.rawValue
+                    : $0.origin < $1.origin
+            }
     }
 
     public func allGrants() -> [HTMLAppPermissionGrant] {
         lock.lock()
         defer { lock.unlock() }
         return (Array(sessionGrants.values) + Array(persistentGrants.values))
-            .sorted { Self.key(appID: $0.appID, capability: $0.capability) < Self.key(appID: $1.appID, capability: $1.capability) }
+            .sorted {
+                Self.key(appID: $0.appID, origin: $0.origin, capability: $0.capability)
+                    < Self.key(appID: $1.appID, origin: $1.origin, capability: $1.capability)
+            }
     }
 
     public func replaceAll(_ grants: [HTMLAppPermissionGrant]) throws {
         var proposedPersistent: [String: HTMLAppPermissionGrant] = [:]
         var proposedSession: [String: HTMLAppPermissionGrant] = [:]
         for grant in grants {
-            let key = Self.key(appID: grant.appID, capability: grant.capability)
+            let key = Self.key(appID: grant.appID, origin: grant.origin, capability: grant.capability)
             switch grant.scope {
             case .once: continue
             case .appSession: proposedSession[key] = grant
@@ -293,21 +329,82 @@ public final class HTMLAppPermissionLedger {
         sessionGrants = proposedSession
     }
 
-    public func revoke(appID: String, capability: HTMLAppCapability) {
-        let key = Self.key(appID: appID, capability: capability)
+    public func revoke(appID: String, origin: String, capability: HTMLAppCapability) {
+        let key = Self.key(appID: appID, origin: origin, capability: capability)
         lock.lock()
-        defer { lock.unlock() }
-        sessionGrants.removeValue(forKey: key)
-        persistentGrants.removeValue(forKey: key)
+        let removedSession = sessionGrants.removeValue(forKey: key)
+        let removedPersistent = persistentGrants.removeValue(forKey: key)
         persistLocked()
+        lock.unlock()
+
+        guard removedSession != nil || removedPersistent != nil else { return }
+        postRevocation(HTMLAppPermissionRevocation(
+            appID: appID,
+            origin: origin,
+            capability: capability
+        ))
     }
 
     public func revokeAll(appID: String) {
         lock.lock()
-        defer { lock.unlock() }
+        var revokedByKey: [String: HTMLAppPermissionRevocation] = [:]
+        for grant in sessionGrants.values where grant.appID == appID {
+            revokedByKey[Self.key(
+                appID: grant.appID,
+                origin: grant.origin,
+                capability: grant.capability
+            )] = HTMLAppPermissionRevocation(
+                appID: grant.appID,
+                origin: grant.origin,
+                capability: grant.capability
+            )
+        }
+        for grant in persistentGrants.values where grant.appID == appID {
+            revokedByKey[Self.key(
+                appID: grant.appID,
+                origin: grant.origin,
+                capability: grant.capability
+            )] = HTMLAppPermissionRevocation(
+                appID: grant.appID,
+                origin: grant.origin,
+                capability: grant.capability
+            )
+        }
         sessionGrants = sessionGrants.filter { $0.value.appID != appID }
         persistentGrants = persistentGrants.filter { $0.value.appID != appID }
         persistLocked()
+        lock.unlock()
+
+        revokedByKey.values.forEach(postRevocation)
+    }
+
+    /// Ends only container-scoped grants for one managed PWA document context.
+    /// Persistent `.always` grants and grants owned by another app/origin remain.
+    public func revokeSessionGrants(appID: String, origin: String) {
+        lock.lock()
+        let revoked = sessionGrants.values.filter {
+            $0.appID == appID && $0.origin == origin
+        }
+        sessionGrants = sessionGrants.filter {
+            !($0.value.appID == appID && $0.value.origin == origin)
+        }
+        lock.unlock()
+
+        revoked.forEach {
+            postRevocation(HTMLAppPermissionRevocation(
+                appID: $0.appID,
+                origin: $0.origin,
+                capability: $0.capability
+            ))
+        }
+    }
+
+    private func postRevocation(_ revocation: HTMLAppPermissionRevocation) {
+        NotificationCenter.default.post(
+            name: .htmlAppPermissionDidRevoke,
+            object: self,
+            userInfo: [HTMLAppPermissionRevocationNotification.payloadKey: revocation]
+        )
     }
 
     private func persistLocked() {
@@ -320,8 +417,8 @@ public final class HTMLAppPermissionLedger {
         return (try? JSONDecoder().decode([String: HTMLAppPermissionGrant].self, from: data)) ?? [:]
     }
 
-    private static func key(appID: String, capability: HTMLAppCapability) -> String {
-        "\(appID)|\(capability.rawValue)"
+    private static func key(appID: String, origin: String, capability: HTMLAppCapability) -> String {
+        "\(appID)|\(origin)|\(capability.rawValue)"
     }
 }
 
@@ -363,22 +460,23 @@ public final class HTMLAppCapabilityGateway {
             return result(for: request, status: .denied)
         }
 
-        let nativeStatus = nativeAuthorizationProvider.authorizationStatus(for: request.capability)
-        guard nativeStatus == .granted else {
-            return result(
-                for: request,
-                status: nativeStatus == .denied ? .requiresSettings : nativeStatus,
-                authorizationLayer: .nativeSystem
-            )
-        }
-
-        if let grant = permissionLedger.grant(for: appID, capability: request.capability) {
-            return result(for: request, status: .granted, scope: grant.scope)
-        }
-
         guard let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL) else {
             return result(for: request, status: .denied)
         }
+
+        if let grant = permissionLedger.grant(for: appID, origin: origin, capability: request.capability) {
+            let nativeStatus = nativeAuthorizationProvider.authorizationStatus(for: request.capability)
+            guard nativeStatus == .granted else {
+                return result(
+                    for: request,
+                    status: nativeStatus == .denied ? .requiresSettings : nativeStatus,
+                    scope: grant.scope,
+                    authorizationLayer: .nativeSystem
+                )
+            }
+            return result(for: request, status: .granted, scope: grant.scope)
+        }
+
         lock.lock()
         pendingRequests[pendingKey(appID: appID, requestID: request.id)] = PendingRequest(
             appID: appID,
@@ -414,25 +512,38 @@ public final class HTMLAppCapabilityGateway {
             return result(for: request, status: .denied, authorizationLayer: .htmlApp)
         }
 
+        let permissionGrant = permissionLedger.grant(
+            appID: appID,
+            origin: pendingRequest.documentOrigin,
+            capability: request.capability,
+            scope: request.scope
+        )
         let nativeStatus = nativeAuthorizationProvider.authorizationStatus(for: request.capability)
         guard nativeStatus == .granted else {
             return result(
                 for: request,
                 status: nativeStatus == .denied ? .requiresSettings : nativeStatus,
+                scope: permissionGrant.scope,
                 authorizationLayer: .nativeSystem
             )
         }
-
-        let permissionGrant = permissionLedger.grant(
-            appID: appID,
-            capability: request.capability,
-            scope: request.scope
-        )
         return result(for: request, status: .granted, scope: permissionGrant.scope)
     }
 
-    public func revokeAuthorization(appID: String, capability: HTMLAppCapability) {
-        permissionLedger.revoke(appID: appID, capability: capability)
+    /// Removes an unresolved app-level request without creating a grant.
+    /// Returns false when the request was already resolved or cancelled.
+    @discardableResult
+    public func cancelAuthorization(appID: String, requestID: String) -> Bool {
+        let key = pendingKey(appID: appID, requestID: requestID)
+        lock.lock()
+        let removed = pendingRequests.removeValue(forKey: key)
+        lock.unlock()
+        return removed != nil
+    }
+
+    public func revokeAuthorization(appID: String, documentURL: URL, capability: HTMLAppCapability) {
+        guard let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL) else { return }
+        permissionLedger.revoke(appID: appID, origin: origin, capability: capability)
     }
 
     private func pendingKey(appID: String, requestID: String) -> String {
