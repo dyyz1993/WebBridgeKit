@@ -16,14 +16,17 @@ public final class ClipboardMonitor: Sendable {
 
     private init() {}
 
+    /// Reads the pasteboard string on the calling thread.
+    ///
+    /// Never hops to the main thread for this read: `.string` may force the
+    /// pasteboard daemon into an expensive HTML→text coercion (synchronous
+    /// XPC round-trip). Doing that on the main thread during the scene
+    /// activation transition froze the app until the 0x8BADF00D watchdog
+    /// killed it (SuperApp-2026-08-20 hang reports: main thread stuck in
+    /// `semaphore_wait_trap` under `_UIConcretePasteboard string`).
+    /// Callers that need the value should run this on a background queue.
     public func readClipboard() -> String? {
-        if Thread.isMainThread {
-            return UIPasteboard.general.string
-        } else {
-            return DispatchQueue.main.sync {
-                UIPasteboard.general.string
-            }
-        }
+        UIPasteboard.general.string
     }
 
     public func looksLikeCommand(_ text: String) -> Bool {

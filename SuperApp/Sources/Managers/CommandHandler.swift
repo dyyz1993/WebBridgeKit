@@ -36,7 +36,9 @@ final class CommandHandler {
         let clipboardText = ClipboardMonitor.shared.readClipboard()
         guard let text = clipboardText,
               ClipboardMonitor.shared.looksLikeCommand(text) else {
-            dismissBanner()
+            DispatchQueue.main.async { [weak self] in
+                self?.dismissBanner()
+            }
             return
         }
 
@@ -44,7 +46,7 @@ final class CommandHandler {
         guard currentHash != lastProcessedClipboardHash else { return }
         lastProcessedClipboardHash = currentHash
 
-        Task {
+        Task { @MainActor in
             do {
                 await Self.configureParserForAppCommands()
                 let payload = try await CommandParser.shared.parse(text)
