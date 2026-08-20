@@ -24,6 +24,7 @@ extension WebViewController {
 
     /// 页面内容开始提交 - 检查缓存状态
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        bridge.updateManagedHTMLAppDocumentURL(webView.url)
         #if DEBUG
         guard let url = webView.url else { return }
 
@@ -54,6 +55,7 @@ extension WebViewController {
 
     /// 页面加载完成
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        bridge.updateManagedHTMLAppDocumentURL(webView.url)
         #if DEBUG
         if let url = webView.url {
             StructuredLogger.shared.info("[OK] [CacheDebug] Page loaded: \(url.absoluteString)", category: .cache)

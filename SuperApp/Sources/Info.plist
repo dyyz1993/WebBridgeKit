@@ -46,6 +46,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>需要相机权限用于测试 WebBridgeKit 的相机功能</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>允许你授权的 PWA 扫描附近的蓝牙低功耗设备</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>需要相册权限用于测试 WebBridgeKit 的相册功能</string>
 	<key>NSContactsUsageDescription</key>

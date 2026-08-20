@@ -9,17 +9,43 @@
 import Foundation
 
 public enum HTMLAppCapability: String, CaseIterable, Codable, Sendable {
+    case biometrics
     case bluetooth
     case camera
     case clipboard
+    case contacts
+    case deviceControl
+    case displayStatus
     case fileExport
     case fileImport
     case location
     case microphone
+    case motion
     case notification
     case photoLibrary
     case scan
     case share
+
+    public var displayName: String {
+        switch self {
+        case .biometrics: return "身份验证"
+        case .bluetooth: return "蓝牙"
+        case .camera: return "相机"
+        case .clipboard: return "剪贴板"
+        case .contacts: return "通讯录"
+        case .deviceControl: return "设备控制"
+        case .displayStatus: return "投屏状态"
+        case .fileExport: return "导出文件"
+        case .fileImport: return "读取文件"
+        case .location: return "位置"
+        case .microphone: return "麦克风"
+        case .motion: return "运动传感器"
+        case .notification: return "通知"
+        case .photoLibrary: return "照片"
+        case .scan: return "扫码"
+        case .share: return "系统分享"
+        }
+    }
 }
 
 public enum HTMLAppPermissionScope: String, Codable, Sendable {

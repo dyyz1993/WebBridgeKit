@@ -84,6 +84,8 @@ test_resources/*
 !test_resources/pwa-notification/**
 !test_resources/pwa-agent-console/
 !test_resources/pwa-agent-console/**
+!test_resources/pwa-permission/
+!test_resources/pwa-permission/**
 !test_resources/cache-html-validation/
 !test_resources/cache-html-validation/**
 package.json

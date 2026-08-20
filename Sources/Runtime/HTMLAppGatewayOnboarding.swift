@@ -123,7 +123,7 @@ public final class HTMLAppGatewayOnboardingService {
     public init(
         gatewayRegistry: HTMLAppGatewayRegistry,
         trustRegistry: HTMLAppTrustRegistry = HTMLAppTrustRegistry(),
-        permissionLedger: HTMLAppPermissionLedger = HTMLAppPermissionLedger(),
+        permissionLedger: HTMLAppPermissionLedger = .shared,
         transport: HTMLAppGatewayTransport = HTMLAppGatewayURLSessionTransport(),
         allowsDevelopmentMode: Bool = false
     ) {
@@ -177,10 +177,16 @@ public final class HTMLAppGatewayOnboardingService {
         let previousGrants = permissionLedger.allGrants()
         let policy = try trustPolicy(for: report.gateway)
         let identityChanged = previousGateway.map { Self.identity(of: $0) != Self.identity(of: report.gateway) } ?? false
-        let allowedAppIDs = Set(report.manifests.map(\.appID))
+        let manifestsByAppID = Dictionary(uniqueKeysWithValues: report.manifests.map { ($0.appID, $0) })
         let replacementGrants = identityChanged
             ? []
-            : previousGrants.filter { allowedAppIDs.contains($0.appID) }
+            : previousGrants.filter { grant in
+                guard let manifest = manifestsByAppID[grant.appID],
+                      manifest.declares(grant.capability) else { return false }
+                return manifest.allowedOrigins
+                    .compactMap(HTMLAppOrigin.canonicalDeclaredOrigin)
+                    .contains(grant.origin)
+            }
 
         do {
             try trustRegistry.replaceAll(report.manifests, trustPolicy: policy.registryPolicy)

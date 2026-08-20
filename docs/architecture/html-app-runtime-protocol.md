@@ -222,10 +222,10 @@ Sensitive details are fetched after the user opens the application.
 
 Two permission layers are required.
 
-Permission results include `authorizationLayer`. `nativeSystem` means the host
-must first request or open iOS Settings for system authorization; `htmlApp`
-means iOS has granted the capability and the user must now approve it for this
-specific HTML application.
+Permission results include `authorizationLayer`. `htmlApp` means the user must
+approve the capability for this specific HTML application. `nativeSystem`
+means the app-level grant exists but iOS authorization still needs to be
+requested or repaired in Settings.
 
 1. System authorization belongs to the iOS host application. It covers
    Bluetooth, camera, microphone, location, notifications, and other protected
@@ -248,6 +248,13 @@ The normal request flow is:
 A user may revoke a runtime grant in the Permission Center. A user may revoke
 system authorization in iOS Settings. The runtime must re-check system status
 before every protected operation and return `requiresSettings` when applicable.
+
+`appSession` is bound to the exact managed container context identified by
+`appId + origin`. Closing or recycling that container, or committing a
+navigation to another origin, cancels unresolved consent requests and clears
+only its session grants. Persistent `always` grants and grants for another app
+or origin remain. Every pending Bridge call receives one terminal callback;
+late permission-sheet callbacks are ignored after cancellation.
 
 High-risk operations such as camera capture, microphone recording, file export,
 and external data transfer should default to a one-time grant. Low-risk status
@@ -320,6 +327,7 @@ legacy `appid` and `url` fields into the new resolver.
 | --- | --- |
 | Manifest signature or origin mismatch | Treat the page as unmanaged and deny native bridge access. |
 | Runtime grant denied | Return `denied` without opening an iOS system dialog. |
+| Consent cancelled, container closed, or origin changed | Remove the pending request and return one `denied` result without invoking the handler. |
 | iOS system permission denied | Return `requiresSettings` and offer a native Settings handoff. |
 | Offline refresh fails | Keep and render the last verified cached package. |
 | Push route is invalid or expired | Open the message center safely and do not navigate to the target page. |

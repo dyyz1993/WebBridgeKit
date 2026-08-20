@@ -90,6 +90,29 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         return button
     }()
 
+    /// Host-owned menu remains reachable when a managed PWA hides the native
+    /// navigation bar. It mirrors the familiar mini-program capsule affordance.
+    let immersiveMenuButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(LucideIcon.ellipsis.templateImage(pointSize: 20, weight: .semibold), for: .normal)
+        button.tintColor = ThemeTokens.Color.text
+        button.backgroundColor = ThemeTokens.Color.surfaceElevated
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.full
+        button.layer.borderWidth = 1
+        button.layer.borderColor = ThemeTokens.Color.border.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = Float(ThemeTokens.Shadows.sm.opacity)
+        button.layer.shadowRadius = ThemeTokens.Shadows.sm.radius
+        button.layer.shadowOffset = CGSize(
+            width: ThemeTokens.Shadows.sm.offsetX,
+            height: ThemeTokens.Shadows.sm.offsetY
+        )
+        button.accessibilityIdentifier = "browserManager.immersiveMenuButton"
+        button.accessibilityLabel = "应用设置"
+        button.isHidden = true
+        return button
+    }()
+
     private let immersiveExitControl = ImmersivePWAExitControl()
 
     /// 手势 - 点击底部区域关闭（当导航栏隐藏时）
@@ -161,9 +184,16 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     public func configure(with params: WebBrowserParams) {
         debugMode = params.debugMode
+        viewModel.configureManagedHTMLApp(
+            appID: params.payload?["webbridgekitAppId"],
+            documentURL: params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
+        )
         configuredHideNavigationBar = params.hideNavigationBar || params.displayMode == .immersive
         configuredHideStatusBar = params.hideStatusBar || params.displayMode == .immersive
         title = params.customTitle ?? title
+        if isViewLoaded {
+            refreshImmersiveMenuVisibility()
+        }
 
         guard let payload = params.payload,
               JSONSerialization.isValidJSONObject(payload),
@@ -199,7 +229,9 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         webView.accessibilityIdentifier = "browserManager.webView"
         view.addSubview(webView)
         view.addSubview(immersiveExitControl)
+        view.addSubview(immersiveMenuButton)
         immersiveExitControl.onExit = { [weak self] in self?.dismissOrPop() }
+        immersiveMenuButton.addTarget(self, action: #selector(menuButtonTapped), for: .touchUpInside)
 
         setupConstraints()
         setupActions()
@@ -252,6 +284,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         hasAppeared = true
+        refreshImmersiveMenuVisibility()
 
         guard let pendingCacheLoad else { return }
         self.pendingCacheLoad = nil
@@ -429,6 +462,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             self.navigationController?.setNavigationBarHidden(hidden, animated: false)
             self.immersiveExitControl.isHidden = !hidden
             self.immersiveExitControl.updateLayout(in: self.view)
+            self.refreshImmersiveMenuVisibility()
 
             if !hidden {
                 let canGoBack = self.webView.canGoBack
@@ -487,6 +521,15 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             dismiss(animated: true)
         } else if let tabBarController = tabBarController {
             tabBarController.selectedIndex = 0
+        }
+    }
+
+    func refreshImmersiveMenuVisibility() {
+        let shouldShow = hideNavBar && viewModel.managedHTMLAppID != nil
+        immersiveMenuButton.isHidden = !shouldShow
+        immersiveMenuButton.isUserInteractionEnabled = shouldShow
+        if shouldShow {
+            view.bringSubviewToFront(immersiveMenuButton)
         }
     }
 
@@ -586,6 +629,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     // MARK: - Deinit
 
     deinit {
+        viewModel.endManagedHTMLAppSession()
         webView.stopLoading()
 
         for handlerName in registeredHandlerNames {

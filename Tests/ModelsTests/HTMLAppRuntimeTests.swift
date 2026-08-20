@@ -71,13 +71,144 @@ final class HTMLAppRuntimeTests: XCTestCase {
         let storage = MemoryStorage()
         let ledger = HTMLAppPermissionLedger(storage: storage)
         let appID = "com.example.inventory"
+        let origin = "https://inventory.example.com"
 
-        ledger.grant(appID: appID, capability: .camera, scope: .always)
-        XCTAssertEqual(HTMLAppPermissionLedger(storage: storage).grant(for: appID, capability: .camera)?.scope, .always)
+        ledger.grant(appID: appID, origin: origin, capability: .camera, scope: .always)
+        XCTAssertEqual(
+            HTMLAppPermissionLedger(storage: storage)
+                .grant(for: appID, origin: origin, capability: .camera)?.scope,
+            .always
+        )
 
-        ledger.revoke(appID: appID, capability: .camera)
-        XCTAssertNil(ledger.grant(for: appID, capability: .camera))
-        XCTAssertNil(HTMLAppPermissionLedger(storage: storage).grant(for: appID, capability: .camera))
+        ledger.revoke(appID: appID, origin: origin, capability: .camera)
+        XCTAssertNil(ledger.grant(for: appID, origin: origin, capability: .camera))
+        XCTAssertNil(HTMLAppPermissionLedger(storage: storage).grant(for: appID, origin: origin, capability: .camera))
+    }
+
+    func testPermissionLedgerPublishesRevocationForActiveCapability() throws {
+        let ledger = HTMLAppPermissionLedger(storage: MemoryStorage())
+        let appID = "com.example.inventory"
+        let origin = "https://inventory.example.com"
+        ledger.grant(appID: appID, origin: origin, capability: .bluetooth, scope: .appSession)
+        let revoked = expectation(description: "permission revocation published")
+        var received: HTMLAppPermissionRevocation?
+        let observer = NotificationCenter.default.addObserver(
+            forName: .htmlAppPermissionDidRevoke,
+            object: ledger,
+            queue: nil
+        ) { notification in
+            received = notification.userInfo?[HTMLAppPermissionRevocationNotification.payloadKey]
+                as? HTMLAppPermissionRevocation
+            revoked.fulfill()
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        ledger.revoke(appID: appID, origin: origin, capability: .bluetooth)
+
+        wait(for: [revoked], timeout: 1)
+        XCTAssertEqual(received, HTMLAppPermissionRevocation(
+            appID: appID,
+            origin: origin,
+            capability: .bluetooth
+        ))
+    }
+
+    func testPermissionLedgerDoesNotReuseGrantAcrossOrigins() {
+        let ledger = HTMLAppPermissionLedger(storage: MemoryStorage())
+        ledger.grant(
+            appID: "com.example.inventory",
+            origin: "https://inventory.example.com",
+            capability: .camera,
+            scope: .always
+        )
+
+        XCTAssertNil(ledger.grant(
+            for: "com.example.inventory",
+            origin: "https://admin.inventory.example.com",
+            capability: .camera
+        ))
+    }
+
+    func testPermissionLedgerKeepsSessionGrantOnlyInCurrentLedger() {
+        let storage = MemoryStorage()
+        let ledger = HTMLAppPermissionLedger(storage: storage)
+        let appID = "com.example.inventory"
+        let origin = "https://inventory.example.com"
+
+        ledger.grant(
+            appID: appID,
+            origin: origin,
+            capability: .camera,
+            scope: .appSession
+        )
+
+        XCTAssertEqual(
+            ledger.grant(for: appID, origin: origin, capability: .camera)?.scope,
+            .appSession
+        )
+        XCTAssertNil(
+            HTMLAppPermissionLedger(storage: storage)
+                .grant(for: appID, origin: origin, capability: .camera)
+        )
+    }
+
+    func testPermissionLedgerEndsOnlyMatchingAppSessionContext() {
+        let ledger = HTMLAppPermissionLedger(storage: MemoryStorage())
+        let appID = "com.example.inventory"
+        let origin = "https://inventory.example.com"
+        let otherOrigin = "https://admin.inventory.example.com"
+        ledger.grant(appID: appID, origin: origin, capability: .camera, scope: .appSession)
+        ledger.grant(appID: appID, origin: origin, capability: .microphone, scope: .always)
+        ledger.grant(appID: appID, origin: otherOrigin, capability: .camera, scope: .appSession)
+        ledger.grant(appID: "com.example.other", origin: origin, capability: .camera, scope: .appSession)
+
+        ledger.revokeSessionGrants(appID: appID, origin: origin)
+
+        XCTAssertNil(ledger.grant(for: appID, origin: origin, capability: .camera))
+        XCTAssertEqual(ledger.grant(for: appID, origin: origin, capability: .microphone)?.scope, .always)
+        XCTAssertEqual(ledger.grant(for: appID, origin: otherOrigin, capability: .camera)?.scope, .appSession)
+        XCTAssertEqual(ledger.grant(
+            for: "com.example.other",
+            origin: origin,
+            capability: .camera
+        )?.scope, .appSession)
+    }
+
+    func testOnceConsentAuthorizesOnlyCurrentCapabilityRequest() throws {
+        let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
+        let manifest = makeManifest()
+        try registry.register(manifest)
+        let ledger = HTMLAppPermissionLedger(storage: MemoryStorage())
+        let gateway = HTMLAppCapabilityGateway(
+            trustRegistry: registry,
+            permissionLedger: ledger,
+            nativeAuthorizationProvider: NativeAuthorizationProvider()
+        )
+        let request = makeRequest(scope: .once)
+        let documentURL = URL(string: manifest.startURL)!
+
+        XCTAssertEqual(
+            gateway.requestAuthorization(appID: manifest.appID, documentURL: documentURL, request: request).status,
+            .notDetermined
+        )
+        XCTAssertEqual(
+            gateway.resolveUserConsent(
+                appID: manifest.appID,
+                documentURL: documentURL,
+                request: request,
+                granted: true
+            ).status,
+            .granted
+        )
+        XCTAssertNil(ledger.grant(
+            for: manifest.appID,
+            origin: "https://inventory.example.com",
+            capability: .camera
+        ))
+        XCTAssertEqual(
+            gateway.requestAuthorization(appID: manifest.appID, documentURL: documentURL, request: request).status,
+            .notDetermined
+        )
     }
 
     func testGatewayRequiresNativeThenHTMLAuthorizationAndPersistsUserChoice() throws {
@@ -115,7 +246,7 @@ final class HTMLAppRuntimeTests: XCTestCase {
         )
     }
 
-    func testGatewayStopsAtNativeAuthorizationBeforePresentingHTMLConsent() throws {
+    func testGatewayPresentsHTMLAppConsentBeforeSystemAuthorization() throws {
         let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
         let manifest = makeManifest()
         try registry.register(manifest)
@@ -138,7 +269,7 @@ final class HTMLAppRuntimeTests: XCTestCase {
                 id: request.id,
                 capability: .camera,
                 status: .notDetermined,
-                authorizationLayer: .nativeSystem
+                authorizationLayer: .htmlApp
             )
         )
     }
@@ -167,7 +298,11 @@ final class HTMLAppRuntimeTests: XCTestCase {
 
         _ = gateway.requestAuthorization(appID: manifest.appID, documentURL: trustedURL, request: request)
         _ = gateway.resolveUserConsent(appID: manifest.appID, documentURL: trustedURL, request: request, granted: true)
-        gateway.revokeAuthorization(appID: manifest.appID, capability: .camera)
+        gateway.revokeAuthorization(
+            appID: manifest.appID,
+            documentURL: trustedURL,
+            capability: .camera
+        )
 
         XCTAssertEqual(
             gateway.requestAuthorization(appID: manifest.appID, documentURL: trustedURL, request: request),
@@ -178,5 +313,54 @@ final class HTMLAppRuntimeTests: XCTestCase {
                 authorizationLayer: .htmlApp
             )
         )
+    }
+
+    func testGatewayCancellationConsumesOnlyTheMatchingPendingRequest() throws {
+        let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
+        let manifest = makeManifest()
+        try registry.register(manifest)
+        let gateway = HTMLAppCapabilityGateway(
+            trustRegistry: registry,
+            permissionLedger: HTMLAppPermissionLedger(storage: MemoryStorage()),
+            nativeAuthorizationProvider: NativeAuthorizationProvider()
+        )
+        let request = makeRequest(scope: .always)
+        let documentURL = try XCTUnwrap(URL(string: manifest.startURL))
+
+        XCTAssertEqual(
+            gateway.requestAuthorization(appID: manifest.appID, documentURL: documentURL, request: request).status,
+            .notDetermined
+        )
+        XCTAssertTrue(gateway.cancelAuthorization(appID: manifest.appID, requestID: request.id))
+        XCTAssertFalse(gateway.cancelAuthorization(appID: manifest.appID, requestID: request.id))
+        XCTAssertEqual(
+            gateway.resolveUserConsent(
+                appID: manifest.appID,
+                documentURL: documentURL,
+                request: request,
+                granted: true
+            ).status,
+            .denied
+        )
+    }
+
+    func testBridgeCapabilityPolicyMapsProtectedActionsAndDynamicFileOperations() {
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "camera", body: [:]), .camera)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "scan", body: [:]), .scan)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(
+            for: "file",
+            body: [:]
+        ), .fileImport)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(
+            for: "media",
+            body: ["params": ["action": "saveFile"]]
+        ), .fileExport)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(
+            for: "systemExtra",
+            body: ["params": ["action": "authenticate"]]
+        ), .biometrics)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "sensors", body: [:]), .motion)
+        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "screen", body: [:]), .deviceControl)
+        XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "getSystemInfo", body: [:]))
     }
 }
