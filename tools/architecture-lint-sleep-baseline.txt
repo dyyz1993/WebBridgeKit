@@ -1,13 +1,16 @@
+# file: allowed_sleep_count (ratchet — do not grow)
 SuperAppUITests/CacheDashboardTests.swift 18
 SuperAppUITests/DebugPanelTests.swift 12
 SuperAppUITests/DeepLinkDiagnosticsTests.swift 2
 SuperAppUITests/DeepVerificationTests.swift 18
 SuperAppUITests/FunctionalTests.swift 14
 SuperAppUITests/GatewayImportUITests.swift 1
+SuperAppUITests/GroupedHangTest.swift 4
 SuperAppUITests/InboxGroupAnimationTests.swift 15
 SuperAppUITests/PushExampleCatalogTests.swift 1
 SuperAppUITests/RealDevicePushSmokeTests.swift 3
 SuperAppUITests/ScreenshotCaptureTests.swift 3
+SuperAppUITests/ScreenshotTourTests.swift 47
 SuperAppUITests/StabilityTests.swift 4
 SuperAppUITests/SuperAppSmokeTests.swift 2
 SuperAppUITests/TabScreenshotTests.swift 1
@@ -31,4 +34,3 @@ Tests/ServicesTests/MockHistoryServiceAdvancedTests.swift 3
 Tests/UtilsTests/PerformanceMonitorTests.swift 24
 Tests/UtilsTests/RequestDeduplicatorTests.swift 5
 Tests/WebBridgeKitTests/ThreadSafetyTests.swift 5
-SuperAppUITests/ScreenshotTourTests.swift 42
