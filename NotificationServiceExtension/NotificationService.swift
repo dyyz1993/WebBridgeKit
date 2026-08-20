@@ -34,7 +34,18 @@ final class NotificationService: UNNotificationServiceExtension {
         // user never taps the notification.
         recordPayload(recordedUserInfo)
 
-        contentHandler(content)
+        // call=1 (Bark CallProcessor semantics): swap the short alert chime
+        // for a synthesized 30-second looping ringtone. Runs on the DECRYPTED
+        // payload so encrypted call pushes ring too. Best effort — if the
+        // shared sound mirror or synthesis is unavailable, the payload sound
+        // plays as-is.
+        var finalContent = content
+        if Self.isCall(userInfo: recordedUserInfo) {
+            finalContent = Self.applyLongRingtone(to: content, userInfo: recordedUserInfo)
+        }
+        self.bestAttempt = finalContent
+
+        contentHandler(finalContent)
     }
 
     override func serviceExtensionTimeWillExpire() {
