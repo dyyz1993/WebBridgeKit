@@ -357,6 +357,11 @@ Rules that must not regress:
    products instead:
    `strings -a /tmp/wbk-archive/.../PlugIns/*.appex/* | grep <marker>`
    Every NSE change should ship with an ASCII marker string worth grepping.
+   **Marker 必须≥16 字节**（2026-08-20 教训）：Swift 小字符串优化会把 ≤15 字节的
+   字面量编码成立即数、不落数据段，`strings` 永远看不到（`wbk.sounds.30s` 14 字节
+   在二进制里存在却 0 命中）。此时改查 dSYM 符号：
+   `strings -a <dSYM>/.../DWARF/<name> | grep <funcName>`——函数名在 DWARF 里
+   保留，`applyLongRingtone`/`loopToDuration` 等符号在场即证明代码进包。
 4. The NSE must stay **self-contained** (no `import WebBridgeKit`) —
    importing the framework drags its CocoaPods graph into the extension
    target. Crypto lives inline in `PushCrypto.swift`, mirroring the
