@@ -82,6 +82,7 @@ public class WebViewPool {
     /// 回收 WebView 实例
     /// - Parameter instance: 要回收的实例
     public func recycle(_ instance: WebViewInstance) {
+        instance.bridge.endManagedHTMLAppSession()
         lock.lock()
         defer { lock.unlock() }
 

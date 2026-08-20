@@ -19,6 +19,22 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
     public var nativeHandlers: [String: WebNativeAPI] = [:]  // 改为 public，供 WebTestViewController 访问
     private var handlerFactories: [String: () -> WebNativeAPI] = [:]  // Handler 工厂方法，用于懒加载
     private weak var webView: WKWebView?
+    private var managedAppID: String?
+    private var managedDocumentURL: URL?
+    public weak var permissionConsentPresenter: HTMLAppPermissionConsentPresenting?
+    private let trustRegistry: HTMLAppTrustRegistry
+    private let permissionLedger: HTMLAppPermissionLedger
+    private let capabilityGateway: HTMLAppCapabilityGateway
+    private let gatewayIdentity: String?
+    private struct PendingAuthorization {
+        let subject: HTMLAppPermissionSubject
+        let documentURL: URL
+        let request: HTMLAppCapabilityRequest
+        let completion: (AuthorizationDecision) -> Void
+    }
+    private let pendingAuthorizationsLock = NSLock()
+    private var pendingAuthorizations: [String: PendingAuthorization] = [:]
+    private var permissionRevocationObserver: NSObjectProtocol?
     public var currentCallbackId: String?  // 改为 public，供 WebTestViewController 访问
     private let handlersLock = NSLock()  // 线程安全锁
 
@@ -110,18 +126,127 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
 
     // MARK: - Initialization
 
-    public override init() {
+    public override convenience init() {
+        self.init(
+            trustRegistry: HTMLAppRuntimeCenter.shared.trustRegistry,
+            permissionLedger: HTMLAppRuntimeCenter.shared.permissionLedger,
+            nativeAuthorizationProvider: HTMLAppRuntimeCenter.shared.systemPermissionAdapter,
+            gatewayIdentity: nil
+        )
+    }
+
+    public init(
+        trustRegistry: HTMLAppTrustRegistry,
+        permissionLedger: HTMLAppPermissionLedger,
+        nativeAuthorizationProvider: HTMLAppNativeAuthorizationProviding,
+        gatewayIdentity: String? = "test-gateway"
+    ) {
+        self.trustRegistry = trustRegistry
+        self.permissionLedger = permissionLedger
+        self.gatewayIdentity = gatewayIdentity
+        capabilityGateway = HTMLAppCapabilityGateway(
+            trustRegistry: trustRegistry,
+            permissionLedger: permissionLedger,
+            nativeAuthorizationProvider: nativeAuthorizationProvider
+        )
         super.init()
+        permissionConsentPresenter = HTMLAppPermissionPromptPresenter.shared
+        permissionRevocationObserver = NotificationCenter.default.addObserver(
+            forName: .htmlAppPermissionDidRevoke,
+            object: permissionLedger,
+            queue: nil
+        ) { [weak self] notification in
+            self?.handlePermissionRevocation(notification)
+        }
         registerHandlerFactories()  // 只注册工厂方法，不创建实例
+    }
+
+    deinit {
+        endManagedHTMLAppSession()
+        if let permissionRevocationObserver {
+            NotificationCenter.default.removeObserver(permissionRevocationObserver)
+        }
     }
 
     // MARK: - WKScriptMessageHandler
 
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let body = message.body as? [String: Any],
-              let action = body["action"] as? String else {
+        guard let body = message.body as? [String: Any] else {
             WebBridgeLogger.shared.error("Invalid message format")
             sendErrorToJS("Invalid message format", callbackId: nil)
+            return
+        }
+        handle(body: body) { [weak self] result, callbackID in
+            self?.sendResultToJS(result, callbackId: callbackID)
+        }
+    }
+
+    public func configureManagedHTMLApp(appID: String?, documentURL: URL?) {
+        let previousAppID = managedAppID
+        let previousURL = managedDocumentURL
+        let previousOrigin = previousURL.flatMap(HTMLAppOrigin.canonicalOrigin(forDocumentURL:))
+        let nextOrigin = documentURL.flatMap(HTMLAppOrigin.canonicalOrigin(forDocumentURL:))
+        if let previousAppID,
+           previousAppID != appID || previousOrigin != nextOrigin {
+            endManagedHTMLAppSession(appID: previousAppID, documentURL: previousURL)
+        }
+        managedAppID = appID
+        managedDocumentURL = documentURL
+    }
+
+    public func updateManagedHTMLAppDocumentURL(_ documentURL: URL?) {
+        configureManagedHTMLApp(appID: managedAppID, documentURL: documentURL)
+    }
+
+    public func endManagedHTMLAppSession() {
+        endManagedHTMLAppSession(appID: managedAppID, documentURL: managedDocumentURL ?? webView?.url)
+        managedAppID = nil
+        managedDocumentURL = nil
+    }
+
+    private func endManagedHTMLAppSession(appID: String?, documentURL: URL?) {
+        guard let appID else { return }
+        cancelPendingAuthorizations(appID: appID)
+        guard let documentURL,
+              let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL) else { return }
+        guard let subject = permissionSubject(appID: appID, origin: origin) else { return }
+        permissionLedger.revokeSessionGrants(subject: subject)
+    }
+
+    private func handlePermissionRevocation(_ notification: Notification) {
+        guard let revocation = notification.userInfo?[HTMLAppPermissionRevocationNotification.payloadKey]
+                as? HTMLAppPermissionRevocation,
+              revocation.appID == managedAppID else {
+            return
+        }
+        let documentURL = webView?.url ?? managedDocumentURL
+        guard let documentURL,
+              HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL) == revocation.origin else {
+            return
+        }
+
+        handlersLock.lock()
+        let handlers = nativeHandlers.compactMap { action, handler -> HTMLAppCapabilityRevocationHandling? in
+            guard HTMLAppBridgeCapabilityPolicy.capability(for: action, body: [:]) == revocation.capability else {
+                return nil
+            }
+            return handler as? HTMLAppCapabilityRevocationHandling
+        }
+        handlersLock.unlock()
+
+        DispatchQueue.main.async {
+            handlers.forEach { $0.htmlAppCapabilityDidRevoke() }
+        }
+    }
+
+    /// Shared dispatch path for WKScriptMessageHandler and host containers that
+    /// proxy script messages through their own navigation controller.
+    public func handle(
+        body: [String: Any],
+        completion: @escaping (_ result: Any, _ callbackID: String?) -> Void
+    ) {
+        guard let action = body["action"] as? String else {
+            completion(WebBridgeResponse.error(code: 400, message: "Invalid message format"), nil)
             return
         }
 
@@ -143,7 +268,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             )
             addCommandToHistory(trace)
 
-            sendErrorToJS(error, callbackId: callbackId)
+            completion(WebBridgeResponse.error(code: 403, message: error), callbackId)
             return
         }
 
@@ -165,7 +290,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
 
         guard let handler = getHandler(for: action) else {
             WebBridgeLogger.shared.error("Unsupported action: \(action)")
-            sendErrorToJS("Unsupported action: \(action)", callbackId: callbackId)
+            completion(WebBridgeResponse.error(code: 404, message: "Unsupported action: \(action)"), callbackId)
 
             // 更新跟踪状态为失败
             updateCommandStatus(action: action, status: .failed, error: "Unsupported action")
@@ -173,20 +298,213 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             return
         }
 
-        // 更新跟踪状态为执行中
-        updateCommandStatus(action: action, status: .executing)
-
-        // 异步处理，避免阻塞主线程
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-
-            handler.handle(body: body) { [weak self] result in
-                // 更新跟踪状态为成功
-                self?.updateCommandStatus(action: action, status: .succeeded, result: result)
-
-                self?.sendResultToJS(result, callbackId: callbackId)
+        authorizeIfNeeded(action: action, body: body) { [weak self] authorization in
+            guard let self else {
+                completion(Self.authorizationError(
+                    capability: HTMLAppBridgeCapabilityPolicy.capability(for: action, body: body) ?? .deviceControl,
+                    status: .denied,
+                    message: "PWA 容器已关闭"
+                ), callbackId)
+                return
+            }
+            switch authorization {
+            case .allowed:
+                self.updateCommandStatus(action: action, status: .executing)
+                DispatchQueue.global(qos: .userInitiated).async {
+                    handler.handle(body: body) { [weak self] result in
+                        self?.updateCommandStatus(action: action, status: .succeeded, result: result)
+                        completion(result, callbackId)
+                    }
+                }
+            case .denied(let result):
+                self.updateCommandStatus(action: action, status: .failed, error: result["error"] as? String)
+                completion(result, callbackId)
             }
         }
+    }
+
+    private enum AuthorizationDecision {
+        case allowed
+        case denied([String: Any])
+    }
+
+    private func authorizeIfNeeded(
+        action: String,
+        body: [String: Any],
+        completion: @escaping (AuthorizationDecision) -> Void
+    ) {
+        guard let capability = HTMLAppBridgeCapabilityPolicy.capability(for: action, body: body) else {
+            completion(.allowed)
+            return
+        }
+        let liveURL = webView?.url.flatMap {
+            HTMLAppOrigin.canonicalOrigin(forDocumentURL: $0) == nil ? nil : $0
+        }
+        guard let appID = managedAppID,
+              let documentURL = liveURL ?? managedDocumentURL,
+              let manifest = trustRegistry.manifest(for: appID) else {
+            completion(.denied(Self.authorizationError(
+                capability: capability,
+                status: .denied,
+                message: "该页面不是已验证的 PWA，不能调用受保护的原生能力"
+            )))
+            return
+        }
+        guard let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL),
+              let subject = permissionSubject(appID: appID, origin: origin) else {
+            completion(.denied(Self.authorizationError(
+                capability: capability,
+                status: .denied,
+                message: "未配置可信网关，不能调用受保护的原生能力"
+            )))
+            return
+        }
+        let params = body["params"] as? [String: Any] ?? body
+        let requestID = UUID().uuidString
+        let reason = (params["reason"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let request = HTMLAppCapabilityRequest(
+            id: requestID,
+            capability: capability,
+            reason: reason?.isEmpty == false ? reason! : "使用\(capability.displayName)完成当前操作",
+            scope: .once
+        )
+        let result = capabilityGateway.requestAuthorization(subject: subject, documentURL: documentURL, request: request)
+        switch (result.status, result.authorizationLayer) {
+        case (.granted, _), (.notDetermined, .nativeSystem):
+            completion(.allowed)
+        case (.notDetermined, .htmlApp):
+            guard let presenter = permissionConsentPresenter else {
+                capabilityGateway.cancelPendingRequests(subject: subject)
+                completion(.denied(Self.authorizationError(
+                    capability: capability,
+                    status: .denied,
+                    message: "无法显示 PWA 权限确认"
+                )))
+                return
+            }
+            storePendingAuthorization(PendingAuthorization(
+                subject: subject,
+                documentURL: documentURL,
+                request: request,
+                completion: completion
+            ))
+            presenter.requestConsent(HTMLAppPermissionConsentRequest(
+                application: .init(id: appID, name: manifest.name),
+                requestID: request.id,
+                origin: origin,
+                capability: capability,
+                reason: request.reason
+            )) { [weak self] selectedScope in
+                self?.finishPendingAuthorization(requestID: request.id, selectedScope: selectedScope)
+            }
+        default:
+            completion(.denied(Self.authorizationError(
+                capability: capability,
+                status: result.status,
+                message: result.status == .requiresSettings
+                    ? "iOS 系统权限已关闭，请前往系统设置开启"
+                    : "PWA 未获得该原生能力授权"
+            )))
+        }
+    }
+
+    private func storePendingAuthorization(_ pending: PendingAuthorization) {
+        pendingAuthorizationsLock.lock()
+        pendingAuthorizations[pending.request.id] = pending
+        pendingAuthorizationsLock.unlock()
+    }
+
+    private func takePendingAuthorization(requestID: String) -> PendingAuthorization? {
+        pendingAuthorizationsLock.lock()
+        let pending = pendingAuthorizations.removeValue(forKey: requestID)
+        pendingAuthorizationsLock.unlock()
+        return pending
+    }
+
+    private func finishPendingAuthorization(
+        requestID: String,
+        selectedScope: HTMLAppPermissionScope?
+    ) {
+        guard let pending = takePendingAuthorization(requestID: requestID) else { return }
+        guard let selectedScope else {
+            capabilityGateway.cancelPendingRequests(subject: pending.subject)
+            pending.completion(.denied(Self.authorizationError(
+                capability: pending.request.capability,
+                status: .denied,
+                message: "用户已取消授权"
+            )))
+            return
+        }
+
+        let selectedRequest = HTMLAppCapabilityRequest(
+            id: pending.request.id,
+            capability: pending.request.capability,
+            reason: pending.request.reason,
+            scope: selectedScope
+        )
+        capabilityGateway.resolveUserConsent(
+            subject: pending.subject,
+            documentURL: pending.documentURL,
+            request: selectedRequest,
+            approvedScope: selectedScope,
+            granted: true
+        ) { resolved in
+            if resolved.status == .granted {
+                pending.completion(.allowed)
+            } else {
+                pending.completion(.denied(Self.authorizationError(
+                    capability: pending.request.capability,
+                    status: resolved.status,
+                    message: resolved.status == .requiresSettings
+                        ? "iOS 系统权限已关闭，请前往系统设置开启"
+                        : "原生能力授权失败"
+                )))
+            }
+        }
+    }
+
+    private func cancelPendingAuthorizations(appID: String) {
+        pendingAuthorizationsLock.lock()
+        let cancelled = pendingAuthorizations.values.filter { $0.subject.appID == appID }
+        cancelled.forEach { pendingAuthorizations.removeValue(forKey: $0.request.id) }
+        pendingAuthorizationsLock.unlock()
+
+        cancelled.forEach { pending in
+            capabilityGateway.cancelPendingRequests(subject: pending.subject)
+            permissionConsentPresenter?.cancelConsent(
+                appID: pending.subject.appID,
+                requestID: pending.request.id
+            )
+            pending.completion(.denied(Self.authorizationError(
+                capability: pending.request.capability,
+                status: .denied,
+                message: "PWA 已关闭或页面来源已变更"
+            )))
+        }
+    }
+
+    private static func authorizationError(
+        capability: HTMLAppCapability,
+        status: HTMLAppCapabilityResult.Status,
+        message: String
+    ) -> [String: Any] {
+        [
+            "success": false,
+            "error": message,
+            "code": "PWA_CAPABILITY_DENIED",
+            "capability": capability.rawValue,
+            "status": status.rawValue
+        ]
+    }
+
+    private func permissionSubject(appID: String, origin: String) -> HTMLAppPermissionSubject? {
+        let activeGatewayIdentity = gatewayIdentity ?? HTMLAppRuntimeCenter.shared.gatewayIdentity
+        guard !activeGatewayIdentity.isEmpty else { return nil }
+        return HTMLAppPermissionSubject(
+            gatewayIdentity: activeGatewayIdentity,
+            appID: appID,
+            origin: origin
+        )
     }
 
     // MARK: - Register Handlers

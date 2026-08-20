@@ -13,7 +13,8 @@ import CoreBluetooth
 
 /// 蓝牙交互 Handler
 /// 支持：扫描周边设备、连接设备、监听连接状态
-public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate {
+public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate,
+    HTMLAppCapabilityRevocationHandling {
 
     // MARK: - Properties
 
@@ -131,6 +132,14 @@ public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate
         centralManager?.stopScan()
         WebBridgeLogger.shared.log(.info, "[WebBluetoothHandler] Scanning stopped")
         self.resolve(["status": "stopped"], completion: completion)
+    }
+
+    public func htmlAppCapabilityDidRevoke() {
+        centralManager?.stopScan()
+        discoveredPeripherals.removeAll()
+        scanCompletion = nil
+        WebBridgeLogger.shared.log(.info, "[WebBluetoothHandler] Scanning stopped after PWA permission revocation")
+        sendEventToJS(event: "onBluetoothAccessRevoked", data: ["status": "revoked"])
     }
 
     // MARK: - CBCentralManagerDelegate

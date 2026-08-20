@@ -26,6 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         CrashLogManager.shared.initialize()
         NetworkMonitor.shared.startMonitoring()
+        HTMLAppHostUI.settingsViewControllerProvider = SuperAppHTMLAppSettingsProvider.shared
 
         if let serverURL = ServerConfigManager.shared.getActiveBaseURL() {
             CrashLogManager.shared.serverBaseURL = serverURL
@@ -128,6 +129,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         #if DEBUG
         registerNotificationFixtureIfRequested()
+        registerBridgePermissionFixtureIfRequested()
         showPWAAppCenterIfRequested()
         #endif
 
@@ -161,6 +163,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             StructuredLogger.shared.error(
                 "Unable to register APNs route fixture: \(error.localizedDescription)",
                 category: .navigation
+            )
+        }
+    }
+
+    private func registerBridgePermissionFixtureIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--register-pwa-permission-fixture") else { return }
+        let runtime = HTMLAppRuntimeCenter.shared
+        // The fixture has no imported gateway, so use a deterministic test
+        // identity to exercise the same subject-bound flow as a real gateway.
+        runtime.gatewayIdentity = "test-gateway"
+        runtime.permissionLedger.revokeAll(appID: "com.webbridgekit.fixture.permissions")
+        let origin = ProcessInfo.processInfo.environment["WBK_PWA_PERMISSION_ORIGIN"] ?? "http://localhost:8081"
+        let route = "/test_resources/pwa-permission/index.html"
+        let manifest = HTMLAppManifest(
+            appID: "com.webbridgekit.fixture.permissions",
+            name: "原生能力演示",
+            startURL: "\(origin)\(route)",
+            allowedOrigins: [origin],
+            capabilities: [.bluetooth, .clipboard, .camera, .location, .fileImport, .share],
+            routes: [route],
+            cache: HTMLAppCachePolicy(
+                strategy: .networkOnly,
+                version: "2026.08.13",
+                persistent: false,
+                restoresLastState: true
+            )
+        )
+        try? runtime.register(manifest)
+        if ProcessInfo.processInfo.arguments.contains("--seed-pwa-permission-grant") {
+            runtime.permissionLedger.grant(
+                subject: HTMLAppPermissionSubject(
+                    gatewayIdentity: runtime.gatewayIdentity,
+                    appID: manifest.appID,
+                    origin: origin
+                ),
+                capability: .clipboard,
+                scope: .always
             )
         }
     }

@@ -132,6 +132,7 @@ public class WebBridgePool {
     /// 回收 Bridge 实例
     /// - Parameter bridge: 要回收的 Bridge 实例
     public func recycleBridge(_ bridge: WebJavaScriptBridge) {
+        bridge.endManagedHTMLAppSession()
         lock.lock()
         // 只保留一个预热实例
         if warmBridge == nil {

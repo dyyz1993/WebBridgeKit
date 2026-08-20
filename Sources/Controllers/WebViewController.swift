@@ -52,6 +52,29 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     public var browserConfig: WebBrowserParams?
 
     private let immersiveExitControl = ImmersivePWAExitControl()
+    private var managedHTMLAppID: String?
+    private var managedHTMLAppDocumentURL: URL?
+
+    private let immersiveSettingsButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(LucideIcon.ellipsis.templateImage(pointSize: 20, weight: .semibold), for: .normal)
+        button.tintColor = ThemeTokens.Color.text
+        button.backgroundColor = ThemeTokens.Color.surfaceElevated
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.full
+        button.layer.borderWidth = 1
+        button.layer.borderColor = ThemeTokens.Color.border.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = Float(ThemeTokens.Shadows.sm.opacity)
+        button.layer.shadowRadius = ThemeTokens.Shadows.sm.radius
+        button.layer.shadowOffset = CGSize(
+            width: ThemeTokens.Shadows.sm.offsetX,
+            height: ThemeTokens.Shadows.sm.offsetY
+        )
+        button.accessibilityIdentifier = "browserManager.immersiveMenuButton"
+        button.accessibilityLabel = "应用设置"
+        button.isHidden = true
+        return button
+    }()
 
     //  浏览器特性控制（默认全部禁用，通过 Bridge 按需开启）
     var bouncesEnabled = false
@@ -361,6 +384,11 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 配置浏览器参数
     public func configure(with params: WebBrowserParams) {
         browserConfig = params
+        let managedAppID = params.payload?["webbridgekitAppId"]
+        let managedPageURL = params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
+        managedHTMLAppID = managedAppID
+        managedHTMLAppDocumentURL = managedPageURL
+        bridge.configureManagedHTMLApp(appID: managedAppID, documentURL: managedPageURL)
         supportedOrientations = params.orientation
         isStatusBarHidden = params.hideStatusBar
 
@@ -480,18 +508,65 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     private func setupImmersiveReturnButton() {
         view.addSubview(immersiveExitControl)
         immersiveExitControl.onExit = { [weak self] in self?.exitImmersivePWA() }
+
+        view.addSubview(immersiveSettingsButton)
+        immersiveSettingsButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            immersiveSettingsButton.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: ThemeTokens.Spacing.sm
+            ),
+            immersiveSettingsButton.trailingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.trailingAnchor,
+                constant: -ThemeTokens.Spacing.md
+            ),
+            immersiveSettingsButton.widthAnchor.constraint(
+                equalToConstant: ThemeTokens.ComponentContract.TapTarget.minimumWidth
+            ),
+            immersiveSettingsButton.heightAnchor.constraint(
+                equalToConstant: ThemeTokens.ComponentContract.TapTarget.minimumHeight
+            )
+        ])
+        immersiveSettingsButton.addTarget(
+            self,
+            action: #selector(openManagedHTMLAppSettings),
+            for: .touchUpInside
+        )
     }
 
     private func updateImmersiveChrome() {
         let immersive = browserConfig?.displayMode == .immersive || browserConfig?.hideNavigationBar == true
         navigationController?.setNavigationBarHidden(immersive, animated: false)
         immersiveExitControl.isHidden = !immersive
+        immersiveSettingsButton.isHidden = !immersive || managedHTMLAppID == nil
         immersiveExitControl.updateLayout(in: view)
 
         if immersive {
             navigationItem.rightBarButtonItem = nil
             webView?.scrollView.contentInsetAdjustmentBehavior = .never
+            if !immersiveSettingsButton.isHidden {
+                view.bringSubviewToFront(immersiveSettingsButton)
+            }
         }
+    }
+
+    @objc private func openManagedHTMLAppSettings() {
+        guard let appID = managedHTMLAppID,
+              let settings = HTMLAppHostUI.settingsViewControllerProvider?
+                .makeHTMLAppSettingsViewController(
+                    appID: appID,
+                    documentURL: webView.url ?? managedHTMLAppDocumentURL
+                ) else {
+            let alert = UIAlertController(
+                title: "设置模块不可用",
+                message: "当前宿主没有提供这个 PWA 的应用设置页面。",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "知道了", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        navigationController?.pushViewController(settings, animated: true)
     }
 
     private func exitImmersivePWA() {
@@ -519,6 +594,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         let bridgeForPool = pooled ? bridge : nil
 
         Task { @MainActor in
+            bridgeInstance?.endManagedHTMLAppSession()
             //  Remove all script message handlers to prevent memory leaks
             // WKUserContentController.add(_:name:) creates strong references
             for handlerName in handlerNames {

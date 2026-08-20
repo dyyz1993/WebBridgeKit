@@ -263,7 +263,25 @@ public struct HTMLAppPermissionGrant: Codable, Equatable, Sendable {
     }
 }
 
+public struct HTMLAppPermissionRevocation: Equatable, Sendable {
+    public let appID: String
+    public let origin: String
+    public let capability: HTMLAppCapability
+
+    public init(appID: String, origin: String, capability: HTMLAppCapability) {
+        self.appID = appID
+        self.origin = origin
+        self.capability = capability
+    }
+}
+
+public enum HTMLAppPermissionRevocationNotification {
+    public static let payloadKey = "revocation"
+}
+
 public final class HTMLAppPermissionLedger {
+    public static let shared = HTMLAppPermissionLedger()
+
     private let storage: HTMLAppRuntimeStorage
     private let storageKey: String
     private let lock = NSLock()
@@ -347,6 +365,42 @@ public final class HTMLAppPermissionLedger {
             .sorted { $0.subject.storageKey(capability: $0.capability) < $1.subject.storageKey(capability: $1.capability) }
     }
 
+    // Compatibility helpers for hosts/tests that have not yet supplied a
+    // gateway identity. New integrations should always use HTMLAppPermissionSubject.
+    @discardableResult
+    public func grant(
+        appID: String,
+        origin: String,
+        capability: HTMLAppCapability,
+        scope: HTMLAppPermissionScope,
+        grantedAt: Date = Date()
+    ) -> HTMLAppPermissionGrant {
+        grant(
+            subject: HTMLAppPermissionSubject(gatewayIdentity: "test-gateway", appID: appID, origin: origin),
+            capability: capability,
+            scope: scope,
+            grantedAt: grantedAt
+        )
+    }
+
+    public func grant(
+        for appID: String,
+        origin: String,
+        capability: HTMLAppCapability
+    ) -> HTMLAppPermissionGrant? {
+        grant(
+            for: HTMLAppPermissionSubject(gatewayIdentity: "test-gateway", appID: appID, origin: origin),
+            capability: capability
+        )
+    }
+
+    public func revoke(appID: String, origin: String, capability: HTMLAppCapability) {
+        revoke(
+            subject: HTMLAppPermissionSubject(gatewayIdentity: "test-gateway", appID: appID, origin: origin),
+            capability: capability
+        )
+    }
+
     public func replaceAll(_ grants: [HTMLAppPermissionGrant]) throws {
         var proposedPersistent: [String: HTMLAppPermissionGrant] = [:]
         var proposedSession: [String: HTMLAppPermissionGrant] = [:]
@@ -373,10 +427,17 @@ public final class HTMLAppPermissionLedger {
     public func revoke(subject: HTMLAppPermissionSubject, capability: HTMLAppCapability) {
         let key = subject.storageKey(capability: capability)
         lock.lock()
-        defer { lock.unlock() }
-        sessionGrants.removeValue(forKey: key)
-        persistentGrants.removeValue(forKey: key)
+        let removedSession = sessionGrants.removeValue(forKey: key)
+        let removedPersistent = persistentGrants.removeValue(forKey: key)
         persistLocked()
+        lock.unlock()
+
+        guard removedSession != nil || removedPersistent != nil else { return }
+        postRevocation(HTMLAppPermissionRevocation(
+            appID: subject.appID,
+            origin: subject.origin,
+            capability: capability
+        ))
     }
 
     public func revokeAll(appID: String) {
@@ -411,14 +472,57 @@ public final class HTMLAppPermissionLedger {
     public func syncGrants(with manifest: HTMLAppManifest, gatewayIdentity: String, origin: String) {
         let prefix = "\(gatewayIdentity)|\(manifest.appID)|\(origin)|"
         lock.lock()
-        defer { lock.unlock() }
         func keep(_ entry: (key: String, value: HTMLAppPermissionGrant)) -> Bool {
             guard entry.key.hasPrefix(prefix) else { return true }
             return manifest.declares(entry.value.capability)
         }
+        let revoked = (Array(sessionGrants.values) + Array(persistentGrants.values)).filter {
+            $0.subject.gatewayIdentity == gatewayIdentity &&
+                $0.subject.appID == manifest.appID &&
+                $0.subject.origin == origin &&
+                !manifest.declares($0.capability)
+        }
         sessionGrants = sessionGrants.filter(keep)
         persistentGrants = persistentGrants.filter(keep)
         persistLocked()
+        lock.unlock()
+        revoked.forEach {
+            postRevocation(HTMLAppPermissionRevocation(
+                appID: $0.appID,
+                origin: $0.origin,
+                capability: $0.capability
+            ))
+        }
+    }
+
+    /// Ends only container-scoped grants for one managed PWA document context.
+    /// Persistent `.always` grants and grants owned by another app/origin remain.
+    public func revokeSessionGrants(subject: HTMLAppPermissionSubject) {
+        lock.lock()
+        let revoked = sessionGrants.values.filter {
+            $0.subject == subject
+        }
+        sessionGrants = sessionGrants.filter {
+            $0.value.subject != subject
+        }
+        persistLocked()
+        lock.unlock()
+
+        revoked.forEach {
+            postRevocation(HTMLAppPermissionRevocation(
+                appID: $0.appID,
+                origin: $0.origin,
+                capability: $0.capability
+            ))
+        }
+    }
+
+    private func postRevocation(_ revocation: HTMLAppPermissionRevocation) {
+        NotificationCenter.default.post(
+            name: .htmlAppPermissionDidRevoke,
+            object: self,
+            userInfo: [HTMLAppPermissionRevocationNotification.payloadKey: revocation]
+        )
     }
 
     private func persistLocked() {
