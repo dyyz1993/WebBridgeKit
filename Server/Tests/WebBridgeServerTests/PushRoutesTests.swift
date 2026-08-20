@@ -269,6 +269,65 @@ struct PushRoutesTests {
         #expect(unspecifiedAps["sound"] as? String == "default")
     }
 
+    @Test("Bark POST accepts empty body when title or action fields are present")
+    func barkPostAcceptsBodylessActionPushes() async throws {
+        let app = createApplication()
+        try await app.test(.router) { client in
+            // push-render-catalog 清角标/撤回 cards carry no body but do
+            // carry a title or action fields — they must not be rejected.
+            let payloads = [
+                #"{"title":"清角标","body":"","badge":0}"#,
+                #"{"id":"demo-replace-1","title":"撤回","body":"","delete":true}"#,
+                #"{"title":"只有标题"}"#
+            ]
+            for payload in payloads {
+                try await client.execute(
+                    uri: "/test_resources",
+                    method: .post,
+                    headers: [.contentType: "application/json"],
+                    body: ByteBuffer(string: payload)
+                ) { response in
+                    #expect(response.status == .ok)
+                }
+            }
+
+            // No title, no body, no action — still rejected.
+            try await client.execute(
+                uri: "/test_resources",
+                method: .post,
+                headers: [.contentType: "application/json"],
+                body: ByteBuffer(string: "{}")
+            ) { response in
+                #expect(response.status == .badRequest)
+            }
+        }
+    }
+
+    @Test("Passive level omits the aps sound key entirely")
+    func passiveLevelOmitsSound() throws {
+        let passive = APNsService.makeAPNsPayload(PushPayload(
+            title: "被动通知", body: "不打扰", level: "passive"
+        ))
+        let aps = try #require(passive["aps"] as? [String: Any])
+        #expect(aps["sound"] == nil)
+        #expect(aps["interruption-level"] as? String == "passive")
+
+        // Even an explicit sound must be suppressed for passive delivery —
+        // iOS honors a present sound key over the passive interruption level.
+        let explicit = APNsService.makeAPNsPayload(PushPayload(
+            title: "被动通知", body: "不打扰", sound: "alarm", level: "passive"
+        ))
+        let explicitAps = try #require(explicit["aps"] as? [String: Any])
+        #expect(explicitAps["sound"] == nil)
+
+        // Non-passive levels keep the default-sound fallback.
+        let active = APNsService.makeAPNsPayload(PushPayload(
+            title: "普通", body: "内容", level: "active"
+        ))
+        let activeAps = try #require(active["aps"] as? [String: Any])
+        #expect(activeAps["sound"] as? String == "default")
+    }
+
     @Test("JSON Push v2 request maps canonical and Bark-compatible aliases")
     func jsonPushV2RequestMapsAliases() throws {
         let data = Data("""
