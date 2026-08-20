@@ -160,6 +160,28 @@ public class PersistentManifestLoader: NSObject {
         }
     }
 
+    /// 缓存命中前的健全性校验：内容像 HTML 且缓存版本与服务端 manifest 一致。
+    /// 版本不一致（服务端已升级）或内容异常（历史损坏写入）时返回 false，
+    /// 让调用方回退到完整下载路径，避免加载坏缓存导致白屏。
+    static func cachePayloadIsValid(html: String, cachedManifestPath: URL, freshManifest: WebManifest) -> Bool {
+        let trimmed = html.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.hasPrefix("<") else {
+            NSLog("[WARN] [PersistentManifestLoader] 缓存 HTML 内容异常（非文档），视为损坏")
+            return false
+        }
+        guard let data = try? Data(contentsOf: cachedManifestPath),
+              let cached = try? JSONDecoder().decode(Manifest.self, from: data) else {
+            NSLog("[WARN] [PersistentManifestLoader] 缓存 manifest 无法解码，视为损坏")
+            return false
+        }
+        guard cached.resolvedVersion == freshManifest.resolvedVersion else {
+            NSLog("[SYNC] [PersistentManifestLoader] 缓存版本落后（%@ -> %@），重新下载",
+                  cached.resolvedVersion, freshManifest.resolvedVersion)
+            return false
+        }
+        return true
+    }
+
     /// 检查 URL 是否支持持久化模式
     /// - Parameter url: 页面 URL
     /// - Returns: 是否支持持久化
@@ -257,11 +279,13 @@ public class PersistentManifestLoader: NSObject {
 
         if !forceRefresh,
            FileManager.default.fileExists(atPath: htmlPath.path),
-           FileManager.default.fileExists(atPath: manifestPath.path) {
+           FileManager.default.fileExists(atPath: manifestPath.path),
+           let html = try? String(contentsOfFile: htmlPath.path, encoding: .utf8),
+           Self.cachePayloadIsValid(html: html, cachedManifestPath: manifestPath, freshManifest: manifest) {
             diagnose("缓存已存在, cacheID: \(cacheID), htmlPath: \(htmlPath.path)")
             NSLog("[RECYCLE] [PersistentManifestLoader] 发现完整缓存，跳过下载")
 
-            if let html = try? String(contentsOfFile: htmlPath.path, encoding: .utf8) {
+            do {
                 var finalManifest: Manifest
                 if let existing = ManifestStore.shared.getManifest(for: cacheID) {
                     finalManifest = Manifest(
@@ -307,6 +331,10 @@ public class PersistentManifestLoader: NSObject {
                 diagnose("从缓存加载完成, html大小: \(html.count) bytes")
                 NSLog("[OK] [PersistentManifestLoader] 从缓存加载完成")
                 return
+            } catch {
+                // 缓存内容损坏（读取/解码失败）：清掉本目录，走下面的重新下载
+                NSLog("[WARN] [PersistentManifestLoader] 缓存内容异常，回退网络重新下载: %@", error.localizedDescription)
+                try? FileManager.default.removeItem(at: cacheDir)
             }
         }
         if forceRefresh {
