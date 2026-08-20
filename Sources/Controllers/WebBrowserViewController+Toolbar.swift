@@ -80,20 +80,22 @@ extension WebBrowserViewController {
     }
 
     @objc func backButtonTapped() {
-        if webView.canGoBack {
-            webView.goBack()
+        // App 层历史栈优先：loadHTMLString 也会在 WebKit 的后退列表里留下
+        // 脏条目（旧轮次的 custom 文档），webView.goBack() 会退错页。
+        // 只有本会话不在栈管理下（纯 http 直载链）才用 WebKit 原生历史。
+        guard customNavStack.count > 1 else {
+            if webView.canGoBack {
+                webView.goBack()
+            }
             return
         }
-        // custom:// 页间导航没有 WebKit 后退历史，走 App 层栈：
-        // 弹掉当前页，加载上一页（didFinish 里的去重保证栈不回涨）。
-        guard customNavStack.count > 1 else { return }
         customNavStack.removeLast()
         if let previous = customNavStack.last,
            let scheme = previous.scheme?.lowercased(),
            scheme == "http" || scheme == "https" {
-            // 直载（不走 smartLoad 管线）：http 文档加载会重置 App 层栈，
-            // 之后的页内跳转回到 WebKit 原生历史，语义一致且无竞态。
-            loadURLDirect(previous)
+            // 直载（不走 smartLoad 管线）。keepHistory 保留剩余栈，
+            // 多级 A→B→C 可以连续后退。
+            loadURLDirect(previous, keepHistory: true)
         } else {
             // 根条目异常（空路径污染）时兜底：收起浏览器回宿主页面
             customNavStack.removeAll()

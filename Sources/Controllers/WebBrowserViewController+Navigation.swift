@@ -67,7 +67,15 @@ extension WebBrowserViewController: WKNavigationDelegate {
            linkScheme == "http" || linkScheme == "https",
            navigationAction.targetFrame?.isMainFrame == true {
             DispatchQueue.main.async { [weak self] in
-                self?.loadURLWithCache(url)
+                guard let self else { return }
+                if url != self.customNavStack.last {
+                    if self.customNavStack.isEmpty {
+                        self.customNavStack = [url]
+                    } else {
+                        self.customNavStack.append(url)
+                    }
+                }
+                self.loadURLWithCache(url, keepHistory: true)
             }
             return .cancel
         }
@@ -202,14 +210,16 @@ extension WebBrowserViewController: WKNavigationDelegate {
     /// Load a standard PWA without probing WebBridgeKit's resource manifest.
     /// WKWebsiteDataStore.default() still persists cookies, localStorage,
     /// IndexedDB, Cache Storage, and service-worker state.
-    public func loadURLDirect(_ url: URL, forceRefresh: Bool = false) {
-        performDirectLoad(url, forceRefresh: forceRefresh)
+    public func loadURLDirect(_ url: URL, forceRefresh: Bool = false, keepHistory: Bool = false) {
+        performDirectLoad(url, forceRefresh: forceRefresh, keepHistory: keepHistory)
     }
 
-    func performDirectLoad(_ url: URL, forceRefresh: Bool) {
+    func performDirectLoad(_ url: URL, forceRefresh: Bool, keepHistory: Bool = false) {
         os_log("Starting standard PWA navigation", log: OSLog.default, type: .info)
         currentURL = url
-        customNavStack = [url]
+        if !keepHistory {
+            customNavStack = [url]
+        }
         loadStartTime = Date()
         injectDebugScript(for: url)
         updateCacheStatus(source: "LIVE")
@@ -220,7 +230,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
     }
 
     /// 使用 Manifest 缓存加载 URL
-    public func loadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
+    public func loadURLWithCache(_ url: URL, forceRefresh: Bool = false, keepHistory: Bool = false) {
         guard hasAppeared, isViewLoaded, isViewModelBinded else {
             currentURL = url
             pendingCacheLoad = (url, forceRefresh)
@@ -228,16 +238,18 @@ extension WebBrowserViewController: WKNavigationDelegate {
             return
         }
 
-        performLoadURLWithCache(url, forceRefresh: forceRefresh)
+        performLoadURLWithCache(url, forceRefresh: forceRefresh, keepHistory: keepHistory)
     }
 
-    func performLoadURLWithCache(_ url: URL, forceRefresh: Bool = false) {
+    func performLoadURLWithCache(_ url: URL, forceRefresh: Bool = false, keepHistory: Bool = false) {
         StructuredLogger.shared.debug("Loading URL with cache: \(url.absoluteString)", category: .navigation)
 
         currentURL = url
-        // 历史栈在受控加载入口重置为真实 URL（didFinish 对 custom:// 根文档
-        // 的 seeding 会录进空路径条目，已实证污染栈）
-        customNavStack = [url]
+        // 历史栈默认在受控加载入口重置为真实 URL；链接跳转（keepHistory）
+        // 由导航层显式压栈，这里不得清栈
+        if !keepHistory {
+            customNavStack = [url]
+        }
 
         injectDebugScript(for: url)
 
