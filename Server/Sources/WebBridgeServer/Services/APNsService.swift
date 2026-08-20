@@ -173,9 +173,7 @@ final class APNsService: Sendable {
         for (index, host) in hosts.enumerated() {
             let urlString = "https://\(host)/3/device/\(deviceToken)"
 
-            // A token rejected with 429 stays blacklisted by Apple, so retry once
-            // with a freshly minted token before surfacing the error.
-            for attempt in 0...1 {
+            for _ in 0...1 {
                 guard let authorizationToken = try? jwtSigner.token() else { return }
                 let status = Self.curlPost(
                     url: urlString,
@@ -185,9 +183,15 @@ final class APNsService: Sendable {
                     priority: payload.level == "passive" ? "5" : "10"
                 )
                 if status == 200 { return }
-                if status == 429, attempt == 0 {
-                    jwtSigner.invalidateCachedToken()
-                    continue
+                // 429 TooManyProviderTokenUpdates: Apple is rate-limiting
+                // provider-token MINTS. Minting a replacement would deepen the
+                // penalty (~25 min lockout, learned 2026-08-20). Back off now
+                // and keep the cached token for after the lockout clears.
+                if status == 429 {
+                    FileHandle.standardError.write(Data(
+                        "[APNs] 429 provider-token penalty — backing off, cached token kept\n".utf8
+                    ))
+                    return
                 }
                 // 400 BadDeviceToken on the preferred host: the token lives in
                 // the other environment — fall through to it.
