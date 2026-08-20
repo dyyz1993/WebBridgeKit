@@ -399,6 +399,7 @@ public class LazyManifestLoader: NSObject {
                 //  FIX: 从缓存加载时也需要设置 pageKey
                 if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: self.scheme) as? ManifestURLSchemeHandler {
                     schemeHandler.setPageKey(cacheID, for: webView)
+                    schemeHandler.setBaseURL(url, for: webView)
                     self.postLog("[OK] [pageKey] 已设置 '\(cacheID)'")
                 } else {
                     self.postLog("[WARN] [pageKey] ManifestURLSchemeHandler 未找到")
@@ -484,6 +485,7 @@ public class LazyManifestLoader: NSObject {
             manifestCacheManager.loadHTML(cachedHTML, into: webView)
             if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: scheme) as? ManifestURLSchemeHandler {
                 schemeHandler.setPageKey(cacheID, for: webView)
+                schemeHandler.setBaseURL(url, for: webView)
             }
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
@@ -623,6 +625,7 @@ public class LazyManifestLoader: NSObject {
                     self.manifestCacheManager.loadHTML(html, into: webView)
                     if let schemeHandler = webView.configuration.urlSchemeHandler(forURLScheme: self.scheme) as? ManifestURLSchemeHandler {
                         schemeHandler.setPageKey(cacheID, for: webView)
+                        schemeHandler.setBaseURL(url, for: webView)
                     }
                 }
                 completion(.success(()))

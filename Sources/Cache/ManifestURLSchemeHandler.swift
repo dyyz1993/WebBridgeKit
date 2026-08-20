@@ -19,6 +19,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
     private let taskLock = NSLock()
     private let currentPagesLock = NSLock()
     private var currentPageKeys: [String: String] = [:]  // webViewID -> pageKey
+    private var baseURLs: [String: URL] = [:]  // webViewID -> 真实页面 URL（网络回退用）
 
     // MARK: - WKURLSchemeHandler
 
@@ -78,6 +79,32 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
             case .failure(let error):
                 NSLog("   [FAIL] Failed: %@, error: %@", relativePath, error.localizedDescription)
 
+                // 网络回退：custom:// 基址下的相对导航（页面间跳转）和未列入
+                // manifest 的子资源都不在缓存里。按本 WebView 注册的真实
+                // 页面 URL 拼出远端地址拉取，成功则按普通资源交付；只有
+                // 远端也失败才落到错误页。
+                if let base = self.getBaseURL(for: webView),
+                   let remote = URL(string: relativePath, relativeTo: base.deletingLastPathComponent())?.absoluteURL,
+                   let remoteScheme = remote.scheme?.lowercased(),
+                   remoteScheme == "http" || remoteScheme == "https" {
+                    NSLog("   [NET] Fallback fetch: %@", remote.absoluteString)
+                    self.fetchRemoteResource(at: remote) { data, mimeType in
+                        if let data = data {
+                            let resource = ResourceData(relativePath: relativePath, data: data, mimeType: mimeType)
+                            self.deliverResource(resource, to: urlSchemeTask, originalURL: url)
+                        } else {
+                            let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
+                            if isPageRequest {
+                                self.deliverErrorPage(to: urlSchemeTask, url: url, error: error)
+                            } else {
+                                urlSchemeTask.didFailWithError(error)
+                            }
+                        }
+                        self.removeTask(forID: taskID)
+                    }
+                    return
+                }
+
                 //  优化：如果是 HTML 页面或主请求失败，显示错误提示页，而不是白屏
                 let isPageRequest = relativePath.isEmpty || relativePath.hasSuffix(".html") || relativePath.hasSuffix(".htm")
                 if isPageRequest {
@@ -88,6 +115,25 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
                 self.removeTask(forID: taskID)
             }
         }
+    }
+
+    /// 网络回退拉取（custom:// 缓存未命中时使用）
+    private func fetchRemoteResource(at url: URL, completion: @escaping (Data?, String) -> Void) {
+        var request = URLRequest(url: url, timeoutInterval: 15)
+        request.cachePolicy = .returnCacheDataElseLoad
+        URLSession.shared.dataTask(with: request) { data, response, _ in
+            guard let data = data,
+                  let http = response as? HTTPURLResponse,
+                  http.statusCode == 200 else {
+                NSLog("   [NET] Fallback failed: %@", url.absoluteString)
+                completion(nil, "application/octet-stream")
+                return
+            }
+            let mimeType = (response as? HTTPURLResponse)?.mimeType
+                ?? self.getMimeType(forPath: url.path)
+            NSLog("   [NET] Fallback delivered: %d bytes", data.count)
+            completion(data, mimeType)
+        }.resume()
     }
 
     func handlePersistentRequest(_ urlSchemeTask: WKURLSchemeTask, cacheID: String) {
@@ -204,6 +250,25 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
         currentPageKeys[webViewID] = pageKey
 
         NSLog("[LIST] [SchemeHandler] Set pageKey '%@' for WebView", pageKey)
+    }
+
+    /// 记录 WebView 当前页面的真实 http(s) URL。
+    /// custom:// 基址下的相对链接（如测试中心点卡片跳 permissions_ui.html）
+    /// 不经过导航代理、直接落到本 handler；缓存未命中时用它拼出远端地址
+    /// 做网络回退，页面间跳转与未列入 manifest 的子资源才能正常工作。
+    public func setBaseURL(_ url: URL, for webView: WKWebView) {
+        currentPagesLock.lock()
+        defer { currentPagesLock.unlock() }
+
+        baseURLs[getWebViewID(for: webView)] = url
+    }
+
+    /// 获取 WebView 对应的页面真实 URL
+    private func getBaseURL(for webView: WKWebView) -> URL? {
+        currentPagesLock.lock()
+        defer { currentPagesLock.unlock() }
+
+        return baseURLs[getWebViewID(for: webView)]
     }
 
     /// 获取 WebView 对应的 pageKey
@@ -387,6 +452,7 @@ public class ManifestURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
         let webViewID = getWebViewID(for: webView)
         currentPageKeys.removeValue(forKey: webViewID)
+        baseURLs.removeValue(forKey: webViewID)
 
         NSLog("[DEL] [SchemeHandler] Cleaned up page for WebView")
     }
