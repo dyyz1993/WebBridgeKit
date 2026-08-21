@@ -21,11 +21,13 @@ public enum HTMLAppBridgeCapabilityPolicy {
         case "camera", "videoStream": return .camera
         case "clipboard": return .clipboard
         case "contacts": return .contacts
-        case "gesture", "layout", "screen": return .deviceControl
+        // gesture/layout/screen：纯容器交互，不涉及用户隐私，免授权
+        case "gesture", "layout", "screen": return nil
         case "file": return .fileImport
         case "getLocation": return .location
         case "audioLevel", "speech": return .microphone
-        case "mirroring": return .displayStatus
+        // mirroring：只读投屏状态查询，不涉及用户隐私，免授权
+        case "mirroring": return nil
         case "photo": return .photoLibrary
         case "scan": return .scan
         case "sensors": return .motion
