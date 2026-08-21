@@ -149,7 +149,9 @@ final class PWAPermissionCenterViewController: UIViewController {
         contentStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         contentStack.addArrangedSubview(makeHeaderCard(manifest: manifest))
 
-        for section in RowModel.Section.allCases {
+        // 只展示已授权与需处理项；「尚未使用」纯噪音，用户明确要求不显示
+        let visibleSections: [RowModel.Section] = [.needsAttention, .allowed]
+        for section in visibleSections {
             let sectionRows = rows.filter { $0.section == section }
             guard !sectionRows.isEmpty else { continue }
             contentStack.addArrangedSubview(makeSectionTitle(section.title, count: sectionRows.count))
