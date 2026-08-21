@@ -364,18 +364,28 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         let liveURL = webView?.url.flatMap {
             HTMLAppOrigin.canonicalOrigin(forDocumentURL: $0) == nil ? nil : $0
         }
-        guard let appID = managedAppID,
-              let documentURL = liveURL ?? managedDocumentURL,
-              let manifest = trustRegistry.manifest(for: appID) else {
+        // 分层信任模型：
+        // 层级 3（网关注册应用）：managedAppID + 签名 manifest → 完整判定链
+        // 层级 2（本地信任）：无网关注册 → origin 即身份 → 跳过 manifest 校验，
+        //                     直接走授权面板（和浏览器权限弹窗同语义）
+        let documentURL = liveURL ?? managedDocumentURL
+        guard let documentURL, let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL) else {
             completion(.denied(Self.authorizationError(
                 capability: capability,
                 status: .denied,
-                message: "该页面不是已验证的 PWA，不能调用受保护的原生能力"
+                message: "无法识别页面来源，不能调用受保护的原生能力"
             )))
             return
         }
-        guard let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: documentURL),
-              let subject = permissionSubject(appID: appID, origin: origin) else {
+
+        let appID: String
+        if let registered = managedAppID, trustRegistry.manifest(for: registered) != nil {
+            appID = registered
+        } else {
+            // 本地信任：origin 即身份，无需网关注册
+            appID = "local.\(origin)"
+        }
+        guard let subject = permissionSubject(appID: appID, origin: origin) else {
             completion(.denied(Self.authorizationError(
                 capability: capability,
                 status: .denied,
@@ -392,6 +402,58 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             reason: reason?.isEmpty == false ? reason! : "使用\(capability.displayName)完成当前操作",
             scope: .once
         )
+        let isLocalTrust = appID.hasPrefix("local.")
+        if isLocalTrust {
+            // 本地信任：先检查系统层（拒绝时直接弹引导，同网关路径）
+            let nativeStatus = HTMLAppRuntimeCenter.shared.systemPermissionAdapter
+                .authorizationStatus(for: capability)
+            if nativeStatus == .denied || nativeStatus == .restricted {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: .init("pwa.consent.systemResult"),
+                        object: nil,
+                        userInfo: ["granted": false]
+                    )
+                }
+                completion(.denied(Self.authorizationError(
+                    capability: capability,
+                    status: .requiresSettings,
+                    message: "iOS 系统权限已关闭，请前往系统设置开启"
+                )))
+                return
+            }
+            // 本地信任：跳过 gateway 的 manifest 校验，直接查账本
+            if let grant = HTMLAppPermissionLedger.shared.grant(for: subject, capability: capability) {
+                completion(.allowed)
+                return
+            }
+            // 未授权：走 consent panel（同网关路径）
+            guard let presenter = permissionConsentPresenter else {
+                completion(.denied(Self.authorizationError(
+                    capability: capability,
+                    status: .denied,
+                    message: "无法显示授权确认"
+                )))
+                return
+            }
+            storePendingAuthorization(PendingAuthorization(
+                subject: subject,
+                documentURL: documentURL,
+                request: request,
+                completion: completion
+            ))
+            presenter.requestConsent(HTMLAppPermissionConsentRequest(
+                application: .init(id: appID, name: "本地网页"),
+                requestID: request.id,
+                origin: origin,
+                capability: capability,
+                reason: request.reason
+            )) { [weak self] selectedScope in
+                self?.finishPendingAuthorization(requestID: request.id, selectedScope: selectedScope)
+            }
+            return
+        }
+
         let result = capabilityGateway.requestAuthorization(subject: subject, documentURL: documentURL, request: request)
         switch (result.status, result.authorizationLayer) {
         case (.granted, _), (.notDetermined, .nativeSystem):
@@ -413,7 +475,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 completion: completion
             ))
             presenter.requestConsent(HTMLAppPermissionConsentRequest(
-                application: .init(id: appID, name: manifest.name),
+                application: .init(id: appID, name: URL(string: origin)?.host ?? origin),
                 requestID: request.id,
                 origin: origin,
                 capability: capability,
@@ -466,6 +528,40 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             reason: pending.request.reason,
             scope: selectedScope
         )
+
+        // 本地信任：跳过 gateway（无 manifest），请求系统权限 + 落账本
+        if pending.subject.appID.hasPrefix("local.") {
+            HTMLAppRuntimeCenter.shared.systemPermissionAdapter.requestAuthorization(
+                for: selectedRequest.capability
+            ) { systemStatus in
+                let granted = systemStatus == .granted
+                if granted {
+                    _ = HTMLAppPermissionLedger.shared.grant(
+                        subject: pending.subject,
+                        capability: selectedRequest.capability,
+                        scope: selectedScope
+                    )
+                }
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: .init("pwa.consent.systemResult"),
+                        object: nil,
+                        userInfo: ["granted": granted]
+                    )
+                }
+                if granted {
+                    pending.completion(.allowed)
+                } else {
+                    pending.completion(.denied(Self.authorizationError(
+                        capability: pending.request.capability,
+                        status: .requiresSettings,
+                        message: "iOS 系统权限已关闭，请前往系统设置开启"
+                    )))
+                }
+            }
+            return
+        }
+
         capabilityGateway.resolveUserConsent(
             subject: pending.subject,
             documentURL: pending.documentURL,
