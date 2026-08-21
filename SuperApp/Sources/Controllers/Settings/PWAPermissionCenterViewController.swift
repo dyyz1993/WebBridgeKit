@@ -208,7 +208,19 @@ final class PWAPermissionCenterViewController: UIViewController {
         header.spacing = ThemeTokens.Spacing.md
         header.alignment = .top
 
-        let stack = UIStackView(arrangedSubviews: [header, noteLabel])
+        // note 与 name/origin 左对齐（缩进 = 图标宽度 + 间距），不再从卡片左缘开始
+        let noteWrapper = UIStackView(arrangedSubviews: [UIView(), noteLabel])
+        noteWrapper.axis = .horizontal
+        noteWrapper.spacing = 0
+        let iconSpacing = ThemeTokens.Spacing.md
+        let iconSize: CGFloat = 32
+        noteWrapper.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: 0, leading: iconSize + iconSpacing, bottom: 0, trailing: 0
+        )
+        noteWrapper.isLayoutMarginsRelativeArrangement = true
+        noteWrapper.arrangedSubviews[0].widthAnchor.constraint(equalToConstant: 0).isActive = true
+
+        let stack = UIStackView(arrangedSubviews: [header, noteWrapper])
         stack.axis = .vertical
         stack.spacing = ThemeTokens.Spacing.sm
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -290,6 +302,10 @@ final class PWAPermissionCenterViewController: UIViewController {
         row0.axis = .horizontal
         row0.spacing = ThemeTokens.Spacing.md
         row0.alignment = .center
+        // 文字列填满中间空间：标题/状态明确左对齐，按钮明确靠右
+        textColumn.translatesAutoresizingMaskIntoConstraints = false
+        textColumn.setContentHuggingPriority(.required - 1, for: .horizontal)
+        textColumn.setContentCompressionResistancePriority(.required - 1, for: .horizontal)
 
         row0.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(row0)
