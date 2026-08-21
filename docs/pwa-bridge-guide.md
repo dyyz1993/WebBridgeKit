@@ -78,7 +78,8 @@ window.BarkBridge.call('getPermissionStatus');
 
 | 分类 | action | 说明 |
 |---|---|---|
-| 设备信息 | `getSystemInfo` `getNetworkInfo` | 只读基本信息 |
+| 设备信息 | `getSystemInfo` `getNetworkInfo` | 只读基本信息（网络状态等） |
+| 容器交互 | `gesture` `layout` `screen` `mirroring` | 触控/布局/屏幕信息/投屏状态，纯容器交互无隐私 |
 | 页面导航 | `openPage` `closePage` `goBack` `setModal` `page` `layout`* | 容器内导航（*`layout`/`screen`/`gesture` 属设备控制组，见 §4） |
 | 历史/上下文 | `getHistory` `getPayload` | 本页启动参数与历史 |
 | 反馈 | `haptic` `vibrate` `tts` | 触感/振动/朗读 |
@@ -101,8 +102,7 @@ window.BarkBridge.call('getPermissionStatus');
 | notification | `showNotification` `systemExtra(setBadge)` | 通知 |
 | bluetooth | `bluetooth` | 蓝牙 |
 | motion | `sensors` | 运动传感器 |
-| deviceControl | `gesture` `layout` `screen` `systemExtra(其他)` | 设备控制 |
-| displayStatus | `mirroring` | 投屏状态 |
+
 | fileImport | `file` | 读取文件 |
 | fileExport | `media(saveFile/uploadFile)` | 导出文件 |
 | biometrics | `systemExtra(authenticate)` | 身份验证 |
