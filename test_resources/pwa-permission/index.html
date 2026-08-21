@@ -1,114 +1,89 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <link rel="icon" href="data:,">
-  <title>原生能力演示</title>
-  <style>
-    :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { margin: 0; padding: max(24px, env(safe-area-inset-top)) 20px 40px; background: #f7f8fc; color: #1a1d2e; }
-    h1 { margin: 12px 0 6px; font-size: 28px; }
-    p { color: #6b7394; line-height: 1.55; }
-    .card { margin-top: 20px; padding: 18px; border-radius: 18px; background: white; box-shadow: 0 8px 30px rgba(20,30,60,.08); }
-    .card h2 { margin: 0; font-size: 18px; }
-    .steps { margin: 12px 0 0; padding-left: 22px; color: #6b7394; line-height: 1.65; }
-    button { width: 100%; min-height: 50px; margin-top: 12px; border: 0; border-radius: 14px; background: #4f6af6; color: white; font-size: 16px; font-weight: 600; }
-    pre { white-space: pre-wrap; min-height: 64px; padding: 14px; border-radius: 12px; background: #eef1fb; color: #4c5578; }
-    .runtime { display: inline-flex; margin-top: 14px; padding: 7px 10px; border-radius: 999px; background: #eef1fb; color: #596484; font-size: 13px; }
-    @media (prefers-color-scheme: dark) { body { background:#0f1117;color:#f2f4fa } .card{background:#1e2233}.card p{color:#a0a8c5} pre{background:#151827;color:#c1c7dc} }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>原生能力演示</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f7; color: #1d1d1f; padding: 20px; max-width: 500px; margin: 0 auto; }
+        h1 { margin: 12px 0 6px; font-size: 28px; }
+        .runtime { color: #86868b; font-size: 13px; margin-bottom: 16px; }
+        .desc { color: #86868b; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+        h2 { font-size: 15px; margin-top: 20px; margin-bottom: 4px; }
+        button { width: 100%; min-height: 50px; margin-top: 12px; border: 0; border-radius: 14px; background: #4f6af6; color: white; font-size: 16px; font-weight: 600; cursor: pointer; }
+        button:active { opacity: 0.8; }
+        pre { background: #e8e8ed; border-radius: 10px; padding: 10px; font-size: 12px; margin-top: 8px; white-space: pre-wrap; word-break: break-all; min-height: 36px; color: #3a3a3c; }
+    </style>
 </head>
 <body>
-  <h1>原生能力演示</h1>
-  <p>此 PWA 只在点击按钮时申请对应能力。授权由 WebBridgeKit 管理，可随时在应用详情中撤销。</p>
-  <div class="runtime" id="runtime">正在检测运行容器…</div>
-  <section class="card">
-    <h2>授权会分两层</h2>
-    <ol class="steps">
-      <li>WebBridgeKit 先询问：是否允许这个 PWA 使用蓝牙。</li>
-      <li>首次真正访问时，iOS 再显示系统蓝牙权限弹窗。</li>
-    </ol>
-  </section>
-  <section class="card">
-    <h2>蓝牙</h2>
-    <p>只查询蓝牙状态，不会自动连接设备。允许后可继续发起 BLE 扫描。</p>
-    <button id="bluetooth" onclick="getBluetoothStatus()">查看蓝牙状态</button>
-    <pre id="bluetooth-result">尚未调用</pre>
-  </section>
-  <section class="card">
-    <h2>剪贴板</h2>
-    <p>演示首次 JSBridge 调用时的 PWA 授权确认。</p>
-    <button id="clipboard" onclick="readClipboard()">读取剪贴板</button>
-    <pre id="result">尚未调用</pre>
-  </section>
-  <script>
-    function unavailableResult(action) {
-      const message = '当前容器未提供 ' + action + ' 原生模块，请在 WebBridgeKit 中打开。';
-      return {
-        success: false,
-        available: false,
-        code: 'NATIVE_MODULE_UNAVAILABLE',
-        module: action,
-        error: message,
-        message: message
-      };
-    }
+    <h1>原生能力演示</h1>
+    <div class="runtime" id="runtime">正在检测运行容器…</div>
+    <div class="desc">本页面演示 WebBridgeKit 受保护原生能力的完整授权流程。点击按钮触发对应能力，首次使用会弹出原生授权面板（仅这一次 / 本次使用期间 / 始终允许），硬件能力还会触发 iOS 系统级弹窗。</div>
 
-    // Public, browser-safe facade. WebBridgeKit injects the native implementation;
-    // a normal browser receives a structured capability result instead of a JS error.
-    window.WebBridgeKit = window.WebBridgeKit || {};
-    if (typeof window.WebBridgeKit.isAvailable !== 'function') {
-      window.WebBridgeKit.isAvailable = function() {
-        const bridge = window.BarkBridge;
-        return !!(
-          bridge &&
-          typeof bridge.callNative === 'function' &&
-          (typeof bridge.isAvailable !== 'function' || bridge.isAvailable())
-        );
-      };
-    }
-    if (typeof window.WebBridgeKit.callNative !== 'function') {
-      window.WebBridgeKit.callNative = function(action, params) {
-        if (!window.WebBridgeKit.isAvailable()) {
-          return Promise.resolve(unavailableResult(action));
+    <div>
+        <h2>蓝牙</h2>
+        <pre id="bluetooth-result">尚未调用</pre>
+        <button id="bluetooth" onclick="getBluetoothStatus()">查看蓝牙状态</button>
+    </div>
+
+    <div>
+        <h2>相机</h2>
+        <pre id="camera-result">尚未调用</pre>
+        <button id="camera" onclick="takePhoto()">使用相机</button>
+    </div>
+
+    <div>
+        <h2>剪贴板</h2>
+        <pre id="clipboard-result">尚未调用</pre>
+        <button id="clipboard" onclick="readClipboard()">读取剪贴板</button>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            var rt = document.getElementById('runtime');
+            if (window.WebBridgeKit || window.webkit) {
+                rt.textContent = 'WebBridgeKit 原生容器 · 原生模块可用';
+            } else {
+                rt.textContent = '普通浏览器（无原生容器）';
+            }
+        }, 100);
+
+        async function getBluetoothStatus() {
+            const output = document.getElementById('bluetooth-result');
+            try {
+                const result = await window.BarkBridge.callNative('bluetooth', {
+                    action: 'getState'
+                });
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (e) {
+                output.textContent = 'Error: ' + (e.message || e);
+            }
         }
-        return window.BarkBridge.callNative(action, params || {});
-      };
-    }
 
-    document.getElementById('runtime').textContent = window.WebBridgeKit.isAvailable()
-      ? 'WebBridgeKit 原生容器 · 原生模块可用'
-      : '普通浏览器 · 原生模块不可用，网页功能仍可继续使用';
+        async function takePhoto() {
+            const output = document.getElementById('camera-result');
+            try {
+                const result = await window.BarkBridge.callNative('camera', {
+                    action: 'capture'
+                });
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (e) {
+                output.textContent = 'Error: ' + (e.message || e);
+            }
+        }
 
-    async function getBluetoothStatus() {
-      const output = document.getElementById('bluetooth-result');
-      try {
-        const result = await window.WebBridgeKit.callNative('bluetooth', {
-          reason: '检查蓝牙是否可用，以便发现附近的 BLE 设备'
-        });
-        output.textContent = result.code === 'NATIVE_MODULE_UNAVAILABLE'
-          ? result.message
-          : JSON.stringify(result, null, 2);
-      } catch (error) {
-        output.textContent = error.message || String(error);
-      }
-    }
-
-    async function readClipboard() {
-      const output = document.getElementById('result');
-      try {
-        const result = await window.WebBridgeKit.callNative('clipboard', {
-          action: 'read',
-          reason: '读取你复制的测试文本并显示在页面中'
-        });
-        output.textContent = result.code === 'NATIVE_MODULE_UNAVAILABLE'
-          ? result.message
-          : JSON.stringify(result, null, 2);
-      } catch (error) {
-        output.textContent = error.message || String(error);
-      }
-    }
-  </script>
+        async function readClipboard() {
+            const output = document.getElementById('clipboard-result');
+            try {
+                const result = await window.BarkBridge.callNative('clipboard', {
+                    action: 'read'
+                });
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (e) {
+                output.textContent = 'Error: ' + (e.message || e);
+            }
+        }
+    </script>
 </body>
 </html>

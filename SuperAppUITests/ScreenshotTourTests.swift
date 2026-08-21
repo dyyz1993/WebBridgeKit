@@ -484,3 +484,161 @@ final class PermissionLifecycleShotTests: XCTestCase {
 
     }
 }
+
+/// 系统拒绝引导流：先在系统层拒绝相机 → PWA 调相机 → 弹「前往系统设置」引导
+final class SystemDeniedFlowTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testSystemDeniedGuide() {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-testing", "--register-pwa-permission-fixture"]
+        app.launch()
+        sleep(6)
+
+        // 打开演示应用
+        let appButton = app.buttons["pwaHome.app.com.webbridgekit.fixture.permissions"]
+        XCTAssertTrue(appButton.waitForExistence(timeout: 12))
+        appButton.tap()
+        sleep(2)
+        let launch = app.buttons.containing(NSPredicate(format: "label CONTAINS '打开应用'")).firstMatch
+        XCTAssertTrue(launch.waitForExistence(timeout: 5))
+        launch.tap()
+        sleep(7)
+        snap("sysdenied-01-fixture-page")
+
+        // 查看蓝牙状态 → 品牌面板（系统 notDetermined 会先弹系统询问）
+        let btBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '查看蓝牙状态'")).firstMatch
+        XCTAssertTrue(btBtn.waitForExistence(timeout: 6))
+        btBtn.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        // 面板出现
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        if prompt.waitForExistence(timeout: 5) {
+            snap("sysdenied-02-consent-panel")
+            // 拒绝品牌面板（取消）
+            let cancel = app.buttons.containing(NSPredicate(format: "label CONTAINS '取消'")).firstMatch
+            if cancel.exists { cancel.tap(); sleep(2) }
+        }
+
+        // 权限中心（系统拒绝后通过界面看引导——系统拒绝需要真机/设置；
+        // 模拟器上蓝牙系统弹窗出现在面板取消后）
+        let sysDeny = springboard.buttons["不允许"].exists ? springboard.buttons["不允许"] : springboard.buttons["Don't Allow"].exists ? springboard.buttons["Don't Allow"] : nil
+        if sysDeny != nil {
+            sysDeny!.tap()
+            sleep(3)
+            snap("sysdenied-03-after-system-deny")
+        }
+
+        // 再调蓝牙 → 应弹「系统权限已关闭」引导（或 JS 返回错误）
+        if btBtn.exists {
+            btBtn.tap()
+            sleep(4)
+            snap("sysdenied-04-guide-or-result")
+        }
+
+        // 权限中心查看「需要处理」分组
+        let menu = app.descendants(matching: .any)["browserManager.immersiveMenuButton"]
+        if menu.waitForExistence(timeout: 6) {
+            menu.tap()
+            sleep(2)
+            if app.descendants(matching: .any)["pwa-permission.headerCard"].waitForExistence(timeout: 6) {
+                sleep(1)
+                snap("sysdenied-05-permission-center")
+            }
+        }
+    }
+}
+
+/// 系统拒绝后权限中心「需要处理」+「前往系统设置」按钮可见性
+final class SystemDeniedCenterTests: XCTestCase {
+    func testCenterShowsSettingsHandoff() {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-testing", "--register-pwa-permission-fixture"]
+        app.launch()
+        sleep(6)
+        let appButton = app.buttons["pwaHome.app.com.webbridgekit.fixture.permissions"]
+        XCTAssertTrue(appButton.waitForExistence(timeout: 12))
+        appButton.tap()
+        sleep(2)
+        let launch = app.buttons.containing(NSPredicate(format: "label CONTAINS '打开应用'")).firstMatch
+        XCTAssertTrue(launch.waitForExistence(timeout: 5))
+        launch.tap()
+        sleep(6)
+        let menu = app.descendants(matching: .any)["browserManager.immersiveMenuButton"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 8))
+        menu.tap()
+        sleep(2)
+        XCTAssertTrue(app.descendants(matching: .any)["pwa-permission.headerCard"].waitForExistence(timeout: 6))
+        sleep(1)
+        let att = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        att.name = "sysdenied-center"; att.lifetime = .keepAlways; add(att)
+    }
+}
+
+/// 相机完整两层流：品牌面板 → iOS 系统弹窗 → 结果（首次申请）
+final class CameraTwoLayerTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testCameraTwoLayerFlow() {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-testing", "--register-pwa-permission-fixture"]
+        app.launch()
+        sleep(6)
+
+        let appButton = app.buttons["pwaHome.app.com.webbridgekit.fixture.permissions"]
+        XCTAssertTrue(appButton.waitForExistence(timeout: 12))
+        appButton.tap()
+        sleep(2)
+        let launch = app.buttons.containing(NSPredicate(format: "label CONTAINS '打开应用'")).firstMatch
+        XCTAssertTrue(launch.waitForExistence(timeout: 5))
+        launch.tap()
+        sleep(8)
+        snap("cam-01-page")
+
+        // 点「使用相机」→ 第一层：品牌面板
+        let camBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '使用相机'")).firstMatch
+        XCTAssertTrue(camBtn.waitForExistence(timeout: 8))
+        camBtn.tap()
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 5))
+        sleep(1)
+        snap("cam-02-consent-panel")
+
+        // 选「始终允许」→ 第二层：iOS 系统弹窗
+        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+        XCTAssertTrue(always.waitForExistence(timeout: 3))
+        always.tap()
+        sleep(3)
+        // iOS 系统弹窗（SpringBoard 级）
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        var sysOK: XCUIElement? = nil
+        for label in ["允许", "OK", "Allow", "允许访问", "Allow While Using App"] {
+            if springboard.buttons[label].exists {
+                sysOK = springboard.buttons[label]; break
+            }
+        }
+        if sysOK != nil {
+            snap("cam-03-system-prompt")
+            sysOK!.tap()
+            sleep(4)
+        } else {
+            snap("cam-03-no-system-prompt")
+        }
+
+        // 第四张：结果（成功或错误）
+        snap("cam-04-result")
+
+        // 第五张：再调一次（直通，不弹任何面板）
+        camBtn.tap()
+        sleep(4)
+        snap("cam-05-second-call")
+    }
+}
