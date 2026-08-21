@@ -374,3 +374,113 @@ final class PermissionFlowTests: XCTestCase {
 private extension XCUIElement {
     func tapIfExistsCompat() { if exists { tap() } }
 }
+
+/// 网页授权管理页（带数据版）：种子授权后截图 origin 分组 + 撤销按钮
+final class WebGrantsScreenshotTests: XCTestCase {
+    func testGrantsPageWithData() {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-testing", "--register-pwa-permission-fixture", "--seed-pwa-permission-grant"]
+        app.launch()
+        sleep(6)
+        let settingsTab = app.tabBars.buttons["设置"]
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: 8))
+        settingsTab.tap()
+        sleep(2)
+        let row = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '网页授权管理'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 6))
+        row.tap()
+        sleep(3)
+        let att = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        att.name = "web-grants-with-data"
+        att.lifetime = .keepAlways
+        add(att)
+    }
+}
+
+/// 权限全生命周期连续剧：申请 → 面板 → 允许 → 成功 → 原生管理页 → 撤销 → 空 → 复测
+final class PermissionLifecycleShotTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testLifecycle() {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-testing", "--register-pwa-permission-fixture"]
+        app.launch()
+        sleep(6)
+
+        // 1. 应用首页宫格：原生能力演示卡
+        let appButton = app.buttons["pwaHome.app.com.webbridgekit.fixture.permissions"]
+        XCTAssertTrue(appButton.waitForExistence(timeout: 12))
+        snap("01-app-grid")
+
+        // 2. 打开演示页（宫格 → 详情弹层 → 打开应用）
+        appButton.tap()
+        sleep(2)
+        let launch = app.buttons.containing(NSPredicate(format: "label CONTAINS '打开应用'")).firstMatch
+        XCTAssertTrue(launch.waitForExistence(timeout: 5))
+        snap("02-app-details")
+        launch.tap()
+        sleep(7)
+        snap("03-fixture-initial")
+
+        // 3. 点「读取剪贴板」→ 原生授权面板
+        let clipboardBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch
+        XCTAssertTrue(clipboardBtn.waitForExistence(timeout: 6))
+        clipboardBtn.tap()
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 5))
+        sleep(1)
+        snap("04-consent-panel")
+
+        // 4. 选「始终允许」
+        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+        XCTAssertTrue(always.waitForExistence(timeout: 3))
+        always.tap()
+        sleep(3)
+        snap("05-after-accept")
+
+        // 5. 再次读取（应免面板直接成功）
+        clipboardBtn.tap()
+        sleep(3)
+        snap("06-second-call-granted")
+
+        // 7. 浏览器菜单 → 应用设置 → 权限中心（应用维度，带授权记录）
+        let menu = app.descendants(matching: .any)["browserManager.immersiveMenuButton"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 10))
+        menu.tap()
+        sleep(2)
+        // 沉浸式菜单直开权限中心（pwa-permission.headerCard 出现即为中心）
+        XCTAssertTrue(app.descendants(matching: .any)["pwa-permission.headerCard"].waitForExistence(timeout: 6))
+        sleep(1)
+        snap("07-permission-center-granted")
+
+        // 8. 中心内撤销：剪贴板
+        let revoke = app.buttons["pwa-permission.revoke.clipboard"]
+        if revoke.waitForExistence(timeout: 4) {
+            revoke.tap()
+            sleep(2)
+            snap("08-revoke-confirm")
+            let confirm = app.buttons["pwa-permission.revokeConfirm.confirm"]
+            if confirm.waitForExistence(timeout: 3) {
+                confirm.tap()
+                sleep(2)
+            }
+            snap("09-after-revoke")
+        }
+
+        // 9. 关闭中心回网页，再读剪贴板 → 面板应重新弹出
+        let closeCenter = app.navigationBars.buttons.element(boundBy: 0)
+        if closeCenter.exists { closeCenter.tap() }
+        sleep(2)
+        let cb2 = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch
+        if cb2.waitForExistence(timeout: 6) {
+            cb2.tap()
+            sleep(3)
+            snap("10-reprompt-after-revoke")
+        }
+
+    }
+}
