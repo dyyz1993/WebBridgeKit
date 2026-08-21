@@ -30,19 +30,17 @@ final class PWAPermissionTests: XCTestCase {
         app.buttons["权限与原生能力"].tap()
 
         XCTAssertTrue(element("pwa-permission.headerCard").waitForExistence(timeout: 5))
+        // 产品决策 2026-08-21：未授权能力不再渲染行，中心此时为空授权态
         for capability in ["bluetooth", "clipboard", "camera", "location", "fileImport", "share"] {
-            XCTAssertTrue(
-                element("pwa-permission.capability.\(capability)").waitForExistence(timeout: 3),
-                "Missing declared capability: \(capability)"
+            XCTAssertFalse(
+                element("pwa-permission.capability.\(capability)").exists,
+                "未授权能力不应渲染: \(capability)"
             )
         }
-        XCTAssertTrue(
-            element("pwa-permission.capability.bluetooth")
-                .staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'iOS 系统：'")).firstMatch.exists
-        )
-        XCTAssertTrue(
+        // 产品决策 2026-08-21：权限中心只展示已授权/需处理，「尚未使用」不再渲染
+        XCTAssertFalse(
             app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '尚未使用'"))
-                .firstMatch.waitForExistence(timeout: 3)
+                .firstMatch.waitForExistence(timeout: 2)
         )
         XCTAssertEqual(app.buttons.matching(identifier: "pwa-permission.revokeAll").count, 0)
 
@@ -129,7 +127,8 @@ final class PWAPermissionTests: XCTestCase {
         XCTAssertTrue(element("pwa-permission.revokeConfirm").waitForExistence(timeout: 3))
         app.buttons["pwa-permission.revokeConfirm.confirm"].tap()
 
-        XCTAssertTrue(element("pwa-permission.capability.clipboard").waitForExistence(timeout: 3))
+        // 撤销后该能力不再渲染（未授权不显示）
+        XCTAssertFalse(element("pwa-permission.capability.clipboard").waitForExistence(timeout: 2))
         XCTAssertEqual(app.buttons.matching(identifier: "pwa-permission.revokeAll").count, 0)
     }
 
@@ -147,7 +146,8 @@ final class PWAPermissionTests: XCTestCase {
         menu.tap()
 
         XCTAssertTrue(element("pwa-permission.headerCard").waitForExistence(timeout: 5))
-        XCTAssertTrue(element("pwa-permission.capability.bluetooth").exists)
+        // 未授权能力不再渲染行，中心此时应为空授权态
+        XCTAssertFalse(element("pwa-permission.capability.bluetooth").exists)
     }
 
     private func element(_ identifier: String) -> XCUIElement {
