@@ -183,6 +183,8 @@ final class PWAPermissionCenterViewController: UIViewController {
         originLabel.font = ThemeTokens.Typography.monospaceSmall
         originLabel.textColor = ThemeTokens.Color.textSecondary
         originLabel.numberOfLines = 0
+        originLabel.textAlignment = .natural
+        originLabel.lineBreakMode = .byWordWrapping
         originLabel.adjustsFontForContentSizeCategory = true
 
         let noteLabel = UILabel()
