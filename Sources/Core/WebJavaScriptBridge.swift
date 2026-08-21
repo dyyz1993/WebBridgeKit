@@ -307,6 +307,30 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 ), callbackId)
                 return
             }
+            // iOS 系统层已拒绝：弹原生引导（含「前往系统设置」入口），不再
+            // 只把错误文字丢回 JS——用户需要一个可操作的路径去开启。
+            if case .denied(let result) = authorization,
+               let status = result["status"] as? String, status == "requiresSettings" {
+                DispatchQueue.main.async {
+                    let alert = UIAlertController(
+                        title: "系统权限已关闭",
+                        message: (result["error"] as? String) ?? "iOS 系统层已拒绝该能力，请前往系统设置开启后再试。",
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "前往系统设置", style: .default) { _ in
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    })
+                    alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+                    let scene = UIApplication.shared.connectedScenes
+                        .compactMap { $0 as? UIWindowScene }
+                        .first { $0.activationState == .foregroundActive }
+                    let topVC = scene?.keyWindow?.rootViewController?
+                        .topMostPresented() ?? scene?.keyWindow?.rootViewController
+                    topVC?.present(alert, animated: true)
+                }
+            }
             switch authorization {
             case .allowed:
                 self.updateCommandStatus(action: action, status: .executing)
@@ -890,5 +914,15 @@ public struct CommandTraceEntry {
         self.result = nil
         self.error = nil
         self.completedAt = nil
+    }
+}
+
+private extension UIViewController {
+    func topMostPresented() -> UIViewController {
+        var top: UIViewController = self
+        while let presented = top.presentedViewController {
+            top = presented
+        }
+        return top
     }
 }
