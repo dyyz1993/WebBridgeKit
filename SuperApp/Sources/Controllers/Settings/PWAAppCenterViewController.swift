@@ -332,7 +332,10 @@ final class PWAAppCenterViewController: UIViewController {
             self?.showGatewayManagement()
         })
         alert.addAction(UIAlertAction(title: "关闭", style: .cancel))
-        if let popover = alert.popoverPresentationController {
+        // 仅 iPad（regular 宽度）需要 popover 锚点；iPhone 上无条件配置会把
+        // actionSheet 变成居中窄浮卡（宽度异常、遮挡宫格）——用户实测报告。
+        if let popover = alert.popoverPresentationController,
+           traitCollection.horizontalSizeClass == .regular {
             popover.sourceView = view
             popover.sourceRect = view.bounds
         }
