@@ -473,6 +473,14 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             approvedScope: selectedScope,
             granted: true
         ) { resolved in
+            DispatchQueue.main.async {
+                // 面板保持到了系统弹窗——现在按结果收起或切引导态
+                NotificationCenter.default.post(
+                    name: .init("pwa.consent.systemResult"),
+                    object: nil,
+                    userInfo: ["granted": resolved.status == .granted]
+                )
+            }
             if resolved.status == .granted {
                 pending.completion(.allowed)
             } else {

@@ -240,6 +240,21 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
         super.viewDidLoad()
         configureView()
         buildContent()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(systemConsentResult(_:)),
+            name: .init("pwa.consent.systemResult"),
+            object: nil
+        )
+    }
+
+    @objc private func systemConsentResult(_ note: Notification) {
+        let granted = note.userInfo?["granted"] as? Bool ?? false
+        if granted {
+            dismissPanel()
+        } else if !hasResolved {
+            showSettingsGuidance()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -512,6 +527,29 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
     private func resolve(_ scope: HTMLAppPermissionScope?) {
         guard !hasResolved else { return }
         hasResolved = true
+        if scope == nil {
+            // 取消：面板正常收起
+            UIView.animate(
+                withDuration: ThemeTokens.Animation.fast.duration,
+                animations: {
+                    self.dimmingControl.alpha = 0
+                    self.sheetView.transform = CGAffineTransform(translationX: 0, y: self.sheetView.bounds.height)
+                },
+                completion: { _ in
+                    self.dismiss(animated: false) {
+                        self.completion(nil)
+                    }
+                }
+            )
+            return
+        }
+        // 选了范围：面板保持显示，iOS 系统弹窗会叠加在上面。
+        // 系统授权结果由通知决定：成功 dismissPanel()，拒绝 showSettingsGuidance()。
+        completion(scope)
+    }
+
+    /// 系统授权通过后面板正常收起
+    public func dismissPanel() {
         UIView.animate(
             withDuration: ThemeTokens.Animation.fast.duration,
             animations: {
@@ -519,11 +557,43 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
                 self.sheetView.transform = CGAffineTransform(translationX: 0, y: self.sheetView.bounds.height)
             },
             completion: { _ in
-                self.dismiss(animated: false) {
-                    self.completion(scope)
-                }
+                self.dismiss(animated: false)
             }
         )
+    }
+
+    /// 系统授权拒绝后面板切引导态：提示去系统设置
+    public func showSettingsGuidance() {
+        // 隐藏三档按钮，显示引导文案+去设置按钮
+        contentStack.arrangedSubviews.forEach { sub in
+            if sub.accessibilityIdentifier == "pwa.permission.scopes" {
+                sub.isHidden = true
+            }
+        }
+        let guideLabel = UILabel()
+        guideLabel.text = "iOS 系统已拒绝该权限。请前往系统设置开启后重试。"
+        guideLabel.font = ThemeTokens.Typography.body
+        guideLabel.textColor = ThemeTokens.Color.textSecondary
+        guideLabel.numberOfLines = 0
+        contentStack.addArrangedSubview(guideLabel)
+
+        let settingsBtn = ThemeButton(type: .system)
+        settingsBtn.setTitle("前往系统设置", for: .normal)
+        settingsButtonConfigured(settingsBtn)
+        contentStack.addArrangedSubview(settingsBtn)
+
+        // 重置 resolve 状态，允许再次触发
+        hasResolved = false
+    }
+
+    private func settingsButtonConfigured(_ button: ThemeButton) {
+        button.addTarget(self, action: #selector(openSystemSettings), for: .touchUpInside)
+    }
+
+    @objc private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
 
     private static func icon(for capability: HTMLAppCapability) -> LucideIcon {
