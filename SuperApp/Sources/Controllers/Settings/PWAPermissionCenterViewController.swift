@@ -114,6 +114,9 @@ final class PWAPermissionCenterViewController: UIViewController {
                 section = .allowed
             } else if grant != nil {
                 section = .needsAttention
+            } else if systemStatus == .denied {
+                // 未授权但 iOS 系统已拒绝：用户需要知道去系统设置开启
+                section = .needsAttention
             } else {
                 section = .unused
             }
