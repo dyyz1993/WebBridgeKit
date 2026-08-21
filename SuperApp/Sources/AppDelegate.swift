@@ -168,7 +168,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     private func registerBridgePermissionFixtureIfRequested() {
-        guard ProcessInfo.processInfo.arguments.contains("--register-pwa-permission-fixture") else { return }
+        let fixtureAppID = "com.webbridgekit.fixture.permissions"
+        guard ProcessInfo.processInfo.arguments.contains("--register-pwa-permission-fixture") else {
+            // UI 测试注册的 fixture 会持久写进信任清单；正常启动时清掉，
+            // 否则测试宿主（模拟器）的「我的应用」宫格会残留演示应用。
+            try? HTMLAppRuntimeCenter.shared.trustRegistry.unregister(appID: fixtureAppID)
+            return
+        }
         let runtime = HTMLAppRuntimeCenter.shared
         // Register the fixture under the ACTIVE gateway identity when one is
         // configured: the permission center syncs runtime.gatewayIdentity to
