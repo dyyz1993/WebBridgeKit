@@ -337,7 +337,10 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
         sourceLabel.font = ThemeTokens.Typography.monospaceSmall
         sourceLabel.textColor = ThemeTokens.Color.textTertiary
         sourceLabel.numberOfLines = 2
-        sourceLabel.text = "来源 · \(origin)"
+        // 通配样式（host/*）明示授权覆盖该域名下所有页面——与判定链的
+        // origin 语义一致（scheme+host+port 精确匹配，path 不参与）
+        let displayOrigin = origin.hasSuffix("/") ? origin + "*" : origin + "/*"
+        sourceLabel.text = "来源 · \(displayOrigin)（该域名下所有页面）"
         sourceLabel.accessibilityIdentifier = "pwa.permission.origin"
         contentStack.addArrangedSubview(sourceLabel)
 
