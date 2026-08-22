@@ -642,3 +642,52 @@ final class CameraTwoLayerTests: XCTestCase {
         snap("cam-05-second-call")
     }
 }
+
+/// 本地信任端到端：推送链接打开（非注册应用）→ 点相机 → 品牌面板 → 允许 → 结果
+final class LocalTrustE2ETests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testLocalTrustFullFlow() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        sleep(5)
+        // 深链打开公网页面（非注册应用 = 本地信任路径）
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=https%3A%2F%2Fae8fcb.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fpwa-permission%2Findex.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(12)
+        snap("lt-01-page")
+
+        // 点「使用相机」→ 应弹品牌面板（不再报"不是已验证的PWA"）
+        let camBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '使用相机'")).firstMatch
+        XCTAssertTrue(camBtn.waitForExistence(timeout: 10), "使用相机按钮应存在")
+        camBtn.tap()
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        let panelShown = prompt.waitForExistence(timeout: 6)
+        snap("lt-02-panel=\(panelShown)")
+        XCTAssertTrue(panelShown, "本地信任路径应弹品牌授权面板")
+
+        // 选「始终允许」→ 系统弹窗
+        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+        if always.waitForExistence(timeout: 3) {
+            always.tap()
+            sleep(3)
+            var sysOK: XCUIElement? = nil
+            for label in ["允许", "OK", "Allow"] {
+                if springboard.buttons[label].exists { sysOK = springboard.buttons[label]; break }
+            }
+            if sysOK != nil {
+                snap("lt-03-system")
+                sysOK!.tap()
+                sleep(5)
+            }
+        }
+        snap("lt-04-result")
+    }
+}

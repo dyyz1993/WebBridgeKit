@@ -582,8 +582,6 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
         settingsButtonConfigured(settingsBtn)
         contentStack.addArrangedSubview(settingsBtn)
 
-        // 重置 resolve 状态，允许再次触发
-        hasResolved = false
     }
 
     private func settingsButtonConfigured(_ button: ThemeButton) {
