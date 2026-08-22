@@ -31,23 +31,37 @@ public class WebCameraHandler: BaseWebNativeHandler {
         let params = body["params"] as? [String: Any] ?? body
         let type = params["type"] as? String ?? "photo" // 针对 camera 的 type
 
+        // bridge 层的 authorizeIfNeeded 已确保系统权限就绪（弹过系统弹窗、
+        // 用户允许后才放行到 handler），这里不再二次 requestAccess——
+        // 双重请求在真机上造成面板/系统弹窗/相机 UI 的循环异常
+        // （2026-08-22 用户实测报告）。仅做防御性状态检查。
+        let alreadyAuthorized = AVCaptureDevice.authorizationStatus(for: .video) == .authorized
+
         switch type {
         case "photo":
-            requestCameraPermission { [weak self] granted in
-                guard let self = self else { return }
-                if granted {
-                    self.openCamera(completion: completion)
-                } else {
-                    self.rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
+            if alreadyAuthorized {
+                openCamera(completion: completion)
+            } else {
+                requestCameraPermission { [weak self] granted in
+                    guard let self = self else { return }
+                    if granted {
+                        self.openCamera(completion: completion)
+                    } else {
+                        self.rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
+                    }
                 }
             }
         case "video":
-            requestCameraPermission { [weak self] granted in
-                guard let self = self else { return }
-                if granted {
-                    self.openCameraForVideo(completion: completion)
-                } else {
-                    self.rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
+            if alreadyAuthorized {
+                openCameraForVideo(completion: completion)
+            } else {
+                requestCameraPermission { [weak self] granted in
+                    guard let self = self else { return }
+                    if granted {
+                        self.openCameraForVideo(completion: completion)
+                    } else {
+                        self.rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
+                    }
                 }
             }
         default:
