@@ -385,7 +385,17 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             // 本地信任：origin 即身份，无需网关注册
             appID = "local.\(origin)"
         }
-        guard let subject = permissionSubject(appID: appID, origin: origin) else {
+        // 本地信任不依赖网关身份——直接用 local-appID 构造 subject
+        let subject: HTMLAppPermissionSubject
+        if appID.hasPrefix("local.") {
+            subject = HTMLAppPermissionSubject(
+                gatewayIdentity: "local-trust",
+                appID: appID,
+                origin: origin
+            )
+        } else if let registered = permissionSubject(appID: appID, origin: origin) {
+            subject = registered
+        } else {
             completion(.denied(Self.authorizationError(
                 capability: capability,
                 status: .denied,
@@ -404,6 +414,16 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         )
         let isLocalTrust = appID.hasPrefix("local.")
         if isLocalTrust {
+            // 防重入：同 (subject, capability) 已有 pending 授权时拒绝新请求
+            // （真机实测：JS 在面板等待期间可能重发 camera 调用，导致面板/系统弹窗循环）
+            if hasPendingAuthorization(subject: subject, capability: capability) {
+                completion(.denied(Self.authorizationError(
+                    capability: capability,
+                    status: .denied,
+                    message: "授权正在进行中，请先完成当前授权"
+                )))
+                return
+            }
             // 本地信任：先检查系统层（拒绝时直接弹引导，同网关路径）
             let nativeStatus = HTMLAppRuntimeCenter.shared.systemPermissionAdapter
                 .authorizationStatus(for: capability)
@@ -491,6 +511,14 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                     ? "iOS 系统权限已关闭，请前往系统设置开启"
                     : "PWA 未获得该原生能力授权"
             )))
+        }
+    }
+
+    private func hasPendingAuthorization(subject: HTMLAppPermissionSubject, capability: HTMLAppCapability) -> Bool {
+        pendingAuthorizationsLock.lock()
+        defer { pendingAuthorizationsLock.unlock() }
+        return pendingAuthorizations.values.contains { pending in
+            pending.subject == subject && pending.request.capability == capability
         }
     }
 

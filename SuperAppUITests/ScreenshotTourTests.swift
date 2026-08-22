@@ -691,3 +691,70 @@ final class LocalTrustE2ETests: XCTestCase {
         snap("lt-04-result")
     }
 }
+
+/// 深度诊断：相机流每步截图，追踪面板是否重弹
+final class CameraLoopDiagTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testDiagCameraLoop() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        sleep(5)
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=https%3A%2F%2Fae8fcb.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fpwa-permission%2Findex.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let openBtn = springboard.buttons["打开"]
+        if openBtn.waitForExistence(timeout: 10) { sleep(2); openBtn.tap(); if openBtn.exists { openBtn.tap() } }
+        sleep(12)
+        snap("diag-01-page")
+
+        let camBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '使用相机'")).firstMatch
+        XCTAssertTrue(camBtn.waitForExistence(timeout: 8))
+        camBtn.tap()
+        sleep(3)
+
+        // 面板第一次出现
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 5))
+        snap("diag-02-panel-first")
+
+        // 选「本次使用期间」
+        let session = app.buttons.containing(NSPredicate(format: "label CONTAINS '本次使用期间'")).firstMatch
+        XCTAssertTrue(session.waitForExistence(timeout: 3))
+        session.tap()
+        sleep(3)
+        snap("diag-03-after-select")
+
+        // 等系统弹窗
+        var sysBtn: XCUIElement? = nil
+        for label in ["允许", "OK", "Allow"] {
+            if springboard.buttons[label].exists { sysBtn = springboard.buttons[label]; break }
+        }
+        if sysBtn != nil {
+            snap("diag-04-system-prompt")
+            sysBtn!.tap()
+            sleep(4)
+        } else {
+            snap("diag-04-no-system")
+        }
+        snap("diag-05-after-system")
+
+        // 再等 5 秒看面板是否重弹
+        sleep(5)
+        let panelStill = prompt.exists
+        snap("diag-06-panel-still=\(panelStill)")
+
+        // 再等 5 秒
+        sleep(5)
+        let panelStill2 = prompt.exists
+        snap("diag-07-panel-still2=\(panelStill2)")
+
+        // dump 元素树
+        let tree = XCTAttachment(string: app.debugDescription)
+        tree.name = "diag-tree"; tree.lifetime = .keepAlways; add(tree)
+    }
+}

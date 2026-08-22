@@ -31,39 +31,21 @@ public class WebCameraHandler: BaseWebNativeHandler {
         let params = body["params"] as? [String: Any] ?? body
         let type = params["type"] as? String ?? "photo" // 针对 camera 的 type
 
-        // bridge 层的 authorizeIfNeeded 已确保系统权限就绪（弹过系统弹窗、
-        // 用户允许后才放行到 handler），这里不再二次 requestAccess——
-        // 双重请求在真机上造成面板/系统弹窗/相机 UI 的循环异常
-        // （2026-08-22 用户实测报告）。仅做防御性状态检查。
-        let alreadyAuthorized = AVCaptureDevice.authorizationStatus(for: .video) == .authorized
+        // bridge 层的 authorizeIfNeeded 全权负责系统权限请求（品牌面板确认后
+        // 触发 iOS 系统弹窗，拿到结果才放行 handler）。handler 内不再调用
+        // AVCaptureDevice.requestAccess——真机实测双重请求导致面板/系统弹窗/
+        // 相机 UI 循环异常（2026-08-22）。未授权直接拒绝（正常不会走到这，
+        // 仅防御性兜底）。
+        guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
+            rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
+            return
+        }
 
         switch type {
         case "photo":
-            if alreadyAuthorized {
-                openCamera(completion: completion)
-            } else {
-                requestCameraPermission { [weak self] granted in
-                    guard let self = self else { return }
-                    if granted {
-                        self.openCamera(completion: completion)
-                    } else {
-                        self.rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
-                    }
-                }
-            }
+            openCamera(completion: completion)
         case "video":
-            if alreadyAuthorized {
-                openCameraForVideo(completion: completion)
-            } else {
-                requestCameraPermission { [weak self] granted in
-                    guard let self = self else { return }
-                    if granted {
-                        self.openCameraForVideo(completion: completion)
-                    } else {
-                        self.rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
-                    }
-                }
-            }
+            openCameraForVideo(completion: completion)
         default:
             reject(error: "Unknown camera type: \(type)", completion: completion)
         }
