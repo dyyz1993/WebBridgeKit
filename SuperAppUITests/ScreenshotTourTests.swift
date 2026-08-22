@@ -349,7 +349,7 @@ final class PermissionFlowTests: XCTestCase {
 
         if panelShown {
             // 选「始终允许」→ 系统弹窗 → 允许 → 刷新
-            let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+            let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '允许'")).firstMatch
             if always.exists { always.tap() }
             sleep(2)
             let sysAllow = springboard.buttons["允许"].exists ? springboard.buttons["允许"] : springboard.buttons["OK"]
@@ -436,7 +436,7 @@ final class PermissionLifecycleShotTests: XCTestCase {
         snap("04-consent-panel")
 
         // 4. 选「始终允许」
-        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '允许'")).firstMatch
         XCTAssertTrue(always.waitForExistence(timeout: 3))
         always.tap()
         sleep(3)
@@ -613,7 +613,7 @@ final class CameraTwoLayerTests: XCTestCase {
         snap("cam-02-consent-panel")
 
         // 选「始终允许」→ 第二层：iOS 系统弹窗
-        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '允许'")).firstMatch
         XCTAssertTrue(always.waitForExistence(timeout: 3))
         always.tap()
         sleep(3)
@@ -674,7 +674,7 @@ final class LocalTrustE2ETests: XCTestCase {
         XCTAssertTrue(panelShown, "本地信任路径应弹品牌授权面板")
 
         // 选「始终允许」→ 系统弹窗
-        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '始终允许'")).firstMatch
+        let always = app.buttons.containing(NSPredicate(format: "label CONTAINS '允许'")).firstMatch
         if always.waitForExistence(timeout: 3) {
             always.tap()
             sleep(3)

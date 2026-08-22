@@ -463,31 +463,27 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
         stack.axis = .vertical
         stack.spacing = ThemeTokens.Spacing.sm
 
-        let once = PermissionScopeButton(
-            title: "仅这一次",
-            subtitle: "完成当前操作后失效",
-            recommended: false
-        )
-        once.accessibilityIdentifier = "pwa.permission.scope.once"
-        once.addAction(UIAction { [weak self] _ in self?.resolve(.once) }, for: .touchUpInside)
-
-        let session = PermissionScopeButton(
-            title: "本次使用期间",
-            subtitle: "关闭这个 PWA 后失效",
+        // 产品决策 2026-08-22：简化为「允许 / 拒绝」两选。
+        // 允许 = 始终允许（可随时在设置撤销），拒绝 = 本次拒绝（下次再调再弹）。
+        // 去掉了「仅这一次」「本次使用期间」——用户反馈选项过多且语义混淆。
+        let allow = PermissionScopeButton(
+            title: "允许",
+            subtitle: "可随时在设置中撤销授权",
             recommended: true
         )
-        session.accessibilityIdentifier = "pwa.permission.scope.appSession"
-        session.addAction(UIAction { [weak self] _ in self?.resolve(.appSession) }, for: .touchUpInside)
+        allow.accessibilityIdentifier = "pwa.permission.scope.allow"
+        allow.addAction(UIAction { [weak self] _ in self?.resolve(.always) }, for: .touchUpInside)
 
-        let always = PermissionScopeButton(
-            title: "始终允许",
-            subtitle: "可随时在应用设置中撤销",
-            recommended: false
+        let deny = PermissionScopeButton(
+            title: "拒绝",
+            subtitle: "本次拒绝，下次使用时再次询问",
+            recommended: false,
+            style: .destructive
         )
-        always.accessibilityIdentifier = "pwa.permission.scope.always"
-        always.addAction(UIAction { [weak self] _ in self?.resolve(.always) }, for: .touchUpInside)
+        deny.accessibilityIdentifier = "pwa.permission.scope.deny"
+        deny.addAction(UIAction { [weak self] _ in self?.resolve(nil) }, for: .touchUpInside)
 
-        [once, session, always].forEach { stack.addArrangedSubview($0) }
+        [allow, deny].forEach { stack.addArrangedSubview($0) }
         return stack
     }
 
@@ -612,19 +608,22 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
 }
 
 private final class PermissionScopeButton: UIButton {
-    init(title: String, subtitle: String, recommended: Bool) {
+    enum ButtonStyle { case normal, destructive }
+
+    init(title: String, subtitle: String, recommended: Bool, style: ButtonStyle = .normal) {
         super.init(frame: .zero)
 
-        backgroundColor = recommended ? ThemeTokens.Color.primarySoft : ThemeTokens.Color.surface
+        let isDestructive = style == .destructive
+        backgroundColor = isDestructive ? ThemeTokens.Color.error : (recommended ? ThemeTokens.Color.primarySoft : ThemeTokens.Color.surface)
         layer.cornerRadius = ThemeTokens.CornerRadius.row
         layer.borderWidth = 1
-        layer.borderColor = (recommended ? ThemeTokens.Color.primary : ThemeTokens.Color.border).cgColor
+        layer.borderColor = (isDestructive ? ThemeTokens.Color.error : (recommended ? ThemeTokens.Color.primary : ThemeTokens.Color.border)).cgColor
         accessibilityLabel = title
         accessibilityHint = subtitle
 
         let titleLabel = UILabel()
         titleLabel.font = ThemeTokens.Typography.rowTitle
-        titleLabel.textColor = ThemeTokens.Color.text
+        titleLabel.textColor = (style == .destructive) ? ThemeTokens.Color.error : ThemeTokens.Color.text
         titleLabel.text = title
 
         let subtitleLabel = UILabel()

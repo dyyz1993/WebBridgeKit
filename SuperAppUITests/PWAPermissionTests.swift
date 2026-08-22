@@ -65,14 +65,15 @@ final class PWAPermissionTests: XCTestCase {
 
         XCTAssertTrue(element("pwa.permission.prompt").waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["原生能力申请"].exists)
-        for title in ["仅这一次", "本次使用期间", "始终允许", "取消"] {
+        // 2026-08-22 产品决策：两选（允许 / 拒绝）
+        for title in ["允许", "拒绝"] {
             XCTAssertTrue(app.buttons[title].exists, "Missing permission choice: \(title)")
         }
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = "pwa-bridge-permission-prompt"
         attachment.lifetime = .keepAlways
         add(attachment)
-        app.buttons["取消"].tap()
+        app.buttons["拒绝"].tap()
         XCTAssertFalse(element("pwa.permission.prompt").waitForExistence(timeout: 2))
         XCTAssertTrue(bridgeButton.exists)
     }
@@ -94,9 +95,9 @@ final class PWAPermissionTests: XCTestCase {
         XCTAssertTrue(prompt.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["允许使用蓝牙？"].exists)
         XCTAssertTrue(app.staticTexts["允许后，iOS 仍可能显示系统权限确认。"].exists)
-        XCTAssertTrue(app.buttons["仅这一次"].exists)
-        XCTAssertTrue(app.buttons["本次使用期间"].exists)
-        XCTAssertTrue(app.buttons["始终允许"].exists)
+        XCTAssertTrue(app.buttons["允许"].exists)
+        XCTAssertTrue(app.buttons["拒绝"].exists)
+        XCTAssertTrue(app.buttons["允许"].exists)
         XCTAssertTrue(app.buttons["取消"].exists)
 
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
