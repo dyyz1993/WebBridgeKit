@@ -308,8 +308,8 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
         view.addSubview(sheetView)
         sheetView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.leading.equalToSuperview().offset(ThemeTokens.Spacing.md).priority(.high)
-            make.trailing.equalToSuperview().inset(ThemeTokens.Spacing.md).priority(.high)
+            make.leading.equalToSuperview().priority(.required)
+            make.trailing.equalToSuperview().priority(.required)
             make.width.lessThanOrEqualTo(520)
             make.top.greaterThanOrEqualTo(view.safeAreaLayoutGuide.snp.top).offset(ThemeTokens.Spacing.md)
             make.bottom.equalToSuperview()

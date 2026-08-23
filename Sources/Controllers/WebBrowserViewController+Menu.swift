@@ -80,11 +80,8 @@ extension WebBrowserViewController {
             })
         }
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("[AUTH] Permissions", comment: ""), style: .default) { [weak self] _ in
-            self?.loadPermissionsPage()
-        })
-
-        // 原生权限管理入口：打开网页授权管理页（SuperApp 注入的 presenter）
+        // 原生权限管理入口（替代旧的 loadPermissionsPage 网页版——用户反馈
+        // 菜单里进权限管理不应是网页）
         if let presenter = WebBrowserManager.shared.webGrantsPresenter {
             alertController.addAction(UIAlertAction(title: "权限管理", style: .default) { [weak self] _ in
                 guard let self else { return }
