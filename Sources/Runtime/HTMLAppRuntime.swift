@@ -395,10 +395,29 @@ public final class HTMLAppPermissionLedger {
     }
 
     public func revoke(appID: String, origin: String, capability: HTMLAppCapability) {
-        revoke(
-            subject: HTMLAppPermissionSubject(gatewayIdentity: "test-gateway", appID: appID, origin: origin),
+        // 调用方（网页授权管理页）只知道 appID/origin/capability 三元组；
+        // gatewayIdentity 可能是 local-trust、已配置网关或 test-gateway——
+        // 按三元组匹配删除，不要猜身份拼 key（2026-08-23 实证：硬编码
+        // "test-gateway" 导致本地信任授权的撤销静默无效）。
+        lock.lock()
+        let matches: (HTMLAppPermissionGrant) -> Bool = { grant in
+            grant.subject.appID == appID
+                && grant.subject.origin == origin
+                && grant.capability == capability
+        }
+        let before = sessionGrants.count + persistentGrants.count
+        sessionGrants = sessionGrants.filter { !matches($0.value) }
+        persistentGrants = persistentGrants.filter { !matches($0.value) }
+        let removed = before - (sessionGrants.count + persistentGrants.count)
+        persistLocked()
+        lock.unlock()
+
+        guard removed > 0 else { return }
+        postRevocation(HTMLAppPermissionRevocation(
+            appID: appID,
+            origin: origin,
             capability: capability
-        )
+        ))
     }
 
     public func replaceAll(_ grants: [HTMLAppPermissionGrant]) throws {

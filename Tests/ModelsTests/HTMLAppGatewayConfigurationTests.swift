@@ -116,7 +116,9 @@ final class HTMLAppGatewayConfigurationTests: XCTestCase {
         let gateway = HTMLAppGatewayDefaults.official
 
         XCTAssertTrue(gateway.validate().isValid)
-        XCTAssertEqual(gateway.baseURL, "https://cloak.xbrowser.dev:5801")
+        // 官方网关已从 tx（cloak.xbrowser.dev:5801，已退役）切换到
+        // shanbox 自托管生产网关（2026-08 起，见 HTMLAppGatewayDefaults 注释）。
+        XCTAssertEqual(gateway.baseURL, "https://wbk.shanbox.19930810.xyz:8443")
         XCTAssertEqual(gateway.healthPath, "/health")
         XCTAssertEqual(gateway.manifestPath, "/api/v1/html-apps")
         XCTAssertNotNil(gateway.publicKeyID)

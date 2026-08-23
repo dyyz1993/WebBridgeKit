@@ -823,3 +823,111 @@ final class ClipboardGrantPersistenceTests: XCTestCase {
         }
     }
 }
+
+/// 网页授权管理页 E2E：授权→菜单进原生授权页→撤销→行消失→再调用重新弹面板。
+/// 回归 2026-08-23：revoke(appID:) 曾硬编码 test-gateway，local-trust 授权撤销无效。
+final class WebGrantRevokeTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testRevokeRestoresConsentPrompt() {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-testing", "--register-pwa-permission-fixture"]
+        app.launch()
+        sleep(6)
+
+        let appButton = app.buttons["pwaHome.app.com.webbridgekit.fixture.permissions"]
+        XCTAssertTrue(appButton.waitForExistence(timeout: 12), "宫格应有 fixture 应用")
+
+        // 宫格按钮在 fixture 异步注册后会重建（AX 元素失效）；菜单/转场 tap 也偶发被吞——都重试
+        func tapStable(_ el: XCUIElement, timeout: TimeInterval = 6) -> Bool {
+            for _ in 0..<3 {
+                if el.waitForExistence(timeout: timeout) {
+                    el.tap()
+                    return true
+                }
+            }
+            return false
+        }
+        func openFixturePage() -> Bool {
+            for _ in 0..<3 {
+                guard tapStable(appButton) else { continue }
+                sleep(2)
+                let launch = app.buttons.containing(NSPredicate(format: "label CONTAINS '打开应用'")).firstMatch
+                guard launch.waitForExistence(timeout: 5) else { continue }
+                launch.tap()
+                let clip = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch
+                if clip.waitForExistence(timeout: 12) { return true }
+                let close = app.buttons["browserManager.closeButton"]
+                if close.waitForExistence(timeout: 3) { close.tap(); sleep(2) }
+            }
+            return false
+        }
+        XCTAssertTrue(openFixturePage(), "fixture 演示页应可打开")
+
+        // 授权剪贴板（面板→允许）
+        let clipBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch
+        clipBtn.tap()
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 6), "首次调用应弹品牌面板")
+        let allow = app.buttons.containing(NSPredicate(format: "label == '允许'")).firstMatch
+        XCTAssertTrue(allow.waitForExistence(timeout: 4))
+        allow.tap()
+        sleep(4)
+        snap("revoke-01-granted")
+
+        // 菜单 → 权限中心（fixture 浏览器菜单可能直接呈现或经入口进入）
+        let headerCard = app.descendants(matching: .any)["pwa-permission.headerCard"]
+        var centerOpened = headerCard.waitForExistence(timeout: 4)
+        if !centerOpened {
+            let navMenu = app.buttons["browserManager.menuButton"]
+            let immersiveMenu = app.descendants(matching: .any)["browserManager.immersiveMenuButton"]
+            for m in [navMenu, immersiveMenu] where !centerOpened {
+                if m.waitForExistence(timeout: 4) {
+                    m.tap()
+                    sleep(2)
+                    if headerCard.waitForExistence(timeout: 4) { centerOpened = true; break }
+                    for entry in [app.buttons["权限管理"], app.buttons["应用设置"]] {
+                        if entry.waitForExistence(timeout: 2) { entry.tap(); sleep(2); break }
+                    }
+                    centerOpened = headerCard.waitForExistence(timeout: 5)
+                }
+            }
+        }
+        XCTAssertTrue(centerOpened, "应能进入权限中心")
+        snap("revoke-02-center")
+
+        // 撤销剪贴板（品牌确认面板 → 确认）
+        let revokeBtn = app.buttons["pwa-permission.revoke.clipboard"]
+        XCTAssertTrue(revokeBtn.waitForExistence(timeout: 6), "权限中心应有剪贴板撤销按钮")
+        revokeBtn.tap()
+        sleep(2)
+        let confirmBtn = app.buttons["pwa-permission.revokeConfirm.confirm"]
+        XCTAssertTrue(confirmBtn.waitForExistence(timeout: 4), "应弹出撤销确认面板")
+        confirmBtn.tap()
+        sleep(2)
+        snap("revoke-03-after")
+        XCTAssertFalse(
+            app.buttons["pwa-permission.revoke.clipboard"].waitForExistence(timeout: 2),
+            "撤销后该授权行应消失"
+        )
+
+        // 重启回首页（权限中心在隐藏导航栏的栈上无法点返回）→ 重新打开演示页
+        // → 再点剪贴板 → 面板应重新弹出。
+        // 注：fixture 重注册自身也会 revokeAll，此断言验证的是 UX 语义
+        // （撤销后下次调用重新询问），修复本身的证据是上面的行消失断言。
+        app.terminate()
+        app.launch()
+        sleep(6)
+        XCTAssertTrue(openFixturePage(), "重启后应能重新打开演示页")
+        let clipBtn2 = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch
+        clipBtn2.tap()
+        sleep(3)
+        let panelBack = prompt.waitForExistence(timeout: 6)
+        snap("revoke-04-reprompt=\(panelBack)")
+        XCTAssertTrue(panelBack, "撤销后再次调用应重新弹品牌面板")
+    }
+}

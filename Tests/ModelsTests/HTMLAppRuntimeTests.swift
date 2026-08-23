@@ -113,6 +113,44 @@ final class HTMLAppRuntimeTests: XCTestCase {
         XCTAssertNil(HTMLAppPermissionLedger(storage: storage).grant(for: subject, capability: .camera))
     }
 
+    /// 回归 2026-08-23：网页授权管理页只知道 (appID, origin, capability)，
+    /// revoke(appID:origin:capability:) 曾硬编码 "test-gateway" 拼 key，
+    /// 对 local-trust / 真实网关身份写入的授权静默无效。
+    func testConvenienceRevokeRemovesGrantsAcrossGatewayIdentities() {
+        let storage = MemoryStorage()
+        let ledger = HTMLAppPermissionLedger(storage: storage)
+
+        let localTrust = HTMLAppPermissionSubject(
+            gatewayIdentity: "local-trust",
+            appID: "local.https://demo.example.com",
+            origin: "https://demo.example.com"
+        )
+        let managed = HTMLAppPermissionSubject(
+            gatewayIdentity: "gateway#key-1",
+            appID: "com.example.inventory",
+            origin: "https://inventory.example.com"
+        )
+        ledger.grant(subject: localTrust, capability: .clipboard, scope: .always)
+        ledger.grant(subject: managed, capability: .clipboard, scope: .always)
+
+        ledger.revoke(
+            appID: localTrust.appID,
+            origin: localTrust.origin,
+            capability: .clipboard
+        )
+
+        XCTAssertNil(ledger.grant(for: localTrust, capability: .clipboard))
+        XCTAssertNotNil(ledger.grant(for: managed, capability: .clipboard))
+
+        ledger.revoke(
+            appID: managed.appID,
+            origin: managed.origin,
+            capability: .clipboard
+        )
+        XCTAssertNil(ledger.grant(for: managed, capability: .clipboard))
+        XCTAssertTrue(ledger.allGrants().isEmpty)
+    }
+
     func testBrandedConsentComesFirstAndSystemPromptRunsOnlyAfterAcceptance() throws {
         let nativeProvider = NativeAuthorizationProvider()
         // First-time system state: iOS has not been asked yet.
@@ -306,7 +344,12 @@ final class HTMLAppRuntimeTests: XCTestCase {
             body: ["params": ["action": "authenticate"]]
         ), .biometrics)
         XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "sensors", body: [:]), .motion)
-        XCTAssertEqual(HTMLAppBridgeCapabilityPolicy.capability(for: "screen", body: [:]), .deviceControl)
+        // 纯容器交互（2026-08-22 产品决策）：gesture/layout/screen/mirroring
+        // 只读或纯展示，不涉用户隐私，免授权。
+        XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "screen", body: [:]))
+        XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "gesture", body: [:]))
+        XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "layout", body: [:]))
+        XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "mirroring", body: [:]))
         XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "getSystemInfo", body: [:]))
     }
 }
