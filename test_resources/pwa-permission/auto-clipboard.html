@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>剪贴板授权自动化</title>
+<style>
+body{font-family:-apple-system,sans-serif;padding:24px;background:#f5f5f7;color:#1d1d1f}
+.card{background:#fff;border-radius:16px;padding:20px;margin-top:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+h1{font-size:20px}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:#f2f2f7;padding:12px;border-radius:8px}
+button{background:#4F6AF6;color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:15px}
+@media (prefers-color-scheme: dark){body{background:#000;color:#f5f5f7}.card{background:#1c1c1e}pre{background:#2c2c2e}}
+</style>
+</head>
+<body>
+<h1>剪贴板授权（自动触发）</h1>
+<div class="card">
+<p>页面加载 1.5 秒后自动调用剪贴板读取，用于验证品牌授权面板。</p>
+<pre id="out">等待自动调用…</pre>
+<button onclick="callClip()">手动重试</button>
+</div>
+<script>
+async function callClip(){
+  const out=document.getElementById('out');
+  try{
+    const r=await window.BarkBridge.callNative('clipboard',{action:'read'});
+    out.textContent=JSON.stringify(r,null,2);
+  }catch(e){ out.textContent='Error: '+(e.message||e); }
+}
+setTimeout(callClip,1500);
+</script>
+</body>
+</html>

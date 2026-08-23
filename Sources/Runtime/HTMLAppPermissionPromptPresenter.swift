@@ -623,7 +623,11 @@ private final class PermissionScopeButton: UIButton {
         super.init(frame: .zero)
 
         let isDestructive = style == .destructive
-        backgroundColor = isDestructive ? ThemeTokens.Color.error : (recommended ? ThemeTokens.Color.primarySoft : ThemeTokens.Color.surface)
+        // destructive 与 recommended 同构的 tint 风格：浅色底 + 深色文字。
+        // 之前误用 error 实底 + error 文字（红底红字不可读，2026-08-23 用户反馈）。
+        backgroundColor = isDestructive
+            ? ThemeTokens.Color.errorSoft
+            : (recommended ? ThemeTokens.Color.primarySoft : ThemeTokens.Color.surface)
         layer.cornerRadius = ThemeTokens.CornerRadius.row
         layer.borderWidth = 1
         layer.borderColor = (isDestructive ? ThemeTokens.Color.error : (recommended ? ThemeTokens.Color.primary : ThemeTokens.Color.border)).cgColor
@@ -632,7 +636,7 @@ private final class PermissionScopeButton: UIButton {
 
         let titleLabel = UILabel()
         titleLabel.font = ThemeTokens.Typography.rowTitle
-        titleLabel.textColor = (style == .destructive) ? ThemeTokens.Color.error : ThemeTokens.Color.text
+        titleLabel.textColor = isDestructive ? ThemeTokens.Color.error : ThemeTokens.Color.text
         titleLabel.text = title
 
         let subtitleLabel = UILabel()
@@ -646,7 +650,9 @@ private final class PermissionScopeButton: UIButton {
         labels.isUserInteractionEnabled = false
 
         let iconView = UIImageView(image: LucideIcon.chevronRight.templateImage(pointSize: 16, weight: .semibold))
-        iconView.tintColor = recommended ? ThemeTokens.Color.primary : ThemeTokens.Color.textTertiary
+        iconView.tintColor = isDestructive
+            ? ThemeTokens.Color.error
+            : (recommended ? ThemeTokens.Color.primary : ThemeTokens.Color.textTertiary)
 
         addSubview(labels)
         addSubview(iconView)

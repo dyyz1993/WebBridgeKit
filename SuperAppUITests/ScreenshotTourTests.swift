@@ -761,3 +761,65 @@ final class CameraLoopDiagTests: XCTestCase {
         tree.name = "diag-tree"; tree.lifetime = .keepAlways; add(tree)
     }
 }
+
+/// 剪贴板一次授权后不重弹：第一次弹面板→允许→第二次直通→结果区有返回
+final class ClipboardGrantPersistenceTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testGrantOnceThenSilent() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        sleep(5)
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=https%3A%2F%2Fae8fcb.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fpwa-permission%2Findex.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(12)
+        snap("clip-01-page")
+
+        // 第一次：点「读取剪贴板」→ 应弹品牌面板
+        let clipBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch
+        XCTAssertTrue(clipBtn.waitForExistence(timeout: 10))
+        clipBtn.tap()
+        sleep(3)
+        let panel = app.otherElements["pwa.permission.prompt"]
+        let panelShown1 = panel.waitForExistence(timeout: 5)
+        snap("clip-02-panel1=\(panelShown1)")
+        XCTAssertTrue(panelShown1, "第一次调用应弹品牌面板")
+
+        // 点「允许」
+        let allow = app.buttons.containing(NSPredicate(format: "label == '允许'")).firstMatch
+        XCTAssertTrue(allow.waitForExistence(timeout: 3))
+        allow.tap()
+        sleep(5)
+        snap("clip-03-after-allow")
+
+        // 第二次：再点「读取剪贴板」→ 不应弹面板
+        clipBtn.tap()
+        sleep(4)
+        let panelShown2 = panel.exists
+        snap("clip-04-second=\(panelShown2)")
+        XCTAssertFalse(panelShown2, "授权后第二次调用不应再弹面板")
+
+        // 第三次：关页面重进再点 → 依然不弹（持久）
+        let close = app.buttons["browserManager.closeButton"]
+        if close.waitForExistence(timeout: 4) { close.tap() }
+        sleep(2)
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=https%3A%2F%2Fae8fcb.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fpwa-permission%2Findex.html")!)
+        if open.waitForExistence(timeout: 8) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(10)
+        let clipBtn2 = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch
+        if clipBtn2.waitForExistence(timeout: 8) {
+            clipBtn2.tap()
+            sleep(4)
+            let panelShown3 = panel.exists
+            snap("clip-05-reentry=\(panelShown3)")
+            XCTAssertFalse(panelShown3, "重进页面后授权应持久，不应弹面板")
+        }
+    }
+}
