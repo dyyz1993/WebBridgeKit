@@ -931,3 +931,54 @@ final class WebGrantRevokeTests: XCTestCase {
         XCTAssertTrue(panelBack, "撤销后再次调用应重新弹品牌面板")
     }
 }
+
+/// 会话恢复：iOS 在系统设置改隐私权限（TCC）会终止 App（已实证），
+/// 「前往系统设置」引导回来必然冷启动——5 分钟内自动恢复上次浏览页；
+/// 用户主动关闭页面后不复活。
+final class BrowserSessionRestoreTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    private func openDemoPage(_ app: XCUIApplication) {
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fpwa-permission%2Findex.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+    }
+
+    private func browserVisible(_ app: XCUIApplication) -> Bool {
+        app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch.waitForExistence(timeout: 12)
+    }
+
+    func testRestoreAfterKillAndNoRestoreAfterClose() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--enable-session-restore"]
+        app.launch()
+        sleep(5)
+
+        // 1. 打开演示页 → 模拟系统杀进程 → 冷启动应恢复
+        openDemoPage(app)
+        XCTAssertTrue(browserVisible(app), "演示页应已打开")
+        app.terminate()
+        app.launch()
+        sleep(6)
+        let restored = browserVisible(app)
+        snap("restore-1-after-kill=\(restored)")
+        XCTAssertTrue(restored, "冷启动 5 分钟内应自动恢复上次浏览页")
+
+        // 2. 用户主动关闭页面 → 冷启动不应复活
+        let close = app.buttons["browserManager.closeButton"]
+        XCTAssertTrue(close.waitForExistence(timeout: 6), "应有浏览器关闭按钮")
+        close.tap()
+        sleep(3)
+        app.terminate()
+        app.launch()
+        sleep(6)
+        let resurrected = app.buttons.containing(NSPredicate(format: "label CONTAINS '读取剪贴板'")).firstMatch.exists
+        snap("restore-2-after-close=\(resurrected)")
+        XCTAssertFalse(resurrected, "用户关闭页面后冷启动不应复活")
+    }
+}

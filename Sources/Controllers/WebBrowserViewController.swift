@@ -287,6 +287,11 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         restoreUIState()
+        // 浏览器页面真正离屏（pop/dismiss，而非栈内跳转）= 用户结束浏览，
+        // 清除会话恢复记录，避免下次冷启动复活用户已主动关闭的页面。
+        if isBeingDismissed || isMovingFromParent {
+            WebBrowserManager.shared.clearLastSession()
+        }
     }
 
     public override func viewDidAppear(_ animated: Bool) {

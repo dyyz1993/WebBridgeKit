@@ -96,6 +96,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             await EngineBootstrap.shared.initialize(in: self.window)
         }
 
+        // 会话恢复：iOS 在系统设置修改隐私权限（TCC）会终止 App——
+        // 「前往系统设置」引导流程回来必然是冷启动。5 分钟内的上次
+        // 浏览页自动重开，用户改完权限回来直接续上原页面重试。
+        // UI 测试默认关闭（UserDefaults 跨用例残留会让后续用例误恢复），
+        // 由本行为专门的测试用 --enable-session-restore 显式打开。
+        let restoreEnabled = !isUITesting
+            || ProcessInfo.processInfo.arguments.contains("--enable-session-restore")
+        if restoreEnabled {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                guard let self = self, self.window?.rootViewController != nil,
+                      let url = WebBrowserManager.restorableLastURL() else { return }
+                WebBrowserManager.shared.openBrowser(url: url)
+            }
+        }
+
         // 注册推送通知
         UNUserNotificationCenter.current().delegate = self
 

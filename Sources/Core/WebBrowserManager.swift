@@ -76,6 +76,35 @@ public class WebBrowserManager: WebBrowserManaging {
         set { stateQueue.async(flags: .barrier) { self._currentModal = newValue } }
     }
 
+    // MARK: - Session Restore
+
+    /// iOS 在系统设置修改隐私权限（TCC，如相册/相机）时会终止 App——
+    /// 「前往系统设置」引导流程回来必然是冷启动、落在首页。记录最近
+    /// 浏览页，冷启动在恢复窗口内自动重开，权限引导闭环不断链。
+    private static let lastBrowserURLKey = "com.webbridgekit.browser.lastURL"
+    private static let lastBrowserAtKey = "com.webbridgekit.browser.lastAt"
+    /// 恢复窗口：太久之前的会话不复活（用户主动关闭页面也会即时清除）
+    public static let sessionRestoreWindow: TimeInterval = 300
+
+    func persistLastSession(url: URL) {
+        UserDefaults.standard.set(url.absoluteString, forKey: Self.lastBrowserURLKey)
+        UserDefaults.standard.set(Date(), forKey: Self.lastBrowserAtKey)
+    }
+
+    func clearLastSession() {
+        UserDefaults.standard.removeObject(forKey: Self.lastBrowserURLKey)
+        UserDefaults.standard.removeObject(forKey: Self.lastBrowserAtKey)
+    }
+
+    /// 冷启动时若上次浏览在恢复窗口内，返回其 URL
+    public static func restorableLastURL() -> URL? {
+        guard let raw = UserDefaults.standard.string(forKey: lastBrowserURLKey),
+              let url = URL(string: raw),
+              let at = UserDefaults.standard.object(forKey: lastBrowserAtKey) as? Date,
+              Date().timeIntervalSince(at) <= sessionRestoreWindow else { return nil }
+        return url
+    }
+
     // MARK: - Open Browser
 
     /// 打开浏览器（统一入口，带错误处理）
@@ -107,6 +136,7 @@ public class WebBrowserManager: WebBrowserManaging {
             }
 
             let effectiveParams = params ?? WebBrowserParams.from(url: url)
+            persistLastSession(url: url)
             os_log("DisplayMode: %ld", log: OSLog.default, type: .info, effectiveParams.displayMode.rawValue)
 
             switch effectiveParams.displayMode {

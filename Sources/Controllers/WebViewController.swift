@@ -225,6 +225,15 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         }
     }
 
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // 与 WebBrowserViewController 同款：浏览器页面真正离屏（pop/dismiss）
+        // = 用户结束浏览，清除会话恢复记录，避免冷启动复活已主动关闭的页面。
+        if isBeingDismissed || isMovingFromParent {
+            WebBrowserManager.shared.clearLastSession()
+        }
+    }
+
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         immersiveExitControl.updateLayout(in: view)
