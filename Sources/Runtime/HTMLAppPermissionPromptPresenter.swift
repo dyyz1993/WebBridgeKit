@@ -224,6 +224,12 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     private let contentStack = UIStackView()
+    private let cancelFooterButton: ThemeButton = {
+        let button = ThemeButton(type: .system)
+        button.configure(title: "取消", style: .secondary)
+        button.accessibilityIdentifier = "pwa.permission.cancel"
+        return button
+    }()
     private var hasResolved = false
 
     init(
@@ -319,8 +325,27 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
         sheetView.addSubview(scrollView)
         scrollView.alwaysBounceVertical = false
         scrollView.showsVerticalScrollIndicator = false
+
+        // 取消按钮固定在面板底部（不进滚动区）：内容较长时滚动区
+        // 内的取消会被滚出首屏视野（2026-08-23 用户反馈看不到取消）
+        let footer = UIView()
+        footer.backgroundColor = .clear
+        sheetView.addSubview(footer)
+        footer.addSubview(cancelFooterButton)
+        cancelFooterButton.addTarget(self, action: #selector(cancel), for: .touchUpInside)
+        cancelFooterButton.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(ThemeTokens.Spacing.xl)
+            make.top.bottom.equalToSuperview().inset(ThemeTokens.Spacing.sm)
+            make.height.equalTo(ThemeTokens.ComponentContract.Button.height)
+        }
+        footer.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.height.equalTo(ThemeTokens.ComponentContract.Button.height + ThemeTokens.Spacing.sm * 2)
+        }
+
         scrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.leading.trailing.top.equalToSuperview()
+            make.bottom.equalTo(footer.snp.top)
         }
 
         scrollView.addSubview(contentView)
@@ -369,15 +394,8 @@ private final class HTMLAppPermissionPromptViewController: UIViewController {
         sourceLabel.text = "来源 · \(displayOrigin)（该域名下所有页面）"
         sourceLabel.accessibilityIdentifier = "pwa.permission.origin"
         contentStack.addArrangedSubview(sourceLabel)
-
-        let cancelButton = ThemeButton(type: .system)
-        cancelButton.configure(title: "取消", style: .secondary)
-        cancelButton.accessibilityIdentifier = "pwa.permission.cancel"
-        cancelButton.addTarget(self, action: #selector(cancel), for: .touchUpInside)
-        cancelButton.snp.makeConstraints { make in
-            make.height.equalTo(ThemeTokens.ComponentContract.Button.height)
-        }
-        contentStack.addArrangedSubview(cancelButton)
+        // 取消按钮已移至面板固定底栏（cancelFooterButton），
+        // 不再放进滚动内容——长内容时首屏就能看到取消。
     }
 
     private func makeGrabber() -> UIView {

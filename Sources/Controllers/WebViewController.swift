@@ -575,6 +575,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             present(alert, animated: true)
             return
         }
+        // 权限中心要求全屏（无底部 Tab，靠导航栏返回）
+        settings.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(settings, animated: true)
     }
 

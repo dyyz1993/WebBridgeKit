@@ -91,10 +91,16 @@ private struct GrantRow: View {
                     .font(Font.app(ThemeTokens.Typography.rowTitle))
                     .foregroundStyle(Color(ThemeTokens.Color.text))
 
-                Text("\(scopeTitle) · \(grant.grantedAt.formatted(date: .abbreviated, time: .shortened)) · \(grant.appID)")
+                // 时间一行、appID 一行——合并在单行时 appID（local.https://…）
+                // 会把授权时间挤出截断（2026-08-23 用户反馈时间看不到）
+                Text("\(scopeTitle) · \(grant.grantedAt.formatted(date: .abbreviated, time: .shortened))")
+                    .font(Font.app(ThemeTokens.Typography.caption2))
+                    .foregroundStyle(Color(ThemeTokens.Color.textSecondary))
+                Text(grant.appID)
                     .font(Font.app(ThemeTokens.Typography.caption2))
                     .foregroundStyle(Color(ThemeTokens.Color.textTertiary))
                     .lineLimit(1)
+                    .truncationMode(.middle)
             }
 
             Spacer(minLength: 0)

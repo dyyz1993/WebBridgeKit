@@ -982,3 +982,38 @@ final class BrowserSessionRestoreTests: XCTestCase {
         XCTAssertFalse(resurrected, "用户关闭页面后冷启动不应复活")
     }
 }
+
+/// 网页授权管理页布局验证（截图）：时间/appID 换行、无 TabBar
+final class OriginGrantsShotTests: XCTestCase {
+    func testGrantsPageLayoutShot() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        sleep(5)
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fpwa-permission%2Fauto-clipboard.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(8)
+
+        let panel = app.otherElements["pwa.permission.prompt"]
+        XCTAssertTrue(panel.waitForExistence(timeout: 10), "自动页应弹品牌面板")
+        let allow = app.buttons.containing(NSPredicate(format: "label == '允许'")).firstMatch
+        XCTAssertTrue(allow.waitForExistence(timeout: 4))
+        allow.tap()
+        sleep(4)
+
+        let menu = app.buttons["browserManager.menuButton"]
+        if !menu.waitForExistence(timeout: 5) {
+            XCTFail("浏览器菜单按钮缺失"); return
+        }
+        menu.tap()
+        sleep(2)
+        let perm = app.buttons["权限管理"]
+        XCTAssertTrue(perm.waitForExistence(timeout: 5), "菜单应有权限管理入口")
+        perm.tap()
+        sleep(3)
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = "grants-page"; a.lifetime = .keepAlways; add(a)
+    }
+}

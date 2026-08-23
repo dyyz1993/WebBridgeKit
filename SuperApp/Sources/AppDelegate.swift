@@ -29,6 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             hostVC.navigationController?.setNavigationBarHidden(false, animated: false)
             let vc = UIHostingController(rootView: WebOriginGrantsView())
             vc.title = "网页授权管理"
+            vc.hidesBottomBarWhenPushed = true
             hostVC.navigationController?.pushViewController(vc, animated: true)
         }
 
