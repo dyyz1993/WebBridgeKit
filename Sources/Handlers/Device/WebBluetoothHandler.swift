@@ -70,6 +70,9 @@ public class WebBluetoothHandler: BaseWebNativeHandler, CBCentralManagerDelegate
         }
 
         switch action {
+        case "getState", "status", "getBluetoothStatus":
+            getBluetoothStatus(completion: completion)
+
         case "startScan":
             startScan(completion: completion)
 

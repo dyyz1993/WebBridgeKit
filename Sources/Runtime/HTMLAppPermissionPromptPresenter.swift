@@ -179,8 +179,12 @@ public final class HTMLAppPermissionPromptPresenter: HTMLAppPermissionConsentPre
     private func resolveActive(with scope: HTMLAppPermissionScope?) {
         guard let request = activeRequest else { return }
         activeRequest = nil
+        let prompt = activePrompt
         activePrompt = nil
         request.subscribers.forEach { $0.completion(scope) }
+        // dismiss prompt（系统授权结果通知也会调 dismissPanel，
+        // 这里做幂等兜底，保证 prompt 一定被清掉）
+        prompt?.dismissPanel()
         DispatchQueue.main.async { [weak self] in
             self?.presentNextIfNeeded()
         }

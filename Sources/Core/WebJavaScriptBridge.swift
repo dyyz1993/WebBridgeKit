@@ -447,29 +447,29 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 completion(.allowed)
                 return
             }
-            // 未授权：走 consent panel（同网关路径）
-            guard let presenter = permissionConsentPresenter else {
-                completion(.denied(Self.authorizationError(
-                    capability: capability,
-                    status: .denied,
-                    message: "无法显示授权确认"
-                )))
-                return
-            }
-            storePendingAuthorization(PendingAuthorization(
-                subject: subject,
-                documentURL: documentURL,
-                request: request,
-                completion: completion
-            ))
-            presenter.requestConsent(HTMLAppPermissionConsentRequest(
-                application: .init(id: appID, name: "本地网页"),
-                requestID: request.id,
-                origin: origin,
-                capability: capability,
-                reason: request.reason
-            )) { [weak self] selectedScope in
-                self?.finishPendingAuthorization(requestID: request.id, selectedScope: selectedScope)
+            // 未授权：弹简化版授权面板（UIAlertController——不依赖 presenter 队列，
+            // 该队列在 immersive WebView 场景下 topViewController 可能返回 nil
+            // 导致面板静默取消，2026-08-23 诊断截图实证）
+            let alert = UIAlertController(
+                title: "允许使用\(capability.displayName)？",
+                message: "来源：\(URL(string: origin)?.host ?? origin)/*\n\(request.reason)",
+                preferredStyle: .alert
+            )
+
+            alert.addAction(UIAlertAction(title: "允许", style: .default) { _ in
+                self.finishPendingAuthorization(requestID: request.id, selectedScope: .always)
+            })
+            alert.addAction(UIAlertAction(title: "拒绝", style: .cancel) { _ in
+                self.finishPendingAuthorization(requestID: request.id, selectedScope: nil)
+            })
+
+            DispatchQueue.main.async {
+                let scene = UIApplication.shared.connectedScenes
+                    .compactMap { $0 as? UIWindowScene }
+                    .first { $0.activationState == .foregroundActive }
+                var topVC = scene?.keyWindow?.rootViewController
+                while let presented = topVC?.presentedViewController { topVC = presented }
+                topVC?.present(alert, animated: true)
             }
             return
         }
@@ -577,8 +577,13 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                         userInfo: ["granted": granted]
                     )
                 }
+                // 延迟一拍让面板 dismiss 动画完成，否则 handler 的
+                // present (UIImagePickerController) 会与面板 dismiss 冲突
+                // （真机卡死：相机出来→消失→面板又弹→点不动）
                 if granted {
-                    pending.completion(.allowed)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        pending.completion(.allowed)
+                    }
                 } else {
                     pending.completion(.denied(Self.authorizationError(
                         capability: pending.request.capability,

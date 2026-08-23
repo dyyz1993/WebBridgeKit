@@ -31,23 +31,29 @@ public class WebCameraHandler: BaseWebNativeHandler {
         let params = body["params"] as? [String: Any] ?? body
         let type = params["type"] as? String ?? "photo" // 针对 camera 的 type
 
-        // bridge 层的 authorizeIfNeeded 全权负责系统权限请求（品牌面板确认后
-        // 触发 iOS 系统弹窗，拿到结果才放行 handler）。handler 内不再调用
-        // AVCaptureDevice.requestAccess——真机实测双重请求导致面板/系统弹窗/
-        // 相机 UI 循环异常（2026-08-22）。未授权直接拒绝（正常不会走到这，
-        // 仅防御性兜底）。
-        guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
-            rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
-            return
+        // bridge 层的 authorizeIfNeeded 负责品牌面板 + 系统权限请求。
+        // handler 侧：如果已授权直接打开；未授权则请求（不直接拒绝——
+        // 系统状态可能在 bridge 授权完成和 handler 执行之间有瞬态变化）。
+        let alreadyAuthorized = AVCaptureDevice.authorizationStatus(for: .video) == .authorized
+        let proceed: (Bool) -> Void = { [weak self] granted in
+            guard let self = self else { return }
+            if granted {
+                switch type {
+                case "photo": self.openCamera(completion: completion)
+                case "video": self.openCameraForVideo(completion: completion)
+                default: self.reject(error: "Unknown camera type: \(type)", completion: completion)
+                }
+            } else {
+                self.rejectPermissionDenied(type: .camera, status: .denied, completion: completion)
+            }
         }
 
-        switch type {
-        case "photo":
-            openCamera(completion: completion)
-        case "video":
-            openCameraForVideo(completion: completion)
-        default:
-            reject(error: "Unknown camera type: \(type)", completion: completion)
+        if alreadyAuthorized {
+            proceed(true)
+        } else {
+            requestCameraPermission { granted in
+                proceed(granted)
+            }
         }
     }
 
