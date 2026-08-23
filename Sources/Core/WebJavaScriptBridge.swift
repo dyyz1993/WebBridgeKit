@@ -447,29 +447,30 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 completion(.allowed)
                 return
             }
-            // 未授权：弹简化版授权面板（UIAlertController——不依赖 presenter 队列，
-            // 该队列在 immersive WebView 场景下 topViewController 可能返回 nil
-            // 导致面板静默取消，2026-08-23 诊断截图实证）
-            let alert = UIAlertController(
-                title: "允许使用\(capability.displayName)？",
-                message: "来源：\(URL(string: origin)?.host ?? origin)/*\n\(request.reason)",
-                preferredStyle: .alert
-            )
-
-            alert.addAction(UIAlertAction(title: "允许", style: .default) { _ in
-                self.finishPendingAuthorization(requestID: request.id, selectedScope: .always)
-            })
-            alert.addAction(UIAlertAction(title: "拒绝", style: .cancel) { _ in
-                self.finishPendingAuthorization(requestID: request.id, selectedScope: nil)
-            })
-
-            DispatchQueue.main.async {
-                let scene = UIApplication.shared.connectedScenes
-                    .compactMap { $0 as? UIWindowScene }
-                    .first { $0.activationState == .foregroundActive }
-                var topVC = scene?.keyWindow?.rootViewController
-                while let presented = topVC?.presentedViewController { topVC = presented }
-                topVC?.present(alert, animated: true)
+            // 未授权：弹品牌半弹窗（topViewController 修复后 presenter 队列
+            // 在 immersive 模式下也能正确定位——不再降级为 UIAlertController）
+            guard let presenter = permissionConsentPresenter else {
+                completion(.denied(Self.authorizationError(
+                    capability: capability,
+                    status: .denied,
+                    message: "无法显示授权确认"
+                )))
+                return
+            }
+            storePendingAuthorization(PendingAuthorization(
+                subject: subject,
+                documentURL: documentURL,
+                request: request,
+                completion: completion
+            ))
+            presenter.requestConsent(HTMLAppPermissionConsentRequest(
+                application: .init(id: appID, name: URL(string: origin)?.host ?? origin),
+                requestID: request.id,
+                origin: origin,
+                capability: capability,
+                reason: request.reason
+            )) { [weak self] selectedScope in
+                self?.finishPendingAuthorization(requestID: request.id, selectedScope: selectedScope)
             }
             return
         }

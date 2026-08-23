@@ -84,6 +84,14 @@ extension WebBrowserViewController {
             self?.loadPermissionsPage()
         })
 
+        // 原生权限管理入口：打开网页授权管理页（SuperApp 注入的 presenter）
+        if let presenter = WebBrowserManager.shared.webGrantsPresenter {
+            alertController.addAction(UIAlertAction(title: "权限管理", style: .default) { [weak self] _ in
+                guard let self else { return }
+                presenter(self)
+            })
+        }
+
         alertController.addAction(UIAlertAction(title: NSLocalizedString("[SAVE] Cache Statistics", comment: ""), style: .default) { [weak self] _ in
             self?.showSystemCacheStatistics()
         })

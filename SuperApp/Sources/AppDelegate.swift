@@ -7,6 +7,7 @@
 
 import UIKit
 import UserNotifications
+import SwiftUI
 import WebBridgeKit
 
 extension ProcessInfo {
@@ -22,6 +23,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        WebBrowserManager.shared.webGrantsPresenter = { hostVC in
+            let vc = UIHostingController(rootView: WebOriginGrantsView())
+            vc.title = "网页授权管理"
+            hostVC.navigationController?.pushViewController(vc, animated: true)
+        }
+
         let start = Date()
 
         CrashLogManager.shared.initialize()

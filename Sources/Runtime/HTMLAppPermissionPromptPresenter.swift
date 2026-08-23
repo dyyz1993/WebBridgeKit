@@ -191,11 +191,16 @@ public final class HTMLAppPermissionPromptPresenter: HTMLAppPermissionConsentPre
     }
 
     private static func topViewController() -> UIViewController? {
-        let root = UIApplication.shared.connectedScenes
+        // immersive 模式下 keyWindow 可能不是浏览器所在的 window——
+        // 取所有 window 中有 rootViewController 且可见的最上层那个，
+        // 而不是只看 keyWindow（返回 nil 导致面板静默消失的根因）
+        let candidates = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
-            .first(where: \.isKeyWindow)?
-            .rootViewController
+            .filter { $0.isHidden == false && $0.rootViewController != nil }
+            .sorted { $0.windowLevel >= $1.windowLevel }
+        let root = candidates.last?.rootViewController
+            ?? candidates.first?.rootViewController
         return top(from: root)
     }
 

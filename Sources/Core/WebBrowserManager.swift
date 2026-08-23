@@ -29,6 +29,8 @@ public class WebBrowserManager: WebBrowserManaging {
     /// browser menu's "应用设置" entry is tapped for a registered HTML app.
     /// The SDK stays product-agnostic; hosts like SuperApp install this hook.
     public var appPermissionSettingsPresenter: ((UIViewController, HTMLAppManifest) -> Void)?
+    /// 原生网页授权管理页 presenter（SuperApp 注入 WebOriginGrantsView 容器）
+    public var webGrantsPresenter: ((UIViewController) -> Void)?
 
     // MARK: - Navigation History
 
