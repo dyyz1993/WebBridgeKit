@@ -74,6 +74,10 @@ final class PWAPermissionCenterViewController: UIViewController {
         view.backgroundColor = ThemeTokens.Color.background
         title = "权限与原生能力"
         navigationItem.largeTitleDisplayMode = .never
+        // 沉浸式浏览器隐藏了导航栏，推入本页会继承隐藏态导致没有返回入口
+        // （2026-08-23 用户实测进得去出不来）。本页需要导航栏；返回浏览器时
+        // 其 viewWillAppear 会按自身配置恢复隐藏。
+        navigationController?.setNavigationBarHidden(false, animated: false)
 
         // Keep the runtime's gateway identity in sync with the active gateway
         // so grants never carry across a gateway switch.

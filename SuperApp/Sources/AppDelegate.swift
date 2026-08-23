@@ -24,6 +24,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         WebBrowserManager.shared.webGrantsPresenter = { hostVC in
+            // 沉浸式浏览器隐藏了导航栏，推入的授权页需要显式恢复，
+            // 否则网页授权管理页没有返回入口。
+            hostVC.navigationController?.setNavigationBarHidden(false, animated: false)
             let vc = UIHostingController(rootView: WebOriginGrantsView())
             vc.title = "网页授权管理"
             hostVC.navigationController?.pushViewController(vc, animated: true)
