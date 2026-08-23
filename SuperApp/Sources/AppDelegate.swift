@@ -48,6 +48,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         if isUITesting {
             TestDataSeeder.populateIfNeeded()
             Self.cleanupInvalidHistoryURLs()
+            // UI 测试要求全新账本：授权持久化（正常功能）会让重装的测试
+            // 设备带着旧授权跑——首调静默命中账本而不是弹面板
+            // （2026-08-24 定位：测试设备与 `booted` 不是同一台导致卸载无效）。
+            if ProcessInfo.processInfo.arguments.contains("--reset-permission-grants") {
+                HTMLAppPermissionLedger.shared.revokeAll()
+            }
         } else {
             DispatchQueue.global(qos: .userInitiated).async {
                 TestDataSeeder.populateIfNeeded()

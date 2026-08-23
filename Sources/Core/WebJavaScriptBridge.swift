@@ -275,6 +275,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         // 获取 callbackId，避免并发时被覆盖。旧版 WebBridge.js 使用 messageId，
         // 这里保留兼容，避免真实 WKWebView Promise 回调无法 resolve。
         let callbackId = body["callbackId"] as? String ?? body["messageId"] as? String
+        WBKGateTrace.log("handle action=\(action) cb=\(callbackId ?? "-") self=\(ObjectIdentifier(self))")
 
         // 创建命令跟踪条目
         let trace = CommandTraceEntry(
@@ -361,6 +362,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             completion(.allowed)
             return
         }
+        WBKGateTrace.log("policy cap=\(capability.rawValue) managedAppID=\(managedAppID ?? "nil")")
         let liveURL = webView?.url.flatMap {
             HTMLAppOrigin.canonicalOrigin(forDocumentURL: $0) == nil ? nil : $0
         }
@@ -444,9 +446,11 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             }
             // 本地信任：跳过 gateway 的 manifest 校验，直接查账本
             if let grant = HTMLAppPermissionLedger.shared.grant(for: subject, capability: capability) {
+                WBKGateTrace.log("LEDGER-HIT scope=\(grant.scope.rawValue) appID=\(appID)")
                 completion(.allowed)
                 return
             }
+            WBKGateTrace.log("no-grant → panel appID=\(appID)")
             // 未授权：弹品牌半弹窗（topViewController 修复后 presenter 队列
             // 在 immersive 模式下也能正确定位——不再降级为 UIAlertController）
             guard let presenter = permissionConsentPresenter else {
@@ -1064,3 +1068,21 @@ private extension UIViewController {
         return top
     }
 }
+
+#if DEBUG
+/// 权限判定链文件级 trace：模拟器进程可直接写宿主 /tmp（统一日志
+/// store 对 app os_log 是盲区），用于定位偶发静默放行。DEBUG 专用。
+enum WBKGateTrace {
+    static func log(_ line: String) {
+        let path = "/tmp/wbk-gate-trace.log"
+        let stamped = "\(Date().timeIntervalSince1970) [WBKGate] \(line)\n"
+        if let handle = FileHandle(forWritingAtPath: path) {
+            handle.seekToEndOfFile()
+            handle.write(stamped.data(using: .utf8)!)
+            handle.closeFile()
+        } else {
+            try? stamped.write(toFile: path, atomically: true, encoding: .utf8)
+        }
+    }
+}
+#endif

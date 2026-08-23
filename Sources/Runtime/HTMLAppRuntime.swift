@@ -459,6 +459,15 @@ public final class HTMLAppPermissionLedger {
         ))
     }
 
+    /// 清空全部授权（UI 测试重置账本用）
+    public func revokeAll() {
+        lock.lock()
+        defer { lock.unlock() }
+        sessionGrants.removeAll()
+        persistentGrants.removeAll()
+        persistLocked()
+    }
+
     public func revokeAll(appID: String) {
         lock.lock()
         defer { lock.unlock() }

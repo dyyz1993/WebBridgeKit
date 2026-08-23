@@ -772,7 +772,10 @@ final class ClipboardGrantPersistenceTests: XCTestCase {
 
     func testGrantOnceThenSilent() {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing"]
+        // --reset-permission-grants：测试设备可能带着上次运行的持久授权
+        // （xcodebuild 按名字选设备，`simctl uninstall booted` 未必清到它），
+        // 不重置则首调直接命中账本，测试必然失败。
+        app.launchArguments = ["--ui-testing", "--reset-permission-grants"]
         app.launch()
         sleep(5)
         XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=https%3A%2F%2Fae8fcb.shanbox.19930810.xyz%3A8443%2Ftest_resources%2Fpwa-permission%2Findex.html")!)
