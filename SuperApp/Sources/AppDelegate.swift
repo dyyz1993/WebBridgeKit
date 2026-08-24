@@ -23,6 +23,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        #if DREL_CONTAINER_ONLY
+        // Store 1.0 is a push entry point plus web container. Native Bridge
+        // capability ships only in a later, separately reviewed release.
+        WebContainerRuntimePolicy.shared.mode = .containerOnly
+        #endif
+
+        #if !DREL_CONTAINER_ONLY
         WebBrowserManager.shared.webGrantsPresenter = { hostVC in
             // 沉浸式浏览器隐藏了导航栏，推入的授权页需要显式恢复，
             // 否则网页授权管理页没有返回入口。
@@ -32,12 +39,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             vc.hidesBottomBarWhenPushed = true
             hostVC.navigationController?.pushViewController(vc, animated: true)
         }
+        #endif
 
         let start = Date()
 
         CrashLogManager.shared.initialize()
         NetworkMonitor.shared.startMonitoring()
+        #if !DREL_CONTAINER_ONLY
         HTMLAppHostUI.settingsViewControllerProvider = SuperAppHTMLAppSettingsProvider.shared
+        #endif
 
         if let serverURL = ServerConfigManager.shared.getActiveBaseURL() {
             CrashLogManager.shared.serverBaseURL = serverURL

@@ -59,6 +59,11 @@ public final class WebBridgeKitManager {
         // 异步预热，不阻塞应用启动
 
         // 确保在主线程开始预热，内部会处理异步逻辑
+        guard WebContainerRuntimePolicy.shared.mode.bridgeEnabled else {
+            Log.info("WebBridgeKit running in container-only mode; Bridge pools not warmed", category: .general)
+            return
+        }
+
         DispatchQueue.main.async {
             WebViewPool.shared.warmup {
                 Log.info("WebViewPool warmed up", category: .general)

@@ -122,4 +122,31 @@ final class WebBrowserViewModelTests: XCTestCase {
 
         XCTAssertNil(handler)
     }
+
+    func testContainerOnlyMode_DoesNotInjectBridgeScript() {
+        let viewModel = WebBrowserViewModel(runtimeMode: .containerOnly)
+
+        XCTAssertFalse(viewModel.bridgeEnabled)
+        XCTAssertTrue(
+            viewModel.getWebView().configuration.userContentController.userScripts.isEmpty,
+            "Container-only pages must not receive WebBridge.js or a launch-context script"
+        )
+    }
+
+    func testContainerOnlyMode_DoesNotExposeBridgeGlobals() {
+        let viewModel = WebBrowserViewModel(runtimeMode: .containerOnly)
+        let expectation = expectation(description: "container-only page loaded")
+        let webView = viewModel.getWebView()
+
+        webView.loadHTMLString("<html><body>container</body></html>", baseURL: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            webView.evaluateJavaScript("[typeof window.WebBridgeKit, typeof window.BarkBridge, typeof window.webkit?.messageHandlers?.BarkBridge, typeof window.webkit?.messageHandlers?.barkBridge].join('|')") { result, error in
+                XCTAssertNil(error)
+                XCTAssertEqual(result as? String, "undefined|undefined|undefined|undefined")
+                expectation.fulfill()
+            }
+        }
+
+        wait(for: [expectation], timeout: 3)
+    }
 }

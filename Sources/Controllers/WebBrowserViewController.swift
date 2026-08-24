@@ -180,8 +180,8 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     }
 
     /// 便捷初始化 - 支持加载 URL
-    convenience init(url: URL) {
-        self.init(viewModel: WebBrowserViewModel(url: url))
+    convenience init(url: URL, runtimeMode: WebContainerRuntimeMode = WebContainerRuntimePolicy.shared.mode) {
+        self.init(viewModel: WebBrowserViewModel(url: url, runtimeMode: runtimeMode))
         webView.navigationDelegate = self
         StructuredLogger.shared.debug("[TOOL] WebBrowserViewController init - URL: \(url.absoluteString)", category: .navigation)
         StructuredLogger.shared.debug("[TOOL] navigationDelegate set", category: .navigation)
@@ -194,16 +194,19 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     public func configure(with params: WebBrowserParams) {
         debugMode = params.debugMode
-        viewModel.configureManagedHTMLApp(
-            appID: params.payload?["webbridgekitAppId"],
-            documentURL: params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
-        )
+        if viewModel.bridgeEnabled {
+            viewModel.configureManagedHTMLApp(
+                appID: params.payload?["webbridgekitAppId"],
+                documentURL: params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
+            )
+        }
         configuredHideNavigationBar = params.hideNavigationBar || params.displayMode == .immersive
         configuredHideStatusBar = params.hideStatusBar || params.displayMode == .immersive
         title = params.customTitle ?? title
-        htmlAppID = params.payload?["webbridgekitAppId"]
+        htmlAppID = viewModel.bridgeEnabled ? params.payload?["webbridgekitAppId"] : nil
 
-        guard let payload = params.payload,
+        guard viewModel.bridgeEnabled,
+              let payload = params.payload,
               JSONSerialization.isValidJSONObject(payload),
               let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]),
               let json = String(data: data, encoding: .utf8) else {

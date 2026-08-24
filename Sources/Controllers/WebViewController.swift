@@ -91,7 +91,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         super.viewDidLoad()
 
         // 尝试从池中获取实例（性能优化）
-        if let instance = WebViewPool.shared.acquire() {
+        if WebContainerRuntimePolicy.shared.mode.bridgeEnabled,
+           let instance = WebViewPool.shared.acquire() {
             // 使用池中的实例
             self.webView = instance.webView
             self.bridge = instance.bridge
@@ -129,8 +130,15 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             StructuredLogger.shared.debug("Using pooled WebView instance", category: .lifecycle)
         } else {
             setupUI()
-            setupBridge()
-            StructuredLogger.shared.debug("Created new WebView instance", category: .lifecycle)
+            if WebContainerRuntimePolicy.shared.mode.bridgeEnabled {
+                setupBridge()
+                StructuredLogger.shared.debug("Created new WebView instance", category: .lifecycle)
+            } else {
+                // Keep the controller's internal state usable, but never bind
+                // this bridge to the page or register a JavaScript endpoint.
+                bridge = WebJavaScriptBridge()
+                StructuredLogger.shared.debug("Created container-only WebView instance", category: .lifecycle)
+            }
         }
 
         setupNotifications()
@@ -393,11 +401,16 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 配置浏览器参数
     public func configure(with params: WebBrowserParams) {
         browserConfig = params
-        let managedAppID = params.payload?["webbridgekitAppId"]
-        let managedPageURL = params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
+        let bridgeEnabled = WebContainerRuntimePolicy.shared.mode.bridgeEnabled
+        let managedAppID = bridgeEnabled ? params.payload?["webbridgekitAppId"] : nil
+        let managedPageURL = bridgeEnabled
+            ? params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
+            : nil
         managedHTMLAppID = managedAppID
         managedHTMLAppDocumentURL = managedPageURL
-        bridge.configureManagedHTMLApp(appID: managedAppID, documentURL: managedPageURL)
+        if bridgeEnabled {
+            bridge.configureManagedHTMLApp(appID: managedAppID, documentURL: managedPageURL)
+        }
         supportedOrientations = params.orientation
         isStatusBarHidden = params.hideStatusBar
 
@@ -433,7 +446,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         configureBrowserFeatures(params: params)
 
         //  注入 payload 参数
-        if let payload = params.payload {
+        if bridgeEnabled,
+           let payload = params.payload {
             if JSONSerialization.isValidJSONObject(payload),
                let payloadData = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]),
                let payloadString = String(data: payloadData, encoding: .utf8) {

@@ -223,7 +223,9 @@ extension WebBrowserViewController: WKNavigationDelegate {
             customNavStack = [url]
         }
         loadStartTime = Date()
+        #if DEBUG
         injectDebugScript(for: url)
+        #endif
         updateCacheStatus(source: "LIVE")
 
         let policy: URLRequest.CachePolicy = forceRefresh ? .reloadIgnoringLocalCacheData : .useProtocolCachePolicy
@@ -253,7 +255,9 @@ extension WebBrowserViewController: WKNavigationDelegate {
             customNavStack = [url]
         }
 
+        #if DEBUG
         injectDebugScript(for: url)
+        #endif
 
         updateCacheStatus(source: "CHECKING")
 
@@ -288,6 +292,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
     // MARK: - Debug Mode
 
     /// 注入调试脚本（当 debugMode 启用时）
+    #if DEBUG
     private func injectDebugScript(for url: URL) {
         StructuredLogger.shared.debug("injectDebugScript called, debugMode=\(debugMode)", category: .navigation)
         guard debugMode else { return }
@@ -360,6 +365,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
         webView.configuration.userContentController.addUserScript(userScript)
         StructuredLogger.shared.debug("Debug script injected for: \(url.absoluteString)", category: .navigation)
     }
+    #endif
 
     /// 加载错误提示页面
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {

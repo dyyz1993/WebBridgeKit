@@ -41,6 +41,7 @@ public class WebBrowserViewModel: ViewModel {
 
     private let webView: WKWebView
     private let jsBridge: WebJavaScriptBridge
+    let bridgeEnabled: Bool
 
     /// 桥接实例（宿主 VC 需要在导航完成后回填页面 meta 声明身份）
     public var bridge: WebJavaScriptBridge { jsBridge }
@@ -59,11 +60,17 @@ public class WebBrowserViewModel: ViewModel {
 
     // MARK: - Initialization
 
-    public init(url: URL? = nil) {
+    public init(
+        url: URL? = nil,
+        runtimeMode: WebContainerRuntimeMode = WebContainerRuntimePolicy.shared.mode
+    ) {
         self.initialURL = url
+        self.bridgeEnabled = runtimeMode.bridgeEnabled
 
         // 创建 WebView 配置和 Bridge
-        let (configuration, bridge) = WKWebViewConfiguration.createDefault()
+        let (configuration, bridge) = WKWebViewConfiguration.createDefault(
+            bridgeEnabled: runtimeMode.bridgeEnabled
+        )
         self.jsBridge = bridge
 
         self.webView = WKWebView(frame: .zero, configuration: configuration)
@@ -72,7 +79,9 @@ public class WebBrowserViewModel: ViewModel {
         super.init()
 
         // 设置 bridge 的 webView
-        self.jsBridge.setWebView(self.webView)
+        if runtimeMode.bridgeEnabled {
+            self.jsBridge.setWebView(self.webView)
+        }
 
         // 设置初始 URL
         if let url = url {
@@ -209,7 +218,9 @@ public class WebBrowserViewModel: ViewModel {
 
 extension WKWebViewConfiguration {
     /// 创建默认配置，返回配置和 bridge
-    internal static func createDefault() -> (WKWebViewConfiguration, WebJavaScriptBridge) {
+    internal static func createDefault(
+        bridgeEnabled: Bool = WebContainerRuntimePolicy.shared.mode.bridgeEnabled
+    ) -> (WKWebViewConfiguration, WebJavaScriptBridge) {
         let config = WKWebViewConfiguration()
 
         // 1. 数据存储配置
@@ -218,16 +229,18 @@ extension WKWebViewConfiguration {
         // 2. 用户内容控制器（JS 桥接）
         let userContentController = WKUserContentController()
 
-        // 注入 WebBridge.js 脚本
-        if let scriptPath = Bundle.main.path(forResource: "WebBridge", ofType: "js"),
-           let script = try? String(contentsOfFile: scriptPath) {
-            let userScript = WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true)
-            userContentController.addUserScript(userScript)
-        }
-
-        // 注册消息处理器
         let bridge = WebJavaScriptBridge()
-        userContentController.add(bridge, name: "BarkBridge")
+        if bridgeEnabled {
+            // 注入 WebBridge.js 脚本
+            if let scriptPath = Bundle.main.path(forResource: "WebBridge", ofType: "js"),
+               let script = try? String(contentsOfFile: scriptPath) {
+                let userScript = WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+                userContentController.addUserScript(userScript)
+            }
+
+            // 注册消息处理器
+            userContentController.add(bridge, name: "BarkBridge")
+        }
 
         config.userContentController = userContentController
 
