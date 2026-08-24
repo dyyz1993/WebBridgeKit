@@ -117,6 +117,8 @@ extension WebBrowserViewController: WKNavigationDelegate {
     /// 页面加载完成 - 检查是否需要自动缓存页面
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         HUDService.shared.dismiss()
+        // 页面 meta 声明身份（webbridgekit-app-id 等）：导航完成后读取回填判定链
+        viewModel.bridge.refreshDeclaredIdentity()
         // custom:// 导航：维护 App 层历史栈（WebKit 不为这类加载建后退历史），
         // 并做一次确定性的返回按钮同步（canGoBack 的 KVO 对 scheme 加载不可靠）。
         DispatchQueue.main.async { [weak self] in

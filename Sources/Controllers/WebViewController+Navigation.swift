@@ -56,6 +56,8 @@ extension WebViewController {
     /// 页面加载完成
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         bridge.updateManagedHTMLAppDocumentURL(webView.url)
+        // 页面 meta 声明身份（webbridgekit-app-id 等）：导航完成后读取回填判定链
+        bridge.refreshDeclaredIdentity()
         #if DEBUG
         if let url = webView.url {
             StructuredLogger.shared.info("[OK] [CacheDebug] Page loaded: \(url.absoluteString)", category: .cache)

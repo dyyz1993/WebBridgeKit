@@ -1020,3 +1020,61 @@ final class OriginGrantsShotTests: XCTestCase {
         a.name = "grants-page"; a.lifetime = .keepAlways; add(a)
     }
 }
+
+/// 页面 meta 声明身份 E2E：面板显示声明名 → 允许 → 落账 page.{id} →
+/// 清单外能力被拒
+final class DeclaredIdentityFlowTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testDeclaredIdentityFlow() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-permission-grants"]
+        app.launch()
+        sleep(5)
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fpwa-permission%2Fdeclared-app.html")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(9)
+
+        // 1. 面板出现，头部显示声明名
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 10), "声明页应弹品牌面板")
+        XCTAssertTrue(app.staticTexts["剪贴板演示应用"].waitForExistence(timeout: 4), "面板应显示声明应用名")
+        snap("declared-01-panel")
+
+        // 2. 允许 → 剪贴板成功
+        let allow = app.buttons.containing(NSPredicate(format: "label == '允许'")).firstMatch
+        XCTAssertTrue(allow.waitForExistence(timeout: 4))
+        allow.tap()
+        sleep(5)
+        snap("declared-02-allowed")
+
+        // 3. 菜单 → 权限管理 → 授权记在 page.{id} 名下
+        let menu = app.buttons["browserManager.menuButton"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 6), "应有浏览器菜单按钮")
+        menu.tap(); sleep(2)
+        let perm = app.buttons["权限管理"]
+        XCTAssertTrue(perm.waitForExistence(timeout: 5), "菜单应有权限管理入口")
+        perm.tap(); sleep(3)
+        let pageID = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'page.com.webbridgekit.demo.clipboard'")).firstMatch
+        XCTAssertTrue(pageID.waitForExistence(timeout: 6), "授权应记在 page.{声明ID} 名下")
+        snap("declared-03-grants")
+
+        // 4. 清单外能力（蓝牙）被拒：返回 → 点申请蓝牙 → 错误文案含「未声明」
+        let back = app.navigationBars.buttons.firstMatch
+        if back.waitForExistence(timeout: 4) { back.tap(); sleep(2) }
+        let btBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '申请清单外的蓝牙'")).firstMatch
+        XCTAssertTrue(btBtn.waitForExistence(timeout: 8), "应有蓝牙越权按钮")
+        btBtn.tap()
+        sleep(4)
+        let deniedText = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '未声明'")).firstMatch
+        let deniedShown = deniedText.waitForExistence(timeout: 6)
+        snap("declared-04-capdenied=\(deniedShown)")
+        XCTAssertTrue(deniedShown, "清单外能力应被拒绝并提示未声明")
+    }
+}

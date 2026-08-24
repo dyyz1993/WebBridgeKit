@@ -181,6 +181,23 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         }
     }
 
+    /// 页面 meta 声明身份（didFinish 时由宿主通过 extractionScript 读取回填）。
+    /// nil = 页面未声明，维持 origin 身份（完全向后兼容）。
+    private(set) var declaredIdentity: HTMLAppDeclaredIdentity?
+
+    /// 宿主在导航完成后调用：读取页面 meta 声明并应用到判定链。
+    public func updateDeclaredIdentity(from extractionResult: Any?) {
+        declaredIdentity = HTMLAppDeclaredIdentity.parse(extractionResult: extractionResult)
+        WBKGateTrace.log("declaredIdentity=\(self.declaredIdentity?.namespacedAppID ?? "nil")")
+    }
+
+    public func refreshDeclaredIdentity() {
+        guard let webView else { return }
+        webView.evaluateJavaScript(HTMLAppDeclaredIdentity.extractionScript) { [weak self] result, _ in
+            self?.updateDeclaredIdentity(from: result)
+        }
+    }
+
     public func configureManagedHTMLApp(appID: String?, documentURL: URL?) {
         let previousAppID = managedAppID
         let previousURL = managedDocumentURL
@@ -383,13 +400,37 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         let appID: String
         if let registered = managedAppID, trustRegistry.manifest(for: registered) != nil {
             appID = registered
+        } else if let declared = declaredIdentity {
+            // 页面 meta 声明身份（webbridgekit-app-id）：账本 key 升级为
+            // page.{声明ID}，同 origin 下多应用授权隔离；origin 仍是四元组
+            // 的一部分，跨 origin 无法冒领。"page." 前缀防止与网关注册的
+            // 真实 appID 冲突。
+            guard webView?.url == nil
+                || liveURL == nil
+                || HTMLAppOrigin.canonicalOrigin(forDocumentURL: liveURL!) == origin else {
+                completion(.denied(Self.authorizationError(
+                    capability: capability,
+                    status: .denied,
+                    message: "页面声明身份与当前来源不一致"
+                )))
+                return
+            }
+            if !declared.capabilities.isEmpty && !declared.capabilities.contains(capability) {
+                completion(.denied(Self.authorizationError(
+                    capability: capability,
+                    status: .denied,
+                    message: "页面未声明需要「\(capability.displayName)」能力（webbridgekit-capabilities）"
+                )))
+                return
+            }
+            appID = declared.namespacedAppID
         } else {
             // 本地信任：origin 即身份，无需网关注册
             appID = "local.\(origin)"
         }
-        // 本地信任不依赖网关身份——直接用 local-appID 构造 subject
+        // 本地信任不依赖网关身份——直接用 local/page-appID 构造 subject
         let subject: HTMLAppPermissionSubject
-        if appID.hasPrefix("local.") {
+        if appID.hasPrefix("local.") || appID.hasPrefix("page.") {
             subject = HTMLAppPermissionSubject(
                 gatewayIdentity: "local-trust",
                 appID: appID,
@@ -414,7 +455,9 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
             reason: reason?.isEmpty == false ? reason! : "使用\(capability.displayName)完成当前操作",
             scope: .once
         )
-        let isLocalTrust = appID.hasPrefix("local.")
+        // page.*（meta 声明身份）与 local.* 同属本地信任层：
+        // 不依赖网关注册，直接走系统层检查 + 账本 + 品牌面板
+        let isLocalTrust = appID.hasPrefix("local.") || appID.hasPrefix("page.")
         if isLocalTrust {
             // 防重入：同 (subject, capability) 已有 pending 授权时拒绝新请求
             // （真机实测：JS 在面板等待期间可能重发 camera 调用，导致面板/系统弹窗循环）
@@ -468,7 +511,10 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 completion: completion
             ))
             presenter.requestConsent(HTMLAppPermissionConsentRequest(
-                application: .init(id: appID, name: URL(string: origin)?.host ?? origin),
+                application: .init(
+                    id: appID,
+                    name: declaredIdentity?.appName ?? URL(string: origin)?.host ?? origin
+                ),
                 requestID: request.id,
                 origin: origin,
                 capability: capability,
@@ -500,7 +546,10 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
                 completion: completion
             ))
             presenter.requestConsent(HTMLAppPermissionConsentRequest(
-                application: .init(id: appID, name: URL(string: origin)?.host ?? origin),
+                application: .init(
+                    id: appID,
+                    name: declaredIdentity?.appName ?? URL(string: origin)?.host ?? origin
+                ),
                 requestID: request.id,
                 origin: origin,
                 capability: capability,
@@ -563,7 +612,7 @@ public class WebJavaScriptBridge: NSObject, WKScriptMessageHandler {
         )
 
         // 本地信任：跳过 gateway（无 manifest），请求系统权限 + 落账本
-        if pending.subject.appID.hasPrefix("local.") {
+        if pending.subject.appID.hasPrefix("local.") || pending.subject.appID.hasPrefix("page.") {
             HTMLAppRuntimeCenter.shared.systemPermissionAdapter.requestAuthorization(
                 for: selectedRequest.capability
             ) { systemStatus in
@@ -1069,11 +1118,11 @@ private extension UIViewController {
     }
 }
 
-#if DEBUG
-/// 权限判定链文件级 trace：模拟器进程可直接写宿主 /tmp（统一日志
-/// store 对 app os_log 是盲区），用于定位偶发静默放行。DEBUG 专用。
+/// 权限判定链 trace。Debug 构建写宿主 /tmp 供模拟器排障；Release 保留
+/// 无操作实现，让同一套授权路径能安全地通过归档编译。
 enum WBKGateTrace {
     static func log(_ line: String) {
+        #if DEBUG
         let path = "/tmp/wbk-gate-trace.log"
         let stamped = "\(Date().timeIntervalSince1970) [WBKGate] \(line)\n"
         if let handle = FileHandle(forWritingAtPath: path) {
@@ -1083,6 +1132,6 @@ enum WBKGateTrace {
         } else {
             try? stamped.write(toFile: path, atomically: true, encoding: .utf8)
         }
+        #endif
     }
 }
-#endif

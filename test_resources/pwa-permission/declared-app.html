@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- WebBridgeKit 页面声明身份：授权账本按声明 appId 隔离（page.{appId}），
+     声明的能力清单外的请求会被拒绝 -->
+<meta name="webbridgekit-app-id" content="com.webbridgekit.demo.clipboard">
+<meta name="webbridgekit-app-name" content="剪贴板演示应用">
+<meta name="webbridgekit-capabilities" content="clipboard">
+<title>声明身份演示</title>
+<style>
+body{font-family:-apple-system,sans-serif;padding:24px;background:#f5f5f7;color:#1d1d1f}
+.card{background:#fff;border-radius:16px;padding:20px;margin-top:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+h1{font-size:20px}
+.meta{font-size:12px;color:#6e6e73;background:#f2f2f7;padding:10px;border-radius:8px;word-break:break-all}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:#f2f2f7;padding:12px;border-radius:8px}
+button{background:#4F6AF6;color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:15px;margin-top:10px}
+button.warn{background:#8B5CF6}
+@media (prefers-color-scheme: dark){body{background:#000;color:#f5f5f7}.card{background:#1c1c1e}.meta,pre{background:#2c2c2e}}
+</style>
+</head>
+<body>
+<h1>声明身份演示</h1>
+<div class="card">
+<p>本页通过 meta 声明了应用身份与能力清单：</p>
+<div class="meta">
+&lt;meta name="webbridgekit-app-id" content="com.webbridgekit.demo.clipboard"&gt;<br>
+&lt;meta name="webbridgekit-app-name" content="剪贴板演示应用"&gt;<br>
+&lt;meta name="webbridgekit-capabilities" content="clipboard"&gt;
+</div>
+<p>授权将记在 <b>page.com.webbridgekit.demo.clipboard</b> 名下（而非整个域名）；清单外的能力（蓝牙）会被拒绝。</p>
+<pre id="out">页面加载 1.5 秒后自动申请剪贴板…</pre>
+<button onclick="callClip()">申请剪贴板</button>
+<button class="warn" onclick="callBt()">申请清单外的蓝牙（应被拒绝）</button>
+</div>
+<script>
+async function call(name, params){
+  const out=document.getElementById('out');
+  try{
+    const r=await window.BarkBridge.callNative(name, params);
+    out.textContent=JSON.stringify(r,null,2);
+  }catch(e){ out.textContent='Error: '+(e.message||e); }
+}
+function callClip(){ call('clipboard',{action:'read'}); }
+function callBt(){ call('bluetooth',{action:'getState'}); }
+setTimeout(callClip,1500);
+</script>
+</body>
+</html>

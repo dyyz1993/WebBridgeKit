@@ -353,3 +353,45 @@ final class HTMLAppRuntimeTests: XCTestCase {
         XCTAssertNil(HTMLAppBridgeCapabilityPolicy.capability(for: "getSystemInfo", body: [:]))
     }
 }
+
+/// 页面 meta 声明身份（Layer 2.5）：解析、命名空间、能力清单门
+final class HTMLAppDeclaredIdentityTests: XCTestCase {
+    func testParseValidIdentityWithNameAndCapabilities() {
+        let identity = HTMLAppDeclaredIdentity.parse(
+            appID: "com.example.inventory",
+            appName: "  库存工具  ",
+            capabilities: "clipboard, camera ,bluetooth"
+        )
+        XCTAssertNotNil(identity)
+        XCTAssertEqual(identity?.appID, "com.example.inventory")
+        XCTAssertEqual(identity?.appName, "库存工具")
+        XCTAssertEqual(identity?.capabilities, [.clipboard, .camera, .bluetooth])
+        XCTAssertEqual(identity?.namespacedAppID, "page.com.example.inventory")
+    }
+
+    func testInvalidOrMissingAppIDFallsBackToNil() {
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(appID: nil, appName: nil, capabilities: nil))
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(appID: "", appName: nil, capabilities: nil))
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(appID: "  ", appName: nil, capabilities: nil))
+        // 非法字符（空格/斜杠/冒号）直接判无效——不做修复，防止拼错 ID 悄悄换身份
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(appID: "com example/x", appName: nil, capabilities: nil))
+        // 超长
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(appID: String(repeating: "a", count: 65), appName: nil, capabilities: nil))
+    }
+
+    func testEmptyCapabilityListMeansUnconstrained() {
+        let identity = HTMLAppDeclaredIdentity.parse(appID: "com.example.a", appName: nil, capabilities: nil)
+        XCTAssertEqual(identity?.capabilities, [])
+    }
+
+    func testExtractionResultParsing() {
+        let json = "{\"id\":\"com.example.b\",\"name\":\"B\",\"caps\":\"clipboard\"}"
+        let identity = HTMLAppDeclaredIdentity.parse(extractionResult: json)
+        XCTAssertEqual(identity?.namespacedAppID, "page.com.example.b")
+        XCTAssertEqual(identity?.appName, "B")
+
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(extractionResult: nil))
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(extractionResult: 42))
+        XCTAssertNil(HTMLAppDeclaredIdentity.parse(extractionResult: "{\"id\":null,\"name\":null,\"caps\":null}"))
+    }
+}

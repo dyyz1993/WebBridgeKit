@@ -41,6 +41,9 @@ public class WebBrowserViewModel: ViewModel {
 
     private let webView: WKWebView
     private let jsBridge: WebJavaScriptBridge
+
+    /// 桥接实例（宿主 VC 需要在导航完成后回填页面 meta 声明身份）
+    public var bridge: WebJavaScriptBridge { jsBridge }
     public let initialURL: URL?
     public private(set) var managedHTMLAppID: String?
     public private(set) var managedHTMLAppDocumentURL: URL?
