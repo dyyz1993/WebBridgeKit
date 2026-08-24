@@ -37,6 +37,10 @@
         <h2>剪贴板</h2>
         <pre id="clipboard-result">尚未调用</pre>
         <button id="clipboard" onclick="readClipboard()">读取剪贴板</button>
+
+        <h3>相册</h3>
+        <pre id="photo-result">尚未调用</pre>
+        <button id="photo" onclick="pickPhoto()">选择相册图片</button>
     </div>
 
     <script>
@@ -68,6 +72,27 @@
                     action: 'capture'
                 });
                 output.textContent = JSON.stringify(result, null, 2);
+            } catch (e) {
+                output.textContent = 'Error: ' + (e.message || e);
+            }
+        }
+
+        async function pickPhoto() {
+            const output = document.getElementById('photo-result');
+            try {
+                const envelope = await window.BarkBridge.callNative('photo', {});
+                // 回调是 {success, data} 信封——载荷在 data 里
+                const result = envelope.data ?? envelope;
+                if (result.cancelled) {
+                    output.textContent = '已取消选择';
+                } else if (result.images && result.images.length) {
+                    const img = result.images[0];
+                    output.textContent = '已选择 ' + result.count + ' 张图：'
+                        + '大小 ' + Math.round(img.size / 1024) + ' KB，'
+                        + 'base64 长度 ' + img.data.length;
+                } else {
+                    output.textContent = JSON.stringify(result);
+                }
             } catch (e) {
                 output.textContent = 'Error: ' + (e.message || e);
             }

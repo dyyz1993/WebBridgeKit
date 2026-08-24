@@ -1078,3 +1078,61 @@ final class DeclaredIdentityFlowTests: XCTestCase {
         XCTAssertTrue(deniedShown, "清单外能力应被拒绝并提示未声明")
     }
 }
+
+/// 相册能力 E2E：品牌面板 → 允许 → iOS 相册权限弹窗 → PHPicker → 取消
+final class PhotoCapabilityFlowTests: XCTestCase {
+    private func snap(_ name: String) {
+        let a = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        a.name = name; a.lifetime = .keepAlways; add(a)
+        sleep(1)
+    }
+
+    func testPhotoFullFlow() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-permission-grants"]
+        app.launch()
+        sleep(5)
+        // ?v= 破 WKWebView HTTP 缓存——页面 JS 迭代后旧缓存会让断言打到老代码
+        XCUIDevice.shared.system.open(URL(string: "webbridgekit://open?url=http%3A%2F%2Flocalhost%3A8081%2Ftest_resources%2Fpwa-permission%2Findex.html%3Fv%3Dphoto2")!)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let open = springboard.buttons["打开"]
+        if open.waitForExistence(timeout: 10) { sleep(2); open.tap(); if open.exists { open.tap() } }
+        sleep(10)
+
+        let photoBtn = app.buttons.containing(NSPredicate(format: "label CONTAINS '选择相册图片'")).firstMatch
+        XCTAssertTrue(photoBtn.waitForExistence(timeout: 10), "演示页应有相册按钮")
+
+        // 跳过剪贴板卡（上面）直接滚到相册卡并点击
+        photoBtn.tap()
+        let prompt = app.otherElements["pwa.permission.prompt"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 8), "相册首次调用应弹品牌面板")
+        sleep(1)
+        snap("photo-01-panel")
+        let allow = app.buttons.containing(NSPredicate(format: "label == '允许'")).firstMatch
+        XCTAssertTrue(allow.waitForExistence(timeout: 4))
+        allow.tap()
+        sleep(4)
+
+        // iOS 系统相册权限弹窗（springboard 域）：notDetermined 时出现
+        // 「允许完全访问」；已授权（上次运行/预授权）则直接进选择器——两种都要能走
+        let sysAllow = springboard.buttons["允许完全访问"]
+        let sysShown = sysAllow.waitForExistence(timeout: 5)
+        snap("photo-02-system=\(sysShown)")
+        if sysShown {
+            sysAllow.tap()
+            sleep(4)
+        }
+
+        // PHPicker 出现 → 取消
+        let pickerCancel = app.buttons["取消"].firstMatch
+        let pickerShown = pickerCancel.waitForExistence(timeout: 8)
+        snap("photo-03-picker=\(pickerShown)")
+        XCTAssertTrue(pickerShown, "应弹出照片选择器")
+        pickerCancel.tap()
+        sleep(3)
+        let cancelled = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '已取消选择'")).firstMatch
+        let cancelledShown = cancelled.waitForExistence(timeout: 5)
+        snap("photo-04-result=\(cancelledShown)")
+        XCTAssertTrue(cancelledShown, "取消后页面应显示已取消选择")
+    }
+}
