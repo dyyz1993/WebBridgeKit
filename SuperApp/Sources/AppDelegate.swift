@@ -356,6 +356,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         Task {
             await PendingMessageImporter.importPending()
         }
+        // 口令/剪贴板命令是后期 Bridge 线能力：Drel 商店构建（container-only）
+        // 不做激活期剪贴板扫描——App Review 对激活读剪贴板高度敏感。
+        #if !DREL_CONTAINER_ONLY
         if !ProcessInfo.processInfo.isWebBridgeKitUITesting {
             // Clipboard reads must stay off the activation transition: reading
             // UIPasteboard.string can trigger a slow HTML→text coercion in the
@@ -369,6 +372,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 CommandHandler.shared.checkClipboardOnForeground()
             }
         }
+        #endif
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
@@ -396,6 +400,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     return true
                 }
             } else if url.host == "command" {
+                // 口令深链属于后期 Bridge 线：商店构建不处理
+                #if !DREL_CONTAINER_ONLY
                 // Handle webbridgekit://command/<token> — resolve token from server
                 let tokenString = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
                 guard !tokenString.isEmpty else { return false }
@@ -404,6 +410,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     CommandHandler.shared.checkClipboardOnForeground()
                 }
                 return true
+                #else
+                return false
+                #endif
             } else if url.host == "runalltests" {
                 #if DEBUG
                 if let tabBarController = window?.rootViewController as? UITabBarController,
