@@ -1,0 +1,10 @@
+{
+  "name": "drel-api-proxy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "npx --yes wrangler@latest deploy --dry-run",
+    "deploy": "npx --yes wrangler@latest deploy"
+  }
+}

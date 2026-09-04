@@ -1,0 +1,35 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "drel-api-proxy",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-25",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "api.drel.app",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "UPSTREAM_ORIGIN": "https://wbk.shanbox.19930810.xyz:8443",
+    "DREL_MANAGED_PUSH_MAX_DELIVERIES_PER_MINUTE": "60"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MANAGED_PUSH_REGISTRY",
+        "class_name": "ManagedPushRegistry"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-managed-encrypted-push",
+      "new_sqlite_classes": ["ManagedPushRegistry"]
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}
