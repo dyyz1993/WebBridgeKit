@@ -53,4 +53,5 @@ jobs:
       - if: steps.credentials.outputs.configured == 'true'
         run: npm run deploy
       - if: steps.credentials.outputs.configured != 'true'
-        run: echo "Cloudflare deployment skipped: configure CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN as GitHub Actions secrets."
+        run: |
+          echo "Cloudflare deployment skipped: configure CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN as GitHub Actions secrets."
