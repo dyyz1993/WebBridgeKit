@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Support for Drel, the developer notification utility.">
+  <title>Drel Support</title>
+  <link rel="icon" href="/assets/drel-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="shell nav">
+    <a class="brand" href="/"><img src="/assets/drel-mark.svg" alt="">Drel</a>
+    <nav class="nav-links"><a href="/">Product</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a class="nav-cta" href="mailto:support@drel.app">Contact support</a></nav>
+  </header>
+  <main class="legal-shell">
+    <div class="legal-head">
+      <span class="eyebrow">Help & documentation</span>
+      <h1>Support</h1>
+      <p>Activate Drel, verify push delivery, and open an HTTPS destination from a notification.</p>
+    </div>
+    <article class="legal">
+      <div class="support-grid">
+        <a class="support-card" href="mailto:support@drel.app"><strong>Email support</strong><span>support@drel.app<br>Include your Drel version and iOS version.</span></a>
+        <div class="support-card"><strong>Expected response</strong><span>We aim to respond within three business days during the preview period.</span></div>
+      </div>
+      <section>
+        <h2>Getting started</h2>
+        <p>Install Drel, allow notifications when prompted, then copy the personal push address shown on the Home screen. You can call that address from a browser, script, automation, or your own web service.</p>
+      </section>
+      <section>
+        <h2>Open-source push service</h2>
+        <p>The Drel push service is based on the open-source WebBridgeKit server. V1 uses the official Drel endpoint in the iOS app; gateway import, offline web-tool packages, and web-tool management are planned for later releases.</p>
+      </section>
+      <section>
+        <h2>A notification did not arrive</h2>
+        <ol>
+          <li>Confirm notifications are enabled for Drel in iOS Settings.</li>
+          <li>Open Drel once after installation so it can complete registration.</li>
+          <li>Check that your Drel push address is current and that <code>api.drel.app</code> is reachable.</li>
+          <li>Try a short title and body without custom sound or route parameters.</li>
+        </ol>
+      </section>
+      <section>
+        <h2>An HTTPS page does not open</h2>
+        <p>Confirm the target URL uses HTTPS and is reachable. Drel's first Store release does not install web tools, inject WebBridge.js, or allow remote pages to call native Bridge capabilities.</p>
+      </section>
+      <section class="notice">
+        <h2>Security reports</h2>
+        <p>Please send suspected vulnerabilities to <a href="mailto:security@drel.app">security@drel.app</a>. Do not include secrets, private keys, or full push tokens in screenshots or email.</p>
+      </section>
+    </article>
+  </main>
+  <footer class="shell footer"><div class="footer-inner"><span>© 2026 Drel · Built with WebBridgeKit.</span><div class="footer-links"><a href="/">Home</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></div></div></footer>
+</body>
+</html>

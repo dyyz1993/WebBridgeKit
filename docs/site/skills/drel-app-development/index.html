@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A versioned agent skill for building standards-compatible Drel web and offline applications.">
+  <meta name="theme-color" content="#f7f8fc">
+  <title>Drel App Development Skill</title>
+  <link rel="icon" href="/assets/drel-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="shell nav">
+    <a class="brand" href="/" aria-label="Drel home"><img src="/assets/drel-mark.svg" alt="">Drel</a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="/">Overview</a><a href="/self-hosted/">Self-host</a><a href="/support/">Support</a><a href="/privacy/">Privacy</a>
+    </nav>
+  </header>
+  <main class="shell section">
+    <div class="section-head">
+      <div><span class="eyebrow">Agent skill · v1.0.0</span><h1>Drel app development</h1></div>
+      <p class="section-copy">Give an agent the current contract for Drel web apps, strong offline packages and push routes—without accidentally assuming a native Bridge.</p>
+    </div>
+    <div class="feature-grid">
+      <article class="feature"><div class="feature-icon">1.4</div><h3>Compatible with Drel 1.4.0</h3><p>Standard Web App Manifest, signed application identity, opt-in offline packages and push route validation.</p></article>
+      <article class="feature"><div class="feature-icon">0</div><h3>Bridge version 0</h3><p>The current Store container exposes no native JavaScript Bridge. The skill stops agents from inventing camera, file, clipboard or permission APIs.</p></article>
+      <article class="feature"><div class="feature-icon">✓</div><h3>Release-aware</h3><p>Includes the physical-device cases for package updates, airplane mode, rollback, deletion and asynchronous network data.</p></article>
+    </div>
+    <section class="code-section" aria-labelledby="install-title">
+      <div class="shell code-layout">
+        <div><span class="eyebrow">Install</span><h2 id="install-title">Add it to your agent.</h2><p>Use the GitHub source for updates, or download the versioned ZIP for a manual import.</p></div>
+        <div class="terminal"><div class="terminal-bar"><i class="terminal-dot"></i><i class="terminal-dot"></i><i class="terminal-dot"></i>&nbsp; terminal</div><pre><span class="comment"># Install only this Drel skill</span>
+npx skills add dyyz1993/WebBridgeKit --skill drel-app-development</pre></div>
+      </div>
+    </section>
+    <div class="actions">
+      <a class="button primary" href="/skills/drel-app-development/drel-app-development-1.0.0.zip">Download skill ZIP <span aria-hidden="true">↓</span></a>
+      <a class="button secondary" href="/skills/drel-app-development/SKILL.md">Open SKILL.md</a>
+      <a class="button secondary" href="https://github.com/dyyz1993/WebBridgeKit/tree/master/skills/drel-app-development">View on GitHub</a>
+    </div>
+    <section class="principle"><div class="principle-card"><span class="eyebrow">Scope</span><h2>Offline is an installation contract, not a cache promise.</h2><p>Static files are verified and installed locally only after a user action. APIs and live data continue to use the network, with an explicit offline fallback.</p></div></section>
+  </main>
+  <footer class="shell footer"><div class="footer-inner"><span>© 2026 Drel · Built with WebBridgeKit.</span><div class="footer-links"><a href="/support/">Support</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></div></div></footer>
+</body>
+</html>

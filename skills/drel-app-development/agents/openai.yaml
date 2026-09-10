@@ -1,0 +1,4 @@
+interface:
+  display_name: "Drel App Development"
+  short_description: "Build Store-safe Drel web and offline apps"
+  default_prompt: "Create or review a Drel 1.4 web application that stays standards-compatible, follows the signed offline-package contract when needed, and does not assume a native Bridge."

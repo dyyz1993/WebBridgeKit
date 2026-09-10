@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Deploy Drel's optional direct APNs relay on infrastructure you control.">
+  <meta name="theme-color" content="#f7f8fc">
+  <title>Self-host Drel — direct APNs, your infrastructure</title>
+  <link rel="icon" href="/assets/drel-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="shell nav">
+    <a class="brand" href="/" aria-label="Drel home"><img src="/assets/drel-mark.svg" alt="">Drel</a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="/#how">How it works</a>
+      <a href="/support/">Support</a>
+      <a href="/privacy/">Privacy</a>
+      <a class="nav-cta" href="#start">Self-host guide</a>
+    </nav>
+  </header>
+  <main>
+    <section class="shell guide-hero">
+      <div>
+        <span class="eyebrow">Optional · direct APNs relay</span>
+        <h1>Run Drel<br><span class="gradient-word">on your side.</span></h1>
+        <p class="lead">Drel can pair with an authorized relay and send to APNs. This page makes the trust boundary explicit: the stock Drel App cannot safely hand its APNs signing key to every deployment.</p>
+        <div class="actions"><a class="button primary" href="#start">Start the guide <span aria-hidden="true">→</span></a><a class="button secondary" href="#boundaries">Read the boundaries</a></div>
+      </div>
+      <aside class="trust-card" aria-label="Self-hosted delivery path">
+        <span class="trust-label">AUTHORIZED DELIVERY PATH</span>
+        <ol class="trust-path">
+          <li><b>01</b><span>Your sender<br><small>script · automation · service</small></span></li>
+          <li><b>02</b><span>Authorized relay<br><small>your own signed App, or Drel managed signer</small></span></li>
+          <li><b>03</b><span>APNs<br><small>Apple delivery network</small></span></li>
+          <li><b>04</b><span>Your iPhone<br><small>Drel receives the alert</small></span></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="shell guide-section" id="start">
+      <div class="guide-heading"><span class="eyebrow">What a new user needs</span><h2>Three basics.<br>One hard boundary.</h2></div>
+      <div class="requirements-grid">
+        <article><strong>01</strong><h3>A small Linux server</h3><p>It needs outbound HTTPS. A Cloudflare Tunnel is supported, so you do not need to expose port 443.</p></article>
+        <article><strong>02</strong><h3>Your HTTPS hostname</h3><p>For example <code>push.example.com</code>. The Drel app validates this address before it pairs.</p></article>
+        <article><strong>03</strong><h3>Drel on an iPhone</h3><p>Install Drel, then connect once through Settings → Self-hosted Push. Every iPhone receives a different address.</p></article>
+        <article><strong>04</strong><h3>Delivery authority</h3><p>Direct APNs needs a private signer authorized for the App's topic. A stock Drel installation cannot create that key on a user's Apple team.</p></article>
+      </div>
+      <p class="guide-note"><b>Current release state:</b> the relay protocol is being verified, but Drel will not publish its APNs private key. <code>push.drel.app</code> intentionally reports that APNs is not ready and refuses pairing. It never pretends to deliver a push it cannot send.</p>
+    </section>
+
+    <section class="guide-code-section">
+      <div class="shell guide-code-layout">
+        <div><span class="eyebrow">1 / deploy</span><h2>Keep the service<br>behind your hostname.</h2><p>The binary binds only to localhost. A Cloudflare Tunnel provides the public HTTPS address without opening an inbound firewall port. It still needs legitimate APNs signing authority before it can pair a phone.</p></div>
+        <pre class="terminal guide-terminal"><span class="comment"># advanced deployment: install an authorized relay</span>
+sudo install -m 0755 drel-selfhosted /usr/local/bin/
+sudo install -m 0644 drel-selfhosted.service /etc/systemd/system/
+
+<span class="comment"># add your public hostname, then start</span>
+sudo systemctl enable --now drel-selfhosted
+curl https://push.example.com/health
+
+<span class="comment"># expected only when delivery credentials are ready</span>
+<span class="value">{ "status": "ok", "apnsReady": true }</span></pre>
+      </div>
+    </section>
+
+    <section class="shell guide-section pairing-section">
+      <div class="guide-heading"><span class="eyebrow">2 / pair once</span><h2>Connect the<br>iPhone.</h2></div>
+      <div class="pairing-steps">
+        <div><span>1</span><p>Open <b>Drel → Settings → Self-hosted Push</b>.</p></div>
+        <div><span>2</span><p>Scan the deployment QR code, or paste <code>https://push.example.com</code>.</p></div>
+        <div><span>3</span><p>Drel checks the server health, creates an installation-only key, and registers its APNs token with <em>your</em> server.</p></div>
+        <div><span>4</span><p>Copy the generated push URL to the sender you trust. It is a capability: anyone holding it can alert this phone.</p></div>
+      </div>
+    </section>
+
+    <section class="shell guide-section send-section">
+      <div class="guide-heading"><span class="eyebrow">3 / send</span><h2>Choose the privacy<br>mode you need.</h2></div>
+      <div class="mode-grid">
+        <article class="mode-card primary-mode">
+          <span class="mode-tag">ADVANCED · OWN SIGNED APP</span><h3>Direct push</h3>
+          <p>A server with a valid private signer for its own Drel bundle receives the title, body, and optional URL, then sends it straight to APNs. This is the familiar Bark-style workflow.</p>
+          <pre><span class="comment"># use the address shown by Drel</span>
+curl -G "https://push.example.com/DEVICE_KEY/Build%20ready/Inspect%20the%20result" \
+  --data-urlencode "url=https://drel.app/"</pre>
+          <p class="mode-foot">Use it only when you own the corresponding Apple App ID, signing team, and Drel build. The server operator can read this request, so it is not zero-knowledge.</p>
+        </article>
+        <article class="mode-card">
+          <span class="mode-tag">PLANNED · STOCK DREL APP</span><h3>Encrypted push</h3>
+          <p>The sender fetches the iPhone's public key, encrypts before upload, and posts an opaque envelope. A Drel-managed APNs signer can deliver it without reading business content, but it still receives delivery metadata.</p>
+          <pre><span class="comment"># reference sender bundled with Drel</span>
+node drel-encrypt-and-push.mjs \
+  https://push.example.com DEVICE_KEY \
+  "Build ready" "Code 482901" \
+  https://drel.app/</pre>
+          <p class="mode-foot">This is the feasible privacy path for the stock App; it is not shipped yet. It avoids publishing a reusable APNs private key; read the trust boundaries below before planning a deployment.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="shell guide-section reset-section">
+      <div class="guide-heading"><span class="eyebrow">4 / rotate or leave</span><h2>A leaked address<br>is recoverable.</h2></div>
+      <div class="reset-grid">
+        <article><h3>Reset address</h3><p>In Drel, choose <b>Reset push address</b>. Drel removes the old registration, discards its local encryption identity, pairs again, and shows a new device address. Update trusted senders.</p></article>
+        <article><h3>Remove server</h3><p>Choose <b>Remove self-hosted server</b> to delete the local configuration and private encryption material. Drel asks the server to unregister the exact token/address pair first.</p></article>
+        <article><h3>Rotate APNs material</h3><p>Never distribute a Drel APNs private key. An advanced developer rotates their own topic-specific key; the stock Drel App uses a managed signer instead.</p></article>
+      </div>
+    </section>
+
+    <section class="shell boundary-section" id="boundaries">
+      <span class="eyebrow">Trust boundaries</span><h2>What each key can — and cannot — do.</h2>
+      <div class="boundary-table" role="region" aria-label="Drel self-hosted trust boundaries" tabindex="0">
+        <table>
+          <thead><tr><th>Material</th><th>What it allows</th><th>What it does not allow</th><th>Recovery</th></tr></thead>
+          <tbody>
+            <tr><td>Device push address</td><td>Send an alert to that paired Drel installation.</td><td>Read message history, fetch an APNs token, or access the phone.</td><td>Reset the address in Drel.</td></tr>
+            <tr><td>Topic-specific APNs signer</td><td>Authenticate notification delivery for one bundle/topic.</td><td>Read notifications, access Apple accounts, or address arbitrary apps.</td><td>Keep private; its owning App team revokes and rotates it.</td></tr>
+            <tr><td>iPhone private key</td><td>Decrypt optional encrypted envelopes on that installation.</td><td>Send APNs notifications or be exported by the server.</td><td>Remove or reset the server connection.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="guide-note">An APNs signer is still a private signing key. Topic restriction limits its blast radius, but a holder can forge alerts to known device tokens. Drel does not publish it. The stock App's privacy route must use sender-side encryption plus a managed signer; a truly independent direct relay requires the operator's own signed Drel bundle and App topic.</p>
+    </section>
+  </main>
+  <footer class="shell footer"><div class="footer-inner"><span>© 2026 Drel · Built with WebBridgeKit.</span><div class="footer-links"><a href="/">Home</a><a href="/support/">Support</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></div></div></footer>
+</body>
+</html>

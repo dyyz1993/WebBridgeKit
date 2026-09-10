@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Drel 离线网络演示</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <main class="legal-shell">
+    <a href="/" class="brand"><img src="/assets/drel-mark.svg" alt="Drel"><span>Drel</span></a>
+    <section class="legal-card">
+      <p class="eyebrow">PUBLIC TEST FIXTURE</p>
+      <h1>离线包 + 实时网络数据</h1>
+      <p>这套演示将页面资源安装到 Drel 的本地包中；联网时请求公网 IP 和天气，断网时只显示本地页面与最近缓存结果。</p>
+      <h2>测试材料</h2>
+      <ul>
+        <li><a href="/test/offline-network/v1/index.html">在线预览</a></li>
+        <li><a href="/test/offline-network/manifest.webmanifest">Web App Manifest</a></li>
+        <li><a href="/test/offline-network/package.json">Drel 资源清单</a></li>
+        <li><a href="/test/offline-network/drel-offline-network-demo-v1.zip">诊断 ZIP</a></li>
+      </ul>
+      <p>强离线包只保证已声明的静态资源；IP 和天气属于页面运行时请求，网络关闭后不会伪装成实时数据。</p>
+    </section>
+  </main>
+</body>
+</html>

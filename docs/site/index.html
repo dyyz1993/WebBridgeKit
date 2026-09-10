@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Drel is a developer push notification utility for iPhone.">
+  <meta name="theme-color" content="#f7f8fc">
+  <title>Drel — Push, right where you need it.</title>
+  <link rel="icon" href="/assets/drel-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="shell nav">
+    <a class="brand" href="/" aria-label="Drel home"><img src="/assets/drel-mark.svg" alt="">Drel</a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="#how">How it works</a>
+      <a href="/skills/drel-app-development/">Skill</a>
+      <a href="/self-hosted/">Self-host</a>
+      <a href="/support/">Support</a>
+      <a href="/privacy/">Privacy</a>
+      <a class="nav-cta" href="#release">iPhone · TestFlight</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="shell hero">
+      <div>
+        <span class="eyebrow">Native push · exact HTTPS destination</span>
+        <h1>Push, right where <span class="gradient-word">you need it.</span></h1>
+        <p class="lead">Drel gives developers one dependable place for notifications. Send a push, tap it, and open its exact HTTPS destination inside a focused native container.</p>
+        <section class="skill-install" aria-labelledby="skill-install-title">
+          <div>
+            <span id="skill-install-title">Build Drel apps with an agent</span>
+            <code>npx skills add dyyz1993/WebBridgeKit --skill drel-app-development</code>
+          </div>
+          <button class="copy-command" type="button" data-copy-command="npx skills add dyyz1993/WebBridgeKit --skill drel-app-development" aria-describedby="skill-copy-status">Copy skill command</button>
+          <span id="skill-copy-status" class="copy-status" aria-live="polite"></span>
+        </section>
+        <div class="actions">
+          <a class="button primary" href="#how">See the developer loop <span aria-hidden="true">→</span></a>
+          <a class="button secondary" href="/skills/drel-app-development/">Read the skill</a>
+        </div>
+      </div>
+      <div class="route-stage" aria-label="A push arriving at its destination">
+        <div class="route-halo"></div>
+        <div class="route-panel">
+          <img src="/assets/drel-mark.svg" alt="Drel route mark">
+          <div class="route-label"><strong>arrived · exact destination</strong>HTTPS URL / route context</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="strip">
+      <div class="shell strip-inner">
+        <span><i class="status-dot"></i> Built for developers</span>
+        <span>Open-source push service</span>
+        <span>Focused web container</span>
+        <span>Built with WebBridgeKit</span>
+      </div>
+    </div>
+
+    <section class="shell section" id="how">
+      <div class="section-head">
+        <h2>From signal<br>to screen.</h2>
+        <p class="section-copy">Drel keeps the first release deliberately focused: a complete push-to-web loop, without exposing remote pages to native Bridge capabilities.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature" data-step="01 / CONNECT">
+          <div class="feature-icon">ON</div>
+          <h3>Activate push</h3>
+          <p>Enable notifications once. Drel creates a personal address for your scripts, automations, and services.</p>
+        </article>
+        <article class="feature" data-step="02 / PUSH">
+          <div class="feature-icon">↗</div>
+          <h3>Send one clean URL</h3>
+          <p>Copy your push address, call it from scripts or automations, and include the destination your tool should open.</p>
+        </article>
+        <article class="feature" data-step="03 / ARRIVE">
+          <div class="feature-icon">D</div>
+          <h3>Land on the right page</h3>
+          <p>The notification opens its HTTPS destination inside Drel after you tap it.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="code-section">
+      <div class="shell code-layout">
+        <div>
+          <span class="eyebrow">A developer-shaped notification</span>
+          <h2>Your tools can call home.</h2>
+          <p>Use a Bark-compatible push request from a shell script, CI job, personal dashboard, or an AI-built web tool. Your server remains yours.</p>
+        </div>
+        <div class="terminal" aria-label="Example push request">
+          <div class="terminal-bar"><i class="terminal-dot"></i><i class="terminal-dot"></i><i class="terminal-dot"></i>&nbsp; terminal</div>
+          <pre><span class="comment"># Send a notification to Drel</span>
+curl <span class="token">https://api.drel.app/</span>\
+  <span class="value">YOUR_KEY</span>/Build%20complete/\
+  Open%20the%20release%20report \
+  -G \
+  --data-urlencode <span class="value">url=https://tools.example/release/42</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell principle" id="release">
+      <div class="principle-card">
+        <span class="eyebrow">First release principle</span>
+        <h2>Your webpage opens. It does not inherit the phone.</h2>
+        <p>Drel's first App Store release is a notification and web-container product. Remote pages cannot invoke native Bridge actions; sensitive actions still require native validation and explicit consent.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell footer">
+    <div class="footer-inner">
+      <span>© 2026 Drel · Built with WebBridgeKit.</span>
+      <div class="footer-links"><a href="/self-hosted/">Self-host</a><a href="/support/">Support</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></div>
+    </div>
+  </footer>
+  <script>
+    document.querySelectorAll("[data-copy-command]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const command = button.dataset.copyCommand;
+        const status = document.getElementById("skill-copy-status");
+        try {
+          await navigator.clipboard.writeText(command);
+          status.textContent = "Copied — paste this into your agent terminal.";
+        } catch {
+          const field = document.createElement("textarea");
+          field.value = command;
+          field.setAttribute("readonly", "");
+          field.style.position = "fixed";
+          field.style.opacity = "0";
+          document.body.appendChild(field);
+          field.select();
+          document.execCommand("copy");
+          field.remove();
+          status.textContent = "Copied — paste this into your agent terminal.";
+        }
+      });
+    });
+  </script>
+</body>
+</html>

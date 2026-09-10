@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Drel</title>
+  <desc id="desc">An open D-shaped route with an incoming message dot.</desc>
+  <defs>
+    <linearGradient id="route" x1="92" y1="162" x2="420" y2="365" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2878F4"/>
+      <stop offset="0.52" stop-color="#5E65F6"/>
+      <stop offset="1" stop-color="#A13DFA"/>
+    </linearGradient>
+  </defs>
+  <path d="M190 157h102c79 0 143 64 143 143v15c0 79-64 143-143 143-67 0-124-46-139-109-5-20-23-34-44-34H94" fill="none" stroke="url(#route)" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="49" cy="315" r="31" fill="#2878F4"/>
+</svg>

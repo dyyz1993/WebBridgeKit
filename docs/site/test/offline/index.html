@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Drel Strong Offline Test</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <main class="legal-shell">
+    <a href="/" class="brand"><img src="/assets/drel-mark.svg" alt="Drel"><span>Drel</span></a>
+    <section class="legal-card">
+      <p class="eyebrow">PUBLIC TEST FIXTURE</p>
+      <h1>Strong offline test</h1>
+      <p>This stable fixture verifies Drel's signed Web Manifest binding and its hash-checked resource installation flow.</p>
+      <h2>Artifacts</h2>
+      <ul>
+        <li><a href="/test/offline/v1/index.html">Online entry page</a></li>
+        <li><a href="/test/offline/manifest.webmanifest">Web App Manifest</a></li>
+        <li><a href="/test/offline/package.json">Drel resource manifest</a></li>
+        <li><a href="/test/offline/drel-offline-demo-v1.zip">Diagnostic ZIP</a></li>
+      </ul>
+      <p>The app installs from <code>package.json</code> and verifies each resource. The ZIP is published for manual inspection and future archive-transport testing; Drel does not execute the ZIP directly.</p>
+    </section>
+  </main>
+</body>
+</html>
