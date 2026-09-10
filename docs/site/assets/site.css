@@ -133,6 +133,33 @@ pre { margin: 0; padding: 28px; overflow: auto; color: #dce1f6; font: 13px/1.8 "
 .support-card strong { display: block; margin-bottom: 7px; }
 .support-card span { color: var(--muted); font-size: 14px; line-height: 1.6; }
 
+/* Developer documentation */
+.docs-shell { width: min(1040px, calc(100% - 40px)); margin: 0 auto; }
+.docs-hero { padding: 70px 0 48px; border-bottom: 1px solid var(--line); }
+.docs-hero h1 { max-width: 800px; font-size: clamp(48px, 7vw, 82px); }
+.docs-hero p { max-width: 720px; margin: 22px 0 0; color: var(--muted); font-size: 17px; line-height: 1.72; }
+.docs-nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+.docs-nav a { padding: 9px 13px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.74); color: #4e5677; font-size: 13px; font-weight: 700; }
+.docs-nav a:hover, .docs-nav a[aria-current="page"] { border-color: rgba(72,99,232,.35); color: #4657d8; background: rgba(79,99,232,.08); }
+.docs-main { padding: 52px 0 104px; }
+.docs-main section { margin: 0 0 52px; }
+.docs-main h2 { margin: 0 0 16px; font-size: clamp(27px, 4vw, 42px); letter-spacing: -.045em; }
+.docs-main h3 { margin: 28px 0 10px; font-size: 19px; letter-spacing: -.03em; }
+.docs-main p, .docs-main li { color: var(--muted); font-size: 15px; line-height: 1.75; }
+.docs-main a { color: #4e60dc; text-decoration: underline; text-underline-offset: 3px; }
+.docs-main code { padding: 2px 6px; border-radius: 6px; background: rgba(72,84,139,.08); color: #39416b; font: 500 .87em "DM Mono", monospace; }
+.docs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.docs-card { padding: 25px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.74); }
+.docs-card h3 { margin: 0 0 9px; }.docs-card p { margin: 0; }.docs-card a { display: inline-block; margin-top: 15px; font-weight: 700; text-decoration: none; }
+.docs-callout { padding: 20px 22px; border: 1px solid rgba(76,99,232,.2); border-radius: 18px; background: rgba(76,99,232,.06); color: #505a7e; font-size: 14px; line-height: 1.7; }
+.docs-callout strong { color: var(--ink); }
+.docs-code { margin: 18px 0; padding: 19px; border-radius: 16px; background: #111528; color: #e5e8ff; overflow: auto; font: 12px/1.75 "DM Mono", monospace; white-space: pre; }
+.docs-table { overflow-x: auto; border: 1px solid var(--line); border-radius: 19px; background: rgba(255,255,255,.76); }
+.docs-table table { width: 100%; min-width: 650px; border-collapse: collapse; text-align: left; }
+.docs-table th { padding: 14px 17px; border-bottom: 1px solid var(--line); background: rgba(80,94,175,.05); color: #4e5677; font: 500 11px "DM Mono", monospace; letter-spacing: .04em; text-transform: uppercase; }
+.docs-table td { padding: 16px 17px; vertical-align: top; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.65; }
+.docs-table tr:last-child td { border-bottom: 0; }.docs-table td:first-child { color: var(--ink); font-weight: 700; }
+
 @media (max-width: 840px) {
   .nav-links a:not(.nav-cta) { display: none; }
   .hero, .section-head, .code-layout { grid-template-columns: 1fr; }
@@ -163,6 +190,7 @@ pre { margin: 0; padding: 28px; overflow: auto; color: #dce1f6; font: 13px/1.8 "
   pre { font-size: 11px; padding: 20px; }
   .principle-card { padding: 36px 26px; }
   .support-grid { grid-template-columns: 1fr; }
+  .docs-grid { grid-template-columns: 1fr; }
   .footer-inner { align-items: flex-start; flex-direction: column; padding-top: 30px; }
 }
 
