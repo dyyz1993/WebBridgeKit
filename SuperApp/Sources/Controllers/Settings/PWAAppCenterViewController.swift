@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import UIKit
 import UserNotifications
@@ -10,12 +11,20 @@ final class PWAAppCenterViewController: UIViewController {
     private let runtime = HTMLAppRuntimeCenter.shared
     private var trustRegistry: HTMLAppTrustRegistry { runtime.trustRegistry }
     private var permissionLedger: HTMLAppPermissionLedger { runtime.permissionLedger }
-    private let launchResolver = HTMLAppLaunchResolver()
+    // Keep the resolver on the live shared registry. A resolver constructed
+    // with its own registry snapshots UserDefaults before first-run gateway
+    // onboarding and cannot see apps registered moments later.
+    private lazy var launchResolver = HTMLAppLaunchResolver(trustRegistry: trustRegistry)
+    private let offlinePackageLocator = HTMLAppOfflinePackageLocator()
+    private let offlinePackageInstaller = HTMLAppOfflinePackageInstaller()
+    private let presentationMetadataStore = HTMLAppPresentationMetadataStore()
+    private let receivedAppStore = HTMLAppPushActivationStore()
     private let gatewayRegistry = HTMLAppGatewayRegistry()
     private lazy var onboardingService = HTMLAppGatewayOnboardingService(
         gatewayRegistry: gatewayRegistry,
         trustRegistry: trustRegistry,
-        permissionLedger: permissionLedger
+        permissionLedger: permissionLedger,
+        presentationMetadataStore: presentationMetadataStore
     )
 
     private lazy var homeViewModel = PWAHomeViewModel(
@@ -33,16 +42,40 @@ final class PWAAppCenterViewController: UIViewController {
         super.viewDidLoad()
         title = "首页"
         view.backgroundColor = ThemeTokens.Color.background
+        #if !DREL_RELEASE_MINIMAL_SETTINGS
         syncRuntimeGatewayIdentity()
         installAppSettingsHandoff()
+        #endif
         installHomeView()
         prepareOfficialPushIdentity()
+        #if !DREL_RELEASE_MINIMAL_SETTINGS
         reloadApps()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(refreshAppsAfterPushActivation),
+            name: .htmlAppPushDidActivate,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(refreshPushState),
+            name: DrelPushChannelStore.didChangeNotification,
+            object: nil
+        )
+        #endif
+    }
+
+    @objc private func refreshAppsAfterPushActivation() {
+        refreshVisibleApps()
+        updateHomeApps()
     }
 
     /// Container entry: the PWA browser menu's "应用设置" funnels into the same
     /// permission management page as the App Center detail entry.
     private func installAppSettingsHandoff() {
+        #if DREL_CONTAINER_ONLY
+        WebBrowserManager.shared.appPermissionSettingsPresenter = nil
+        #else
         WebBrowserManager.shared.appPermissionSettingsPresenter = { [weak self] host, manifest in
             guard let self else { return }
             let permissions = PWAPermissionCenterViewController(appID: manifest.appID)
@@ -52,14 +85,19 @@ final class PWAAppCenterViewController: UIViewController {
                 self.present(UINavigationController(rootViewController: permissions), animated: true)
             }
         }
+        #endif
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        #if !DREL_RELEASE_MINIMAL_SETTINGS
         syncRuntimeGatewayIdentity()
+        #endif
         refreshPushState()
+        #if !DREL_RELEASE_MINIMAL_SETTINGS
         reloadApps()
+        #endif
         observeDidBecomeActive()
     }
 
@@ -75,12 +113,21 @@ final class PWAAppCenterViewController: UIViewController {
     }
 
     private var pushServerURL: String {
-        ServerConfigManager.shared.getActiveBaseURL()
-            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
-            ?? "https://wbk.shanbox.19930810.xyz:8443"
+        // Custom delivery is represented by its own persisted self-hosted
+        // configuration. The official Drel address must never inherit a
+        // legacy Bark/server preference.
+        HTMLAppGatewayDefaults.official.baseURL
     }
 
     private var pushURL: String {
+        let channel = DrelPushChannelStore.shared.activeChannel(officialPushURL: officialPushURL)
+        if !channel.isOfficial {
+            return channel.pushURL
+        }
+        return officialPushURL
+    }
+
+    private var officialPushURL: String {
         guard let officialPushIdentity, !officialPushIdentity.isEmpty else { return "" }
         let base = pushServerURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         return "\(base)/\(officialPushIdentity)"
@@ -108,7 +155,9 @@ final class PWAAppCenterViewController: UIViewController {
                 self?.openPushExample(plain, title: title, body: body)
             },
             onCopyPushURL: { [weak self] in self?.copyPushURL() },
-            onConfigurePush: { [weak self] in self?.activateOfficialPush() },
+            onManagePushAddress: { [weak self] in self?.showPushAddressManagement() },
+            onConfigurePush: { [weak self] in self?.configureActivePushChannel() },
+            onSelectPushChannel: { [weak self] channel in self?.selectPushChannel(channel) },
             onSelectApp: { [weak self] appID in self?.showAppDetails(appID: appID) },
             onManageApps: { [weak self] in self?.showGatewayManagement() },
             onOpenAPIExamples: { [weak self] in self?.showAPIExamples() },
@@ -129,13 +178,22 @@ final class PWAAppCenterViewController: UIViewController {
         self.hostingController = hostingController
     }
 
-    private func refreshPushState() {
+    @objc private func refreshPushState() {
+        refreshPushChannels()
         homeViewModel.pushURL = pushURL
         if officialPushIdentity == nil {
             prepareOfficialPushIdentity()
         }
 
-        #if DEBUG
+        if DrelPushChannelStore.shared.isActiveSelfHosted(officialPushURL: officialPushURL) {
+            // A direct self-hosted configuration is persisted only after its
+            // pairing and APNs registration succeed. It has an independent
+            // registration lifecycle and must not request official setup.
+            homeViewModel.pushState = .ready
+            return
+        }
+
+        #if !DREL_CONTAINER_ONLY
         if Self.isOfficialPushUITest { return }
         #endif
 
@@ -170,19 +228,20 @@ final class PWAAppCenterViewController: UIViewController {
     private func prepareOfficialPushIdentity() {
         homeViewModel.pushState = .identityPreparing
         do {
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             if Self.isOfficialPushUITest,
                let fixture = ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_IDENTITY"],
                !fixture.isEmpty {
                 officialPushIdentity = fixture
             } else {
-                officialPushIdentity = try OfficialPushIdentityStore.shared.currentOrCreate()
+                officialPushIdentity = try OfficialPushIdentityStore.shared.currentOrMigrateToShortIdentity()
             }
             #else
-            officialPushIdentity = try OfficialPushIdentityStore.shared.currentOrCreate()
+            officialPushIdentity = try OfficialPushIdentityStore.shared.currentOrMigrateToShortIdentity()
             #endif
+            refreshPushChannels()
             homeViewModel.pushURL = pushURL
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             if Self.isOfficialPushUITest {
                 homeViewModel.pushState = ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] == "initial-ready"
                     ? .ready
@@ -231,23 +290,55 @@ final class PWAAppCenterViewController: UIViewController {
         }
     }
 
+    private func refreshPushChannels() {
+        let channels = DrelPushChannelStore.shared.channels(officialPushURL: officialPushURL)
+        homeViewModel.pushChannels = channels
+        homeViewModel.activePushChannelID = DrelPushChannelStore.shared
+            .activeChannel(officialPushURL: officialPushURL).id
+    }
+
+    private func selectPushChannel(_ channel: DrelPushChannel) {
+        DrelPushChannelStore.shared.select(channel)
+        refreshPushState()
+    }
+
+    private func configureActivePushChannel() {
+        if DrelPushChannelStore.shared.isActiveSelfHosted(officialPushURL: officialPushURL) {
+            navigationController?.pushViewController(SelfHostedPushConfigurationViewController(), animated: true)
+        } else {
+            activateOfficialPush()
+        }
+    }
+
     private func reloadApps() {
-        manifests = trustRegistry.registeredManifests()
+        refreshVisibleApps()
         updateHomeApps()
 
-        guard manifests.isEmpty,
-              gatewayRegistry.activeGateway() == nil,
-              !isBootstrappingOfficialGateway,
+        // Keep the verified catalog current for push-route validation, but do
+        // not render it directly. An app becomes visible only after a trusted
+        // push has targeted it and recorded a user-local activation.
+        let gateway = gatewayRegistry.activeGateway() ?? HTMLAppGatewayDefaults.official
+        guard !isBootstrappingOfficialGateway,
               !officialGatewayUnavailable else { return }
-        bootstrapOfficialGateway()
+        bootstrapGateway(gateway)
+    }
+
+    private func refreshVisibleApps() {
+        manifests = trustRegistry.registeredManifests().filter {
+            receivedAppStore.contains($0.appID)
+        }
     }
 
     private func updateHomeApps() {
         homeViewModel.apps = manifests.map { manifest in
-            PWAHomeViewModel.AppItem(
+            let metadata = presentationMetadataStore.metadata(for: manifest.appID)
+            let displayName = metadata?.name ?? manifest.name
+            return PWAHomeViewModel.AppItem(
                 id: manifest.appID,
-                name: manifest.name,
-                icon: appIcon(for: manifest),
+                name: displayName,
+                iconURL: metadata?.iconURLs.last,
+                iconCacheKey: "\(manifest.appID)|\(manifest.webManifest?.sha256 ?? "no-web-manifest")",
+                fallbackInitial: appInitial(name: displayName, appID: manifest.appID),
                 tint: appTint(for: manifest)
             )
         }
@@ -262,10 +353,10 @@ final class PWAAppCenterViewController: UIViewController {
         }
     }
 
-    private func bootstrapOfficialGateway() {
+    private func bootstrapGateway(_ gateway: HTMLAppGatewayConfiguration) {
         isBootstrappingOfficialGateway = true
         homeViewModel.appState = .loading
-        onboardingService.validate(HTMLAppGatewayDefaults.official) { [weak self] result in
+        onboardingService.validate(gateway) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.isBootstrappingOfficialGateway = false
@@ -273,7 +364,7 @@ final class PWAAppCenterViewController: UIViewController {
                 case .success(let report):
                     do {
                         try self.onboardingService.activate(report)
-                        self.manifests = self.trustRegistry.registeredManifests()
+                        self.refreshVisibleApps()
                         self.officialGatewayUnavailable = false
                     } catch {
                         self.officialGatewayUnavailable = true
@@ -286,13 +377,12 @@ final class PWAAppCenterViewController: UIViewController {
         }
     }
 
-    private func appIcon(for manifest: HTMLAppManifest) -> LucideIcon {
-        let value = "\(manifest.appID) \(manifest.name)".lowercased()
-        if value.contains("chat") { return .paperplane }
-        if value.contains("agent") || value.contains("console") { return .terminal }
-        if value.contains("approval") { return .clipboard }
-        if value.contains("markdown") { return .docText }
-        return .appFill
+    private func appInitial(name: String, appID: String) -> String {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let first = trimmedName.first { return String(first).uppercased() }
+        let appComponent = appID.split(separator: ".").last.map(String.init) ?? appID
+        if let first = appComponent.first { return String(first).uppercased() }
+        return "D"
     }
 
     private func appTint(for manifest: HTMLAppManifest) -> UIColor {
@@ -309,18 +399,52 @@ final class PWAAppCenterViewController: UIViewController {
 
     private func showAppDetails(appID: String) {
         guard let manifest = manifests.first(where: { $0.appID == appID }) else { return }
-        let grants = permissionLedger.grants(for: manifest.appID)
-        let offline = manifest.cache.persistent ? "强离线包" : (manifest.cache.restoresLastState ? "缓存优先" : "在线")
+        let offline = offlinePackageSummary(for: manifest)
+        #if DREL_CONTAINER_ONLY
         let message = """
         App ID：\(manifest.appID)
-        离线策略：\(offline)（\(manifest.cache.version)）
+        离线策略：\(offline)
+
+        此版本以安全网页容器运行。推送可定位到页面，但远程页面不能调用原生 Bridge 能力。
+        """
+        #else
+        let grants = permissionLedger.grants(for: manifest.appID)
+        let message = """
+        App ID：\(manifest.appID)
+        离线策略：\(offline)
         已声明能力：\(manifest.capabilities.map(\.rawValue).joined(separator: "、").ifEmpty("无"))
         已授予能力：\(grants.map { $0.capability.rawValue }.joined(separator: "、").ifEmpty("无"))
 
         推送只能定位到页面；权限和敏感操作仍需用户在应用内确认。
         """
+        #endif
         let alert = UIAlertController(title: manifest.name, message: message, preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "打开应用", style: .default) { [weak self] _ in self?.launch(manifest) })
+        if manifest.effectiveOfflineCache.isStrongOfflineEligible {
+            let hasCurrentPackage = hasCurrentOfflinePackage(for: manifest)
+            alert.addAction(UIAlertAction(
+                title: hasCurrentPackage ? "更新离线包" : "下载离线包",
+                style: .default
+            ) { [weak self] _ in
+                self?.prepareOfflinePackage(manifest)
+            })
+            if hasCurrentPackage {
+                alert.addAction(UIAlertAction(title: "删除离线包", style: .destructive) { [weak self] _ in
+                    self?.confirmOfflinePackageRemoval(for: manifest)
+                })
+            }
+        }
+        let defaultStartupAppID = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.defaultStartupAppID)
+        if defaultStartupAppID == manifest.appID {
+            alert.addAction(UIAlertAction(title: "取消默认启动应用", style: .default) { _ in
+                UserDefaults.standard.removeObject(forKey: SettingsPreferenceKeys.defaultStartupAppID)
+            })
+        } else {
+            alert.addAction(UIAlertAction(title: "设为默认启动应用", style: .default) { _ in
+                UserDefaults.standard.set(manifest.appID, forKey: SettingsPreferenceKeys.defaultStartupAppID)
+            })
+        }
+        #if !DREL_CONTAINER_ONLY
         alert.addAction(UIAlertAction(title: "权限与原生能力", style: .default) { [weak self] _ in
             guard let self else { return }
             self.navigationController?.pushViewController(
@@ -328,9 +452,12 @@ final class PWAAppCenterViewController: UIViewController {
                 animated: true
             )
         })
+        #endif
+        #if !DREL_CONTAINER_ONLY
         alert.addAction(UIAlertAction(title: "管理应用服务", style: .default) { [weak self] _ in
             self?.showGatewayManagement()
         })
+        #endif
         alert.addAction(UIAlertAction(title: "关闭", style: .cancel))
         // 仅 iPad（regular 宽度）需要 popover 锚点；iPhone 上无条件配置会把
         // actionSheet 变成居中窄浮卡（宽度异常、遮挡宫格）——用户实测报告。
@@ -343,6 +470,54 @@ final class PWAAppCenterViewController: UIViewController {
     }
 
     private func launch(_ manifest: HTMLAppManifest) {
+        // Launch does not implicitly install or update code. A user may open
+        // the network version at any time, while installing/updating an
+        // offline package remains the distinct, explicit action in details.
+        launchResolved(manifest)
+    }
+
+    private func prepareOfflinePackage(_ manifest: HTMLAppManifest) {
+        HUDService.shared.show("正在验证并准备离线包…")
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await self.offlinePackageInstaller.install(appManifest: manifest)
+                HUDService.shared.showSuccess(withStatus: "离线包已准备完成")
+            } catch {
+                // The installer only switches the current pointer after every
+                // resource is verified. On failure resolve again so a stale or
+                // partial package can never be presented as strong offline.
+                HUDService.shared.showInfo(withStatus: "离线包暂不可用，已改为联网打开")
+            }
+        }
+    }
+
+    private func confirmOfflinePackageRemoval(for manifest: HTMLAppManifest) {
+        let alert = UIAlertController(
+            title: "删除离线包？",
+            message: "这会移除 \(manifest.name) 已下载的网页资源，之后仍可联网打开并再次下载。",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: "删除", style: .destructive) { [weak self] _ in
+            self?.removeOfflinePackage(for: manifest)
+        })
+        present(alert, animated: true)
+    }
+
+    private func removeOfflinePackage(for manifest: HTMLAppManifest) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let removed = try await self.offlinePackageInstaller.removeInstalledPackage(appID: manifest.appID)
+                HUDService.shared.showSuccess(withStatus: removed ? "离线包已删除" : "没有可删除的离线包")
+            } catch {
+                self.showMessage(title: "无法删除离线包", message: error.localizedDescription)
+            }
+        }
+    }
+
+    private func launchResolved(_ manifest: HTMLAppManifest) {
         guard let startURL = URL(string: manifest.startURL) else { return }
         do {
             let target = try launchResolver.resolve(appID: manifest.appID, route: startURL.path)
@@ -355,7 +530,7 @@ final class PWAAppCenterViewController: UIViewController {
                 hideStatusBar: true,
                 hideTabBar: true,
                 payload: payload,
-                useManifestLoader: target.offlineMode == .strong,
+                useManifestLoader: false,
                 preferCachedContent: target.offlineMode == .partial
             )
             WebBrowserManager.shared.openBrowser(url: target.loaderURL, params: params, from: self)
@@ -364,10 +539,124 @@ final class PWAAppCenterViewController: UIViewController {
         }
     }
 
+    private func hasCurrentOfflinePackage(for manifest: HTMLAppManifest) -> Bool {
+        guard let package = try? offlinePackageLocator.installedPackage(appID: manifest.appID) else {
+            return false
+        }
+        let cache = manifest.effectiveOfflineCache
+        return package.version == cache.version
+            && package.resourceManifestSHA256 == cache.resourceManifestSHA256
+            && (try? offlinePackageLocator.entrypointURL(for: package)) != nil
+    }
+
+    private func offlinePackageSummary(for manifest: HTMLAppManifest) -> String {
+        let cache = manifest.effectiveOfflineCache
+        guard cache.isStrongOfflineEligible else {
+            return cache.restoresLastState ? "缓存优先（\(cache.version)）" : "在线"
+        }
+
+        guard let package = try? offlinePackageLocator.installedPackage(appID: manifest.appID) else {
+            return "强离线包待准备（可下载后离线打开，\(cache.version)）"
+        }
+        guard hasCurrentOfflinePackage(for: manifest) else {
+            return "强离线包待更新（当前 \(package.version) → \(cache.version)）"
+        }
+        let size = (try? offlinePackageLocator.packageSize(for: package)) ?? 0
+        return "强离线包已安装（\(cache.version)，\(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))）"
+    }
+
     private func copyPushURL() {
-        guard homeViewModel.isPushReady else { return }
+        guard !pushURL.isEmpty else { return }
         UIPasteboard.general.string = pushURL
-        HUDService.shared.showSuccess(withStatus: "推送地址已复制")
+        let status = homeViewModel.isPushReady
+            ? "推送地址已复制"
+            : L10n.tr("official.push.address.copied_before_enable")
+        HUDService.shared.showSuccess(withStatus: status)
+    }
+
+    private func showPushAddressManagement() {
+        if DrelPushChannelStore.shared.isActiveSelfHosted(officialPushURL: officialPushURL) {
+            navigationController?.pushViewController(SelfHostedPushConfigurationViewController(), animated: true)
+            return
+        }
+        guard let officialPushIdentity, !officialPushIdentity.isEmpty else {
+            // An absent identity previously failed silently here; a tap with
+            // zero feedback reads as a dead button on fresh installs.
+            HUDService.shared.showInfo(withStatus: "推送身份尚未生成，请先启用通知完成授权")
+            return
+        }
+        let sheet = UIAlertController(
+            title: "推送地址管理",
+            message: "推送标识是公开地址的一部分，不是登录密码。",
+            preferredStyle: .actionSheet
+        )
+        sheet.addAction(UIAlertAction(title: "复制完整地址", style: .default) { [weak self] _ in
+            self?.copyPushURL()
+        })
+        sheet.addAction(UIAlertAction(title: "复制推送标识", style: .default) { _ in
+            UIPasteboard.general.string = officialPushIdentity
+            HUDService.shared.showSuccess(withStatus: "推送标识已复制")
+        })
+        sheet.addAction(UIAlertAction(title: "重新生成推送地址", style: .destructive) { [weak self] _ in
+            self?.confirmPushAddressRotation()
+        })
+        sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        if let popover = sheet.popoverPresentationController,
+           traitCollection.horizontalSizeClass == .regular {
+            popover.sourceView = view
+            popover.sourceRect = view.bounds
+        }
+        present(sheet, animated: true)
+    }
+
+    private func confirmPushAddressRotation() {
+        let alert = UIAlertController(
+            title: "重新生成推送地址？",
+            message: "旧地址将停止向这台设备推送。请同步更新你的脚本、服务和网页。此操作无法撤销。",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: "重新生成", style: .destructive) { [weak self] _ in
+            self?.rotatePushAddress()
+        })
+        present(alert, animated: true)
+    }
+
+    private func rotatePushAddress() {
+        guard let oldIdentity = officialPushIdentity else { return }
+        homeViewModel.pushState = .registering
+
+        let replaceLocalIdentity = { [weak self] in
+            guard let self else { return }
+            do {
+                let successor = try OfficialPushIdentityStore.shared.reset()
+                self.officialPushIdentity = successor
+                UserDefaults.standard.set(false, forKey: self.pushRegistrationFlag)
+                self.homeViewModel.pushURL = self.pushURL
+                self.activateOfficialPush()
+            } catch {
+                self.homeViewModel.pushState = .recoverableError(error.localizedDescription)
+            }
+        }
+
+        // Before notification permission/APNs registration there is no server
+        // registration to revoke; rotating the local public identity is safe.
+        guard UserDefaults.standard.bool(forKey: pushRegistrationFlag) else {
+            replaceLocalIdentity()
+            return
+        }
+
+        PushNotificationManager.shared.revokeOfficialPush(
+            serverURL: pushServerURL,
+            key: oldIdentity
+        ) { [weak self] result in
+            switch result {
+            case .success:
+                replaceLocalIdentity()
+            case .failure(let error):
+                self?.homeViewModel.pushState = .recoverableError(error.localizedDescription)
+            }
+        }
     }
 
     private func showTokenManager() {
@@ -383,11 +672,11 @@ final class PWAAppCenterViewController: UIViewController {
 
     private func showAPIExamples() {
         let view = PushExampleCatalogView(
-            onTry: { [weak self] example in
-                self?.openPushExample(example)
+            onSend: { [weak self] example in
+                self?.openPushExampleInSafari(example)
             },
             onCopy: { [weak self] example in
-                self?.copyExampleURL(example)
+                self?.copyPushExampleURL(example)
             },
             onOpenSounds: { [weak self] in
                 self?.showRingtonePicker()
@@ -404,20 +693,24 @@ final class PWAAppCenterViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "推送铃声", style: .default) { [weak self] _ in
             self?.showRingtonePicker()
         })
+        #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
         alert.addAction(UIAlertAction(title: "推送加密", style: .default) { [weak self] _ in
             self?.navigationController?.pushViewController(
                 UIHostingController(rootView: PushEncryptionView()), animated: true
             )
         })
+        #endif
         alert.addAction(UIAlertAction(title: "分组静音", style: .default) { [weak self] _ in
             self?.navigationController?.pushViewController(
                 UIHostingController(rootView: GroupMuteView()), animated: true
             )
         })
+        #if !DREL_CONTAINER_ONLY
         alert.addAction(UIAlertAction(title: "管理自有服务", style: .default) { [weak self] _ in
             self?.navigationController?.pushViewController(GatewayConfigurationViewController(), animated: true)
         })
-        #if DEBUG
+        #endif
+        #if !DREL_CONTAINER_ONLY
         alert.addAction(UIAlertAction(title: "Push 调试工具", style: .default) { [weak self] _ in
             guard let self else { return }
             let view = TokenPushHomeView { [weak self] action in self?.handleTokenPushAction(action) }
@@ -432,7 +725,7 @@ final class PWAAppCenterViewController: UIViewController {
         present(alert, animated: true)
     }
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private func handleTokenPushAction(_ action: TokenPushAction) {
         switch action {
         case .openTokenManager:
@@ -440,7 +733,7 @@ final class PWAAppCenterViewController: UIViewController {
         case .openAPIKeyManager:
             navigationController?.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
         case .openNotificationDebug:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             navigationController?.pushViewController(NotificationDebugViewController(), animated: true)
             #endif
         }
@@ -459,8 +752,35 @@ final class PWAAppCenterViewController: UIViewController {
         )
     }
 
-    private func copyExampleURL(_ example: PushExample) {
-        copyPushURL(title: example.pushTitle, body: example.pushBody, queryItems: example.queryItems)
+    /// The catalog's send icon opens the fully composed, Bark-compatible
+    /// request in Safari. The compact copy icon keeps the exact URL available.
+    private func openPushExampleInSafari(_ example: PushExample) {
+        guard homeViewModel.isPushReady else {
+            activateOfficialPush()
+            return
+        }
+
+        guard let url = makeBarkURL(
+            title: example.pushTitle,
+            body: example.pushBody,
+            queryItems: example.queryItems
+        ) else {
+            showMessage(title: "无法生成测试地址", message: "请检查推送服务地址是否有效。")
+            return
+        }
+
+        UIApplication.shared.open(url, options: [:]) { [weak self] opened in
+            guard !opened else { return }
+            self?.showMessage(title: "无法打开 Safari", message: "请稍后重试，或先复制推送 URL。")
+        }
+    }
+
+    private func copyPushExampleURL(_ example: PushExample) {
+        copyPushURL(
+            title: example.pushTitle,
+            body: example.pushBody,
+            queryItems: example.queryItems
+        )
     }
 
     // MARK: - Push URL actions
@@ -475,7 +795,15 @@ final class PWAAppCenterViewController: UIViewController {
             showMessage(title: "无法生成测试地址", message: "请检查推送服务地址是否有效。")
             return
         }
-        #if DEBUG
+        #if DREL_CONTAINER_ONLY
+        // A Store user pressing “send” is testing the push loop, not opening
+        // an API response document. Issue one request in-process and surface
+        // its result natively; do not retry because APNs may already have
+        // accepted a timed-out alert request.
+        sendDrelTestPush(to: url)
+        return
+        #endif
+        #if !DREL_CONTAINER_ONLY
         if Self.isOfficialPushUITest {
             homeViewModel.pushState = .ready
             return
@@ -490,6 +818,36 @@ final class PWAAppCenterViewController: UIViewController {
         }
         #endif
         UIApplication.shared.open(url)
+    }
+
+    private func sendDrelTestPush(to url: URL) {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 15
+
+        URLSession.shared.dataTask(with: request) { [weak self] _, response, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if let error {
+                    self.showMessage(
+                        title: L10n.tr("official.push.send.failure_title"),
+                        message: error.localizedDescription
+                    )
+                    return
+                }
+
+                guard let response = response as? HTTPURLResponse,
+                      (200...299).contains(response.statusCode) else {
+                    self.showMessage(
+                        title: L10n.tr("official.push.send.failure_title"),
+                        message: L10n.tr("official.push.send.failure_message")
+                    )
+                    return
+                }
+
+                HUDService.shared.showSuccess(withStatus: L10n.tr("official.push.send.success"))
+            }
+        }.resume()
     }
 
     private func copyPushURL(title: String, body: String, queryItems: [URLQueryItem]) {
@@ -539,7 +897,10 @@ final class PWAAppCenterViewController: UIViewController {
     private func makeBarkURL(title: String, body: String, queryItems: [URLQueryItem]) -> URL? {
         let base = pushServerURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard let officialPushIdentity else { return nil }
-        let path = [officialPushIdentity, title, body].compactMap(Self.encodePathSegment).joined(separator: "/")
+        let rawSegments = title.isEmpty
+            ? [officialPushIdentity, body]
+            : [officialPushIdentity, title, body]
+        let path = rawSegments.compactMap(Self.encodePathSegment).joined(separator: "/")
         guard var components = URLComponents(string: "\(base)/\(path)") else { return nil }
         components.queryItems = queryItems.isEmpty ? nil : queryItems
         return components.url
@@ -557,7 +918,7 @@ final class PWAAppCenterViewController: UIViewController {
         present(alert, animated: true)
     }
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private static var isOfficialPushUITest: Bool {
         return ProcessInfo.processInfo.isWebBridgeKitUITesting
             && ProcessInfo.processInfo.environment["WBK_OFFICIAL_PUSH_TEST_STATE"] != nil

@@ -167,6 +167,13 @@ class FavoriteCell: UITableViewCell {
         }
 
         cacheModeLabel.snp.makeConstraints { make in
+            // Chain cacheModeLabel to urlLabel: without this top constraint the
+            // cell's vertical layout splits into two disconnected fragments
+            // (title/url from the top, cache row from the bottom), so
+            // self-sizing height was ambiguous and rows collapsed to ~16pt,
+            // overlapping each other under the nav bar — the favorites list
+            // looked like a blank screen (N2c).
+            make.top.equalTo(urlLabel.snp.bottom).offset(12)
             make.bottom.equalToSuperview().offset(-12)
             make.left.equalTo(faviconImageView.snp.right).offset(12)
         }

@@ -196,6 +196,11 @@ public class CacheManagementViewController: UIViewController {
     }
 
     private func setupCharts() {
+        #if DEBUG
+        // Prototype charts with hard-coded figures ("2.3G", "1.1 GB", weekly
+        // bars) that never reflect real cache state. Shipping them in Release
+        // contradicted the real per-app sizes listed below (N2b), so they are
+        // Debug-only and explicitly labeled as demo data.
         let pieChart = chartContainerView.viewWithTag(201) as? PieChartView
         pieChart?.segments = [
             PieSegment(value: 1.1, color: ThemeTokens.Color.primary, label: "E-Commerce · 1.1 GB"),
@@ -217,9 +222,21 @@ public class CacheManagementViewController: UIViewController {
             BarItem(value: 10, color: ThemeTokens.Color.primary.withAlphaComponent(0.4), label: "Sun")
         ]
 
-        chartContainerView.frame = CGRect(x: 0, y: 0, width: 0, height: 340)
-        chartContainerView.layoutIfNeeded()
+        (chartContainerView.viewWithTag(200) as? UILabel)?.text = "存储分布（演示数据）"
+        (chartContainerView.viewWithTag(202) as? UILabel)?.text = "每周使用量（演示）"
+
+        // Auto-size the header: the stale fixed 340pt frame clipped the
+        // weekly-usage title (N3). Fit the stack to its own layout.
+        let headerWidth = max(tableView.bounds.width, UIScreen.main.bounds.width)
+        chartContainerView.frame = CGRect(x: 0, y: 0, width: headerWidth, height: 1)
+        let fitHeight = chartContainerView.systemLayoutSizeFitting(
+            CGSize(width: headerWidth, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+        chartContainerView.frame = CGRect(x: 0, y: 0, width: headerWidth, height: ceil(fitHeight))
         tableView.tableHeaderView = chartContainerView
+        #endif
     }
 
     private func bindViewModel() {

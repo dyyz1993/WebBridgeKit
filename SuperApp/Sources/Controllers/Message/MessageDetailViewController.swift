@@ -13,11 +13,17 @@ import WebKit
 import WebBridgeKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import Photos
 
 class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate {
 
-    let message: StoredMessage
-    private let launchResolver = HTMLAppLaunchResolver()
+    /// `var`: read state lands asynchronously after viewDidLoad and the meta
+    /// card is rebuilt against this copy so the read-time row appears without
+    /// reopening the message.
+    var message: StoredMessage
+    private let launchResolver = HTMLAppLaunchResolver(
+        trustRegistry: HTMLAppRuntimeCenter.shared.trustRegistry
+    )
 
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -188,8 +194,21 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         // Opening the detail counts as reading the message — for every entry
         // path (row tap, banner focus, cold-start deep link), not just peer
         // swipes. Without this the banner-tap flow leaves the red dot on.
+        // The local copy is refreshed and the meta card rebuilt afterwards:
+        // configure() ran before the write landed, so the read-time row was
+        // missing until the message was reopened.
         if !message.isRead {
-            Task { await MessageEngine.shared.markAsRead(id: message.id) }
+            Task { [weak self] in
+                guard let self else { return }
+                await MessageEngine.shared.markAsRead(id: self.message.id)
+                self.message.isRead = true
+                if self.message.readAt == nil {
+                    self.message.readAt = Date()
+                }
+                await MainActor.run {
+                    self.rebuildMetaRows()
+                }
+            }
         }
     }
 
@@ -197,70 +216,116 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
 
     // MARK: - Swipe navigation indicators
 
-    /// Subtle side chevrons: left = swipe left for the next message,
-    /// right = swipe right for the previous one. The left indicator also
-    /// carries the unread red dot (next message unread).
-    private let nextIndicator: UIImageView = {
-        let iv = UIImageView()
-        iv.image = LucideIcon.chevronLeft.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm)
-        iv.tintColor = ThemeTokens.Color.textTertiary
-        iv.alpha = 0.45
-        iv.contentMode = .scaleAspectFit
-        iv.isUserInteractionEnabled = false
-        iv.accessibilityIdentifier = "message.detail.indicator.next"
-        return iv
+    /// Labeled pills instead of bare edge chevrons: the swipe gesture keeps
+    /// working, but affordances that read as misrendered artifacts in screen
+    /// edges gave no discoverable meaning. The pills are also tappable and
+    /// carry the next-message unread state inline.
+    private lazy var nextIndicator: UIButton = makeNavigationPill(
+        title: L10n.tr("message.detail.next"),
+        accessibilityID: "message.detail.indicator.next",
+        action: #selector(tapNextIndicator)
+    )
+
+    private lazy var prevIndicator: UIButton = makeNavigationPill(
+        title: "‹ " + L10n.tr("message.detail.prev"),
+        accessibilityID: "message.detail.indicator.prev",
+        action: #selector(tapPrevIndicator)
+    )
+
+    private let indicatorStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = ThemeTokens.Spacing.sm
+        stack.alpha = 0.85
+        return stack
     }()
 
-    private let prevIndicator: UIImageView = {
-        let iv = UIImageView()
-        iv.image = LucideIcon.chevronRight.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm)
-        iv.tintColor = ThemeTokens.Color.textTertiary
-        iv.alpha = 0.45
-        iv.contentMode = .scaleAspectFit
-        iv.isUserInteractionEnabled = false
-        iv.accessibilityIdentifier = "message.detail.indicator.prev"
-        return iv
-    }()
+    private func makeNavigationPill(title: String, accessibilityID: String, action: Selector) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = ThemeTokens.Typography.metadata
+        button.setTitleColor(ThemeTokens.Color.textSecondary, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.cardBackground
+        button.layer.borderColor = ThemeTokens.Color.separator.cgColor
+        button.layer.borderWidth = 1
+        button.layer.cornerRadius = 14
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+        button.isUserInteractionEnabled = true
+        button.accessibilityIdentifier = accessibilityID
+        button.addTarget(self, action: action, for: .touchUpInside)
+        return button
+    }
 
-    private let nextUnreadDot: UIView = {
-        let dot = UIView()
-        dot.backgroundColor = ThemeTokens.Color.error
-        dot.layer.cornerRadius = 3
-        dot.isHidden = true
-        dot.isUserInteractionEnabled = false
-        dot.accessibilityIdentifier = "message.detail.next.unread"
-        return dot
-    }()
+    /// Red dot moves inline into the next pill's title when the next message
+    /// is unread, instead of floating at the screen edge.
+    private func refreshNextIndicatorTitle(hasUnreadNext: Bool) {
+        let title = L10n.tr("message.detail.next") + " ›"
+        guard hasUnreadNext else {
+            nextIndicator.setTitle(title, for: .normal)
+            return
+        }
+        let attributed = NSMutableAttributedString(
+            string: "● ",
+            attributes: [
+                .foregroundColor: ThemeTokens.Color.error,
+                .font: UIFont.systemFont(ofSize: 9),
+            ]
+        )
+        attributed.append(NSAttributedString(
+            string: title,
+            attributes: [
+                .foregroundColor: ThemeTokens.Color.textSecondary,
+                .font: ThemeTokens.Typography.metadata,
+            ]
+        ))
+        nextIndicator.setAttributedTitle(attributed, for: .normal)
+    }
+
+    @objc private func tapNextIndicator() { navigate(by: 1) }
+    @objc private func tapPrevIndicator() { navigate(by: -1) }
+
+    /// Tap-driven version of the swipe fly-out: same visual language, no
+    /// finger required.
+    private func navigate(by offset: Int) {
+        let width = view.bounds.width
+        UIView.animate(
+            withDuration: ThemeTokens.Animation.normal.duration,
+            delay: 0,
+            options: [.curveEaseIn],
+            animations: {
+                self.scrollView.transform = CGAffineTransform(
+                    translationX: -CGFloat(offset) * width,
+                    y: 0
+                )
+                self.scrollView.alpha = 0
+            },
+            completion: { [weak self] _ in
+                guard let self else { return }
+                self.scrollView.transform = .identity
+                self.scrollView.alpha = 1
+                self.advance(toOffset: offset)
+            }
+        )
+    }
 
     private func setupSideIndicators() {
         guard peerMessages != nil else { return }
-        view.addSubview(nextIndicator)
-        view.addSubview(prevIndicator)
-        view.addSubview(nextUnreadDot)
-        nextIndicator.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(ThemeTokens.Spacing.xxs)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(ThemeTokens.Icons.Sizes.sm)
-        }
-        prevIndicator.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-ThemeTokens.Spacing.xxs)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(ThemeTokens.Icons.Sizes.sm)
-        }
-        nextUnreadDot.snp.makeConstraints { make in
-            make.centerX.equalTo(nextIndicator.snp.leading)
-            make.top.equalTo(nextIndicator.snp.top).offset(-4)
-            make.width.height.equalTo(6)
+        view.addSubview(indicatorStack)
+        indicatorStack.addArrangedSubview(nextIndicator)
+        indicatorStack.addArrangedSubview(prevIndicator)
+        indicatorStack.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-ThemeTokens.Spacing.sm)
         }
         refreshNavigationState()
     }
 
     private func refreshNavigationState() {
         guard let peers = peerMessages else { return }
-        nextIndicator.isHidden = currentIndex >= peers.count - 1
-        prevIndicator.isHidden = currentIndex <= 0
         let hasNext = currentIndex < peers.count - 1
-        nextUnreadDot.isHidden = !(hasNext && !peers[currentIndex + 1].isRead)
+        nextIndicator.isHidden = !hasNext
+        prevIndicator.isHidden = currentIndex <= 0
+        refreshNextIndicatorTitle(hasUnreadNext: hasNext && !peers[currentIndex + 1].isRead)
     }
 
     /// Horizontal swipe navigation: left = next message (mark read and
@@ -500,20 +565,11 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         }
     }
 
-    private func configure() {
-        titleLabel.text = message.payload.title
-
-        if message.bodyType == "markdown" {
-            let markdownContent = message.payload.markdown ?? message.payload.body
-            let html = MarkdownRenderer.renderHTML(
-                title: message.payload.title,
-                markdown: markdownContent
-            )
-            webView.loadHTMLString(html, baseURL: nil)
-            webView.navigationDelegate = self
-        } else {
-            bodyLabel.text = message.payload.body
-        }
+    /// Idempotent meta building: called from configure() and again after the
+    /// async mark-as-read lands so the read-time row appears immediately.
+    private func rebuildMetaRows() {
+        metaStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        technicalMetaStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -527,7 +583,9 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
             addMetaRow(label: L10n.tr("message.detail.interruption"), value: level.displayName)
         }
         if let sound = message.payload.sound {
-            let volume = message.payload.soundVolume.map { " · \(Int($0))/10" } ?? ""
+            let volume = message.payload.soundVolume.map {
+                " · " + String(format: L10n.tr("message.detail.sound_volume"), Int($0))
+            } ?? ""
             addMetaRow(label: L10n.tr("message.detail.sound"), value: "\(sound)\(volume)")
         }
         if message.payload.isCall == true {
@@ -562,6 +620,24 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         if message.isRead, let readAt = message.readAt {
             addMetaRow(label: L10n.tr("message.detail.read_time"), value: formatter.string(from: readAt))
         }
+    }
+
+    private func configure() {
+        titleLabel.text = message.payload.title
+
+        if message.bodyType == "markdown" {
+            let markdownContent = message.payload.markdown ?? message.payload.body
+            let html = MarkdownRenderer.renderHTML(
+                title: message.payload.title,
+                markdown: markdownContent
+            )
+            webView.loadHTMLString(html, baseURL: nil)
+            webView.navigationDelegate = self
+        } else {
+            bodyLabel.text = message.payload.body
+        }
+
+        rebuildMetaRows()
 
         let bodyToCopy = message.bodyType == "markdown"
             ? (message.payload.markdown ?? message.payload.body)
@@ -631,7 +707,12 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
                 guard let self = self else { return }
                 WebBrowserManager.shared.openBrowser(
                     url: url,
-                    params: WebBrowserParams(payload: self.message.payload.userInfo),
+                    params: DrelMessageOpenPolicy.browserParams(
+                        for: url,
+                        mode: DrelMessageOpenPolicy.mode(for: self.message.payload),
+                        payload: self.message.payload.userInfo,
+                        useManifestLoader: false
+                    ),
                     from: self
                 )
             }
@@ -681,22 +762,29 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
 
     private func makeEncryptionOnboardingCard() -> UIView {
         let button = UIButton(type: .system)
+        #if DREL_RELEASE_MINIMAL_SETTINGS || DREL_CONTAINER_ONLY
+        button.setTitle("这是一条加密消息 — 此版本暂不支持配置解密密钥", for: .normal)
+        button.isEnabled = false
+        #else
         button.setTitle("这是一条加密消息 — 点击配置解密密钥", for: .normal)
+        button.addTarget(self, action: #selector(openEncryptionSettings), for: .touchUpInside)
+        #endif
         button.titleLabel?.font = ThemeTokens.Typography.rowTitle
         button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 12, bottom: 14, right: 12)
         button.layer.cornerRadius = ThemeTokens.CornerRadius.card
         button.clipsToBounds = true
         button.backgroundColor = ThemeTokens.Color.primarySoft
-        button.addTarget(self, action: #selector(openEncryptionSettings), for: .touchUpInside)
         return button
     }
 
+    #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
     @objc private func openEncryptionSettings() {
         let vc = UIHostingController(rootView: PushEncryptionView())
         vc.title = "推送加密"
         navigationController?.pushViewController(vc, animated: true)
     }
+    #endif
 
     private func addMetaRow(label: String, value: String) {
         addMetaRow(label: label, value: value, to: metaStackView)
@@ -915,10 +1003,92 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
 
     private func makeMediaCard() -> UIView {
         let card = MessageMediaCardView()
+        card.onSaveRequested = { [weak self] image in
+            self?.saveAttachmentToPhotoLibrary(image)
+        }
+        card.onSaveMenuRequested = { [weak self] image in
+            self?.presentAttachmentSaveMenu(for: image)
+        }
         if let source = message.payload.imageURL {
             card.load(source: source)
         }
         return card
+    }
+
+    private func presentAttachmentSaveMenu(for image: UIImage) {
+        let alert = UIAlertController(
+            title: L10n.tr("message.detail.media.actions_title"),
+            message: L10n.tr("message.detail.media.actions_message"),
+            preferredStyle: .actionSheet
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("message.detail.media.save"), style: .default) { [weak self] _ in
+            self?.saveAttachmentToPhotoLibrary(image)
+        })
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
+        }
+        present(alert, animated: true)
+    }
+
+    private func saveAttachmentToPhotoLibrary(_ image: UIImage) {
+        let authorization = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        switch authorization {
+        case .authorized, .limited:
+            writeAttachmentToPhotoLibrary(image)
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { [weak self] status in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    if status == .authorized || status == .limited {
+                        self.writeAttachmentToPhotoLibrary(image)
+                    } else {
+                        self.showPhotoLibrarySettingsGuide()
+                    }
+                }
+            }
+        case .denied, .restricted:
+            showPhotoLibrarySettingsGuide()
+        @unknown default:
+            showAlert(title: L10n.tr("message.detail.media.save_unavailable_title"), message: L10n.tr("message.detail.media.save_unknown_message"))
+        }
+    }
+
+    /// iOS only allows an app to open its own Settings page. That page is the
+    /// supported recovery route after a user has denied the add-only photo
+    /// permission; deep-linking into the Photos app or its privacy pane is not
+    /// a public API and would be unreliable in App Review.
+    private func showPhotoLibrarySettingsGuide() {
+        let alert = UIAlertController(
+            title: L10n.tr("message.detail.media.save_unavailable_title"),
+            message: L10n.tr("message.detail.media.save_unavailable_message"),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(
+            title: L10n.tr("message.detail.media.open_settings"),
+            style: .default
+        ) { _ in
+            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            UIApplication.shared.open(url)
+        })
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func writeAttachmentToPhotoLibrary(_ image: UIImage) {
+        PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAsset(from: image)
+        } completionHandler: { [weak self] success, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if success {
+                    HUDService.shared.showSuccess(withStatus: L10n.tr("message.detail.media.save_success"))
+                } else {
+                    self.showAlert(title: L10n.tr("message.detail.media.save_failed_title"), message: error?.localizedDescription ?? L10n.tr("message.detail.media.save_failed_message"))
+                }
+            }
+        }
     }
 
     private func openHTMLApp(appID: String) {
@@ -933,13 +1103,11 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
                 var payload = target.context.bridgePayload
                 payload["webbridgekitOfflineMode"] = target.offlineMode.rawValue
                 payload["webbridgekitPageURL"] = target.pageURL.absoluteString
-                let params = WebBrowserParams(
-                    displayMode: message.payload.targetMode == "modal" ? .modal : .immersive,
-                    hideNavigationBar: message.payload.targetMode != "modal",
-                    hideStatusBar: message.payload.targetMode != "modal",
-                    hideTabBar: message.payload.targetMode != "modal",
+                let params = DrelMessageOpenPolicy.browserParams(
+                    for: target.loaderURL,
+                    mode: DrelMessageOpenPolicy.registeredAppMode(for: message.payload),
                     payload: payload,
-                    useManifestLoader: target.offlineMode == .strong,
+                    useManifestLoader: false,
                     preferCachedContent: target.offlineMode == .partial
                 )
                 WebBrowserManager.shared.openBrowser(url: target.loaderURL, params: params, from: self)
@@ -952,7 +1120,12 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         if let result = ManifestStore.shared.getManifestByAppId(appID), let url = URL(string: result.key) {
             WebBrowserManager.shared.openBrowser(
                 url: url,
-                params: WebBrowserParams(payload: message.payload.userInfo),
+                params: DrelMessageOpenPolicy.browserParams(
+                    for: url,
+                    mode: DrelMessageOpenPolicy.registeredAppMode(for: message.payload),
+                    payload: message.payload.userInfo,
+                    useManifestLoader: true
+                ),
                 from: self
             )
         }
@@ -984,7 +1157,12 @@ extension MessageDetailViewController: WKNavigationDelegate {
             if url.scheme == "http" || url.scheme == "https" {
                 WebBrowserManager.shared.openBrowser(
                     url: url,
-                    params: WebBrowserParams(payload: self.message.payload.userInfo),
+                    params: DrelMessageOpenPolicy.browserParams(
+                        for: url,
+                        mode: DrelMessageOpenPolicy.mode(for: self.message.payload),
+                        payload: self.message.payload.userInfo,
+                        useManifestLoader: false
+                    ),
                     from: self
                 )
                 decisionHandler(.cancel)

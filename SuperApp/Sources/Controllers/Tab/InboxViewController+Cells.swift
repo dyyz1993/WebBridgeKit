@@ -25,7 +25,10 @@ class InboxMessageCellWrapper: UITableViewCell {
     private let titleLabel = UILabel()
     private let previewLabel = UILabel()
     private let stateBadge = UILabel()
-    private let chevronImageView = UIImageView()
+    private let copyButton = UIButton(type: .system)
+    private var iconLoadTask: URLSessionDataTask?
+    private var representedMessageID: String?
+    var onCopy: (() -> Void)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -41,10 +44,21 @@ class InboxMessageCellWrapper: UITableViewCell {
     /// row's cached identity must not leak into the next configuration.
     override func prepareForReuse() {
         super.prepareForReuse()
+        iconLoadTask?.cancel()
+        iconLoadTask = nil
+        representedMessageID = nil
         contentView.layer.removeAllAnimations()
         contentView.alpha = 1
         contentView.transform = .identity
         collapsedIdentity = nil
+        onCopy = nil
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        iconContainer.layer.cornerRadius = iconContainer.bounds.height / 2
+        iconImageView.layer.cornerRadius = iconImageView.bounds.height / 2
+        iconImageView.clipsToBounds = true
     }
 
     private func setupUI() {
@@ -76,7 +90,10 @@ class InboxMessageCellWrapper: UITableViewCell {
 
         unreadAccent.isHidden = true
 
-        iconContainer.layer.cornerRadius = ThemeTokens.CornerRadius.avatar
+        // A remote push icon is a message avatar, not an app tile. Its shape
+        // is finalized from the actual square bounds in layoutSubviews.
+        iconContainer.layer.cornerRadius = 20
+        iconContainer.clipsToBounds = true
         cardView.addSubview(iconContainer)
         iconContainer.addSubview(iconImageView)
         iconContainer.snp.makeConstraints { make in
@@ -128,6 +145,22 @@ class InboxMessageCellWrapper: UITableViewCell {
         previewLabel.numberOfLines = 1
         previewLabel.lineBreakMode = .byTruncatingTail
 
+        copyButton.setImage(LucideIcon.copy.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm), for: .normal)
+        copyButton.tintColor = ThemeTokens.Color.primary
+        copyButton.backgroundColor = ThemeTokens.Color.primarySoft
+        copyButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
+        copyButton.addTarget(self, action: #selector(copyTapped), for: .touchUpInside)
+        copyButton.accessibilityLabel = "复制消息内容"
+        cardView.addSubview(copyButton)
+        // The copy button is the single right-side accessory: an extra edge
+        // chevron duplicated the whole-row-tap affordance and crowded the
+        // date/button zone.
+        copyButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(ThemeTokens.Spacing.md)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(36)
+        }
+
         let textStack = UIStackView(arrangedSubviews: [sourceRow, titleLabel, previewLabel])
         textStack.axis = .vertical
         textStack.spacing = 2
@@ -135,16 +168,7 @@ class InboxMessageCellWrapper: UITableViewCell {
         textStack.snp.makeConstraints { make in
             make.leading.equalTo(iconContainer.snp.trailing).offset(ThemeTokens.Spacing.md)
             make.top.bottom.equalToSuperview().inset(ThemeTokens.Spacing.md)
-            make.trailing.equalToSuperview().inset(ThemeTokens.Spacing.xxxl)
-        }
-
-        chevronImageView.image = LucideIcon.chevronRight.templateImage(pointSize: ThemeTokens.Icons.Sizes.xs)
-        chevronImageView.tintColor = ThemeTokens.Color.textTertiary
-        cardView.addSubview(chevronImageView)
-        chevronImageView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(ThemeTokens.Spacing.md)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(ThemeTokens.Icons.Sizes.xs)
+            make.trailing.equalTo(copyButton.snp.leading).offset(-ThemeTokens.Spacing.sm)
         }
 
     }
@@ -173,6 +197,9 @@ class InboxMessageCellWrapper: UITableViewCell {
     private var collapsedIdentity: String?
 
     func configure(with message: StoredMessage) {
+        iconLoadTask?.cancel()
+        iconLoadTask = nil
+        representedMessageID = message.id
         collapsedIdentity = nil
         let presentation = NotificationPresentation(message: message)
         accessibilityIdentifier = "notification.card.\(message.id)"
@@ -183,6 +210,12 @@ class InboxMessageCellWrapper: UITableViewCell {
         iconContainer.backgroundColor = presentation.tintColor.withAlphaComponent(0.12)
         iconImageView.image = presentation.icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.md)
         iconImageView.tintColor = presentation.tintColor
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.accessibilityIdentifier = "notification.icon.\(message.id)"
+        iconImageView.snp.updateConstraints { make in
+            make.width.height.equalTo(ThemeTokens.Icons.Sizes.md)
+        }
+        loadCustomIconIfNeeded(message)
         unreadDot.isHidden = message.isRead
         sourceLabel.text = presentation.source
         timestampLabel.text = Self.timeText(for: message.receivedAt)
@@ -190,11 +223,42 @@ class InboxMessageCellWrapper: UITableViewCell {
         titleLabel.font = message.isRead ? ThemeTokens.Typography.rowTitle : ThemeTokens.Typography.sectionTitle
         previewLabel.text = presentation.preview
         previewLabel.accessibilityIdentifier = "notification.preview.\(message.id)"
+        copyButton.accessibilityIdentifier = "notification.copy.\(message.id)"
 
         configureBadge(stateBadge, title: presentation.stateLabel, color: presentation.tintColor)
         stateBadge.accessibilityIdentifier = presentation.stateLabel == nil
             ? nil
             : "notification.state.\(message.id)"
+    }
+
+    /// APNs cannot replace an app's system notification icon. `icon` is a
+    /// Drel message-avatar URL, rendered in the inbox (and in message detail)
+    /// after the push has been received by the app.
+    private func loadCustomIconIfNeeded(_ message: StoredMessage) {
+        guard let source = message.payload.iconURL,
+              let url = URL(string: source),
+              url.scheme?.lowercased() == "https",
+              url.host?.isEmpty == false
+        else { return }
+
+        iconImageView.accessibilityIdentifier = "notification.customIcon.\(message.id)"
+        iconLoadTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let data, let image = UIImage(data: data) else { return }
+            DispatchQueue.main.async {
+                guard let self, self.representedMessageID == message.id else { return }
+                self.iconImageView.image = image
+                self.iconImageView.tintColor = nil
+                self.iconImageView.contentMode = .scaleAspectFill
+                self.iconImageView.snp.updateConstraints { make in
+                    make.width.height.equalTo(40)
+                }
+            }
+        }
+        iconLoadTask?.resume()
+    }
+
+    @objc private func copyTapped() {
+        onCopy?()
     }
 
     private func configureBadge(_ badge: UILabel, title: String?, color: UIColor) {
@@ -239,7 +303,7 @@ private struct NotificationPresentation {
         case "apns", "apn": return "应用推送"
         case "bark": return "服务推送"
         case "bridge": return "PWA"
-        case "system": return "WebBridgeKit"
+        case "system": return "Drel"
         default: return payload.channel.uppercased()
         }
     }

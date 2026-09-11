@@ -83,7 +83,7 @@ public class CacheAppCell: UITableViewCell {
     private let cacheSizeLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.body
-        label.textColor = ThemeTokens.Color.warning
+        label.textColor = ThemeTokens.Color.text
         label.numberOfLines = 1
         return label
     }()

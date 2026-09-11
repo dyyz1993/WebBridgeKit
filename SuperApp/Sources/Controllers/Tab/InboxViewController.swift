@@ -29,25 +29,45 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         return label
     }()
 
-    private let clearAllButton: UIButton = {
+    private lazy var inboxActionsButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle(L10n.tr("inbox.mark_all_read"), for: .normal)
-        button.titleLabel?.font = ThemeTokens.Typography.metadata
-        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
-        button.contentEdgeInsets = .zero
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = LucideIcon.ellipsis.templateImage(
+            pointSize: ThemeTokens.Icons.Sizes.sm
+        )
+        configuration.baseForegroundColor = ThemeTokens.Color.primary
+        configuration.contentInsets = NSDirectionalEdgeInsets(
+            top: 0,
+            leading: ThemeTokens.Spacing.sm,
+            bottom: 0,
+            trailing: ThemeTokens.Spacing.sm
+        )
+        button.configuration = configuration
+        button.showsMenuAsPrimaryAction = true
+        button.accessibilityIdentifier = "inbox.actions"
+        button.accessibilityLabel = L10n.tr("inbox.actions")
         return button
     }()
 
+    #if !DREL_CONTAINER_ONLY
     private lazy var reviewButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(L10n.tr("review.entry"), for: .normal)
         button.titleLabel?.font = ThemeTokens.Typography.metadata
         button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
-        button.contentEdgeInsets = .zero
+        var configuration = UIButton.Configuration.plain()
+        configuration.contentInsets = NSDirectionalEdgeInsets(
+            top: 0,
+            leading: ThemeTokens.Spacing.sm,
+            bottom: 0,
+            trailing: ThemeTokens.Spacing.sm
+        )
+        button.configuration = configuration
         button.accessibilityIdentifier = "inbox.review.entry"
         button.addTarget(self, action: #selector(openReview), for: .touchUpInside)
         return button
     }()
+    #endif
 
     private let searchField = WBKSearchField(placeholder: L10n.tr("inbox.search.placeholder"))
 
@@ -71,24 +91,13 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         return control
     }()
 
-    private let filterStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = ThemeTokens.Spacing.sm
-        stack.alignment = .fill
-        stack.distribution = .fill
-        return stack
+    private lazy var filterButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.showsMenuAsPrimaryAction = true
+        button.accessibilityIdentifier = "inbox.filterMenu"
+        button.accessibilityLabel = "筛选通知"
+        return button
     }()
-
-    private let filterScrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.showsHorizontalScrollIndicator = false
-        scrollView.alwaysBounceHorizontal = true
-        scrollView.accessibilityIdentifier = "inbox.filters"
-        return scrollView
-    }()
-
-    private var filterButtons: [UIButton] = []
     private let filterRelay = BehaviorRelay<InboxViewModel.FilterType>(value: .all)
 
     private lazy var tableView: UITableView = {
@@ -156,6 +165,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     }()
 
     private let markAllReadRelay = PublishRelay<Void>()
+    private let clearAllMessagesRelay = PublishRelay<Void>()
     private let deleteItemRelay = PublishRelay<IndexPath>()
 
     /// Guards against overlapping group toggle animations; this screen has a
@@ -200,40 +210,49 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     private func setupScaffold() {
         let header = UIView()
         header.addSubview(titleLabel)
+        header.addSubview(inboxActionsButton)
+        configureInboxActionsMenu()
+        #if !DREL_CONTAINER_ONLY
         header.addSubview(reviewButton)
-        header.addSubview(clearAllButton)
         titleLabel.snp.makeConstraints { make in
             make.leading.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(reviewButton.snp.leading).offset(-ThemeTokens.Spacing.md)
         }
         reviewButton.snp.makeConstraints { make in
-            make.trailing.equalTo(clearAllButton.snp.leading).offset(-ThemeTokens.Spacing.md)
+            make.trailing.equalTo(inboxActionsButton.snp.leading).offset(-ThemeTokens.Spacing.md)
             make.centerY.equalToSuperview()
-            make.height.greaterThanOrEqualTo(32)
+            make.height.greaterThanOrEqualTo(ThemeTokens.ComponentContract.TapTarget.minimumHeight)
         }
-        clearAllButton.snp.makeConstraints { make in
+        #else
+        titleLabel.snp.makeConstraints { make in
+            make.leading.centerY.equalToSuperview()
+            make.trailing.lessThanOrEqualTo(inboxActionsButton.snp.leading).offset(-ThemeTokens.Spacing.md)
+        }
+        #endif
+        inboxActionsButton.snp.makeConstraints { make in
             make.trailing.centerY.equalToSuperview()
-            make.height.greaterThanOrEqualTo(32)
+            make.width.greaterThanOrEqualTo(ThemeTokens.ComponentContract.TapTarget.minimumWidth)
+            make.height.greaterThanOrEqualTo(ThemeTokens.ComponentContract.TapTarget.minimumHeight)
         }
         header.snp.makeConstraints { make in
-            make.height.equalTo(40)
+            make.height.equalTo(ThemeTokens.ComponentContract.TapTarget.minimumHeight)
         }
         scaffold.addSection(header)
-        displayModeControl.snp.makeConstraints { make in
-            make.height.equalTo(32)
-        }
-        scaffold.addSection(displayModeControl, spacing: ThemeTokens.Spacing.sm)
-        scaffold.addSection(searchField, spacing: ThemeTokens.Spacing.md)
+        scaffold.addSection(searchField, spacing: ThemeTokens.Spacing.sm)
 
-        filterScrollView.addSubview(filterStack)
-        filterStack.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        let filterBar = UIStackView(arrangedSubviews: [displayModeControl, filterButton])
+        filterBar.axis = .horizontal
+        filterBar.spacing = ThemeTokens.Spacing.sm
+        filterBar.alignment = .fill
+        filterBar.distribution = .fill
+        displayModeControl.snp.makeConstraints { make in
+            make.width.equalTo(150)
             make.height.equalTo(ThemeTokens.ComponentContract.FilterPill.height)
         }
-        filterScrollView.snp.makeConstraints { make in
+        filterButton.snp.makeConstraints { make in
             make.height.equalTo(ThemeTokens.ComponentContract.FilterPill.height)
         }
-        scaffold.addSection(filterScrollView, spacing: ThemeTokens.Spacing.sm)
+        scaffold.addSection(filterBar, spacing: ThemeTokens.Spacing.sm)
 
         let tableContainer = UIView()
         tableContainer.addSubview(tableView)
@@ -248,6 +267,38 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         scaffold.addSection(tableContainer, spacing: ThemeTokens.Spacing.sm)
     }
 
+    private func configureInboxActionsMenu() {
+        // No leading checkmark icon: in iOS menus a leading check reads as
+        // "this state is active", which read as "already all read" while
+        // unread messages were still in the list (N1).
+        let markAllRead = UIAction(
+            title: L10n.tr("inbox.mark_all_read")
+        ) { [weak self] _ in
+            self?.markAllReadRelay.accept(())
+        }
+        let clearAll = UIAction(
+            title: L10n.tr("inbox.clear_all"),
+            image: LucideIcon.trash.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm),
+            attributes: .destructive
+        ) { [weak self] _ in
+            self?.confirmClearAllMessages()
+        }
+        inboxActionsButton.menu = UIMenu(children: [markAllRead, clearAll])
+    }
+
+    private func confirmClearAllMessages() {
+        let alert = UIAlertController(
+            title: L10n.tr("inbox.clear_all.confirm.title"),
+            message: L10n.tr("inbox.clear_all.confirm.message"),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("inbox.clear_all"), style: .destructive) { [weak self] _ in
+            self?.clearAllMessagesRelay.accept(())
+        })
+        present(alert, animated: true)
+    }
+
     @objc private func handleRefresh() {
         viewModel.refreshData()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
@@ -255,19 +306,21 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         }
     }
 
-    /// Opens the card-stack triage flow over the current inbox order,
-    /// starting at the first unread message.
+    #if !DREL_CONTAINER_ONLY
+    /// Opens the card-stack triage flow over the current inbox order.
+    /// The queue is the unread list only: the progress counter previously
+    /// read "1/16" while the unread badge showed 11, because already-read
+    /// messages after the first unread were appended to the deck (N4).
     @objc private func openReview() {
-        let ordered = viewModel.orderedMessages()
-        let unread = ordered.filter { !$0.isRead }
-        guard !unread.isEmpty, let firstIndex = ordered.firstIndex(where: { $0.id == unread[0].id }) else {
+        let unread = viewModel.orderedMessages().filter { !$0.isRead }
+        guard !unread.isEmpty else {
             reviewButton.isEnabled = false
             return
         }
         reviewButton.isEnabled = true
-        let queue = Array(ordered[firstIndex...])
-        navigationController?.pushViewController(MessageReviewViewController(messages: queue), animated: true)
+        navigationController?.pushViewController(MessageReviewViewController(messages: unread), animated: true)
     }
+    #endif
 
     @objc private func displayModeChanged() {
         guard let mode = InboxViewModel.DisplayMode(rawValue: displayModeControl.selectedSegmentIndex) else { return }
@@ -277,68 +330,53 @@ class InboxViewController: BaseViewController<InboxViewModel> {
     }
 
     private func setupFilterPills() {
-        let filters: [(String, InboxViewModel.FilterType)] = [
+        updateFilterSelection(.all)
+    }
+
+    private var filterOptions: [(String, InboxViewModel.FilterType)] {
+        [
             (L10n.tr("inbox.filter.all"), .all),
             (L10n.tr("inbox.filter.unread"), .unread),
             (L10n.tr("inbox.filter.apps"), .apps),
             (L10n.tr("inbox.filter.action_required"), .actionRequired)
         ]
-
-        for (title, type) in filters {
-            let button = UIButton(type: .custom)
-            button.setTitle(title, for: .normal)
-            button.titleLabel?.font = ThemeTokens.Typography.caption
-            button.titleLabel?.lineBreakMode = .byTruncatingTail
-            button.contentEdgeInsets = UIEdgeInsets(
-                top: 0,
-                left: ThemeTokens.Spacing.md,
-                bottom: 0,
-                right: ThemeTokens.Spacing.md
-            )
-            button.layer.cornerRadius = ThemeTokens.ComponentContract.FilterPill.height / 2
-            button.layer.borderWidth = 1
-            button.clipsToBounds = true
-            button.addAction(UIAction { [weak self] _ in
-                guard let self = self else { return }
-                UISelectionFeedbackGenerator().selectionChanged()
-                let selectedFilter = type
-                self.filterRelay.accept(selectedFilter)
-                self.updateFilterSelection(selectedFilter)
-                self.viewModel.refreshData()
-            }, for: .touchUpInside)
-            button.accessibilityIdentifier = type.accessibilityIdentifier
-            button.snp.makeConstraints { make in
-                make.height.equalTo(ThemeTokens.ComponentContract.FilterPill.height)
-                make.width.greaterThanOrEqualTo(ThemeTokens.ComponentContract.FilterPill.minWidth)
-            }
-            button.setContentHuggingPriority(.required, for: .horizontal)
-            filterStack.addArrangedSubview(button)
-            filterButtons.append(button)
-        }
-        updateFilterSelection(.all)
     }
 
     private func updateFilterSelection(_ selected: InboxViewModel.FilterType) {
-        for (index, button) in filterButtons.enumerated() {
-            let filterType = InboxViewModel.FilterType(rawValue: index) ?? .all
-            let isSelected = filterType == selected
-            button.isSelected = isSelected
-            button.backgroundColor = isSelected
-                ? ThemeTokens.Color.primarySoft
-                : ThemeTokens.Color.surface
-            button.layer.borderColor = (isSelected
-                ? ThemeTokens.Color.primary
-                : ThemeTokens.Color.border).cgColor
-            button.setTitleColor(
-                isSelected ? ThemeTokens.Color.primary : ThemeTokens.Color.textSecondary,
-                for: .normal
-            )
-        }
+        let selectedTitle = filterOptions.first(where: { $0.1 == selected })?.0
+            ?? L10n.tr("inbox.filter.all")
+        var configuration = UIButton.Configuration.gray()
+        configuration.title = selectedTitle
+        configuration.image = LucideIcon.chevronDown.templateImage(
+            pointSize: ThemeTokens.Icons.Sizes.xs
+        )
+        configuration.imagePadding = ThemeTokens.Spacing.sm
+        configuration.baseForegroundColor = ThemeTokens.Color.primary
+        configuration.baseBackgroundColor = ThemeTokens.Color.primarySoft
+        configuration.cornerStyle = .capsule
+        configuration.contentInsets = NSDirectionalEdgeInsets(
+            top: 0,
+            leading: ThemeTokens.Spacing.md,
+            bottom: 0,
+            trailing: ThemeTokens.Spacing.md
+        )
+        filterButton.configuration = configuration
+        filterButton.menu = UIMenu(children: filterOptions.map { title, type in
+            UIAction(
+                title: title,
+                state: type == selected ? .on : .off
+            ) { [weak self] _ in
+                guard let self else { return }
+                UISelectionFeedbackGenerator().selectionChanged()
+                self.filterRelay.accept(type)
+                self.updateFilterSelection(type)
+                self.viewModel.refreshData()
+            }
+        })
+        filterButton.accessibilityValue = selectedTitle
     }
 
     override func bindViewModel() {
-        let markAllRead = clearAllButton.rx.tap.asDriver(onErrorDriveWith: .empty())
-
         let input = InboxViewModel.Input(
             refresh: Driver.merge(
                 rx.methodInvoked(#selector(UIViewController.viewWillAppear(_:))).map { _ in () }.asDriver(onErrorJustReturn: ())
@@ -347,7 +385,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             filterSelected: filterRelay.asDriver(onErrorJustReturn: .all),
             itemSelect: tableView.rx.itemSelected.asDriver(onErrorDriveWith: .empty()),
             deleteItem: deleteItemRelay.asDriver(onErrorJustReturn: IndexPath(row: 0, section: 0)),
-            markAllRead: markAllRead,
+            markAllRead: markAllReadRelay.asDriver(onErrorJustReturn: ()),
+            clearAllMessages: clearAllMessagesRelay.asDriver(onErrorJustReturn: ()),
             sendTestNotification: Driver<Void>.empty()
         )
 
@@ -379,6 +418,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
             })
             .disposed(by: rx)
 
+        #if !DREL_CONTAINER_ONLY
         output.unreadCount
             .drive(onNext: { [weak self] count in
                 guard let self = self else { return }
@@ -386,6 +426,7 @@ class InboxViewController: BaseViewController<InboxViewModel> {
                 self.reviewButton.alpha = count > 0 ? 1 : 0.4
             })
             .disposed(by: rx)
+        #endif
 
         output.selectedMessage
             .drive(onNext: { [weak self] message in
@@ -499,6 +540,24 @@ extension InboxViewController: UITableViewDataSource {
             for: indexPath
         ) as! InboxMessageCellWrapper
         cell.configure(with: message)
+        cell.onCopy = { [weak self] in
+            guard self != nil else { return }
+            let payload = message.payload
+            let candidates = [
+                payload.copyText,
+                payload.verificationCode,
+                payload.qrPayload,
+                message.bodyType == "markdown" ? payload.markdown : nil,
+                payload.body
+            ]
+            let value = candidates.compactMap { candidate -> String? in
+                guard let candidate else { return nil }
+                let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmed.isEmpty ? nil : candidate
+            }.first ?? payload.body
+            UIPasteboard.general.string = value
+            HUDService.shared.showSuccess(withStatus: "消息内容已复制")
+        }
         // Collapsed-group rows persist at zero height with their accessibility
         // identity stripped until revealed again.
         cell.setCollapsedAccessibility(!viewModel.isRowRevealed(at: indexPath))

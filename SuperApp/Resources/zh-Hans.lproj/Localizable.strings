@@ -63,10 +63,13 @@
 "inbox.filter.apps" = "应用";
 "inbox.filter.action_required" = "需处理";
 "inbox.mark_all_read" = "全部已读";
+"inbox.actions" = "通知管理";
 "inbox.empty.title" = "暂无通知";
-"inbox.empty.description" = "收到的应用通知、待办和审批提醒会显示在这里";
+"inbox.empty.description" = "收到的推送会显示在这里";
 "inbox.swipe.delete" = "删除";
 "inbox.clear_all" = "全部清除";
+"inbox.clear_all.confirm.title" = "清空所有消息？";
+"inbox.clear_all.confirm.message" = "所有通知记录都会从本机删除，此操作无法撤销。";
 "inbox.send_test" = "发送测试通知";
 "inbox.group.unread_format" = "%@未读";
 "inbox.group.ungrouped" = "其他消息";
@@ -162,21 +165,22 @@
 "settings.section.preferences" = "偏好设置";
 "settings.section.developer" = "开发者";
 "settings.section.about" = "关于";
-"settings.hero.token_masked" = "Token: abcd****efgh";
-"settings.hero.copy_token" = "复制 Token";
+"settings.hero.token_masked" = "推送密钥：abcd****efgh";
+"settings.hero.copy_token" = "复制推送密钥";
 "settings.hero.copied_title" = "已复制";
 "settings.hero.copied_message" = "推送密钥已复制到剪贴板";
-"settings.hero.token_format" = "Token: %@";
+"settings.hero.token_format" = "推送密钥：%@";
 "settings.hero.identity.unset" = "推送身份未配置";
 "settings.hero.unset_title" = "未配置";
 "settings.hero.unset_message" = "请先在「密钥管理」中配置 Bark 身份密钥";
-"settings.server.config" = "服务器配置";
+"settings.server.config" = "网关配置";
 "settings.token.manager" = "口令管理";
 "settings.apikey.manager" = "密钥管理";
 "settings.notification.settings" = "通知设置";
-"settings.cache.manage" = "缓存管理";
+"settings.cache.manage" = "存储管理";
 "settings.favorites" = "收藏夹";
-"settings.remember.last.app" = "记住上次应用";
+"settings.default.startup.app" = "默认启动应用";
+"settings.default.startup.app.unset" = "未设置";
 "settings.appearance" = "外观";
 "settings.appearance.system" = "跟随系统";
 "settings.appearance.light" = "浅色";
@@ -241,6 +245,7 @@
 "message.detail.verification_copied" = "验证码已复制";
 "message.detail.interruption" = "提醒级别";
 "message.detail.sound" = "声音";
+"message.detail.sound_volume" = "音量 %d/10";
 "message.detail.call" = "来电提醒";
 "message.detail.route" = "PWA 路由";
 "message.detail.expiry" = "有效期";
@@ -252,11 +257,22 @@
 "message.detail.media_attachment" = "图片附件";
 "message.detail.media_loading" = "正在加载图片";
 "message.detail.media_unavailable" = "图片暂时无法加载";
+"message.detail.media.save" = "保存到相册";
+"message.detail.media.save_accessibility" = "保存图片到相册";
+"message.detail.media.actions_title" = "图片操作";
+"message.detail.media.actions_message" = "可将这张图片保存到系统相册。";
+"message.detail.media.save_success" = "已保存到相册";
+"message.detail.media.save_unavailable_title" = "无法保存图片";
+"message.detail.media.save_unavailable_message" = "你已拒绝 Drel 添加照片。请前往系统设置，允许 Drel 添加照片后再试。";
+"message.detail.media.open_settings" = "前往系统设置";
+"message.detail.media.save_unknown_message" = "系统未提供相册写入权限。";
+"message.detail.media.save_failed_title" = "保存失败";
+"message.detail.media.save_failed_message" = "图片未能写入系统相册。";
 "message.detail.technical_info" = "技术信息";
 "message.detail.open_app_failed" = "无法打开 PWA";
 "message.detail.open_approval" = "打开审批页面";
 "message.detail.approval_safety_note" = "通知仅用于定位请求；确认操作需在目标应用内完成并重新校验状态。";
-"message.detail.approval_native_note" = "操作将提交到当前 WebBridgeKit 审批服务；第一份有效响应生效。";
+"message.detail.approval_native_note" = "操作将提交到当前 Drel 审批服务；第一份有效响应生效。";
 "message.detail.approval_reason_prompt" = "请输入处理原因。";
 "message.detail.approval_reason_placeholder" = "原因";
 "message.detail.approval_reason_required" = "请填写原因";
@@ -305,14 +321,19 @@
 "about.section.introduction" = "项目简介";
 "about.section.features" = "功能列表";
 "about.section.license" = "开源协议";
+"about.section.legal" = "法律与隐私";
 "about.section.feedback" = "反馈";
-"about.introduction" = "WebBridgeKit 是一个功能强大的 iOS WebView 缓存浏览器框架，为开发者提供完整的 WebView 缓存管理解决方案。";
+"about.introduction" = "Drel 是面向开发者的推送通知工具。产品基于开源运行时 WebBridgeKit 构建。";
+"about.feature.push" = "个人推送地址";
+"about.feature.inbox" = "通知收件箱";
+"about.feature.secure_route" = "安全打开 HTTPS 链接";
 "about.feature.cache" = "URL 缓存管理";
 "about.feature.favorite" = "收藏夹管理";
 "about.feature.token" = "口令分享功能";
 "about.feature.api_key" = "密钥管理";
 "about.feedback.github" = "GitHub Issues";
 "about.feedback.email" = "发送邮件";
+"about.privacy_policy" = "隐私政策";
 "about.version_format" = "版本 %@ (%@)";
 "about.version_default" = "版本 1.0 (1)";
 "about.close" = "关闭";
@@ -345,7 +366,7 @@
 "model.access_token.minutes_format" = "%@分钟";
 
 // Token Share
-"token.share.text" = "【WebBridgeKit】共享口令: %@\n口令: %@";
+"token.share.text" = "【Drel】共享口令: %@\n口令: %@";
 "token.share.title" = "分享口令";
 
 // Token Generate
@@ -361,6 +382,7 @@
 
 // Favorite
 "favorite.title" = "收藏夹";
+"favorite.cache_mode" = "缓存模式";
 "favorite.empty_title" = "暂无收藏";
 "favorite.empty_description" = "收藏的链接会显示在这里";
 "favorite.confirm_delete" = "确认删除";
@@ -466,9 +488,9 @@
 "apikey.manage.view_examples" = "查看示例";
 "apikey.manage.temporary_keys" = "临时密钥";
 "apikey.manage.temporary_keys_desc" = "临时密钥有过期时间，过期后自动删除";
-"apikey.manage.bark_config_title" = "Bark 推送配置";
-"apikey.manage.bark_key_placeholder" = "输入 Bark Key";
-"apikey.manage.bark_server_placeholder" = "https://wbk.shanbox.19930810.xyz:8443";
+"apikey.manage.bark_config_title" = "推送服务配置";
+"apikey.manage.bark_key_placeholder" = "输入推送密钥";
+"apikey.manage.bark_server_placeholder" = "https://api.drel.app";
 "apikey.manage.save_config" = "保存配置";
 "apikey.manage.empty_title" = "暂无密钥";
 "apikey.manage.empty_description" = "点击右上角 + 号创建新密钥";
@@ -476,7 +498,7 @@
 "apikey.manage.refresh_confirm_message" = "确定要重新生成永久密钥吗？旧密钥将立即失效。";
 "apikey.manage.refresh_confirm" = "确认刷新";
 "apikey.manage.save_success" = "保存成功";
-"apikey.manage.bark_save_message" = "Bark 推送配置已保存";
+"apikey.manage.bark_save_message" = "推送服务配置已保存";
 "apikey.manage.create_title" = "创建临时密钥";
 "apikey.manage.create_message" = "设置临时密钥的名称、分组和有效期";
 "apikey.manage.create_name_placeholder" = "密钥名称";
@@ -590,16 +612,29 @@
 "official.push.action.send_safari" = "用 Safari 发送测试";
 "official.push.help.enable" = "无需配置服务器；点一次启用通知即可开始";
 "official.push.address.pending" = "启用通知后显示";
+"official.push.address.enable_to_receive" = "地址已生成；启用通知后即可接收推送。";
+"official.push.address.copied_before_enable" = "推送地址已复制；启用通知后即可接收推送";
 "official.push.permission.denied" = "请在系统设置中允许通知，然后返回重试。";
 "official.push.error.identity" = "无法生成安全的推送身份，请重试。";
 "official.push.error.storage" = "无法安全保存推送身份，请检查设备存储后重试。";
 "official.push.error.permission" = "当前系统无法使用通知，请稍后重试。";
 "official.push.error.server" = "通知服务暂时不可用，请稍后重试。";
+"official.push.test.title" = "发送测试通知";
+"official.push.test.subtitle" = "快速验证当前设备能否收到推送";
+"official.push.test.default_title" = "测试通知";
+"official.push.test.default_body" = "你好，这是一条来自 Drel 的消息";
+"official.push.test.field.title" = "标题";
+"official.push.test.field.title.hint" = "输入要显示在通知中的标题";
+"official.push.test.field.body" = "内容";
+"official.push.test.field.body.hint" = "输入要显示在通知中的正文";
+"official.push.send.success" = "测试推送已发送";
+"official.push.send.failure_title" = "测试推送未发送";
+"official.push.send.failure_message" = "推送服务暂时无法响应，请稍后再试。";
 "gateway.title" = "网关管理";
 "gateway.current.title" = "当前网关";
 "gateway.current.none" = "未启用自有服务";
 "gateway.scan" = "扫描二维码";
-"gateway.scan.tip" = "扫描 WebBridgeKit 网关配置码";
+"gateway.scan.tip" = "扫描 Drel 网关配置码";
 "gateway.paste" = "粘贴配置";
 "gateway.input.title" = "JSON 或 webbridgekit://gateway";
 "gateway.validate" = "验证配置";

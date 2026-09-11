@@ -12,16 +12,22 @@ import WebBridgeKit
 /// 管理中心视图控制器（合并收藏与缓存管理）
 class ManagementViewController: UIViewController {
 
+    #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
     private let segmentedControl: UISegmentedControl = {
         let control = UISegmentedControl(items: [L10n.tr("management.tab_favorites"), L10n.tr("management.tab_cache")])
-        control.selectedSegmentIndex = 0
+        // Entry point is "存储管理": land on the cache segment. The favorites
+        // segment default made the first screen an empty favorites list (N2a).
+        control.selectedSegmentIndex = 1
         return control
     }()
+    #endif
 
     private let containerView = UIView()
 
-    private lazy var favoriteVC = FavoriteViewController(viewModel: FavoriteViewModel())
     private lazy var cacheVC = CacheManagementViewController()
+    #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
+    private lazy var favoriteVC = FavoriteViewController(viewModel: FavoriteViewModel())
+    #endif
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,22 +37,32 @@ class ManagementViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = ThemeTokens.Color.background
+        #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
         navigationItem.titleView = segmentedControl
+        #else
+        title = "存储管理"
+        #endif
 
         view.addSubview(containerView)
         containerView.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide)
         }
 
+        #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
         segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
+        #endif
     }
 
+    #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
     @objc private func segmentChanged() {
         if segmentedControl.selectedSegmentIndex == 1 {
+            #if !DREL_CONTAINER_ONLY
             TestDataSeeder.seedManifestCaches()
+            #endif
         }
         updateChildController()
     }
+    #endif
 
     private func updateChildController() {
         // 移除现有子控制器
@@ -56,7 +72,11 @@ class ManagementViewController: UIViewController {
             $0.removeFromParent()
         }
 
+        #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
         let targetVC = segmentedControl.selectedSegmentIndex == 0 ? favoriteVC : cacheVC
+        #else
+        let targetVC = cacheVC
+        #endif
 
         addChild(targetVC)
         containerView.addSubview(targetVC.view)

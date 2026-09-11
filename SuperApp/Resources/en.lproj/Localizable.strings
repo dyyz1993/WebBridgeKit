@@ -63,10 +63,13 @@
 "inbox.filter.apps" = "Apps";
 "inbox.filter.action_required" = "Actions";
 "inbox.mark_all_read" = "Mark all read";
+"inbox.actions" = "Notification actions";
 "inbox.empty.title" = "No Notifications";
-"inbox.empty.description" = "App notifications, follow-ups, and approval reminders will appear here";
+"inbox.empty.description" = "Received pushes will appear here";
 "inbox.swipe.delete" = "Delete";
 "inbox.clear_all" = "Clear All";
+"inbox.clear_all.confirm.title" = "Clear all messages?";
+"inbox.clear_all.confirm.message" = "All notification history will be deleted from this device. This cannot be undone.";
 "inbox.send_test" = "Send Test Notification";
 "inbox.group.unread_format" = "%@ unread";
 "inbox.group.ungrouped" = "Other Messages";
@@ -162,21 +165,22 @@
 "settings.section.preferences" = "Preferences";
 "settings.section.developer" = "Developer";
 "settings.section.about" = "About";
-"settings.hero.token_masked" = "Token: abcd****efgh";
-"settings.hero.copy_token" = "Copy Token";
+"settings.hero.token_masked" = "Push key: abcd****efgh";
+"settings.hero.copy_token" = "Copy push key";
 "settings.hero.copied_title" = "Copied";
 "settings.hero.copied_message" = "Push key copied to clipboard";
-"settings.hero.token_format" = "Token: %@";
+"settings.hero.token_format" = "Push key: %@";
 "settings.hero.identity.unset" = "Push identity not configured";
 "settings.hero.unset_title" = "Not configured";
 "settings.hero.unset_message" = "Configure your Bark identity key in Key Manager first.";
-"settings.server.config" = "Server Configuration";
+"settings.server.config" = "Gateway Configuration";
 "settings.token.manager" = "Token Manager";
 "settings.apikey.manager" = "API Key Manager";
 "settings.notification.settings" = "Notification Preferences";
-"settings.cache.manage" = "Cache Manager";
+"settings.cache.manage" = "Storage Management";
 "settings.favorites" = "Favorites";
-"settings.remember.last.app" = "Remember Last App";
+"settings.default.startup.app" = "Default Startup App";
+"settings.default.startup.app.unset" = "Not Set";
 "settings.appearance" = "Appearance";
 "settings.appearance.system" = "System";
 "settings.appearance.light" = "Light";
@@ -241,6 +245,7 @@
 "message.detail.verification_copied" = "Verification code copied";
 "message.detail.interruption" = "Interruption";
 "message.detail.sound" = "Sound";
+"message.detail.sound_volume" = "Volume %d/10";
 "message.detail.call" = "Call Alert";
 "message.detail.route" = "PWA Route";
 "message.detail.expiry" = "Expires";
@@ -252,11 +257,22 @@
 "message.detail.media_attachment" = "Image Attachment";
 "message.detail.media_loading" = "Loading image";
 "message.detail.media_unavailable" = "Image unavailable";
+"message.detail.media.save" = "Save to Photos";
+"message.detail.media.save_accessibility" = "Save image to Photos";
+"message.detail.media.actions_title" = "Image actions";
+"message.detail.media.actions_message" = "You can save this image to your photo library.";
+"message.detail.media.save_success" = "Saved to Photos";
+"message.detail.media.save_unavailable_title" = "Unable to save image";
+"message.detail.media.save_unavailable_message" = "You denied Drel permission to add photos. Open Settings, allow Drel to add photos, then try again.";
+"message.detail.media.open_settings" = "Open Settings";
+"message.detail.media.save_unknown_message" = "Photo Library write access is unavailable.";
+"message.detail.media.save_failed_title" = "Save failed";
+"message.detail.media.save_failed_message" = "The image could not be saved to your photo library.";
 "message.detail.technical_info" = "Technical Information";
 "message.detail.open_app_failed" = "Unable to Open PWA";
 "message.detail.open_approval" = "Open Approval Page";
 "message.detail.approval_safety_note" = "The notification only locates the request. Confirm inside the target app after it revalidates the state.";
-"message.detail.approval_native_note" = "The action is submitted to the configured WebBridgeKit approval service; the first valid response wins.";
+"message.detail.approval_native_note" = "The action is submitted to the configured Drel approval service; the first valid response wins.";
 "message.detail.approval_reason_prompt" = "Enter a reason for this action.";
 "message.detail.approval_reason_placeholder" = "Reason";
 "message.detail.approval_reason_required" = "A reason is required";
@@ -305,14 +321,19 @@
 "about.section.introduction" = "Introduction";
 "about.section.features" = "Features";
 "about.section.license" = "License";
+"about.section.legal" = "Legal";
 "about.section.feedback" = "Feedback";
-"about.introduction" = "WebBridgeKit is a powerful iOS WebView caching browser framework, providing developers with a complete WebView cache management solution.";
+"about.introduction" = "Drel is a developer notification utility, built with the open-source WebBridgeKit runtime.";
+"about.feature.push" = "Personal push address";
+"about.feature.inbox" = "Notification inbox";
+"about.feature.secure_route" = "Secure HTTPS link opening";
 "about.feature.cache" = "URL Cache Management";
 "about.feature.favorite" = "Favorites Management";
 "about.feature.token" = "Token Sharing";
 "about.feature.api_key" = "API Key Management";
 "about.feedback.github" = "GitHub Issues";
 "about.feedback.email" = "Send Email";
+"about.privacy_policy" = "Privacy Policy";
 "about.version_format" = "Version %@ (%@)";
 "about.version_default" = "Version 1.0 (1)";
 "about.close" = "Close";
@@ -345,7 +366,7 @@
 "model.access_token.minutes_format" = "%@m";
 
 // Token Share
-"token.share.text" = "【WebBridgeKit】Shared Token: %@\nToken: %@";
+"token.share.text" = "【Drel】Shared Token: %@\nToken: %@";
 "token.share.title" = "Share Token";
 
 // Token Generate
@@ -361,6 +382,7 @@
 
 // Favorite
 "favorite.title" = "Favorites";
+"favorite.cache_mode" = "Cache Mode";
 "favorite.empty_title" = "No Favorites";
 "favorite.empty_description" = "Your favorited links will appear here";
 "favorite.confirm_delete" = "Confirm Delete";
@@ -466,9 +488,9 @@
 "apikey.manage.view_examples" = "View Examples";
 "apikey.manage.temporary_keys" = "Temporary Keys";
 "apikey.manage.temporary_keys_desc" = "Temporary keys have an expiration time and will be auto-deleted";
-"apikey.manage.bark_config_title" = "Bark Push Config";
-"apikey.manage.bark_key_placeholder" = "Enter Bark Key";
-"apikey.manage.bark_server_placeholder" = "https://wbk.shanbox.19930810.xyz:8443";
+"apikey.manage.bark_config_title" = "Push Service Configuration";
+"apikey.manage.bark_key_placeholder" = "Enter push key";
+"apikey.manage.bark_server_placeholder" = "https://api.drel.app";
 "apikey.manage.save_config" = "Save Config";
 "apikey.manage.empty_title" = "No Keys";
 "apikey.manage.empty_description" = "Tap + in the top-right corner to create a new key";
@@ -476,7 +498,7 @@
 "apikey.manage.refresh_confirm_message" = "Are you sure you want to regenerate the permanent key? The old key will be invalidated immediately.";
 "apikey.manage.refresh_confirm" = "Confirm Refresh";
 "apikey.manage.save_success" = "Saved";
-"apikey.manage.bark_save_message" = "Bark push configuration saved";
+"apikey.manage.bark_save_message" = "Push service configuration saved";
 "apikey.manage.create_title" = "Create Temporary Key";
 "apikey.manage.create_message" = "Set name, group, and expiration for the temporary key";
 "apikey.manage.create_name_placeholder" = "Key Name";
@@ -590,16 +612,29 @@
 "official.push.action.send_safari" = "Send Test in Safari";
 "official.push.help.enable" = "No server setup required; enable notifications once to begin";
 "official.push.address.pending" = "Shown after notifications are enabled";
+"official.push.address.enable_to_receive" = "Your address is ready. Enable notifications to receive pushes.";
+"official.push.address.copied_before_enable" = "Push address copied. Enable notifications to receive pushes.";
 "official.push.permission.denied" = "Allow notifications in System Settings, then return and try again.";
 "official.push.error.identity" = "A secure push identity could not be created. Try again.";
 "official.push.error.storage" = "The push identity could not be stored securely. Check device storage and retry.";
 "official.push.error.permission" = "Notifications are not available right now. Try again later.";
 "official.push.error.server" = "The notification service is temporarily unavailable. Try again later.";
+"official.push.test.title" = "Send a Test Notification";
+"official.push.test.subtitle" = "Quickly verify that this device can receive notifications";
+"official.push.test.default_title" = "Test Notification";
+"official.push.test.default_body" = "Hello, this is a message from Drel.";
+"official.push.test.field.title" = "Title";
+"official.push.test.field.title.hint" = "Enter the title to show in the notification";
+"official.push.test.field.body" = "Message";
+"official.push.test.field.body.hint" = "Enter the body text to show in the notification";
+"official.push.send.success" = "Test notification sent";
+"official.push.send.failure_title" = "Test notification was not sent";
+"official.push.send.failure_message" = "The push service is temporarily unavailable. Try again later.";
 "gateway.title" = "Gateway Management";
 "gateway.current.title" = "Current Gateway";
 "gateway.current.none" = "No self-hosted service enabled";
 "gateway.scan" = "Scan QR Code";
-"gateway.scan.tip" = "Scan a WebBridgeKit gateway code";
+"gateway.scan.tip" = "Scan a Drel gateway code";
 "gateway.paste" = "Paste Configuration";
 "gateway.input.title" = "JSON or webbridgekit://gateway";
 "gateway.validate" = "Validate Configuration";

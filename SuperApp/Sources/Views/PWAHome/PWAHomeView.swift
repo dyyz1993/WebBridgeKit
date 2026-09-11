@@ -21,12 +21,16 @@ final class PWAHomeViewModel: ObservableObject {
     struct AppItem: Identifiable {
         let id: String
         let name: String
-        let icon: LucideIcon
+        let iconURL: URL?
+        let iconCacheKey: String
+        let fallbackInitial: String
         let tint: UIColor
     }
 
     @Published var pushURL: String
     @Published var pushState: PushState
+    @Published var pushChannels: [DrelPushChannel] = []
+    @Published var activePushChannelID = DrelPushChannelStore.officialChannelID
     @Published var appState: AppState = .loading
     @Published var apps: [AppItem] = []
 
@@ -36,6 +40,10 @@ final class PWAHomeViewModel: ObservableObject {
     }
 
     var isPushReady: Bool { pushState == .ready }
+
+    var activePushChannel: DrelPushChannel? {
+        pushChannels.first(where: { $0.id == activePushChannelID })
+    }
 
     var pushStatusText: String {
         switch pushState {
@@ -64,21 +72,26 @@ struct PWAHomeView: View {
 
     let onSendTest: (String, String) -> Void
     let onCopyPushURL: () -> Void
+    let onManagePushAddress: () -> Void
     let onConfigurePush: () -> Void
+    let onSelectPushChannel: (DrelPushChannel) -> Void
     let onSelectApp: (String) -> Void
     let onManageApps: () -> Void
     let onOpenAPIExamples: () -> Void
     let onOpenGuideAndDebug: () -> Void
 
-    @State private var pushTitle = "测试通知"
-    @State private var pushBody = "你好，这是一条来自 WebBridgeKit 的消息"
+    @State private var pushTitle = L10n.tr("official.push.test.default_title")
+    @State private var pushBody = L10n.tr("official.push.test.default_body")
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.lg) {
                 header
-                firstPushCard
+                endpointCard
+                #if !DREL_RELEASE_MINIMAL_SETTINGS
                 appsSection
+                #endif
+                testPushSection
                 supportSection
             }
             .padding(.horizontal, ThemeTokens.Spacing.screenHorizontal)
@@ -86,16 +99,53 @@ struct PWAHomeView: View {
             .padding(.bottom, ThemeTokens.Spacing.screenBottom + 16)
         }
         .background(Color.appBackground.ignoresSafeArea())
+        .overlay(alignment: .top) {
+            StatusBarScrim()
+        }
         .accessibilityIdentifier("pwaCenter.table")
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
-            Text("WebBridgeKit")
-                .font(.system(size: ThemeTokens.Typography.screenTitle.pointSize, weight: .bold))
-                .foregroundColor(Color.appText)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier("pwaHome.root")
+            HStack(alignment: .center) {
+                Text("Drel")
+                    .font(.system(size: ThemeTokens.Typography.screenTitle.pointSize, weight: .bold))
+                    .foregroundColor(Color.appText)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("pwaHome.root")
+
+                Spacer()
+
+                if !viewModel.pushChannels.isEmpty {
+                    Menu {
+                        ForEach(viewModel.pushChannels) { channel in
+                            Button {
+                                onSelectPushChannel(channel)
+                            } label: {
+                                if channel.id == viewModel.activePushChannelID {
+                                    Label(channel.name, systemImage: "checkmark")
+                                } else {
+                                    Text(channel.name)
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Text(viewModel.activePushChannel?.name ?? "官方 Drel")
+                            Image(systemName: "chevron.down")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .font(Font.app(ThemeTokens.Typography.metadata))
+                        .foregroundColor(Color.appPrimary)
+                    }
+                    .accessibilityIdentifier("home.push.channel-picker")
+                    .accessibilityLabel("切换推送通道")
+                }
+            }
+
+            Text("将推送直接送到你需要的地方")
+                .font(Font.app(ThemeTokens.Typography.body))
+                .foregroundColor(Color.appTextSecondary)
 
             HStack(spacing: ThemeTokens.Spacing.sm) {
                 Circle()
@@ -116,35 +166,130 @@ struct PWAHomeView: View {
         }
     }
 
-    private var firstPushCard: some View {
+    private var endpointCard: some View {
         VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
             HStack(spacing: ThemeTokens.Spacing.md) {
-                Image(uiImage: LucideIcon.send.templateImage(pointSize: ThemeTokens.Icons.Sizes.lg) ?? UIImage())
+                Image(uiImage: LucideIcon.link.templateImage(pointSize: ThemeTokens.Icons.Sizes.lg) ?? UIImage())
                     .renderingMode(.template)
                     .foregroundColor(Color.appPrimary)
                     .frame(width: 40, height: 40)
                     .background(Color(ThemeTokens.Color.primarySoft))
                     .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xs) {
-                    Text("发送第一条通知")
-                        .font(.system(size: ThemeTokens.Typography.sectionTitle.pointSize, weight: .semibold))
+                    Text(viewModel.activePushChannel?.isOfficial == false ? "自建推送地址" : "你的推送地址")
+                        .font(Font.app(ThemeTokens.Typography.sectionTitle))
                         .foregroundColor(Color.appText)
-                    Text("输入标题和内容，立即测试推送效果")
+                    Text("复制后即可从你的服务、脚本或网页发起推送")
+                        .font(Font.app(ThemeTokens.Typography.metadata))
+                        .foregroundColor(Color.appTextSecondary)
+                }
+            }
+
+            HStack(spacing: ThemeTokens.Spacing.md) {
+                VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xs) {
+                    Text(viewModel.pushURL.isEmpty ? L10n.tr("official.push.address.pending") : viewModel.pushURL)
+                        .font(Font.app(ThemeTokens.Typography.monospaceMeta))
+                        .foregroundColor(Color.appTextSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .accessibilityLabel(
+                            !viewModel.pushURL.isEmpty
+                                ? "我的推送地址 \(viewModel.pushURL)"
+                                : L10n.tr("official.push.address.pending")
+                        )
+                        .accessibilityIdentifier("home.push.address")
+                }
+
+                Spacer(minLength: ThemeTokens.Spacing.sm)
+
+                Button(action: onCopyPushURL) {
+                    Image(uiImage: LucideIcon.copy.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
+                        .renderingMode(.template)
+                        .foregroundColor(Color.appPrimary)
+                        .frame(width: 44, height: 44)
+                        .background(Color(ThemeTokens.Color.primarySoft))
+                        .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
+                }
+                .buttonStyle(PressScaleButtonStyle())
+                .accessibilityLabel("复制推送地址")
+                // The address is generated locally before notification permission
+                // is requested. Developers must be able to copy and inspect the
+                // public API endpoint on first launch; permission only gates
+                // delivery, not discovery of their personal endpoint.
+                .disabled(viewModel.pushURL.isEmpty)
+                .accessibilityIdentifier("home.push.copy")
+
+                Button(action: onManagePushAddress) {
+                    Image(uiImage: LucideIcon.ellipsis.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
+                        .renderingMode(.template)
+                        .foregroundColor(Color.appPrimary)
+                        .frame(width: 44, height: 44)
+                        .background(Color(ThemeTokens.Color.primarySoft))
+                        .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
+                }
+                .buttonStyle(PressScaleButtonStyle())
+                .accessibilityLabel("管理推送地址")
+                .disabled(viewModel.pushURL.isEmpty)
+                .accessibilityIdentifier("home.push.manage")
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("pwaHome.copyPushURL")
+
+            if viewModel.pushState == .denied {
+                Text(L10n.tr("official.push.permission.denied"))
+                    .font(Font.app(ThemeTokens.Typography.caption))
+                    .foregroundColor(Color(ThemeTokens.Color.warning))
+                    .accessibilityIdentifier("home.push.permission-denied")
+            }
+
+            if !viewModel.isPushReady, !viewModel.pushURL.isEmpty {
+                Text(L10n.tr("official.push.address.enable_to_receive"))
+                    .font(Font.app(ThemeTokens.Typography.caption))
+                    .foregroundColor(Color.appTextSecondary)
+                    .accessibilityIdentifier("home.push.address.enable-to-receive")
+            }
+        }
+        .padding(ThemeTokens.Spacing.md)
+        .background(Color.appCardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card)
+                .stroke(Color.appSeparator, lineWidth: 1)
+        )
+    }
+
+    private var testPushSection: some View {
+        VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
+            HStack(spacing: ThemeTokens.Spacing.md) {
+                Image(uiImage: LucideIcon.send.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
+                    .renderingMode(.template)
+                    .foregroundColor(Color.appPrimary)
+                    .frame(width: 36, height: 36)
+                    .background(Color(ThemeTokens.Color.primarySoft))
+                    .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.sm))
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xs) {
+                    Text(L10n.tr("official.push.test.title"))
+                        .font(Font.app(ThemeTokens.Typography.rowTitle))
+                        .foregroundColor(Color.appText)
+                    Text(L10n.tr("official.push.test.subtitle"))
                         .font(Font.app(ThemeTokens.Typography.metadata))
                         .foregroundColor(Color.appTextSecondary)
                 }
             }
 
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xs) {
-                Text("标题")
+                Text(L10n.tr("official.push.test.field.title"))
                     .font(Font.app(ThemeTokens.Typography.metadata))
                     .foregroundColor(Color.appTextSecondary)
-                TextField("测试通知", text: $pushTitle)
+                TextField(L10n.tr("official.push.test.default_title"), text: $pushTitle)
                     .font(Font.app(ThemeTokens.Typography.body))
                     .foregroundColor(Color.appText)
                     .padding(.horizontal, ThemeTokens.Spacing.md)
-                    .frame(minHeight: 44)
+                    .frame(minHeight: ThemeTokens.ComponentContract.SearchField.height)
                     .background(Color.appBackground)
                     .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.row))
                     .overlay(
@@ -152,8 +297,10 @@ struct PWAHomeView: View {
                             .stroke(Color.appSeparator, lineWidth: 1)
                     )
                     .accessibilityIdentifier("pwaHome.pushTitle")
+                    .accessibilityLabel(L10n.tr("official.push.test.field.title"))
+                    .accessibilityHint(L10n.tr("official.push.test.field.title.hint"))
 
-                Text("内容")
+                Text(L10n.tr("official.push.test.field.body"))
                     .font(Font.app(ThemeTokens.Typography.metadata))
                     .foregroundColor(Color.appTextSecondary)
                 TextEditor(text: $pushBody)
@@ -168,6 +315,8 @@ struct PWAHomeView: View {
                             .stroke(Color.appSeparator, lineWidth: 1)
                     )
                     .accessibilityIdentifier("pwaHome.pushBody")
+                    .accessibilityLabel(L10n.tr("official.push.test.field.body"))
+                    .accessibilityHint(L10n.tr("official.push.test.field.body.hint"))
             }
 
             Button {
@@ -182,9 +331,9 @@ struct PWAHomeView: View {
                         .renderingMode(.template)
                     Text(viewModel.primaryActionTitle)
                 }
-                .font(.system(size: ThemeTokens.Typography.button.pointSize, weight: .semibold))
+                .font(Font.app(ThemeTokens.Typography.button))
                 .foregroundColor(Color(ThemeTokens.Color.onPrimary))
-                .frame(maxWidth: .infinity, minHeight: 48)
+                .frame(maxWidth: .infinity, minHeight: ThemeTokens.ComponentContract.Button.height)
                 .background(Color.appPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
             }
@@ -200,46 +349,6 @@ struct PWAHomeView: View {
                 .foregroundColor(Color.appTextSecondary)
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
-
-            Divider().overlay(Color.appSeparator)
-
-            HStack(spacing: ThemeTokens.Spacing.md) {
-                VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xs) {
-                    Text("我的推送地址")
-                        .font(Font.app(ThemeTokens.Typography.metadata))
-                        .foregroundColor(Color.appText)
-                    Text(viewModel.isPushReady ? viewModel.pushURL : L10n.tr("official.push.address.pending"))
-                        .font(Font.app(ThemeTokens.Typography.monospaceMeta))
-                        .foregroundColor(Color.appTextSecondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .accessibilityIdentifier("home.push.address")
-                }
-                .accessibilityIdentifier("pwaHome.pushURL")
-
-                Spacer(minLength: ThemeTokens.Spacing.sm)
-
-                Button(action: onCopyPushURL) {
-                    Image(uiImage: LucideIcon.copy.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
-                        .renderingMode(.template)
-                        .foregroundColor(Color.appPrimary)
-                        .frame(width: 44, height: 44)
-                        .background(Color(ThemeTokens.Color.primarySoft))
-                        .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
-                }
-                .buttonStyle(PressScaleButtonStyle())
-                .accessibilityLabel("复制推送地址")
-                .disabled(!viewModel.isPushReady)
-                .accessibilityIdentifier("home.push.copy")
-            }
-            .accessibilityIdentifier("pwaHome.copyPushURL")
-
-            if viewModel.pushState == .denied {
-                Text(L10n.tr("official.push.permission.denied"))
-                    .font(Font.app(ThemeTokens.Typography.caption))
-                    .foregroundColor(Color(ThemeTokens.Color.warning))
-                    .accessibilityIdentifier("home.push.permission-denied")
-            }
         }
         .padding(ThemeTokens.Spacing.md)
         .background(Color.appCardBackground)
@@ -278,26 +387,15 @@ struct PWAHomeView: View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: ThemeTokens.Spacing.sm) {
                 ForEach(viewModel.apps.prefix(4)) { app in
-                    Button { onSelectApp(app.id) } label: {
-                        VStack(spacing: ThemeTokens.Spacing.sm) {
-                            Image(uiImage: app.icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.lg) ?? UIImage())
-                                .renderingMode(.template)
-                                .foregroundColor(Color(app.tint))
-                                .frame(width: 44, height: 44)
-                                .background(Color(app.tint).opacity(0.12))
-                                .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
+                    installedAppTile(app)
+                }
 
-                            Text(app.name)
-                                .font(Font.app(ThemeTokens.Typography.caption))
-                                .foregroundColor(Color.appText)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.72)
-                                .frame(maxWidth: .infinity)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(PressScaleButtonStyle())
-                    .accessibilityIdentifier("pwaHome.app.\(app.id)")
+                // A lone application looked accidental in the four-column
+                // app shelf. This is intentionally not an add button or a
+                // fabricated "recent" entry: trusted apps only arrive after
+                // a user-visible push activation.
+                if viewModel.apps.count == 1 {
+                    waitingAppSlot
                 }
             }
             .padding(ThemeTokens.Spacing.md)
@@ -325,6 +423,60 @@ struct PWAHomeView: View {
             RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card)
                 .stroke(Color.appSeparator, lineWidth: 1)
         )
+    }
+
+    private func installedAppTile(_ app: PWAHomeViewModel.AppItem) -> some View {
+        Button { onSelectApp(app.id) } label: {
+            VStack(spacing: ThemeTokens.Spacing.sm) {
+                PWAAppIconView(
+                    iconURL: app.iconURL,
+                    cacheKey: app.iconCacheKey,
+                    fallbackInitial: app.fallbackInitial,
+                    tint: app.tint
+                )
+                    .id(app.iconCacheKey)
+                    .frame(width: 44, height: 44)
+
+                Text(app.name)
+                    .font(Font.app(ThemeTokens.Typography.caption))
+                    .foregroundColor(Color.appText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(PressScaleButtonStyle())
+        .accessibilityIdentifier("pwaHome.app.\(app.id)")
+    }
+
+    private var waitingAppSlot: some View {
+        VStack(spacing: ThemeTokens.Spacing.sm) {
+            Text("待")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(Color.appTextTertiary)
+                .frame(width: 44, height: 44)
+                .background(Color.appBackground)
+                .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.sm))
+                .overlay(
+                    RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.sm)
+                        .stroke(
+                            Color.appSeparator,
+                            style: StrokeStyle(lineWidth: 1, dash: [4, 3])
+                        )
+                )
+
+            Text("虚位以待")
+                .font(Font.app(ThemeTokens.Typography.caption))
+                .foregroundColor(Color.appTextTertiary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("虚位以待")
+        .accessibilityHint("新的私有应用会在收到并打开对应推送后显示在这里")
+        .accessibilityIdentifier("pwaHome.appPlaceholder")
     }
 
     private var emptyApps: some View {
@@ -382,13 +534,14 @@ struct PWAHomeView: View {
     private var supportSection: some View {
         VStack(spacing: 0) {
             supportRow(
-                title: "全部 API 示例",
-                subtitle: "普通、Markdown、验证码、二维码、图片、聊天、审批",
+                title: releaseExamplesTitle,
+                subtitle: releaseExamplesSubtitle,
                 icon: .terminal,
                 identifier: "pwaHome.apiExamples",
                 action: onOpenAPIExamples
             )
 
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             Divider()
                 .overlay(Color.appSeparator)
                 .padding(.leading, 60)
@@ -400,6 +553,7 @@ struct PWAHomeView: View {
                 identifier: "pwaHome.guideAndDebug",
                 action: onOpenGuideAndDebug
             )
+            #endif
         }
         .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card))
@@ -407,6 +561,22 @@ struct PWAHomeView: View {
             RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.card)
                 .stroke(Color.appSeparator, lineWidth: 1)
         )
+    }
+
+    private var releaseExamplesTitle: String {
+#if DREL_CONTAINER_ONLY
+        return "推送示例"
+#else
+        return "全部 API 示例"
+#endif
+    }
+
+    private var releaseExamplesSubtitle: String {
+#if DREL_CONTAINER_ONLY
+        return "文本通知、点击打开网页与铃声提示"
+#else
+        return "普通、Markdown、验证码、二维码、图片、聊天、审批"
+#endif
     }
 
     private func supportRow(
@@ -444,5 +614,28 @@ struct PWAHomeView: View {
         }
         .buttonStyle(PressScaleButtonStyle())
         .accessibilityIdentifier(identifier)
+    }
+}
+
+/// Fades scrolled content out before it reaches the status bar / Dynamic
+/// Island. The home ScrollView is intentionally full-bleed; without this
+/// scrim the address card and hint row collide with the system clock while
+/// scrolling.
+private struct StatusBarScrim: View {
+    var body: some View {
+        LinearGradient(
+            stops: [
+                .init(color: Color.appBackground, location: 0),
+                .init(color: Color.appBackground, location: 0.45),
+                .init(color: Color.appBackground.opacity(0), location: 1),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(height: 64)
+        .frame(maxWidth: .infinity)
+        .ignoresSafeArea(edges: .top)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
