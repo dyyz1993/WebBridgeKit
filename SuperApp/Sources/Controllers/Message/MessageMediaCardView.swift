@@ -3,14 +3,14 @@ import UIKit
 import WebBridgeKit
 
 final class MessageMediaCardView: UIView {
+    private let contentStack = UIStackView()
     private let imageView = UIImageView()
     private let placeholderIcon = UIImageView()
     private let statusLabel = UILabel()
     private let placeholderStack = UIStackView()
     private let saveButton = UIButton(type: .system)
     private var loadTask: URLSessionDataTask?
-    private var heightConstraint: Constraint?
-    private var saveButtonHeightConstraint: Constraint?
+    private var imageHeightConstraint: Constraint?
 
     /// The host owns the Photo Library permission and persistence flow; this
     /// card only exposes deliberate user gestures for the already-downloaded
@@ -35,11 +35,10 @@ final class MessageMediaCardView: UIView {
         accessibilityValue = "loading"
         statusLabel.text = L10n.tr("message.detail.media_loading")
         statusLabel.textColor = ThemeTokens.Color.textSecondary
-        statusLabel.isHidden = false
         placeholderIcon.image = LucideIcon.image.templateImage(pointSize: ThemeTokens.Icons.Sizes.lg)
         placeholderIcon.tintColor = ThemeTokens.Color.info
         placeholderStack.isHidden = false
-        setSaveButtonVisible(false)
+        saveButton.isHidden = true
 
         guard let url = URL(string: source) else {
             showFailure()
@@ -56,9 +55,9 @@ final class MessageMediaCardView: UIView {
                     return
                 }
                 self.imageView.image = image
-                self.heightConstraint?.update(offset: 168)
+                self.imageHeightConstraint?.update(offset: 168)
                 self.placeholderStack.isHidden = true
-                self.setSaveButtonVisible(true)
+                self.saveButton.isHidden = false
                 self.accessibilityValue = "loaded"
             }
         }
@@ -89,8 +88,7 @@ final class MessageMediaCardView: UIView {
 
         // Icon + caption live in one stack centered on the tinted image area
         // (not the whole card): the failure caption previously straddled the
-        // gray/white boundary because it was centered against the card while
-        // the hidden save button kept reserving 44pt of body below.
+        // gray/white boundary because it was centered against the card.
         placeholderStack.axis = .vertical
         placeholderStack.alignment = .center
         placeholderStack.spacing = ThemeTokens.Spacing.sm
@@ -109,18 +107,26 @@ final class MessageMediaCardView: UIView {
         saveButton.layer.cornerRadius = ThemeTokens.CornerRadius.sm
         saveButton.layer.masksToBounds = true
         saveButton.titleLabel?.font = ThemeTokens.Typography.metadata
-        saveButton.isHidden = true
         saveButton.accessibilityIdentifier = "message.detail.media.save"
         saveButton.accessibilityLabel = L10n.tr("message.detail.media.save_accessibility")
         saveButton.addTarget(self, action: #selector(handleSaveButton), for: .touchUpInside)
 
+        // A vertical stack drives the card height: hidden arranged subviews
+        // leave the layout on their own, so the save strip needs no height
+        // toggling (a collapsed 0pt button constraint tripped the design
+        // lint's button-height rule and kept reserving space when hidden).
+        contentStack.axis = .vertical
+        contentStack.spacing = 0
+        contentStack.alignment = .fill
+
         addSubview(imageView)
         addSubview(placeholderStack)
-        addSubview(saveButton)
+        addSubview(contentStack)
+        contentStack.addArrangedSubview(saveButton)
 
         imageView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
-            heightConstraint = make.height.equalTo(168).constraint
+            imageHeightConstraint = make.height.equalTo(168).constraint
         }
         placeholderStack.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
@@ -128,32 +134,24 @@ final class MessageMediaCardView: UIView {
             make.leading.greaterThanOrEqualToSuperview().inset(ThemeTokens.Spacing.lg)
             make.trailing.lessThanOrEqualToSuperview().inset(ThemeTokens.Spacing.lg)
         }
-        saveButton.snp.makeConstraints { make in
+        contentStack.snp.makeConstraints { make in
             make.top.equalTo(imageView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview()
-            saveButtonHeightConstraint = make.height.equalTo(0).constraint
+            make.leading.trailing.bottom.equalToSuperview()
         }
-        setSaveButtonVisible(false)
-    }
-
-    /// The save action collapses to zero height instead of hiding in place:
-    /// a hidden-but-constrained button kept reserving a 44pt white band that
-    /// showed through on the failure state.
-    private func setSaveButtonVisible(_ visible: Bool) {
-        saveButton.isHidden = !visible
-        saveButtonHeightConstraint?.update(offset: visible ? 44 : 0)
+        saveButton.snp.makeConstraints { make in
+            make.height.equalTo(44)
+        }
+        saveButton.isHidden = true
     }
 
     private func showFailure() {
         imageView.image = nil
-        heightConstraint?.update(offset: 96)
-        setSaveButtonVisible(false)
+        imageHeightConstraint?.update(offset: 96)
+        saveButton.isHidden = true
         placeholderIcon.image = LucideIcon.warning.templateImage(pointSize: ThemeTokens.Icons.Sizes.lg)
         placeholderIcon.tintColor = ThemeTokens.Color.error
         statusLabel.text = L10n.tr("message.detail.media_unavailable")
         statusLabel.textColor = ThemeTokens.Color.error
-        statusLabel.isHidden = false
         placeholderStack.isHidden = false
         accessibilityValue = "failed"
     }

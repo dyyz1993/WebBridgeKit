@@ -268,7 +268,7 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
             string: "● ",
             attributes: [
                 .foregroundColor: ThemeTokens.Color.error,
-                .font: UIFont.systemFont(ofSize: 9),
+                .font: ThemeTokens.Typography.metadata,
             ]
         )
         attributed.append(NSAttributedString(
