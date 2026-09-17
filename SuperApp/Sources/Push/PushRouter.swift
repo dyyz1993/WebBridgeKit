@@ -78,8 +78,11 @@ class PushRouter {
             return
         }
 
-        // 3. 有 url → 内置浏览器打开
+        // 3. 有 url → drel://app 链接拉起已注册应用；其余进内置浏览器
         if let urlString = payload.url, let url = URL(string: urlString) {
+            if DrelExternalAppLinkOpener.openIfAppLink(url, from: rootVC) {
+                return
+            }
             openBrowser(url: url, mode: payload.mode, from: rootVC)
             return
         }

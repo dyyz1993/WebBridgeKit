@@ -79,7 +79,7 @@ check "Store Inbox exposes confirmed clear-all" \
 check "Store build excludes Bridge permission UI" \
     "rg -q '#if !DREL_CONTAINER_ONLY' SuperApp/Sources/Controllers/Settings/PWAPermissionCenterViewController.swift && rg -q '#if !DREL_CONTAINER_ONLY' SuperApp/Sources/Views/Settings/WebOriginGrantsView.swift"
 check "Store build excludes legacy command and arbitrary URL entry points" \
-    "rg -q '#if !DREL_CONTAINER_ONLY' SuperApp/Sources/AppDelegate.swift && rg -q 'Drel 1.0 intentionally has no other external command/deep-link surface' SuperApp/Sources/AppDelegate.swift && rg -q 'Fail closed: only apps already trusted' SuperApp/Sources/AppDelegate.swift && ! rg -q 'webbridgekit://open?url' Sources/Runtime/DrelExternalAppLink.swift"
+    "rg -q '#if !DREL_CONTAINER_ONLY' SuperApp/Sources/AppDelegate.swift && rg -q 'Drel 1.0 intentionally has no other external command/deep-link surface' SuperApp/Sources/AppDelegate.swift && rg -q 'Fail closed: only apps already trusted' SuperApp/Sources/Utilities/DrelExternalAppLinkOpener.swift && ! rg -q 'webbridgekit://open?url' Sources/Runtime/DrelExternalAppLink.swift"
 check "Component catalog is unavailable in Store builds" \
     "rg -B 2 -A 1 'show-component-catalog' SuperApp/Sources/AppDelegate.swift | rg -q '#if !DREL_CONTAINER_ONLY'"
 check "Store build retains required SDK privacy prompts" \

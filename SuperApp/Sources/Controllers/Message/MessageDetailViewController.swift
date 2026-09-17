@@ -76,7 +76,7 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         return webview
     }()
 
-    private var markdownHeightConstraint: Constraint?
+    private(set) var markdownHeightConstraint: Constraint?
     weak var approvalStateValueLabel: UILabel?
     var isSubmittingApproval = false
 
@@ -709,6 +709,10 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
                 style: .primary
             ) { [weak self] in
                 guard let self = self else { return }
+                // drel://app 链接在消息里与外部拉起同语义：受信注册即沉浸式打开。
+                if DrelExternalAppLinkOpener.openIfAppLink(url, from: self) {
+                    return
+                }
                 WebBrowserManager.shared.openBrowser(
                     url: url,
                     params: DrelMessageOpenPolicy.browserParams(
@@ -1155,38 +1159,4 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
     }
 }
 
-extension MessageDetailViewController: WKNavigationDelegate {
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self] result, _ in
-            guard let self, let height = (result as? NSNumber)?.doubleValue else { return }
-            self.markdownHeightConstraint?.update(offset: ceil(height) + 16)
-        }
-    }
-
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        let scheme = navigationAction.request.url?.scheme?.lowercased()
-        let isWebURL = scheme == "http" || scheme == "https"
-        // Context-menu commits (link preview menu's 打开链接) arrive as
-        // `.other` rather than `.linkActivated`; both must leave the embedded
-        // height-constrained webview and open the shared browser instead.
-        let isLinkNavigation = navigationAction.navigationType == .linkActivated
-            || (navigationAction.navigationType == .other && isWebURL)
-        if isLinkNavigation, let url = navigationAction.request.url, isWebURL {
-            WebBrowserManager.shared.openBrowser(
-                url: url,
-                params: DrelMessageOpenPolicy.browserParams(
-                    for: url,
-                    mode: DrelMessageOpenPolicy.mode(for: self.message.payload),
-                    payload: self.message.payload.userInfo,
-                    useManifestLoader: false
-                ),
-                from: self
-            )
-            decisionHandler(.cancel)
-            return
-        }
-        decisionHandler(.allow)
-    }
-}
 

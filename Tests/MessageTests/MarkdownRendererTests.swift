@@ -121,4 +121,16 @@ final class MarkdownRendererTests: XCTestCase {
 
         XCTAssertFalse(html.contains("href=\"ftp://"))
     }
+
+    func testRendersDrelAppLinksInMarkdown() {
+        let markdown = """
+        裸链接 drel://app?app_id=dev.drel.data-template&param_title=Hi 也可以，
+        或显式 [打开卡片](drel://app?app_id=a.b)。
+        """
+
+        let html = MarkdownRenderer.renderHTML(title: "t", markdown: markdown)
+
+        XCTAssertTrue(html.contains("<a href=\"drel://app?app_id=dev.drel.data-template&amp;param_title=Hi\">drel://app?app_id=dev.drel.data-template&amp;param_title=Hi</a>"))
+        XCTAssertTrue(html.contains("<a href=\"drel://app?app_id=a.b\">打开卡片</a>"))
+    }
 }

@@ -118,7 +118,7 @@ targets:
           # UI while retaining the same container-only native capability wall.
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DREL_CONTAINER_ONLY
           MARKETING_VERSION: "1.4.0"
-          CURRENT_PROJECT_VERSION: "75"
+          CURRENT_PROJECT_VERSION: "76"
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: 4AFA8471A600DE35F54E34594597F01325FD50CE
           PROVISIONING_PROFILE_SPECIFIER: WebBridgeKit App Store
@@ -231,7 +231,7 @@ targets:
           PROVISIONING_PROFILE_SPECIFIER: WebBridgeKit NSE App Store
         Drel14Release:
           MARKETING_VERSION: "1.4.0"
-          CURRENT_PROJECT_VERSION: "75"
+          CURRENT_PROJECT_VERSION: "76"
           DEVELOPMENT_TEAM: B45VZCNYU3
           PRODUCT_BUNDLE_IDENTIFIER: com.webbridgekit.superapp.nse
           CODE_SIGN_STYLE: Manual

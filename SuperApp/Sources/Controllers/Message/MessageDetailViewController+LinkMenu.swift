@@ -23,7 +23,7 @@ extension MessageDetailViewController: WKUIDelegate {
     ) {
         guard let url = elementInfo.linkURL,
               let scheme = url.scheme?.lowercased(),
-              scheme == "http" || scheme == "https" else {
+              scheme == "http" || scheme == "https" || scheme == "drel" else {
             completionHandler(nil)
             return
         }
@@ -37,7 +37,12 @@ extension MessageDetailViewController: WKUIDelegate {
                 title: L10n.tr("message.detail.open_link"),
                 image: LucideIcon.link.templateImage(pointSize: ThemeTokens.Icons.Sizes.md)
             ) { [weak self] _ in
-                self?.openRecognizedLink(url)
+                guard let self else { return }
+                if url.scheme?.lowercased() == "drel" {
+                    DrelExternalAppLinkOpener.openIfAppLink(url, from: self)
+                } else {
+                    self.openRecognizedLink(url)
+                }
             }
             let copyAction = UIAction(
                 title: L10n.tr("message.detail.copy_link"),

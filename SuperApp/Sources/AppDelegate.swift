@@ -491,8 +491,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// registered HTML app — the app equivalent of a push launch. Anything
     /// else under the scheme routes QR import payloads or is refused.
     private func handleDrelExternalURL(_ url: URL) -> Bool {
-        if let link = DrelExternalAppLink.parse(url) {
-            openExternalAppLink(link)
+        if DrelExternalAppLink.parse(url) != nil {
+            openExternalAppLinkFromHandoff(url)
             return true
         }
 
@@ -509,52 +509,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
     }
 
-    private func openExternalAppLink(_ link: DrelExternalAppLink) {
-        let registry = HTMLAppRuntimeCenter.shared.trustRegistry
-        // Fail closed: only apps already trusted on this device open from an
-        // external link; unregistered IDs get an explanation, not a browser.
-        guard let manifest = registry.manifest(for: link.appID) else {
-            presentExternalLinkAlert(
-                title: "应用未注册",
-                message: "“\(link.appID)”不在本机的受信应用列表中。请先在应用中心导入，或通过推送激活该应用。"
-            )
-            return
-        }
-
-        let route = (link.route?.isEmpty == false ? link.route : nil) ?? manifest.routes.first ?? "/"
-        do {
-            let target = try HTMLAppLaunchResolver(trustRegistry: registry).resolve(
-                appID: link.appID,
-                route: route,
-                parameters: link.parameters,
-                source: .direct
-            )
-            // External launches always deliver via the bridge-free
-            // containerOnlyURL (validated route + drel_param_* query items):
-            // an external caller has no bridge context, and this keeps the
-            // documented template contract identical across every train.
-            let params = DrelMessageOpenPolicy.browserParams(
-                for: target.containerOnlyURL,
-                mode: .immersive,
-                payload: nil,
-                useManifestLoader: false,
-                preferCachedContent: false
-            )
-            WebBrowserManager.shared.openBrowser(url: target.containerOnlyURL, params: params, from: window?.rootViewController)
-        } catch {
-            presentExternalLinkAlert(title: "无法打开应用", message: error.localizedDescription)
-        }
-    }
-
-    private func presentExternalLinkAlert(title: String, message: String) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            var presenter = self.window?.rootViewController
-            while let presented = presenter?.presentedViewController { presenter = presented }
-            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "好", style: .default))
-            presenter?.present(alert, animated: true)
-        }
+    private func openExternalAppLinkFromHandoff(_ url: URL) {
+        guard let link = DrelExternalAppLink.parse(url) else { return }
+        DrelExternalAppLinkOpener.open(link, from: window?.rootViewController)
     }
 
     // MARK: - Push Notifications

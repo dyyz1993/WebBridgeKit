@@ -411,7 +411,7 @@ private struct OfflineMarkdownDocument {
 /// rewrap the URL inside an explicit link syntax.
 private let imageLinkPattern = "!\\[([^\\]]*)\\]\\(([^\\s)]+)(?:\\s+\\\"[^\\\"]*\\\")?\\)"
 private let textLinkPattern = "\\[([^\\]]+)\\]\\(([^\\s)]+)(?:\\s+\\\"[^\\\"]*\\\")?\\)"
-private let angleAutolinkPattern = "&lt;((?:https?://|mailto:)[^\\s]+?|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})&gt;"
+private let angleAutolinkPattern = "&lt;((?:https?://|mailto:|drel://)[^\\s]+?|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})&gt;"
 
 private func inlineHTML(_ source: String) -> String {
     var output = escapeHTML(source)
@@ -498,7 +498,7 @@ private func linkSyntaxRanges(in escapedHTML: String) -> [NSRange] {
 /// Trailing sentence punctuation is kept out of the href but preserved in the
 /// rendered text after the anchor.
 private func autolinkBareURLs(in escapedHTML: String, protecting protectedRanges: [NSRange]) -> String {
-    guard let regex = try? NSRegularExpression(pattern: "https?://[^\\s]+?(?=(?:&quot;|&gt;|&lt;|&#39;|`|\\s|$))") else {
+    guard let regex = try? NSRegularExpression(pattern: "(?:https?://|drel://app\\?)[^\\s]+?(?=(?:&quot;|&gt;|&lt;|&#39;|`|\\s|$))") else {
         return escapedHTML
     }
     let fullRange = NSRange(escapedHTML.startIndex..., in: escapedHTML)
@@ -534,7 +534,7 @@ private func safeURL(_ escapedURL: String, image: Bool) -> String? {
     let rawURL = escapedURL.replacingOccurrences(of: "&amp;", with: "&")
     guard let components = URLComponents(string: rawURL), let scheme = components.scheme?.lowercased() else { return nil }
 
-    let allowedSchemes: Set<String> = image ? ["https"] : ["https", "http", "mailto"]
+    let allowedSchemes: Set<String> = image ? ["https"] : ["https", "http", "mailto", "drel"]
     guard allowedSchemes.contains(scheme) else { return nil }
     return escapeHTML(rawURL)
 }
