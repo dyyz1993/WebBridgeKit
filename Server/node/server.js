@@ -58,6 +58,7 @@ const startTime = Date.now();
 
 const adminHTML = fs.readFileSync(path.join(__dirname, 'admin.html'), 'utf8');
 const adminPushHTML = fs.readFileSync(path.join(__dirname, 'admin-push.html'), 'utf8');
+const drelMarkPNG = fs.readFileSync(path.join(__dirname, 'drel-mark.png'));
 
 function json(res, data, status = 200) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -67,6 +68,30 @@ function json(res, data, status = 200) {
 function html(res, content, status = 200) {
   res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(content);
+}
+
+function pushDiscovery(res, req, key, urlObj) {
+  if (!devices.has(key)) return json(res, { error: 'device key not registered' }, 404);
+  const forwardedHost = String(req.headers['x-forwarded-host'] || req.headers.host || 'api.drel.app').split(',')[0].trim();
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+  const base = `${forwardedProto}://${forwardedHost}`;
+  const pushURL = `${base}/${encodeURIComponent(key)}`;
+  const requested = String(urlObj.searchParams.get('format') || '').toLowerCase();
+  const markdownPath = urlObj.pathname.endsWith('.md');
+  const markdown = `# Drel Push Discovery\n\nThis address sends notifications to one Drel installation. Treat it as a secret capability.\n\n## Quick start\n\n\`\`\`sh\ncurl '${pushURL}/Build%20ready/Open%20Drel'\n\`\`\`\n\n## References\n\n- Product: https://drel.app/\n- Self-hosting: https://drel.app/self-hosted/\n- Source: https://github.com/dyyz1993/WebBridgeKit\n`;
+  const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff' };
+  if (requested === 'json') {
+    res.writeHead(200, { ...headers, 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ schema: 'drel.push-discovery.v1', name: 'Drel Push Discovery', pushURL, api: { get: `${pushURL}/{title}/{body}`, post: `${base}/push` }, documentation: 'https://drel.app/self-hosted/', source: 'https://github.com/dyyz1993/WebBridgeKit' }));
+  }
+  if (markdownPath || requested === 'markdown' || requested === 'md' || !String(req.headers.accept || '').includes('text/html')) {
+    res.writeHead(200, { ...headers, 'Content-Type': 'text/markdown; charset=utf-8' });
+    return res.end(markdown);
+  }
+  const safe = pushURL.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Drel Push Discovery</title><style>body{font:16px system-ui;background:#f5f7fb;color:#172033;margin:0}.wrap{max-width:760px;margin:auto;padding:48px 20px}.card{background:#fff;border-radius:24px;padding:28px;box-shadow:0 18px 60px #17203318}h1{margin-top:0}label{display:block;margin:16px 0 6px}input,textarea{box-sizing:border-box;width:100%;padding:13px;border:1px solid #ccd3df;border-radius:12px;font:inherit}button{margin-top:18px;border:0;border-radius:999px;padding:13px 20px;background:#5b5cf0;color:#fff;font-weight:700}.muted{color:#697386}code{overflow-wrap:anywhere}a{color:#4d50d8}</style></head><body><main class="wrap"><section class="card"><p class="muted">Drel developer endpoint</p><h1>Drel Push Discovery</h1><p>Send a notification to this Drel installation. Keep this address private; anyone holding it can send notifications.</p><p><code>${safe}</code></p><form id="push"><label>Title</label><input id="pushTitle" value="Build ready"><label>Body</label><textarea id="pushBody">Open Drel to inspect the result.</textarea><label>URL (optional)</label><input id="pushTarget" type="url" placeholder="https://example.com"><button>Send test notification</button></form><p id="result" class="muted"></p><hr><p><a href="https://drel.app/self-hosted/">Self-hosting guide</a> · <a href="https://github.com/dyyz1993/WebBridgeKit">Open source</a> · <a href="?format=markdown">Markdown</a></p></section></main><script>document.querySelector('#push').onsubmit=async(e)=>{e.preventDefault();const p='${safe}/'+encodeURIComponent(pushTitle.value)+'/'+encodeURIComponent(pushBody.value);const q=pushTarget.value?'?url='+encodeURIComponent(pushTarget.value):'';result.textContent='Sending…';try{const r=await fetch(p+q,{headers:{accept:'application/json'}});result.textContent=r.ok?'Sent successfully':('Failed: '+r.status)}catch{result.textContent='Network request failed'}}</script></body></html>`;
+  res.writeHead(200, { ...headers, 'Content-Type': 'text/html; charset=utf-8' });
+  return res.end(page);
 }
 
 function parseBody(req) {
@@ -366,6 +391,11 @@ async function handleRequest(req, res) {
     return html(res, adminPushHTML);
   }
 
+  if (method === 'GET' && pathname === '/drel-mark.png') {
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000, immutable' });
+    return res.end(drelMarkPNG);
+  }
+
   if (method === 'GET' && pathname === '/health') {
     return json(res, { timestamp: new Date().toISOString(), status: 'ok', uptime: Math.floor((Date.now() - startTime) / 1000) });
   }
@@ -469,7 +499,7 @@ async function handleRequest(req, res) {
       if (!cmd) return json(res, { error: 'Command not found' }, 404);
       cmd.shareCount++;
       const shareURL = cmd.url;
-      const shareText = `[WebBridgeKit Command] ${cmd.payload.type}: ${cmd.payload.data}`;
+      const shareText = `[Drel Command] ${cmd.payload.type}: ${cmd.payload.data}`;
       return json(res, { id: cmd.id, shareCount: cmd.shareCount, shareURL, shareText });
     }
   }
@@ -987,6 +1017,11 @@ async function handleBarkPush(req, res, pathname, urlObj) {
   } else {
     const parts = pathname.startsWith('/push/') ? pathname.replace('/push/', '').split('/') : pathname.split('/').filter(Boolean);
     key = parts[0];
+
+    if (parts.length === 1 && !urlObj.searchParams.get('title') && !urlObj.searchParams.get('body')) {
+      const discoveryKey = key.endsWith('.md') ? key.slice(0, -3) : key;
+      return pushDiscovery(res, req, discoveryKey, urlObj);
+    }
     title = parts[1] || '';
     body = parts.slice(2).join('/') || '';
     params = {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WebBridgeKit 推送控制台</title>
+<title>Drel 推送控制台</title>
 <style>
 :root{
   --sidebar-bg:#1d1d1f;--sidebar-text:#f5f5f7;--sidebar-text-dim:#86868b;
@@ -27,9 +27,10 @@ body{font-family:var(--font);background:var(--main-bg);color:var(--text-primary)
 .sidebar{width:248px;min-width:248px;background:var(--sidebar-bg);color:var(--sidebar-text);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sidebar-header{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
 .sidebar-header .logo{display:flex;align-items:center;gap:10px}
-.sidebar-header .logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#4F6AF6,#8B5CF6);display:flex;align-items:center;justify-content:center;color:#fff}
-.sidebar-header .logo-icon svg{width:22px;height:22px;display:block}
-.sidebar-header h1{font-size:16px;font-weight:600;letter-spacing:-.3px;line-height:1.2}
+.sidebar-header .logo-icon{width:32px;height:32px;border-radius:8px;background:#fff url('/drel-mark.png') center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#fff}
+.sidebar-header .logo-icon svg{display:none}
+.sidebar-header h1{font-size:0;font-weight:600;letter-spacing:-.3px;line-height:1.2}
+.sidebar-header h1::after{content:'Drel';font-size:16px}
 .sidebar-header p{font-size:11px;color:var(--sidebar-text-dim);margin-top:2px}
 .sidebar-nav{padding:10px 8px;flex:1}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;font-size:13px;font-weight:400;color:var(--sidebar-text-dim);transition:var(--transition);border:none;background:none;width:100%;text-align:left;border-radius:var(--radius-sm);margin:1px 4px}
@@ -237,7 +238,7 @@ textarea.form-input{resize:vertical;min-height:64px;line-height:1.5}
 <main class="main">
 <div class="status-bar" id="statusBar"></div>
 <div class="topbar">
-<div class="topbar-left"><h2 id="pageTitle">推送控制台</h2><p id="pageSubtitle">WebBridgeKit 功能演示控制台 — 每个模板展示一项核心能力</p></div>
+<div class="topbar-left"><h2 id="pageTitle">推送控制台</h2><p id="pageSubtitle">Drel 功能演示控制台 — 每个模板展示一项核心能力</p></div>
 <div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="openCustomModal()">✏️ 自定义推送</button></div>
 </div>
 <div class="content" id="content"></div>
@@ -258,8 +259,8 @@ var templates=[
 {cat:'basic',badge:'基础',name:'标准通知',desc:'最完整的推送格式：标题 + 正文 + 默认声音 + 角标。这是 iOS 推送的最常用形态。',feature:{label:'演示特性',items:['title + body 双行结构','默认系统提示音 (default)','App 图标角标自动 +1','点击通知打开管理后台']},expected:'手机收到带声音的横幅通知，角标+1，点击可打开页面',params:{title:'📱 标准推送',body:'这是一条完整的标准通知，包含标题、正文、声音和角标更新',sound:'default',badge:1,url:ORIGIN+'/admin-push'}},
 {cat:'basic',badge:'静默',name:'静默通知',desc:'不弹窗、不响铃，仅后台更新数据。适用于内容同步、角标刷新等场景。',feature:{label:'演示特性',items:['无声音 (sound=空)','无横幅提示','仅更新 App 角标为 99','在通知中心可见']},expected:'手机不显示横幅、不播放声音，但角标更新为 99（通知中心可见）',params:{title:'🤫 静默通知',body:'这条不会弹窗也不会响铃',sound:'',badge:99,mode:'silent'}},
 {cat:'basic',badge:'分组',name:'分组通知',desc:'连续发送 3 条同组消息，iOS 自动折叠为一个通知组。用户展开可查看全部消息。',feature:{label:'演示特性',items:['相同 thread-id 的消息自动分组','通知中心显示为折叠卡片','展开后显示 3 条独立消息','适用于聊天/社交类场景']},expected:'发送 3 条后，通知中心显示为 1 个折叠组，展开可看 3 条',params:null,comboType:'grouped'},
-{cat:'basic',badge:'长文本',name:'大文本通知',desc:'超长正文内容的展示。iOS 会自动处理长文本的截断与展开逻辑。',feature:{label:'演示特性',items:['200 字中文正文','iOS 自动截断或展开','3D Touch / 长按展开全文','验证文本渲染完整性']},expected:'通知展开显示完整长文本内容，不被异常截断',params:{title:'📄 大文本通知',body:'这是一段用于测试大文本展示能力的超长通知正文。WebBridgeKit 支持完整的通知内容传输，包括标题、副标题和任意长度的正文内容。这段文字包含了中文标点符号、数字（12345）、英文字母（abcdefg）以及各种特殊字符！@#￥%……&*（）——+。当用户收到这条通知时，iOS 系统会根据屏幕宽度自动决定是否需要截断显示。用户可以通过 3D Touch（在支持的设备上）或者长按通知的方式来展开查看完整的文本内容。这个功能对于新闻类应用、邮件客户端以及需要展示详细摘要的场景非常重要。'}},
-{cat:'basic',badge:'副标题',name:'副标题通知',desc:'三行结构：主标题 > 副标题 > 正文。提供更丰富的信息层次。',feature:{label:'演示特性',items:['三层信息结构：标题 > 副标题 > 正文','副标题用于来源/分类标识','视觉层次更清晰','适合多维度信息展示']},expected:'通知显示 主标题 > 副标题 > 正文 三层结构',params:{title:'📋 副标题通知',subtitle:'来自 WebBridgeKit 推送系统',body:'这是一条带有副标题的三行结构通知，展示了 iOS 通知的完整信息层级。'}},
+{cat:'basic',badge:'长文本',name:'大文本通知',desc:'超长正文内容的展示。iOS 会自动处理长文本的截断与展开逻辑。',feature:{label:'演示特性',items:['200 字中文正文','iOS 自动截断或展开','3D Touch / 长按展开全文','验证文本渲染完整性']},expected:'通知展开显示完整长文本内容，不被异常截断',params:{title:'📄 大文本通知',body:'这是一段用于测试大文本展示能力的超长通知正文。Drel 支持完整的通知内容传输，包括标题、副标题和任意长度的正文内容。这段文字包含了中文标点符号、数字（12345）、英文字母（abcdefg）以及各种特殊字符！@#￥%……&*（）——+。当用户收到这条通知时，iOS 系统会根据屏幕宽度自动决定是否需要截断显示。用户可以通过 3D Touch（在支持的设备上）或者长按通知的方式来展开查看完整的文本内容。这个功能对于新闻类应用、邮件客户端以及需要展示详细摘要的场景非常重要。'}},
+{cat:'basic',badge:'副标题',name:'副标题通知',desc:'三行结构：主标题 > 副标题 > 正文。提供更丰富的信息层次。',feature:{label:'演示特性',items:['三层信息结构：标题 > 副标题 > 正文','副标题用于来源/分类标识','视觉层次更清晰','适合多维度信息展示']},expected:'通知显示 主标题 > 副标题 > 正文 三层结构',params:{title:'📋 副标题通知',subtitle:'来自 Drel 推送系统',body:'这是一条带有副标题的三行结构通知，展示了 iOS 通知的完整信息层级。'}},
 
 /* ===== Category 2: 缓存行为演示（核心价值）===== */
 {cat:'cache',badge:'Manifest',name:'首次加载（无缓存）',desc:'演示 Manifest 缓存机制的完整生命周期：首次网络加载 → 后台缓存 → 二次秒开 → 断网可用。',feature:{label:'缓存生命周期',items:['【第1次】网络加载 → 显示 → 后台下载缓存资源','【第2次】直接从本地缓存读取 → 秒开','【断网后】离线可用（已缓存的资源）','Manifest 定义了 JS/CSS/图片等资源的版本']},expected:'第一次从服务器加载并缓存资源文件（JS/CSS/图片），之后每次打开都从本地读取，断网也能用',params:{title:'🔗 Manifest 缓存演示',body:'打开页面体验首次加载与缓存机制',url:ORIGIN+'/test_resources/manifest_demo.html'}},

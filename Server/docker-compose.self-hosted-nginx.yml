@@ -1,0 +1,19 @@
+# Alternative production stack for a host that already owns public TLS in
+# Nginx. The Swift service is reachable only from the same machine; Nginx is
+# the sole public HTTPS endpoint.
+services:
+  server:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - server-data:/app/data
+      # Never COPY an APNs provider key into the image. APNS_KEY_PATH in .env
+      # must point at the corresponding read-only in-container path.
+      - ${APNS_KEY_DIRECTORY:-./secrets}:/run/secrets/drel:ro
+    restart: unless-stopped
+
+volumes:
+  server-data:

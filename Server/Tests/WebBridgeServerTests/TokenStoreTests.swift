@@ -17,16 +17,69 @@ struct TokenStoreTests {
         #expect(devices.map(\.deviceToken) == ["token-a"])
     }
 
-    @Test("registering the same token updates instead of duplicating")
-    func sameTokenUpdatesWithoutDuplicate() async throws {
+    @Test("legacy token-keyed persistence normalizes without duplicate delivery")
+    func legacyPersistenceNormalizesRegistrationKey() async throws {
+        let fixture = try TemporaryTokenStoreFixture()
+        let legacy = [
+            "token-a": Self.registration(token: "token-a", key: "legacy-key")
+        ]
+        try JSONEncoder().encode(legacy).write(to: fixture.fileURL)
+
+        let store = TokenStore(fileURL: fixture.fileURL)
+        try await store.register(Self.registration(token: "token-a", key: "legacy-key"))
+
+        #expect(await store.deviceCount() == 1)
+        #expect(await store.getDevices(forKey: "legacy-key").map(\.deviceToken) == ["token-a"])
+    }
+
+    @Test("registering a short successor preserves the legacy key for the same token")
+    func sameTokenCanKeepLegacyAndShortKey() async throws {
         let fixture = try TemporaryTokenStoreFixture()
         let store = TokenStore(fileURL: fixture.fileURL)
         try await store.register(Self.registration(token: "token-a", key: "old-key"))
         try await store.register(Self.registration(token: "token-a", key: "new-key"))
 
-        #expect(await store.deviceCount() == 1)
-        #expect(await store.getDevices(forKey: "old-key").isEmpty)
+        #expect(await store.deviceCount() == 2)
+        #expect(await store.getDevices(forKey: "old-key").map(\.deviceToken) == ["token-a"])
         #expect(await store.getDevices(forKey: "new-key").map(\.deviceToken) == ["token-a"])
+    }
+
+    @Test("registering the same token and key updates in place")
+    func sameTokenAndKeyUpdatesWithoutDuplicate() async throws {
+        let fixture = try TemporaryTokenStoreFixture()
+        let store = TokenStore(fileURL: fixture.fileURL)
+        try await store.register(Self.registration(token: "token-a", key: "key-a"))
+        try await store.register(Self.registration(token: "token-a", key: "key-a"))
+
+        #expect(await store.deviceCount() == 1)
+        #expect(await store.getDevices(forKey: "key-a").map(\.deviceToken) == ["token-a"])
+    }
+
+    @Test("unregister removes only the requested key and token pair")
+    func unregisterRemovesOnlyMatchingRegistration() async throws {
+        let fixture = try TemporaryTokenStoreFixture()
+        let store = TokenStore(fileURL: fixture.fileURL)
+        try await store.register(Self.registration(token: "token-a", key: "old-key"))
+        try await store.register(Self.registration(token: "token-a", key: "new-key"))
+        try await store.register(Self.registration(token: "token-b", key: "old-key"))
+
+        let removed = try await store.unregister(token: "token-a", key: "old-key")
+
+        #expect(removed)
+        #expect(await store.getDevices(forKey: "old-key").map(\.deviceToken) == ["token-b"])
+        #expect(await store.getDevices(forKey: "new-key").map(\.deviceToken) == ["token-a"])
+    }
+
+    @Test("unregister reports a missing pair without changing persistence")
+    func unregisterMissingPairIsIdempotent() async throws {
+        let fixture = try TemporaryTokenStoreFixture()
+        let store = TokenStore(fileURL: fixture.fileURL)
+        try await store.register(Self.registration(token: "token-a", key: "key-a"))
+
+        let removed = try await store.unregister(token: "token-b", key: "key-a")
+
+        #expect(!removed)
+        #expect(await store.deviceCount() == 1)
     }
 
     @Test("corrupt registration file is quarantined instead of silently overwritten")

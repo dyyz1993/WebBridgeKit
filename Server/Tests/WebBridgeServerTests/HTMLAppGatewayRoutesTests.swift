@@ -66,6 +66,95 @@ struct HTMLAppGatewayRoutesTests {
         }
     }
 
+    @Test("Rejects route wildcards unsupported by the iOS client")
+    func rejectsUnsupportedRouteWildcard() async throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let service = makeService(dataDir: directory.path)
+        let invalid = HTMLAppPolicyManifest(
+            schemaVersion: "1",
+            appId: "dev.drel.unsupported-route",
+            name: "Unsupported Route",
+            startURL: "https://drel.app/test/offline/v1/index.html",
+            allowedOrigins: ["https://drel.app"],
+            capabilities: [],
+            routes: ["/test/offline/*"],
+            cache: .init(strategy: .networkOnly, version: "1", persistent: false),
+            signature: nil
+        )
+
+        await #expect(throws: HTTPError.self) {
+            try await service.save(invalid)
+        }
+    }
+
+    @Test("Signs and persists the Web Manifest binding and strong-offline declaration")
+    func signsAndPersistsStrongOfflineBinding() async throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let service = makeService(dataDir: directory.path)
+        let digest = String(repeating: "a", count: 64)
+        let candidate = HTMLAppPolicyManifest(
+            schemaVersion: "1",
+            appId: "dev.drel.offline-demo",
+            name: "Drel Offline Demo",
+            startURL: "https://drel.app/test/offline/v1/index.html",
+            allowedOrigins: ["https://drel.app"],
+            capabilities: [],
+            routes: ["/test/offline/v1/index.html"],
+            cache: .init(strategy: .manifest, version: "1", persistent: true),
+            webManifest: .init(
+                url: "https://drel.app/test/offline/manifest.webmanifest",
+                sha256: digest
+            ),
+            drelOffline: .init(
+                version: "1",
+                resourceManifestURL: "https://drel.app/test/offline/package.json",
+                resourceManifestSHA256: digest
+            ),
+            signature: nil
+        )
+
+        let signed = try await service.save(candidate)
+        #expect(signed.webManifest == candidate.webManifest)
+        #expect(signed.drelOffline == candidate.drelOffline)
+
+        let restored = try await makeService(dataDir: directory.path).get(appID: candidate.appId)
+        #expect(restored.webManifest == candidate.webManifest)
+        #expect(restored.drelOffline == candidate.drelOffline)
+    }
+
+    @Test("Rejects malformed or conflicting strong-offline bindings")
+    func rejectsInvalidStrongOfflineBinding() async throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let service = makeService(dataDir: directory.path)
+        let invalid = HTMLAppPolicyManifest(
+            schemaVersion: "1",
+            appId: "dev.drel.offline-demo",
+            name: "Drel Offline Demo",
+            startURL: "https://drel.app/test/offline/v1/index.html",
+            allowedOrigins: ["https://drel.app"],
+            capabilities: [],
+            routes: ["/test/offline/v1/index.html"],
+            cache: .init(strategy: .manifest, version: "legacy", persistent: true),
+            webManifest: .init(
+                url: "https://drel.app/test/offline/manifest.webmanifest",
+                sha256: "NOT-A-SHA256"
+            ),
+            drelOffline: .init(
+                version: "1",
+                resourceManifestURL: "https://attacker.example/package.json",
+                resourceManifestSHA256: String(repeating: "b", count: 64)
+            ),
+            signature: nil
+        )
+
+        await #expect(throws: HTTPError.self) {
+            try await service.save(invalid)
+        }
+    }
+
     @Test("Ignores invalid persisted manifests and tolerates duplicate app IDs")
     func loadsPersistedManifestsDefensively() async throws {
         let directory = temporaryDirectory()

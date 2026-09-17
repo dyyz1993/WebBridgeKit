@@ -7,6 +7,9 @@ services:
       - .env
     volumes:
       - server-data:/app/data
+      # Keep the APNs .p8 outside the image and repository. Set
+      # APNS_KEY_PATH to its in-container /run/secrets/drel/... path.
+      - ${APNS_KEY_DIRECTORY:-./secrets}:/run/secrets/drel:ro
     restart: unless-stopped
 
 volumes:

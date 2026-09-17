@@ -1,0 +1,19 @@
+[Unit]
+Description=Drel self-hosted direct and encrypted APNs relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=drel
+Group=drel
+EnvironmentFile=/etc/drel-selfhosted/drel-selfhosted.env
+ExecStart=/usr/local/bin/drel-selfhosted
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

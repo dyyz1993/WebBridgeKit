@@ -1,0 +1,11 @@
+{
+	email {$DREL_SELF_HOSTED_ACME_EMAIL}
+}
+
+# Caddy obtains and renews the public TLS certificate. The mobile client
+# rejects HTTP in Release builds, so keep the self-hosted descriptor and its
+# registration paths behind this HTTPS origin.
+{$DREL_SELF_HOSTED_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy server:8080
+}

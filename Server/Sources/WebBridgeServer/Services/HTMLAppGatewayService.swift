@@ -75,6 +75,8 @@ actor HTMLAppGatewayService {
                 capabilities: candidate.capabilities,
                 routes: candidate.routes,
                 cache: candidate.cache,
+                webManifest: candidate.webManifest,
+                drelOffline: candidate.drelOffline,
                 signature: nil
             )
         }
@@ -175,6 +177,8 @@ actor HTMLAppGatewayService {
             capabilities: unsigned.capabilities,
             routes: unsigned.routes,
             cache: unsigned.cache,
+            webManifest: unsigned.webManifest,
+            drelOffline: unsigned.drelOffline,
             signature: .init(
                 algorithm: "ed25519",
                 keyId: keyID,

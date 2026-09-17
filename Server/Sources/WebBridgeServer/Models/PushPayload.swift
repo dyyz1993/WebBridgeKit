@@ -47,13 +47,19 @@ struct PushPayload: Codable, Sendable {
     /// Opaque end-to-end encrypted payload passthrough. The server never
     /// sees the plaintext; the device NSE decrypts with the shared key.
     let ciphertext: String?
+    /// Versioned per-device self-hosted envelope. Unlike `ciphertext`, this
+    /// uses the Drel X25519 envelope contract rather than the legacy shared
+    /// AES-key contract.
+    let drelEnvelope: String?
+    /// Registration-owned source label. The sender cannot choose it.
+    var drelSourceChannel: String?
 
     enum CodingKeys: String, CodingKey {
         case schema, type, title, body, subtitle, category, markdown, sound, badge, icon, image
         case group, url, copy, level, volume, route, mode, display, verificationCode, expiresAt, ttl
         case actionState, contentType, qrPayload, statePath, revision, params, presentation, approval
         case messageID = "messageId"
-        case ciphertext
+        case ciphertext, drelEnvelope, drelSourceChannel
         case threadID = "threadId"
         case isCall = "call"
         case autoCopy
@@ -104,7 +110,9 @@ struct PushPayload: Codable, Sendable {
         presentation: String? = nil,
         approval: ApprovalClientPayload? = nil,
         messageID: String? = nil,
-        ciphertext: String? = nil
+        ciphertext: String? = nil,
+        drelEnvelope: String? = nil,
+        drelSourceChannel: String? = nil
     ) {
         self.schema = schema
         self.type = type
@@ -146,6 +154,8 @@ struct PushPayload: Codable, Sendable {
         self.approval = approval
         self.messageID = messageID
         self.ciphertext = ciphertext
+        self.drelEnvelope = drelEnvelope
+        self.drelSourceChannel = drelSourceChannel
     }
 
     /// Assigns a push id if none exists yet. Reuses the approval identity
@@ -210,6 +220,8 @@ struct PushPayload: Codable, Sendable {
         put("presentation", presentation)
         put("schema", schema)
         put("ciphertext", ciphertext)
+        put("drelEnvelope", drelEnvelope)
+        put("drelSourceChannel", drelSourceChannel)
         return fields
     }
 
@@ -254,7 +266,8 @@ struct PushPayload: Codable, Sendable {
             presentation: presentation,
             approval: approval,
             messageID: messageID,
-            ciphertext: ciphertext
+            ciphertext: ciphertext,
+            drelEnvelope: drelEnvelope
         )
     }
 }
@@ -263,4 +276,9 @@ struct PushResponse: ResponseEncodable, Sendable {
     let code: Int
     let message: String
     let timestamp: Int
+    /// APNs acceptance is the only delivery signal the server can honestly
+    /// report. A registered token is merely an attempted recipient.
+    let attempted: Int
+    let accepted: Int
+    let expired: Int
 }

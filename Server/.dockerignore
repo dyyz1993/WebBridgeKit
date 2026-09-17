@@ -1,0 +1,7 @@
+.build
+.env
+secrets
+data
+node
+examples
+.DS_Store

@@ -114,6 +114,47 @@ struct PushRoutesTests {
         }
     }
 
+    @Test("legacy registration cannot add a self-hosted decrypting recipient")
+    func legacyRegistrationRejectsEncryptionKey() async throws {
+        let app = createApplication()
+        try await app.test(.router) { client in
+            let body = ByteBuffer(string: #"{"deviceToken":"token-a","key":"key-a","encryptionPublicKey":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}"#)
+            try await client.execute(uri: "/register", method: .post, body: body) { response in
+                #expect(response.status == .badRequest)
+            }
+        }
+    }
+
+    @Test("device unregister removes only the exact registration")
+    func unregisterExactRegistration() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("webbridgekit-unregister-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let tokenStore = TokenStore(fileURL: directory.appendingPathComponent("registrations.json"))
+        let services = ServiceRegistry(configuration: ServerConfiguration(), tokenStore: tokenStore)
+        let router = Router()
+        PushRoutes.register(on: router, services: services)
+        let app = Application(router: router)
+
+        try await app.test(.router) { client in
+            let registration = ByteBuffer(string: #"{"deviceToken":"token-a","key":"key-a"}"#)
+            try await client.execute(uri: "/register", method: .post, body: registration) { response in
+                #expect(response.status == .ok)
+            }
+
+            let unregister = ByteBuffer(string: #"{"deviceToken":"token-a","key":"key-a"}"#)
+            try await client.execute(uri: "/unregister", method: .post, body: unregister) { response in
+                #expect(response.status == .ok)
+                let json = try responseJSON(response.body)
+                #expect(json["removed"] as? Bool == true)
+            }
+        }
+
+        #expect(await tokenStore.getDevices(forKey: "key-a").isEmpty)
+    }
+
     @Test("JSON push endpoint")
     func jsonPush() async throws {
         let app = createApplication()
@@ -221,8 +262,44 @@ struct PushRoutesTests {
         #expect(resolved.revision == 18)
     }
 
-    @Test("Critical level promotes aps.sound to the dictionary form with scaled volume")
-    func criticalLevelBuildsDictionarySound() throws {
+    @Test("copy payload registers the Drel notification copy category")
+    func copyPayloadUsesNotificationActionCategory() throws {
+        let payload = PushPayload(
+            title: "Verification",
+            body: "Code 482901",
+            copy: "482901"
+        )
+
+        let apnsPayload = APNsService.makeAPNsPayload(payload)
+        let aps = try #require(apnsPayload["aps"] as? [String: Any])
+
+        #expect(aps["category"] as? String == "DREL_COPY")
+    }
+
+    @Test("replacement IDs become safe APNs collapse identifiers")
+    func replacementIDBecomesCollapseID() {
+        #expect(APNsService.apnsCollapseID("deploy-status-42") == "deploy-status-42")
+        #expect(APNsService.apnsCollapseID(String(repeating: "x", count: 65)) == nil)
+        #expect(APNsService.apnsCollapseID("bad\nvalue") == nil)
+    }
+
+    @Test("recall payload wakes the app to remove delivered notification history")
+    func recallPayloadCarriesBackgroundWake() throws {
+        let payload = PushPayload(
+            title: "Recall",
+            body: "Recall previous alert",
+            replacementID: "deploy-status-42",
+            isDeleted: true
+        )
+
+        let apnsPayload = APNsService.makeAPNsPayload(payload)
+        let aps = try #require(apnsPayload["aps"] as? [String: Any])
+
+        #expect(aps["content-available"] as? Int == 1)
+    }
+
+    @Test("Unsupported critical level safely degrades to time-sensitive delivery")
+    func criticalLevelDegradesToTimeSensitive() throws {
         let critical = PushPayload(
             title: "Critical",
             body: "Something happened",
@@ -232,28 +309,8 @@ struct PushRoutesTests {
         )
         let apns = APNsService.makeAPNsPayload(critical)
         let aps = try #require(apns["aps"] as? [String: Any])
-        let sound = try #require(aps["sound"] as? [String: Any])
-        #expect(sound["critical"] as? Int == 1)
-        #expect(sound["name"] as? String == "alarm")
-        #expect(sound["volume"] as? Double == 0.5)
-    }
-
-    @Test("Critical dictionary sound defaults and clamps Bark volume")
-    func criticalDictionarySoundDefaultsAndClampsVolume() throws {
-        let noVolume = APNsService.makeAPNsPayload(PushPayload(
-            title: "Critical", body: "No volume", level: "critical"
-        ))
-        let noVolumeAps = try #require(noVolume["aps"] as? [String: Any])
-        let defaultSound = try #require(noVolumeAps["sound"] as? [String: Any])
-        #expect(defaultSound["name"] as? String == "default")
-        #expect(defaultSound["volume"] as? Double == 0.5)
-
-        let loud = APNsService.makeAPNsPayload(PushPayload(
-            title: "Critical", body: "Too loud", level: "critical", volume: 15
-        ))
-        let loudAps = try #require(loud["aps"] as? [String: Any])
-        let loudSound = try #require(loudAps["sound"] as? [String: Any])
-        #expect(loudSound["volume"] as? Double == 1.0)
+        #expect(aps["interruption-level"] as? String == "time-sensitive")
+        #expect(aps["sound"] as? String == "alarm")
     }
 
     @Test("Non-critical levels keep the plain string sound")

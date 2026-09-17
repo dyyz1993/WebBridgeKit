@@ -1,0 +1,43 @@
+# Dependency-free alternative for the portable Go relay. It intentionally
+# binds only to localhost; put it behind a Cloudflare Tunnel or an existing
+# TLS proxy. Build the binary first with tools/build-drel-selfhosted-native.sh.
+services:
+  relay:
+    build:
+      context: ./native
+      dockerfile: Dockerfile
+    image: drel-selfhosted-native:local
+    environment:
+      DREL_LISTEN_ADDR: 0.0.0.0:8080
+      DREL_DATA_DIR: /var/lib/drel-selfhosted
+      DREL_SELF_HOSTED_NAME: ${DREL_SELF_HOSTED_NAME:-Drel Self-hosted Push}
+      DREL_SELF_HOSTED_PUBLIC_BASE_URL: ${DREL_SELF_HOSTED_PUBLIC_BASE_URL:?set the final HTTPS public URL}
+      APNS_ENVIRONMENT: ${APNS_ENVIRONMENT:-production}
+      APNS_TOPIC: ${APNS_TOPIC:-com.webbridgekit.superapp}
+      APNS_KEY_ID: ${APNS_KEY_ID:?set the APNs key id}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:?set the Apple team id}
+      # The host path stays outside the image. It is mounted to one fixed
+      # in-container location so the Go service never needs a host pathname.
+      APNS_KEY_PATH: /run/secrets/drel/apns-provider-key.p8
+      # A scratch image has no CA bundle. Mount the host's trusted bundle at
+      # this fixed path so Go can validate Apple's TLS certificate.
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+    volumes:
+      - drel-native-data:/var/lib/drel-selfhosted
+      - ${DREL_APNS_KEY_HOST_PATH:?set the host path to the private .p8}:/run/secrets/drel/apns-provider-key.p8:ro
+      - ${DREL_CA_CERTIFICATES_HOST_PATH:?set the host CA bundle path}:/etc/ssl/certs/ca-certificates.crt:ro
+    ports:
+      - "127.0.0.1:${DREL_NATIVE_HOST_PORT:-8080}:8080"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # The mounted `.p8` stays mode 0640 root:drel on the host. Supply that
+    # host group's numeric GID here rather than weakening the key's mode.
+    group_add:
+      - ${DREL_APNS_KEY_GID:?set the numeric group id that can read the .p8}
+    restart: unless-stopped
+
+volumes:
+  drel-native-data:

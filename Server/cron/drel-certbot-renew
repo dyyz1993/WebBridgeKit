@@ -1,0 +1,4 @@
+# Drel self-hosted TLS renewal. Install as /etc/cron.d/drel-certbot-renew on
+# the public Nginx host. Certbot's deploy hook runs only when a certificate was
+# actually renewed, so Nginx is not needlessly reloaded every day.
+17 3 * * * root /usr/bin/certbot renew --quiet --cert-name push.drel.app --deploy-hook '/usr/bin/systemctl reload nginx'
