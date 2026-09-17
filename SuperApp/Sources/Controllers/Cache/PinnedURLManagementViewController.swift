@@ -96,6 +96,15 @@ class PinnedURLManagementViewController: BaseViewController<PinnedURLViewModel> 
         setupNavigation()
     }
 
+    // Same CALayer CGColor constraint as InboxMessageCellWrapper.
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        addFromPresetButton.layer.borderColor = ThemeTokens.Color.primary
+            .resolvedColor(with: traitCollection)
+            .cgColor
+    }
+
     override func bindViewModel() {
         dataSource = RxTableViewSectionedReloadDataSource<PinnedURLViewModel.PinnedURLSection>(
             configureCell: { _, tableView, indexPath, item in

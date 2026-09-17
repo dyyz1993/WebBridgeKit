@@ -71,6 +71,19 @@ class InboxMessageCellWrapper: UITableViewCell {
         }
     }
 
+    // CALayer borderColor holds the CGColor resolved at assignment and never
+    // re-resolves a dynamic token color: without this, cells created under the
+    // previous theme keep dark-mode separator borders after an in-session
+    // switch to light, so the list renders with a mix of bordered and
+    // borderless cards.
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        cardView.layer.borderColor = ThemeTokens.Color.separator
+            .resolvedColor(with: traitCollection)
+            .cgColor
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         iconContainer.layer.cornerRadius = iconContainer.bounds.height / 2
@@ -227,6 +240,11 @@ class InboxMessageCellWrapper: UITableViewCell {
         accessibilityIdentifier = "notification.card.\(message.id)"
         cardView.accessibilityIdentifier = "notification.card.\(message.id).content"
         cardView.backgroundColor = ThemeTokens.Color.surface
+        // Queued cells sit outside the window and miss the trait-change
+        // callback, so dequeued instances must re-resolve the border too.
+        cardView.layer.borderColor = ThemeTokens.Color.separator
+            .resolvedColor(with: traitCollection)
+            .cgColor
         unreadAccent.isHidden = true
 
         iconContainer.backgroundColor = presentation.tintColor.withAlphaComponent(0.12)

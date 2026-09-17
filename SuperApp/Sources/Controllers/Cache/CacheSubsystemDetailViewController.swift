@@ -38,6 +38,11 @@ class CacheSubsystemDetailViewController: UIViewController {
         ]
     }
 
+    /// Action buttons built in setupUI; retained so trait changes can
+    /// re-resolve their layer border colors (CGColor never tracks a dynamic
+    /// token color across theme switches).
+    private var actionBarButtons: [UIButton] = []
+
     var extraDataRows: [(label: String, value: String)] { [] }
 
     init(subsystemID: SubsystemID) {
@@ -54,6 +59,16 @@ class CacheSubsystemDetailViewController: UIViewController {
 
         setupUI()
         refreshStats()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        for btn in actionBarButtons {
+            btn.layer.borderColor = ThemeTokens.Color.border
+                .resolvedColor(with: traitCollection)
+                .cgColor
+        }
     }
 
     private func setupUI() {
@@ -88,6 +103,7 @@ class CacheSubsystemDetailViewController: UIViewController {
                 btn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
                 btn.rx.tap.subscribe(onNext: { _ in action.action() }).disposed(by: disposeBag)
                 actionBar.addArrangedSubview(btn)
+                actionBarButtons.append(btn)
             }
 
             let container = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 52))

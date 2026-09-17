@@ -168,6 +168,15 @@ class AboutViewController: UIViewController {
         loadAppInfo()
     }
 
+    // Same CALayer CGColor constraint as InboxMessageCellWrapper.
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        appIconImageView.layer.borderColor = ThemeTokens.Color.separator
+            .resolvedColor(with: traitCollection)
+            .cgColor
+    }
+
     // MARK: - Setup UI
 
     private func setupUI() {

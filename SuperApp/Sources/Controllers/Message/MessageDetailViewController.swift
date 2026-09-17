@@ -259,6 +259,19 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         return button
     }
 
+    // Same CALayer CGColor constraint as InboxMessageCellWrapper: the pill
+    // borders must re-resolve on theme switches or they keep the previous
+    // theme's color for the life of the view.
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        for pill in [prevIndicator, nextIndicator] {
+            pill.layer.borderColor = ThemeTokens.Color.separator
+                .resolvedColor(with: traitCollection)
+                .cgColor
+        }
+    }
+
     /// Red dot moves inline into the next pill's title when the next message
     /// is unread, instead of floating at the screen edge.
     private func refreshNextIndicatorTitle(hasUnreadNext: Bool) {

@@ -411,6 +411,47 @@ final class ModuleAvailabilityTests: XCTestCase {
         goBack()
     }
 
+    /// Regression for the light-theme "black card borders" defect: inbox cells
+    /// created under dark kept their resolved separator CGColor after an
+    /// in-session switch to light. The proof is visual — screenshots land in
+    /// /tmp for inspection; assertions only guard the navigation.
+    func testThemeSwitchLeavesNoStaleInboxCardBorders() {
+        // Build the inbox cell population under dark mode.
+        assertTab("tab.settings", opens: "SettingsViewController")
+        tapElement("settings.cell.appearance")
+        assertExists("appearance.modePicker")
+        tapLabeledControl("深色")
+        goBack()
+        assertTab("tab.notifications", opens: "InboxViewController")
+        RunLoop.current.run(until: Date().addingTimeInterval(1.5))
+        saveBorderProofShot("step1-dark-inbox")
+
+        // Switch to light in the same session and return to the inbox: every
+        // card must re-resolve its border (no dark outlines on white cards).
+        assertTab("tab.settings", opens: "SettingsViewController")
+        tapElement("settings.cell.appearance")
+        assertExists("appearance.modePicker")
+        tapLabeledControl("浅色")
+        goBack()
+        assertTab("tab.notifications", opens: "InboxViewController")
+        RunLoop.current.run(until: Date().addingTimeInterval(1.5))
+        saveBorderProofShot("step2-light-inbox")
+
+        // Force fresh cell allocations below the fold, then scroll back.
+        app.swipeUp()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+        app.swipeDown()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+        saveBorderProofShot("step3-light-rescrolled")
+    }
+
+    private func saveBorderProofShot(_ name: String) {
+        let shot = XCUIScreen.main.screenshot()
+        if let data = shot.image.pngData() {
+            try? data.write(to: URL(fileURLWithPath: "/tmp/drel-border-\(name).png"))
+        }
+    }
+
     func testDefaultStartupAppCanSelectTrustedApp() {
         app.terminate()
         app.launchArguments = [

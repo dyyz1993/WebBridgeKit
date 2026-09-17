@@ -89,6 +89,15 @@ class MainViewController: BaseViewController<MainViewModel> {
         WebCacheManager.shared.performAutoCleanup()
     }
 
+    // Same CALayer CGColor constraint as InboxMessageCellWrapper.
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        storageInfoButton.layer.borderColor = ThemeTokens.Color.border
+            .resolvedColor(with: traitCollection)
+            .cgColor
+    }
+
     private func setupNavigationBar() {
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.largeTitleDisplayMode = .never
