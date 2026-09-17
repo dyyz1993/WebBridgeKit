@@ -100,7 +100,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
 
     private let baseURL: String = {
         ServerConfigManager.shared.getActiveBaseURL()
-            ?? "https://wbk.shanbox.19930810.xyz:8443"
+            ?? "https://api.drel.app"
     }()
 
     private override init() { super.init() }
@@ -117,7 +117,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         dataTask?.resume()
         isConnected = true
         reconnectAttempts = 0
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRelay] SSE connecting: \(url)")
         #endif
     }
@@ -127,7 +127,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         dataTask?.cancel(); dataTask = nil
         session?.invalidateAndCancel(); session = nil
         isConnected = false; buffer = ""
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRelay] Disconnected")
         #endif
     }
@@ -135,7 +135,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
     // MARK: - URLSessionDataDelegate
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRelay] SSE connected, status: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
         #endif
         completionHandler(.allow)
@@ -152,7 +152,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         if let error = error { print("[PushRelay] Stream ended: \(error.localizedDescription)") }
         #endif
         scheduleReconnect()
@@ -167,7 +167,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
             guard let data = jsonStr.data(using: .utf8) else { continue }
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let type = json["type"] as? String else { continue }
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             if type == "connected" { print("[PushRelay] SSE connected"); continue }
             #endif
             guard type == "push", let pushData = json["data"] as? [String: Any] else { continue }
@@ -263,7 +263,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
                     finalContent.attachments = [att]
                 }
             } catch {
-                #if DEBUG
+                #if !DREL_CONTAINER_ONLY
                 print("[PushRelay] Icon attach failed: \(error)")
                 #endif
             }
@@ -274,11 +274,11 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         let req = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(req) { err in
             if let err = err {
-                #if DEBUG
+                #if !DREL_CONTAINER_ONLY
                 print("[PushRelay] Failed: \(err)")
                 #endif
             } else {
-                #if DEBUG
+                #if !DREL_CONTAINER_ONLY
                 print("[PushRelay] [OK] Shown: \(content.title)")
                 #endif
             }
@@ -289,7 +289,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
 
     private func scheduleReconnect() {
         guard reconnectAttempts < maxReconnectAttempts else {
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             print("[PushRelay] Max reconnect reached")
             #endif
             disconnect(); return
@@ -301,7 +301,7 @@ final class PushRelayManager: NSObject, URLSessionDataDelegate {
         reconnectTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
             self?.disconnect(); self?.connect()
         }
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRelay] Reconnecting in \(delay)s (attempt \(reconnectAttempts))")
         #endif
     }

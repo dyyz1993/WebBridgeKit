@@ -40,16 +40,16 @@ class APIKeyExampleViewModel: ViewModel {
     private let examplesRelay = BehaviorRelay<[CodeExample]>(value: [])
     private let copySuccessRelay = PublishRelay<Void>()
     private let copiedCodeRelay = PublishRelay<String>()
-    private static let serverBaseURL = "https://wbk.shanbox.19930810.xyz:8443"
+    private static let serverBaseURL = "https://api.drel.app"
 
     private let exampleData: [CodeExample] = [
         CodeExample(
             title: "Bark 推送请求",
             language: "URL",
             code: """
-            https://wbk.shanbox.19930810.xyz:8443/YOUR_KEY_HERE/推送标题/推送内容?group=WebBridgeKit&sound=birdsong
+            https://api.drel.app/YOUR_KEY_HERE/推送标题/推送内容?group=Drel&sound=birdsong
             """,
-            description: "使用 WebBridgeKit Bark 兼容 API 发送推送通知，支持自定义分组和铃声"
+            description: "使用 Drel 的 Bark 兼容 API 发送推送通知，支持自定义分组和铃声"
         ),
         CodeExample(
             title: "Swift 请求",

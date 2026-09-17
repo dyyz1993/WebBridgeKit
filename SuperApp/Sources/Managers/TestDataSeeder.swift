@@ -2,6 +2,7 @@ import Foundation
 import RealmSwift
 import WebBridgeKit
 
+#if !DREL_CONTAINER_ONLY
 struct TestDataSeeder {
 
     private static let seededKey = "TestDataSeeder_Sealed"
@@ -91,7 +92,7 @@ struct TestDataSeeder {
                 let prodConfig = ServerConfig()
                 prodConfig.id = "prod-server"
                 prodConfig.serverType = "custom"
-                prodConfig.baseURL = "https://wbk.shanbox.19930810.xyz:8443"
+                prodConfig.baseURL = "https://api.drel.app"
                 prodConfig.apiEndpoint = "/v1/push"
                 prodConfig.isActive = true
                 prodConfig.updatedAt = date("2026-05-09T12:00:00Z")
@@ -100,7 +101,7 @@ struct TestDataSeeder {
                 let barkConfig = ServerConfig()
                 barkConfig.id = "bark-server"
                 barkConfig.serverType = "custom"
-                barkConfig.baseURL = "https://wbk.shanbox.19930810.xyz:8443"
+                barkConfig.baseURL = "https://api.drel.app"
                 barkConfig.apiEndpoint = nil
                 barkConfig.isActive = true
                 barkConfig.updatedAt = date("2026-05-09T12:00:00Z")
@@ -109,7 +110,7 @@ struct TestDataSeeder {
                 let inactiveConfig = ServerConfig()
                 inactiveConfig.id = "inactive-custom-014"
                 inactiveConfig.serverType = "custom"
-                inactiveConfig.baseURL = "https://wbk.shanbox.19930810.xyz:8443"
+                inactiveConfig.baseURL = "https://api.drel.app"
                 inactiveConfig.apiEndpoint = "/v1/push"
                 inactiveConfig.isActive = false
                 inactiveConfig.updatedAt = date("2026-04-20T08:00:00Z")
@@ -139,7 +140,7 @@ struct TestDataSeeder {
             try realm.write {
                 let perm = AccessToken()
                 perm.id = "token-perm-001"
-                perm.url = "https://wbk.shanbox.19930810.xyz:8443"
+                perm.url = "https://api.drel.app"
                 perm.token = "ABC123XYZ"
                 perm.title = "我的永久口令"
                 perm.validDuration = -1
@@ -172,7 +173,7 @@ struct TestDataSeeder {
 
                 let week = AccessToken()
                 week.id = "token-7day-004"
-                week.url = "https://wbk.shanbox.19930810.xyz:8443"
+                week.url = "https://api.drel.app"
                 week.token = "WeekTokn"
                 week.title = "周卡口令"
                 week.validDuration = 604800
@@ -202,7 +203,7 @@ struct TestDataSeeder {
 
     // MARK: - Favorites
 
-    private static let baseURL = "https://wbk.shanbox.19930810.xyz:8443"
+    private static let baseURL = "https://api.drel.app"
     private static let staticBaseURL = "https://ae8fcb.shanbox.19930810.xyz:8443"
 
     private static func seedFavorites() {
@@ -284,7 +285,7 @@ struct TestDataSeeder {
                     ("hist-weather-001", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html", "Bridge 交互测试", true, 184320, true, true, 35, nil, nil, false, 3600),
                     ("hist-shop-002", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-media.html", "Bridge 媒体测试", true, 1155072, true, true, 28, nil, nil, false, 5400),
                     ("hist-notes-003", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-device.html", "Bridge 设备测试", true, 92160, false, true, 42, nil, nil, false, 7200),
-                    ("hist-admin-004", "https://wbk.shanbox.19930810.xyz:8443/admin", "管理后台", true, 163840, true, true, 15, nil, nil, false, 10800),
+                    ("hist-admin-004", "https://api.drel.app/admin", "管理后台", true, 163840, true, true, 15, nil, nil, false, 10800),
                     ("hist-news-005", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-permission.html", "Bridge 权限测试", true, 40960, false, false, 30, nil, nil, false, 86400),
                     ("hist-dashboard-006", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "引擎总览", true, 2179072, false, true, 22, nil, nil, false, 14400),
                     ("hist-docs-007", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "Bridge 缓存测试", true, 204800, false, true, 45, nil, nil, false, 21600),
@@ -402,7 +403,7 @@ struct TestDataSeeder {
                 id: "rule-glob-002",
                 name: "缓存所有 JS/CSS",
                 type: .glob,
-                pattern: "https://wbk.shanbox.19930810.xyz:8443/**/*.{js,css}",
+                pattern: "https://api.drel.app/**/*.{js,css}",
                 resourceType: .staticResource,
                 isEnabled: true,
                 priority: 20
@@ -420,7 +421,7 @@ struct TestDataSeeder {
                 id: "rule-exact-004",
                 name: "首页精确缓存",
                 type: .exact,
-                pattern: "https://wbk.shanbox.19930810.xyz:8443/index.html",
+                pattern: "https://api.drel.app/index.html",
                 resourceType: .staticResource,
                 isEnabled: true,
                 priority: 15
@@ -484,7 +485,7 @@ struct TestDataSeeder {
             [
                 "id": "cmd-json-004",
                 "type": "json",
-                "data": "{\"action\":\"navigate\",\"url\":\"https://wbk.shanbox.19930810.xyz:8443/admin\",\"params\":{\"tab\":\"overview\"}}",
+                "data": "{\"action\":\"navigate\",\"url\":\"https://api.drel.app/admin\",\"params\":{\"tab\":\"overview\"}}",
                 "format": "plainText",
                 "signature": "sig_json_s7t8u9v0w1x",
                 "createdAt": now,
@@ -536,8 +537,8 @@ struct TestDataSeeder {
                 id: "custom-multi-004",
                 name: "多模式自定义规则",
                 includePatterns: [
-                    "https://wbk.shanbox.19930810.xyz:8443/**/*.{html,css,js}",
-                    "https://wbk.shanbox.19930810.xyz:8443/v1/static/**"
+                    "https://api.drel.app/**/*.{html,css,js}",
+                    "https://api.drel.app/v1/static/**"
                 ],
                 excludePatterns: ["**/admin/**", "**/login*"],
                 isEnabled: true,
@@ -547,7 +548,7 @@ struct TestDataSeeder {
             PageCacheRule(
                 id: "custom-disabled-005",
                 name: "已禁用的测试规则",
-                includePatterns: ["https://wbk.shanbox.19930810.xyz:8443/**"],
+                includePatterns: ["https://api.drel.app/**"],
                 excludePatterns: [],
                 isEnabled: false,
                 createdAt: date("2026-04-15T08:00:00Z")
@@ -582,3 +583,4 @@ struct TestDataSeeder {
         }
     }
 }
+#endif

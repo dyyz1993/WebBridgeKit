@@ -70,7 +70,7 @@ class AboutViewController: UIViewController {
         label.font = ThemeTokens.Typography.caption2
         label.textColor = ThemeTokens.Color.textSecondary
         label.numberOfLines = 0
-        label.text = "WebBridgeKit © 2025"
+        label.text = "Drel · Built with WebBridgeKit © 2026"
         return label
     }()
 
@@ -81,6 +81,7 @@ class AboutViewController: UIViewController {
         case introduction
         case features
         case license
+        case legal
         case feedback
 
         var title: String? {
@@ -88,6 +89,7 @@ class AboutViewController: UIViewController {
             case .introduction: return L10n.tr("about.section.introduction")
             case .features: return L10n.tr("about.section.features")
             case .license: return L10n.tr("about.section.license")
+            case .legal: return L10n.tr("about.section.legal")
             case .feedback: return L10n.tr("about.section.feedback")
             }
         }
@@ -100,6 +102,8 @@ class AboutViewController: UIViewController {
                 return "features"
             case .license:
                 return "license"
+            case .legal:
+                return "legal"
             case .feedback:
                 return "feedback"
             }
@@ -110,9 +114,19 @@ class AboutViewController: UIViewController {
             case .introduction:
                 return [L10n.tr("about.introduction")]
             case .features:
+                #if DREL_CONTAINER_ONLY
+                return [
+                    L10n.tr("about.feature.push"),
+                    L10n.tr("about.feature.inbox"),
+                    L10n.tr("about.feature.secure_route")
+                ]
+                #else
                 return [L10n.tr("about.feature.cache"), L10n.tr("about.feature.favorite"), L10n.tr("about.feature.token"), L10n.tr("about.feature.api_key")]
+                #endif
             case .license:
                 return [L10n.tr("about.third_party_licenses")]
+            case .legal:
+                return [L10n.tr("about.privacy_policy")]
             case .feedback:
                 return [L10n.tr("about.feedback.github"), L10n.tr("about.feedback.email")]
             }
@@ -209,7 +223,7 @@ class AboutViewController: UIViewController {
             appIconImageView.image = appIcon
         } else {
             // 如果无法获取 AppIcon，使用正式品牌标记
-            appIconImageView.image = WebBridgeKitBrand.image
+            appIconImageView.image = DrelBrand.image
             if appIconImageView.image == nil {
                 appIconImageView.image = LucideIcon.appFill.templateImage(pointSize: 60, weight: .light)
                 appIconImageView.tintColor = ThemeTokens.Color.primary
@@ -254,17 +268,22 @@ class AboutViewController: UIViewController {
     }
 
     private func openGitHubIssues() {
-        let githubURL = "https://github.com/yourusername/WebBridgeKit/issues"
+        let githubURL = "https://github.com/dyyz1993/WebBridgeKit/issues"
         if let url = URL(string: githubURL) {
             UIApplication.shared.open(url)
         }
     }
 
     private func openEmail() {
-        let email = "support@webbridgekit.com"
+        let email = "support@drel.app"
         if let url = URL(string: "mailto:\(email)") {
             UIApplication.shared.open(url)
         }
+    }
+
+    private func openPrivacyPolicy() {
+        guard let url = URL(string: "https://drel.app/privacy/") else { return }
+        UIApplication.shared.open(url)
     }
 }
 
@@ -304,6 +323,10 @@ extension AboutViewController: UITableViewDataSource {
             content.textProperties.color = ThemeTokens.Color.primary
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
+        case .legal:
+            content.textProperties.color = ThemeTokens.Color.primary
+            cell.accessoryType = .disclosureIndicator
+            cell.selectionStyle = .default
         case .feedback:
             content.textProperties.color = ThemeTokens.Color.primary
             cell.accessoryType = .disclosureIndicator
@@ -335,6 +358,8 @@ extension AboutViewController: UITableViewDelegate {
             let vc = ThirdPartyLicensesViewController()
             vc.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(vc, animated: true)
+        case .legal:
+            openPrivacyPolicy()
         case .feedback:
             if indexPath.row == 0 {
                 openGitHubIssues()
@@ -392,12 +417,12 @@ extension Bundle {
         }
 
         // 尝试从 Assets.xcassets 加载 AppIcon
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         if let icon = UIImage(named: "AppIcon60x60") {
             return icon
         }
         #endif
 
-        return UIImage(named: "AppIcon") ?? WebBridgeKitBrand.image
+        return UIImage(named: "AppIcon") ?? DrelBrand.image
     }
 }

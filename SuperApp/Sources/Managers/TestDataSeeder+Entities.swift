@@ -9,6 +9,7 @@ import Foundation
 import RealmSwift
 import WebBridgeKit
 
+#if !DREL_CONTAINER_ONLY
 extension TestDataSeeder {
 
     // MARK: - Cache Entries
@@ -49,10 +50,10 @@ extension TestDataSeeder {
                     ("docs_theme_css", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "text/css", 40960, 12288, "/cache/docs/theme.css"),
                     ("docs_search_js", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "application/javascript", 61440, 20480, "/cache/docs/search.js"),
                     ("docs_nav_js", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-cache.html", "application/javascript", 32768, 10240, "/cache/docs/navigation.js"),
-                    ("admin_index_html", "https://wbk.shanbox.19930810.xyz:8443/admin", "text/html", 20480, 6144, "/cache/admin/index.html"),
-                    ("admin_app_css", "https://wbk.shanbox.19930810.xyz:8443/admin", "text/css", 40960, 14336, "/cache/admin/app.css"),
-                    ("admin_app_js", "https://wbk.shanbox.19930810.xyz:8443/admin", "application/javascript", 81920, 30720, "/cache/admin/app.js"),
-                    ("admin_charts_js", "https://wbk.shanbox.19930810.xyz:8443/admin", "application/javascript", 57344, 20480, "/cache/admin/charts.js"),
+                    ("admin_index_html", "https://api.drel.app/admin", "text/html", 20480, 6144, "/cache/admin/index.html"),
+                    ("admin_app_css", "https://api.drel.app/admin", "text/css", 40960, 14336, "/cache/admin/app.css"),
+                    ("admin_app_js", "https://api.drel.app/admin", "application/javascript", 81920, 30720, "/cache/admin/app.js"),
+                    ("admin_charts_js", "https://api.drel.app/admin", "application/javascript", 57344, 20480, "/cache/admin/charts.js"),
                     ("dashboard_index_html", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "text/html", 28672, 8192, "/cache/dashboard/index.html"),
                     ("dashboard_app_js", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "application/javascript", 184320, 61440, "/cache/dashboard/app.js"),
                     ("dashboard_chart_js", "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/engine-dashboard.html", "application/javascript", 102400, 30720, "/cache/dashboard/chart.js"),
@@ -147,7 +148,7 @@ extension TestDataSeeder {
                     badge: 1,
                     group: "server-alerts",
                     threadId: "server-prod-01",
-                    targetURL: "https://wbk.shanbox.19930810.xyz:8443/admin",
+                    targetURL: "https://api.drel.app/admin",
                     userInfo: ["server": "prod-01", "metric": "cpu", "threshold": "90"],
                     createdAt: hour2Ago
                 ),
@@ -355,13 +356,41 @@ extension TestDataSeeder {
                 receivedAt: day3Ago.addingTimeInterval(-1800),
                 bodyType: "markdown"
             ),
+            // Bare URLs in a paragraph and inside a code block: exercises the
+            // renderer's bare-URL autolinking and the detail's long-press
+            // open-link menu (no explicit markdown link syntax at all).
+            StoredMessage(
+                id: "stored-markdown-links-013",
+                payload: MessagePayload(
+                    id: "msg-markdown-links-013",
+                    title: "部署手册更新",
+                    body: "裸链接与代码块链接长按可打开",
+                    markdown: """
+                    部署指引见 https://example.com/deploy-guide，紧急回滚入口：
+
+                    ```bash
+                    open https://example.com/rollback-runbook
+                    ```
+                    """,
+                    subtitle: "Docs",
+                    channel: "bridge",
+                    category: "task",
+                    priority: .normal,
+                    group: "agent-tasks",
+                    userInfo: ["doc": "deploy"],
+                    createdAt: hour2Ago
+                ),
+                isRead: false,
+                receivedAt: hour2Ago,
+                bodyType: "markdown"
+            ),
             StoredMessage(
                 id: "stored-verification-012",
                 payload: MessagePayload(
                     id: "msg-verification-012",
                     title: "登录验证码",
                     body: "验证码 482 901，5 分钟内有效。请勿泄露给他人。",
-                    subtitle: "WebBridgeKit",
+                    subtitle: "Drel",
                     channel: "system",
                     category: "verification",
                     priority: .high,
@@ -380,7 +409,7 @@ extension TestDataSeeder {
                     id: "msg-qr-015",
                     title: "桌面端登录二维码",
                     body: "请使用已登录设备扫码确认，本二维码 10 分钟内有效。",
-                    subtitle: "WebBridgeKit",
+                    subtitle: "Drel",
                     channel: "system",
                     category: "login",
                     priority: .normal,
@@ -418,7 +447,7 @@ extension TestDataSeeder {
                     id: "msg-image-failure-018",
                     title: "图片加载失败示例",
                     body: "即使远端图片不可用，通知正文和其他操作仍然可以正常使用。",
-                    subtitle: "WebBridgeKit",
+                    subtitle: "Drel",
                     channel: "system",
                     category: "design",
                     priority: .low,
@@ -508,7 +537,7 @@ extension TestDataSeeder {
                     targetAppId: "com.webbridgekit.fixture.agent-console",
                     route: "/test_resources/pwa-agent-console/approval.html",
                     targetMode: "modal",
-                    imageURL: "https://cloak.xbrowser.dev:5801/fixtures/pwa-agent-console/icon-192.png",
+                    imageURL: "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/logo.png",
                     interruptionLevel: .timeSensitive,
                     soundVolume: 8,
                     copyText: "approval-42",
@@ -531,7 +560,7 @@ extension TestDataSeeder {
                 payload: MessagePayload(
                     id: "msg-sys-update",
                     title: "版本更新",
-                    body: "WebBridgeKit v2.6.0 已发布，新增深色模式支持",
+                    body: "Drel v1.0 已发布，新增深色模式支持",
                     channel: "system",
                     category: "update",
                     priority: .low,
@@ -573,7 +602,7 @@ extension TestDataSeeder {
                 version: "2.1.0",
                 appid: "weather-app",
                 name: "北京天气",
-                icon: "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
+                icon: "https://api.drel.app/favicon.ico",
                 isPinned: true,
                 lastAccessed: Date()
             )),
@@ -590,7 +619,7 @@ extension TestDataSeeder {
                 version: "3.8.1",
                 appid: "shop-mall-app",
                 name: "优购商城",
-                icon: "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
+                icon: "https://api.drel.app/favicon.ico",
                 lastAccessed: Date().addingTimeInterval(-7200)
             )),
             ("game-tetris", Manifest(
@@ -618,7 +647,7 @@ extension TestDataSeeder {
                 lastAccessed: Date().addingTimeInterval(-259200)
             )),
             ("admin-dashboard", Manifest(
-                resources: ["index.html": "https://wbk.shanbox.19930810.xyz:8443/admin"],
+                resources: ["index.html": "https://api.drel.app/admin"],
                 version: "2.0.1",
                 appid: "admin-panel",
                 name: "管理后台",
@@ -630,7 +659,7 @@ extension TestDataSeeder {
                 version: "1.3.7",
                 appid: "analytics-app",
                 name: "数据分析",
-                icon: "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
+                icon: "https://api.drel.app/favicon.ico",
                 lastAccessed: Date().addingTimeInterval(-604800)
             ))
         ]
@@ -644,3 +673,4 @@ extension TestDataSeeder {
 
     }
 }
+#endif

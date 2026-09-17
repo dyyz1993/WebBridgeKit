@@ -31,7 +31,7 @@ struct CacheDashboardView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { viewModel.refresh() }, label: {
-                    Image(systemName: "arrow.clockwise")
+                    Image(uiImage: LucideIcon.refresh.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
                         .foregroundColor(Color.appPrimary)
                 })
                 .accessibilityLabel("刷新缓存数据")
@@ -54,8 +54,10 @@ struct CacheDashboardView: View {
 
     private func errorView(_ message: String) -> some View {
         VStack(spacing: ThemeTokens.Spacing.lg) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 52, weight: .medium))
+            Image(uiImage: LucideIcon.warning.templateImage(pointSize: ThemeTokens.Icons.Sizes.empty) ?? UIImage())
+                .resizable()
+                .scaledToFit()
+                .frame(width: ThemeTokens.Icons.Sizes.empty, height: ThemeTokens.Icons.Sizes.empty)
                 .foregroundColor(Color.appError)
             Text("加载失败")
                 .font(Font(ThemeTokens.Typography.sectionTitle))
@@ -69,7 +71,7 @@ struct CacheDashboardView: View {
                 .minimumScaleFactor(0.7)
             Button(action: { viewModel.refresh() }, label: {
                 HStack(spacing: ThemeTokens.Spacing.sm) {
-                    Image(systemName: "arrow.clockwise")
+                    Image(uiImage: LucideIcon.refresh.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm) ?? UIImage())
                     Text("重试")
                 }
                 .font(Font(ThemeTokens.Typography.subheadline))
@@ -89,8 +91,10 @@ struct CacheDashboardView: View {
     private var emptyStateView: some View {
         VStack(spacing: ThemeTokens.Spacing.md) {
             Spacer()
-            Image(systemName: "internaldrive")
-                .font(.system(size: 60, weight: .light))
+            Image(uiImage: LucideIcon.hardDrive.templateImage(pointSize: ThemeTokens.Icons.Sizes.empty) ?? UIImage())
+                .resizable()
+                .scaledToFit()
+                .frame(width: ThemeTokens.Icons.Sizes.empty, height: ThemeTokens.Icons.Sizes.empty)
                 .foregroundColor(Color.appTextTertiary)
                 .padding(.bottom, ThemeTokens.Spacing.sm)
             Text("暂无缓存数据")
@@ -103,7 +107,7 @@ struct CacheDashboardView: View {
                 .padding(.horizontal, ThemeTokens.Spacing.xl)
             Button(action: { viewModel.refresh() }, label: {
                 HStack(spacing: ThemeTokens.Spacing.xs) {
-                    Image(systemName: "arrow.clockwise")
+                    Image(uiImage: LucideIcon.refresh.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm) ?? UIImage())
                     Text("刷新")
                 }
                 .font(Font(ThemeTokens.Typography.subheadline))
@@ -143,10 +147,10 @@ struct CacheDashboardView: View {
         Section {
             VStack(alignment: .leading, spacing: ThemeTokens.Spacing.md) {
                 HStack(spacing: ThemeTokens.Spacing.sm) {
-                    metricCard(icon: "internaldrive", label: "总缓存", value: viewModel.summaryValues.totalSize)
-                    metricCard(icon: "doc.text", label: "总条目", value: viewModel.summaryValues.totalEntries)
-                    metricCard(icon: "pin", label: "置顶数", value: viewModel.summaryValues.pinnedCount)
-                    metricCard(icon: "chart.bar", label: "活跃系统", value: viewModel.summaryValues.activeSystems)
+                    metricCard(icon: .hardDrive, label: "总缓存", value: viewModel.summaryValues.totalSize)
+                    metricCard(icon: .docText, label: "总条目", value: viewModel.summaryValues.totalEntries)
+                    metricCard(icon: .pinOutline, label: "置顶数", value: viewModel.summaryValues.pinnedCount)
+                    metricCard(icon: .chartBar, label: "活跃系统", value: viewModel.summaryValues.activeSystems)
                 }
 
                 GeometryReader { geo in
@@ -169,7 +173,12 @@ struct CacheDashboardView: View {
             .padding(ThemeTokens.Spacing.lg)
             .background(Color.appCardBackground)
             .cornerRadius(ThemeTokens.CornerRadius.xl)
-            .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+            .shadow(
+                color: Color(ThemeTokens.Color.shadow).opacity(ThemeTokens.Shadows.sm.opacity),
+                radius: ThemeTokens.Shadows.sm.radius,
+                x: ThemeTokens.Shadows.sm.offsetX,
+                y: ThemeTokens.Shadows.sm.offsetY
+            )
             .springAppear(appeared: appeared)
             .listRowInsets(EdgeInsets(
                 top: ThemeTokens.Spacing.md,
@@ -181,10 +190,9 @@ struct CacheDashboardView: View {
         }
     }
 
-    private func metricCard(icon: String, label: String, value: String) -> some View {
+    private func metricCard(icon: LucideIcon, label: String, value: String) -> some View {
         VStack(spacing: ThemeTokens.Spacing.xs) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+            Image(uiImage: icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.sm) ?? UIImage())
                 .foregroundColor(Color.appPrimary)
             Text(value)
                 .font(Font(ThemeTokens.Typography.title3))
@@ -236,7 +244,7 @@ struct CacheDashboardView: View {
     }
 
     private func subsystemInfo(_ item: SubsystemSectionItem) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: ThemeTokens.Spacing.xxs) {
             Text(item.nameZh)
                 .font(Font(ThemeTokens.Typography.body))
                 .foregroundColor(Color.appText)
@@ -250,7 +258,7 @@ struct CacheDashboardView: View {
 
     private func subsystemMetrics(_ item: SubsystemSectionItem) -> some View {
         HStack(spacing: ThemeTokens.Spacing.sm) {
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: ThemeTokens.Spacing.xxs) {
                 Text(item.entries)
                     .font(Font(ThemeTokens.Typography.monospaceMeta))
                     .foregroundColor(Color.appText)
@@ -262,8 +270,7 @@ struct CacheDashboardView: View {
                 hitRateBadge(hitRate)
             }
             statusDot(item.statusColorName)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
+            Image(uiImage: LucideIcon.chevronRight.templateImage(pointSize: ThemeTokens.Icons.Sizes.xs) ?? UIImage())
                 .foregroundColor(Color.appTextTertiary)
         }
     }
@@ -275,7 +282,7 @@ struct CacheDashboardView: View {
             .font(Font(ThemeTokens.Typography.monospaceMeta))
             .foregroundColor(Color(ThemeTokens.Color.onPrimary))
             .padding(.horizontal, ThemeTokens.Spacing.sm)
-            .padding(.vertical, 2)
+            .padding(.vertical, ThemeTokens.Spacing.xxs)
             .background(
                 rate >= 80 ? Color.appSuccess :
                     (rate >= 50 ? Color.appPrimary : Color.appError)

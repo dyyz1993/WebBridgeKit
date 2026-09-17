@@ -15,6 +15,9 @@ import RxCocoa
 class TabBarController: UITabBarController {
 
     private let disposeBag = DisposeBag()
+    private let defaultStartupLaunchResolver = HTMLAppLaunchResolver(
+        trustRegistry: HTMLAppRuntimeCenter.shared.trustRegistry
+    )
 
     private let separatorView = UIView()
     private var previousSelectedIndex: Int?
@@ -82,10 +85,15 @@ class TabBarController: UITabBarController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        checkAndRestoreLastApp()
+        openDefaultStartupAppIfNeeded()
     }
 
-    private func checkAndRestoreLastApp() {
+    /// Opens the selected trusted app once for a cold Drel launch. This is
+    /// intentionally app-ID based, never a saved arbitrary web URL.
+    private func openDefaultStartupAppIfNeeded() {
+        #if DREL_RELEASE_MINIMAL_SETTINGS
+        return
+        #else
         struct Static {
             static var hasChecked = false
         }
@@ -93,23 +101,45 @@ class TabBarController: UITabBarController {
         if Static.hasChecked { return }
         Static.hasChecked = true
 
-        SettingsPreferenceKeys.migrateLegacyValuesIfNeeded()
+        SettingsPreferenceKeys.removeLegacyLastURLPreferencesIfNeeded()
 
-        let isEnabled = UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp)
-
-        if isEnabled,
-           let lastURLString = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.lastOpenedURL),
-           let url = URL(string: lastURLString) {
-
-            if let mainNav = viewControllers?.first as? UINavigationController {
-                WebBrowserManager.shared.openBrowser(
-                    url: url,
-                    params: WebBrowserParams(displayMode: .normal),
-                    from: mainNav,
-                    animated: false
-                )
-            }
+        guard let appID = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.defaultStartupAppID),
+              !appID.isEmpty,
+              let manifest = HTMLAppRuntimeCenter.shared.trustRegistry.manifest(for: appID),
+              let startURL = URL(string: manifest.startURL),
+              let mainNav = viewControllers?.first as? UINavigationController else {
+            return
         }
+
+        do {
+            let target = try defaultStartupLaunchResolver.resolve(
+                appID: manifest.appID,
+                route: startURL.path,
+                source: .direct
+            )
+            var payload = target.context.bridgePayload
+            payload["webbridgekitOfflineMode"] = target.offlineMode.rawValue
+            payload["webbridgekitPageURL"] = target.pageURL.absoluteString
+            let params = WebBrowserParams(
+                displayMode: .immersive,
+                hideNavigationBar: true,
+                hideStatusBar: true,
+                hideTabBar: true,
+                payload: payload,
+                useManifestLoader: false,
+                preferCachedContent: target.offlineMode == .partial
+            )
+            WebBrowserManager.shared.openBrowser(
+                url: target.loaderURL,
+                params: params,
+                from: mainNav,
+                animated: false
+            )
+        } catch {
+            // A removed or invalid manifest must never block Drel's regular home.
+            UserDefaults.standard.removeObject(forKey: SettingsPreferenceKeys.defaultStartupAppID)
+        }
+        #endif
     }
 
     // MARK: - Setup
@@ -134,14 +164,17 @@ class TabBarController: UITabBarController {
     }
 
     private func setupAppearance() {
-        tabBar.isTranslucent = true
+        // The product contract requires scroll content to remain visually clear
+        // of the navigation surface. A transparent, glass tab bar made cards
+        // and text appear beneath the selected tab on iOS 26.
+        tabBar.isTranslucent = false
         tabBar.unselectedItemTintColor = ThemeTokens.Color.textSecondary
         tabBar.tintColor = ThemeTokens.Color.primary
 
         if #available(iOS 15.0, *) {
             let appearance = UITabBarAppearance()
-            appearance.configureWithTransparentBackground()
-            appearance.backgroundEffect = UIBlurEffect(style: .systemChromeMaterial)
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = ThemeTokens.Color.tabBarBackground
             appearance.shadowColor = nil
             appearance.shadowImage = nil
             tabBar.standardAppearance = appearance
@@ -213,35 +246,37 @@ class TabBarController: UITabBarController {
         }
     }
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private func handleWebCacheAction(_ action: WebCacheHomeAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
         switch action {
         case .openCacheDashboard:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             nav.pushViewController(
                 CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
                 animated: true
             )
+            #endif
         case .openCacheManagement:
             nav.pushViewController(ManagementViewController(), animated: true)
         }
     }
     #endif
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private func handleBridgeLabAction(_ action: BridgeLabAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
         switch action {
         case .openLegacyShowcase:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             nav.pushViewController(BridgeShowcaseViewController(), animated: true)
             #else
             showAppShellInfo(title: "Bridge", message: "Bridge Showcase is available in DEBUG builds.")
             #endif
         case .openDebugLogs:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let debugPanel = DebugPanelViewController()
             let debugNav = UINavigationController(rootViewController: debugPanel)
             debugNav.modalPresentationStyle = .fullScreen
@@ -253,7 +288,7 @@ class TabBarController: UITabBarController {
     }
     #endif
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private func handleTokenPushAction(_ action: TokenPushAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
@@ -261,9 +296,11 @@ class TabBarController: UITabBarController {
         case .openTokenManager:
             nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
         case .openAPIKeyManager:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+            #endif
         case .openNotificationDebug:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             nav.pushViewController(NotificationDebugViewController(), animated: true)
             #else
             showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
@@ -272,13 +309,13 @@ class TabBarController: UITabBarController {
     }
     #endif
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private func handleDebugCenterAction(_ action: DebugCenterAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
         switch action {
         case .openDebugPanel:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let debugPanel = DebugPanelViewController()
             let debugNav = UINavigationController(rootViewController: debugPanel)
             debugNav.modalPresentationStyle = .fullScreen
@@ -287,7 +324,7 @@ class TabBarController: UITabBarController {
             showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
             #endif
         case .openDiagnostics:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(rootView: DiagnosticsView())
             vc.title = L10n.tr("settings.diagnostics.title")
             nav.pushViewController(vc, animated: true)
@@ -295,7 +332,7 @@ class TabBarController: UITabBarController {
             showAppShellInfo(title: "Diagnostics", message: "Diagnostics are available in DEBUG builds.")
             #endif
         case .openNetworkInspector:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             nav.pushViewController(NetworkDebugViewController(), animated: true)
             #else
             showAppShellInfo(title: "Network", message: "Network inspector is available in DEBUG builds.")
@@ -306,13 +343,13 @@ class TabBarController: UITabBarController {
                 animated: true
             )
         case .openManifestCacheTests:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             nav.pushViewController(ManifestCacheTestViewController(), animated: true)
             #else
             showAppShellInfo(title: "Manifest", message: "Manifest cache tests are available in DEBUG builds.")
             #endif
         case .openWebCache:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(rootView: WebCacheHomeView { [weak self] action in
                 self?.handleWebCacheAction(action)
             })
@@ -325,7 +362,7 @@ class TabBarController: UITabBarController {
                 message: "在项目根目录执行 bash scripts/scan-crash-logs.sh --json，要求 total 为 0。"
             )
         case .openBridgeLab:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(rootView: BridgeLabHomeView { [weak self] action in
                 self?.handleBridgeLabAction(action)
             })
@@ -333,7 +370,7 @@ class TabBarController: UITabBarController {
             nav.pushViewController(vc, animated: true)
             #endif
         case .openPushTools:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(rootView: TokenPushHomeView { [weak self] action in
                 self?.handleTokenPushAction(action)
             })
@@ -344,7 +381,7 @@ class TabBarController: UITabBarController {
     }
     #endif
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private func handleDeepLinkAction(_ action: DeepLinkAction) {
         guard let nav = selectedViewController as? UINavigationController else { return }
 
@@ -373,14 +410,16 @@ class TabBarController: UITabBarController {
                 animated: true
             )
         case .openCacheDashboard:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             nav.pushViewController(
                 CacheDashboardViewController(viewModel: CacheDashboardViewModel()),
                 animated: true
             )
+            #endif
         case .openCacheManagement:
             nav.pushViewController(ManagementViewController(), animated: true)
         case .openBridgeShowcase:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             nav.pushViewController(BridgeShowcaseViewController(), animated: true)
             #else
             showAppShellInfo(title: "Bridge", message: "Bridge Showcase is available in DEBUG builds.")
@@ -388,9 +427,11 @@ class TabBarController: UITabBarController {
         case .openTokenManager:
             nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
         case .openAPIKeyManager:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+            #endif
         case .openNotificationDebug:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             nav.pushViewController(NotificationDebugViewController(), animated: true)
             #else
             showAppShellInfo(title: "Push", message: "Notification Debug is available in DEBUG builds.")
@@ -400,7 +441,7 @@ class TabBarController: UITabBarController {
                 selectedIndex = inboxIndex
             }
         case .openDebugPanel:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let debugPanel = DebugPanelViewController()
             let debugNav = UINavigationController(rootViewController: debugPanel)
             debugNav.modalPresentationStyle = .fullScreen
@@ -409,7 +450,7 @@ class TabBarController: UITabBarController {
             showAppShellInfo(title: "Debug", message: "Debug Panel is available in DEBUG builds.")
             #endif
         case .openDiagnostics:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(rootView: DiagnosticsView())
             vc.title = L10n.tr("settings.diagnostics.title")
             nav.pushViewController(vc, animated: true)
@@ -448,49 +489,78 @@ class TabBarController: UITabBarController {
 
         switch destination {
         case .serverConfig:
-            nav.pushViewController(GatewayConfigurationViewController(), animated: true)
+            let channelVC = DrelPushChannelConfigurationViewController()
+            // 配置页全屏呈现：不带底部 tab，侧滑返回时 tab bar 自动恢复
+            // （与 AboutViewController 的先例一致）。
+            channelVC.hidesBottomBarWhenPushed = true
+            nav.pushViewController(channelVC, animated: true)
         case .tokenManage:
             nav.pushViewController(TokenManageViewController(viewModel: TokenManageViewModel()), animated: true)
         case .apiKeyManage:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             nav.pushViewController(APIKeyManageViewController(viewModel: APIKeyManageViewModel()), animated: true)
+            #endif
         case .webGrants:
+            #if DREL_CONTAINER_ONLY
+            showAppShellInfo(
+                title: "网页授权管理",
+                message: "Drel 的首个 Store 版本不向远程网页开放原生 Bridge 能力。"
+            )
+            #else
             let vc = UIHostingController(rootView: WebOriginGrantsView())
             nav.pushViewController(vc, animated: true)
+            #endif
         case .cacheManagement:
             nav.pushViewController(ManagementViewController(), animated: true)
         case .favorites:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             nav.pushViewController(FavoriteViewController(viewModel: FavoriteViewModel()), animated: true)
+            #endif
         case .history:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             let vc = UIHostingController(rootView: RecentAccessHistoryView())
             vc.title = "最近访问"
             nav.pushViewController(vc, animated: true)
+            #endif
         case .notificationSettings:
             NotificationSettingsOpener.open()
         case .pushEncryption:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             let vc = UIHostingController(rootView: PushEncryptionView())
             vc.title = "推送加密"
             nav.pushViewController(vc, animated: true)
+            #endif
+        case .defaultStartupApp:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
+            let vc = UIHostingController(rootView: DefaultStartupAppView())
+            vc.title = "默认启动应用"
+            nav.pushViewController(vc, animated: true)
+            #else
+            showAppShellInfo(title: "Default startup", message: "Saved web-tool startup is planned for a later Drel release.")
+            #endif
         case .appearance:
             let vc = UIHostingController(rootView: AppearanceSettingsView())
             vc.title = L10n.tr("settings.appearance")
             nav.pushViewController(vc, animated: true)
         case .debugPanel:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let debugPanel = DebugPanelViewController()
             let debugNav = UINavigationController(rootViewController: debugPanel)
             debugNav.modalPresentationStyle = .fullScreen
             nav.present(debugNav, animated: true)
             #endif
         case .exportDiagnostics:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(rootView: DiagnosticsView())
             vc.title = L10n.tr("settings.diagnostics.title")
             nav.pushViewController(vc, animated: true)
             #endif
         case .cacheDashboard:
+            #if !DREL_RELEASE_MINIMAL_SETTINGS
             nav.pushViewController(CacheDashboardViewController(viewModel: CacheDashboardViewModel()), animated: true)
+            #endif
         case .debugCenter:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(
                 rootView: DebugCenterHomeView { [weak self] action in
                     self?.handleDebugCenterAction(action)
@@ -502,7 +572,7 @@ class TabBarController: UITabBarController {
             showAppShellInfo(title: "Debug", message: "Debug Center is available in DEBUG builds.")
             #endif
         case .deepLinks:
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             let vc = UIHostingController(
                 rootView: DeepLinkHomeView { [weak self] action in
                     self?.handleDeepLinkAction(action)

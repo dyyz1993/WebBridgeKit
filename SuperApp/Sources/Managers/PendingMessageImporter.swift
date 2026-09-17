@@ -45,6 +45,7 @@ enum PendingMessageImporter {
                 identifier: fileURL.lastPathComponent,
                 userInfo: PushCipher.decryptingUserInfoIfEncrypted(dict)
             )
+            DrelPushAppCatalogCoordinator.shared.activateIfTrusted(userInfo: dict)
             try? await MessageEngine.shared.receive(payload)
             try? FileManager.default.removeItem(at: fileURL)
         }
@@ -85,6 +86,7 @@ enum PendingMessageImporter {
                     identifier: "server-\(message.timestamp)",
                     userInfo: PushCipher.decryptingUserInfoIfEncrypted(userInfo)
                 )
+                DrelPushAppCatalogCoordinator.shared.activateIfTrusted(userInfo: userInfo)
                 try? await MessageEngine.shared.receive(payload)
                 latest = max(latest, Double(message.timestamp))
             }
@@ -100,7 +102,7 @@ enum PendingMessageImporter {
     private static var serverBaseURL: String? {
         ServerConfigManager.shared.getActiveBaseURL()
             ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
-            ?? "https://wbk.shanbox.19930810.xyz:8443"
+            ?? "https://api.drel.app"
     }
 
     private struct MessageHistory: Codable {

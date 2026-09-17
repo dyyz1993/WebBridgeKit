@@ -2,7 +2,7 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 
 class ThemeShowcaseViewController: UIViewController {
 

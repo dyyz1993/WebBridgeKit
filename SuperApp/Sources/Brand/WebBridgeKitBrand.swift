@@ -1,12 +1,12 @@
 import UIKit
 
-/// Central access point for the WebBridgeKit product mark.
+/// Central access point for the Drel product mark.
 ///
-/// Functional UI icons remain Lucide icons. This asset is reserved for
-/// product identity surfaces such as About, Settings, notifications, and
-/// empty app-icon fallbacks.
-enum WebBridgeKitBrand {
-    static let imageName = "WebBridgeKitBrand"
+/// Functional UI icons remain Lucide icons. This asset is reserved for Drel
+/// identity surfaces. WebBridgeKit remains the separately branded SDK beneath
+/// the product.
+enum DrelBrand {
+    static let imageName = "DrelBrand"
 
     static var image: UIImage? {
         UIImage(named: imageName)?.withRenderingMode(.alwaysOriginal)

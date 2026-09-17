@@ -50,6 +50,8 @@
 	<string>允许你授权的 PWA 扫描附近的蓝牙低功耗设备</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>允许你授权的网页应用选择和保存照片</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>允许你主动将推送中的图片保存到系统相册</string>
 	<key>NSContactsUsageDescription</key>
 	<string>允许你授权的网页应用读取你选择的联系人</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

@@ -52,7 +52,7 @@
 "home.device_token.not_registered" = "Not Registered";
 "home.section.frequently_used" = "Frequently Used";
 "home.section.my_favorites" = "My Favorites";
-"home.section.recent_visits" = "Recent Visits";
+"home.section.recent_visits" = "Recently Opened Tools";
 "home.test_cases_entry" = "🧪 Automated Test Cases";
 
 // Inbox
@@ -165,14 +165,14 @@
 "settings.section.preferences" = "Preferences";
 "settings.section.developer" = "Developer";
 "settings.section.about" = "About";
-"settings.hero.token_masked" = "Push key: abcd****efgh";
-"settings.hero.copy_token" = "Copy push key";
+"settings.hero.token_masked" = "Push ID: abcd****efgh";
+"settings.hero.copy_token" = "Copy push ID";
 "settings.hero.copied_title" = "Copied";
-"settings.hero.copied_message" = "Push key copied to clipboard";
-"settings.hero.token_format" = "Push key: %@";
+"settings.hero.copied_message" = "Full push address copied to clipboard";
+"settings.hero.token_format" = "Push ID: %@";
 "settings.hero.identity.unset" = "Push identity not configured";
 "settings.hero.unset_title" = "Not configured";
-"settings.hero.unset_message" = "Configure your Bark identity key in Key Manager first.";
+"settings.hero.unset_message" = "A Drel push ID is generated once notifications are enabled.";
 "settings.server.config" = "Gateway Configuration";
 "settings.token.manager" = "Token Manager";
 "settings.apikey.manager" = "API Key Manager";
@@ -228,10 +228,13 @@
 "message.detail.title" = "Message Detail";
 "message.detail.received_time" = "Received";
 "message.detail.source" = "Source";
+"message.detail.source.official" = "Official push";
+"message.detail.source.selfhosted" = "Self-hosted push";
 "message.detail.group" = "Group";
 "message.detail.read_time" = "Read Time";
 "message.detail.copy_content" = "Copy Content";
 "message.detail.open_link" = "Open Link";
+"message.detail.copy_link" = "Copy Link";
 "message.detail.open_app" = "Open App";
 "message.detail.open_conversation" = "Open Conversation";
 "message.detail.delete" = "Delete";
@@ -619,6 +622,7 @@
 "official.push.error.storage" = "The push identity could not be stored securely. Check device storage and retry.";
 "official.push.error.permission" = "Notifications are not available right now. Try again later.";
 "official.push.error.server" = "The notification service is temporarily unavailable. Try again later.";
+"official.push.error.entitlement" = "This build cannot receive push notifications. Install the official release.";
 "official.push.test.title" = "Send a Test Notification";
 "official.push.test.subtitle" = "Quickly verify that this device can receive notifications";
 "official.push.test.default_title" = "Test Notification";

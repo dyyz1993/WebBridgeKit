@@ -1,4 +1,4 @@
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 import Foundation
 import RealmSwift
 import UIKit
@@ -40,7 +40,7 @@ final class TokenPushHomeViewModel: ObservableObject {
 
     var pushURL: String {
         let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
-            ?? "https://wbk.shanbox.19930810.xyz:8443"
+            ?? "https://api.drel.app"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         return key.isEmpty ? server : "\(server)/\(key)"
     }

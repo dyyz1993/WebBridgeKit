@@ -11,6 +11,10 @@ import SnapKit
 import WebBridgeKit
 
 /// 收藏列表单元格
+/// S4: single-row card — icon, title (📌 marks legacy pinned items), domain.
+/// The per-item 缓存模式 switch, decorative star, and the pin toggle (置顶 has
+/// no visible outlet in Drel) were removed; removing a favorite stays
+/// available via the trailing swipe action.
 class FavoriteCell: UITableViewCell {
 
     static let identifier = "FavoriteCell"
@@ -54,39 +58,6 @@ class FavoriteCell: UITableViewCell {
         return label
     }()
 
-    private let pinButton: UIButton = {
-        let button = UIButton(type: .system)
-        let image = LucideIcon.pin.image(pointSize: 16)
-        button.setImage(image, for: .normal)
-        button.tintColor = ThemeTokens.Color.warning
-        button.accessibilityLabel = "置顶"
-        return button
-    }()
-
-    private let favoriteIconView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = LucideIcon.star.image(pointSize: 18)
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = ThemeTokens.Color.warning
-        return imageView
-    }()
-
-    private let cacheModeSwitch: UISwitch = {
-        let switchControl = UISwitch()
-        switchControl.isOn = false
-        switchControl.tintColor = ThemeTokens.Color.success
-        switchControl.onTintColor = ThemeTokens.Color.success
-        return switchControl
-    }()
-
-    private let cacheModeLabel: UILabel = {
-        let label = UILabel()
-        label.font = ThemeTokens.Typography.caption1
-        label.textColor = ThemeTokens.Color.textSecondary
-        label.text = L10n.tr("favorite.cache_mode")
-        return label
-    }()
-
     // MARK: - Properties
 
     private var currentFavorite: URLFavorite?
@@ -97,9 +68,6 @@ class FavoriteCell: UITableViewCell {
             updateUI()
         }
     }
-
-    var onPinToggle: ((String) -> Void)?
-    var onCacheModeToggle: ((String, Bool) -> Void)?
 
     // MARK: - Initialization
 
@@ -122,18 +90,14 @@ class FavoriteCell: UITableViewCell {
 
         contentView.addSubview(containerView)
         containerView.addSubview(faviconImageView)
-        containerView.addSubview(pinButton)
         containerView.addSubview(titleLabel)
         containerView.addSubview(urlLabel)
-        containerView.addSubview(favoriteIconView)
-        containerView.addSubview(cacheModeLabel)
-        containerView.addSubview(cacheModeSwitch)
 
         containerView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(8)
+            make.top.equalToSuperview().offset(6)
             make.left.equalToSuperview().offset(16)
             make.right.equalToSuperview().offset(-16)
-            make.bottom.equalToSuperview().offset(-8)
+            make.bottom.equalToSuperview().offset(-6)
         }
 
         faviconImageView.snp.makeConstraints { make in
@@ -142,51 +106,19 @@ class FavoriteCell: UITableViewCell {
             make.width.height.equalTo(44)
         }
 
-        pinButton.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(4)
-            make.right.equalToSuperview().offset(-4)
-            make.width.height.equalTo(44)
-        }
-
-        favoriteIconView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().offset(-4)
-            make.right.equalToSuperview().offset(-8)
-            make.width.height.equalTo(20)
-        }
-
         titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
+            make.top.equalToSuperview().offset(16)
             make.left.equalTo(faviconImageView.snp.right).offset(12)
-            make.right.equalTo(pinButton.snp.left).offset(-4)
+            make.right.equalToSuperview().offset(-14)
         }
 
         urlLabel.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
             make.left.equalTo(faviconImageView.snp.right).offset(12)
-            make.right.equalTo(pinButton.snp.left).offset(-4)
+            make.right.equalToSuperview().offset(-14)
+            make.bottom.equalToSuperview().offset(-16)
         }
 
-        cacheModeLabel.snp.makeConstraints { make in
-            // Chain cacheModeLabel to urlLabel: without this top constraint the
-            // cell's vertical layout splits into two disconnected fragments
-            // (title/url from the top, cache row from the bottom), so
-            // self-sizing height was ambiguous and rows collapsed to ~16pt,
-            // overlapping each other under the nav bar — the favorites list
-            // looked like a blank screen (N2c).
-            make.top.equalTo(urlLabel.snp.bottom).offset(12)
-            make.bottom.equalToSuperview().offset(-12)
-            make.left.equalTo(faviconImageView.snp.right).offset(12)
-        }
-
-        cacheModeSwitch.snp.makeConstraints { make in
-            make.centerY.equalTo(cacheModeLabel)
-            make.left.equalTo(cacheModeLabel.snp.right).offset(8)
-            make.right.lessThanOrEqualTo(favoriteIconView.snp.left).offset(-8)
-        }
-
-        // 添加按钮事件
-        pinButton.addTarget(self, action: #selector(pinButtonTapped), for: .touchUpInside)
-        cacheModeSwitch.addTarget(self, action: #selector(cacheModeSwitchChanged), for: .valueChanged)
     }
 
     // MARK: - Update UI
@@ -195,15 +127,13 @@ class FavoriteCell: UITableViewCell {
         guard let favorite = currentFavorite else {
             titleLabel.text = ""
             urlLabel.text = ""
-            pinButton.isHidden = true
-            favoriteIconView.isHidden = true
             faviconImageView.image = nil
-            cacheModeSwitch.isOn = false
             return
         }
 
-        // 设置标题
-        titleLabel.text = favorite.title ?? L10n.tr("favorite.unknown_page")
+        // 设置标题（置顶以📌标注，与列表单行卡片约定一致）
+        let baseTitle = favorite.title ?? L10n.tr("favorite.unknown_page")
+        titleLabel.text = favorite.isPinned ? "📌 " + baseTitle : baseTitle
 
         // 设置 URL
         if let url = URL(string: favorite.url) {
@@ -221,28 +151,9 @@ class FavoriteCell: UITableViewCell {
             faviconImageView.setLetterIcon(for: favorite.title ?? favorite.url, size: CGSize(width: 40, height: 40))
         }
 
-        // 置顶状态
-        pinButton.isHidden = false
-            pinButton.tintColor = favorite.isPinned ? ThemeTokens.Color.warning : ThemeTokens.Color.textTertiary
-
-        // 收藏图标
-        favoriteIconView.isHidden = false
-
-        // 缓存模式
-        cacheModeSwitch.isOn = favorite.enableCacheMode
     }
 
     // MARK: - Actions
-
-    @objc private func pinButtonTapped() {
-        guard let favorite = currentFavorite else { return }
-        onPinToggle?(favorite.id)
-    }
-
-    @objc private func cacheModeSwitchChanged() {
-        guard let favorite = currentFavorite else { return }
-        onCacheModeToggle?(favorite.id, cacheModeSwitch.isOn)
-    }
 
     // MARK: - Reuse
 
@@ -250,14 +161,9 @@ class FavoriteCell: UITableViewCell {
         super.prepareForReuse()
         currentFavorite = nil
         faviconImageView.image = nil
-        onPinToggle = nil
-        onCacheModeToggle = nil
         // 重置所有 UI 状态
         titleLabel.text = nil
         urlLabel.text = nil
-        pinButton.isHidden = true
-        favoriteIconView.isHidden = true
-        cacheModeSwitch.isOn = false
         faviconImageView.backgroundColor = ThemeTokens.Color.surface
     }
 }

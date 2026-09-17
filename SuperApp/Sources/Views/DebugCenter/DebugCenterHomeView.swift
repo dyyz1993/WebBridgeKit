@@ -1,4 +1,4 @@
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 import SwiftUI
 import WebBridgeKit
 

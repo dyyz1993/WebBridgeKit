@@ -24,7 +24,7 @@ class SettingsViewModel {
         case history
         case notificationSettings
         case pushEncryption
-        case rememberLastApp
+        case defaultStartupApp
         case appearance
         case debugPanel
         case debugCenter
@@ -60,13 +60,17 @@ class SettingsViewModel {
         var isHeroSection: Bool = false
     }
 
-    static var rememberLastAppEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp) }
-        set { UserDefaults.standard.set(newValue, forKey: SettingsPreferenceKeys.rememberLastApp) }
+    static var defaultStartupAppName: String {
+        guard let appID = UserDefaults.standard.string(forKey: SettingsPreferenceKeys.defaultStartupAppID),
+              !appID.isEmpty else {
+            return L10n.tr("settings.default.startup.app.unset")
+        }
+        return HTMLAppRuntimeCenter.shared.trustRegistry.manifest(for: appID)?.name
+            ?? L10n.tr("settings.default.startup.app.unset")
     }
 
     let sections: [SettingsSection] = {
-        let rememberOn = SettingsViewModel.rememberLastAppEnabled
+        let defaultStartupAppName = SettingsViewModel.defaultStartupAppName
         let cacheSize = SettingsViewModel.calculateCacheSize()
 
         let pb = ThemeTokens.Color.primary.withAlphaComponent(0.1)
@@ -86,56 +90,66 @@ class SettingsViewModel {
         let gb = ThemeTokens.Color.textSecondary.withAlphaComponent(0.1)
         let gt = ThemeTokens.Color.textSecondary
 
-        let heroItem = SettingsItem(
-            icon: nil,
-            lucideIcon: .globe,
-            title: L10n.tr("settings.hero.token_masked"),
-            action: nil,
-            iconBackgroundColor: nil,
-            iconTintColor: nil,
-            cellKind: .hero
-        )
+        var sections: [SettingsSection] = []
 
-        return [
-            SettingsSection(header: nil, items: [heroItem], isHeroSection: true),
-            SettingsSection(header: L10n.tr("settings.section.server"), items: [
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .server,
-                    title: L10n.tr("settings.server.config"),
-                    action: .serverConfig,
-                    value: "wbk.shanbox",
-                    iconBackgroundColor: pb,
-                    iconTintColor: pt
-                )
-            ]),
-            SettingsSection(header: L10n.tr("settings.section.security"), items: [
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .key,
-                    title: L10n.tr("settings.token.manager"),
-                    action: .tokenManager,
-                    iconBackgroundColor: sb,
-                    iconTintColor: st
-                ),
-                SettingsItem(
-                    icon: "key.radiowaves.forward",
-                    lucideIcon: nil,
-                    title: L10n.tr("settings.apikey.manager"),
-                    action: .apiKeyManage,
-                    iconBackgroundColor: pubg,
-                    iconTintColor: put
-                ),
-                SettingsItem(
-                    icon: nil,
-                    lucideIcon: .globe,
-                    title: "网页授权管理",
-                    action: .webGrants,
-                    iconBackgroundColor: sb,
-                    iconTintColor: st
-                )
-            ]),
-            SettingsSection(header: L10n.tr("settings.section.storage"), items: [
+        // The public Drel address lives on Home. The legacy Bark identity card
+        // must not appear in the minimal Store settings surface.
+        #if !DREL_RELEASE_MINIMAL_SETTINGS
+        sections.append(SettingsSection(header: nil, items: [
+            SettingsItem(
+                icon: nil,
+                lucideIcon: .globe,
+                title: L10n.tr("settings.hero.token_masked"),
+                action: nil,
+                iconBackgroundColor: nil,
+                iconTintColor: nil,
+                cellKind: .hero
+            )
+        ], isHeroSection: true))
+
+        // S5: the local API-key manager has no Drel counterpart — its keys are
+        // device-local and no Drel server consumes them — so container builds
+        // drop the whole row instead of exposing a no-op page.
+        var securityItems: [SettingsItem] = []
+        #if !DREL_CONTAINER_ONLY
+        securityItems.append(
+            SettingsItem(
+                icon: "key.radiowaves.forward",
+                lucideIcon: nil,
+                title: L10n.tr("settings.apikey.manager"),
+                action: .apiKeyManage,
+                iconBackgroundColor: pubg,
+                iconTintColor: put
+            )
+        )
+        securityItems.insert(
+            SettingsItem(
+                icon: nil,
+                lucideIcon: .key,
+                title: L10n.tr("settings.token.manager"),
+                action: .tokenManager,
+                iconBackgroundColor: sb,
+                iconTintColor: st
+            ),
+            at: 0
+        )
+        securityItems.append(
+            SettingsItem(
+                icon: nil,
+                lucideIcon: .globe,
+                title: "网页授权管理",
+                action: .webGrants,
+                iconBackgroundColor: sb,
+                iconTintColor: st
+            )
+        )
+        #endif
+        if !securityItems.isEmpty {
+            sections.append(SettingsSection(header: L10n.tr("settings.section.security"), items: securityItems))
+        }
+        #endif
+
+        var storageItems: [SettingsItem] = [
                 SettingsItem(
                     icon: nil,
                     lucideIcon: .hardDrive,
@@ -144,7 +158,10 @@ class SettingsViewModel {
                     value: cacheSize,
                     iconBackgroundColor: ob,
                     iconTintColor: ot
-                ),
+                )
+        ]
+        #if !DREL_RELEASE_MINIMAL_SETTINGS
+        storageItems.append(contentsOf: [
                 SettingsItem(
                     icon: nil,
                     lucideIcon: .star,
@@ -161,16 +178,37 @@ class SettingsViewModel {
                     iconBackgroundColor: wb,
                     iconTintColor: wt
                 )
-            ]),
-            SettingsSection(header: L10n.tr("settings.section.notification"), items: [
+        ])
+        #endif
+        sections.append(SettingsSection(header: L10n.tr("settings.section.storage"), items: storageItems))
+
+        var notificationItems: [SettingsItem] = [
                 SettingsItem(
                     icon: nil,
                     lucideIcon: .bell,
                     title: L10n.tr("settings.notification.settings"),
                     action: .notificationSettings,
+                    value: "系统权限",
                     iconBackgroundColor: eb,
                     iconTintColor: et
-                ),
+                )
+        ]
+        // Drel's optional self-hosted APNs relay is not the old HTML-app
+        // gateway: it is safe for the Store container and needs to stay
+        // visible so open-source deployments can be paired after install.
+        notificationItems.append(
+            SettingsItem(
+                icon: nil,
+                lucideIcon: .server,
+                title: "推送通道",
+                action: .serverConfig,
+                value: SelfHostedPushConfiguration.load()?.name ?? "官方 Drel",
+                iconBackgroundColor: pb,
+                iconTintColor: pt
+            )
+        )
+        #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
+        notificationItems.append(
                 SettingsItem(
                     icon: nil,
                     lucideIcon: .key,
@@ -179,18 +217,21 @@ class SettingsViewModel {
                     iconBackgroundColor: eb,
                     iconTintColor: et
                 )
-            ]),
+        )
+        #endif
+        sections.append(SettingsSection(header: L10n.tr("settings.section.notification"), items: notificationItems))
+
+        #if !DREL_RELEASE_MINIMAL_SETTINGS
+        sections.append(
             SettingsSection(header: L10n.tr("settings.section.preferences"), items: [
                 SettingsItem(
                     icon: nil,
-                    lucideIcon: .clock,
-                    title: L10n.tr("settings.remember.last.app"),
-                    action: .rememberLastApp,
-                    showArrow: false,
+                    lucideIcon: .appFill,
+                    title: L10n.tr("settings.default.startup.app"),
+                    action: .defaultStartupApp,
+                    value: defaultStartupAppName,
                     iconBackgroundColor: pb,
-                    iconTintColor: pt,
-                    hasToggle: true,
-                    toggleIsOn: rememberOn
+                    iconTintColor: pt
                 ),
                 SettingsItem(
                     icon: "paintpalette.fill",
@@ -201,10 +242,26 @@ class SettingsViewModel {
                     iconBackgroundColor: pubg,
                     iconTintColor: put
                 )
-            ]),
-            SettingsSection(header: L10n.tr("settings.section.developer"), items: {
-                #if DEBUG
-                return [
+            ])
+        )
+        #else
+        sections.append(
+            SettingsSection(header: L10n.tr("settings.section.preferences"), items: [
+                SettingsItem(
+                    icon: "paintpalette.fill",
+                    lucideIcon: nil,
+                    title: L10n.tr("settings.appearance"),
+                    action: .appearance,
+                    value: L10n.tr("settings.appearance.system"),
+                    iconBackgroundColor: pubg,
+                    iconTintColor: put
+                )
+            ])
+        )
+        #endif
+
+        #if !DREL_RELEASE_MINIMAL_SETTINGS && !DREL_CONTAINER_ONLY
+        sections.append(SettingsSection(header: L10n.tr("settings.section.developer"), items: [
                     SettingsItem(
                         icon: nil,
                         lucideIcon: .bug,
@@ -247,21 +304,10 @@ class SettingsViewModel {
                         showArrow: true,
                         hasToggle: false
                     )
-                ]
-                #else
-                return [
-                    SettingsItem(
-                        icon: nil,
-                        lucideIcon: .chartBar,
-                        title: L10n.tr("settings.cache.dashboard"),
-                        action: .cacheDashboard,
-                        value: nil,
-                        showArrow: true,
-                        hasToggle: false
-                    )
-                ]
-                #endif
-            }()),
+                ]))
+        #endif
+
+        sections.append(
             SettingsSection(header: L10n.tr("settings.section.about"), items: [
                 SettingsItem(
                     icon: nil,
@@ -272,7 +318,9 @@ class SettingsViewModel {
                     iconTintColor: gt
                 )
             ])
-        ]
+        )
+
+        return sections
     }()
 
     private static func calculateCacheSize() -> String {

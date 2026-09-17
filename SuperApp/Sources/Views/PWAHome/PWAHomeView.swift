@@ -318,6 +318,10 @@ struct PWAHomeView: View {
                     .accessibilityLabel(L10n.tr("official.push.test.field.body"))
                     .accessibilityHint(L10n.tr("official.push.test.field.body.hint"))
             }
+            .disabled(!viewModel.isPushReady)
+            // 未启用通知时主按钮是「启用通知」；先弱化表单，避免填完点按钮
+            // 却触发系统授权的语义错位。
+            .opacity(viewModel.isPushReady ? 1 : 0.55)
 
             Button {
                 if viewModel.isPushReady {
@@ -385,8 +389,15 @@ struct PWAHomeView: View {
 
     private var installedApps: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: ThemeTokens.Spacing.sm) {
-                ForEach(viewModel.apps.prefix(4)) { app in
+            // 应用数量天然少：4 列自适应换行，第 5 个及以后不再被截断。
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(.flexible(), spacing: ThemeTokens.Spacing.sm),
+                    count: 4
+                ),
+                spacing: ThemeTokens.Spacing.md
+            ) {
+                ForEach(viewModel.apps) { app in
                     installedAppTile(app)
                 }
 
@@ -519,7 +530,7 @@ struct PWAHomeView: View {
         switch viewModel.appState {
         case .loading: return "正在连接应用服务"
         case .ready: return "还没有添加应用"
-        case .unavailable: return "应用服务暂不可用"
+        case .unavailable: return "暂时没有可用的应用"
         }
     }
 
@@ -527,7 +538,7 @@ struct PWAHomeView: View {
         switch viewModel.appState {
         case .loading: return "正在校验受签名的应用清单"
         case .ready: return "连接官方或自部署应用服务"
-        case .unavailable: return "点击重试或连接自有服务"
+        case .unavailable: return "点按管理应用服务，稍后会自动重试"
         }
     }
 

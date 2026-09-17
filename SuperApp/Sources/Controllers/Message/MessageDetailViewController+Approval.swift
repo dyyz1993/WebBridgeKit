@@ -73,7 +73,7 @@ extension MessageDetailViewController {
         let defaults = UserDefaults.standard
         let baseURL = defaults.string(forKey: "com.webbridgekit.bark.server")
             ?? ServerConfigManager.shared.getActiveBaseURL()
-            ?? "https://wbk.shanbox.19930810.xyz:8443"
+            ?? "https://api.drel.app"
         let deviceKey = defaults.string(forKey: "com.webbridgekit.bark.key") ?? ""
         isSubmittingApproval = true
         contextualActionStackView.isUserInteractionEnabled = false

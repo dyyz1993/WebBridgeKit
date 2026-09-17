@@ -48,7 +48,8 @@
             document.getElementById('check-kit').textContent = hasKit ? '✅ 是' : '❌ 否';
             document.getElementById('check-kit').style.color = hasKit ? 'green' : 'red';
             
-            const hasVersion = /WebBridgeKit\/\d+\.\d+\.\d+/.test(ua);
+            const hasVersion = /Drel\/\d+\.\d+\.\d+ \(Build\/\d+;/.test(ua)
+                && /WebBridgeKit\/\d+/.test(ua);
             document.getElementById('check-version').textContent = hasVersion ? '✅ 是' : '❌ 否';
             document.getElementById('check-version').style.color = hasVersion ? 'green' : 'red';
 
@@ -57,8 +58,8 @@
             document.getElementById('check-screen').style.color = hasScreen ? 'green' : 'red';
         }
 
-        // 延迟一小会儿获取，确保 customUserAgent 已经生效
-        setTimeout(updateUA, 100);
+        // Drel 在创建 WKWebView 前设置 UA，首个页面请求即可直接读取。
+        updateUA();
     </script>
 </body>
 </html>

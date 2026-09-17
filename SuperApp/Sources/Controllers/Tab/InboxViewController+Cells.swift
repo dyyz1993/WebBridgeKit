@@ -54,6 +54,23 @@ class InboxMessageCellWrapper: UITableViewCell {
         onCopy = nil
     }
 
+    /// Pressed feedback recolors the card itself: the highlight therefore
+    /// follows the rounded corners by construction and never draws outside
+    /// them, unlike the system row highlight this replaces.
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        let apply = {
+            self.cardView.backgroundColor = highlighted
+                ? ThemeTokens.Color.backgroundSecondary
+                : ThemeTokens.Color.surface
+        }
+        if animated {
+            UIView.animate(withDuration: ThemeTokens.Animation.fast.duration, animations: apply)
+        } else {
+            apply()
+        }
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         iconContainer.layer.cornerRadius = iconContainer.bounds.height / 2
@@ -69,6 +86,11 @@ class InboxMessageCellWrapper: UITableViewCell {
         // card content must be clipped so the compression reads as folding.
         contentView.clipsToBounds = true
         accessibilityIdentifier = "InboxMessageCell"
+        // The system selection highlight is a full-width square that bleeds
+        // past the card's rounded corners and 4pt insets; selection stays
+        // enabled for tap-to-open but the pressed feedback is drawn on the
+        // card itself (setHighlighted below).
+        selectionStyle = .none
 
         cardView.layer.cornerRadius = ThemeTokens.CornerRadius.row
         cardView.layer.borderWidth = 1
@@ -443,6 +465,34 @@ final class GroupChevronIndicator: UIView {
     }
 }
 
+// MARK: - TouchFeedbackView
+
+/// Container that reports raw touch-down/up/cancel so owners can render
+/// touch-down highlight without a gesture recognizer. Gestures observing the
+/// same touch (tap, pan, table scroll) cancel delivery on recognition, which
+/// surfaces here as touchesCancelled — the highlight clears itself the
+/// moment any drag or scroll wins.
+final class TouchFeedbackView: UIView {
+
+    var onTouchDown: (() -> Void)?
+    var onTouchEnd: (() -> Void)?
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        onTouchDown?()
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        onTouchEnd?()
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesCancelled(touches, with: event)
+        onTouchEnd?()
+    }
+}
+
 // MARK: - InboxGroupHeaderCell
 
 class InboxGroupHeaderCell: UITableViewHeaderFooterView, UIGestureRecognizerDelegate {
@@ -453,10 +503,10 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView, UIGestureRecognizerDele
     /// real state change; reconfigured cells during scroll must not spin.
     private var appliedExpandedState: Bool?
 
-    private let containerView: UIView = {
+    private let containerView: TouchFeedbackView = {
         // Opaque: the swipe action buttons sit directly behind this view;
         // a transparent container lets them show through on every header.
-        let view = UIView()
+        let view = TouchFeedbackView()
         view.backgroundColor = ThemeTokens.Color.background
         return view
     }()
@@ -552,28 +602,32 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView, UIGestureRecognizerDele
         contentView.accessibilityIdentifier = "InboxGroupHeaderCell.content"
         containerView.accessibilityIdentifier = "InboxGroupHeaderCell.container"
 
-        // A zero-delay long-press acts as a press tracker: it gives touch-down
-        // highlight feedback and fires the toggle on release, matching the
-        // accordion feel of system grouped lists.
-        let pressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handlePress(_:)))
-        pressGesture.minimumPressDuration = 0
+        // Touch-down highlight comes from raw touch tracking on the sliding
+        // content. A zero-delay long-press was tried here before, but it was
+        // gated with require(toFail: pan) so a drag release would not fire
+        // the toggle — and the pan never fails while the finger is
+        // stationary, so the press only began at release: the highlight
+        // never actually showed while the finger was down. Raw touches need
+        // no such gate; when a drag wins, the pan cancels the touches and
+        // the highlight clears through touchesCancelled.
+        containerView.onTouchDown = { [weak self] in self?.setPressed(true) }
+        containerView.onTouchEnd = { [weak self] in self?.setPressed(false) }
         // Attached to the sliding content, not contentView: a gesture on
         // contentView intercepts touches for every subview, which starved
         // the revealed action buttons of their taps entirely.
-        containerView.addGestureRecognizer(pressGesture)
+        containerView.addGestureRecognizer(UITapGestureRecognizer(
+            target: self,
+            action: #selector(handleHeaderTap(_:))
+        ))
 
         // Horizontal-only pan reveals the trailing pin/delete actions; the
         // delegate gate keeps vertical table scrolling and taps unaffected.
+        // The tap fails on movement and the pan begins on it, so tap toggles
+        // and drag reveals with no explicit require(toFail:) wiring.
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handleSwipePan(_:)))
         pan.delegate = self
         contentView.addGestureRecognizer(pan)
         swipePanGesture = pan
-        // A zero-delay press activates at touch-down and would otherwise fire
-        // .ended on drag release, instantly closing the revealed actions.
-        // For taps the pan fails immediately (shouldBegin gate) so the press
-        // is unaffected; for drags the pan takes over and the press never
-        // fires.
-        pressGesture.require(toFail: pan)
 
         // Action buttons sit behind the content on the trailing edge.
         contentView.addSubview(swipeActionsStack)
@@ -688,23 +742,14 @@ class InboxGroupHeaderCell: UITableViewHeaderFooterView, UIGestureRecognizerDele
         }
     }
 
-    @objc private func handlePress(_ gesture: UILongPressGestureRecognizer) {
-        switch gesture.state {
-        case .began:
-            setPressed(true)
-        case .ended:
-            setPressed(false)
-            if containerView.transform.tx == 0 {
-                onTap?()
-            } else {
-                // A tap while actions are revealed closes them instead of
-                // toggling the group — the standard swipe-action behavior.
-                closeActions(animated: true)
-            }
-        case .cancelled, .failed:
-            setPressed(false)
-        default:
-            break
+    @objc private func handleHeaderTap(_ gesture: UITapGestureRecognizer) {
+        guard gesture.state == .ended else { return }
+        if containerView.transform.tx == 0 {
+            onTap?()
+        } else {
+            // A tap while actions are revealed closes them instead of
+            // toggling the group — the standard swipe-action behavior.
+            closeActions(animated: true)
         }
     }
 

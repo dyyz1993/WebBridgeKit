@@ -1,22 +1,22 @@
 import Foundation
 
 enum SettingsPreferenceKeys {
-    static let rememberLastApp = "settings.rememberLastApp"
-    static let lastOpenedURL = "settings.lastOpenedURL"
+    static let defaultStartupAppID = "settings.defaultStartupAppID"
     static let appearanceMode = "settings.appearanceMode"
 
+    private static let startupAppMigrationCompleted = "settings.defaultStartupAppMigrationCompleted"
+    private static let previousRememberLastApp = "settings.rememberLastApp"
+    private static let previousLastOpenedURL = "settings.lastOpenedURL"
     private static let legacyRememberLastApp = "EnableLastAppMemory"
     private static let legacyLastOpenedURL = "LastOpenedURL"
 
-    static func migrateLegacyValuesIfNeeded(defaults: UserDefaults = .standard) {
-        if defaults.object(forKey: rememberLastApp) == nil,
-           defaults.object(forKey: legacyRememberLastApp) != nil {
-            defaults.set(defaults.bool(forKey: legacyRememberLastApp), forKey: rememberLastApp)
-        }
-
-        if defaults.string(forKey: lastOpenedURL) == nil,
-           let legacyURL = defaults.string(forKey: legacyLastOpenedURL) {
-            defaults.set(legacyURL, forKey: lastOpenedURL)
-        }
+    /// Drel used to retain the complete URL of the last web page. That could
+    /// preserve transient routes or query parameters, so it is intentionally
+    /// not migrated. The replacement stores only a trusted manifest app ID.
+    static func removeLegacyLastURLPreferencesIfNeeded(defaults: UserDefaults = .standard) {
+        guard !defaults.bool(forKey: startupAppMigrationCompleted) else { return }
+        [previousRememberLastApp, previousLastOpenedURL, legacyRememberLastApp, legacyLastOpenedURL]
+            .forEach(defaults.removeObject(forKey:))
+        defaults.set(true, forKey: startupAppMigrationCompleted)
     }
 }

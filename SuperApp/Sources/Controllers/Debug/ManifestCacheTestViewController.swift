@@ -1,6 +1,6 @@
 //
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 //  ManifestCacheTestViewController.swift
 //  SuperApp
 //
@@ -216,7 +216,7 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
         updateStats()
 
         // 设置默认 URL - 指向本地测试服务器（使用实际 IP）
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         urlTextField.text = "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
         #else
         urlTextField.text = "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
@@ -240,7 +240,7 @@ class ManifestCacheTestViewController: UIViewController, UIGestureRecognizerDele
         )
 
         // 注释掉自动测试，让用户手动点击"开始测试"按钮
-        // #if DEBUG
+        // #if !DREL_CONTAINER_ONLY
         // DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
         //     self?.addLog("🤖 DEBUG 模式：自动开始测试...")
         //     // 使用持久化模式

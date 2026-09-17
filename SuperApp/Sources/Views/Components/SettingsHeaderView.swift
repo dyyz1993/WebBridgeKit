@@ -151,7 +151,7 @@ class SettingsHeaderView: UIView {
 
     private func loadAppInfo() {
         // App 图标
-        if let appIcon = UIImage(named: "AppIcon") ?? WebBridgeKitBrand.image {
+        if let appIcon = UIImage(named: "AppIcon") ?? DrelBrand.image {
             iconImageView.image = appIcon
         } else {
             iconImageView.image = LucideIcon.appBadge.image(pointSize: 40, weight: .regular)

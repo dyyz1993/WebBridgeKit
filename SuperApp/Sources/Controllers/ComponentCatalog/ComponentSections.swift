@@ -3,6 +3,7 @@
 //  SuperApp
 //
 
+ #if !DREL_CONTAINER_ONLY
 import UIKit
 import SnapKit
 import WebBridgeKit
@@ -221,3 +222,5 @@ extension ComponentCatalogViewController {
         addSection(header, container)
     }
 }
+
+#endif

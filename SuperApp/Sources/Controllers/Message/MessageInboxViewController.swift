@@ -149,16 +149,31 @@ class MessageInboxViewController: UIViewController {
         }
 
         if let urlString = message.payload.targetURL, let url = URL(string: urlString) {
-            let params = WebBrowserParams(payload: message.payload.userInfo)
+            let params = DrelMessageOpenPolicy.browserParams(
+                for: url,
+                mode: DrelMessageOpenPolicy.mode(for: message.payload),
+                payload: message.payload.userInfo,
+                useManifestLoader: false
+            )
             WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
         } else if let appId = message.payload.targetAppId {
             if let result = ManifestStore.shared.getManifestByAppId(appId),
                let url = URL(string: result.key) {
-                let params = WebBrowserParams(payload: message.payload.userInfo)
+                let params = DrelMessageOpenPolicy.browserParams(
+                    for: url,
+                    mode: DrelMessageOpenPolicy.mode(for: message.payload),
+                    payload: message.payload.userInfo,
+                    useManifestLoader: true
+                )
                 WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
             } else {
                 if let url = URL(string: appId), url.scheme == "http" || url.scheme == "https" {
-                    let params = WebBrowserParams(payload: message.payload.userInfo)
+                    let params = DrelMessageOpenPolicy.browserParams(
+                        for: url,
+                        mode: DrelMessageOpenPolicy.mode(for: message.payload),
+                        payload: message.payload.userInfo,
+                        useManifestLoader: false
+                    )
                     WebBrowserManager.shared.openBrowser(url: url, params: params, from: self)
                 } else {
                     let alert = UIAlertController(title: L10n.tr("message.inbox.cannot_open_app"), message: L10n.tr("message.inbox.app_not_found_format", appId), preferredStyle: .alert)

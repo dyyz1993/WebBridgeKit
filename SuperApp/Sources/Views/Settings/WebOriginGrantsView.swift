@@ -1,3 +1,6 @@
+// This is a reusable/Debug bridge-management screen. It must not ship in the
+// Drel Store product, where remote pages have no native Bridge surface.
+#if !DREL_CONTAINER_ONLY
 import SwiftUI
 import WebBridgeKit
 
@@ -134,3 +137,4 @@ private struct GrantRow: View {
         }
     }
 }
+#endif

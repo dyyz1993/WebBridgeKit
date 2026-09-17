@@ -2,6 +2,8 @@
 //  ComponentCatalogViewController.swift
 //  SuperApp
 //
+
+#if !DREL_CONTAINER_ONLY
 //  Storybook-style UI Component Catalog for Fidelity Testing
 //
 
@@ -123,3 +125,5 @@ class ComponentCatalogViewController: UIViewController {
         contentStackView.addArrangedSubview(spacer)
     }
 }
+
+#endif

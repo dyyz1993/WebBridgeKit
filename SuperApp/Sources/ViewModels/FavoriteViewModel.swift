@@ -111,7 +111,7 @@ class FavoriteViewModel: ViewModel {
         return Output(
             favorites: favoritesRelay.asDriver(onErrorJustReturn: []),
             isEmpty: isEmptyRelay.asDriver(onErrorJustReturn: true),
-            openURL: openURLRelay.asDriver(onErrorJustReturn: URL(string: "https://wbk.shanbox.19930810.xyz:8443")!),
+            openURL: openURLRelay.asDriver(onErrorJustReturn: URL(string: "https://api.drel.app")!),
             loading: loadingRelay.asDriver(onErrorJustReturn: false)
         )
     }

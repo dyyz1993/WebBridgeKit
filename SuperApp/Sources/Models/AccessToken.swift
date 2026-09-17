@@ -85,7 +85,7 @@ public class AccessToken: Object {
 
     /// 分享文本
     public var shareText: String {
-        return "【WebBridgeKit】共享口令: \(url)\n口令: \(token)"
+        return "【Drel】共享口令: \(url)\n口令: \(token)"
     }
 }
 

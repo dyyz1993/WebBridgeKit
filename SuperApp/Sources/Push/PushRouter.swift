@@ -16,7 +16,9 @@ class PushRouter {
     private let launchResolver: HTMLAppLaunchResolver
 
     private init() {
-        launchResolver = HTMLAppLaunchResolver()
+        launchResolver = HTMLAppLaunchResolver(
+            trustRegistry: HTMLAppRuntimeCenter.shared.trustRegistry
+        )
     }
 
     /// 处理推送通知点击
@@ -83,7 +85,7 @@ class PushRouter {
         }
 
         // 3. 都没有 → 不做路由，让 App 正常打开
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRouter] No route target in payload")
         #endif
     }
@@ -99,18 +101,60 @@ class PushRouter {
             return
         }
 
+        DrelPushAppCatalogCoordinator.shared.activateIfTrusted(
+            appID: envelope.appID,
+            route: envelope.route
+        ) { [weak self, weak rootVC] accepted in
+            guard accepted, let self, let rootVC else {
+                StructuredLogger.shared.warning(
+                    "[PushRouter] Rejected HTML app route because no signed manifest accepted it",
+                    category: .navigation
+                )
+                return
+            }
+            self.openResolvedTrustedHTMLApp(envelope: envelope, payload: payload, from: rootVC)
+        }
+    }
+
+    private func openResolvedTrustedHTMLApp(
+        envelope: HTMLAppPushEnvelope,
+        payload: PushPayload,
+        from rootVC: UIViewController
+    ) {
         do {
             let target = try launchResolver.resolve(envelope: envelope)
+
+            if !DrelContainerBuildPolicy.nativeBridgeEnabled {
+                // Store builds deliberately provide no native JS bridge. The
+                // validated route and parameters travel in namespaced URL
+                // query items instead, so the PWA can render its destination
+                // using ordinary web APIs while strong-offline packages still
+                // open their signed local entrypoint.
+                let browserParams = DrelMessageOpenPolicy.browserParams(
+                    for: target.containerOnlyURL,
+                    mode: payload.mode == .modal ? .modal : .immersive,
+                    payload: nil,
+                    useManifestLoader: false,
+                    preferCachedContent: false
+                )
+                WebBrowserManager.shared.openBrowser(
+                    url: target.containerOnlyURL,
+                    params: browserParams,
+                    from: rootVC
+                )
+                return
+            }
+
             var bridgePayload = target.context.bridgePayload
             bridgePayload["webbridgekitOfflineMode"] = target.offlineMode.rawValue
             bridgePayload["webbridgekitPageURL"] = target.pageURL.absoluteString
-            let browserParams = makeParams(
+            let browserParams = DrelMessageOpenPolicy.browserParams(
                 for: target.loaderURL,
                 // Registered PWAs are app experiences, not browser tabs. They
                 // default to immersive mode; modal is the sole explicit override.
                 mode: payload.mode == .modal ? .modal : .immersive,
                 payload: bridgePayload,
-                useManifestLoader: target.offlineMode == .strong,
+                useManifestLoader: false,
                 preferCachedContent: target.offlineMode == .partial
             )
             WebBrowserManager.shared.openBrowser(
@@ -127,87 +171,54 @@ class PushRouter {
     }
 
     private func openCachedApp(appid: String, params: [String: Any], mode: PushPayload.OpenMode, from rootVC: UIViewController) {
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRouter] Opening cached app: \(appid)")
         #endif
 
         if let result = ManifestStore.shared.getManifestByAppId(appid),
            let url = URL(string: result.key) {
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             print("[PushRouter] Cache hit for appid: \(appid), url: \(url)")
             #endif
-            let browserParams = makeParams(for: url, mode: mode, payload: stringParams(params))
+            let browserParams = DrelMessageOpenPolicy.browserParams(
+                for: url,
+                mode: mode,
+                payload: stringParams(params),
+                useManifestLoader: true
+            )
             WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
             return
         }
 
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRouter] Cache miss for appid: \(appid), falling back to URL scheme")
         #endif
         guard let url = URL(string: "app://\(appid)") else { return }
-        let browserParams = makeParams(for: url, mode: mode, payload: stringParams(params))
+        let browserParams = DrelMessageOpenPolicy.browserParams(
+            for: url,
+            mode: mode,
+            payload: stringParams(params),
+            useManifestLoader: true
+        )
         WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
     }
 
     // MARK: - Open Browser
 
     private func openBrowser(url: URL, mode: PushPayload.OpenMode, from rootVC: UIViewController) {
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         print("[PushRouter] Opening URL: \(url) mode: \(mode)")
         #endif
-        let browserParams = makeParams(for: url, mode: mode)
+        // A plain push `url` is an ordinary HTTPS destination, not an
+        // installed HTML-app package. Sending it through the manifest loader
+        // makes normal websites fail with a manifest-related toast.
+        let browserParams = DrelMessageOpenPolicy.browserParams(
+            for: url,
+            mode: mode,
+            useManifestLoader: false,
+            preferCachedContent: false
+        )
         WebBrowserManager.shared.openBrowser(url: url, params: browserParams, from: rootVC)
-    }
-
-    // MARK: - Helper
-
-    private func makeParams(
-        for url: URL,
-        mode: PushPayload.OpenMode,
-        payload: [String: String]? = nil,
-        useManifestLoader: Bool = true,
-        preferCachedContent: Bool = false
-    ) -> WebBrowserParams {
-        switch mode {
-        case .normal:
-            let parsed = WebBrowserParams.from(url: url)
-            return WebBrowserParams(
-                displayMode: parsed.displayMode,
-                modalSize: parsed.modalSize,
-                showMask: parsed.showMask,
-                clickMaskCloses: parsed.clickMaskCloses,
-                showCloseButton: parsed.showCloseButton,
-                hideNavigationBar: parsed.hideNavigationBar,
-                hideStatusBar: parsed.hideStatusBar,
-                hideTabBar: parsed.hideTabBar,
-                disableSwipeBack: parsed.disableSwipeBack,
-                orientation: parsed.orientation,
-                allowJavaScriptClose: parsed.allowJavaScriptClose,
-                customTitle: parsed.customTitle,
-                debugMode: parsed.debugMode,
-                payload: payload,
-                useManifestLoader: useManifestLoader,
-                preferCachedContent: preferCachedContent
-            )
-        case .immersive:
-            return WebBrowserParams(
-                displayMode: .immersive,
-                hideNavigationBar: true,
-                hideStatusBar: true,
-                hideTabBar: true,
-                payload: payload,
-                useManifestLoader: useManifestLoader,
-                preferCachedContent: preferCachedContent
-            )
-        case .modal:
-            return WebBrowserParams(
-                displayMode: .modal,
-                modalSize: .percent(width: "85%", height: "70%"),
-                payload: payload,
-                useManifestLoader: useManifestLoader,
-                preferCachedContent: preferCachedContent
-            )
-        }
     }
 
     private func stringParams(_ params: [String: Any]) -> [String: String] {

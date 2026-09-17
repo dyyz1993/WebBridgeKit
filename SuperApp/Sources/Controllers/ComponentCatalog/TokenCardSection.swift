@@ -3,6 +3,7 @@
 //  SuperApp
 //
 
+ #if !DREL_CONTAINER_ONLY
 import UIKit
 import SnapKit
 import WebBridgeKit
@@ -34,8 +35,11 @@ extension ComponentCatalogViewController {
     }
 }
 
+#endif
+
 // MARK: - Token Card Demo View
 
+#if !DREL_CONTAINER_ONLY
 class TokenCardDemoView: UIView {
 
     private let gradientLayer = CAGradientLayer()
@@ -81,7 +85,7 @@ class TokenCardDemoView: UIView {
         titleLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.9)
 
         let urlLabel = UILabel()
-        urlLabel.text = "wbk.shanbox.19930810.xyz:8443"
+        urlLabel.text = "api.drel.app"
         urlLabel.font = ThemeTokens.Typography.monospaceSmall
         urlLabel.textColor = ThemeTokens.Color.background.withAlphaComponent(0.85)
         urlLabel.numberOfLines = 1
@@ -124,3 +128,4 @@ class TokenCardDemoView: UIView {
         }
     }
 }
+#endif

@@ -6,6 +6,9 @@
 //  system status per capability, with revocation and the iOS Settings handoff.
 //
 
+// This is a reusable/Debug bridge-management screen. It must not ship in the
+// Drel Store product, where remote pages have no native Bridge surface.
+#if !DREL_CONTAINER_ONLY
 import UIKit
 import WebBridgeKit
 
@@ -176,7 +179,7 @@ final class PWAPermissionCenterViewController: UIViewController {
         let card = ThemeCard()
         card.accessibilityIdentifier = "pwa-permission.headerCard"
 
-        let icon = UIImageView(image: WebBridgeKitBrand.image ?? LucideIcon.appFill.image())
+        let icon = UIImageView(image: DrelBrand.image ?? LucideIcon.appFill.image())
         icon.tintColor = ThemeTokens.Color.primary
         icon.contentMode = .scaleAspectFit
         icon.translatesAutoresizingMaskIntoConstraints = false
@@ -512,3 +515,4 @@ final class PWARevokeConfirmViewController: UIViewController {
         dismiss(animated: true) { [onResult] in onResult(result) }
     }
 }
+#endif

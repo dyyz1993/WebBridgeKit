@@ -1,6 +1,6 @@
 //
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 //  NotificationDebugViewController.swift
 //  SuperApp
 //
@@ -13,7 +13,7 @@ import SnapKit
 import RxSwift
 import WebBridgeKit
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 
 private struct NotificationParams {
     let server: String
@@ -354,7 +354,7 @@ class NotificationDebugViewController: UIViewController {
             (L10n.tr("notif_debug.template.image"), L10n.tr("notif_debug.template.image_title"), L10n.tr("notif_debug.template.image_body"), "https://via.placeholder.com/300", "active", "", "", false),
             (L10n.tr("notif_debug.template.urgent"), L10n.tr("notif_debug.template.urgent_title"), L10n.tr("notif_debug.template.urgent_body"), "", "timeSensitive", "alarm", "", false),
             ("Markdown", "Markdown", "# Hello\n- Item 1\n- Item 2", "", "active", "", "", true),
-            (L10n.tr("notif_debug.template.link"), L10n.tr("notif_debug.template.link_title"), L10n.tr("notif_debug.template.link_body"), "", "active", "", "https://wbk.shanbox.19930810.xyz:8443", false)
+            (L10n.tr("notif_debug.template.link"), L10n.tr("notif_debug.template.link_title"), L10n.tr("notif_debug.template.link_body"), "", "active", "", "https://api.drel.app", false)
         ]
         objc_setAssociatedObject(self, "templates", templates, .OBJC_ASSOCIATION_RETAIN)
     }
@@ -401,7 +401,7 @@ class NotificationDebugViewController: UIViewController {
     /// Collects and validates the current form. On validation failure the
     /// reason is written to the response view and nil is returned.
     private func collectParams() -> NotificationParams? {
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.drel.app"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         guard !key.isEmpty else {
             responseView.text = L10n.tr("notif_debug.error_no_key")

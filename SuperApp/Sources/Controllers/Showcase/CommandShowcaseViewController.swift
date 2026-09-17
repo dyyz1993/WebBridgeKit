@@ -2,7 +2,7 @@ import UIKit
 import WebBridgeKit
 import SnapKit
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 
 class CommandShowcaseViewController: UIViewController {
 
@@ -186,9 +186,9 @@ class CommandShowcaseViewController: UIViewController {
     private func loadTestJSON() {
         let testPayload: [String: Any] = [
             "appid": "com.example.testapp",
-            "url": "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html",
+            "url": "https://api.drel.app/test_resources/bridge-hub.html",
             "title": "Test Page",
-            "icon": "https://wbk.shanbox.19930810.xyz:8443/favicon.ico",
+            "icon": "https://api.drel.app/favicon.ico",
             "token": "test-token-123",
             "ts": Date().timeIntervalSince1970,
             "nonce": UUID().uuidString
@@ -214,7 +214,7 @@ class CommandShowcaseViewController: UIViewController {
     private func testRouter() {
         let payload = CommandPayload(
             appid: "com.test.app",
-            url: "https://wbk.shanbox.19930810.xyz:8443",
+            url: "https://api.drel.app",
             title: "Test"
         )
         let route = CommandRouter.shared.route(payload)

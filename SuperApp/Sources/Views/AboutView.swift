@@ -2,7 +2,7 @@ import SwiftUI
 import WebBridgeKit
 
 struct AboutView: View {
-    private let appIcon: UIImage? = Bundle.main.icon ?? WebBridgeKitBrand.image
+    private let appIcon: UIImage? = Bundle.main.icon ?? DrelBrand.image
     private let appName: String = Bundle.main.displayName
     private let versionText: String = {
         if let version = Bundle.main.version, let build = Bundle.main.build {
@@ -23,8 +23,10 @@ struct AboutView: View {
                 .staggerIn(index: 2, appeared: appeared)
             licenseSection
                 .staggerIn(index: 3, appeared: appeared)
-            feedbackSection
+            legalSection
                 .staggerIn(index: 4, appeared: appeared)
+            feedbackSection
+                .staggerIn(index: 5, appeared: appeared)
         }
         .appListStyle()
         .listStyle(InsetGroupedListStyle())
@@ -41,7 +43,7 @@ struct AboutView: View {
                         Image(uiImage: icon)
                             .resizable()
                     } else {
-                        Image(uiImage: WebBridgeKitBrand.image ?? UIImage())
+                        Image(uiImage: DrelBrand.image ?? UIImage())
                             .resizable()
                     }
                 }
@@ -75,6 +77,18 @@ struct AboutView: View {
 
     private var featuresSection: some View {
         Section(header: Text(L10n.tr("about.section.features")).font(Font.app(ThemeTokens.Typography.headline))) {
+            #if DREL_CONTAINER_ONLY
+            ForEach([
+                L10n.tr("about.feature.push"),
+                L10n.tr("about.feature.inbox"),
+                L10n.tr("about.feature.secure_route")
+            ], id: \.self) { feature in
+                Text(feature)
+                    .font(Font.app(ThemeTokens.Typography.callout))
+                    .foregroundColor(Color.appText)
+                    .listRowBackground(Color.appCardBackground)
+            }
+            #else
             ForEach([
                 L10n.tr("about.feature.cache"),
                 L10n.tr("about.feature.favorite"),
@@ -86,6 +100,7 @@ struct AboutView: View {
                     .foregroundColor(Color.appText)
                     .listRowBackground(Color.appCardBackground)
             }
+            #endif
         }
     }
 
@@ -104,7 +119,7 @@ struct AboutView: View {
     private var feedbackSection: some View {
         Section(header: Text(L10n.tr("about.section.feedback")).font(Font.app(ThemeTokens.Typography.headline))) {
             Button {
-                if let url = URL(string: "https://github.com/yourusername/WebBridgeKit/issues") {
+                if let url = URL(string: "https://github.com/dyyz1993/WebBridgeKit/issues") {
                     UIApplication.shared.open(url)
                 }
             } label: {
@@ -115,7 +130,7 @@ struct AboutView: View {
             .listRowBackground(Color.appCardBackground)
 
             Button {
-                if let url = URL(string: "mailto:support@webbridgekit.com") {
+                if let url = URL(string: "mailto:support@drel.app") {
                     UIApplication.shared.open(url)
                 }
             } label: {
@@ -123,6 +138,22 @@ struct AboutView: View {
                     .font(Font.app(ThemeTokens.Typography.callout))
                     .foregroundColor(Color.appPrimary)
             }
+            .listRowBackground(Color.appCardBackground)
+        }
+    }
+
+    private var legalSection: some View {
+        Section(header: Text(L10n.tr("about.section.legal")).font(Font.app(ThemeTokens.Typography.headline))) {
+            Button {
+                if let url = URL(string: "https://drel.app/privacy/") {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                Text(L10n.tr("about.privacy_policy"))
+                    .font(Font.app(ThemeTokens.Typography.callout))
+                    .foregroundColor(Color.appPrimary)
+            }
+            .accessibilityIdentifier("about.cell.legal.0")
             .listRowBackground(Color.appCardBackground)
         }
     }

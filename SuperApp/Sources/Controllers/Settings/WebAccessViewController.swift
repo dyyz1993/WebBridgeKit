@@ -291,11 +291,6 @@ class WebAccessViewController: BaseViewController<WebAccessViewModel> {
     func loadTargetURL(_ url: URL) {
         currentURL = url
 
-        if UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp) {
-            UserDefaults.standard.set(url.absoluteString, forKey: SettingsPreferenceKeys.lastOpenedURL)
-            UserDefaults.standard.synchronize()
-        }
-
         checkURLParameters(url)
 
         webView.load(URLRequest(url: url))
@@ -441,10 +436,6 @@ extension WebAccessViewController: WKNavigationDelegate {
             }
             viewModel.refreshCacheStatus()
 
-            if UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp) {
-                UserDefaults.standard.set(url.absoluteString, forKey: SettingsPreferenceKeys.lastOpenedURL)
-                UserDefaults.standard.synchronize()
-            }
         }
 
         viewModel.notifyPageDidFinishLoading()

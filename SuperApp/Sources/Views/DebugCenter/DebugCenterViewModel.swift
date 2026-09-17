@@ -1,4 +1,4 @@
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 import Foundation
 import UIKit
 import WebBridgeKit
@@ -45,7 +45,7 @@ final class DebugCenterViewModel: ObservableObject {
         crashCount = "\(countCrashLogs())"
         environment = EnvironmentInfo().summary
 
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         networkCount = "\(MockNetworkRequestStore.shared.getRecentRequests().count)"
         #else
         networkCount = "N/A"

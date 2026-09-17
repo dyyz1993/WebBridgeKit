@@ -69,17 +69,10 @@ struct PushPayload {
         self.level = userInfo["level"] as? String
         self.group = userInfo["group"] as? String
 
-        if let modeStr = userInfo["mode"] as? String {
-            self.mode = OpenMode(rawValue: modeStr) ?? .normal
-        } else if let display = userInfo["display"] as? String {
-            switch display {
-            case "sheet", "inline": self.mode = .modal
-            case "full": self.mode = .immersive
-            default: self.mode = .normal
-            }
-        } else {
-            self.mode = .normal
-        }
+        self.mode = DrelMessageOpenPolicy.mode(
+            rawValue: userInfo["mode"] as? String,
+            display: userInfo["display"] as? String
+        )
 
         if let p = userInfo["params"] as? [String: Any] {
             self.params = p
@@ -117,5 +110,90 @@ struct PushPayload {
             expiresAt: expiresAt,
             nonce: nonce
         )
+    }
+}
+
+/// The one canonical presentation policy for a Drel message destination.
+///
+/// A notification can be opened immediately by `PushRouter`, or much later
+/// from the inbox/detail screen after it has been persisted as a
+/// `MessagePayload`.  Those paths must not reinterpret `mode` independently:
+/// doing so previously made an immersive push reopen as a normal browser tab.
+enum DrelMessageOpenPolicy {
+
+    /// Accept the documented `mode` values plus the historical `display`
+    /// aliases used by older senders. Unknown values deliberately fall back to
+    /// a normal browser rather than granting a more disruptive presentation.
+    static func mode(rawValue: String?, display: String? = nil) -> PushPayload.OpenMode {
+        switch MessageTargetPresentation.resolve(mode: rawValue, display: display) {
+        case .normal:
+            return .normal
+        case .immersive:
+            return .immersive
+        case .modal:
+            return .modal
+        }
+    }
+
+    static func mode(for payload: MessagePayload) -> PushPayload.OpenMode {
+        mode(
+            rawValue: payload.targetMode ?? payload.userInfo?["mode"],
+            display: payload.userInfo?["display"]
+        )
+    }
+
+    /// Registered HTML apps are app experiences, so they remain immersive by
+    /// default. A modal message is the one explicit presentation override.
+    static func registeredAppMode(for payload: MessagePayload) -> PushPayload.OpenMode {
+        mode(for: payload) == .modal ? .modal : .immersive
+    }
+
+    static func browserParams(
+        for url: URL,
+        mode: PushPayload.OpenMode,
+        payload: [String: String]? = nil,
+        useManifestLoader: Bool = false,
+        preferCachedContent: Bool = false
+    ) -> WebBrowserParams {
+        switch mode {
+        case .normal:
+            let parsed = WebBrowserParams.from(url: url)
+            return WebBrowserParams(
+                displayMode: parsed.displayMode,
+                modalSize: parsed.modalSize,
+                showMask: parsed.showMask,
+                clickMaskCloses: parsed.clickMaskCloses,
+                showCloseButton: parsed.showCloseButton,
+                hideNavigationBar: parsed.hideNavigationBar,
+                hideStatusBar: parsed.hideStatusBar,
+                hideTabBar: parsed.hideTabBar,
+                disableSwipeBack: parsed.disableSwipeBack,
+                orientation: parsed.orientation,
+                allowJavaScriptClose: parsed.allowJavaScriptClose,
+                customTitle: parsed.customTitle,
+                debugMode: parsed.debugMode,
+                payload: payload,
+                useManifestLoader: useManifestLoader,
+                preferCachedContent: preferCachedContent
+            )
+        case .immersive:
+            return WebBrowserParams(
+                displayMode: .immersive,
+                hideNavigationBar: true,
+                hideStatusBar: true,
+                hideTabBar: true,
+                payload: payload,
+                useManifestLoader: useManifestLoader,
+                preferCachedContent: preferCachedContent
+            )
+        case .modal:
+            return WebBrowserParams(
+                displayMode: .modal,
+                modalSize: .percent(width: "85%", height: "70%"),
+                payload: payload,
+                useManifestLoader: useManifestLoader,
+                preferCachedContent: preferCachedContent
+            )
+        }
     }
 }

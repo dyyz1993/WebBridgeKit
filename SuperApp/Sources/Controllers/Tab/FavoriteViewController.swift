@@ -36,17 +36,6 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
     private let loadingView = LoadingView()
 
-    private lazy var addButton: UIButton = {
-        let button = UIButton(type: .system)
-        let image = LucideIcon.plus.templateImage(pointSize: 20, weight: .medium)
-        button.setImage(image, for: .normal)
-        button.tintColor = ThemeTokens.Color.text
-        button.snp.makeConstraints { make in
-            make.width.height.equalTo(44)
-        }
-        return button
-    }()
-
     // MARK: - Properties
 
     private var currentSections: [URLFavoriteSection] = []
@@ -78,7 +67,6 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         tableView.accessibilityIdentifier = "favorite.tableView"
         emptyStateView.accessibilityIdentifier = "favorite.emptyStateView"
         loadingView.accessibilityIdentifier = "favorite.loadingView"
-        addButton.accessibilityIdentifier = "favorite.addButton"
 
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
@@ -95,9 +83,6 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         loadingView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-
-        // 导航栏右侧按钮
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
 
         // 配置空状态
         emptyStateView.configure(
@@ -136,20 +121,14 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         let itemSelect = tableView.rx.itemSelected
             .asDriver()
 
-        let pinToggle = PublishRelay<String>()
-            .asDriver(onErrorJustReturn: "")
-
-        let cacheModeToggle = PublishRelay<(String, Bool)>()
-            .asDriver(onErrorJustReturn: ("", false))
-
         let itemDelete = PublishRelay<String>()
             .asDriver(onErrorJustReturn: "")
 
         let input = FavoriteViewModel.Input(
             refresh: refresh,
             itemSelect: itemSelect,
-            pinToggle: pinToggle,
-            cacheModeToggle: cacheModeToggle,
+            pinToggle: .empty(),
+            cacheModeToggle: .empty(),
             itemDelete: itemDelete
         )
 
@@ -166,12 +145,6 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
             .map { $0.flatMap { $0.items } }
             .drive(tableView.rx.items(cellIdentifier: FavoriteCell.identifier, cellType: FavoriteCell.self)) { [weak self] _, favorite, cell in
                 cell.favorite = favorite
-                cell.onPinToggle = { id in
-                    self?.handlePinToggle(id: id)
-                }
-                cell.onCacheModeToggle = { id, enabled in
-                    self?.handleCacheModeToggle(id: id, enabled: enabled)
-                }
             }
             .disposed(by: rx)
 
@@ -224,29 +197,6 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         )
     }
 
-    private func handlePinToggle(id: String) {
-        // 通过 PublishRelay 发送事件
-        let input = FavoriteViewModel.Input(
-            refresh: .empty(),
-            itemSelect: .empty(),
-            pinToggle: .just(id),
-            cacheModeToggle: .empty(),
-            itemDelete: .empty()
-        )
-        _ = viewModel.transform(input: input)
-    }
-
-    private func handleCacheModeToggle(id: String, enabled: Bool) {
-        let input = FavoriteViewModel.Input(
-            refresh: .empty(),
-            itemSelect: .empty(),
-            pinToggle: .empty(),
-            cacheModeToggle: .just((id, enabled)),
-            itemDelete: .empty()
-        )
-        _ = viewModel.transform(input: input)
-    }
-
     private func handleDelete(id: String) {
         let alert = UIAlertController(
             title: L10n.tr("favorite.confirm_delete"),
@@ -267,6 +217,18 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         })
 
         present(alert, animated: true)
+    }
+
+    /// 收藏夹页的置顶入口：与首页长按操作表共用同一 pinToggle 通道。
+    private func handlePinToggle(id: String) {
+        let input = FavoriteViewModel.Input(
+            refresh: .empty(),
+            itemSelect: .empty(),
+            pinToggle: .just(id),
+            cacheModeToggle: .empty(),
+            itemDelete: .empty()
+        )
+        _ = viewModel.transform(input: input)
     }
 
     @objc private func handleLongPress(_ gestureRecognizer: UILongPressGestureRecognizer) {
@@ -317,16 +279,15 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 // MARK: - UITableViewDelegate
 
 extension FavoriteViewController: UITableViewDelegate {
+    /// 左滑同时露出「删除」与「置顶/取消置顶」；删除排最外层，
+    /// 保持既有"全滑即删除"的手势语义不变。
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        // Get all favorites flattened from sections
+        let allFavorites = currentSections.flatMap { $0.items }
+        guard let favorite = allFavorites[safe: indexPath.row] else { return nil }
+
         let deleteAction = UIContextualAction(style: .destructive, title: L10n.tr("common.delete")) { [weak self] _, _, completion in
             guard let self = self else {
-                completion(false)
-                return
-            }
-
-            // Get all favorites flattened from sections
-            let allFavorites = self.currentSections.flatMap { $0.items }
-            guard let favorite = allFavorites[safe: indexPath.row] else {
                 completion(false)
                 return
             }
@@ -334,10 +295,16 @@ extension FavoriteViewController: UITableViewDelegate {
             self.handleDelete(id: favorite.id)
             completion(true)
         }
-
         deleteAction.backgroundColor = ThemeTokens.Color.error
 
-        return UISwipeActionsConfiguration(actions: [deleteAction])
+        let isPinned = favorite.isPinned
+        let pinAction = UIContextualAction(style: .normal, title: isPinned ? "取消置顶" : "置顶") { [weak self] _, _, completion in
+            self?.handlePinToggle(id: favorite.id)
+            completion(true)
+        }
+        pinAction.backgroundColor = ThemeTokens.Color.warning
+
+        return UISwipeActionsConfiguration(actions: [deleteAction, pinAction])
     }
 }
 

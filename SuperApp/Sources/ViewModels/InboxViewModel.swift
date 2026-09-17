@@ -9,6 +9,7 @@
 import Foundation
 import RxCocoa
 import RxSwift
+import UserNotifications
 import WebBridgeKit
 
 class InboxViewModel: ViewModel {
@@ -20,6 +21,7 @@ class InboxViewModel: ViewModel {
         let itemSelect: Driver<IndexPath>
         let deleteItem: Driver<IndexPath>
         let markAllRead: Driver<Void>
+        let clearAllMessages: Driver<Void>
         let sendTestNotification: Driver<Void>
     }
 
@@ -190,6 +192,18 @@ class InboxViewModel: ViewModel {
             .drive()
             .disposed(by: rx)
 
+        input.clearAllMessages
+            .do(onNext: { [weak self] in
+                Task {
+                    await MessageEngine.shared.clearAllMessages()
+                    UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+                    await DefaultBadgeManager().setBadge(0)
+                    self?.loadMessages()
+                }
+            })
+            .drive()
+            .disposed(by: rx)
+
         input.sendTestNotification
             .do(onNext: { [weak self] in
                 self?.sendTestMessage()
@@ -350,6 +364,16 @@ class InboxViewModel: ViewModel {
 
     private func applyFilters() {
         var messages = messagesRelay.value
+
+        let activeChannelID = UserDefaults.standard.string(forKey: "drel.push-channel.selected.v1")
+            ?? DrelPushChannelStore.officialChannelID
+        if activeChannelID == DrelPushChannelStore.officialChannelID {
+            // Untagged records predate the self-hosted source contract and
+            // remain official history rather than silently disappearing.
+            messages = messages.filter { !$0.payload.channel.hasPrefix("drel.selfhosted.") }
+        } else {
+            messages = messages.filter { $0.payload.channel == activeChannelID }
+        }
 
         switch currentFilter {
         case .all:

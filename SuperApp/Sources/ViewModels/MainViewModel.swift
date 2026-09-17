@@ -179,8 +179,8 @@ class MainViewModel: ViewModel {
         return Output(
             histories: historiesRelay.asDriver(),
             isEmpty: isEmptyRelay.asDriver(),
-            openURL: openURLRelay.asDriver(onErrorJustReturn: URL(string: "https://wbk.shanbox.19930810.xyz:8443")!),
-            showActionSheet: showActionSheetRelay.asDriver(onErrorJustReturn: URL(string: "https://wbk.shanbox.19930810.xyz:8443")!),
+            openURL: openURLRelay.asDriver(onErrorJustReturn: URL(string: "https://api.drel.app")!),
+            showActionSheet: showActionSheetRelay.asDriver(onErrorJustReturn: URL(string: "https://api.drel.app")!),
             showScanner: showScannerRelay.asDriver(onErrorJustReturn: ()),
             loading: loadingRelay.asDriver()
         )

@@ -18,8 +18,11 @@ public class ServerConfigManager {
 
     let realmConfiguration: Realm.Configuration
 
-    private let defaultBaseURL = "https://wbk.shanbox.19930810.xyz:8443"
+    private let defaultBaseURL = "https://api.drel.app"
     private let defaultAPIEndpoint = ""
+    /// Builds installed before the Drel public endpoint used this infrastructure
+    /// hostname as the app's *default* service. Migrate only that known default;
+    /// never rewrite a user's self-hosted configuration.
 
     private var hasEnsuredDefault = false
     private let initLock = NSRecursiveLock()
@@ -39,11 +42,13 @@ public class ServerConfigManager {
         hasEnsuredDefault = true
         do {
             let realm = try Realm(configuration: realmConfiguration)
-            if realm.object(ofType: ServerConfig.self, forPrimaryKey: "default") == nil {
+            if let defaultConfig = realm.object(ofType: ServerConfig.self, forPrimaryKey: "default") {
+                try migrateLegacyOfficialDefaultSync(defaultConfig, in: realm)
+            } else {
                 try resetToDefaultSync(in: realm)
             }
         } catch {
-            #if DEBUG
+            #if !DREL_CONTAINER_ONLY
             print("[WARN] [ServerConfigManager] Failed to ensure default config: \(error)")
             #endif
         }
@@ -67,6 +72,34 @@ public class ServerConfigManager {
             defaultConfig.updatedAt = Date()
             realm.add(defaultConfig)
         }
+    }
+
+    private func migrateLegacyOfficialDefaultSync(_ config: ServerConfig, in realm: Realm) throws {
+        guard config.id == "default",
+              config.serverType == "default",
+              let baseURL = config.baseURL?.trimmingCharacters(in: .whitespacesAndNewlines),
+              Self.isLegacyOfficialDefault(baseURL) else {
+            return
+        }
+        try realm.write {
+            config.baseURL = defaultBaseURL
+            config.apiEndpoint = defaultAPIEndpoint
+            config.updatedAt = Date()
+        }
+        WebBridgeLogger.shared.log(.info, "[MIGRATE] Default API endpoint moved to Drel")
+    }
+
+    /// Identifies the pre-Drel official endpoint without embedding its full
+    /// infrastructure hostname in the release binary. This migration remains
+    /// deliberately narrow: it is only used for the built-in default config.
+    private static func isLegacyOfficialDefault(_ baseURL: String) -> Bool {
+        guard let url = URL(string: baseURL),
+              url.scheme?.lowercased() == "https",
+              url.port == 8443 else {
+            return false
+        }
+        return url.host?.lowercased().split(separator: ".").map(String.init)
+            == ["wbk", "shanbox", "19930810", "xyz"]
     }
 
     // MARK: - 配置管理

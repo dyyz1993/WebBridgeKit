@@ -77,7 +77,7 @@ final class GatewayConfigurationViewController: UIViewController {
         let scanner = QRScannerViewController(configuration: .init(
             showScanRegionOverlay: true,
             showCloseButton: true,
-            tipText: text("gateway.scan.tip", "扫描 WebBridgeKit 网关配置码"),
+            tipText: text("gateway.scan.tip", "扫描 Drel 网关配置码"),
             autoDismiss: true
         ))
         scanner.scannerDidSuccess.subscribe(onNext: { [weak self] payload in

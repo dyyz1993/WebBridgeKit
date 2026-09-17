@@ -19,14 +19,16 @@ enum OfficialPushIdentityStoreError: LocalizedError {
 }
 
 /// Per-installation push identity with dual persistence (Keychain + UserDefaults).
-/// UserDefaults acts as a read cache so all code paths — push registration,
-/// message fetch, UI display — always see the same identity even when
-/// Keychain access fails in background contexts.
+/// Keychain is preferred, while UserDefaults is both a read cache and a
+/// non-secret fallback. The identity is intentionally public in the copyable
+/// push URL, so a transient Keychain failure must not stop a new developer
+/// from discovering a stable address before granting notification permission.
 final class OfficialPushIdentityStore {
     static let shared = OfficialPushIdentityStore()
 
     private let userDefaultsKey = "com.webbridgekit.official-push.identity"
     private let provider: PushDeviceIdentityProvider
+    private let userDefaultsProvider: PushDeviceIdentityProvider
     private let keychainStorage: KeychainPushDeviceIdentityStorage
 
     init(
@@ -35,6 +37,10 @@ final class OfficialPushIdentityStore {
     ) {
         self.keychainStorage = storage
         self.provider = PushDeviceIdentityProvider(storage: storage, randomBytes: randomBytes)
+        self.userDefaultsProvider = PushDeviceIdentityProvider(
+            storage: UserDefaultsPushDeviceIdentityStorage(key: userDefaultsKey),
+            randomBytes: randomBytes
+        )
     }
 
     /// Returns the current identity, creating one if none exists. Persists to
@@ -53,21 +59,55 @@ final class OfficialPushIdentityStore {
             return cached
         }
 
-        // Slow path: create or recover from Keychain
-        let identity = try provider.currentOrCreate()
+        // Slow path: create or recover from Keychain. If the OS keychain is
+        // temporarily unavailable, retain the non-secret identity in
+        // UserDefaults instead of withholding the public endpoint from V1's
+        // first-launch screen.
+        let identity = try createIdentity()
         UserDefaults.standard.set(identity, forKey: userDefaultsKey)
         return identity
     }
 
-    /// Discards the current identity and generates a fresh one. The old
-    /// identity becomes invalid for this device after the next registration.
+    /// Moves an installation from either the legacy 43-character URL-safe
+    /// base64 key or the first grouped short format to the compact 16-character
+    /// identity. The server keeps the legacy registration alongside the
+    /// successor, so developers' existing scripts continue to deliver while
+    /// the app starts showing the separator-free address.
+    func currentOrMigrateToShortIdentity() throws -> String {
+        let current = try currentOrCreate()
+        guard !PushDeviceIdentityProvider.isCurrentIdentity(current) else { return current }
+
+        try keychainStorage.delete()
+        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+
+        let successor = try createIdentity()
+        UserDefaults.standard.set(successor, forKey: userDefaultsKey)
+        return successor
+    }
+
+    /// Discards the current identity and generates a fresh one. The server may
+    /// retain the old identity during its compatibility window, so callers that
+    /// need immediate revocation must remove the old registration server-side.
     func reset() throws -> String {
         try? keychainStorage.delete()
         UserDefaults.standard.removeObject(forKey: userDefaultsKey)
 
-        let identity = try provider.currentOrCreate()
+        let identity = try createIdentity()
         UserDefaults.standard.set(identity, forKey: userDefaultsKey)
         return identity
+    }
+
+    private func createIdentity() throws -> String {
+        do {
+            return try provider.currentOrCreate()
+        } catch let error as OfficialPushIdentityStoreError {
+            switch error {
+            case .keychainReadFailed, .keychainWriteFailed, .invalidKeychainValue:
+                return try userDefaultsProvider.currentOrCreate()
+            case .randomGenerationFailed:
+                throw error
+            }
+        }
     }
 
     private static func secureRandomBytes(count: Int) throws -> Data {
@@ -79,6 +119,20 @@ final class OfficialPushIdentityStore {
             throw OfficialPushIdentityStoreError.randomGenerationFailed(status)
         }
         return data
+    }
+}
+
+/// The public push identity is not a credential. This storage is used only if
+/// Keychain access fails, so a first-run address remains stable and copyable.
+private struct UserDefaultsPushDeviceIdentityStorage: PushDeviceIdentityStorage {
+    let key: String
+
+    func load() throws -> String? {
+        UserDefaults.standard.string(forKey: key)
+    }
+
+    func save(_ value: String) throws {
+        UserDefaults.standard.set(value, forKey: key)
     }
 }
 

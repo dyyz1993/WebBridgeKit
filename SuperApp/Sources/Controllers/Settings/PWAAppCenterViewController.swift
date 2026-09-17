@@ -35,6 +35,9 @@ final class PWAAppCenterViewController: UIViewController {
     private var manifests: [HTMLAppManifest] = []
     private var isBootstrappingOfficialGateway = false
     private var officialGatewayUnavailable = false
+    private var lastGatewayFailureAt: Date?
+    /// 网关校验失败后的重试冷却期；首页每次再现最多重试一次。
+    private static let gatewayRetryCooldown: TimeInterval = 30
     private var officialPushIdentity: String?
     private let pushRegistrationFlag = "com.webbridgekit.officialPush.registered"
 
@@ -318,8 +321,13 @@ final class PWAAppCenterViewController: UIViewController {
         // not render it directly. An app becomes visible only after a trusted
         // push has targeted it and recorded a user-local activation.
         let gateway = gatewayRegistry.activeGateway() ?? HTMLAppGatewayDefaults.official
-        guard !isBootstrappingOfficialGateway,
-              !officialGatewayUnavailable else { return }
+        // 一次瞬时失败不应永久钉死在「不可用」：冷却期后允许在首页再现时重试。
+        if officialGatewayUnavailable,
+           let last = lastGatewayFailureAt,
+           Date().timeIntervalSince(last) < Self.gatewayRetryCooldown {
+            return
+        }
+        guard !isBootstrappingOfficialGateway else { return }
         bootstrapGateway(gateway)
     }
 
@@ -366,11 +374,14 @@ final class PWAAppCenterViewController: UIViewController {
                         try self.onboardingService.activate(report)
                         self.refreshVisibleApps()
                         self.officialGatewayUnavailable = false
+                        self.lastGatewayFailureAt = nil
                     } catch {
                         self.officialGatewayUnavailable = true
+                        self.lastGatewayFailureAt = Date()
                     }
                 case .failure:
                     self.officialGatewayUnavailable = true
+                    self.lastGatewayFailureAt = Date()
                 }
                 self.updateHomeApps()
             }
@@ -825,7 +836,7 @@ final class PWAAppCenterViewController: UIViewController {
         request.httpMethod = "GET"
         request.timeoutInterval = 15
 
-        URLSession.shared.dataTask(with: request) { [weak self] _, response, error in
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 guard let self else { return }
                 if let error {
@@ -843,6 +854,24 @@ final class PWAAppCenterViewController: UIViewController {
                         message: L10n.tr("official.push.send.failure_message")
                     )
                     return
+                }
+
+                // Bark 兼容路由恒定返回 HTTP 200，投递结论只在 JSON body 里
+                // （code≠200 或 accepted=0 都代表 APNs 没有接受该条通知）。
+                // 只看 HTTP 状态码会把投递失败误报成「测试推送已发送」。
+                if let data,
+                   let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    let code = body["code"] as? Int
+                    let accepted = body["accepted"] as? Int
+                    let deliveryFailed = (code.map { $0 != 200 } ?? false) || accepted == 0
+                    if deliveryFailed {
+                        let detail = (body["message"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+                        self.showMessage(
+                            title: L10n.tr("official.push.send.failure_title"),
+                            message: detail ?? L10n.tr("official.push.send.failure_message")
+                        )
+                        return
+                    }
                 }
 
                 HUDService.shared.showSuccess(withStatus: L10n.tr("official.push.send.success"))

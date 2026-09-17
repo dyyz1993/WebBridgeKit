@@ -49,7 +49,7 @@ class MainViewController: BaseViewController<MainViewModel> {
                 ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
             return key.isEmpty ? activeURL : "\(activeURL)/\(key)"
         }
-        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://wbk.shanbox.19930810.xyz:8443"
+        let server = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server") ?? "https://api.drel.app"
         let key = UserDefaults.standard.string(forKey: "com.webbridgekit.bark.key") ?? ""
         return key.isEmpty ? server : "\(server)/\(key)"
     }
@@ -403,7 +403,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             favoritesSection.isHidden = true
         } else {
             favoritesSection.isHidden = false
-            let header = WBKSectionHeader(title: L10n.tr("home.section.favorites"), style: .withCount)
+            let header = WBKSectionHeader(title: L10n.tr("home.section.my_favorites"), style: .withCount)
             header.setCount(favoritesItems.count)
             let cards = favoritesItems.map { item -> WBKResourceCard in
                 makeResourceCard(from: item)
@@ -485,10 +485,6 @@ class MainViewController: BaseViewController<MainViewModel> {
                 tabBarController.selectedIndex = 1
             }
             return
-        }
-        if UserDefaults.standard.bool(forKey: SettingsPreferenceKeys.rememberLastApp) {
-            UserDefaults.standard.set(url.absoluteString, forKey: SettingsPreferenceKeys.lastOpenedURL)
-            UserDefaults.standard.synchronize()
         }
         WebBrowserManager.shared.openBrowser(
             url: url,

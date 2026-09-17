@@ -1,6 +1,6 @@
 //
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 //  ManifestCacheDemo.swift
 //  SuperApp
 //

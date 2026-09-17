@@ -70,6 +70,9 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         webview.isOpaque = false
         webview.scrollView.isScrollEnabled = false
         webview.contentMode = .scaleToFill
+        // Keep the default link preview ON: disabling it also disables the
+        // link context-menu interaction entirely, and long-press falls
+        // through to text selection instead of the open/copy menu.
         return webview
     }()
 
@@ -575,7 +578,7 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
         addMetaRow(label: L10n.tr("message.detail.received_time"), value: formatter.string(from: message.receivedAt))
-        addMetaRow(label: L10n.tr("message.detail.source"), value: message.payload.channel)
+        addMetaRow(label: L10n.tr("message.detail.source"), value: sourceDisplayName)
         if let group = message.payload.group {
             addMetaRow(label: L10n.tr("message.detail.group"), value: group)
         }
@@ -633,6 +636,7 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
             )
             webView.loadHTMLString(html, baseURL: nil)
             webView.navigationDelegate = self
+            webView.uiDelegate = self
         } else {
             bodyLabel.text = message.payload.body
         }
@@ -785,6 +789,19 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         navigationController?.pushViewController(vc, animated: true)
     }
     #endif
+
+    /// The persisted channel id is data ("apns", "drel.selfhosted.<host>");
+    /// only the detail row presents it in human words.
+    private var sourceDisplayName: String {
+        let channel = message.payload.channel
+        if channel.isEmpty || channel == "apns" {
+            return L10n.tr("message.detail.source.official")
+        }
+        if channel.hasPrefix("drel.selfhosted.") {
+            return L10n.tr("message.detail.source.selfhosted")
+        }
+        return channel
+    }
 
     private func addMetaRow(label: String, value: String) {
         addMetaRow(label: label, value: value, to: metaStackView)
@@ -1148,27 +1165,28 @@ extension MessageDetailViewController: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if navigationAction.navigationType == .linkActivated {
-            guard let url = navigationAction.request.url else {
-                decisionHandler(.allow)
-                return
-            }
-
-            if url.scheme == "http" || url.scheme == "https" {
-                WebBrowserManager.shared.openBrowser(
-                    url: url,
-                    params: DrelMessageOpenPolicy.browserParams(
-                        for: url,
-                        mode: DrelMessageOpenPolicy.mode(for: self.message.payload),
-                        payload: self.message.payload.userInfo,
-                        useManifestLoader: false
-                    ),
-                    from: self
-                )
-                decisionHandler(.cancel)
-                return
-            }
+        let scheme = navigationAction.request.url?.scheme?.lowercased()
+        let isWebURL = scheme == "http" || scheme == "https"
+        // Context-menu commits (link preview menu's 打开链接) arrive as
+        // `.other` rather than `.linkActivated`; both must leave the embedded
+        // height-constrained webview and open the shared browser instead.
+        let isLinkNavigation = navigationAction.navigationType == .linkActivated
+            || (navigationAction.navigationType == .other && isWebURL)
+        if isLinkNavigation, let url = navigationAction.request.url, isWebURL {
+            WebBrowserManager.shared.openBrowser(
+                url: url,
+                params: DrelMessageOpenPolicy.browserParams(
+                    for: url,
+                    mode: DrelMessageOpenPolicy.mode(for: self.message.payload),
+                    payload: self.message.payload.userInfo,
+                    useManifestLoader: false
+                ),
+                from: self
+            )
+            decisionHandler(.cancel)
+            return
         }
         decisionHandler(.allow)
     }
 }
+

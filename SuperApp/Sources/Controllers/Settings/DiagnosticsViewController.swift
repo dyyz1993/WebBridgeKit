@@ -9,7 +9,7 @@
 import UIKit
 import WebBridgeKit
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 
 class DiagnosticsViewController: UIViewController {
 

@@ -52,7 +52,7 @@
 "home.device_token.not_registered" = "未注册";
 "home.section.frequently_used" = "常用应用";
 "home.section.my_favorites" = "我的收藏";
-"home.section.recent_visits" = "最近访问";
+"home.section.recent_visits" = "最近打开的工具";
 "home.test_cases_entry" = "🧪 自动化测试用例";
 
 // Inbox
@@ -165,14 +165,14 @@
 "settings.section.preferences" = "偏好设置";
 "settings.section.developer" = "开发者";
 "settings.section.about" = "关于";
-"settings.hero.token_masked" = "推送密钥：abcd****efgh";
-"settings.hero.copy_token" = "复制推送密钥";
+"settings.hero.token_masked" = "推送标识：abcd****efgh";
+"settings.hero.copy_token" = "复制完整推送地址";
 "settings.hero.copied_title" = "已复制";
-"settings.hero.copied_message" = "推送密钥已复制到剪贴板";
-"settings.hero.token_format" = "推送密钥：%@";
+"settings.hero.copied_message" = "完整推送地址已复制到剪贴板";
+"settings.hero.token_format" = "推送标识：%@";
 "settings.hero.identity.unset" = "推送身份未配置";
 "settings.hero.unset_title" = "未配置";
-"settings.hero.unset_message" = "请先在「密钥管理」中配置 Bark 身份密钥";
+"settings.hero.unset_message" = "启用通知后将自动生成 Drel 推送标识";
 "settings.server.config" = "网关配置";
 "settings.token.manager" = "口令管理";
 "settings.apikey.manager" = "密钥管理";
@@ -228,10 +228,13 @@
 "message.detail.title" = "消息详情";
 "message.detail.received_time" = "接收时间";
 "message.detail.source" = "来源";
+"message.detail.source.official" = "官方推送";
+"message.detail.source.selfhosted" = "自托管推送";
 "message.detail.group" = "分组";
 "message.detail.read_time" = "已读时间";
 "message.detail.copy_content" = "复制内容";
 "message.detail.open_link" = "打开链接";
+"message.detail.copy_link" = "拷贝链接";
 "message.detail.open_app" = "打开应用";
 "message.detail.open_conversation" = "打开会话";
 "message.detail.delete" = "删除";
@@ -619,6 +622,7 @@
 "official.push.error.storage" = "无法安全保存推送身份，请检查设备存储后重试。";
 "official.push.error.permission" = "当前系统无法使用通知，请稍后重试。";
 "official.push.error.server" = "通知服务暂时不可用，请稍后重试。";
+"official.push.error.entitlement" = "当前安装包未启用推送能力，请使用正式版安装。";
 "official.push.test.title" = "发送测试通知";
 "official.push.test.subtitle" = "快速验证当前设备能否收到推送";
 "official.push.test.default_title" = "测试通知";

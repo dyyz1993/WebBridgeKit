@@ -1,8 +1,8 @@
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 import SwiftUI
 import WebBridgeKit
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 
 final class DiagnosticsViewModel: ObservableObject {
     @Published var sections: [DiagnosticsUISection] = []

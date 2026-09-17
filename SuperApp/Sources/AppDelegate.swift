@@ -9,6 +9,9 @@ import UIKit
 import UserNotifications
 import SwiftUI
 import WebBridgeKit
+#if DEBUG
+import Network
+#endif
 
 extension ProcessInfo {
     var isWebBridgeKitUITesting: Bool {
@@ -20,9 +23,15 @@ extension ProcessInfo {
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
+    private static let copyNotificationCategoryIdentifier = "DREL_COPY"
+    private static let copyNotificationActionIdentifier = "DREL_COPY_ACTION"
+
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        #if DREL_CONTAINER_ONLY
+        WebBrowserManager.shared.webGrantsPresenter = nil
+        #else
         WebBrowserManager.shared.webGrantsPresenter = { hostVC in
             // 沉浸式浏览器隐藏了导航栏，推入的授权页需要显式恢复，
             // 否则网页授权管理页没有返回入口。
@@ -32,6 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             vc.hidesBottomBarWhenPushed = true
             hostVC.navigationController?.pushViewController(vc, animated: true)
         }
+        #endif
 
         let start = Date()
 
@@ -45,6 +55,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
+        #if DEBUG
+        DrelSelfHostedUITestFixture.startIfRequested()
+        #endif
+        #if !DREL_CONTAINER_ONLY
         if isUITesting {
             TestDataSeeder.populateIfNeeded()
             Self.cleanupInvalidHistoryURLs()
@@ -60,6 +74,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 Self.cleanupInvalidHistoryURLs()
             }
         }
+        #else
+        Self.cleanupInvalidHistoryURLs()
+        #endif
 
         // APNs sandbox tokens rotate across reinstalls; refresh silently on
         // every launch so the server always holds the current one.
@@ -70,7 +87,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 PushSoundInstaller.install()
             }
             DispatchQueue.main.async {
-                Self.refreshOfficialPushRegistration()
+                Self.refreshPushRegistration()
             }
         }
 
@@ -111,20 +128,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // 浏览页自动重开，用户改完权限回来直接续上原页面重试。
         // UI 测试默认关闭（UserDefaults 跨用例残留会让后续用例误恢复），
         // 由本行为专门的测试用 --enable-session-restore 显式打开。
-        let restoreEnabled = !isUITesting
-            || ProcessInfo.processInfo.arguments.contains("--enable-session-restore")
+        let defaultStartupAppID = UserDefaults.standard
+            .string(forKey: SettingsPreferenceKeys.defaultStartupAppID) ?? ""
+        let restoreEnabled = DrelStartupNavigationPolicy.shouldRestoreRecentSession(
+            isUITesting: isUITesting,
+            explicitlyEnablesUITestRestore: ProcessInfo.processInfo.arguments
+                .contains("--enable-session-restore"),
+            // A notification response supplies the user's explicit destination.
+            launchedFromRemoteNotification: launchOptions?[.remoteNotification] != nil,
+            // A trusted default app is opened by TabBarController. Letting the
+            // delayed recent-session restore run as well creates a second
+            // normal browser and strips the immersive presentation.
+            hasDefaultStartupApp: !defaultStartupAppID.isEmpty
+        )
         if restoreEnabled {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 guard let self = self, self.window?.rootViewController != nil,
                       let url = WebBrowserManager.restorableLastURL() else { return }
-                WebBrowserManager.shared.openBrowser(url: url)
+                WebBrowserManager.shared.openBrowser(
+                    url: url,
+                    params: WebBrowserParams(useManifestLoader: false)
+                )
             }
         }
 
         // 注册推送通知
         UNUserNotificationCenter.current().delegate = self
+        Self.registerNotificationActions()
 
-        //  Support UI Fidelity Testing — show Component Catalog
+        // The component catalog is a development-only visual test surface. It
+        // must not be reachable from the Store binary through launch args.
+        #if !DREL_CONTAINER_ONLY
         if ProcessInfo.processInfo.arguments.contains("--show-component-catalog") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 guard let self = self else { return }
@@ -134,9 +168,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 self.window?.rootViewController?.present(nav, animated: false)
             }
         }
+        #endif
 
         //  Support automated testing via launch arguments
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         if ProcessInfo.processInfo.arguments.contains("-RunAllTests") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if let tabBarController = self.window?.rootViewController as? UITabBarController {
@@ -159,16 +194,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let duration = Date().timeIntervalSince(start)
         Log.info("App launch took \(String(format: "%.3f", duration))s", category: .performance)
 
-        #if DEBUG
+        #if !DREL_CONTAINER_ONLY
         registerNotificationFixtureIfRequested()
         registerBridgePermissionFixtureIfRequested()
         showPWAAppCenterIfRequested()
+        if ProcessInfo.processInfo.arguments.contains("--reset-default-startup-app") {
+            UserDefaults.standard.removeObject(forKey: SettingsPreferenceKeys.defaultStartupAppID)
+        }
         #endif
 
         return true
     }
 
-    #if DEBUG
+    #if !DREL_CONTAINER_ONLY
     private func registerNotificationFixtureIfRequested() {
         guard ProcessInfo.processInfo.arguments.contains("--register-pwa-notification-fixture") else { return }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in }
@@ -188,7 +226,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             )
         )
         do {
-            try HTMLAppTrustRegistry().register(manifest)
+            try HTMLAppRuntimeCenter.shared.trustRegistry.register(manifest)
             StructuredLogger.shared.info("Registered APNs route fixture", category: .navigation)
             openNotificationFixtureIfRequested()
         } catch {
@@ -346,6 +384,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         Task {
             await PendingMessageImporter.importPending()
         }
+        #if !DREL_CONTAINER_ONLY
         if !ProcessInfo.processInfo.isWebBridgeKitUITesting {
             // Clipboard reads must stay off the activation transition: reading
             // UIPasteboard.string can trigger a slow HTML→text coercion in the
@@ -359,9 +398,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 CommandHandler.shared.checkClipboardOnForeground()
             }
         }
+        #endif
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        // Drel 1.0 intentionally has no external command/deep-link surface.
+        // Its only web entry is the validated route received from an APNs
+        // notification or a trusted gateway manifest. Keeping the legacy
+        // WebBridgeKit scheme out of this Store build prevents arbitrary URLs
+        // or command payloads from turning it into a generic browser.
+        #if DREL_CONTAINER_ONLY
+        return false
+        #else
         if url.scheme == "webbridgekit" {
             // 解析真实的 URL
             // 假设格式为 webbridgekit://open?url=https%3A%2F%2Fgoogle.com
@@ -395,7 +443,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
                 return true
             } else if url.host == "runalltests" {
-                #if DEBUG
+                #if !DREL_CONTAINER_ONLY
                 if let tabBarController = window?.rootViewController as? UITabBarController,
                    let nav = tabBarController.viewControllers?[1] as? UINavigationController,
                    let testVC = nav.viewControllers.first as? ManifestTestCasesViewController {
@@ -409,6 +457,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         return false
+        #endif
     }
 
     // MARK: - Push Notifications
@@ -437,6 +486,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // is still present.
         let wireUserInfo = PushCipher.decryptingUserInfoIfEncrypted(request.content.userInfo)
         Task {
+            DrelPushAppCatalogCoordinator.shared.activateIfTrusted(userInfo: wireUserInfo)
             let payload = makeMessagePayload(
                 identifier: request.identifier,
                 userInfo: wireUserInfo,
@@ -466,7 +516,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        var userInfo = PushCipher.decryptingUserInfoIfEncrypted(
+        let userInfo = PushCipher.decryptingUserInfoIfEncrypted(
             response.notification.request.content.userInfo
         )
         let content = response.notification.request.content
@@ -474,10 +524,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         routingInfo["title"] = userInfo["title"] as? String ?? content.title
         routingInfo["body"] = userInfo["body"] as? String ?? content.body
 
-        // Record the message into the inbox FIRST, then route. If routing
+        let isCopyAction = response.actionIdentifier == Self.copyNotificationActionIdentifier
+
+        // Record the message into the inbox FIRST, then copy or route. If routing
         // fires before the message is stored, focusMessage finds nothing and
         // the user lands on the inbox list instead of the detail page.
         Task { [weak self] in
+            DrelPushAppCatalogCoordinator.shared.activateIfTrusted(userInfo: userInfo)
             let payload = self?.makeMessagePayload(
                 identifier: response.notification.request.identifier,
                 userInfo: userInfo,
@@ -487,16 +540,80 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 try? await MessageEngine.shared.receive(payload)
             }
 
-            // Message is now in the inbox; safe to route to its detail.
+            // Message is now in the inbox; safe to perform the chosen action.
             await MainActor.run { [weak self] in
-                PushNotificationManager.shared.handleNotificationTap(
-                    userInfo: routingInfo,
-                    rootViewController: self?.window?.rootViewController
-                )
+                if isCopyAction {
+                    let copyValue = (userInfo["copy"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    UIPasteboard.general.string = copyValue?.isEmpty == false ? copyValue : content.body
+                    HUDService.shared.showSuccess(withStatus: "内容已复制")
+                } else {
+                    PushNotificationManager.shared.handleNotificationTap(
+                        userInfo: routingInfo,
+                        rootViewController: self?.window?.rootViewController
+                    )
+                }
             }
         }
 
         completionHandler()
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        let isDelete = (userInfo["delete"] as? Bool) == true
+            || (userInfo["delete"] as? String) == "1"
+            || (userInfo["delete"] as? NSNumber)?.boolValue == true
+        guard isDelete,
+              let replacementID = userInfo["id"] as? String,
+              !replacementID.isEmpty else {
+            completionHandler(.noData)
+            return
+        }
+
+        // APNs request identifiers are not guaranteed to equal collapse IDs.
+        // Match the explicit Bark-compatible `id` carried in userInfo instead.
+        UNUserNotificationCenter.current().getDeliveredNotifications { notifications in
+            let identifiers = notifications.compactMap { notification -> String? in
+                let value = notification.request.content.userInfo["id"] as? String
+                return value == replacementID ? notification.request.identifier : nil
+            }
+            if !identifiers.isEmpty {
+                UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: identifiers)
+            }
+        }
+
+        let payload = NotificationPayloadMapper.makePayload(
+            identifier: replacementID,
+            userInfo: userInfo,
+            fallbacks: .init(
+                title: userInfo["title"] as? String ?? "",
+                body: userInfo["body"] as? String ?? "",
+                subtitle: userInfo["subtitle"] as? String,
+                badge: nil
+            )
+        )
+        Task {
+            try? await MessageEngine.shared.receive(payload)
+            completionHandler(.newData)
+        }
+    }
+
+    private static func registerNotificationActions() {
+        let copy = UNNotificationAction(
+            identifier: copyNotificationActionIdentifier,
+            title: "复制",
+            options: [.foreground]
+        )
+        let category = UNNotificationCategory(
+            identifier: copyNotificationCategoryIdentifier,
+            actions: [copy],
+            intentIdentifiers: [],
+            options: []
+        )
+        UNUserNotificationCenter.current().setNotificationCategories([category])
     }
 
     private func makeMessagePayload(
@@ -522,15 +639,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     private func injectTestURLsForDebugging() {
     }
 
-    /// Re-registers the current APNs token with the official push identity on
-    /// every launch. iOS rotates sandbox device tokens across reinstalls, and
-    /// the server must always hold the latest token for the push address to work.
-    private static func refreshOfficialPushRegistration() {
-        guard let identity = try? OfficialPushIdentityStore.shared.currentOrCreate() else { return }
-        let serverURL = ServerConfigManager.shared.getActiveBaseURL()
-            ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
-            ?? "https://wbk.shanbox.19930810.xyz:8443"
-        PushNotificationManager.shared.activateOfficialPush(serverURL: serverURL, key: identity) { _ in }
+    /// Re-registers an already-authorized installation on launch. iOS rotates
+    /// APNs tokens across reinstalls, but a cold launch must never cause the
+    /// notification permission sheet to appear before the developer has seen
+    /// their local push address and chosen “启用通知”.
+    private static func refreshPushRegistration() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized
+                    || settings.authorizationStatus == .provisional
+                    || settings.authorizationStatus == .ephemeral else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                if let selfHosted = SelfHostedPushConfiguration.load() {
+                    // A self-hosted choice must never silently register this
+                    // APNs token with api.drel.app on launch or token refresh.
+                    PushNotificationManager.shared.activateSelfHostedPush(
+                        importPayload: selfHosted.reconnectImportPayload()
+                    ) { _ in }
+                    return
+                }
+                guard let identity = try? OfficialPushIdentityStore.shared.currentOrMigrateToShortIdentity() else { return }
+                let serverURL = ServerConfigManager.shared.getActiveBaseURL()
+                    ?? UserDefaults.standard.string(forKey: "com.webbridgekit.bark.server")
+                    ?? "https://api.drel.app"
+                PushNotificationManager.shared.activateOfficialPush(serverURL: serverURL, key: identity) { _ in }
+            }
+        }
     }
 
     private static func cleanupInvalidHistoryURLs() {
@@ -549,6 +685,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             let historyManager = WebPageHistoryManager.shared
             try? await historyManager.clearAllHistory()
 
+            // 预置推荐只在测试环境（Debug）出现；发布构建新装用户的收藏夹
+            // 必须从空开始，不得自动塞入任何预置条目。
+            #if DEBUG
             let recommended = PresetURLCatalog.recommendedItems
             var seeded = 0
             for item in recommended {
@@ -559,6 +698,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 }
             }
             WebBridgeLogger.shared.info("Data reset: cleared \(allFavorites.count) favs, seeded \(seeded) recommended")
+            #endif
 
             UserDefaults.standard.set(true, forKey: key)
         }
@@ -567,7 +707,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
 // MARK: - DebugWindow
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 private class DebugWindow: UIWindow {
     override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
         super.motionEnded(motion, with: event)
@@ -601,4 +741,90 @@ private class DebugWindow: UIWindow {
 }
 #else
 private typealias DebugWindow = UIWindow
+#endif
+
+// MARK: - Self-hosted push UI-test loopback fixture
+
+// This lives in AppDelegate.swift so the existing Xcode project compiles it
+// without regenerating project files. It is absent from Drel's Store build.
+#if DEBUG
+private enum DrelSelfHostedUITestFixture {
+    private static let port: NWEndpoint.Port = 18080
+    private static var listener: NWListener?
+    private static let queue = DispatchQueue(label: "app.drel.ui-test-fixture")
+
+    static func startIfRequested() {
+        guard ProcessInfo.processInfo.isWebBridgeKitUITesting,
+              ProcessInfo.processInfo.environment["WBK_SELF_HOSTED_UI_TEST_FIXTURE"] == "1",
+              listener == nil
+        else { return }
+
+        do {
+            let listener = try NWListener(using: .tcp, on: port)
+            listener.newConnectionHandler = { connection in
+                accept(connection)
+            }
+            listener.start(queue: queue)
+            self.listener = listener
+        } catch {
+            // The UI test will surface a failed connection. Never expose this
+            // internal fixture or its error details in a production UI.
+            self.listener = nil
+        }
+    }
+
+    private static func accept(_ connection: NWConnection) {
+        connection.start(queue: queue)
+        receiveRequest(on: connection, data: Data())
+    }
+
+    private static func receiveRequest(on connection: NWConnection, data: Data) {
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 16_384) { chunk, _, complete, _ in
+            var collected = data
+            if let chunk { collected.append(chunk) }
+            if let end = collected.range(of: Data("\r\n\r\n".utf8)) {
+                respond(to: connection, requestHead: collected[..<end.lowerBound])
+            } else if complete || collected.count >= 16_384 {
+                connection.cancel()
+            } else {
+                receiveRequest(on: connection, data: collected)
+            }
+        }
+    }
+
+    private static func respond(to connection: NWConnection, requestHead: Data.SubSequence) {
+        let firstLine = String(decoding: requestHead, as: UTF8.self)
+            .split(separator: "\n", maxSplits: 1).first ?? ""
+        let parts = firstLine.split(separator: " ", maxSplits: 2)
+        let method = parts.first.map(String.init) ?? ""
+        let path = parts.dropFirst().first.map(String.init) ?? ""
+
+        let body: String
+        let status: String
+        switch (method, path) {
+        case ("GET", "/.well-known/drel-push.json"):
+            status = "200 OK"
+            body = """
+            {"schema":"drel.self-hosted-push.v1","name":"Simulator Self-hosted","publicBaseURL":"http://127.0.0.1:18080","registrationPath":"/self-hosted/register","pairingPath":"/self-hosted/pairings","healthPath":"/health","unregisterPath":"/unregister"}
+            """
+        case ("GET", "/health"):
+            status = "200 OK"
+            body = "{\"status\":\"ok\",\"apnsReady\":true}"
+        case ("POST", "/self-hosted/pairings"):
+            status = "200 OK"
+            body = "{\"pairingToken\":\"ui-test-ticket\"}"
+        case ("POST", "/self-hosted/register"):
+            status = "201 Created"
+            body = "{\"ok\":true}"
+        default:
+            status = "404 Not Found"
+            body = "{\"code\":404}"
+        }
+
+        let response = "HTTP/1.1 \(status)\r\nContent-Type: application/json\r\nContent-Length: \(body.utf8.count)\r\nConnection: close\r\n\r\n\(body)"
+        connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
+            connection.cancel()
+        })
+    }
+}
 #endif

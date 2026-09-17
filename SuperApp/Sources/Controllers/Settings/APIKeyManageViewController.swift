@@ -276,19 +276,19 @@ class APIKeyManageViewController: BaseViewController<APIKeyManageViewModel> {
         copyPermanentKeyButton.snp.makeConstraints { make in
             make.left.equalTo(permanentKeyIcon.snp.right).offset(12)
             make.top.equalTo(permanentKeyValue.snp.bottom).offset(12)
-            make.height.equalTo(36)
+            make.height.equalTo(ThemeTokens.ComponentContract.TapTarget.minimumHeight)
         }
 
         refreshKeyButton.snp.makeConstraints { make in
             make.left.equalTo(copyPermanentKeyButton.snp.right).offset(12)
             make.centerY.equalTo(copyPermanentKeyButton)
-            make.height.equalTo(36)
+            make.height.equalTo(ThemeTokens.ComponentContract.TapTarget.minimumHeight)
         }
 
         testPermanentKeyButton.snp.makeConstraints { make in
             make.left.equalTo(refreshKeyButton.snp.right).offset(12)
             make.centerY.equalTo(copyPermanentKeyButton)
-            make.height.equalTo(36)
+            make.height.equalTo(ThemeTokens.ComponentContract.TapTarget.minimumHeight)
         }
 
         permanentKeySeparator.snp.makeConstraints { make in

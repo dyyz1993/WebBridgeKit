@@ -1,6 +1,6 @@
 //
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 //  DebugPanelViewController.swift
 //  SuperApp
 //
@@ -13,7 +13,7 @@ import SwiftUI
 import SnapKit
 import WebBridgeKit
 
-#if DEBUG
+#if !DREL_CONTAINER_ONLY
 
 class DebugPanelViewController: UIViewController {
 

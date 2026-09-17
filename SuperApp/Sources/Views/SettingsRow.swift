@@ -62,6 +62,14 @@ struct SettingsRow: View {
                 Text(text)
                     .font(Font.app(ThemeTokens.Typography.metadata))
                     .foregroundColor(Color.appTextTertiary)
+                    // A custom relay name is user-controlled and can be much
+                    // longer than the official-channel label. Keep the row
+                    // stable on small screens while retaining the full value
+                    // for VoiceOver.
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 116, alignment: .trailing)
+                    .accessibilityLabel("\(title)：\(text)")
             }
 
             if let badge = badge {

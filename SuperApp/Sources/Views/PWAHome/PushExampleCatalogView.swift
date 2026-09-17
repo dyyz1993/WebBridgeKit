@@ -33,17 +33,30 @@ struct PushExample: Identifiable {
     enum Preview {
         case banner(title: String, body: String, iconURL: URL? = nil, alertStyle: Bool = false)
         case grouped(groupName: String, count: Int, title: String, body: String)
+        /// The system banner keeps the Drel App Icon; a remote `icon` is the
+        /// avatar rendered later in Drel's Inbox and message detail.
+        case customIcon(title: String, body: String, iconURL: URL)
         case autoCopy(title: String, body: String, value: String)
     }
 }
 
 extension PushExample {
 
-    /// The full catalog organized as content types, presentation parameters
-    /// and behavior parameters. Content-type ids stay equal to the historical
-    /// `pushExamples.<id>` accessibility identifiers used by UI tests.
-    static let all: [PushExample] = [
+    /// The complete development catalog. Store builds deliberately publish a
+    /// smaller subset below: an example must be part of the current product
+    /// promise, not merely a parser or framework capability.
+    private static let base: [PushExample] = [
         // MARK: 内容类型
+        PushExample(
+            id: "bodyOnly",
+            title: "仅正文",
+            subtitle: "最短 Bark 兼容地址，只提供通知正文",
+            icon: .docText,
+            group: .content,
+            pushTitle: "",
+            pushBody: "这是一条只包含正文的通知",
+            queryItems: []
+        ),
         PushExample(
             id: "plain",
             title: "普通通知",
@@ -51,17 +64,17 @@ extension PushExample {
             icon: .bell,
             group: .content,
             pushTitle: "测试通知",
-            pushBody: "你好，这是一条来自 WebBridgeKit 的消息",
+            pushBody: "你好，这是一条来自 Drel 的消息",
             queryItems: []
         ),
         PushExample(
             id: "markdown",
             title: "Markdown",
-            subtitle: "标题、列表、代码块与安全链接",
+            subtitle: "标题、清单、表格、代码块与安全链接",
             icon: .docText,
             group: .content,
             pushTitle: "部署完成",
-            pushBody: "## 结果\n\n- 状态：成功\n- 环境：生产",
+            pushBody: "## 发布结果\n\n- [x] 部署完成\n- [ ] 观察错误率\n\n| 指标 | 当前值 |\n| --- | ---: |\n| 错误率 | 0.02% |",
             queryItems: [
                 URLQueryItem(name: "contentType", value: "markdown"),
                 URLQueryItem(name: "markdown", value: "1")
@@ -89,7 +102,7 @@ extension PushExample {
             icon: .qrCode,
             group: .content,
             pushTitle: "扫码登录",
-            pushBody: "使用 WebBridgeKit 扫描此二维码",
+            pushBody: "使用 Drel 扫描此二维码",
             queryItems: [
                 URLQueryItem(name: "contentType", value: "qr"),
                 URLQueryItem(name: "qrPayload", value: "webbridgekit://login/example")
@@ -105,7 +118,10 @@ extension PushExample {
             pushBody: "查看远程图片及加载失败降级",
             queryItems: [
                 URLQueryItem(name: "contentType", value: "image"),
-                URLQueryItem(name: "image", value: "https://example.com/preview.png")
+                URLQueryItem(
+                    name: "image",
+                    value: "https://drel.app/assets/drel-message-avatar.png"
+                )
             ]
         ),
         PushExample(
@@ -158,21 +174,21 @@ extension PushExample {
         PushExample(
             id: "icon",
             title: "自定义图标",
-            subtitle: "替换通知左侧图标（iOS 15 或以上）",
+            subtitle: "系统通知保持 Drel 图标；消息头像显示在收件箱和详情中",
             icon: .appBadge,
             group: .presentation,
             pushTitle: "自定义图标",
-            pushBody: "通知左侧图标已替换为示例图片",
+            pushBody: "打开 Drel 收件箱查看此消息的自定义头像",
             queryItems: [
                 URLQueryItem(
                     name: "icon",
-                    value: "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/logo.png"
+                    value: "https://drel.app/assets/drel-message-avatar.png"
                 )
             ],
-            preview: .banner(
+            preview: .customIcon(
                 title: "自定义图标",
-                body: "通知左侧图标已替换为示例图片",
-                iconURL: URL(string: "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/logo.png")
+                body: "打开 Drel 收件箱查看此消息的自定义头像",
+                iconURL: URL(string: "https://drel.app/assets/drel-message-avatar.png")!
             )
         ),
         PushExample(
@@ -206,24 +222,6 @@ extension PushExample {
             ]
         ),
         PushExample(
-            id: "critical",
-            title: "重要警告",
-            subtitle: "突破静音和勿扰（需系统授权重要警告）",
-            icon: .warning,
-            group: .presentation,
-            pushTitle: "重要警告",
-            pushBody: "Something critical has happened!",
-            queryItems: [
-                URLQueryItem(name: "level", value: "critical"),
-                URLQueryItem(name: "volume", value: "5")
-            ],
-            preview: .banner(
-                title: "重要警告",
-                body: "Something critical has happened!",
-                alertStyle: true
-            )
-        ),
-        PushExample(
             id: "badge",
             title: "角标",
             subtitle: "更新应用图标角标数字",
@@ -236,6 +234,18 @@ extension PushExample {
             ]
         ),
         PushExample(
+            id: "badgeClear",
+            title: "清除角标",
+            subtitle: "将应用图标角标恢复为零",
+            icon: .tag,
+            group: .presentation,
+            pushTitle: "角标已清除",
+            pushBody: "应用图标角标将恢复为 0",
+            queryItems: [
+                URLQueryItem(name: "badge", value: "0")
+            ]
+        ),
+        PushExample(
             id: "subtitle",
             title: "副标题",
             subtitle: "标题下方展示灰色附加信息",
@@ -244,7 +254,7 @@ extension PushExample {
             pushTitle: "副标题示例",
             pushBody: "通知可以同时展示标题、副标题和正文",
             queryItems: [
-                URLQueryItem(name: "subtitle", value: "来自 WebBridgeKit")
+                URLQueryItem(name: "subtitle", value: "来自 Drel")
             ]
         ),
 
@@ -260,8 +270,20 @@ extension PushExample {
             queryItems: [
                 URLQueryItem(
                     name: "url",
-                    value: "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/bridge-hub.html"
+                    value: "https://drel.app/"
                 )
+            ]
+        ),
+        PushExample(
+            id: "copyManual",
+            title: "复制内容",
+            subtitle: "长按系统通知或进入详情后复制指定内容",
+            icon: .copy,
+            group: .behavior,
+            pushTitle: "复制测试",
+            pushBody: "展开通知后可复制验证码",
+            queryItems: [
+                URLQueryItem(name: "copy", value: "482901")
             ]
         ),
         PushExample(
@@ -309,7 +331,7 @@ extension PushExample {
         PushExample(
             id: "replace",
             title: "覆盖与撤回",
-            subtitle: "相同 id 的推送覆盖旧通知；delete=1 可撤回",
+            subtitle: "相同 id 的后续推送覆盖旧通知",
             icon: .refresh,
             group: .behavior,
             pushTitle: "覆盖通知",
@@ -317,8 +339,70 @@ extension PushExample {
             queryItems: [
                 URLQueryItem(name: "id", value: "wbk-demo-replace")
             ]
+        ),
+        PushExample(
+            id: "recall",
+            title: "撤回通知",
+            subtitle: "用相同 id 和 delete=1 移除通知与本地历史",
+            icon: .trash,
+            group: .behavior,
+            pushTitle: "撤回通知",
+            pushBody: "撤回 wbk-demo-replace",
+            queryItems: [
+                URLQueryItem(name: "id", value: "wbk-demo-replace"),
+                URLQueryItem(name: "delete", value: "1")
+            ]
         )
     ]
+
+    /// Critical Alerts requires an Apple-reviewed entitlement that Drel 1.0
+    /// does not request. Keep the debug example for future entitlement work,
+    /// but compile it out of the Store container's catalog.
+#if !DREL_CONTAINER_ONLY
+    private static let criticalExample = PushExample(
+        id: "critical",
+        title: "重要警告",
+        subtitle: "突破静音和勿扰（需系统授权重要警告）",
+        icon: .warning,
+        group: .presentation,
+        pushTitle: "重要警告",
+        pushBody: "Something critical has happened!",
+        queryItems: [
+            URLQueryItem(name: "level", value: "critical"),
+            URLQueryItem(name: "volume", value: "5")
+        ],
+        preview: .banner(
+            title: "重要警告",
+            body: "Something critical has happened!",
+            alertStyle: true
+        )
+    )
+#endif
+
+    static var all: [PushExample] {
+        var examples = base
+#if DREL_CONTAINER_ONLY
+        // Drel 1.0 is a developer push utility, so Store builds should expose
+        // every implemented push/presentation behavior that belongs to that
+        // product promise. Only omit capabilities outside the V1 boundary:
+        // managed HTML-app chat/approval routes, Apple's separately entitled
+        // Critical Alerts, and call=1 long-ringtone synthesis (known to have
+        // caused SpringBoard instability on a supported iOS release).
+        let releaseExampleIDs: Set<String> = [
+            "bodyOnly", "plain", "markdown", "otp", "qr", "image",
+            "sound", "icon", "group", "timeSensitive", "badge", "badgeClear", "subtitle",
+            "url", "copyManual", "copy", "archive", "replace", "recall"
+        ]
+        examples = examples.filter { releaseExampleIDs.contains($0.id) }
+#else
+#if !DREL_CONTAINER_ONLY
+        if let timeSensitiveIndex = examples.firstIndex(where: { $0.id == "timeSensitive" }) {
+            examples.insert(criticalExample, at: timeSensitiveIndex + 1)
+        }
+#endif
+#endif
+        return examples
+    }
 
     static func example(id: String) -> PushExample? {
         all.first { $0.id == id }
@@ -326,24 +410,34 @@ extension PushExample {
 
     /// The parameter contract shown on the card (Bark's `queryParameter`
     /// pattern): the useful part of the URL without the device-key noise.
-    /// Nil hides the line entirely (e.g. the plain example has no params).
-    var spec: String? {
-        guard !queryItems.isEmpty else { return nil }
+    /// Every catalog card shows this line. A body-only or normal notification
+    /// has no URL query items, which is useful information in its own right.
+    var spec: String {
+        guard !queryItems.isEmpty else { return "无额外 URL 参数" }
+        // 零宽空格让换行落在参数边界，而不是把 ttl=300 之类的词拆成两半。
         return queryItems
             .compactMap { item in item.value.map { "\(item.name)=\($0)" } }
-            .joined(separator: "&")
+            .joined(separator: "&\u{200B}")
     }
 }
 
 /// Bark-style capability catalog: each card pairs a description and its
-/// parameter spec with a copy button (full device URL) and a send button
-/// that fires the push from the browser. The card itself also sends.
+/// parameter spec with two compact developer actions: send the complete URL
+/// in Safari or copy that URL for a script or another developer tool.
 struct PushExampleCatalogView: View {
-    let onTry: (PushExample) -> Void
+    /// The send icon opens the complete Bark-compatible URL in Safari. There
+    /// is intentionally no separate in-app test-send action.
+    let onSend: (PushExample) -> Void
+    /// Copy keeps the complete developer URL available without adding text
+    /// buttons to every card.
     let onCopy: (PushExample) -> Void
     /// Opens the ringtone picker from the sound card (Bark's "view all
     /// sounds" entry).
     let onOpenSounds: () -> Void
+    /// URL pushes are ordinary browser pages by default. This per-card option
+    /// adds the existing Bark-compatible `mode=immersive` parameter only when
+    /// the developer explicitly wants the destination to occupy the screen.
+    @State private var urlOpensFullscreen = false
 
     var body: some View {
         List {
@@ -356,18 +450,25 @@ struct PushExampleCatalogView: View {
             }
         }
         .appListStyle()
-        .navigationTitle("API 示例")
+        .navigationTitle(catalogTitle)
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("pushExamples.list")
     }
 
+    private var catalogTitle: String {
+#if DREL_CONTAINER_ONLY
+        return "推送示例"
+#else
+        return "API 示例"
+#endif
+    }
+
     private func exampleCard(_ example: PushExample) -> some View {
-        // Vertical rhythm mirrors Bark's PreviewCardCell: title row with
-        // actions, then the notification preview, then the parameter spec,
-        // and the description last. The title area is deliberately NOT
-        // tappable — only the explicit send button opens Safari, so
-        // accidental card taps cannot fire pushes.
-        VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
+        // Vertical rhythm mirrors Bark's PreviewCardCell: title row, action
+        // row, preview, parameter spec, then description. The title area is
+        // deliberately NOT tappable so no accidental card tap fires a push.
+        let deliveryExample = exampleForDelivery(example)
+        return VStack(alignment: .leading, spacing: ThemeTokens.Spacing.sm) {
             HStack(spacing: ThemeTokens.Spacing.md) {
                 HStack(spacing: ThemeTokens.Spacing.md) {
                     Image(uiImage: example.icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.md) ?? UIImage())
@@ -383,21 +484,22 @@ struct PushExampleCatalogView: View {
                         .multilineTextAlignment(.leading)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
                 iconActionButton(
-                    icon: LucideIcon.send,
+                    icon: .send,
                     identifier: "pushExamples.\(example.id).send",
-                    label: "发送 \(example.title) 推送"
+                    label: "在 Safari 发送 \(example.title) 推送"
                 ) {
-                    onTry(example)
+                    onSend(deliveryExample)
                 }
+
                 iconActionButton(
-                    icon: LucideIcon.copy,
+                    icon: .copy,
                     identifier: "pushExamples.\(example.id).copy",
                     label: "复制 \(example.title) URL"
                 ) {
-                    onCopy(example)
+                    onCopy(deliveryExample)
                 }
             }
 
@@ -407,13 +509,15 @@ struct PushExampleCatalogView: View {
                     .accessibilityIdentifier("pushExamples.\(example.id).preview")
             }
 
-            if let spec = example.spec {
-                Text(spec)
-                    .font(Font.app(ThemeTokens.Typography.monospaceMeta))
-                    .foregroundColor(Color.appTextTertiary)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
+            if example.id == "url" {
+                urlOpeningModePicker
             }
+
+            Text(deliveryExample.spec)
+                .font(Font.app(ThemeTokens.Typography.monospaceMeta))
+                .foregroundColor(Color.appTextTertiary)
+                .lineLimit(2)
+                .truncationMode(.tail)
 
             // Description sits at the card bottom, like Bark's notice label.
             Text(example.subtitle)
@@ -436,6 +540,55 @@ struct PushExampleCatalogView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private var urlOpeningModePicker: some View {
+        HStack(spacing: ThemeTokens.Spacing.md) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("网页打开方式")
+                    .font(.system(size: ThemeTokens.Typography.footnote.pointSize, weight: .semibold))
+                    .foregroundColor(Color.appText)
+                Text(urlOpensFullscreen ? "打开后隐藏导航栏，沉浸展示网页" : "默认保留应用导航，便于返回消息")
+                    .font(Font.app(ThemeTokens.Typography.metadata))
+                    .foregroundColor(Color.appTextSecondary)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 0)
+
+            Picker("网页打开方式", selection: $urlOpensFullscreen) {
+                Text("普通").tag(false)
+                Text("全屏").tag(true)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 142)
+            .accessibilityIdentifier("pushExamples.url.fullscreen")
+            .accessibilityHint("默认普通；选择全屏后发送的 URL 会附带 mode=immersive")
+        }
+        .padding(ThemeTokens.Spacing.sm)
+        .background(Color(ThemeTokens.Color.primarySoft))
+        .clipShape(RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md))
+        .overlay(
+            RoundedRectangle(cornerRadius: ThemeTokens.CornerRadius.md)
+                .strokeBorder(Color.appPrimary.opacity(0.14), lineWidth: 1)
+        )
+    }
+
+    private func exampleForDelivery(_ example: PushExample) -> PushExample {
+        guard example.id == "url", urlOpensFullscreen else { return example }
+        var queryItems = example.queryItems.filter { $0.name != "mode" }
+        queryItems.append(URLQueryItem(name: "mode", value: "immersive"))
+        return PushExample(
+            id: example.id,
+            title: example.title,
+            subtitle: example.subtitle,
+            icon: example.icon,
+            group: example.group,
+            pushTitle: example.pushTitle,
+            pushBody: example.pushBody,
+            queryItems: queryItems,
+            preview: example.preview
+        )
+    }
+
     private func iconActionButton(
         icon: LucideIcon,
         identifier: String,
@@ -456,4 +609,5 @@ struct PushExampleCatalogView: View {
         .accessibilityIdentifier(identifier)
         .accessibilityLabel(label)
     }
+
 }
