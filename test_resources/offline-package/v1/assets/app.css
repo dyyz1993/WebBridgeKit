@@ -1,3 +1,15 @@
-body { font-family: -apple-system, sans-serif; margin: 2rem; background: #f6f7fb; color: #171a24; }
-main { max-width: 32rem; margin: auto; }
-img { width: 48px; height: 48px; }
+:root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
+* { box-sizing: border-box; }
+body { min-height: 100vh; margin: 0; padding: 32px 20px; display: grid; place-items: center; background: radial-gradient(circle at 20% 0%, #dfe2ff 0, transparent 45%), #f7f7fb; color: #171827; }
+.card { width: min(100%, 520px); padding: 28px; border: 1px solid rgba(91,92,240,.16); border-radius: 30px; background: rgba(255,255,255,.88); box-shadow: 0 24px 70px rgba(39,40,92,.14); backdrop-filter: blur(20px); }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+.brand img { width: 42px; height: 42px; border-radius: 12px; box-shadow: 0 8px 20px rgba(81,103,255,.28); }
+.eyebrow { margin: 42px 0 12px; color: #5b5cf0; font-size: 12px; font-weight: 800; letter-spacing: .13em; }
+h1 { margin: 0; font-size: clamp(36px, 9vw, 56px); line-height: .98; letter-spacing: -.055em; }
+.lede { margin: 22px 0 26px; color: #5c5d6e; font-size: 17px; line-height: 1.55; }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.checks div { padding: 15px; border-radius: 16px; background: #f0f1ff; }
+.checks b, .checks span { display: block; }
+.checks span { margin-top: 5px; color: #5b5cf0; font-size: 13px; }
+.foot { margin: 24px 0 0; color: #7b7c8c; font-size: 13px; line-height: 1.5; }
+@media (prefers-color-scheme: dark) { body { background: radial-gradient(circle at 20% 0%, #292b5c 0, transparent 45%), #101118; color: #f8f8ff; } .card { background: rgba(27,28,39,.9); border-color: rgba(146,147,255,.22); } .lede, .foot { color: #b9bac7; } .checks div { background: #292a42; } }

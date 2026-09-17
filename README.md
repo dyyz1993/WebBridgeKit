@@ -13,13 +13,19 @@ iOS 原生增强 PWA 的 SDK、应用模板与完整宿主 App。
 
 - **WebBridgeKit SDK**：将 WKWebView 与相机、定位、分享、扫码等原生能力通过统一 JS Bridge 暴露给标准 PWA，并提供缓存、消息、路由、权限和诊断能力。
 - **AppTemplate**：供开发者创建另一款宿主 App 的最小起点，只演示如何初始化和接入 SDK，不承担完整产品体验。
-- **SuperApp**：基于 SDK 开发的完整 WebBridgeKit App，面向普通用户提供首页、通知中心、PWA 应用中心和设置；官方托管版与开源自托管版共享这套客户端。
+- **SuperApp**：基于 SDK 开发的完整 Drel 产品宿主；仓库保留首页、通知中心、网页工具管理和设置等可演进能力。提交 App Store 的 Drel V1 仅启用推送、通知收件箱和 HTTPS 网页目的地打开。
 
-`SuperApp` 是当前产品开发主线；`AppTemplate` 不是它的替代品。仓库内仍保留内部 target 名称 `SuperApp`，对外产品名称使用 `WebBridgeKit`。
+`SuperApp` 是当前产品开发主线；`AppTemplate` 不是它的替代品。仓库内保留内部 target 名称 `SuperApp`，对外产品名称使用 `Drel`；`WebBridgeKit` 则是其开源运行时与 SDK。
+
+> **Drel Store V1 scope:** Drel 1.0 is the focused push-and-HTTPS-destination
+> product. The SDK and repository continue to document Bridge, gateway, and
+> offline-package capabilities, but those are not advertised as installed or
+> user-configurable Drel 1.0 Store features. See
+> `docs/plans/2026-08-28-drel-phased-release-roadmap.md`.
 
 ### 选择你的起点
 
-- **普通用户或官方/自托管部署者**：使用完整的 WebBridgeKit App（内部 target 为 `SuperApp`）。官方版安装后直接使用；自托管版只需在部署后导入一次网关配置。
+- **普通用户或官方/自托管部署者**：使用完整的 Drel App（内部 target 为 `SuperApp`）。官方版安装后直接使用；自托管版只需在部署后导入一次网关配置。
 - **已有 iOS App 的开发者**：直接集成 `WebBridgeKit SDK`，按需启用 Bridge、缓存、消息、路由等能力。
 - **准备创建另一款宿主 App 的开发者**：从 `AppTemplate` 开始。模板默认不包含凭据、不启动消息通道或本地服务器，只提供最小 SDK 初始化与 PWA 容器。
 
@@ -35,7 +41,7 @@ iOS 原生增强 PWA 的 SDK、应用模板与完整宿主 App。
 
 ```
 ┌─────────────────────────────────────────────────┐
-│            WebBridgeKit App (SuperApp)           │  产品应用层
+│                 Drel (SuperApp)                  │  产品应用层
 │      (首页、通知、PWA 中心、设置、产品路由)          │
 ├─────────────────────────────────────────────────┤
 │                 AppTemplate                      │  开发起点
@@ -55,7 +61,7 @@ iOS 原生增强 PWA 的 SDK、应用模板与完整宿主 App。
 |------|------|
 | **WebBridgeKit（框架层）** | 静态库，包含全部引擎和 41 个 Handler |
 | **AppTemplate（模板层）** | 面向 iOS 开发者的最小宿主脚手架，用于基于 SDK 创建自己的 App；不复制官方 App 的完整产品 UI |
-| **SuperApp（产品层）** | 完整 WebBridgeKit App 的内部 target，集成 SDK 并承载普通用户可见的 UI、路由和官方/自托管体验 |
+| **SuperApp（产品层）** | 完整 Drel App 的内部 target，集成 SDK 并承载普通用户可见的 UI、路由和官方/自托管体验 |
 
 ### 功能归属原则
 
@@ -487,7 +493,7 @@ WebBridgeKit/
 │       ├── AppDelegate.swift
 │       ├── RootViewController.swift
 │       └── TabBarController.swift
-├── SuperApp/                         # 完整 WebBridgeKit 产品 App
+├── SuperApp/                         # 完整 Drel 产品 App
 │   ├── Sources/
 │   └── Resources/
 ├── Tests/                            # 34 个测试文件，520+ 测试方法

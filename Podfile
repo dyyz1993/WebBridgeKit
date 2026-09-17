@@ -5,7 +5,10 @@ use_frameworks! :linkage => :static
 inhibit_all_warnings!
 
 workspace 'WebBridgeKit.xcworkspace'
-project 'WebBridgeKit.xcodeproj'
+project 'WebBridgeKit.xcodeproj',
+  'Debug' => :debug,
+  'Release' => :release,
+  'Drel14Release' => :release
 
 def shared_pods
   pod 'SnapKit'

@@ -273,7 +273,7 @@ export class ManagedPushRegistry {
     await this.state.storage.put("tickets", tickets);
     const baseURL = new URL(request.url).origin;
     return json({
-      schema: "drel.self-hosted-pairing.v1",
+      schema: "drel.managed-encrypted-push-pairing.v1",
       pairingToken: token,
       expiresAt: new Date((now + pairingTTLSeconds) * 1000).toISOString(),
       configurationURL: `drel://managed-encrypted-push?server=${encodeURIComponent(baseURL)}&token=${token}`

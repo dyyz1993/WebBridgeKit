@@ -71,7 +71,9 @@ test("managed signer stores only ticket digest, returns only recipient public ke
     const pairingResponse = await registry.fetch(request("/managed-push/pairings", "POST"));
     assert.equal(pairingResponse.status, 200);
     const pairing = await pairingResponse.json();
+    assert.equal(pairing.schema, "drel.managed-encrypted-push-pairing.v1");
     assert.match(pairing.pairingToken, /^[A-Za-z0-9_-]{32}$/);
+    assert.match(pairing.configurationURL, /^drel:\/\/managed-encrypted-push\?/);
     const persistedTickets = await state.storage.get("tickets");
     assert.equal(JSON.stringify(persistedTickets).includes(pairing.pairingToken), false);
 

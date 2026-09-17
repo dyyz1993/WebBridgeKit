@@ -2,16 +2,16 @@
   "schemaVersion": "1",
   "appId": "com.webbridgekit.fixture.chat",
   "name": "WebBridgeKit Notification Demo",
-  "startURL": "https://cloak.xbrowser.dev:5801/fixtures/pwa-notification/index.html",
+  "startURL": "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/pwa-notification/index.html",
   "allowedOrigins": [
-    "https://cloak.xbrowser.dev:5801"
+    "https://ae8fcb.shanbox.19930810.xyz:8443"
   ],
   "capabilities": [
     "notification"
   ],
   "routes": [
-    "/fixtures/pwa-notification/index.html",
-    "/fixtures/pwa-notification/approval.html"
+    "/test_resources/pwa-notification/index.html",
+    "/test_resources/pwa-notification/approval.html"
   ],
   "cache": {
     "strategy": "manifest",

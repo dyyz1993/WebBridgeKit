@@ -1,1 +1,1 @@
-document.getElementById("status").textContent = "HTML, CSS, JavaScript, and image loaded";
+document.getElementById("status").textContent = "verified";
