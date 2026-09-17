@@ -10,6 +10,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import WebKit
 
 
 /// 缓存管理页面
@@ -47,8 +48,8 @@ public class CacheManagementViewController: UIViewController {
         let view = EmptyStateView()
         view.configure(
             icon: "tray",
-            title: "暂无缓存",
-            description: "加载网页时会自动创建缓存",
+            title: "暂无离线应用包",
+            description: "安装离线应用后会出现在这里",
             actionTitle: nil
         )
         return view
@@ -98,36 +99,85 @@ public class CacheManagementViewController: UIViewController {
         return container
     }()
 
-    private lazy var footerView: UIView = {
-        let view = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 80))
-        view.backgroundColor = .clear
 
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = ThemeTokens.Spacing.sm
-        stackView.alignment = .center
+    /// 网页缓存单独清理：只清 WKWebView 的磁盘/内存网络缓存，不动离线应用包
+    /// 与其他目录。用户可以放心清这块最大的可再生产物。
+    private lazy var clearWebCacheButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("清理网页缓存", for: .normal)
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .footnote)
+        button.setTitleColor(ThemeTokens.Color.primary, for: .normal)
+        button.backgroundColor = ThemeTokens.Color.primarySoft
+        button.layer.cornerRadius = ThemeTokens.CornerRadius.md
+        button.clipsToBounds = true
+        button.addTarget(self, action: #selector(clearWebCacheTapped), for: .touchUpInside)
+        return button
+    }()
 
-        let totalSizeLabel = UILabel()
-        totalSizeLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        totalSizeLabel.textColor = ThemeTokens.Color.textSecondary
-        totalSizeLabel.text = "总缓存: 0 B"
-        totalSizeLabel.tag = 100
+    /// S3: breakdown of the number the settings row shows. The settings entry
+    /// counts the whole Caches directory, so this card itemizes the same
+    /// number instead of listing only manifest offline packages.
+    private lazy var summaryCard: UIView = {
+        let container = UIView()
+        container.backgroundColor = ThemeTokens.Color.surface
+        container.layer.cornerRadius = ThemeTokens.CornerRadius.lg
+        container.clipsToBounds = true
 
-        let appCountLabel = UILabel()
-        appCountLabel.font = .systemFont(ofSize: 12, weight: .regular)
-        appCountLabel.textColor = ThemeTokens.Color.textSecondary
-        appCountLabel.text = "0 个应用"
-        appCountLabel.tag = 101
+        let titleLabel = UILabel()
+        titleLabel.text = "存储构成"
+        titleLabel.font = UIFont.preferredFont(forTextStyle: .headline)
+        titleLabel.textColor = ThemeTokens.Color.text
 
-        stackView.addArrangedSubview(totalSizeLabel)
-        stackView.addArrangedSubview(appCountLabel)
+        let totalLabel = UILabel()
+        totalLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        totalLabel.textColor = ThemeTokens.Color.textSecondary
+        totalLabel.textAlignment = .right
+        totalLabel.tag = 300
+        totalLabel.setContentHuggingPriority(.required, for: .horizontal)
 
-        view.addSubview(stackView)
-        stackView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+        let titleRow = UIStackView(arrangedSubviews: [titleLabel, totalLabel])
+        titleRow.axis = .horizontal
+        titleRow.spacing = 8
+
+        func breakdownRow(name: String, valueTag: Int, nameColor: UIColor) -> UIStackView {
+            let nameLabel = UILabel()
+            nameLabel.text = name
+            nameLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
+            nameLabel.textColor = nameColor
+            nameLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+            let valueLabel = UILabel()
+            valueLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
+            valueLabel.textColor = ThemeTokens.Color.text
+            valueLabel.textAlignment = .right
+            valueLabel.tag = valueTag
+            valueLabel.setContentHuggingPriority(.required, for: .horizontal)
+
+            let row = UIStackView(arrangedSubviews: [nameLabel, valueLabel])
+            row.axis = .horizontal
+            return row
         }
 
-        return view
+        let rows = UIStackView(arrangedSubviews: [
+            titleRow,
+            breakdownRow(name: "网页缓存（浏览器网络缓存）", valueTag: 301, nameColor: ThemeTokens.Color.textSecondary),
+            breakdownRow(name: "离线应用包", valueTag: 302, nameColor: ThemeTokens.Color.textSecondary),
+            breakdownRow(name: "其他缓存", valueTag: 303, nameColor: ThemeTokens.Color.textTertiary),
+            clearWebCacheButton
+        ])
+        rows.axis = .vertical
+        rows.spacing = 10
+        rows.setCustomSpacing(14, after: titleRow)
+        rows.setCustomSpacing(14, after: clearWebCacheButton)
+
+        container.addSubview(rows)
+        rows.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
+        }
+        clearWebCacheButton.snp.makeConstraints { make in
+            make.height.equalTo(40)
+        }
+        return container
     }()
 
     // MARK: - Initialization
@@ -158,6 +208,7 @@ public class CacheManagementViewController: UIViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         manualRefreshSubject.accept(())
+        refreshStorageSummary()
     }
 
     // MARK: - Setup
@@ -175,6 +226,7 @@ public class CacheManagementViewController: UIViewController {
         )
 
         // 添加子视图
+        view.addSubview(summaryCard)
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
 
@@ -182,9 +234,16 @@ public class CacheManagementViewController: UIViewController {
 
         setupCharts()
 
-        // 布局
+        // 布局：摘要卡常驻列表上方——离线应用包为空时，网页缓存等
+        // 占用依然可见（入口数字与页面内容对齐，S3）。
+        summaryCard.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(12)
+            make.left.right.equalToSuperview().inset(16)
+        }
+
         tableView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.equalTo(summaryCard.snp.bottom).offset(12)
+            make.left.right.bottom.equalToSuperview()
         }
 
         emptyStateView.snp.makeConstraints { make in
@@ -192,7 +251,6 @@ public class CacheManagementViewController: UIViewController {
             make.width.lessThanOrEqualTo(300)
         }
 
-        tableView.tableFooterView = footerView
     }
 
     private func setupCharts() {
@@ -271,9 +329,7 @@ public class CacheManagementViewController: UIViewController {
                     self?.showAppDetails(appInfo: appInfo)
                 }
             }
-            .disposed(by: disposeBag)
-
-        // 绑定空状态
+            .disposed(by: disposeBag)        // 绑定空状态
         output.isEmpty
             .drive(onNext: { [weak self] isEmpty in
                 self?.tableView.isHidden = isEmpty
@@ -289,24 +345,6 @@ public class CacheManagementViewController: UIViewController {
                 } else {
                     HUDService.shared.dismiss()
                     self?.refreshControl.endRefreshing()
-                }
-            })
-            .disposed(by: disposeBag)
-
-        // 绑定总缓存大小
-        output.totalCacheSize
-            .drive(onNext: { [weak self] size in
-                if let label = self?.footerView.viewWithTag(100) as? UILabel {
-                    label.text = "总缓存: \(size)"
-                }
-            })
-            .disposed(by: disposeBag)
-
-        // 绑定应用数量
-        output.appCount
-            .drive(onNext: { [weak self] count in
-                if let label = self?.footerView.viewWithTag(101) as? UILabel {
-                    label.text = count
                 }
             })
             .disposed(by: disposeBag)
@@ -415,18 +453,97 @@ public class CacheManagementViewController: UIViewController {
                 HUDService.shared.dismiss(withDelay: 1.5)
                 // 手动刷新
                 self.manualRefreshSubject.accept(())
+                self.refreshStorageSummary()
             }
         }
+    }
+
+    /// Recompute the summary card numbers off the main thread; the values use
+    /// the same Caches-directory scope as the settings row badge (S3).
+    private func refreshStorageSummary() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            let total = Self.directorySize(at: caches)
+            let webkit = Self.directorySize(at: caches.appendingPathComponent("WebKit"))
+            // 离线应用包 = ManifestCache（页面 HTML + 资源 + 映射）+ 持久缓存。
+            // 列表条目的大小正是按这三块累加的，两个口径必须一致，合计才能对上。
+            let offline = Self.directorySize(at: caches.appendingPathComponent("ManifestCache"))
+                + Self.directorySize(at: caches.appendingPathComponent("WebBridgeKit/PersistentCache"))
+            let other = max(0, total - webkit - offline)
+
+            let formatter = ByteCountFormatter()
+            formatter.countStyle = .file
+            DispatchQueue.main.async {
+                guard let self, self.summaryCard.superview != nil else { return }
+                func setValue(_ tag: Int, _ bytes: Int64) {
+                    (self.summaryCard.viewWithTag(tag) as? UILabel)?.text = formatter.string(fromByteCount: bytes)
+                }
+                setValue(300, total)
+                setValue(301, webkit)
+                setValue(302, offline)
+                setValue(303, other)
+            }
+        }
+    }
+
+    private static func directorySize(at directory: URL) -> Int64 {
+        guard let enumerator = FileManager.default.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return 0 }
+        var total: Int64 = 0
+        for case let fileURL as URL in enumerator {
+            let values = try? fileURL.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
+            guard values?.isRegularFile == true, let size = values?.fileSize else { continue }
+            total += Int64(size)
+        }
+        return total
     }
 
     // 直接删除全部缓存（绕过 RxSwift）
     private func deleteAllCacheDirectly() {
         ManifestCacheManager.shared.clearAll {
             DispatchQueue.main.async {
+                // 入口角标的数字统计的是整个 Caches 目录；只清 manifest 缓存
+                // 永远追不上那个数字，这里把 WKWebView 网络缓存一并清掉（S3）。
+                WKWebsiteDataStore.default().removeData(
+                    ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache],
+                    modifiedSince: .distantPast,
+                    completionHandler: {}
+                )
+                // 「其他缓存」里的三个自建目录也一并清掉，角标才能归零。
+                Self.removeResidualCacheDirectories()
                 HUDService.shared.showSuccess(withStatus: "所有缓存已清除")
                 HUDService.shared.dismiss(withDelay: 1.5)
                 // 手动刷新
                 self.manualRefreshSubject.accept(())
+                self.refreshStorageSummary()
+            }
+        }
+    }
+
+    /// 「其他缓存」口径里的自建目录（资源缓存/压缩缓存/页面快照），不在
+    /// ManifestCacheManager 的管辖内，全部清除时必须显式删除。
+    private static func removeResidualCacheDirectories() {
+        DispatchQueue.global(qos: .utility).async {
+            let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            for component in ["WebResourceCache", "WebCompressedCache", "WebPageCache"] {
+                try? FileManager.default.removeItem(at: caches.appendingPathComponent(component))
+            }
+        }
+    }
+
+    /// 只清浏览器网络缓存（summaryCard 里「网页缓存」一项的来源）。
+    @objc private func clearWebCacheTapped() {
+        WKWebsiteDataStore.default().removeData(
+            ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache],
+            modifiedSince: .distantPast
+        ) { [weak self] in
+            DispatchQueue.main.async {
+                HUDService.shared.showSuccess(withStatus: "网页缓存已清除")
+                HUDService.shared.dismiss(withDelay: 1.5)
+                self?.refreshStorageSummary()
             }
         }
     }
@@ -444,6 +561,7 @@ public class CacheManagementViewController: UIViewController {
             deleteApp: .empty(),
             deleteAll: .empty()
         ))
+        refreshStorageSummary()
     }
 }
 

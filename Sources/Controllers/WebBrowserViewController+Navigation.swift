@@ -132,6 +132,7 @@ extension WebBrowserViewController: WKNavigationDelegate {
 
         guard let url = webView.url else { return }
         viewModel.updateManagedHTMLAppDocumentURL(url)
+        refreshImmersiveFavoriteState()
 
         guard let start = loadStartTime else { return }
         let duration = Date().timeIntervalSince(start)
@@ -227,7 +228,11 @@ extension WebBrowserViewController: WKNavigationDelegate {
         updateCacheStatus(source: "LIVE")
 
         let policy: URLRequest.CachePolicy = forceRefresh ? .reloadIgnoringLocalCacheData : .useProtocolCachePolicy
-        webView.load(URLRequest(url: url, cachePolicy: policy, timeoutInterval: 30))
+        if url.isFileURL {
+            webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        } else {
+            webView.load(URLRequest(url: url, cachePolicy: policy, timeoutInterval: 30))
+        }
         StructuredLogger.shared.info("Loading standard PWA directly: \(url.absoluteString)", category: .navigation)
     }
 

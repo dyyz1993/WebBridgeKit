@@ -107,6 +107,21 @@ extension WebBrowserViewController {
         showMenu()
     }
 
+    func reloadImmersivePage() {
+        // Use the managed loader for remote pages so reload preserves the
+        // existing cache/manifest policy. A file document is already a
+        // verified package, so WebKit can reload it without a network probe.
+        guard let url = currentURL ?? webView.url else {
+            webView.reload()
+            return
+        }
+        if url.isFileURL {
+            webView.reload()
+        } else {
+            loadURLWithCache(url, forceRefresh: true, keepHistory: true)
+        }
+    }
+
     func setupConstraints() {
         let safeAreaLayoutGuide = view.safeAreaLayoutGuide
 

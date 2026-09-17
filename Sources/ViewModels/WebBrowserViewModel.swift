@@ -215,21 +215,21 @@ extension WKWebViewConfiguration {
         // 1. 数据存储配置
         config.websiteDataStore = WKWebsiteDataStore.default()
 
-        // 2. 用户内容控制器（JS 桥接）
+        // 2. User content controller. The Store build receives only Drel's
+        // read-only runtime metadata; it still receives no callable bridge.
         let userContentController = WKUserContentController()
-
-        // 注入 WebBridge.js 脚本
-        if let scriptPath = Bundle.main.path(forResource: "WebBridge", ofType: "js"),
-           let script = try? String(contentsOfFile: scriptPath) {
-            let userScript = WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true)
-            userContentController.addUserScript(userScript)
+        let bridge = WebJavaScriptBridge()
+        if DrelContainerBuildPolicy.nativeBridgeEnabled {
+            if let scriptPath = Bundle.main.path(forResource: "WebBridge", ofType: "js"),
+               let script = try? String(contentsOfFile: scriptPath) {
+                let userScript = WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+                userContentController.addUserScript(userScript)
+            }
+            userContentController.add(bridge, name: "BarkBridge")
         }
 
-        // 注册消息处理器
-        let bridge = WebJavaScriptBridge()
-        userContentController.add(bridge, name: "BarkBridge")
-
         config.userContentController = userContentController
+        DrelWebRuntimeContract.install(on: config)
 
         // 3. 偏好设置
         let preferences = WKPreferences()

@@ -55,6 +55,7 @@ public struct HTMLAppGatewayValidationReport: Equatable {
     }
     public let gateway: HTMLAppGatewayConfiguration
     public let manifests: [HTMLAppManifest]
+    public let presentationMetadata: [String: ResolvedHTMLAppWebManifest]
     public let healthStatusCode: Int
     public let checks: [Check]
 
@@ -68,11 +69,13 @@ public struct HTMLAppGatewayValidationReport: Equatable {
     public init(
         gateway: HTMLAppGatewayConfiguration,
         manifests: [HTMLAppManifest],
+        presentationMetadata: [String: ResolvedHTMLAppWebManifest] = [:],
         healthStatusCode: Int,
         checks: [Check]? = nil
     ) {
         self.gateway = gateway
         self.manifests = manifests
+        self.presentationMetadata = presentationMetadata
         self.healthStatusCode = healthStatusCode
         self.checks = checks ?? [
             Check(name: "health", status: .passed, detail: "HTTP \(healthStatusCode)"),
@@ -89,6 +92,7 @@ public enum HTMLAppGatewayOnboardingError: Error, Equatable, LocalizedError {
     case missingTrustAnchor
     case invalidManifest(String)
     case signatureVerificationFailed(String)
+    case webManifestValidationFailed(String)
     case malformedHealthResponse
     case crossOriginRedirect
     case persistenceFailed
@@ -102,6 +106,7 @@ public enum HTMLAppGatewayOnboardingError: Error, Equatable, LocalizedError {
         case .missingTrustAnchor: return "Production gateway configuration requires keyId and an Ed25519 public key"
         case .invalidManifest(let appID): return "Gateway returned an invalid manifest for \(appID)"
         case .signatureVerificationFailed(let appID): return "Manifest signature verification failed for \(appID)"
+        case .webManifestValidationFailed(let appID): return "Bound Web App Manifest validation failed for \(appID)"
         case .malformedHealthResponse: return "Gateway health response must be JSON with status ok"
         case .crossOriginRedirect: return "Gateway redirected outside the configured origin"
         case .persistenceFailed: return "Gateway activation could not be persisted and was rolled back"
@@ -118,6 +123,8 @@ public final class HTMLAppGatewayOnboardingService {
     private let trustRegistry: HTMLAppTrustRegistry
     private let permissionLedger: HTMLAppPermissionLedger
     private let transport: HTMLAppGatewayTransport
+    private let webManifestAdapter: HTMLAppWebManifestAdapter
+    private let presentationMetadataStore: HTMLAppPresentationMetadataStore
     private let allowsDevelopmentMode: Bool
 
     public init(
@@ -125,12 +132,16 @@ public final class HTMLAppGatewayOnboardingService {
         trustRegistry: HTMLAppTrustRegistry = HTMLAppTrustRegistry(),
         permissionLedger: HTMLAppPermissionLedger = .shared,
         transport: HTMLAppGatewayTransport = HTMLAppGatewayURLSessionTransport(),
+        webManifestAdapter: HTMLAppWebManifestAdapter = HTMLAppWebManifestAdapter(),
+        presentationMetadataStore: HTMLAppPresentationMetadataStore = HTMLAppPresentationMetadataStore(),
         allowsDevelopmentMode: Bool = false
     ) {
         self.gatewayRegistry = gatewayRegistry
         self.trustRegistry = trustRegistry
         self.permissionLedger = permissionLedger
         self.transport = transport
+        self.webManifestAdapter = webManifestAdapter
+        self.presentationMetadataStore = presentationMetadataStore
         self.allowsDevelopmentMode = allowsDevelopmentMode
     }
 
@@ -163,8 +174,13 @@ public final class HTMLAppGatewayOnboardingService {
                 completion(.failure(HTMLAppGatewayOnboardingError.malformedHealthResponse))
             case .success(let response):
                 self.fetchManifests(from: manifestURL, gateway: gateway) { result in
-                    completion(result.map {
-                        HTMLAppGatewayValidationReport(gateway: gateway, manifests: $0, healthStatusCode: response.statusCode)
+                    completion(result.map { result in
+                        HTMLAppGatewayValidationReport(
+                            gateway: gateway,
+                            manifests: result.manifests,
+                            presentationMetadata: result.presentationMetadata,
+                            healthStatusCode: response.statusCode
+                        )
                     })
                 }
             }
@@ -175,6 +191,7 @@ public final class HTMLAppGatewayOnboardingService {
         let previousGateway = gatewayRegistry.activeGateway()
         let previousManifests = trustRegistry.registeredManifests()
         let previousGrants = permissionLedger.allGrants()
+        let previousPresentationMetadata = presentationMetadataStore.allMetadata()
         let policy = try trustPolicy(for: report.gateway)
         let identityChanged = previousGateway.map { Self.identity(of: $0) != Self.identity(of: report.gateway) } ?? false
         let manifestsByAppID = Dictionary(uniqueKeysWithValues: report.manifests.map { ($0.appID, $0) })
@@ -191,10 +208,12 @@ public final class HTMLAppGatewayOnboardingService {
         do {
             try trustRegistry.replaceAll(report.manifests, trustPolicy: policy.registryPolicy)
             try permissionLedger.replaceAll(replacementGrants)
+            try presentationMetadataStore.replaceAll(report.presentationMetadata)
             try gatewayRegistry.save(report.gateway, activate: true)
         } catch {
             try? trustRegistry.replaceAll(previousManifests)
             try? permissionLedger.replaceAll(previousGrants)
+            try? presentationMetadataStore.replaceAll(previousPresentationMetadata)
             if let previousGateway { try? gatewayRegistry.save(previousGateway, activate: true) }
             throw HTMLAppGatewayOnboardingError.persistenceFailed
         }
@@ -212,13 +231,16 @@ public final class HTMLAppGatewayOnboardingService {
         let previousGateway = gatewayRegistry.activeGateway()
         let previousManifests = trustRegistry.registeredManifests()
         let previousGrants = permissionLedger.allGrants()
+        let previousPresentationMetadata = presentationMetadataStore.allMetadata()
         do {
             try trustRegistry.replaceAll([])
             try permissionLedger.replaceAll([])
+            try presentationMetadataStore.replaceAll([:])
             try gatewayRegistry.remove(id: id)
         } catch {
             try? trustRegistry.replaceAll(previousManifests)
             try? permissionLedger.replaceAll(previousGrants)
+            try? presentationMetadataStore.replaceAll(previousPresentationMetadata)
             if let previousGateway {
                 try? gatewayRegistry.save(previousGateway, activate: true)
             }
@@ -229,7 +251,7 @@ public final class HTMLAppGatewayOnboardingService {
     private func fetchManifests(
         from url: URL,
         gateway: HTMLAppGatewayConfiguration,
-        completion: @escaping (Result<[HTMLAppManifest], Error>) -> Void
+        completion: @escaping (Result<(manifests: [HTMLAppManifest], presentationMetadata: [String: ResolvedHTMLAppWebManifest]), Error>) -> Void
     ) {
         transport.get(url) { [weak self] result in
             guard let self else { return }
@@ -243,9 +265,56 @@ public final class HTMLAppGatewayOnboardingService {
                 do {
                     let manifests = try self.decodeManifests(response.data)
                     try manifests.forEach { try self.validateTrust(of: $0, gateway: gateway) }
-                    completion(.success(manifests))
+                    self.validateBoundWebManifests(manifests, at: 0, resolved: [:]) { result in
+                        completion(result.map { (manifests, $0) })
+                    }
                 } catch {
                     completion(.failure(error))
+                }
+            }
+        }
+    }
+
+    private func validateBoundWebManifests(
+        _ manifests: [HTMLAppManifest],
+        at index: Int,
+        resolved: [String: ResolvedHTMLAppWebManifest],
+        completion: @escaping (Result<[String: ResolvedHTMLAppWebManifest], Error>) -> Void
+    ) {
+        guard index < manifests.count else {
+            completion(.success(resolved))
+            return
+        }
+        let manifest = manifests[index]
+        guard let binding = manifest.webManifest,
+              let url = URL(string: binding.url) else {
+            validateBoundWebManifests(manifests, at: index + 1, resolved: resolved, completion: completion)
+            return
+        }
+        transport.get(url) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure:
+                completion(.failure(HTMLAppGatewayOnboardingError.webManifestValidationFailed(manifest.appID)))
+            case .success(let response) where !(200..<300).contains(response.statusCode):
+                completion(.failure(HTMLAppGatewayOnboardingError.webManifestValidationFailed(manifest.appID)))
+            case .success(let response):
+                do {
+                    let metadata = try self.webManifestAdapter.resolve(
+                        response.data,
+                        finalURL: response.finalURL,
+                        forTrustedParent: manifest
+                    )
+                    var next = resolved
+                    next[manifest.appID] = metadata
+                    self.validateBoundWebManifests(
+                        manifests,
+                        at: index + 1,
+                        resolved: next,
+                        completion: completion
+                    )
+                } catch {
+                    completion(.failure(HTMLAppGatewayOnboardingError.webManifestValidationFailed(manifest.appID)))
                 }
             }
         }
@@ -328,7 +397,9 @@ public final class HTMLAppGatewayOnboardingService {
             allowedOrigins: manifest.allowedOrigins,
             capabilities: manifest.capabilities,
             routes: manifest.routes,
-            cache: manifest.cache
+            cache: manifest.cache,
+            webManifest: manifest.webManifest,
+            drelOffline: manifest.drelOffline
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]

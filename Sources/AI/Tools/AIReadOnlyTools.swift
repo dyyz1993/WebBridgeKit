@@ -300,6 +300,9 @@ extension BuiltinAITools {
         }
     )
 
+    // This can expose detailed runtime information. It is deliberately kept out
+    // of the container-only Store binary; it remains available to DEBUG builds.
+    #if DEBUG
     public static let getDiagnosticReport = AITool(
         name: "get_diagnostic_report",
         description: "Get a full diagnostic report combining handler count, cache stats, message stats, memory usage, uptime, and OS version",
@@ -365,4 +368,5 @@ extension BuiltinAITools {
             ]
         }
     )
+    #endif
 }

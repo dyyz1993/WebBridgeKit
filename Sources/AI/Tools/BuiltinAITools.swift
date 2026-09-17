@@ -4,7 +4,8 @@ public enum BuiltinAITools {
 
     // MARK: - All Tools
 
-    public static let all: [AITool] = [
+    public static let all: [AITool] = {
+        var tools: [AITool] = [
         listHandlers,
         getHandlerDetail,
         getCacheStats,
@@ -13,10 +14,16 @@ public enum BuiltinAITools {
         getRecentErrors,
         getConfig,
         readFile,
-        getDiagnosticReport,
         executeHandler,
         clearCache,
         sendTestPush,
         reloadConfig
-    ]
+        ]
+
+        #if DEBUG
+        tools.insert(getDiagnosticReport, at: 8)
+        #endif
+
+        return tools
+    }()
 }

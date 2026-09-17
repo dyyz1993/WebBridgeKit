@@ -194,6 +194,18 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     public func configure(with params: WebBrowserParams) {
         debugMode = params.debugMode
+        webView.configuration.userContentController.addUserScript(WKUserScript(
+            source: DrelWebRuntimeContract.presentationScript(for: params.displayMode),
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        ))
+        guard DrelContainerBuildPolicy.nativeBridgeEnabled else {
+            configuredHideNavigationBar = params.hideNavigationBar || params.displayMode == .immersive
+            configuredHideStatusBar = params.hideStatusBar || params.displayMode == .immersive
+            title = params.customTitle ?? title
+            htmlAppID = params.payload?["webbridgekitAppId"]
+            return
+        }
         viewModel.configureManagedHTMLApp(
             appID: params.payload?["webbridgekitAppId"],
             documentURL: params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
@@ -237,9 +249,11 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         webView.accessibilityIdentifier = "browserManager.webView"
         view.addSubview(webView)
         view.addSubview(immersiveExitControl)
-        view.addSubview(immersiveMenuButton)
         immersiveExitControl.onExit = { [weak self] in self?.dismissOrPop() }
+        immersiveExitControl.onRefresh = { [weak self] in self?.reloadImmersivePage() }
+        immersiveExitControl.onFavorite = { [weak self] in self?.toggleImmersiveFavorite() }
         immersiveMenuButton.addTarget(self, action: #selector(menuButtonTapped), for: .touchUpInside)
+        view.addSubview(immersiveMenuButton)
 
         setupConstraints()
         setupActions()
@@ -533,11 +547,35 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
         }
     }
 
+    /// 全屏胶囊收藏格：与 … 菜单「收藏页面」写入同一收藏表。
+    func toggleImmersiveFavorite() {
+        guard let url = webView.url, url.scheme == "https" || url.scheme == "http" else { return }
+        let favoriteService = ServiceLocator.favorite
+        if favoriteService.findFavorite(url: url) != nil {
+            favoriteService.deleteFavorite(url: url)
+            HUDService.shared.showSuccess(withStatus: "已取消收藏")
+            immersiveExitControl.isFavorited = false
+        } else {
+            HUDService.shared.showSuccess(withStatus: "已收藏")
+            // favicon 是异步取的；收藏态刷新必须等写入完成后，否则读到旧状态。
+            fetchFavicon { [weak self] data in
+                favoriteService.addFavorite(url: url, title: self?.webView.title, favicon: data)
+                self?.refreshImmersiveFavoriteState()
+            }
+        }
+    }
+
+    /// 导航完成后同步胶囊收藏态；菜单内的收藏动作也会触发一次。
+    func refreshImmersiveFavoriteState() {
+        guard let url = webView.url else { return }
+        immersiveExitControl.isFavorited = ServiceLocator.favorite.findFavorite(url: url) != nil
+    }
+
     func refreshImmersiveMenuVisibility() {
-        let shouldShow = hideNavBar && viewModel.managedHTMLAppID != nil
-        immersiveMenuButton.isHidden = !shouldShow
-        immersiveMenuButton.isUserInteractionEnabled = shouldShow
-        if shouldShow {
+        let shouldShowMenu = hideNavBar && viewModel.managedHTMLAppID != nil
+        immersiveMenuButton.isHidden = !shouldShowMenu
+        immersiveMenuButton.isUserInteractionEnabled = shouldShowMenu
+        if shouldShowMenu {
             view.bringSubviewToFront(immersiveMenuButton)
         }
     }
@@ -623,26 +661,6 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             })
             .disposed(by: rx)
 
-        setupUserAgent()
-    }
-
-    /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
-    private func setupUserAgent() {
-        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, _) in
-            guard let self = self, let baseUA = result as? String else { return }
-
-            let info = Bundle.main.infoDictionary
-            let appVersion = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-            let buildNumber = info?["CFBundleVersion"] as? String ?? "1"
-
-            let screenSize = UIScreen.main.bounds.size
-            let screenScale = UIScreen.main.scale
-
-            let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
-
-            self.webView.customUserAgent = customUA
-            StructuredLogger.shared.debug("[MOBILE] [WebBrowserVC] Custom UA configured: \(customUA)", category: .ui)
-        }
     }
 
     // MARK: - Deinit

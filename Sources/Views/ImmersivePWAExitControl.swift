@@ -19,8 +19,21 @@ public final class ImmersivePWAExitControl: UIControl {
     }
 
     public var onExit: (() -> Void)?
+    /// Recovery is deliberately placed inside the expanded return capsule so
+    /// immersive pages stay visually quiet until the user asks for controls.
+    public var onRefresh: (() -> Void)?
+    /// Expanded 收藏格：与两壳工具栏星标写入同一收藏表；点击只切换，不收起。
+    public var onFavorite: (() -> Void)?
+    /// 当前页面收藏态；由宿主在导航或切换后刷新，展开态实时反映。
+    public var isFavorited: Bool = false {
+        didSet {
+            guard presentation == .expanded else { return }
+            updateArrow()
+        }
+    }
 
     private let size: CGFloat = 44
+    private let expandedWidth: CGFloat = 140
     private let collapsedVisibleWidth: CGFloat = 30
     /// Extends the tap target beyond the clipped visible sliver so a tap on
     /// the edge still registers instead of falling through to the PWA.
@@ -29,8 +42,12 @@ public final class ImmersivePWAExitControl: UIControl {
     private let edgeKey = "com.webbridgekit.immersive-exit.edge"
     private let verticalRatioKey = "com.webbridgekit.immersive-exit.vertical-ratio"
     private let arrowImageView = UIImageView()
+    private let refreshImageView = UIImageView()
+    private let favoriteImageView = UIImageView()
+    private let actionDivider = UIView()
+    private let favoriteDivider = UIView()
     private lazy var panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
 
     private var edge: Edge = .left
     private var presentation: Presentation = .collapsed
@@ -71,7 +88,7 @@ public final class ImmersivePWAExitControl: UIControl {
         }
     }
 
-    @objc private func handleTap() {
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         guard let superview else { return }
 
         switch presentation {
@@ -79,7 +96,16 @@ public final class ImmersivePWAExitControl: UIControl {
             presentation = .expanded
             updateLayout(in: superview, animated: true)
         case .expanded:
-            onExit?()
+            let location = gesture.location(in: self)
+            if favoriteHitFrame.contains(location) {
+                onFavorite?()
+            } else if refreshHitFrame.contains(location) {
+                onRefresh?()
+                presentation = .collapsed
+                updateLayout(in: superview, animated: true)
+            } else {
+                onExit?()
+            }
         }
     }
 
@@ -124,6 +150,12 @@ public final class ImmersivePWAExitControl: UIControl {
         layer.shadowOffset = CGSize(width: 0, height: 3)
         accessibilityIdentifier = "browserManager.immersiveReturnButton"
         addSubview(arrowImageView)
+        addSubview(refreshImageView)
+        addSubview(favoriteImageView)
+        actionDivider.backgroundColor = ThemeTokens.Color.border
+        addSubview(actionDivider)
+        favoriteDivider.backgroundColor = ThemeTokens.Color.border
+        addSubview(favoriteDivider)
         updateArrow()
     }
 
@@ -134,12 +166,28 @@ public final class ImmersivePWAExitControl: UIControl {
         switch presentation {
         case .expanded:
             image = LucideIcon.chevronLeft.templateImage(pointSize: 18, weight: .semibold)
-            x = 13
-            accessibilityLabel = "退出当前 PWA"
+            x = edge == .left ? 13 : expandedWidth - 31
+            refreshImageView.image = LucideIcon.refresh.templateImage(pointSize: 18, weight: .semibold)
+            refreshImageView.tintColor = ThemeTokens.Color.text
+            refreshImageView.frame = refreshHitFrame.insetBy(dx: 13, dy: 13)
+            refreshImageView.isHidden = false
+            favoriteImageView.image = LucideIcon.star.templateImage(pointSize: 18, weight: .semibold)
+            favoriteImageView.tintColor = isFavorited ? ThemeTokens.Color.warning : ThemeTokens.Color.text
+            favoriteImageView.frame = favoriteHitFrame.insetBy(dx: 13, dy: 13)
+            favoriteImageView.isHidden = false
+            actionDivider.frame = CGRect(x: 43.5, y: 10, width: 1, height: size - 20)
+            actionDivider.isHidden = false
+            favoriteDivider.frame = CGRect(x: 91.5, y: 10, width: 1, height: size - 20)
+            favoriteDivider.isHidden = false
+            accessibilityLabel = isFavorited ? "返回、刷新或取消收藏" : "返回、刷新或收藏网页"
         case .collapsed:
             image = (edge == .left ? LucideIcon.chevronRight : LucideIcon.chevronLeft)
                 .templateImage(pointSize: 18, weight: .semibold)
             x = edge == .left ? 12 : 1
+            refreshImageView.isHidden = true
+            favoriteImageView.isHidden = true
+            actionDivider.isHidden = true
+            favoriteDivider.isHidden = true
             accessibilityLabel = "显示退出 PWA"
         }
 
@@ -156,18 +204,35 @@ public final class ImmersivePWAExitControl: UIControl {
         let y = minY + (maxY - minY) * ratio
 
         let x: CGFloat
+        let width: CGFloat
         switch presentation {
         case .expanded:
+            width = expandedWidth
             x = edge == .left
                 ? safeArea.left + 12
-                : hostView.bounds.width - safeArea.right - size - 12
+                : hostView.bounds.width - safeArea.right - expandedWidth - 12
         case .collapsed:
+            width = size
             x = edge == .left
                 ? safeArea.left - (size - collapsedVisibleWidth)
                 : hostView.bounds.width - safeArea.right - collapsedVisibleWidth
         }
 
-        return CGRect(x: x, y: y, width: size, height: size)
+        return CGRect(x: x, y: y, width: width, height: size)
+    }
+
+    /// 展开态三格：左缘 [返回 0-44 | 刷新 48-92 | 收藏 96-140]，右缘镜像。
+    private var refreshHitFrame: CGRect {
+        CGRect(x: size + 4, y: 0, width: size, height: size)
+    }
+
+    private var favoriteHitFrame: CGRect {
+        switch edge {
+        case .left:
+            return CGRect(x: 2 * size + 8, y: 0, width: size, height: size)
+        case .right:
+            return CGRect(x: 0, y: 0, width: size, height: size)
+        }
     }
 
     private func draggableBounds(in hostView: UIView) -> CGRect {

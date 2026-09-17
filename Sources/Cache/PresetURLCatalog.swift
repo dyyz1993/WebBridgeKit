@@ -93,16 +93,14 @@ public enum PresetURLCatalog {
             title: "Example Domain",
             description: "ICANN 保留的示例域名，用于文档和测试。最简单的 HTML 页面，适合验证基础网络连接和缓存功能。",
             category: .htmlPages,
-            tags: ["示例", "基础", "ICANN"],
-            isRecommended: true
+            tags: ["示例", "基础", "ICANN"]
         ),
         PresetURLItem(
             url: "https://httpbin.org/html",
             title: "HTTPBin HTML",
             description: "HTTPBin 提供的 HTML 测试页面，包含图片、链接等元素。常用于测试 WebView 渲染和资源加载。",
             category: .htmlPages,
-            tags: ["测试", "HTTP", "渲染"],
-            isRecommended: true
+            tags: ["测试", "HTTP", "渲染"]
         ),
         PresetURLItem(
             url: "https://www.wikipedia.org",

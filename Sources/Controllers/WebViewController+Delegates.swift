@@ -18,6 +18,7 @@ extension WebViewController {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.dataDetectorTypes = []
+        DrelWebRuntimeContract.install(on: config)
 
         ManifestURLSchemeHandler.register(to: config, scheme: "wb-resource")
         StructuredLogger.shared.info("[OK] [ManifestCache] Registered wb-resource:// URLSchemeHandler", category: .cache)
@@ -37,6 +38,8 @@ extension WebViewController {
     func setupBridge() {
         bridge = WebBridgePool.shared.acquireBridge()
         bridge.setWebView(webView)
+
+        guard DrelContainerBuildPolicy.nativeBridgeEnabled else { return }
 
         let bridgeScript = """
         window.BarkBridge = {

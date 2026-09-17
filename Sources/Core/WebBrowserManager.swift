@@ -213,11 +213,11 @@ public class WebBrowserManager: WebBrowserManaging {
         navController.pushViewController(webVC, animated: animated)
         currentBrowser = webVC
 
-        // Strong-offline packages use the manifest cache; standard PWAs keep
-        // WKWebView's native storage and service-worker behavior.
+        // Installed strong-offline packages use the direct local-file path;
+        // standard PWAs keep WKWebView's native storage/service-worker behavior.
         if let browserVC = webVC as? WebBrowserViewController {
             os_log("PWA loader selected: %{public}@", log: OSLog.default, type: .info, params.useManifestLoader ? "manifest" : "direct")
-            if params.useManifestLoader {
+            if self.shouldUseManifestLoader(for: url, params: params) {
                 browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
             } else {
                 DispatchQueue.main.async {
@@ -255,11 +255,11 @@ public class WebBrowserManager: WebBrowserManaging {
         navController.pushViewController(webVC, animated: animated)
         currentBrowser = webVC
 
-        // Strong-offline packages use the manifest cache; standard PWAs keep
-        // WKWebView's native storage and service-worker behavior.
+        // Installed strong-offline packages use the direct local-file path;
+        // standard PWAs keep WKWebView's native storage/service-worker behavior.
         if let browserVC = webVC as? WebBrowserViewController {
             os_log("PWA loader selected: %{public}@", log: OSLog.default, type: .info, params.useManifestLoader ? "manifest" : "direct")
-            if params.useManifestLoader {
+            if self.shouldUseManifestLoader(for: url, params: params) {
                 browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
             } else {
                 DispatchQueue.main.async {
@@ -494,7 +494,12 @@ public class WebBrowserManager: WebBrowserManaging {
         StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.hideTabBar: \(params.hideTabBar)", category: .bridge)
         StructuredLogger.shared.debug("[TOOL] [WebBrowserManager] params.displayMode: \(params.displayMode)", category: .bridge)
 
-        if !params.useManifestLoader {
+        // A verified strong-offline package is already a complete local
+        // document tree. Sending its file URL through the legacy manifest
+        // loader makes that loader try to rediscover/download metadata and can
+        // leave the WebView blank when the device is offline. Local packages
+        // must always use WKWebView's file loader instead.
+        if !shouldUseManifestLoader(for: url, params: params) {
             let pwaVC = WebViewController()
             _ = pwaVC.view
             pwaVC.configure(with: params)
@@ -568,6 +573,10 @@ public class WebBrowserManager: WebBrowserManaging {
 
     private func isLocalURL(_ url: URL) -> Bool {
         return url.scheme == "bark" || url.pathExtension == "html"
+    }
+
+    func shouldUseManifestLoader(for url: URL, params: WebBrowserParams) -> Bool {
+        params.useManifestLoader && !url.isFileURL
     }
 
     private func getPageName(from url: URL) -> String {

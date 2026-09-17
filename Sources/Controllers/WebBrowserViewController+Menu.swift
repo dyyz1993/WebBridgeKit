@@ -13,12 +13,12 @@ extension WebBrowserViewController {
 
     func showMenu() {
         let alertController = UIAlertController(
-            title: NSLocalizedString("Browser Menu", comment: ""),
+            title: "浏览器菜单",
             message: nil,
             preferredStyle: .actionSheet
         )
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("[SYNC] Refresh", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: "刷新", style: .default) { [weak self] _ in
             self?.webView.reload()
         })
 
@@ -28,22 +28,22 @@ extension WebBrowserViewController {
             })
         }
 
-        let toggleTitle = hideNavBar ? "[PIN] 显示导航栏" : "[TARGET] 隐藏导航栏"
-        alertController.addAction(UIAlertAction(title: NSLocalizedString(toggleTitle, comment: ""), style: .default) { [weak self] _ in
+        let toggleTitle = hideNavBar ? "显示导航栏" : "隐藏导航栏"
+        alertController.addAction(UIAlertAction(title: toggleTitle, style: .default) { [weak self] _ in
             self?.setNavigationBarHidden(!(self?.hideNavBar ?? false))
         })
 
-        let statusBarToggleTitle = isStatusBarHidden ? "[STATS] 显示状态栏" : "[MOBILE] 隐藏状态栏"
-        alertController.addAction(UIAlertAction(title: NSLocalizedString(statusBarToggleTitle, comment: ""), style: .default) { [weak self] _ in
+        let statusBarToggleTitle = isStatusBarHidden ? "显示状态栏" : "隐藏状态栏"
+        alertController.addAction(UIAlertAction(title: statusBarToggleTitle, style: .default) { [weak self] _ in
             self?.setStatusBarHidden(!(self?.isStatusBarHidden ?? false))
         })
 
         if let url = webView.url {
             let favoriteService = ServiceLocator.favorite
             let isFavorited = favoriteService.findFavorite(url: url) != nil
-            let favoriteTitle = isFavorited ? "[STAR] 取消收藏" : "[EMOJI] 收藏页面"
+            let favoriteTitle = isFavorited ? "取消收藏" : "收藏页面"
 
-            alertController.addAction(UIAlertAction(title: NSLocalizedString(favoriteTitle, comment: ""), style: .default) { [weak self] _ in
+            alertController.addAction(UIAlertAction(title: favoriteTitle, style: .default) { [weak self] _ in
                 guard let self = self else { return }
                 if isFavorited {
                     favoriteService.deleteFavorite(url: url)
@@ -55,7 +55,7 @@ extension WebBrowserViewController {
             })
         }
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("[BOOKS] Bookmarks", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: "书签", style: .default) { [weak self] _ in
             self?.showBookmarks()
         })
 
@@ -89,7 +89,7 @@ extension WebBrowserViewController {
             })
         }
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("[SAVE] Cache Statistics", comment: ""), style: .default) { [weak self] _ in
+        alertController.addAction(UIAlertAction(title: "缓存统计", style: .default) { [weak self] _ in
             self?.showSystemCacheStatistics()
         })
 
@@ -111,7 +111,7 @@ extension WebBrowserViewController {
         })
         #endif
 
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
+        alertController.addAction(UIAlertAction(title: "取消", style: .cancel))
 
         present(alertController, animated: true)
     }
@@ -150,11 +150,11 @@ extension WebBrowserViewController {
                 }.joined(separator: "\n")
 
                 let alert = UIAlertController(
-                    title: NSLocalizedString("Cache Statistics", comment: ""),
-                    message: message.isEmpty ? "No cache data" : message,
+                    title: "缓存统计",
+                    message: message.isEmpty ? "暂无缓存数据" : message,
                     preferredStyle: .alert
                 )
-                alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+                alert.addAction(UIAlertAction(title: "好", style: .default))
                 self.present(alert, animated: true)
             })
             .disposed(by: rx)

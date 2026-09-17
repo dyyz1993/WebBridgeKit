@@ -70,7 +70,40 @@ public struct HTMLAppLaunchTarget: Equatable, Sendable {
     }
 
     public var loaderURL: URL {
-        installedPackageURL ?? resourceManifestURL ?? pageURL
+        // The resource manifest is installation metadata, never a document
+        // entrypoint. Until a complete, matching package is installed, every
+        // launch path must keep using the real network page. This also keeps a
+        // notification from implicitly installing or executing a package.
+        installedPackageURL ?? pageURL
+    }
+
+    /// The first Drel Store release is a web container, not a native bridge.
+    /// Deliver a verified push route through the page URL so the web app can
+    /// read it without `window.WebBridgeKit` or a script-message handler.
+    ///
+    /// User parameters are namespaced to avoid letting remote data alter host
+    /// display-policy query parameters such as `mode` or `hideNavBar`. For a
+    /// strong-offline package the entrypoint stays local; `drel_route` carries
+    /// the validated logical route that a single-page app should render.
+    public var containerOnlyURL: URL {
+        let baseURL = installedPackageURL ?? pageURL
+        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
+            return baseURL
+        }
+
+        var items = components.queryItems ?? []
+        items.removeAll { item in
+            item.name == "drel_app_id" || item.name == "drel_route" || item.name == "drel_source"
+                || item.name.hasPrefix("drel_param_")
+        }
+        items.append(URLQueryItem(name: "drel_app_id", value: context.appID))
+        items.append(URLQueryItem(name: "drel_route", value: context.route))
+        items.append(URLQueryItem(name: "drel_source", value: context.source.rawValue))
+        for (key, value) in context.parameters.sorted(by: { $0.key < $1.key }) {
+            items.append(URLQueryItem(name: "drel_param_\(key)", value: value))
+        }
+        components.queryItems = items
+        return components.url ?? baseURL
     }
 }
 
@@ -154,8 +187,9 @@ public final class HTMLAppLaunchResolver {
             throw HTMLAppLaunchError.invalidStartURL
         }
 
+        let offlineCache = manifest.effectiveOfflineCache
         let resourceManifestURL: URL?
-        if let value = manifest.cache.resourceManifestURL {
+        if let value = offlineCache.resourceManifestURL {
             guard let url = URL(string: value), manifest.allows(documentURL: url) else {
                 throw HTMLAppLaunchError.invalidResourceManifestURL
             }
@@ -166,12 +200,12 @@ public final class HTMLAppLaunchResolver {
 
         let offlineMode: HTMLAppOfflineMode
         var installedPackageURL: URL?
-        if manifest.cache.strategy == .networkOnly {
+        if offlineCache.strategy == .networkOnly {
             offlineMode = .networkOnly
-        } else if manifest.cache.isStrongOfflineEligible,
+        } else if offlineCache.isStrongOfflineEligible,
                   let package = try? packageLocator.installedPackage(appID: manifest.appID),
-                  package.version == manifest.cache.version,
-                  package.resourceManifestSHA256 == manifest.cache.resourceManifestSHA256,
+                  package.version == offlineCache.version,
+                  package.resourceManifestSHA256 == offlineCache.resourceManifestSHA256,
                   let entrypoint = try? packageLocator.entrypointURL(for: package) {
             offlineMode = .strong
             installedPackageURL = entrypoint

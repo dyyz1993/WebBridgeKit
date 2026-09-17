@@ -58,7 +58,9 @@ public enum NotificationPayloadMapper {
             body: userInfo["body"] as? String ?? fallbacks.body ?? "",
             markdown: markdown,
             subtitle: userInfo["subtitle"] as? String ?? fallbacks.subtitle,
-            channel: userInfo["channel"] as? String ?? "apns",
+            channel: (userInfo["drelSourceChannel"] as? String)
+                ?? (userInfo["channel"] as? String)
+                ?? "apns",
             category: userInfo["category"] as? String,
             priority: messagePriority(for: level),
             sound: userInfo["sound"] as? String,
@@ -166,12 +168,10 @@ public enum NotificationPayloadMapper {
     }
 
     private static func notificationTargetMode(_ userInfo: [AnyHashable: Any]) -> String? {
-        if let mode = userInfo["mode"] as? String { return mode }
-        switch userInfo["display"] as? String {
-        case "sheet", "inline": return "modal"
-        case "full": return "immersive"
-        default: return nil
-        }
+        MessageTargetPresentation.canonicalMode(
+            mode: userInfo["mode"] as? String,
+            display: userInfo["display"] as? String
+        )
     }
 
     private static func notificationLevel(_ value: String?) -> String? {

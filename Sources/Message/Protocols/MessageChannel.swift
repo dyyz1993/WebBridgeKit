@@ -18,6 +18,49 @@ public protocol MessageChannel: AnyObject, Sendable {
     func send(_ payload: MessagePayload) async throws -> MessageSendResult
 }
 
+/// Canonical presentation vocabulary shared by push ingestion, persistence and
+/// native navigation. Keeping this conversion in the message contract means a
+/// message cannot be immersive when tapped from a notification but become
+/// normal when opened later from the inbox.
+public enum MessageTargetPresentation: String, Codable, Sendable {
+    case normal
+    case immersive
+    case modal
+
+    /// Normalizes Drel's documented `mode` values and legacy `display`
+    /// aliases. Unknown explicit values safely become normal.
+    public static func resolve(mode: String?, display: String? = nil) -> MessageTargetPresentation {
+        switch mode?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "immersive", "fullscreen", "full":
+            return .immersive
+        case "modal", "sheet", "inline":
+            return .modal
+        case "normal", "browser", "":
+            return .normal
+        case nil:
+            break
+        default:
+            return .normal
+        }
+
+        switch display?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "full", "immersive", "fullscreen":
+            return .immersive
+        case "sheet", "inline", "modal":
+            return .modal
+        default:
+            return .normal
+        }
+    }
+
+    /// Keeps an absent presentation absent in persisted messages, while
+    /// normalizing every explicitly supplied presentation value.
+    public static func canonicalMode(mode: String?, display: String? = nil) -> String? {
+        guard mode != nil || display != nil else { return nil }
+        return resolve(mode: mode, display: display).rawValue
+    }
+}
+
 /// Message payload - unified message format
 public struct MessagePayload: Codable, Sendable, Equatable {
     public let id: String

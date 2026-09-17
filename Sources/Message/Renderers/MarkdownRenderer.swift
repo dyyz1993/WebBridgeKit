@@ -57,32 +57,38 @@ public enum MarkdownRenderer {
                 body {
                     color: var(--text);
                     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
-                    font-size: 17px;
-                    line-height: 1.7;
+                    font-size: 16px;
+                    line-height: 1.72;
                     -webkit-font-smoothing: antialiased;
                     text-rendering: optimizeLegibility;
                     overflow-wrap: anywhere;
                 }
 
-                article { padding: 2px 0 8px; }
+                article { padding: 4px 0 12px; }
+                article > :last-child { margin-bottom: 0; }
                 h1, h2, h3, h4, h5, h6 {
                     color: var(--text);
                     font-weight: 700;
                     letter-spacing: -0.02em;
                     line-height: 1.28;
-                    margin: 28px 0 12px;
+                    margin: 30px 0 12px;
                 }
-                h1 { font-size: 28px; }
-                h2 { font-size: 23px; }
+                h1 { font-size: 28px; letter-spacing: -0.035em; }
+                h2 { font-size: 23px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
                 h3 { font-size: 20px; }
                 h4, h5, h6 { font-size: 18px; }
                 h1:first-child, h2:first-child, h3:first-child { margin-top: 0; }
-                p { color: var(--text-secondary); margin: 0 0 16px; }
+                p { color: var(--text-secondary); margin: 0 0 18px; }
                 strong { color: var(--text); font-weight: 700; }
-                a { color: var(--accent); font-weight: 600; text-decoration: none; }
+                em { color: var(--text); }
+                del { color: var(--text-secondary); text-decoration-thickness: 1.5px; }
+                mark { background: rgba(255, 205, 73, 0.42); border-radius: 4px; color: var(--text); padding: 1px 3px; }
+                a { color: var(--accent); font-weight: 600; text-decoration: underline; text-decoration-color: rgba(78, 115, 255, 0.35); text-underline-offset: 3px; }
                 hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
                 ul, ol { color: var(--text-secondary); margin: 0 0 18px; padding-left: 24px; }
-                li { margin: 7px 0; padding-left: 3px; }
+                ul ul, ul ol, ol ul, ol ol { margin: 7px 0 3px; }
+                li { margin: 8px 0; padding-left: 4px; }
+                li::marker { color: var(--accent); font-weight: 700; }
                 .task-list { list-style: none; padding-left: 0; }
                 .task-list-item { display: flex; gap: 9px; align-items: flex-start; }
                 .task-checkbox { appearance: none; width: 18px; height: 18px; flex: 0 0 18px; margin: 5px 0 0; border: 1.5px solid var(--border); border-radius: 5px; background: var(--surface); }
@@ -91,15 +97,18 @@ public enum MarkdownRenderer {
                 blockquote { margin: 0 0 18px; padding: 13px 15px; border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; background: var(--surface-quote); }
                 blockquote p { color: var(--text); margin: 0; }
                 code { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: "SF Mono", Menlo, Monaco, monospace; font-size: 0.84em; padding: 2px 5px; }
+                kbd { background: var(--surface-muted); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px; color: var(--text); font-family: "SF Mono", Menlo, Monaco, monospace; font-size: 0.78em; font-weight: 700; padding: 2px 5px; }
                 pre { background: var(--code); border-radius: 14px; color: var(--code-text); margin: 0 0 18px; overflow-x: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
                 pre code { background: transparent; border: 0; color: inherit; display: block; font-size: 13px; line-height: 1.6; padding: 0; white-space: pre; }
-                .table-wrap { border: 1px solid var(--border); border-radius: 12px; margin: 0 0 18px; overflow: hidden; overflow-x: auto; }
+                .table-wrap { border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 1px 2px rgba(20, 31, 51, 0.035); margin: 0 0 20px; overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; }
                 table { border-collapse: collapse; min-width: 100%; width: max-content; }
-                th, td { border-bottom: 1px solid var(--border); padding: 10px 12px; text-align: left; white-space: nowrap; }
+                th, td { border-bottom: 1px solid var(--border); padding: 11px 13px; text-align: left; white-space: nowrap; }
                 th { background: var(--surface-muted); color: var(--text); font-size: 14px; font-weight: 700; }
                 td { color: var(--text-secondary); font-size: 14px; }
+                tbody tr:nth-child(even) { background: rgba(244, 245, 248, 0.52); }
+                @media (prefers-color-scheme: dark) { tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.035); } }
                 tr:last-child td { border-bottom: 0; }
-                img { background: var(--surface-muted); border-radius: 12px; display: block; height: auto; margin: 0 0 18px; max-width: 100%; }
+                img { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 3px 12px rgba(20, 31, 51, 0.08); display: block; height: auto; margin: 0 0 20px; max-width: 100%; }
             </style>
         </head>
         <body>
@@ -130,6 +139,9 @@ private struct OfflineMarkdownDocument {
             } else if let heading = heading(line) {
                 blocks.append("<h\(heading.level)>\(inlineHTML(heading.text))</h\(heading.level)>")
                 index += 1
+            } else if let heading = setextHeading(at: index) {
+                blocks.append("<h\(heading.level)>\(inlineHTML(heading.text))</h\(heading.level)>")
+                index += 2
             } else if isHorizontalRule(line) {
                 blocks.append("<hr>")
                 index += 1
@@ -137,7 +149,7 @@ private struct OfflineMarkdownDocument {
                 blocks.append(renderQuote())
             } else if isTableStart(at: index) {
                 blocks.append(renderTable())
-            } else if unorderedItem(line) != nil || orderedItem(line) != nil {
+            } else if listItem(line) != nil {
                 blocks.append(renderList())
             } else {
                 blocks.append(renderParagraph())
@@ -162,7 +174,11 @@ private struct OfflineMarkdownDocument {
 
         let languageClass = safeCSSIdentifier(language)
         let classAttribute = languageClass.isEmpty ? "" : " class=\"language-\(languageClass)\""
-        return "<pre><code\(classAttribute)>\(escapeHTML(code.joined(separator: "\n")))</code></pre>"
+        // Code blocks are a common place for senders to paste a bare URL that
+        // was never converted to link syntax; linkify it so the detail's
+        // long-press menu can still open it.
+        let linkedCode = autolinkBareURLs(in: escapeHTML(code.joined(separator: "\n")), protecting: [])
+        return "<pre><code\(classAttribute)>\(linkedCode)</code></pre>"
     }
 
     private mutating func renderQuote() -> String {
@@ -206,28 +222,45 @@ private struct OfflineMarkdownDocument {
         return "<div class=\"table-wrap\"><table><thead><tr>\(headerHTML)</tr></thead><tbody>\(rowHTML)</tbody></table></div>"
     }
 
-    private mutating func renderList() -> String {
-        let ordered = orderedItem(lines[index]) != nil
+    private mutating func renderList(baseIndent expectedIndent: Int? = nil) -> String {
+        guard let initial = listItem(lines[index]) else { return "" }
+        let baseIndent = expectedIndent ?? initial.indent
+        let ordered = initial.isOrdered
+        let start = initial.ordinal
         var items: [String] = []
         var containsTasks = false
 
-        while index < lines.count {
-            let item = ordered ? orderedItem(lines[index]) : unorderedItem(lines[index])
-            guard let raw = item else { break }
+        while index < lines.count,
+              let item = listItem(lines[index]),
+              item.indent == baseIndent,
+              item.isOrdered == ordered {
             index += 1
 
+            let raw = item.text
+            let itemHTML: String
             if let task = taskItem(raw) {
                 containsTasks = true
                 let checked = task.checked ? " checked" : ""
-                items.append("<li class=\"task-list-item\"><input class=\"task-checkbox\" type=\"checkbox\" disabled\(checked)><span>\(inlineHTML(task.text))</span></li>")
+                itemHTML = "<input class=\"task-checkbox\" type=\"checkbox\" disabled\(checked)><span>\(inlineHTML(task.text))</span>"
             } else {
-                items.append("<li>\(inlineHTML(raw))</li>")
+                itemHTML = inlineHTML(raw)
             }
+
+            var nested = ""
+            while index < lines.count,
+                  let child = listItem(lines[index]),
+                  child.indent > baseIndent {
+                nested += renderList(baseIndent: child.indent)
+            }
+
+            let classAttribute = taskItem(raw) == nil ? "" : " class=\"task-list-item\""
+            items.append("<li\(classAttribute)>\(itemHTML)\(nested)</li>")
         }
 
         let tag = ordered ? "ol" : "ul"
         let classAttribute = containsTasks ? " class=\"task-list\"" : ""
-        return "<\(tag)\(classAttribute)>\(items.joined())</\(tag)>"
+        let startAttribute = ordered && start > 1 ? " start=\"\(start)\"" : ""
+        return "<\(tag)\(startAttribute)\(classAttribute)>\(items.joined())</\(tag)>"
     }
 
     private mutating func renderParagraph() -> String {
@@ -246,11 +279,11 @@ private struct OfflineMarkdownDocument {
         let line = lines[position]
         return isFence(line)
             || heading(line) != nil
+            || setextHeading(at: position) != nil
             || isHorizontalRule(line)
             || isQuote(line)
             || isTableStart(at: position)
-            || unorderedItem(line) != nil
-            || orderedItem(line) != nil
+            || listItem(line) != nil
     }
 
     private func isTableStart(at position: Int) -> Bool {
@@ -271,6 +304,16 @@ private struct OfflineMarkdownDocument {
         return (marks.count, remainder.trimmingCharacters(in: .whitespaces))
     }
 
+    private func setextHeading(at position: Int) -> (level: Int, text: String)? {
+        guard position + 1 < lines.count else { return nil }
+        let title = lines[position].trimmingCharacters(in: .whitespaces)
+        let underline = lines[position + 1].trimmingCharacters(in: .whitespaces)
+        guard !title.isEmpty, underline.count >= 3 else { return nil }
+        if Set(underline) == Set("=") { return (1, title) }
+        if Set(underline) == Set("-") { return (2, title) }
+        return nil
+    }
+
     private func isFence(_ line: String) -> Bool {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         return trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~")
@@ -286,18 +329,36 @@ private struct OfflineMarkdownDocument {
         line.trimmingCharacters(in: .whitespaces).hasPrefix(">")
     }
 
-    private func unorderedItem(_ line: String) -> String? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-        for marker in ["- ", "* ", "+ "] where trimmed.hasPrefix(marker) {
-            return String(trimmed.dropFirst(marker.count))
-        }
-        return nil
+    private struct ListItem {
+        let indent: Int
+        let isOrdered: Bool
+        let ordinal: Int
+        let text: String
     }
 
-    private func orderedItem(_ line: String) -> String? {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-        guard let range = trimmed.range(of: "^[0-9]+\\.\\s+", options: .regularExpression) else { return nil }
-        return String(trimmed[range.upperBound...])
+    private func listItem(_ line: String) -> ListItem? {
+        let leading = line.prefix { $0 == " " || $0 == "\t" }
+        let indent = leading.reduce(into: 0) { $0 += $1 == "\t" ? 4 : 1 }
+        let remainder = String(line.dropFirst(leading.count))
+
+        if let first = remainder.first, ["-", "*", "+"].contains(first) {
+            let afterMarker = remainder.dropFirst()
+            guard afterMarker.first == " " || afterMarker.first == "\t" else { return nil }
+            return ListItem(indent: indent, isOrdered: false, ordinal: 1, text: afterMarker.trimmingCharacters(in: .whitespaces))
+        }
+
+        let digits = remainder.prefix { $0.isNumber }
+        guard !digits.isEmpty else { return nil }
+        let suffix = remainder.dropFirst(digits.count)
+        guard let marker = suffix.first, marker == "." || marker == ")" else { return nil }
+        let afterMarker = suffix.dropFirst()
+        guard afterMarker.first == " " || afterMarker.first == "\t" else { return nil }
+        return ListItem(
+            indent: indent,
+            isOrdered: true,
+            ordinal: Int(digits) ?? 1,
+            text: afterMarker.trimmingCharacters(in: .whitespaces)
+        )
     }
 
     private func taskItem(_ value: String) -> (checked: Bool, text: String)? {
@@ -311,9 +372,29 @@ private struct OfflineMarkdownDocument {
         var trimmed = line.trimmingCharacters(in: .whitespaces)
         if trimmed.hasPrefix("|") { trimmed.removeFirst() }
         if trimmed.hasSuffix("|") { trimmed.removeLast() }
-        return trimmed.split(separator: "|", omittingEmptySubsequences: false).map {
-            String($0).trimmingCharacters(in: .whitespaces)
+        var cells: [String] = []
+        var current = ""
+        var escaped = false
+        var inCode = false
+        for character in trimmed {
+            if escaped {
+                current.append(character)
+                escaped = false
+            } else if character == "\\" {
+                escaped = true
+            } else if character == "`" {
+                inCode.toggle()
+                current.append(character)
+            } else if character == "|", !inCode {
+                cells.append(current.trimmingCharacters(in: .whitespaces))
+                current = ""
+            } else {
+                current.append(character)
+            }
         }
+        if escaped { current.append("\\") }
+        cells.append(current.trimmingCharacters(in: .whitespaces))
+        return cells
     }
 
     private func tableAlignment(_ cell: String) -> String {
@@ -325,16 +406,30 @@ private struct OfflineMarkdownDocument {
     }
 }
 
+/// Patterns of inline constructs that already own a URL. Shared by the
+/// transforms in `inlineHTML` and by bare-URL autolinking, which must never
+/// rewrap the URL inside an explicit link syntax.
+private let imageLinkPattern = "!\\[([^\\]]*)\\]\\(([^\\s)]+)(?:\\s+\\\"[^\\\"]*\\\")?\\)"
+private let textLinkPattern = "\\[([^\\]]+)\\]\\(([^\\s)]+)(?:\\s+\\\"[^\\\"]*\\\")?\\)"
+private let angleAutolinkPattern = "&lt;((?:https?://|mailto:)[^\\s]+?|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})&gt;"
+
 private func inlineHTML(_ source: String) -> String {
     var output = escapeHTML(source)
+    output = autolinkBareURLs(in: output, protecting: linkSyntaxRanges(in: output))
 
-    output = replaceMatches(in: output, pattern: "!\\[([^\\]]*)\\]\\(([^\\s)]+)(?:\\s+\\\"[^\\\"]*\\\")?\\)") { groups in
+    output = replaceMatches(in: output, pattern: imageLinkPattern) { groups in
         guard groups.count == 2, let url = safeURL(groups[1], image: true) else { return groups.first ?? "" }
         return "<img src=\"\(url)\" alt=\"\(groups[0])\">"
     }
-    output = replaceMatches(in: output, pattern: "\\[([^\\]]+)\\]\\(([^\\s)]+)(?:\\s+\\\"[^\\\"]*\\\")?\\)") { groups in
+    output = replaceMatches(in: output, pattern: textLinkPattern) { groups in
         guard groups.count == 2, let url = safeURL(groups[1], image: false) else { return groups.first ?? "" }
         return "<a href=\"\(url)\">\(groups[0])</a>"
+    }
+    output = replaceMatches(in: output, pattern: angleAutolinkPattern) { groups in
+        guard let raw = groups.first else { return "" }
+        let url = raw.contains("@") && !raw.hasPrefix("mailto:") ? "mailto:\(raw)" : raw
+        guard let safe = safeURL(url, image: false) else { return "&lt;\(raw)&gt;" }
+        return "<a href=\"\(safe)\">\(raw)</a>"
     }
     output = replaceMatches(in: output, pattern: "`([^`]+)`") { groups in
         "<code>\(groups.first ?? "")</code>"
@@ -342,10 +437,19 @@ private func inlineHTML(_ source: String) -> String {
     output = replaceMatches(in: output, pattern: "\\*\\*([^*]+)\\*\\*") { groups in
         "<strong>\(groups.first ?? "")</strong>"
     }
+    output = replaceMatches(in: output, pattern: "__([^_]+)__") { groups in
+        "<strong>\(groups.first ?? "")</strong>"
+    }
     output = replaceMatches(in: output, pattern: "~~([^~]+)~~") { groups in
         "<del>\(groups.first ?? "")</del>"
     }
+    output = replaceMatches(in: output, pattern: "==([^=]+)==") { groups in
+        "<mark>\(groups.first ?? "")</mark>"
+    }
     output = replaceMatches(in: output, pattern: "(?<!\\*)\\*([^*]+)\\*(?!\\*)") { groups in
+        "<em>\(groups.first ?? "")</em>"
+    }
+    output = replaceMatches(in: output, pattern: "(?<![A-Za-z0-9])_([^_]+)_(?![A-Za-z0-9])") { groups in
         "<em>\(groups.first ?? "")</em>"
     }
 
@@ -368,6 +472,62 @@ private func replaceMatches(in source: String, pattern: String, transform: ([Str
     }
 
     return output
+}
+
+/// Ranges of explicit link syntax in already-escaped inline text. Bare-URL
+/// autolinking skips them so the URL of `[text](url)`, `![alt](url)` or
+/// `<url>` is never wrapped twice.
+private func linkSyntaxRanges(in escapedHTML: String) -> [NSRange] {
+    let fullRange = NSRange(escapedHTML.startIndex..., in: escapedHTML)
+    var ranges: [NSRange] = []
+    for pattern in [imageLinkPattern, textLinkPattern, angleAutolinkPattern] {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+        regex.enumerateMatches(in: escapedHTML, range: fullRange) { match, _, _ in
+            if let match { ranges.append(match.range) }
+        }
+    }
+    return ranges
+}
+
+/// Wraps bare `http(s)` URLs in tappable anchors. This covers senders that
+/// pushed a URL as plain text instead of link syntax, and URLs pasted inside
+/// code — the two shapes the detail page must still recognize for its
+/// long-press "open link" menu. Runs on already-escaped text: `&quot;`,
+/// `&gt;`, `&lt;` and `&#39;` terminate a URL, while `&amp;` stays part of it.
+/// A raw backtick also terminates (it closes inline code around a URL).
+/// Trailing sentence punctuation is kept out of the href but preserved in the
+/// rendered text after the anchor.
+private func autolinkBareURLs(in escapedHTML: String, protecting protectedRanges: [NSRange]) -> String {
+    guard let regex = try? NSRegularExpression(pattern: "https?://[^\\s]+?(?=(?:&quot;|&gt;|&lt;|&#39;|`|\\s|$))") else {
+        return escapedHTML
+    }
+    let fullRange = NSRange(escapedHTML.startIndex..., in: escapedHTML)
+    let matches = regex.matches(in: escapedHTML, range: fullRange)
+
+    var output = escapedHTML
+    for match in matches.reversed() {
+        guard !protectedRanges.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) else { continue }
+        guard let range = Range(match.range, in: output) else { continue }
+        let candidate = trimLinkTrailingPunctuation(String(output[range]))
+        guard !candidate.isEmpty, let href = safeURL(candidate, image: false) else { continue }
+        let trailing = String(output[range].dropFirst(candidate.count))
+        output.replaceSubrange(range, with: "<a href=\"\(href)\">\(candidate)</a>\(trailing)")
+    }
+    return output
+}
+
+/// Drops sentence-final punctuation, and an unbalanced closing paren, so
+/// `见 https://example.com。` opens the URL rather than `…com。`.
+private func trimLinkTrailingPunctuation(_ url: String) -> String {
+    var trimmed = url
+    while let last = trimmed.last, ".,;:!?，。；！？、".contains(last) {
+        trimmed.removeLast()
+    }
+    if trimmed.hasSuffix(")"),
+       trimmed.filter({ $0 == "(" }).count < trimmed.filter({ $0 == ")" }).count {
+        trimmed.removeLast()
+    }
+    return trimmed
 }
 
 private func safeURL(_ escapedURL: String, image: Bool) -> String? {

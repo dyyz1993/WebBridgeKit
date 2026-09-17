@@ -55,10 +55,11 @@ public final class WebBridgeKitManager {
 
         Log.info("WebBridgeKit v\(Version.string) initialized", category: .general)
 
-        // 预热 WebView 和 Bridge 池，提升首次打开速度
-        // 异步预热，不阻塞应用启动
+        // Drel's Store target is a plain container. Warming the pooled bridge
+        // would inject a script before the app creates its first web view.
+        guard DrelContainerBuildPolicy.nativeBridgeEnabled else { return }
 
-        // 确保在主线程开始预热，内部会处理异步逻辑
+        // 预热 WebView 和 Bridge 池，提升首次打开速度
         DispatchQueue.main.async {
             WebViewPool.shared.warmup {
                 Log.info("WebViewPool warmed up", category: .general)

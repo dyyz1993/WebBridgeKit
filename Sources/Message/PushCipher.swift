@@ -153,6 +153,9 @@ public enum PushCipher {
     public static func decryptingUserInfoIfEncrypted(
         _ userInfo: [AnyHashable: Any]
     ) -> [AnyHashable: Any] {
+        if let selfHosted = SelfHostedPushCrypto.decryptingUserInfoIfPresent(userInfo) {
+            return selfHosted
+        }
         guard let ciphertext = userInfo["ciphertext"] as? String,
               !ciphertext.isEmpty
         else { return userInfo }

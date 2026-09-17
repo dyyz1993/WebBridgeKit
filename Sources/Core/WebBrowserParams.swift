@@ -83,9 +83,9 @@ public struct WebBrowserParams {
     public let allowJavaScriptClose: Bool
     public let customTitle: String?
 
-    /// Strong-offline packages use the native manifest loader. Standard PWAs
-    /// load directly so their service worker, localStorage, and IndexedDB keep
-    /// their normal WebKit semantics.
+    /// Enables the legacy manifest-cache loader for remote URLs. A verified
+    /// strong-offline package is already installed locally and must instead be
+    /// loaded directly with WKWebView's file-document API.
     public let useManifestLoader: Bool
 
     /// Partial-offline PWAs restore the last cached document immediately and

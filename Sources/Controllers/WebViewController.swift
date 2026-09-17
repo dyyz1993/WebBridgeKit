@@ -51,6 +51,20 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 浏览器配置
     public var browserConfig: WebBrowserParams?
 
+    /// 收藏当前网页（推送链接/普通网页壳的方向 B 最小生产入口）。
+    /// immersive 模式下由 updateImmersiveChrome() 置空隐藏。
+    lazy var favoriteButton: UIBarButtonItem = {
+        let button = UIBarButtonItem(
+            image: LucideIcon.star.image(),
+            style: .plain,
+            target: self,
+            action: #selector(toggleFavoriteTapped)
+        )
+        button.accessibilityIdentifier = "browser.favoriteButton"
+        button.accessibilityLabel = "收藏页面"
+        return button
+    }()
+
     private let immersiveExitControl = ImmersivePWAExitControl()
     private var managedHTMLAppID: String?
     private var managedHTMLAppDocumentURL: URL?
@@ -90,8 +104,9 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        // 尝试从池中获取实例（性能优化）
-        if let instance = WebViewPool.shared.acquire() {
+        // The Store build must never receive a pre-warmed bridged web view.
+        if DrelContainerBuildPolicy.nativeBridgeEnabled,
+           let instance = WebViewPool.shared.acquire() {
             // 使用池中的实例
             self.webView = instance.webView
             self.bridge = instance.bridge
@@ -138,34 +153,14 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         // 默认禁用所有浏览器特性
         applyBrowserFeatures()
 
-        // 设置自定义 User-Agent
-        setupUserAgent()
-
-        // 添加缓存调试按钮
+        // Cache inspection and clearing are framework-debug tools. Drel's
+        // Store build uses ordinary web caching transparently, but must not
+        // present it as an offline-download or user-facing web-app feature.
+        #if !DREL_CONTAINER_ONLY
         setupCacheDebugButton()
+        #endif
         setupImmersiveReturnButton()
         updateImmersiveChrome()
-    }
-
-    /// 设置自定义 User-Agent，包含版本号、屏幕尺寸和倍率
-    private func setupUserAgent() {
-        // 获取原始 UA 并追加自定义信息
-        webView.evaluateJavaScript("navigator.userAgent") { [weak self] (result, _) in
-            guard let self = self, let baseUA = result as? String else { return }
-
-            let info = Bundle.main.infoDictionary
-            let appVersion = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-            let buildNumber = info?["CFBundleVersion"] as? String ?? "1"
-
-            let screenSize = UIScreen.main.bounds.size
-            let screenScale = UIScreen.main.scale
-
-            // 格式: BaseUA WebBridgeKit/Version (Build; Screen/WxH; Ratio/R)
-            let customUA = "\(baseUA) WebBridgeKit/\(appVersion) (\(buildNumber); Screen/\(Int(screenSize.width))x\(Int(screenSize.height)); Ratio/\(screenScale))"
-
-            self.webView.customUserAgent = customUA
-            StructuredLogger.shared.debug("Custom UA configured: \(customUA)", category: .ui)
-        }
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -380,6 +375,21 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         // 确保 view 已加载
         _ = view
         self.url = url
+        if url.isFileURL {
+            // `WKWebView.load(URLRequest(fileURL:))` is not equivalent to the
+            // file-document API and can fail after connectivity disappears.
+            // Keep query parameters on the document URL (Drel route/context),
+            // but grant read access using a query-free filesystem directory so
+            // relative CSS, JS and image resources remain available offline.
+            let readAccessURL = URL(fileURLWithPath: url.path, isDirectory: false)
+                .deletingLastPathComponent()
+            webView.loadFileURL(url, allowingReadAccessTo: readAccessURL)
+            StructuredLogger.shared.debug(
+                "Loading verified local HTML app from: \(url.path)",
+                category: .navigation
+            )
+            return
+        }
         let policy: URLRequest.CachePolicy = preferCachedContent
             ? .returnCacheDataElseLoad
             : .useProtocolCachePolicy
@@ -393,6 +403,11 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 配置浏览器参数
     public func configure(with params: WebBrowserParams) {
         browserConfig = params
+        webView.configuration.userContentController.addUserScript(WKUserScript(
+            source: DrelWebRuntimeContract.presentationScript(for: params.displayMode),
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        ))
         let managedAppID = params.payload?["webbridgekitAppId"]
         let managedPageURL = params.payload?["webbridgekitPageURL"].flatMap(URL.init(string:))
         managedHTMLAppID = managedAppID
@@ -517,6 +532,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     private func setupImmersiveReturnButton() {
         view.addSubview(immersiveExitControl)
         immersiveExitControl.onExit = { [weak self] in self?.exitImmersivePWA() }
+        immersiveExitControl.onRefresh = { [weak self] in self?.reloadImmersivePWA() }
+        immersiveExitControl.onFavorite = { [weak self] in self?.toggleFavoriteTapped() }
 
         view.addSubview(immersiveSettingsButton)
         immersiveSettingsButton.translatesAutoresizingMaskIntoConstraints = false
@@ -529,12 +546,8 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                 equalTo: view.safeAreaLayoutGuide.trailingAnchor,
                 constant: -ThemeTokens.Spacing.md
             ),
-            immersiveSettingsButton.widthAnchor.constraint(
-                equalToConstant: ThemeTokens.ComponentContract.TapTarget.minimumWidth
-            ),
-            immersiveSettingsButton.heightAnchor.constraint(
-                equalToConstant: ThemeTokens.ComponentContract.TapTarget.minimumHeight
-            )
+            immersiveSettingsButton.widthAnchor.constraint(equalToConstant: ThemeTokens.ComponentContract.TapTarget.minimumWidth),
+            immersiveSettingsButton.heightAnchor.constraint(equalToConstant: ThemeTokens.ComponentContract.TapTarget.minimumHeight)
         ])
         immersiveSettingsButton.addTarget(
             self,
@@ -556,6 +569,41 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
             if !immersiveSettingsButton.isHidden {
                 view.bringSubviewToFront(immersiveSettingsButton)
             }
+        } else {
+            navigationItem.rightBarButtonItem = favoriteButton
+            refreshFavoriteButtonState()
+        }
+    }
+
+    /// 收藏/取消收藏当前页面；写入与收藏夹页、SDK 菜单同一个收藏表。
+    @objc private func toggleFavoriteTapped() {
+        guard let url = webView?.url, url.scheme == "https" || url.scheme == "http" else { return }
+        let favoriteService = ServiceLocator.favorite
+        if favoriteService.findFavorite(url: url) != nil {
+            favoriteService.deleteFavorite(url: url)
+            HUDService.shared.showSuccess(withStatus: "已取消收藏")
+        } else {
+            favoriteService.addFavorite(url: url, title: webView?.title, favicon: nil)
+            HUDService.shared.showSuccess(withStatus: "已收藏")
+        }
+        refreshFavoriteButtonState()
+    }
+
+    func refreshFavoriteButtonState() {
+        guard let url = webView?.url else { return }
+        let isFavorited = ServiceLocator.favorite.findFavorite(url: url) != nil
+        favoriteButton.tintColor = isFavorited ? ThemeTokens.Color.warning : ThemeTokens.Color.text
+        favoriteButton.accessibilityLabel = isFavorited ? "取消收藏" : "收藏页面"
+        immersiveExitControl.isFavorited = isFavorited
+    }
+
+    @objc private func reloadImmersivePWA() {
+        // Keep local strong-offline packages local. Remote pages use a normal
+        // origin reload so a stuck network document gets a genuine retry.
+        if webView.url?.isFileURL == true {
+            webView.reload()
+        } else {
+            webView.reloadFromOrigin()
         }
     }
 

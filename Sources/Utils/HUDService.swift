@@ -14,6 +14,7 @@ public final class HUDService {
     private var hudWindow: UIWindow?
     private var hudView: HUDContainerView?
     private var dismissWorkItem: DispatchWorkItem?
+    private var presentationGeneration: UInt = 0
 
     private let animationDuration: TimeInterval = ThemeTokens.Animation.normal.duration
     private let successDisplayDuration: TimeInterval = 1.5
@@ -85,10 +86,15 @@ public final class HUDService {
 
     private func showHUD(status: String?, style: HUDStyle) {
         cancelAutoDismiss()
+        presentationGeneration &+= 1
 
         let window = makeWindow()
         self.hudWindow = window
 
+        // A progress state is commonly replaced immediately by success/error.
+        // Remove the previous container before adding the replacement so rapid
+        // transitions can never leave two or three toast cards stacked.
+        hudView?.removeFromSuperview()
         let container = HUDContainerView()
         container.configure(status: status, style: style)
         self.hudView = container
@@ -116,6 +122,7 @@ public final class HUDService {
         guard let window = hudWindow else { return }
 
         cancelAutoDismiss()
+        let generation = presentationGeneration
 
         if UIAccessibility.isReduceMotionEnabled {
             window.isHidden = true
@@ -127,7 +134,8 @@ public final class HUDService {
                 animations: {
                     window.alpha = 0
                 },
-                completion: { _ in
+                completion: { [weak self] _ in
+                    guard let self, self.presentationGeneration == generation else { return }
                     window.isHidden = true
                     self.hudView = nil
                     self.hudWindow = nil
@@ -148,6 +156,11 @@ public final class HUDService {
     private func cancelAutoDismiss() {
         dismissWorkItem?.cancel()
         dismissWorkItem = nil
+    }
+
+    @MainActor
+    var activePresentationCountForTesting: Int {
+        hudWindow?.subviews.filter { $0 is HUDContainerView }.count ?? 0
     }
 
     private func makeWindow() -> UIWindow {

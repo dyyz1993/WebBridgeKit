@@ -53,7 +53,7 @@ public class CacheAppDetailViewController: UIViewController {
         let titleLabel = UILabel()
         titleLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         titleLabel.textColor = ThemeTokens.Color.textSecondary
-        titleLabel.text = "Web App Manifest"
+        titleLabel.text = "应用信息"
         titleLabel.tag = 200
 
         let startURLLabel = UILabel()
@@ -73,7 +73,7 @@ public class CacheAppDetailViewController: UIViewController {
         themeColorLabel.tag = 203
 
         let openButton = UIButton(type: .system)
-        openButton.setTitle("在 WebView 中打开", for: .normal)
+        openButton.setTitle("打开应用", for: .normal)
         openButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
         openButton.backgroundColor = ThemeTokens.Color.primary
         openButton.setTitleColor(ThemeTokens.Color.onPrimary, for: .normal)
@@ -204,7 +204,7 @@ public class CacheAppDetailViewController: UIViewController {
     // MARK: - Setup
 
     private func setupUI() {
-        title = "缓存详情"
+        title = "离线应用详情"
         view.backgroundColor = ThemeTokens.Color.background
 
         // 添加返回按钮
@@ -329,7 +329,7 @@ public class CacheAppDetailViewController: UIViewController {
                 cell.index = index + 1
                 cell.onCopy = { pageKey in
                     UIPasteboard.general.string = pageKey
-                    HUDService.shared.showSuccess(withStatus: "页面 Key 已复制")
+                    HUDService.shared.showSuccess(withStatus: "页面已复制")
                     HUDService.shared.dismiss(withDelay: 1.5)
                 }
                 cell.onDelete = { [weak self] pageKey in

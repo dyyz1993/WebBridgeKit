@@ -10,17 +10,16 @@ import Foundation
 /// First-party gateway metadata bundled with the official app. This is public
 /// trust material, not user-imported configuration and contains no credentials.
 public enum HTMLAppGatewayDefaults {
-    /// Self-hosted production gateway on shanbox. The original tx gateway
-    /// (cloak.xbrowser.dev:5801) is retired; this gateway serves the same
-    /// contract and is verified to be reachable from China.
+    /// Official Drel gateway. Cloudflare owns the public hostname while the
+    /// compatible WebBridgeKit server remains an implementation detail.
     public static let official = HTMLAppGatewayConfiguration(
-        id: "webbridgekit-gateway",
-        name: "WebBridgeKit 官方服务",
-        baseURL: "https://wbk.shanbox.19930810.xyz:8443",
+        id: "drel-gateway",
+        name: "Drel 官方服务",
+        baseURL: "https://api.drel.app",
         healthPath: "/health",
         manifestPath: "/api/v1/html-apps",
-        publicKeyID: "wbk-self-hosted-20260816",
-        publicKey: "h860-f-Vu_IC9DNoOrGrMpnXydSZHjNqb2HprCJIcm8"
+        publicKeyID: "gw-2026-09-15",
+        publicKey: "M3FVnjzVa8bjFQ-VtDov_mvYrik6c-DGSaRm-wdcLzY"
     )
 }
 
@@ -352,7 +351,12 @@ public final class HTMLAppGatewayRegistry {
         self.storage = storage
         self.storageKey = storageKey
         self.allowsDevelopmentHTTP = allowsDevelopmentHTTP
-        state = Self.load(storage: storage, key: storageKey)
+        var loadedState = Self.load(storage: storage, key: storageKey)
+        let migratedOfficialGateway = Self.migrateLegacyOfficialGateway(in: &loadedState)
+        state = loadedState
+        if migratedOfficialGateway {
+            try? persistLocked(loadedState)
+        }
     }
 
     @discardableResult
@@ -430,5 +434,44 @@ public final class HTMLAppGatewayRegistry {
             return State(configurations: [:], activeGatewayID: nil)
         }
         return state
+    }
+
+    /// Converts only prior official defaults to the public Drel gateway. User-created
+    /// self-hosted gateways are deliberately left untouched.
+    private static func migrateLegacyOfficialGateway(in state: inout State) -> Bool {
+        let legacyIDs = [
+            "tx-webbridgekit",
+            "webbridgekit-gateway",
+            HTMLAppGatewayDefaults.official.id
+        ]
+        let legacyGateways = state.configurations.values.filter {
+            legacyIDs.contains($0.id) && isLegacyOfficialOrigin($0.baseURL)
+        }
+        guard !legacyGateways.isEmpty else { return false }
+
+        let wasActive = legacyGateways.contains { $0.id == state.activeGatewayID }
+        for gateway in legacyGateways {
+            state.configurations.removeValue(forKey: gateway.id)
+        }
+        state.configurations[HTMLAppGatewayDefaults.official.id] = HTMLAppGatewayDefaults.official
+        if wasActive {
+            state.activeGatewayID = HTMLAppGatewayDefaults.official.id
+        }
+        return true
+    }
+
+    private static func isLegacyOfficialOrigin(_ baseURL: String) -> Bool {
+        guard let url = URL(string: baseURL),
+              url.scheme?.lowercased() == "https",
+              let host = url.host?.lowercased() else {
+            return false
+        }
+        let labels = host.split(separator: ".").map(String.init)
+        return (url.port == 5801 && labels == ["cloak", "xbrowser", "dev"])
+            || (url.port == 8443 && labels == ["wbk", "shanbox", "19930810", "xyz"])
+            // The current official host. Without this, a persisted official
+            // entry still carrying a rotated-out public key would shadow the
+            // refreshed bundled default (activeGateway() is checked first).
+            || labels == ["api", "drel", "app"]
     }
 }

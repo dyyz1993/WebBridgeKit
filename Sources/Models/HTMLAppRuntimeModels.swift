@@ -142,6 +142,132 @@ public struct HTMLAppCachePolicy: Codable, Equatable, Sendable {
     }
 }
 
+/// Drel's namespaced extension for declaring a strongly installed offline
+/// package from an otherwise standards-compatible web app manifest. Standard
+/// Web App Manifest consumers ignore this member; Drel maps it onto its
+/// existing signed resource-manifest installer contract.
+public struct DrelOfflinePackageDeclaration: Codable, Equatable, Sendable {
+    public let version: String
+    public let resourceManifestURL: String
+    public let resourceManifestSHA256: String
+
+    public init(
+        version: String,
+        resourceManifestURL: String,
+        resourceManifestSHA256: String
+    ) {
+        self.version = version
+        self.resourceManifestURL = resourceManifestURL
+        self.resourceManifestSHA256 = resourceManifestSHA256
+    }
+
+    fileprivate func cachePolicy(restoresLastState: Bool) -> HTMLAppCachePolicy {
+        HTMLAppCachePolicy(
+            strategy: .manifest,
+            version: version,
+            persistent: true,
+            resourceManifestURL: resourceManifestURL,
+            resourceManifestSHA256: resourceManifestSHA256,
+            restoresLastState: restoresLastState
+        )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case version
+        case resourceManifestURL = "resource_manifest"
+        case resourceManifestSHA256 = "resource_manifest_sha256"
+    }
+}
+
+/// A digest-pinned reference to the standards-compatible Web App Manifest.
+/// The binding is part of the signed Drel parent manifest; the remote file is
+/// presentation metadata only until its exact bytes have been verified.
+public struct HTMLAppWebManifestBinding: Codable, Equatable, Sendable {
+    public let url: String
+    public let sha256: String
+
+    public init(url: String, sha256: String) {
+        self.url = url
+        self.sha256 = sha256
+    }
+}
+
+public struct HTMLAppWebManifestIcon: Codable, Equatable, Sendable {
+    public let src: String
+    public let sizes: String?
+    public let type: String?
+    public let purpose: String?
+
+    public init(src: String, sizes: String? = nil, type: String? = nil, purpose: String? = nil) {
+        self.src = src
+        self.sizes = sizes
+        self.type = type
+        self.purpose = purpose
+    }
+}
+
+/// The deliberately small Web App Manifest profile understood by Drel. Any
+/// additional standard members remain forward-compatible and are ignored.
+public struct HTMLAppWebManifest: Codable, Equatable, Sendable {
+    public let id: String?
+    public let name: String?
+    public let shortName: String?
+    public let startURL: String?
+    public let scope: String?
+    public let display: String?
+    public let themeColor: String?
+    public let backgroundColor: String?
+    public let icons: [HTMLAppWebManifestIcon]
+    public let drelOffline: DrelOfflinePackageDeclaration?
+
+    public init(
+        id: String? = nil,
+        name: String? = nil,
+        shortName: String? = nil,
+        startURL: String? = nil,
+        scope: String? = nil,
+        display: String? = nil,
+        themeColor: String? = nil,
+        backgroundColor: String? = nil,
+        icons: [HTMLAppWebManifestIcon] = [],
+        drelOffline: DrelOfflinePackageDeclaration? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.shortName = shortName
+        self.startURL = startURL
+        self.scope = scope
+        self.display = display
+        self.themeColor = themeColor
+        self.backgroundColor = backgroundColor
+        self.icons = icons
+        self.drelOffline = drelOffline
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, scope, display, icons
+        case shortName = "short_name"
+        case startURL = "start_url"
+        case themeColor = "theme_color"
+        case backgroundColor = "background_color"
+        case drelOffline = "drel_offline"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decodeIfPresent(String.self, forKey: .id)
+        name = try values.decodeIfPresent(String.self, forKey: .name)
+        shortName = try values.decodeIfPresent(String.self, forKey: .shortName)
+        startURL = try values.decodeIfPresent(String.self, forKey: .startURL)
+        scope = try values.decodeIfPresent(String.self, forKey: .scope)
+        display = try values.decodeIfPresent(String.self, forKey: .display)
+        themeColor = try values.decodeIfPresent(String.self, forKey: .themeColor)
+        backgroundColor = try values.decodeIfPresent(String.self, forKey: .backgroundColor)
+        icons = try values.decodeIfPresent([HTMLAppWebManifestIcon].self, forKey: .icons) ?? []
+        drelOffline = try values.decodeIfPresent(DrelOfflinePackageDeclaration.self, forKey: .drelOffline)
+    }
+}
+
 public struct HTMLAppManifest: Codable, Equatable, Sendable {
     public static let supportedSchemaVersion = "1"
 
@@ -153,6 +279,10 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
     public let capabilities: [HTMLAppCapability]
     public let routes: [String]
     public let cache: HTMLAppCachePolicy
+    public let webManifest: HTMLAppWebManifestBinding?
+    /// Optional `drel_offline` extension. It is signed with the parent
+    /// manifest and takes precedence for the strong-offline installer only.
+    public let drelOffline: DrelOfflinePackageDeclaration?
     public let signature: HTMLAppManifestSignature?
 
     public init(
@@ -164,6 +294,8 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
         capabilities: [HTMLAppCapability],
         routes: [String],
         cache: HTMLAppCachePolicy,
+        webManifest: HTMLAppWebManifestBinding? = nil,
+        drelOffline: DrelOfflinePackageDeclaration? = nil,
         signature: HTMLAppManifestSignature? = nil
     ) {
         self.schemaVersion = schemaVersion
@@ -174,7 +306,16 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
         self.capabilities = capabilities
         self.routes = routes
         self.cache = cache
+        self.webManifest = webManifest
+        self.drelOffline = drelOffline
         self.signature = signature
+    }
+
+    /// The only cache policy used to decide strong-offline installation and
+    /// launch. Legacy signed manifests keep their existing `cache` contract;
+    /// newer manifests may use the namespaced Web Manifest extension instead.
+    public var effectiveOfflineCache: HTMLAppCachePolicy {
+        drelOffline?.cachePolicy(restoresLastState: cache.restoresLastState) ?? cache
     }
 
     public func validate(requiringSignature: Bool = false) -> HTMLAppManifestValidationResult {
@@ -214,11 +355,29 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
             errors.append(.invalidRoutes)
         }
 
-        if cache.version.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if hasInconsistentDrelOfflineDeclaration {
+            errors.append(.inconsistentDrelOfflineDeclaration)
+        }
+
+        if let webManifest {
+            guard let url = URL(string: webManifest.url),
+                  let origin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: url),
+                  url.scheme?.lowercased() == "https",
+                  canonicalOrigins.contains(origin) else {
+                errors.append(.invalidWebManifestURL(webManifest.url))
+                return .invalid(errors)
+            }
+            if !HTMLAppCachePolicy.isValidSHA256(webManifest.sha256) {
+                errors.append(.invalidWebManifestDigest)
+            }
+        }
+
+        let offlineCache = effectiveOfflineCache
+        if offlineCache.version.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append(.emptyCacheVersion)
         }
 
-        if let resourceManifestURL = cache.resourceManifestURL {
+        if let resourceManifestURL = offlineCache.resourceManifestURL {
             guard let url = URL(string: resourceManifestURL),
                   let resourceOrigin = HTMLAppOrigin.canonicalOrigin(forDocumentURL: url),
                   canonicalOrigins.contains(resourceOrigin) else {
@@ -227,7 +386,7 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
             }
         }
 
-        if let digest = cache.resourceManifestSHA256,
+        if let digest = offlineCache.resourceManifestSHA256,
            !HTMLAppCachePolicy.isValidSHA256(digest) {
             errors.append(.invalidResourceManifestDigest)
         }
@@ -261,6 +420,17 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
         return !appID.isEmpty && appID.count <= 64 && appID.unicodeScalars.allSatisfy(allowed.contains)
     }
 
+    private var hasInconsistentDrelOfflineDeclaration: Bool {
+        guard let drelOffline else { return false }
+        let hasLegacyResourceDeclaration = cache.resourceManifestURL != nil || cache.resourceManifestSHA256 != nil
+        guard hasLegacyResourceDeclaration else { return false }
+        return cache.strategy != .manifest
+            || !cache.persistent
+            || cache.version != drelOffline.version
+            || cache.resourceManifestURL != drelOffline.resourceManifestURL
+            || cache.resourceManifestSHA256 != drelOffline.resourceManifestSHA256
+    }
+
     private enum CodingKeys: String, CodingKey {
         case schemaVersion
         case appID = "appId"
@@ -270,6 +440,8 @@ public struct HTMLAppManifest: Codable, Equatable, Sendable {
         case capabilities
         case routes
         case cache
+        case webManifest
+        case drelOffline = "drel_offline"
         case signature
     }
 }
@@ -296,6 +468,9 @@ public enum HTMLAppManifestError: Error, Equatable, LocalizedError {
     case emptyCacheVersion
     case invalidResourceManifestURL(String)
     case invalidResourceManifestDigest
+    case inconsistentDrelOfflineDeclaration
+    case invalidWebManifestURL(String)
+    case invalidWebManifestDigest
     case missingOrInvalidSignature
 
     public var errorDescription: String? {
@@ -311,6 +486,9 @@ public enum HTMLAppManifestError: Error, Equatable, LocalizedError {
         case .emptyCacheVersion: return "HTML app cache version must not be empty"
         case .invalidResourceManifestURL(let url): return "HTML app resource manifest URL is invalid: \(url)"
         case .invalidResourceManifestDigest: return "HTML app resource manifest SHA-256 must be 64 lowercase hexadecimal characters"
+        case .inconsistentDrelOfflineDeclaration: return "HTML app drel_offline declaration conflicts with the legacy cache resource declaration"
+        case .invalidWebManifestURL(let url): return "Web App Manifest URL is invalid or outside the allowed origins: \(url)"
+        case .invalidWebManifestDigest: return "Web App Manifest SHA-256 must be 64 lowercase hexadecimal characters"
         case .missingOrInvalidSignature: return "HTML app manifest signature is missing or invalid"
         }
     }
@@ -551,7 +729,7 @@ public enum HTMLAppRoute {
         for component in components(for: route) {
             if component.hasPrefix(":") {
                 guard allowsParameters, component.count > 1 else { return false }
-            } else if component.contains(":") {
+            } else if component.contains(":") || component.contains("*") {
                 return false
             }
         }
