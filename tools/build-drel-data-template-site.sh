@@ -13,9 +13,10 @@ case "$STAGE" in
   *) echo "Refusing to replace a staging directory outside $ROOT/build" >&2; exit 2 ;;
 esac
 
-rm -rf "$STAGE"
-mkdir -p "$STAGE"
-cp -R "$ROOT/docs/site/." "$STAGE/"
+# Compose on top of the offline+network staging: CF Pages deployments are
+# FULL snapshots — staging only this fixture would 404 the others in
+# production (2026-09-17 incident: template-only deploy wiped /test/offline).
+bash "$ROOT/tools/build-drel-offline-network-demo-site.sh" "$STAGE"
 mkdir -p "$STAGE/test/template/v1"
 cp -R "$SOURCE/." "$STAGE/test/template/v1/"
 

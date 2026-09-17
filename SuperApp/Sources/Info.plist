@@ -79,6 +79,14 @@
 				<string>webbridgekit</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.drel.link</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>drel</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

@@ -1,3 +1,4 @@
+import Foundation
 import XCTest
 
 final class DeepVerificationTests: XCTestCase {
@@ -14,6 +15,12 @@ final class DeepVerificationTests: XCTestCase {
             app.launchArguments.append("--register-pwa-notification-fixture")
             app.launchEnvironment["WBK_PWA_FIXTURE_CASE"] = "approval"
             app.launchEnvironment["WBK_PWA_FIXTURE_ORIGIN"] = "http://localhost:8081"
+        }
+        if name.contains("testExternalAppLinkOpensRegisteredAppImmersive") {
+            // Official gateway payload so the import screen prefills; validation
+            // fetches the live signed manifests from api.drel.app.
+            app.launchEnvironment["WBK_GATEWAY_UI_PAYLOAD"] =
+                #"{"id":"drel-gateway","name":"Drel Gateway","baseURL":"https://api.drel.app","healthPath":"/health","manifestPath":"/api/v1/html-apps","publicKeyID":"gw-2026-09-15","publicKey":"M3FVnjzVa8bjFQ-VtDov_mvYrik6c-DGSaRm-wdcLzY"}"#
         }
         app.launch()
     }
@@ -343,6 +350,114 @@ final class DeepVerificationTests: XCTestCase {
     /// Long-press on a recognized link in the Markdown body (bare URL, no
     /// markdown link syntax) must offer 打开链接, and opening it must push the
     /// shared browser in normal mode — back returns straight to the message.
+    /// `drel://app?app_id=…` external link, fail-closed half: an unregistered
+    /// app ID must produce an explanation alert — never a browser.
+    func testExternalAppLinkFailsClosedForUnregisteredApp() throws {
+        navigateToTab("tab.settings")
+
+        Self.openExternally("drel://app?app_id=dev.drel.not-registered")
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let openButton = springboard.buttons["打开"].firstMatch
+        if openButton.waitForExistence(timeout: 5) {
+            openButton.tap()
+        }
+
+        let failClosed = app.alerts["应用未注册"].firstMatch
+        XCTAssertTrue(failClosed.waitForExistence(timeout: 8), "Unregistered app link must fail closed with an alert")
+        XCTAssertFalse(
+            app.descendants(matching: .any).matching(identifier: "browserManager.webView").firstMatch.exists,
+            "No browser may appear for an unregistered app link"
+        )
+        saveScreenshot("/tmp/wbk-drel-link-failclosed.png")
+        app.alerts.buttons["好"].firstMatch.tap()
+    }
+
+    /// Registered half: after importing the official gateway (env-prefilled
+    /// payload), `drel://app` for a live registered app opens it immersive
+    /// — the external equivalent of a push launch.
+    func testExternalAppLinkOpensRegisteredAppImmersive() throws {
+        // Import the official gateway first so the live signed manifests
+        // (incl. dev.drel.data-template) land in the trust registry.
+        let guide = app.buttons["pwaHome.guideAndDebug"]
+        var prescrollAttempts = 0
+        while !guide.exists && prescrollAttempts < 8 {
+            app.swipeUp()
+            prescrollAttempts += 1
+        }
+        XCTAssertTrue(guide.waitForExistence(timeout: 10), "Home should expose 手册与调试")
+        guide.tap()
+
+        let manage = app.sheets.buttons["管理自有服务"].firstMatch
+        if !manage.waitForExistence(timeout: 6) {
+            app.buttons["管理自有服务"].firstMatch.tap()
+        } else {
+            manage.tap()
+        }
+
+        let validate = app.buttons["gateway.validate"]
+        XCTAssertTrue(validate.waitForExistence(timeout: 8), "Gateway import screen should be prefilled")
+        if !validate.isHittable { app.swipeUp() }
+        validate.tap()
+
+        let verified = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS 'verified'")
+        ).firstMatch
+        if !verified.waitForExistence(timeout: 45) {
+            saveScreenshot("/tmp/wbk-drel-link-validation-failed.png")
+            XCTFail("Validation report should render")
+        }
+
+        let activate = app.buttons["启用此网关"]
+        var reportScrollAttempts = 0
+        while !activate.exists && reportScrollAttempts < 10 {
+            app.swipeUp()
+            reportScrollAttempts += 1
+            Thread.sleep(forTimeInterval: 0.4)
+        }
+        XCTAssertTrue(activate.waitForExistence(timeout: 10), "启用此网关 should render after scrolling")
+        activate.tap()
+
+        let activated = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "已启用")
+        ).firstMatch
+        XCTAssertTrue(activated.waitForExistence(timeout: 10), "Gateway should report 已启用")
+
+        // External link → system handoff → 打开 → immersive app.
+        Self.openExternally("drel://app?app_id=dev.drel.data-template&route=/test/template/v1/index.html&param_title=%E5%A4%96%E9%83%A8%E6%8B%89%E8%B5%B7")
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let openButton = springboard.buttons["打开"].firstMatch
+        if openButton.waitForExistence(timeout: 5) {
+            openButton.tap()
+        }
+
+        let browser = app.descendants(matching: .any).matching(identifier: "browserManager.webView").firstMatch
+        XCTAssertTrue(browser.waitForExistence(timeout: 10), "Registered app link should open the browser")
+        saveScreenshot("/tmp/wbk-drel-link-opened.png")
+        // Immersive = no navigation bar (the left-edge exit handle collapses
+        // to a chevron whose identifier is not exposed while collapsed).
+        XCTAssertTrue(app.navigationBars.firstMatch.exists == false, "Immersive open must hide the navigation bar")
+        // The link carried param_title=外部拉起 — it must reach the page via the
+        // drel_param_* query channel, not just open the empty template shell.
+        XCTAssertTrue(
+            app.staticTexts["外部拉起"].firstMatch.waitForExistence(timeout: 8),
+            "Link parameters must render in the template page"
+        )
+        saveScreenshot("/tmp/wbk-drel-link-registered.png")
+    }
+
+    /// Opens a URL the way an external context (another app / system) would.
+    private static func openExternally(_ link: String) {
+        guard let url = URL(string: link) else {
+            XCTFail("Invalid test link: \(link)")
+            return
+        }
+        if #available(iOS 16.4, *) {
+            XCUIDevice.shared.system.open(url)
+        } else {
+            XCTFail("XCUIDevice.system.open requires iOS 16.4+")
+        }
+    }
+
     func testInboxMarkdownLinkLongPressMenuOpensBrowserInNormalMode() throws {
         navigateToTab("tab.notifications")
         openInboxMessage(searchText: "部署手册更新", cardID: "stored-markdown-links-013")

@@ -28,6 +28,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     var window: UIWindow?
 
+    /// A `drel://` URL that launched the app cold; processed once the window
+    /// exists (see application(_:didFinishLaunchingWithOptions:)).
+    private var pendingExternalLaunchURL: URL?
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         #if DREL_CONTAINER_ONLY
         WebBrowserManager.shared.webGrantsPresenter = nil
@@ -130,6 +134,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // 由本行为专门的测试用 --enable-session-restore 显式打开。
         let defaultStartupAppID = UserDefaults.standard
             .string(forKey: SettingsPreferenceKeys.defaultStartupAppID) ?? ""
+        // drel://app cold launch is an explicit destination: capture it before
+        // the restore decision (it suppresses session restore) and run once
+        // the window exists. A notification cold launch outranks it.
+        if let coldURL = launchOptions?[.url] as? URL,
+           coldURL.scheme?.lowercased() == "drel",
+           launchOptions?[.remoteNotification] == nil {
+            pendingExternalLaunchURL = coldURL
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self, let url = self.pendingExternalLaunchURL else { return }
+                self.pendingExternalLaunchURL = nil
+                _ = self.handleDrelExternalURL(url)
+            }
+        }
         let restoreEnabled = DrelStartupNavigationPolicy.shouldRestoreRecentSession(
             isUITesting: isUITesting,
             explicitlyEnablesUITestRestore: ProcessInfo.processInfo.arguments
@@ -141,7 +158,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             // normal browser and strips the immersive presentation.
             hasDefaultStartupApp: !defaultStartupAppID.isEmpty
         )
-        if restoreEnabled {
+        // The external link (pending above) already claims this launch.
+        if restoreEnabled, pendingExternalLaunchURL == nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 guard let self = self, self.window?.rootViewController != nil,
                       let url = WebBrowserManager.restorableLastURL() else { return }
@@ -402,7 +420,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        // Drel 1.0 intentionally has no external command/deep-link surface.
+        // `drel://` is Drel's single intentional external surface: launching a
+        // REGISTERED HTML app (DrelExternalAppLink — never a raw web URL) and
+        // routing deployment QR codes into the self-hosted import flow.
+        if url.scheme?.lowercased() == "drel" {
+            return handleDrelExternalURL(url)
+        }
+
+        // Drel 1.0 intentionally has no other external command/deep-link surface.
         // Its only web entry is the validated route received from an APNs
         // notification or a trusted gateway manifest. Keeping the legacy
         // WebBridgeKit scheme out of this Store build prevents arbitrary URLs
@@ -458,6 +483,78 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         return false
         #endif
+    }
+
+    // MARK: - drel:// external app link
+
+    /// `drel://app?app_id=…&route=…&param_<name>=…` opens a gateway-signed
+    /// registered HTML app — the app equivalent of a push launch. Anything
+    /// else under the scheme routes QR import payloads or is refused.
+    private func handleDrelExternalURL(_ url: URL) -> Bool {
+        if let link = DrelExternalAppLink.parse(url) {
+            openExternalAppLink(link)
+            return true
+        }
+
+        switch url.host?.lowercased() {
+        case "self-hosted-push", "managed-encrypted-push":
+            // A deployment QR opened outside the in-app scanner. Keep the
+            // payload on the clipboard and guide to the import UI instead of
+            // silently auto-pairing from an opaque system handoff.
+            UIPasteboard.general.string = url.absoluteString
+            HUDService.shared.showSuccess(withStatus: "自托管配置码已复制，请在 设置 → 推送通道 粘贴导入")
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func openExternalAppLink(_ link: DrelExternalAppLink) {
+        let registry = HTMLAppRuntimeCenter.shared.trustRegistry
+        // Fail closed: only apps already trusted on this device open from an
+        // external link; unregistered IDs get an explanation, not a browser.
+        guard let manifest = registry.manifest(for: link.appID) else {
+            presentExternalLinkAlert(
+                title: "应用未注册",
+                message: "“\(link.appID)”不在本机的受信应用列表中。请先在应用中心导入，或通过推送激活该应用。"
+            )
+            return
+        }
+
+        let route = (link.route?.isEmpty == false ? link.route : nil) ?? manifest.routes.first ?? "/"
+        do {
+            let target = try HTMLAppLaunchResolver(trustRegistry: registry).resolve(
+                appID: link.appID,
+                route: route,
+                parameters: link.parameters,
+                source: .direct
+            )
+            // External launches always deliver via the bridge-free
+            // containerOnlyURL (validated route + drel_param_* query items):
+            // an external caller has no bridge context, and this keeps the
+            // documented template contract identical across every train.
+            let params = DrelMessageOpenPolicy.browserParams(
+                for: target.containerOnlyURL,
+                mode: .immersive,
+                payload: nil,
+                useManifestLoader: false,
+                preferCachedContent: false
+            )
+            WebBrowserManager.shared.openBrowser(url: target.containerOnlyURL, params: params, from: window?.rootViewController)
+        } catch {
+            presentExternalLinkAlert(title: "无法打开应用", message: error.localizedDescription)
+        }
+    }
+
+    private func presentExternalLinkAlert(title: String, message: String) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            var presenter = self.window?.rootViewController
+            while let presented = presenter?.presentedViewController { presenter = presented }
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "好", style: .default))
+            presenter?.present(alert, animated: true)
+        }
     }
 
     // MARK: - Push Notifications
