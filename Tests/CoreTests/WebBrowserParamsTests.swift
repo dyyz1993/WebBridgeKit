@@ -4,9 +4,139 @@
 //
 
 import XCTest
+import WebKit
 @testable import WebBridgeKit
 
 final class WebBrowserParamsTests: XCTestCase {
+    func testDefaultStartupAppSuppressesDelayedSessionRestore() {
+        XCTAssertFalse(DrelStartupNavigationPolicy.shouldRestoreRecentSession(
+            isUITesting: false,
+            explicitlyEnablesUITestRestore: false,
+            launchedFromRemoteNotification: false,
+            hasDefaultStartupApp: true
+        ))
+        XCTAssertTrue(DrelStartupNavigationPolicy.shouldRestoreRecentSession(
+            isUITesting: false,
+            explicitlyEnablesUITestRestore: false,
+            launchedFromRemoteNotification: false,
+            hasDefaultStartupApp: false
+        ))
+    }
+
+    func testDrelUserAgentApplicationNameHasStableVersionedContract() {
+        let value = DrelWebRuntimeContract.applicationNameForUserAgent(
+            appVersion: "1.4.0",
+            buildNumber: "64",
+            screenWidth: 393,
+            screenHeight: 852,
+            displayScale: 3,
+            bridgeEnabled: false
+        )
+
+        XCTAssertEqual(
+            value,
+            "Drel/1.4.0 (Build/64; Screen/393x852; DPR/3; Container/1; Offline/1; Bridge/0) WebBridgeKit/1"
+        )
+    }
+
+    func testDrelRuntimeBootstrapDetectsLocalPackagesAndReportsLiveViewport() {
+        let script = DrelWebRuntimeContract.runtimeBootstrapScript(
+            appVersion: "1.4.0",
+            buildNumber: "64",
+            bridgeEnabled: false
+        )
+
+        XCTAssertTrue(script.contains("'DrelRuntime'"))
+        XCTAssertTrue(script.contains("location.protocol === 'file:'"))
+        XCTAssertTrue(script.contains("offline-package"))
+        XCTAssertTrue(script.contains("window.innerWidth"))
+        XCTAssertTrue(script.contains("window.visualViewport"))
+        XCTAssertTrue(script.contains("bridgeVersion: { value: '0'"))
+        XCTAssertFalse(script.contains("window.webkit.messageHandlers"))
+    }
+
+    func testDrelPresentationScriptUsesCanonicalDisplayMode() {
+        XCTAssertEqual(
+            DrelWebRuntimeContract.presentationScript(for: .immersive),
+            "window.__drelPresentation = 'immersive';"
+        )
+        XCTAssertEqual(
+            DrelWebRuntimeContract.presentationScript(for: .modal),
+            "window.__drelPresentation = 'modal';"
+        )
+        XCTAssertEqual(
+            DrelWebRuntimeContract.presentationScript(for: .normal),
+            "window.__drelPresentation = 'normal';"
+        )
+    }
+
+    @MainActor
+    func testDrelRuntimeInstallationIsCompleteBeforeWebViewCreation() {
+        let configuration = WKWebViewConfiguration()
+
+        DrelWebRuntimeContract.install(on: configuration)
+
+        XCTAssertTrue(configuration.applicationNameForUserAgent?.contains("Drel/") == true)
+        XCTAssertTrue(configuration.applicationNameForUserAgent?.contains("Screen/") == true)
+        XCTAssertTrue(configuration.applicationNameForUserAgent?.contains("Container/1") == true)
+        XCTAssertTrue(configuration.applicationNameForUserAgent?.contains("WebBridgeKit/1") == true)
+        XCTAssertTrue(configuration.userContentController.userScripts.contains {
+            $0.injectionTime == .atDocumentStart && $0.source.contains("'DrelRuntime'")
+        })
+    }
+
+    @MainActor
+    func testLocalPackageReadsOfflineRuntimePresentationViewportAndUserAgent() throws {
+        let configuration = WKWebViewConfiguration()
+        DrelWebRuntimeContract.install(on: configuration)
+        configuration.userContentController.addUserScript(WKUserScript(
+            source: DrelWebRuntimeContract.presentationScript(for: .immersive),
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        ))
+        let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 393, height: 700), configuration: configuration)
+        let loaded = expectation(description: "local package loaded")
+        let navigationProbe = DrelRuntimeNavigationProbe { loaded.fulfill() }
+        webView.navigationDelegate = navigationProbe
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let document = directory.appendingPathComponent("index.html")
+        try "<html><body>Drel runtime probe</body></html>".write(to: document, atomically: true, encoding: .utf8)
+
+        webView.loadFileURL(document, allowingReadAccessTo: directory)
+        wait(for: [loaded], timeout: 5)
+
+        let evaluated = expectation(description: "runtime evaluated")
+        var runtime: [String: Any]?
+        var evaluationError: Error?
+        webView.evaluateJavaScript("""
+        ({
+          runtime: window.DrelRuntime.runtime,
+          offline: window.DrelRuntime.isOfflinePackage,
+          presentation: window.DrelRuntime.presentation,
+          viewportWidth: window.DrelRuntime.viewport.width,
+          viewportHeight: window.DrelRuntime.viewport.height,
+          userAgent: navigator.userAgent
+        })
+        """) { value, error in
+            runtime = value as? [String: Any]
+            evaluationError = error
+            evaluated.fulfill()
+        }
+        wait(for: [evaluated], timeout: 5)
+
+        XCTAssertNil(evaluationError)
+        XCTAssertEqual(runtime?["runtime"] as? String, "offline-package")
+        XCTAssertEqual(runtime?["offline"] as? Bool, true)
+        XCTAssertEqual(runtime?["presentation"] as? String, "immersive")
+        XCTAssertGreaterThan((runtime?["viewportWidth"] as? NSNumber)?.doubleValue ?? 0, 0)
+        XCTAssertGreaterThan((runtime?["viewportHeight"] as? NSNumber)?.doubleValue ?? 0, 0)
+        XCTAssertTrue((runtime?["userAgent"] as? String)?.contains("Drel/") == true)
+        withExtendedLifetime(navigationProbe) {}
+    }
 
     // MARK: - Default Initialization
 
@@ -270,5 +400,17 @@ final class WebBrowserParamsTests: XCTestCase {
 
         XCTAssertEqual(config.widthPercent, 0.8, accuracy: 0.01)
         XCTAssertEqual(config.heightPercent, 0.8, accuracy: 0.01)
+    }
+}
+
+private final class DrelRuntimeNavigationProbe: NSObject, WKNavigationDelegate {
+    private let onFinish: () -> Void
+
+    init(onFinish: @escaping () -> Void) {
+        self.onFinish = onFinish
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        onFinish()
     }
 }

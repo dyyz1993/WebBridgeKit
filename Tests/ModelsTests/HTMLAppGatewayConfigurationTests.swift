@@ -116,9 +116,7 @@ final class HTMLAppGatewayConfigurationTests: XCTestCase {
         let gateway = HTMLAppGatewayDefaults.official
 
         XCTAssertTrue(gateway.validate().isValid)
-        // 官方网关已从 tx（cloak.xbrowser.dev:5801，已退役）切换到
-        // shanbox 自托管生产网关（2026-08 起，见 HTMLAppGatewayDefaults 注释）。
-        XCTAssertEqual(gateway.baseURL, "https://wbk.shanbox.19930810.xyz:8443")
+        XCTAssertEqual(gateway.baseURL, "https://api.drel.app")
         XCTAssertEqual(gateway.healthPath, "/health")
         XCTAssertEqual(gateway.manifestPath, "/api/v1/html-apps")
         XCTAssertNotNil(gateway.publicKeyID)
@@ -177,5 +175,53 @@ final class HTMLAppGatewayConfigurationTests: XCTestCase {
         try registry.remove(id: second.id)
         XCTAssertNil(registry.activeGateway())
         XCTAssertEqual(registry.allGateways(), [first])
+    }
+
+    func testRegistryMigratesOnlyLegacyOfficialGateway() throws {
+        let storage = MemoryStorage()
+        let legacyOfficial = HTMLAppGatewayConfiguration(
+            id: "webbridgekit-gateway",
+            name: "WebBridgeKit 官方服务",
+            baseURL: "https://wbk.shanbox.19930810.xyz:8443",
+            healthPath: "/health",
+            manifestPath: "/api/v1/html-apps",
+            publicKeyID: "wbk-self-hosted-20260816",
+            publicKey: "h860-f-Vu_IC9DNoOrGrMpnXydSZHjNqb2HprCJIcm8"
+        )
+        let selfHosted = HTMLAppGatewayConfiguration(
+            id: "my-gateway",
+            name: "My Gateway",
+            baseURL: "https://gateway.example.com"
+        )
+
+        let oldRegistry = HTMLAppGatewayRegistry(storage: storage)
+        try oldRegistry.save(legacyOfficial, activate: true)
+        try oldRegistry.save(selfHosted)
+
+        let migratedRegistry = HTMLAppGatewayRegistry(storage: storage)
+        XCTAssertEqual(migratedRegistry.activeGateway(), HTMLAppGatewayDefaults.official)
+        XCTAssertEqual(migratedRegistry.allGateways(), [HTMLAppGatewayDefaults.official, selfHosted])
+    }
+
+    /// A persisted current-host official entry still carrying a rotated-out
+    /// public key must refresh to the bundled default; otherwise the stale key
+    /// shadows `HTMLAppGatewayDefaults.official` (activeGateway() is consulted
+    /// first) and signed manifests fail closed forever.
+    func testRegistryRefreshesRotatedOfficialGatewayOnCurrentHost() throws {
+        let storage = MemoryStorage()
+        let staleOfficial = HTMLAppGatewayConfiguration(
+            id: HTMLAppGatewayDefaults.official.id,
+            name: "Drel 官方服务",
+            baseURL: "https://api.drel.app",
+            healthPath: "/health",
+            manifestPath: "/api/v1/html-apps",
+            publicKeyID: "wbk-self-hosted-20260816",
+            publicKey: "h860-f-Vu_IC9DNoOrGrMpnXydSZHjNqb2HprCJIcm8"
+        )
+        try HTMLAppGatewayRegistry(storage: storage).save(staleOfficial, activate: true)
+
+        let upgradedRegistry = HTMLAppGatewayRegistry(storage: storage)
+        XCTAssertEqual(upgradedRegistry.activeGateway(), HTMLAppGatewayDefaults.official)
+        XCTAssertTrue(upgradedRegistry.activeGateway()?.publicKeyID == "gw-2026-09-15")
     }
 }

@@ -12,13 +12,49 @@ final class PushDeviceIdentityTests: XCTestCase {
 
         let identity = try provider.currentOrCreate()
 
-        XCTAssertEqual(requestedByteCount, 32)
+        XCTAssertEqual(requestedByteCount, 10)
         XCTAssertEqual(storage.value, identity)
-        XCTAssertFalse(identity.isEmpty)
-        XCTAssertNil(identity.range(of: #"[^A-Za-z0-9_-]"#, options: .regularExpression))
-        XCTAssertFalse(identity.contains("/"))
-        XCTAssertFalse(identity.contains("+"))
-        XCTAssertFalse(identity.contains("="))
+        XCTAssertEqual(identity.count, 16)
+        XCTAssertNotNil(
+            identity.range(
+                of: #"^[0123456789abcdefghjkmnpqrstvwxyz]{16}$"#,
+                options: .regularExpression
+            )
+        )
+        XCTAssertFalse(identity.contains("-"))
+        XCTAssertFalse(identity.contains("i"))
+        XCTAssertFalse(identity.contains("l"))
+        XCTAssertFalse(identity.contains("o"))
+        XCTAssertFalse(identity.contains("u"))
+    }
+
+    func testCurrentOrCreateEncodesAllTenRandomBytesDeterministically() throws {
+        let storage = InMemoryPushDeviceIdentityStorage()
+        let provider = PushDeviceIdentityProvider(storage: storage) { _ in
+            Data((0..<10).map(UInt8.init))
+        }
+
+        XCTAssertEqual(try provider.currentOrCreate(), "000g40r40m30e209")
+    }
+
+    func testCurrentOrCreateUsesAllThirtyTwoBase32SymbolsSafely() throws {
+        let storage = InMemoryPushDeviceIdentityStorage()
+        let provider = PushDeviceIdentityProvider(storage: storage) { _ in
+            Data([0xf8] + Array(repeating: 0, count: 9))
+        }
+
+        XCTAssertEqual(try provider.currentOrCreate(), "z000000000000000")
+    }
+
+    func testShortIdentityAcceptsCurrentAndPreexistingGroupedAddresses() {
+        XCTAssertTrue(PushDeviceIdentityProvider.isShortIdentity("000g40r40m30e209"))
+        XCTAssertTrue(PushDeviceIdentityProvider.isShortIdentity("uuuu-uuuu-uuuu-uuuu"))
+    }
+
+    func testCurrentIdentityRequiresUngroupedSixteenCharacterFormat() {
+        XCTAssertTrue(PushDeviceIdentityProvider.isCurrentIdentity("000g40r40m30e209"))
+        XCTAssertFalse(PushDeviceIdentityProvider.isCurrentIdentity("000g-40r4-0m30-e209"))
+        XCTAssertFalse(PushDeviceIdentityProvider.isCurrentIdentity("existing_device-key"))
     }
 
     func testCurrentOrCreateReusesStoredIdentityWithoutCallingRandomSource() throws {

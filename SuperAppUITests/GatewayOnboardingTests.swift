@@ -7,7 +7,7 @@ final class GatewayOnboardingTests: XCTestCase {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--ui-testing"]
+        app.launchArguments = ["--UITesting", "-UITesting"]
     }
 
     func testGatewayScreenExposesOnePageImportAndExplicitActivation() {
@@ -15,7 +15,7 @@ final class GatewayOnboardingTests: XCTestCase {
         app.launch()
         openGatewayManagement()
 
-        XCTAssertTrue(app.otherElements["gateway.current"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element("gateway.current").waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["gateway.scan"].exists)
         XCTAssertTrue(app.buttons["gateway.paste"].exists)
         XCTAssertTrue(app.textViews["gateway.input"].exists)
@@ -30,16 +30,23 @@ final class GatewayOnboardingTests: XCTestCase {
         openGatewayManagement()
         app.buttons["gateway.validate"].tap()
 
-        XCTAssertTrue(app.otherElements["gateway.error"].waitForExistence(timeout: 3))
+        XCTAssertTrue(element("gateway.error").waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["gateway.activate"].exists)
     }
 
     private func openGatewayManagement() {
         let settings = app.tabBars.buttons["设置"]
         if settings.waitForExistence(timeout: 5) { settings.tap() }
-        let gateway = app.staticTexts["网关配置"]
-        XCTAssertTrue(gateway.waitForExistence(timeout: 5))
-        gateway.tap()
+        // Official hosting is surfaced as server configuration. Self-hosted
+        // gateway import remains inside that flow rather than being a primary
+        // first-run destination.
+        let serverConfiguration = app.buttons["settings.cell.serverConfig"]
+        XCTAssertTrue(serverConfiguration.waitForExistence(timeout: 5))
+        serverConfiguration.tap()
+    }
+
+    private func element(_ identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
 
     private static let localPayload = """

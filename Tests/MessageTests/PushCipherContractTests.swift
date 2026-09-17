@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import WebBridgeKit
 
 /// Automated end-to-end decryption contract: a ciphertext produced by the
@@ -131,5 +132,60 @@ final class PushCipherContractTests: XCTestCase {
         suite?.removeObject(forKey: "wbk.push-crypto.aes-key")
         XCTAssertEqual(PushCipher.sharedKey(), Self.vectorKey)
         XCTAssertEqual(suite?.data(forKey: "wbk.push-crypto.aes-key"), Self.vectorKey)
+    }
+
+    func testSelfHostedEnvelopeDecryptsAndMergesThePerDevicePayload() throws {
+        let recipient = Curve25519.KeyAgreement.PrivateKey()
+        let now = Date(timeIntervalSince1970: 1_778_000_000)
+        let createdAt = Int(now.timeIntervalSince1970)
+        let expiresAt = createdAt + 3600
+        let messageID = "self-hosted-vector-1"
+        let plaintext: [String: Any] = [
+            "title": "私有验证码",
+            "body": "仅此 iPhone 可以解密",
+            "verificationCode": "482901",
+            "url": "https://example.test/private"
+        ]
+        let plaintextData = try JSONSerialization.data(withJSONObject: plaintext)
+        let ephemeral = Curve25519.KeyAgreement.PrivateKey()
+        let secret = try ephemeral.sharedSecretFromKeyAgreement(with: recipient.publicKey)
+        let aad = Data("drel.push-envelope.v1|\(messageID)|\(createdAt)|\(expiresAt)".utf8)
+        let key = secret.hkdfDerivedSymmetricKey(
+            using: SHA256.self,
+            salt: Data(),
+            sharedInfo: aad,
+            outputByteCount: 32
+        )
+        let sealed = try AES.GCM.seal(plaintextData, using: key)
+        let envelope: [String: Any] = [
+            "schema": "drel.push-envelope.v1",
+            "messageID": messageID,
+            "createdAt": createdAt,
+            "expiresAt": expiresAt,
+            "ephemeralPublicKey": Self.base64URL(ephemeral.publicKey.rawRepresentation),
+            "ciphertext": Self.base64URL(sealed.combined!)
+        ]
+        let encoded = Self.base64URL(try JSONSerialization.data(withJSONObject: envelope))
+
+        let decrypted = try SelfHostedPushCrypto.decrypt(
+            envelopeBase64URL: encoded,
+            privateKeyData: recipient.rawRepresentation,
+            now: now
+        )
+        let merged = PushCipher.merging(
+            plaintext: decrypted,
+            onto: ["drelEnvelope": encoded, "messageId": messageID],
+            removingEnvelopeFields: ["drelEnvelope"]
+        )
+        XCTAssertEqual(merged["title"] as? String, "私有验证码")
+        XCTAssertEqual(merged["verificationCode"] as? String, "482901")
+        XCTAssertNil(merged["drelEnvelope"])
+    }
+
+    private static func base64URL(_ data: Data) -> String {
+        data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
     }
 }

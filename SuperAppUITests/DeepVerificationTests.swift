@@ -92,17 +92,24 @@ final class DeepVerificationTests: XCTestCase {
     }
 
     private func tapSettingsRow(identifier: String, labelText: String) -> Bool {
-        let tableView = app.tables["settings.tableView"]
-        guard tableView.waitForExistence(timeout: 5) else {
-            print("[Warning] Settings table not found")
-            return false
-        }
-
-        let cellById = tableView.cells[identifier]
-        if cellById.waitForExistence(timeout: 3) {
-            cellById.tap()
+        // SwiftUI rows are exposed as generic accessibility elements, not
+        // UITableViewCell instances. Prefer the stable identifier emitted by
+        // SettingsView before falling back to labels for legacy screens.
+        let row = app.descendants(matching: .any)[identifier]
+        if row.waitForExistence(timeout: 5) {
+            row.tap()
             sleep(1)
             return true
+        }
+
+        let tableView = app.tables["settings.tableView"]
+        if tableView.waitForExistence(timeout: 3) {
+            let cellById = tableView.cells[identifier]
+            if cellById.waitForExistence(timeout: 3) {
+                cellById.tap()
+                sleep(1)
+                return true
+            }
         }
 
         let cellByLabel = tableView.cells.containing(.staticText, identifier: labelText).firstMatch
@@ -149,9 +156,9 @@ final class DeepVerificationTests: XCTestCase {
         navigateToTab("设置")
 
         let found = tapSettingsRow(identifier: "settings.cell.tokenManager", labelText: "口令管理")
-        saveScreenshot("/tmp/wbk-ui-token-manage.png")
 
         if found {
+            saveScreenshot("/tmp/wbk-ui-token-manage.png")
             let tokenTable = app.tables.firstMatch
             if tokenTable.waitForExistence(timeout: 3) {
                 print("[Info] Token management table visible, cells: \(tokenTable.cells.count)")
@@ -169,9 +176,9 @@ final class DeepVerificationTests: XCTestCase {
         navigateToTab("设置")
 
         let found = tapSettingsRow(identifier: "settings.cell.apiKeyManage", labelText: "密钥管理")
-        saveScreenshot("/tmp/wbk-ui-apikey-manage.png")
 
         if found {
+            saveScreenshot("/tmp/wbk-ui-apikey-manage.png")
             let table = app.tables.firstMatch
             if table.waitForExistence(timeout: 3) {
                 print("[Info] API Key management table visible, cells: \(table.cells.count)")
@@ -333,8 +340,48 @@ final class DeepVerificationTests: XCTestCase {
         saveScreenshot("/tmp/wbk-ui-inbox-markdown-details.png")
     }
 
-    func testInboxPlainMessageKeepsBodyReadable() throws {
+    /// Long-press on a recognized link in the Markdown body (bare URL, no
+    /// markdown link syntax) must offer 打开链接, and opening it must push the
+    /// shared browser in normal mode — back returns straight to the message.
+    func testInboxMarkdownLinkLongPressMenuOpensBrowserInNormalMode() throws {
         navigateToTab("tab.notifications")
+        openInboxMessage(searchText: "部署手册更新", cardID: "stored-markdown-links-013")
+
+        // Both the bare paragraph URL and the code-block URL render as links.
+        let deployLink = app.links.matching(NSPredicate(format: "label CONTAINS %@", "deploy-guide")).firstMatch
+        XCTAssertTrue(deployLink.waitForExistence(timeout: 5), "Bare paragraph URL should be exposed as a link")
+        let runbookLink = app.links.matching(NSPredicate(format: "label CONTAINS %@", "rollback-runbook")).firstMatch
+        XCTAssertTrue(runbookLink.waitForExistence(timeout: 5), "Code-block URL should be exposed as a link")
+
+        deployLink.press(forDuration: 1.5)
+
+        // Custom menu: exactly 打开链接 / 拷贝链接, no system items.
+        let openAction = app.buttons["打开链接"].firstMatch
+        XCTAssertTrue(openAction.waitForExistence(timeout: 5), "Long-press menu should offer 打开链接")
+        XCTAssertTrue(app.buttons["拷贝链接"].firstMatch.exists, "Long-press menu should offer 拷贝链接")
+        XCTAssertFalse(app.buttons["添加到阅读列表"].firstMatch.exists, "System link actions must be replaced by the custom menu")
+        saveScreenshot("/tmp/wbk-ui-md-link-menu.png")
+        openAction.tap()
+
+        let browser = app.descendants(matching: .any).matching(identifier: "browserManager.webView").firstMatch
+        XCTAssertTrue(browser.waitForExistence(timeout: 8), "打开链接 should open the shared browser")
+        saveScreenshot("/tmp/wbk-ui-md-link-browser.png")
+
+        // Normal mode: pushed with a back control, not the immersive capsule.
+        let immersiveCapsule = app.buttons["browserManager.immersiveMenuButton"].firstMatch
+        XCTAssertFalse(immersiveCapsule.isHittable, "Browser must not open immersive/fullscreen")
+
+        let navBar = app.navigationBars.firstMatch
+        XCTAssertTrue(navBar.waitForExistence(timeout: 3), "Normal-mode browser keeps the navigation bar")
+        navBar.buttons.element(boundBy: 0).tap()
+
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(identifier: "message.detail").firstMatch.waitForExistence(timeout: 5),
+            "Back from the browser should return to the message detail"
+        )
+    }
+
+    func testInboxPlainMessageKeepsBodyReadable() throws {        navigateToTab("tab.notifications")
         openInboxMessage(searchText: "系统维护通知", cardID: "stored-sys-004")
 
         XCTAssertTrue(app.staticTexts["系统将于今晚 22:00-23:00 进行维护升级"].waitForExistence(timeout: 5))

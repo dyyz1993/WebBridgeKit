@@ -3,6 +3,12 @@ import XCTest
 @testable import WebBridgeKit
 
 final class HTMLAppOfflinePackageInstallerTests: XCTestCase {
+    private final class MemoryStorage: HTMLAppRuntimeStorage {
+        var values: [String: Data] = [:]
+        func data(forKey key: String) -> Data? { values[key] }
+        func set(_ data: Data?, forKey key: String) { values[key] = data }
+    }
+
     private actor MemoryTransport: HTMLAppPackageTransport {
         var responses: [URL: HTMLAppPackageTransportResponse]
         var errors: [URL: Error]
@@ -24,6 +30,10 @@ final class HTMLAppOfflinePackageInstallerTests: XCTestCase {
         func replace(url: URL, response: HTMLAppPackageTransportResponse) {
             responses[url] = response
         }
+
+        func disconnect() {
+            responses.removeAll()
+        }
     }
 
     private var root: URL!
@@ -41,6 +51,97 @@ final class HTMLAppOfflinePackageInstallerTests: XCTestCase {
         super.tearDown()
     }
 
+    func testTrustedStandardWebManifestResolvesRelativeFieldsWithoutReplacingParentIdentity() async throws {
+        let webManifestURL = origin.appendingPathComponent("app/manifest.webmanifest")
+        let webManifestData = Data("""
+        {
+          "id": "attacker-controlled-id",
+          "name": "Offline Console",
+          "short_name": "Console",
+          "start_url": "./index.html",
+          "scope": "./",
+          "display": "standalone",
+          "theme_color": "#5B5CE2",
+          "icons": [{"src":"./icon.png","sizes":"192x192","type":"image/png"}],
+          "drel_offline": {
+            "version": "7",
+            "resource_manifest": "./package.json",
+            "resource_manifest_sha256": "\(String(repeating: "a", count: 64))"
+          }
+        }
+        """.utf8)
+        let offline = DrelOfflinePackageDeclaration(
+            version: "7",
+            resourceManifestURL: origin.appendingPathComponent("app/package.json").absoluteString,
+            resourceManifestSHA256: String(repeating: "a", count: 64)
+        )
+        let parent = trustedParent(webManifestURL: webManifestURL, data: webManifestData, drelOffline: offline)
+        let adapter = HTMLAppWebManifestAdapter(transport: MemoryTransport(responses: [
+            webManifestURL: .init(data: webManifestData, finalURL: webManifestURL)
+        ]))
+
+        let resolved = try await adapter.load(forTrustedParent: parent)
+
+        XCTAssertEqual(resolved.appID, parent.appID)
+        XCTAssertEqual(resolved.name, "Offline Console")
+        XCTAssertEqual(resolved.startURL, origin.appendingPathComponent("app/index.html"))
+        XCTAssertEqual(resolved.scopeURL, origin.appendingPathComponent("app/"))
+        XCTAssertEqual(resolved.iconURLs, [origin.appendingPathComponent("app/icon.png")])
+        XCTAssertEqual(resolved.drelOffline, offline)
+    }
+
+    func testTrustedStandardWebManifestRejectsDigestRedirectAndOfflineMismatch() async throws {
+        let webManifestURL = origin.appendingPathComponent("manifest.webmanifest")
+        let data = Data(#"{"name":"Console","start_url":"/","scope":"/"}"#.utf8)
+        let wrongDigestParent = HTMLAppManifest(
+            appID: "com.example.offline",
+            name: "Parent",
+            startURL: origin.appendingPathComponent("index.html").absoluteString,
+            allowedOrigins: [origin.absoluteString],
+            capabilities: [],
+            routes: ["/"],
+            cache: HTMLAppCachePolicy(strategy: .networkOnly, version: "1", persistent: false),
+            webManifest: HTMLAppWebManifestBinding(url: webManifestURL.absoluteString, sha256: String(repeating: "0", count: 64)),
+            signature: HTMLAppManifestSignature(algorithm: "ed25519", keyID: "test", value: "test")
+        )
+        let digestAdapter = HTMLAppWebManifestAdapter(transport: MemoryTransport(responses: [
+            webManifestURL: .init(data: data, finalURL: webManifestURL)
+        ]))
+        do {
+            _ = try await digestAdapter.load(forTrustedParent: wrongDigestParent)
+            XCTFail("Digest mismatch must fail closed")
+        } catch {
+            XCTAssertEqual(error as? HTMLAppWebManifestAdapterError, .digestMismatch)
+        }
+
+        let redirectParent = trustedParent(webManifestURL: webManifestURL, data: data)
+        let redirectAdapter = HTMLAppWebManifestAdapter(transport: MemoryTransport(responses: [
+            webManifestURL: .init(data: data, finalURL: origin.appendingPathComponent("other.webmanifest"))
+        ]))
+        do {
+            _ = try await redirectAdapter.load(forTrustedParent: redirectParent)
+            XCTFail("Redirect away from the signed URL must fail closed")
+        } catch {
+            XCTAssertEqual(error as? HTMLAppWebManifestAdapterError, .redirectMismatch)
+        }
+
+        let declaredData = Data("""
+        {"name":"Console","start_url":"/","scope":"/","drel_offline":{
+          "version":"2","resource_manifest":"/package.json",
+          "resource_manifest_sha256":"\(String(repeating: "c", count: 64))"}}
+        """.utf8)
+        let mismatchParent = trustedParent(webManifestURL: webManifestURL, data: declaredData)
+        let mismatchAdapter = HTMLAppWebManifestAdapter(transport: MemoryTransport(responses: [
+            webManifestURL: .init(data: declaredData, finalURL: webManifestURL)
+        ]))
+        do {
+            _ = try await mismatchAdapter.load(forTrustedParent: mismatchParent)
+            XCTFail("Unsigned offline installation authority must not be accepted")
+        } catch {
+            XCTAssertEqual(error as? HTMLAppWebManifestAdapterError, .offlineDeclarationMismatch)
+        }
+    }
+
     func testInstallsValidPackageAndReturnsCompleteEntrypoint() async throws {
         let fixture = try makeFixture(version: "1")
         let transport = MemoryTransport(responses: fixture.responses)
@@ -54,6 +155,104 @@ final class HTMLAppOfflinePackageInstallerTests: XCTestCase {
         XCTAssertTrue(entrypoint.path.contains("Application Support") == false)
         let restored = try await installer.installedPackage(appID: fixture.parent.appID)
         XCTAssertEqual(restored, installed)
+        let locator = HTMLAppOfflinePackageLocator(packagesRoot: root)
+        let packageSize = try locator.packageSize(for: installed)
+        XCTAssertGreaterThan(packageSize, Int64("<html>v1</html>".utf8.count))
+        XCTAssertEqual(try locator.packageSize(for: installed), packageSize)
+    }
+
+    func testInstalledPackageLaunchAndResourcesRemainAvailableAfterNetworkDisconnects() async throws {
+        let fixture = try makeFixture(version: "1")
+        let transport = MemoryTransport(responses: fixture.responses)
+        let installer = HTMLAppOfflinePackageInstaller(transport: transport, packagesRoot: root)
+        _ = try await installer.install(appManifest: fixture.parent)
+        await transport.disconnect()
+
+        let registry = HTMLAppTrustRegistry(storage: MemoryStorage())
+        try registry.register(fixture.parent)
+        let resolver = HTMLAppLaunchResolver(
+            trustRegistry: registry,
+            packageLocator: HTMLAppOfflinePackageLocator(packagesRoot: root)
+        )
+        let target = try resolver.resolve(appID: fixture.parent.appID, route: "/")
+
+        XCTAssertEqual(target.offlineMode, .strong)
+        XCTAssertTrue(target.loaderURL.isFileURL)
+        XCTAssertEqual(try String(contentsOf: target.loaderURL), "<html>v1</html>")
+        let localStyle = target.loaderURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("assets/style.css")
+        XCTAssertEqual(try String(contentsOf: localStyle), "body{}")
+    }
+
+    private func trustedParent(
+        webManifestURL: URL,
+        data: Data,
+        drelOffline: DrelOfflinePackageDeclaration? = nil
+    ) -> HTMLAppManifest {
+        let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        return HTMLAppManifest(
+            appID: "com.example.offline",
+            name: "Signed Parent",
+            startURL: origin.appendingPathComponent("app/index.html").absoluteString,
+            allowedOrigins: [origin.absoluteString],
+            capabilities: [],
+            routes: ["/"],
+            cache: HTMLAppCachePolicy(strategy: .networkOnly, version: "1", persistent: false),
+            webManifest: HTMLAppWebManifestBinding(url: webManifestURL.absoluteString, sha256: digest),
+            drelOffline: drelOffline,
+            signature: HTMLAppManifestSignature(algorithm: "ed25519", keyID: "test", value: "test")
+        )
+    }
+
+    func testInstallsPackageDeclaredThroughDrelOfflineExtension() async throws {
+        var fixture = try makeFixture(version: "1")
+        let digest = try XCTUnwrap(fixture.parent.cache.resourceManifestSHA256)
+        let resourceManifestURL = try XCTUnwrap(fixture.parent.cache.resourceManifestURL)
+        fixture.parent = HTMLAppManifest(
+            appID: fixture.parent.appID,
+            name: fixture.parent.name,
+            startURL: fixture.parent.startURL,
+            allowedOrigins: fixture.parent.allowedOrigins,
+            capabilities: fixture.parent.capabilities,
+            routes: fixture.parent.routes,
+            cache: HTMLAppCachePolicy(strategy: .manifest, version: "legacy", persistent: true),
+            drelOffline: DrelOfflinePackageDeclaration(
+                version: fixture.package.version,
+                resourceManifestURL: resourceManifestURL,
+                resourceManifestSHA256: digest
+            ),
+            signature: fixture.parent.signature
+        )
+        let installer = HTMLAppOfflinePackageInstaller(
+            transport: MemoryTransport(responses: fixture.responses),
+            packagesRoot: root
+        )
+
+        let installed = try await installer.install(appManifest: fixture.parent)
+
+        XCTAssertEqual(installed.version, "1")
+        let entrypoint = try await installer.entrypointURL(for: installed)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: entrypoint.path))
+    }
+
+    func testExplicitRemovalClearsTheEntireInstalledPackage() async throws {
+        let fixture = try makeFixture(version: "1")
+        let installer = HTMLAppOfflinePackageInstaller(
+            transport: MemoryTransport(responses: fixture.responses),
+            packagesRoot: root
+        )
+
+        _ = try await installer.install(appManifest: fixture.parent)
+        let initiallyInstalled = try await installer.installedPackage(appID: fixture.parent.appID)
+        XCTAssertNotNil(initiallyInstalled)
+
+        let didRemove = try await installer.removeInstalledPackage(appID: fixture.parent.appID)
+        XCTAssertTrue(didRemove)
+        let removedPackage = try await installer.installedPackage(appID: fixture.parent.appID)
+        XCTAssertNil(removedPackage)
+        let didRemoveAgain = try await installer.removeInstalledPackage(appID: fixture.parent.appID)
+        XCTAssertFalse(didRemoveAgain)
     }
 
     func testResourceManifestDigestMismatchActivatesNothing() async throws {

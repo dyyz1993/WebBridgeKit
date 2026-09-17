@@ -65,6 +65,106 @@ final class HTMLAppRuntimeModelsTests: XCTestCase {
         ).isStrongOfflineEligible)
     }
 
+    func testDrelOfflineDeclarationDecodesAndSuppliesStrongOfflinePolicy() throws {
+        let digest = String(repeating: "a", count: 64)
+        let data = Data("""
+        {
+          "schemaVersion": "1",
+          "appId": "com.example.inventory",
+          "name": "Inventory",
+          "startURL": "https://inventory.example.com/index.html",
+          "allowedOrigins": ["https://inventory.example.com"],
+          "capabilities": [],
+          "routes": ["/"],
+          "cache": { "strategy": "manifest", "version": "1", "persistent": true },
+          "drel_offline": {
+            "version": "42",
+            "resource_manifest": "https://inventory.example.com/offline/package.json",
+            "resource_manifest_sha256": "\(digest)"
+          }
+        }
+        """.utf8)
+
+        let manifest = try JSONDecoder().decode(HTMLAppManifest.self, from: data)
+
+        XCTAssertEqual(manifest.drelOffline?.version, "42")
+        XCTAssertEqual(manifest.effectiveOfflineCache.version, "42")
+        XCTAssertEqual(manifest.effectiveOfflineCache.resourceManifestURL, "https://inventory.example.com/offline/package.json")
+        XCTAssertTrue(manifest.effectiveOfflineCache.isStrongOfflineEligible)
+        XCTAssertTrue(manifest.validate().isValid)
+
+        let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(manifest)) as? [String: Any]
+        let offline = object?["drel_offline"] as? [String: Any]
+        XCTAssertEqual(offline?["resource_manifest"] as? String, "https://inventory.example.com/offline/package.json")
+        XCTAssertEqual(offline?["resource_manifest_sha256"] as? String, digest)
+    }
+
+    func testDrelOfflineDeclarationRejectsConflictWithLegacyStrongPolicy() {
+        let digest = String(repeating: "a", count: 64)
+        let manifest = HTMLAppManifest(
+            appID: "com.example.inventory",
+            name: "Inventory",
+            startURL: "https://inventory.example.com/index.html",
+            allowedOrigins: ["https://inventory.example.com"],
+            capabilities: [],
+            routes: ["/"],
+            cache: HTMLAppCachePolicy(
+                strategy: .manifest,
+                version: "41",
+                persistent: true,
+                resourceManifestURL: "https://inventory.example.com/offline/old.json",
+                resourceManifestSHA256: digest
+            ),
+            drelOffline: DrelOfflinePackageDeclaration(
+                version: "42",
+                resourceManifestURL: "https://inventory.example.com/offline/package.json",
+                resourceManifestSHA256: digest
+            )
+        )
+
+        XCTAssertEqual(manifest.validate(), .invalid([.inconsistentDrelOfflineDeclaration]))
+    }
+
+    func testWebManifestBindingUsesStableKeysAndRequiresPinnedAllowedHTTPSURL() throws {
+        let digest = String(repeating: "b", count: 64)
+        let manifest = HTMLAppManifest(
+            appID: "com.example.inventory",
+            name: "Inventory",
+            startURL: "https://inventory.example.com/index.html",
+            allowedOrigins: ["https://inventory.example.com"],
+            capabilities: [],
+            routes: ["/"],
+            cache: HTMLAppCachePolicy(strategy: .networkOnly, version: "1", persistent: false),
+            webManifest: HTMLAppWebManifestBinding(
+                url: "https://inventory.example.com/manifest.webmanifest",
+                sha256: digest
+            )
+        )
+
+        XCTAssertTrue(manifest.validate().isValid)
+        let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(manifest)) as? [String: Any]
+        let binding = object?["webManifest"] as? [String: Any]
+        XCTAssertEqual(binding?["sha256"] as? String, digest)
+
+        let disallowed = HTMLAppManifest(
+            appID: manifest.appID,
+            name: manifest.name,
+            startURL: manifest.startURL,
+            allowedOrigins: manifest.allowedOrigins,
+            capabilities: manifest.capabilities,
+            routes: manifest.routes,
+            cache: manifest.cache,
+            webManifest: HTMLAppWebManifestBinding(
+                url: "https://attacker.example/manifest.webmanifest",
+                sha256: digest
+            )
+        )
+        XCTAssertEqual(
+            disallowed.validate(),
+            .invalid([.invalidWebManifestURL("https://attacker.example/manifest.webmanifest")])
+        )
+    }
+
     func testManifestRejectsMalformedResourceManifestDigest() {
         let manifest = HTMLAppManifest(
             appID: "com.example.inventory",
@@ -113,6 +213,13 @@ final class HTMLAppRuntimeModelsTests: XCTestCase {
 
         XCTAssertFalse(wildcard.validate().isValid)
         XCTAssertFalse(path.validate().isValid)
+    }
+
+    func testManifestRejectsRouteGlobThatCannotMatchAtLaunch() {
+        let manifest = makeManifest(routes: ["/items/*"])
+
+        XCTAssertFalse(manifest.validate().isValid)
+        XCTAssertFalse(manifest.allows(route: "/items/42"))
     }
 
     func testManifestRejectsStartURLOutsideDeclaredOrigins() {

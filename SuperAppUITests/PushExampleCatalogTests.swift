@@ -1,10 +1,9 @@
 import XCTest
 
-/// Real-device smoke for the「全部 API 示例」catalog: taps every push example
-/// (plain / markdown / otp / qr / image / chat / approval), lets Safari fire
-/// the Bark request, then verifies each message landed in the Inbox with its
-/// exact title — proving URL generation, server acceptance, APNs delivery and
-/// content recording end to end for every Push v2 content type.
+/// Real-device smoke for the Drel push catalog: each open icon hands the
+/// complete Bark-compatible request to Safari. APNs presentation and Inbox
+/// persistence have separate device tests because a background notification
+/// is not written into the Inbox until the user taps it.
 ///
 /// Requires a physical, unlocked iPhone whose app is already push-registered
 /// (run RealDevicePushSmokeTests first on a fresh install).
@@ -15,9 +14,7 @@ final class PushExampleCatalogTests: XCTestCase {
         ("markdown", "部署完成"),
         ("otp", "登录验证码"),
         ("qr", "扫码登录"),
-        ("image", "图片预览"),
-        ("chat", "Team Chat 新消息"),
-        ("approval", "需要确认生产发布")
+        ("image", "图片预览")
     ]
 
     private var app: XCUIApplication!
@@ -36,12 +33,8 @@ final class PushExampleCatalogTests: XCTestCase {
         addUIInterruptionMonitor(withDescription: "系统权限弹窗") { alert in
             Self.tapAffirmative(on: alert)
         }
-        // Only the send button sends now (card taps are inert); the test
-        // drives the send buttons, and in-app sending keeps the app
-        // foregrounded so willPresent records every delivery.
         app.launchArguments = [
             "--UITesting",
-            "--uitest-inapp-send",
             "--push-server=https://wbk.shanbox.19930810.xyz:8443"
         ]
         app.launchEnvironment = [
@@ -74,26 +67,19 @@ final class PushExampleCatalogTests: XCTestCase {
         tapAffirmative(on: alert)
     }
 
-    func testEveryExampleDeliversToInbox() throws {
+    func testEveryExampleOpensItsSafariRequest() throws {
         let examplesButton = app.buttons["pwaHome.apiExamples"]
         XCTAssertTrue(examplesButton.waitForExistence(timeout: 15), "Home should expose the API examples entry")
         examplesButton.tap()
 
-        // Phase 1 — fire every example from the catalog in one pass. Only
-        // the send button triggers a send (card taps are inert by design);
-        // under --uitest-inapp-send it opens the in-app browser so the app
-        // never leaves the foreground and every push arrives via
-        // willPresent and is recorded. Closing the browser returns straight
-        // to the catalog, ready for the next card. Per-example trips back
-        // through the home tab proved fragile: scroll positions virtualize
-        // the entry card away.
+        // Each card is inert; its compact send icon is the sole send action.
+        // Safari must receive the exact URL, then we reactivate Drel before
+        // continuing to the next virtualized List row.
         for example in Self.examples {
             var row = app.buttons["pushExamples.\(example.type).send"]
             if !row.waitForExistence(timeout: 3) {
-                // Closing the in-app browser can land back on the catalog or
-                // pop all the way to home depending on presentation context.
-                // Recover either way: scroll home to the top (List rows
-                // virtualize away below the fold) and re-enter the catalog.
+                // Restore the catalog if a previous Safari transition moved
+                // the host back to its root screen.
                 var topAttempts = 0
                 while !examplesButton.exists && topAttempts < 4 {
                     app.swipeDown()
@@ -111,40 +97,15 @@ final class PushExampleCatalogTests: XCTestCase {
                 scrollAttempts += 1
             }
             row.tap()
-            // The wireless-data gate can surface right after the first
-            // outbound request; dismiss any system dialog (the interruption
-            // monitor only fires on interactions).
             Self.dismissVisibleSystemAlert(on: app)
-
-            let browserClose = app.buttons["browserManager.closeButton"]
             XCTAssertTrue(
-                browserClose.waitForExistence(timeout: 8),
-                "\(example.type) send should open the in-app browser"
+                app.wait(for: .runningBackground, timeout: 8),
+                "\(example.type) open action should hand the request to Safari"
             )
-            attachScreenshot(named: "example-\(example.type)-send")
-            browserClose.tap()
-            Thread.sleep(forTimeInterval: 1.0)
-            Self.dismissVisibleSystemAlert(on: app)
+            attachScreenshot(named: "example-\(example.type)-safari")
+            app.activate()
+            XCTAssertTrue(app.wait(for: .runningForeground, timeout: 8))
         }
-
-        // Phase 2 — one Inbox visit asserts every delivery. Sends are done
-        // by now, so each title only needs to appear once in the list.
-        let inboxTab = app.tabBars.buttons["tab.notifications"]
-        XCTAssertTrue(inboxTab.waitForExistence(timeout: 5), "Notifications tab should exist")
-        inboxTab.tap()
-        for example in Self.examples {
-            let message = app.staticTexts[example.title]
-            var scrollAttempts = 0
-            while !message.exists && scrollAttempts < 6 {
-                app.swipeUp()
-                scrollAttempts += 1
-            }
-            XCTAssertTrue(
-                message.waitForExistence(timeout: 30),
-                "\(example.type) push should be recorded in the Inbox as「\(example.title)」"
-            )
-        }
-        attachScreenshot(named: "catalog-all-delivered-inbox")
     }
 
     private func attachScreenshot(named name: String) {
@@ -157,7 +118,7 @@ final class PushExampleCatalogTests: XCTestCase {
 
 /// Simulator-only smoke for the upgraded Bark-style capability catalog:
 /// verifies all three groups (content types / presentation / behavior) render
-/// with copy buttons and captures screenshots for visual review.
+/// with compact Safari-send and URL-copy actions.
 final class CatalogSimulatorSmokeTests: XCTestCase {
 
     private var app: XCUIApplication!
@@ -179,7 +140,7 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
         app.launch()
     }
 
-    func testCatalogShowsAllGroupsAndCopyButtons() throws {
+    func testCatalogShowsAllGroupsAndCompactDeveloperActions() throws {
         let examplesButton = app.buttons["pwaHome.apiExamples"]
         XCTAssertTrue(examplesButton.waitForExistence(timeout: 15), "Home should expose the API examples entry")
 
@@ -190,15 +151,20 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
         }
         examplesButton.tap()
 
-        // Cards are inert; their send button proves the card rendered.
+        // Cards are inert; the two compact actions prove the card rendered.
         let plain = app.buttons["pushExamples.plain.send"]
         XCTAssertTrue(plain.waitForExistence(timeout: 10), "Content-type cards should render")
         attachScreenshot(named: "catalog-content-group")
 
-        // Every card carries send (browser push) and copy buttons, plus the
-        // parameter spec line instead of the raw device URL.
-        XCTAssertTrue(app.buttons["pushExamples.plain.send"].exists, "Plain example should expose a send button")
-        XCTAssertTrue(app.buttons["pushExamples.plain.copy"].exists, "Plain example should expose a copy button")
+        // Every card sends its complete request in Safari or copies that URL,
+        // while keeping an explicit parameter line visible instead of the
+        // device URL.
+        XCTAssertTrue(app.buttons["pushExamples.plain.send"].exists, "Plain example should expose the Safari-send icon")
+        XCTAssertTrue(app.buttons["pushExamples.plain.copy"].exists, "Plain example should expose the copy icon")
+        let plainSpec = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label == %@", "无额外 URL 参数")
+        ).firstMatch
+        XCTAssertTrue(plainSpec.waitForExistence(timeout: 5), "Plain card should explicitly state it has no URL query parameters")
         let markdownSpec = app.descendants(matching: .any).matching(
             NSPredicate(format: "label == %@", "contentType=markdown&markdown=1")
         ).firstMatch
@@ -218,18 +184,21 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
 
         // Presentation and behavior groups render below the fold. Return to
         // the top first so the swipe loop below starts from a known offset.
-        // Cards are no longer buttons (only send/copy act), so row presence
-        // is asserted through each card's send button.
+        // Cards are not buttons; row presence is asserted through each
+        // card's Safari-send action.
         for _ in 0..<3 {
             app.swipeDown()
         }
         let expectedRows = [
+            "pushExamples.bodyOnly",
             "pushExamples.sound",
-            "pushExamples.critical",
             "pushExamples.badge",
+            "pushExamples.badgeClear",
             "pushExamples.url",
+            "pushExamples.copyManual",
             "pushExamples.copy",
-            "pushExamples.replace"
+            "pushExamples.replace",
+            "pushExamples.recall"
         ]
         for identifier in expectedRows {
             let row = app.buttons["\(identifier).send"]
@@ -251,7 +220,6 @@ final class CatalogSimulatorSmokeTests: XCTestCase {
         let expectedPreviews = [
             "pushExamples.icon.preview",
             "pushExamples.group.preview",
-            "pushExamples.critical.preview",
             "pushExamples.copy.preview"
         ]
         for identifier in expectedPreviews {

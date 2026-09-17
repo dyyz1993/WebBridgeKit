@@ -27,6 +27,31 @@ final class MessageRouterTests: XCTestCase {
         XCTAssertEqual(target.destination, "myapp")
         XCTAssertEqual(target.mode, "immersive")
     }
+
+    func testPresentationAliasesNormalizeBeforeMessageIsPersisted() {
+        XCTAssertEqual(
+            MessageTargetPresentation.canonicalMode(mode: nil, display: "full"),
+            "immersive"
+        )
+        XCTAssertEqual(
+            MessageTargetPresentation.canonicalMode(mode: "fullscreen"),
+            "immersive"
+        )
+        XCTAssertEqual(
+            MessageTargetPresentation.canonicalMode(mode: "sheet"),
+            "modal"
+        )
+        XCTAssertEqual(
+            MessageTargetPresentation.canonicalMode(mode: nil, display: nil),
+            nil
+        )
+
+        let persisted = NotificationPayloadMapper.makePayload(
+            identifier: "presentation-alias",
+            userInfo: ["url": "https://example.com", "display": "full"]
+        )
+        XCTAssertEqual(persisted.targetMode, "immersive")
+    }
     
     // MARK: - URL Routing
     

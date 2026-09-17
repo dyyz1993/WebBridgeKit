@@ -12,7 +12,9 @@ import XCTest
 /// activation.
 final class RealDevicePushSmokeTests: XCTestCase {
 
-    private static let pushServer = "https://wbk.shanbox.19930810.xyz:8443"
+    /// Test the same public origin that the Drel Store build copies and uses;
+    /// the shanbox host remains an implementation origin behind this proxy.
+    private static let pushServer = "https://api.drel.app"
 
     private var app: XCUIApplication!
 
@@ -68,7 +70,7 @@ final class RealDevicePushSmokeTests: XCTestCase {
             // first outbound request; clear it before retrying.
             Self.dismissVisibleSystemAlert(on: app)
             do {
-                try sendPush(deviceKey: identity, title: title, body: "WebBridgeKit 真机 APNs 链路自动化验证")
+                try sendPush(deviceKey: identity, title: title, body: "Drel 真机 APNs 链路自动化验证")
                 pushSent = true
             } catch {
                 print("[push-smoke] push attempt \(attempt) failed: \(error)")

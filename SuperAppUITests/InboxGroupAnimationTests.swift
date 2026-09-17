@@ -20,6 +20,11 @@ final class InboxGroupAnimationTests: XCTestCase {
         let screenshot = app.screenshot()
         if let data = screenshot.image.pngData() {
             do {
+                let directory = URL(fileURLWithPath: path).deletingLastPathComponent()
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true
+                )
                 try data.write(to: URL(fileURLWithPath: path))
                 print("[Screenshot] Saved to \(path) (\(data.count) bytes)")
             } catch {
@@ -277,5 +282,109 @@ final class InboxGroupAnimationTests: XCTestCase {
         guard element.waitForExistence(timeout: timeout) else { return false }
         let frame = element.frame
         return frame.height > 0 && frame.minY >= 0 && frame.maxY <= app.frame.maxY
+    }
+
+    // MARK: - Press-state fix verification (2026-09-12)
+
+    /// Screenshots the full device screen from a runner thread while the test
+    /// thread is blocked inside `element.press(forDuration:)`, so the mid-hold
+    /// pressed state is captured without depending on Mac-side clicking (the
+    /// shared Mac's Simulator windows get covered by a concurrent automation
+    /// that keeps moving its windows, which swallowed cliclick taps).
+    private func captureDuringPress(_ element: XCUIElement, hold: TimeInterval, delay: TimeInterval, path: String) {
+        let captured = expectation(description: "mid-press screenshot \(path)")
+        DispatchQueue.global().asyncAfter(deadline: .now() + delay) {
+            let shot = XCUIScreen.main.screenshot()
+            try? shot.image.pngData()?.write(to: URL(fileURLWithPath: path))
+            print("[Screenshot] mid-press saved to \(path)")
+            captured.fulfill()
+        }
+        element.press(forDuration: hold)
+        wait(for: [captured], timeout: 10)
+    }
+
+    private func openInboxTab() {
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist")
+        tabBar.buttons["tab.notifications"].tap()
+        sleep(1)
+        // Debug builds read the pasteboard after the home tab appears; the
+        // permission alert may land after the tab switch.
+        let alert = app.alerts.firstMatch
+        if alert.waitForExistence(timeout: 1.5) {
+            for title in ["不允许粘贴", "Don't Allow", "不允许", "好", "OK"] {
+                let button = alert.buttons[title]
+                if button.exists { button.tap(); break }
+            }
+        }
+    }
+
+    private func selectDisplayMode(_ title: String) {
+        let displayMode = app.segmentedControls["inbox.displayMode"]
+        XCTAssertTrue(displayMode.waitForExistence(timeout: 5))
+        displayMode.buttons[title].tap()
+        sleep(1)
+    }
+
+    /// Case 1 fix: the message card's pressed highlight must come from the
+    /// card itself (rounded, clipped), never from the square system row
+    /// highlight that used to bleed past the corners. Releasing the press is
+    /// a tap, so detail navigation is asserted in the same pass.
+    func testInboxCardPressedHighlightStaysInsideRoundedCorners() throws {
+        openInboxTab()
+        selectDisplayMode("最新")
+        let card = app.descendants(matching: .any)
+            .matching(identifier: "notification.card.stored-verification-012").firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 5), "seeded verification card should exist")
+        saveScreenshot("/tmp/press-cases/xcui-card-rest.png")
+        captureDuringPress(card, hold: 1.4, delay: 0.5, path: "/tmp/press-cases/xcui-card-pressed.png")
+        XCTAssertTrue(
+            app.navigationBars.firstMatch.waitForExistence(timeout: 3),
+            "releasing the card press should push the detail page"
+        )
+        saveScreenshot("/tmp/press-cases/xcui-card-detail.png")
+        app.buttons["返回"].tap()
+        sleep(1)
+    }
+
+    /// Case 3 fix: the group header's touch-down highlight must be visible
+    /// while the finger is down (the old zero-delay long-press gated on the
+    /// swipe pan only fired at release), and release must still toggle.
+    func testGroupHeaderPressedHighlightVisibleDuringHold() throws {
+        openInboxTab()
+        selectDisplayMode("分组")
+        let header = try XCTUnwrap(firstVisibleGroupHeader(), "no visible group header")
+        let expandedCount = notificationCardQuery.count
+        XCTAssertGreaterThan(expandedCount, 0, "groups mode should show seeded cards")
+        saveScreenshot("/tmp/press-cases/xcui-header-rest.png")
+        captureDuringPress(header, hold: 1.4, delay: 0.5, path: "/tmp/press-cases/xcui-header-pressed.png")
+        sleep(1)
+        // The release toggles the group (pre-existing accordion behavior);
+        // header accessibilityValue is not exposed to XCUI, so count cards.
+        XCTAssertLessThan(
+            notificationCardQuery.count, expandedCount,
+            "releasing the header press should collapse the group"
+        )
+        saveScreenshot("/tmp/press-cases/xcui-header-collapsed.png")
+        header.tap()
+        sleep(1)
+        XCTAssertEqual(notificationCardQuery.count, expandedCount, "second tap should expand the group again")
+        saveScreenshot("/tmp/press-cases/xcui-header-restored.png")
+    }
+
+    /// Case 3 regression: removing the press-gesture wiring must not break
+    /// the horizontal swipe reveal or the tap-closes-revealed-actions path.
+    func testGroupHeaderSwipeRevealStillRevealsActions() throws {
+        openInboxTab()
+        selectDisplayMode("分组")
+        let header = try XCTUnwrap(firstVisibleGroupHeader(), "no visible group header")
+        header.swipeLeft()
+        sleep(1)
+        let pin = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'inbox.group.pin.'")).firstMatch
+        let delete = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'inbox.group.delete.'")).firstMatch
+        XCTAssertTrue(pin.exists || delete.exists, "swiping the header left should reveal pin/delete actions")
+        saveScreenshot("/tmp/press-cases/xcui-header-swipe-revealed.png")
+        header.tap()
+        sleep(1)
     }
 }

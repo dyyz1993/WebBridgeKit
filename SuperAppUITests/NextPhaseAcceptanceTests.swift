@@ -24,22 +24,27 @@ final class NextPhaseAcceptanceTests: XCTestCase {
         XCTAssertTrue(element("pwaHome.root").exists)
         XCTAssertTrue(app.buttons["home.push.send-safari"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.buttons["home.push.send-safari"].label, "用 Safari 发送测试")
-        let address = element("pwaHome.pushURL")
-        XCTAssertTrue(address.waitForExistence(timeout: 5))
+        let address = element("home.push.address")
+        XCTAssertTrue(makeVisible(address))
         XCTAssertTrue(address.label.contains(fixtureIdentity))
         XCTAssertTrue(app.buttons["home.push.copy"].isEnabled)
         XCTAssertFalse(element("gateway.table").exists)
         XCTAssertFalse(app.textViews["gateway.input"].exists)
     }
 
-    func testOfficialCatalogRetainsSevenCanonicalMessageTypes() {
+    func testOfficialCatalogRetainsSupportedV1PushCapabilities() {
         app.launch()
         XCTAssertTrue(element("pwaHome.apiExamples").waitForExistence(timeout: 15))
         element("pwaHome.apiExamples").tap()
 
-        for type in ["plain", "markdown", "otp", "qr", "image", "chat", "approval"] {
+        for type in [
+            "bodyOnly", "plain", "markdown", "otp", "qr", "image",
+            "sound", "badge", "badgeClear", "url", "copyManual", "copy",
+            "replace", "recall"
+        ] {
+            let example = app.buttons["pushExamples.\(type).send"]
             XCTAssertTrue(
-                app.buttons["pushExamples.\(type)"].waitForExistence(timeout: 4),
+                makeVisible(example),
                 "Missing canonical message example: \(type)"
             )
         }
@@ -59,13 +64,15 @@ final class NextPhaseAcceptanceTests: XCTestCase {
 
         app.buttons["gateway.validate"].tap()
         XCTAssertTrue(element("gateway.report").waitForExistence(timeout: 15))
-        XCTAssertTrue(app.staticTexts["cloak.xbrowser.dev"].exists)
-        XCTAssertTrue(app.staticTexts["https://cloak.xbrowser.dev:5801/health"].exists)
-        XCTAssertTrue(app.staticTexts["https://cloak.xbrowser.dev:5801/api/v1/html-apps"].exists)
-        XCTAssertTrue(app.staticTexts["tx-ed25519-20260810"].exists)
-        app.swipeUp()
-        app.swipeUp()
-        XCTAssertTrue(app.buttons["gateway.activate"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["wbk.shanbox.19930810.xyz"].exists)
+        XCTAssertTrue(app.staticTexts["https://wbk.shanbox.19930810.xyz:8443/health"].exists)
+        XCTAssertTrue(app.staticTexts["https://wbk.shanbox.19930810.xyz:8443/api/v1/html-apps"].exists)
+        XCTAssertTrue(app.staticTexts["wbk-self-hosted-20260816"].exists)
+        // SwiftUI currently surfaces this control by its visible label rather
+        // than the parent gateway.activate identifier.
+        let activate = app.buttons["启用此网关"]
+        XCTAssertTrue(makeVisible(activate))
+        XCTAssertTrue(activate.waitForExistence(timeout: 5))
     }
 
     func testGatewaySecretPayloadCannotReachActivation() {
@@ -127,16 +134,24 @@ final class NextPhaseAcceptanceTests: XCTestCase {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
 
+    private func makeVisible(_ target: XCUIElement) -> Bool {
+        for _ in 0..<8 {
+            if target.exists, target.isHittable { return true }
+            app.swipeUp()
+        }
+        return target.exists
+    }
+
     private static let publicGatewayPayload = """
     {
       "schemaVersion": "1",
-      "id": "tx-webbridgekit",
-      "displayName": "TX WebBridgeKit Gateway",
-      "baseURL": "https://cloak.xbrowser.dev:5801",
+      "id": "webbridgekit-gateway",
+      "displayName": "WebBridgeKit Gateway",
+      "baseURL": "https://wbk.shanbox.19930810.xyz:8443",
       "healthEndpoint": "/health",
       "manifestEndpoint": "/api/v1/html-apps",
-      "publicKeyId": "tx-ed25519-20260810",
-      "publicKey": "ZDgR7vFJo7MbhRTj7H3EuYygdVv89ZqR8I6sZXUfShE"
+      "publicKeyId": "wbk-self-hosted-20260816",
+      "publicKey": "h860-f-Vu_IC9DNoOrGrMpnXydSZHjNqb2HprCJIcm8"
     }
     """
 }

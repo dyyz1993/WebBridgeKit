@@ -51,4 +51,74 @@ final class MarkdownRendererTests: XCTestCase {
         XCTAssertFalse(html.contains("href=\"javascript:"))
         XCTAssertFalse(html.contains("src=\"data:"))
     }
+
+    func testRendersNestedGFMElementsAndKeepsEscapedTablePipes() {
+        let markdown = """
+        Release checklist
+        =================
+
+        3. **Deploy**
+           - [x] Build `55`
+           - [ ] Watch ==error rate==
+             - Owner: _on-call_
+
+        | Field | Value |
+        | :--- | ---: |
+        | Expression | `a\\|b` |
+
+        <https://drel.app>
+        <support@drel.app>
+        """
+
+        let html = MarkdownRenderer.renderHTML(title: "Release", markdown: markdown)
+        XCTAssertTrue(html.contains("<h1>Release checklist</h1>"))
+        XCTAssertTrue(html.contains("<ol start=\"3\">"))
+        XCTAssertTrue(html.contains("<ul class=\"task-list\">"))
+        XCTAssertTrue(html.contains("<mark>error rate</mark>"))
+        XCTAssertTrue(html.contains("<em>on-call</em>"))
+        XCTAssertTrue(html.contains("<code>a|b</code>"))
+        XCTAssertTrue(html.contains("href=\"https://drel.app\""))
+        XCTAssertTrue(html.contains("href=\"mailto:support@drel.app\""))
+    }
+
+    func testAutolinksBareURLsInParagraphsAndCode() {
+        let markdown = """
+        参考 https://example.com/docs?a=1&b=2。
+        访问 (https://example.com/next) 或运行
+
+        `curl https://api.example.com/v1/ping`
+
+        ```bash
+        open https://example.com/fenced
+        ```
+        """
+
+        let html = MarkdownRenderer.renderHTML(title: "链接识别", markdown: markdown)
+
+        // Sentence-final punctuation stays out of the href but in the text.
+        XCTAssertTrue(html.contains("<a href=\"https://example.com/docs?a=1&amp;b=2\">https://example.com/docs?a=1&amp;b=2</a>。"))
+        // An unbalanced closing paren is not part of the link.
+        XCTAssertTrue(html.contains("<a href=\"https://example.com/next\">https://example.com/next</a>)"))
+        // Inline code spans and fenced blocks both keep their URLs tappable.
+        XCTAssertTrue(html.contains("<code>curl <a href=\"https://api.example.com/v1/ping\">"))
+        XCTAssertTrue(html.contains("open <a href=\"https://example.com/fenced\">"))
+    }
+
+    func testAutolinkLeavesExplicitLinkSyntaxIntact() {
+        let markdown = "[控制台](https://example.com/console) <https://example.com/angle> https://example.com/bare"
+
+        let html = MarkdownRenderer.renderHTML(title: "t", markdown: markdown)
+
+        XCTAssertEqual(html.components(separatedBy: "href=\"https://example.com/console\"").count - 1, 1)
+        XCTAssertTrue(html.contains("<a href=\"https://example.com/angle\">https://example.com/angle</a>"))
+        XCTAssertTrue(html.contains("<a href=\"https://example.com/bare\">https://example.com/bare</a>"))
+        // The bare pass must not rewrap the visible URL of another anchor.
+        XCTAssertFalse(html.contains("</a><a href=\"https://example.com/angle\">"))
+    }
+
+    func testAutolinkIgnoresNonWebSchemes() {
+        let html = MarkdownRenderer.renderHTML(title: "t", markdown: "ftp://example.com/file")
+
+        XCTAssertFalse(html.contains("href=\"ftp://"))
+    }
 }

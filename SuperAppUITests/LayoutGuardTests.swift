@@ -86,7 +86,10 @@ final class LayoutGuardTests: XCTestCase {
 
     func testSettingsLayoutIntegrity() {
         navigateToTab(identifier: "tab.settings", zhName: "设置", enName: "Settings")
-        let settingsView = app.otherElements["SettingsViewController"]
+        // SwiftUI's List root can be exposed as a container other than
+        // `.other` on different simulator runtimes. The identifier is the
+        // contract; do not couple this release guard to an AX element type.
+        let settingsView = app.descendants(matching: .any)["SettingsViewController"]
         XCTAssertTrue(settingsView.waitForExistence(timeout: 3), "Settings view should exist")
 
         let rows = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH 'settings.cell.'")).allElementsBoundByIndex

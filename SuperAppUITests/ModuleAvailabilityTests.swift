@@ -6,7 +6,7 @@ final class ModuleAvailabilityTests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        app.launchArguments = ["--UITesting", "-UITesting"]
+        app.launchArguments = ["--UITesting", "-UITesting", "--enable-session-restore"]
         app.launchEnvironment = [
             "AppleLanguages": "(zh-Hans)",
             "AppleLocale": "zh_CN"
@@ -53,7 +53,8 @@ final class ModuleAvailabilityTests: XCTestCase {
         replaceText(in: "wbk_search_field", with: "运行任务")
         assertExists("notification.card.stored-markdown-011")
         assertExists("notification.preview.stored-markdown-011")
-        assertStaticTextContaining("Markdown")
+        assertExists("notification.copy.stored-markdown-011")
+        assertElementValue("notification.preview.stored-markdown-011", contains: "发布任务已完成")
 
         replaceText(in: "wbk_search_field", with: "")
         tapElement("filter_action_required")
@@ -65,6 +66,17 @@ final class ModuleAvailabilityTests: XCTestCase {
             element("notification.card.stored-critical-005").exists,
             "Priority alone must not turn a notification into an actionable request."
         )
+    }
+
+    func testNotificationCardQuickCopyButtonIsReachable() {
+        assertTab("tab.notifications", opens: "InboxViewController")
+        replaceText(in: "wbk_search_field", with: "运行任务")
+
+        let copy = app.buttons["notification.copy.stored-markdown-011"]
+        XCTAssertTrue(copy.waitForExistence(timeout: 5))
+        XCTAssertTrue(copy.isHittable)
+        copy.tap()
+        XCTAssertTrue(app.staticTexts["消息内容已复制"].waitForExistence(timeout: 3))
     }
 
     func testPWAAppCenterGatewayAndGuideAreReachable() {
@@ -105,26 +117,28 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("pwaHome.pushTitle")
         assertExists("pwaHome.pushBody")
         assertExists("pwaHome.sendTest")
-        assertExists("pwaHome.pushURL")
-        assertExists("pwaHome.copyPushURL")
+        assertExists("home.push.address")
+        assertExists("home.push.copy")
+        assertExists("home.push.manage")
         assertExists("pwaHome.appsSection")
         assertExists("pwaHome.apiExamples")
         assertExists("pwaHome.guideAndDebug")
     }
 
-    func testHomeAPIExamplesExposeAllCanonicalMessageTypes() {
+    func testHomePushExamplesExposeSupportedStoreCapabilities() {
         assertTab("tab.apps", opens: "pwaCenter.table")
         tapElement("pwaHome.apiExamples")
         assertExists("pushExamples.list")
-        for type in ["plain", "markdown", "otp", "qr", "image", "chat", "approval"] {
-            assertExists("pushExamples.\(type)")
+        for type in ["plain", "markdown", "otp", "qr", "image"] {
+            assertExists("pushExamples.\(type).send")
+            assertExists("pushExamples.\(type).copy")
         }
     }
 
     func testHomePlainExampleUsesExternalSafariForARealRequest() {
         assertTab("tab.apps", opens: "pwaCenter.table")
         tapElement("pwaHome.apiExamples")
-        tapElement("pushExamples.plain")
+        tapElement("pushExamples.plain.send")
 
         let hostMovedToBackground = XCTNSPredicateExpectation(
             predicate: NSPredicate(
@@ -382,8 +396,10 @@ final class ModuleAvailabilityTests: XCTestCase {
     func testSettingsPreferencesAreUsable() {
         assertTab("tab.settings", opens: "SettingsViewController")
 
-        tapElement("settings.cell.rememberLastApp")
-        assertExists("SettingsViewController")
+        tapElement("settings.cell.defaultStartupApp")
+        assertExists("defaultStartupApp.root")
+        assertExists("defaultStartupApp.explanation")
+        goBack()
 
         tapElement("settings.cell.appearance")
         assertExists("appearance.root")
@@ -393,6 +409,55 @@ final class ModuleAvailabilityTests: XCTestCase {
         tapLabeledControl("跟随系统")
         assertExists("appearance.currentMode")
         goBack()
+    }
+
+    func testDefaultStartupAppCanSelectTrustedApp() {
+        app.terminate()
+        app.launchArguments = [
+            "--UITesting",
+            "-UITesting",
+            "--reset-default-startup-app",
+            "--register-pwa-notification-fixture"
+        ]
+        app.launchEnvironment = [
+            "AppleLanguages": "(zh-Hans)",
+            "AppleLocale": "zh_CN"
+        ]
+        app.launch()
+
+        assertTab("tab.settings", opens: "SettingsViewController")
+        tapElement("settings.cell.defaultStartupApp")
+        assertExists("defaultStartupApp.option.com.webbridgekit.fixture.chat")
+        tapElement("defaultStartupApp.option.com.webbridgekit.fixture.chat")
+        assertExists("defaultStartupApp.selected.com.webbridgekit.fixture.chat")
+
+        app.terminate()
+        app.launchArguments = ["--UITesting", "-UITesting"]
+        app.launch()
+        XCTAssertTrue(
+            element("browserManager.webView").waitForExistence(timeout: 12),
+            "A selected trusted app should open in the web container on the next cold launch."
+        )
+        // Session restore is intentionally delayed by 1.5 seconds. Observe
+        // beyond that window so this assertion catches a late second push.
+        let restoreWindowElapsed = expectation(description: "session restore window elapsed")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            restoreWindowElapsed.fulfill()
+        }
+        wait(for: [restoreWindowElapsed], timeout: 3)
+        XCTAssertTrue(
+            element("browserManager.immersiveReturnButton").waitForExistence(timeout: 3),
+            "A default startup app must remain immersive instead of being replaced by session restore."
+        )
+        XCTAssertEqual(
+            app.descendants(matching: .any).matching(identifier: "browserManager.container").count,
+            1,
+            "Cold launch must create exactly one browser container for the default startup app."
+        )
+        XCTAssertFalse(
+            app.navigationBars.firstMatch.exists,
+            "The duplicate normal-mode restore must not add a navigation bar over the immersive app."
+        )
     }
 
     func testSettingsAboutLegalDeepDrillIsReachable() {

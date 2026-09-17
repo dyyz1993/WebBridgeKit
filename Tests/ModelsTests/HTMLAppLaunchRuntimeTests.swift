@@ -87,6 +87,10 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
         XCTAssertEqual(target.context.bridgePayload["taskId"], "run-20260810")
         XCTAssertEqual(target.context.bridgePayload["status"], "completed")
         XCTAssertEqual(target.context.bridgePayload["webbridgekitAppId"], app.appID)
+        let queryItems = try XCTUnwrap(URLComponents(url: target.containerOnlyURL, resolvingAgainstBaseURL: false)?.queryItems)
+        XCTAssertEqual(queryItems.first(where: { $0.name == "drel_route" })?.value, "/index.html")
+        XCTAssertEqual(queryItems.first(where: { $0.name == "drel_param_taskId" })?.value, "run-20260810")
+        XCTAssertEqual(queryItems.first(where: { $0.name == "drel_param_status" })?.value, "completed")
     }
 
     func testApprovalNotificationOnlyResolvesRouteAndPreservesUserConsentBoundary() throws {
@@ -112,7 +116,7 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
         XCTAssertNil(target.context.bridgePayload["granted"])
     }
 
-    func testEligiblePackageIsPartialUntilVerifiedVersionIsInstalled() throws {
+    func testEligiblePackageUsesNetworkPageUntilVerifiedVersionIsInstalled() throws {
         let storage = MemoryStorage()
         let registry = HTMLAppTrustRegistry(storage: storage)
         let cache = HTMLAppCachePolicy(
@@ -134,7 +138,9 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
         )
 
         XCTAssertEqual(target.offlineMode, .partial)
-        XCTAssertEqual(target.loaderURL.absoluteString, "https://chat.example.com/offline/manifest.json")
+        XCTAssertEqual(target.loaderURL.absoluteString, "https://chat.example.com/approvals/request-9")
+        XCTAssertEqual(target.resourceManifestURL?.absoluteString, "https://chat.example.com/offline/manifest.json")
+        XCTAssertNotEqual(target.loaderURL, target.resourceManifestURL)
         XCTAssertEqual(target.pageURL.path, "/approvals/request-9")
     }
 
@@ -179,6 +185,14 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
 
         XCTAssertEqual(target.offlineMode, .strong)
         XCTAssertEqual(target.loaderURL, packageDirectory.appendingPathComponent("index.html"))
+        XCTAssertEqual(target.containerOnlyURL.path, packageDirectory.appendingPathComponent("index.html").path)
+        XCTAssertEqual(
+            URLComponents(url: target.containerOnlyURL, resolvingAgainstBaseURL: false)?
+                .queryItems?
+                .first(where: { $0.name == "drel_route" })?
+                .value,
+            "/approvals/request-9"
+        )
     }
 
     func testLegacyPersistentManifestWithoutDigestRemainsPartial() throws {

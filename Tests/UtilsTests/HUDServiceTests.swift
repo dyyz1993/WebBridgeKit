@@ -137,6 +137,16 @@ final class HUDServiceTests: XCTestCase {
         hud.dismiss()
     }
 
+    func testRapidStatusReplacementKeepsOnlyOnePresentation() async throws {
+        hud.show("正在下载")
+        hud.showError(withStatus: "网络不可用")
+        hud.showInfo(withStatus: "请连接网络后重试")
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+        let count = await MainActor.run { hud.activePresentationCountForTesting }
+        XCTAssertEqual(count, 1)
+    }
+
     // MARK: - Multiple Dismiss
 
     func testMultipleDismissDoesNotCrash() {

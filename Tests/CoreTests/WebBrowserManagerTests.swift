@@ -33,6 +33,19 @@ final class WebBrowserManagerTests: XCTestCase {
         XCTAssertTrue(a === b)
     }
 
+    func testVerifiedLocalPackageNeverUsesLegacyManifestLoader() {
+        let localEntrypoint = URL(fileURLWithPath: "/tmp/drel-package/index.html")
+        let params = WebBrowserParams(useManifestLoader: true)
+
+        XCTAssertFalse(manager.shouldUseManifestLoader(for: localEntrypoint, params: params))
+        XCTAssertTrue(
+            manager.shouldUseManifestLoader(
+                for: URL(string: "https://example.com/manifest.json")!,
+                params: params
+            )
+        )
+    }
+
     func testCurrentIndexStartsAtZero() {
         XCTAssertEqual(manager.currentIndex, 0)
     }
