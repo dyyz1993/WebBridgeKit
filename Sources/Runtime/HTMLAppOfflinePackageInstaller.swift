@@ -335,13 +335,20 @@ public final class HTMLAppOfflinePackageLocator: @unchecked Sendable {
     private let packagesRoot: URL
     private let fileManager: FileManager
 
+    /// Default on-disk root for downloaded offline packages
+    /// (`Application Support/WebBridgeKit/Packages`). Storage accounting
+    /// surfaces read this without instantiating a locator.
+    public static var defaultPackagesRoot: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return appSupport.appendingPathComponent("WebBridgeKit/Packages", isDirectory: true)
+    }
+
     public init(packagesRoot: URL? = nil, fileManager: FileManager = .default) {
         self.fileManager = fileManager
         if let packagesRoot {
             self.packagesRoot = packagesRoot
         } else {
-            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            self.packagesRoot = appSupport.appendingPathComponent("WebBridgeKit/Packages", isDirectory: true)
+            self.packagesRoot = Self.defaultPackagesRoot
         }
     }
 

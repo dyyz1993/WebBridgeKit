@@ -265,4 +265,36 @@ final class HTMLAppLaunchRuntimeTests: XCTestCase {
     private func sha256(_ value: String) -> String {
         SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
     }
+
+    // MARK: - Favorite URL → registered app resolution
+
+    /// A favorite stored from an HTML app (its signed https entry URL, with or
+    /// without launch-time query parameters) must resolve back to that app so
+    /// reopening it routes into the immersive manifest experience.
+    func testRegisteredAppMatchesEntryURLIgnoringQueryAndTrailingSlash() throws {
+        let storage = MemoryStorage()
+        let registry = HTMLAppTrustRegistry(storage: storage)
+        try registry.register(manifest())
+        try registry.register(agentConsoleManifest())
+
+        let exact = URL(string: "https://chat.example.com/index.html")!
+        XCTAssertEqual(registry.registeredApp(matching: exact)?.appID, "com.example.chat")
+
+        let withQuery = URL(string: "https://chat.example.com/index.html?drel_param_topic=alpha&x=1")!
+        XCTAssertEqual(registry.registeredApp(matching: withQuery)?.appID, "com.example.chat")
+
+        let trailingSlash = URL(string: "https://console.example.com/index.html/")!
+        XCTAssertEqual(registry.registeredApp(matching: trailingSlash)?.appID, "com.example.agent-console")
+    }
+
+    func testRegisteredAppRejectsUnknownAndNonWebURLs() throws {
+        let storage = MemoryStorage()
+        let registry = HTMLAppTrustRegistry(storage: storage)
+        try registry.register(manifest())
+
+        XCTAssertNil(registry.registeredApp(matching: URL(string: "https://other.example.com/index.html")!))
+        XCTAssertNil(registry.registeredApp(matching: URL(string: "https://chat.example.com/other-page.html")!))
+        XCTAssertNil(registry.registeredApp(matching: URL(string: "custom://index.html")!))
+        XCTAssertNil(registry.registeredApp(matching: URL(string: "mailto:support@example.com")!))
+    }
 }

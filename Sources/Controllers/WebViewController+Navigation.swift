@@ -60,11 +60,34 @@ extension WebViewController {
         bridge.refreshDeclaredIdentity()
         // 每次导航后同步收藏按钮状态（URL 变化时已收藏/未收藏可能翻转）
         refreshFavoriteButtonState()
+        recordHistoryForLoadedPage()
         #if DEBUG
         if let url = webView.url {
             StructuredLogger.shared.info("[OK] [CacheDebug] Page loaded: \(url.absoluteString)", category: .cache)
         }
         #endif
+    }
+
+    /// 这个壳承载推送链接与普通网页——最高频的打开路径。不记录历史时，
+    /// 「最近访问」会漏掉这些页面（与 manifest 壳行为不一致）。
+    private func recordHistoryForLoadedPage() {
+        guard let url = webView.url,
+              url.scheme == "https" || url.scheme == "http" else { return }
+        Task { @MainActor in
+            do {
+                try await WebPageHistoryManager.shared.addOrUpdateHistory(
+                    url: url,
+                    title: webView.title,
+                    favicon: nil
+                )
+                NotificationCenter.default.post(name: .historyDidUpdate, object: nil)
+            } catch {
+                StructuredLogger.shared.error(
+                    "Failed to update history for \(url.absoluteString): \(error.localizedDescription)",
+                    category: .storage
+                )
+            }
+        }
     }
 
     /// 页面加载失败

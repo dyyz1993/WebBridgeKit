@@ -190,11 +190,7 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
     }
 
     private func openURL(_ url: URL) {
-        WebBrowserManager.shared.openBrowser(
-            url: url,
-            params: WebBrowserParams(displayMode: .normal),
-            from: navigationController
-        )
+        DrelFavoriteOpenPolicy.open(url, from: navigationController)
     }
 
     private func handleDelete(id: String) {

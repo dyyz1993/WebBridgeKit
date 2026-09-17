@@ -135,6 +135,25 @@ public final class HTMLAppTrustRegistry {
         return manifests.values.sorted { $0.appID < $1.appID }
     }
 
+    /// Resolves a stored URL (e.g. a favorite) back to the registered HTML app
+    /// whose signed entry URL it is. Matching ignores query and fragment — a
+    /// favorite saved with launch parameters still routes back into its app.
+    public func registeredApp(matching url: URL) -> HTMLAppManifest? {
+        func originAndPath(_ value: String) -> String? {
+            guard let parsed = URL(string: value),
+                  let scheme = parsed.scheme?.lowercased(),
+                  scheme == "https" || scheme == "http",
+                  let host = parsed.host?.lowercased() else { return nil }
+            let port = parsed.port.map { ":\($0)" } ?? ""
+            let path = parsed.path.hasSuffix("/") ? String(parsed.path.dropLast()) : parsed.path
+            return "\(scheme)://\(host)\(port)\(path)"
+        }
+        guard let target = originAndPath(url.absoluteString) else { return nil }
+        return registeredManifests().first { manifest in
+            originAndPath(manifest.startURL) == target
+        }
+    }
+
     public func unregister(appID: String) throws {
         lock.lock()
         defer { lock.unlock() }

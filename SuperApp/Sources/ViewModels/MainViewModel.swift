@@ -276,7 +276,9 @@ class MainViewModel: ViewModel {
 
                 let histories = historySnapshots
                     .filter { !favoriteURLs.contains($0.url) }
-                    .prefix(20)
+                    // 收藏已单独分区展示；这里给「最近」留足容量，重度使用
+                    // 者的条目不再被 20 条截断（快照池本身上限 100）。
+                    .prefix(50)
                     .map { snapshot -> WebPageHistorySectionItem in
                         let displayHistory = snapshot.makeHistory()
 

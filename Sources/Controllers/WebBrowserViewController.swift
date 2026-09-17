@@ -548,8 +548,21 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     }
 
     /// 全屏胶囊收藏格：与 … 菜单「收藏页面」写入同一收藏表。
+    ///
+    /// Managed HTML-app pages render from the custom:// scheme, which must
+    /// never be persisted; for those the favorite stores the app's signed
+    /// https entry URL so opening it later can route back into the app.
+    private var favoriteEntryURL: URL? {
+        guard let url = webView.url else { return nil }
+        if url.scheme == "https" || url.scheme == "http" { return url }
+        guard let appID = viewModel.managedHTMLAppID,
+              let startURL = HTMLAppRuntimeCenter.shared.trustRegistry.manifest(for: appID)?.startURL,
+              let entry = URL(string: startURL) else { return nil }
+        return entry
+    }
+
     func toggleImmersiveFavorite() {
-        guard let url = webView.url, url.scheme == "https" || url.scheme == "http" else { return }
+        guard let url = favoriteEntryURL else { return }
         let favoriteService = ServiceLocator.favorite
         if favoriteService.findFavorite(url: url) != nil {
             favoriteService.deleteFavorite(url: url)
@@ -559,7 +572,11 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
             HUDService.shared.showSuccess(withStatus: "已收藏")
             // favicon 是异步取的；收藏态刷新必须等写入完成后，否则读到旧状态。
             fetchFavicon { [weak self] data in
-                favoriteService.addFavorite(url: url, title: self?.webView.title, favicon: data)
+                let title = self?.webView.title
+                    ?? (self?.viewModel.managedHTMLAppID).flatMap {
+                        HTMLAppRuntimeCenter.shared.trustRegistry.manifest(for: $0)?.name
+                    }
+                favoriteService.addFavorite(url: url, title: title, favicon: data)
                 self?.refreshImmersiveFavoriteState()
             }
         }
@@ -567,7 +584,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
 
     /// 导航完成后同步胶囊收藏态；菜单内的收藏动作也会触发一次。
     func refreshImmersiveFavoriteState() {
-        guard let url = webView.url else { return }
+        guard let url = favoriteEntryURL else { return }
         immersiveExitControl.isFavorited = ServiceLocator.favorite.findFavorite(url: url) != nil
     }
 

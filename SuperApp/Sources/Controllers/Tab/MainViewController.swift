@@ -486,11 +486,7 @@ class MainViewController: BaseViewController<MainViewModel> {
             }
             return
         }
-        WebBrowserManager.shared.openBrowser(
-            url: url,
-            params: WebBrowserParams(displayMode: .normal),
-            from: navigationController
-        )
+        DrelFavoriteOpenPolicy.open(url, from: navigationController)
     }
 
 

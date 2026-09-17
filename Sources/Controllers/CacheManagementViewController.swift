@@ -161,8 +161,9 @@ public class CacheManagementViewController: UIViewController {
         let rows = UIStackView(arrangedSubviews: [
             titleRow,
             breakdownRow(name: "网页缓存（浏览器网络缓存）", valueTag: 301, nameColor: ThemeTokens.Color.textSecondary),
-            breakdownRow(name: "离线应用包", valueTag: 302, nameColor: ThemeTokens.Color.textSecondary),
+            breakdownRow(name: "网页离线缓存", valueTag: 302, nameColor: ThemeTokens.Color.textSecondary),
             breakdownRow(name: "其他缓存", valueTag: 303, nameColor: ThemeTokens.Color.textTertiary),
+            breakdownRow(name: "已下载离线应用（应用中心下载，不计入总计）", valueTag: 304, nameColor: ThemeTokens.Color.textSecondary),
             clearWebCacheButton
         ])
         rows.axis = .vertical
@@ -473,6 +474,10 @@ public class CacheManagementViewController: UIViewController {
 
             let formatter = ByteCountFormatter()
             formatter.countStyle = .file
+            // 已下载离线应用装在 Application Support（应用中心管辖），
+            // 不属于 Caches 口径——单列一行展示，不并入总计（总计与设置
+            // 行角标保持同口径）。
+            let downloaded = Self.directorySize(at: HTMLAppOfflinePackageLocator.defaultPackagesRoot)
             DispatchQueue.main.async {
                 guard let self, self.summaryCard.superview != nil else { return }
                 func setValue(_ tag: Int, _ bytes: Int64) {
@@ -482,6 +487,7 @@ public class CacheManagementViewController: UIViewController {
                 setValue(301, webkit)
                 setValue(302, offline)
                 setValue(303, other)
+                setValue(304, downloaded)
             }
         }
     }
