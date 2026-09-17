@@ -1,0 +1,55 @@
+Drel 1.0 (Build 60) — Guideline 2.1 Review Information
+
+1. Physical-device recording
+The private App Review attachment was captured on a physical iPhone 13
+(iPhone14,5) running iOS 18.7.3 with the processed TestFlight Build 60. It
+begins at Drel's first-run screen immediately after launch and demonstrates
+notification permission, the generated personal push address, a test push,
+the Inbox, representative push options, and opening an explicit HTTPS
+destination after the user taps a notification.
+
+2. Tested devices and operating systems
+- Physical device: iPhone 13 (iPhone14,5), iOS 18.7.3, TestFlight Build 60.
+- Simulator regression: iPhone 17 Pro Max, iOS 26.4, Release configuration.
+The physical-device recording is the evidence for APNs delivery and tap
+routing; simulator checks were used only for UI and regression coverage.
+
+3. Functions, target audience, problem, and value
+Drel is a developer push-notification utility and secure HTTPS container. It
+lets developers copy a personal push address, send notifications from their
+own scripts, browsers, automations, or services, keep an Inbox, and open an
+explicit HTTPS destination only after tapping a notification. It provides a
+simple operational notification path without requiring an account or an
+in-app marketplace.
+
+4. Setup and access instructions
+No registration, login, demo credentials, purchase, subscription, or sample
+file is required.
+1) Launch Drel.
+2) Tap Enable Notifications and allow the optional iOS notification prompt.
+3) Use the Home test control to send a harmless test notification.
+4) Open Push Examples and use the 点击跳转 example to test HTTPS routing; tap
+   the arriving notification to open https://drel.app inside Drel.
+The generated push address belongs only to the current app installation.
+
+5. External services, tools, and platforms
+Core services are Apple Push Notification service (APNs) and Drel's official
+push endpoint at https://api.drel.app. The app has no advertising, analytics,
+payment, authentication, AI, or third-party data-provider service.
+
+6. Regional differences
+Drel has no intentional regional feature or content differences. Build 60
+provides the same V1 functionality in all storefronts.
+
+7. Regulated industry and protected material
+Drel is not in a regulated industry and contains no protected third-party
+content or service requiring authorization. It has no public app catalogue,
+marketplace, UGC, content reporting, or account system. Remote HTTPS pages do
+not receive WebBridge.js, JavaScript-to-native handlers, or native
+capabilities. Push parameters can navigate only; they cannot approve or
+perform sensitive actions.
+
+Official service: https://api.drel.app
+Support: https://drel.app/support/
+Privacy Policy: https://drel.app/privacy/
+Terms of Use: https://drel.app/terms/

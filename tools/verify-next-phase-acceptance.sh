@@ -36,7 +36,7 @@ run_required boundaries "Deliverable boundaries" "bash tools/verify-deliverable-
 run_required messages "Seven message types" "bash tools/verify-message-types-v1.sh"
 run_required approval "Approval consent contract" "bash tools/verify-approval-v1.sh"
 run_required offline "Strong offline fixture" "bash tools/verify-strong-offline-package.sh"
-run_required gateway "Public gateway contract" "WBK_GATEWAY_URL=https://cloak.xbrowser.dev:5801 bash tools/verify-open-gateway.sh"
+run_required gateway "Public gateway contract" "WBK_GATEWAY_URL=https://api.drel.app WBK_GATEWAY_APP_ID=dev.drel.release-monitor bash tools/verify-open-gateway.sh"
 run_required server "Server route and persistence tests" "cd Server && swift test"
 run_required template "AppTemplate boundary gate" "if grep -q 'Summary: 5 passed, 0 failed' build/reports/template-gate.md 2>/dev/null; then true; else bash tools/run-template-gate.sh; fi"
 run_required lint "SwiftLint" "swiftlint --quiet"

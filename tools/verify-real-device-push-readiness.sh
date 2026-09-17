@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verify real-device push/Bark readiness without claiming APNs delivery.
+# Verify Drel self-hosted physical-device readiness without claiming APNs delivery.
 
 set -euo pipefail
 
@@ -8,6 +8,7 @@ REPORT_DIR="$PROJECT_ROOT/build/reports"
 REPORT="$REPORT_DIR/real-device-push-readiness.md"
 DERIVED_DATA="/tmp/wbk-dd-device-smoke"
 DEVICE_ID="${DEVICE_ID:-}"
+BASE_URL="${DREL_SELFHOSTED_BASE_URL:-https://push.drel.app}"
 
 mkdir -p "$REPORT_DIR"
 cd "$PROJECT_ROOT"
@@ -61,16 +62,17 @@ fi
 if [ -n "$DEVICE_ID" ]; then
     record "Paired iPhone available" "PASS" "$DEVICE_ID"
 else
-    record "Paired iPhone available" "FAIL" "Set DEVICE_ID to an available paired iPhone identifier"
+    record "Paired iPhone available" "MANUAL" "A TestFlight iPhone need not be USB-paired to this Mac; supply DEVICE_ID only when doing an Xcode smoke test"
 fi
 
-run_gate "shanbox backend routes" "bash tools/verify-shanbox-backend.sh"
-run_gate "shanbox backend supervision" "bash tools/verify-shanbox-supervision.sh"
+run_gate "self-hosted public health and APNs signer" "curl --fail --silent --show-error '$BASE_URL/health' | rg -q '\"status\"[[:space:]]*:[[:space:]]*\"ok\"' && curl --fail --silent --show-error '$BASE_URL/health' | rg -q '\"apnsReady\"[[:space:]]*:[[:space:]]*true'"
+run_gate "native self-hosted relay contract" "cd Server/native && env -u GOROOT -u GOTOOLDIR PATH='/usr/local/go/bin:'\"\$PATH\" go test ./... && env -u GOROOT -u GOTOOLDIR PATH='/usr/local/go/bin:'\"\$PATH\" go vet ./..."
+run_gate "Drel Store self-hosted boundary" "bash tools/verify-drel-container-only.sh"
 
 if [ -n "$DEVICE_ID" ]; then
     run_gate "Real-device build install launch" "DEVICE_ID='$DEVICE_ID' bash tools/run-real-device-smoke.sh"
 else
-    record "Real-device build install launch" "FAIL" "Skipped because no paired iPhone was discovered"
+    record "Real-device build install launch" "MANUAL" "Install the current TestFlight build on a real iPhone; a local USB/Xcode smoke is optional"
 fi
 
 BUILD_LOG="$REPORT_DIR/build-for-device.log"
@@ -121,9 +123,9 @@ if [ -n "$APP_PATH" ]; then
     fi
 else
     if [ -f "$BUILD_LOG" ]; then
-        record "Signed app contains APNs entitlement" "FAIL" "SuperApp.app not found under $DERIVED_DATA; see $BUILD_LOG"
+        record "Signed app contains APNs entitlement" "MANUAL" "No local device build was requested; the current TestFlight archive must be checked on the physical acceptance pass"
     else
-        record "Signed app contains APNs entitlement" "FAIL" "SuperApp.app not found under $DERIVED_DATA"
+        record "Signed app contains APNs entitlement" "MANUAL" "No local device build was requested; the current TestFlight archive must be checked on the physical acceptance pass"
     fi
 fi
 
@@ -134,17 +136,19 @@ else
     record "APNs token forwarded to PushNotificationManager" "FAIL" "AppDelegate receives the APNs token but does not forward it to PushNotificationManager"
 fi
 
-if rg -q "https://wbk\\.shanbox\\.19930810\\.xyz:8443" \
-    SuperApp/Sources/Push SuperApp/Sources/Views/TokenPush SuperApp/Resources; then
-    record "Default Bark server is shanbox" "PASS" "Default server points to https://wbk.shanbox.19930810.xyz:8443"
+if rg -q "https://api\\.drel\\.app" \
+    SuperApp/Sources/AppDelegate.swift SuperApp/Sources/Push SuperApp/Sources/Views/TokenPush \
+    SuperApp/Sources/Managers/ServerConfigManager.swift SuperApp/Resources; then
+    record "Default push server is Drel API" "PASS" "Default server points to https://api.drel.app"
 else
-    record "Default Bark server is shanbox" "FAIL" "Default shanbox Bark server URL not found in push UI/config paths"
+    record "Default push server is Drel API" "FAIL" "Default https://api.drel.app URL not found in push UI/config paths"
 fi
 
-record "Notification permission prompt observed on iPhone" "MANUAL" "Open iPhone app -> Push -> 注册推送; verify the iOS notification permission prompt or current permission state"
-record "Real APNs device token registered to shanbox" "MANUAL" "After permission allow, verify token state changes to 已注册 and shanbox receives a real token for the configured Bark key"
-record "Bark end-to-end notification received" "MANUAL" "Send a Bark-compatible URL to the configured key and confirm the iPhone receives it"
-record "Background or lock-screen notification behavior" "MANUAL" "Lock/background the iPhone, send Bark push, confirm delivery and tap routing"
+record "Self-hosted server paired on a TestFlight iPhone" "MANUAL" "Drel → 设置 → 自托管推送; scan/paste a fresh configuration and verify the selected server without recording secrets"
+record "Direct APNs foreground/background/lock-screen/tap/exact-once" "MANUAL" "Follow docs/verification/drel-self-hosted-physical-device.md, including a background mode=immersive notification tap"
+record "Sender-side encrypted envelope confidentiality" "MANUAL" "Use Server/examples/drel-encrypt-and-push.mjs and confirm the relay/APNs wrapper has no message plaintext"
+record "Self-hosted decrypted inbox and source history" "MANUAL" "Verify the decrypted message appears once under the self-hosted source and never leaks into official history"
+record "Self-hosted exact revocation" "MANUAL" "Remove the self-hosted server in Drel, then prove the old capability no longer delivers while official push remains independent"
 
 {
     echo "# Real Device Push Readiness"

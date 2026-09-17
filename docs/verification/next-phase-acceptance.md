@@ -60,6 +60,10 @@ These are recorded as non-blocking automation debt, not inferred product PASS fo
 
 The deterministic fixture and installer/model tests prove the signed parent manifest to resource-manifest digest to per-file digest chain, Application Support activation, unsafe path/origin rejection and rollback preservation. The current product UI does not expose a dedicated stable end-to-end installer journey identifier, so offline UI status remains a follow-up automation surface. WebKit-cache clearing and reliable network blocking are intentionally kept out of XCUITest.
 
+### Closeout update (2026-08-24)
+
+The product gap above is now closed in source: App Center prepares a strong-offline-eligible package on first open and reports pending/update/installed version plus package size in the existing app-detail sheet. `HTMLAppOfflinePackageInstallerTests` passed 9/9 and the deterministic package verifier passed 4/4. The retired `https://cloak.xbrowser.dev:5801` test target was aligned to the configured shanbox official gateway; its public contract passed 5/5 and the validate-before-activate simulator journey passed 1/1.
+
 ## Manual Real-Device Gate
 
 - Use a paid Apple Developer Program team/profile with Push Notifications and confirm signed `aps-environment`.

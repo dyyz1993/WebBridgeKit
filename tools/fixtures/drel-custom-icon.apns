@@ -1,0 +1,13 @@
+{
+  "Simulator Target Bundle": "com.webbridgekit.superapp",
+  "aps": {
+    "alert": {
+      "title": "自定义图标",
+      "body": "打开 Drel 收件箱查看此消息的自定义头像"
+    },
+    "sound": "default"
+  },
+  "title": "自定义图标",
+  "body": "打开 Drel 收件箱查看此消息的自定义头像",
+  "icon": "https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/images/logo.png"
+}

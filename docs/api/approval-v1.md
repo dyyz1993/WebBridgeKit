@@ -5,7 +5,7 @@ Approval v1 是 WebBridgeKit 官方版与自托管版共同使用的个人审批
 ## 创建原生审批
 
 ```bash
-curl -X POST https://wbk.shanbox.19930810.xyz:8443/push \
+curl -X POST https://api.drel.app/push \
   -H 'Content-Type: application/json' \
   -d '{
     "schema": "webbridgekit.message.v1",
@@ -33,7 +33,7 @@ curl -X POST https://wbk.shanbox.19930810.xyz:8443/push \
 ## 查询状态
 
 ```bash
-curl https://wbk.shanbox.19930810.xyz:8443/api/v1/approvals/approval-42 \
+curl https://api.drel.app/api/v1/approvals/approval-42 \
   -H 'Authorization: Bearer YOUR_KEY'
 ```
 

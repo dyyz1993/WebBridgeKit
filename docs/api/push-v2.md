@@ -49,7 +49,7 @@ HTML App/PWA 的渐进式接入（零改造打开 → 推送深链 → 原生能
 | `display` | string | `sheet`, `full`, `inline`；当前原生版支持 sheet/full，inline 暂回退为 sheet |
 | `statePath` | string | 交给目标 PWA 的状态查询路径；宿主不携带业务凭据代替 PWA 审批 |
 
-兼容字段 `appid` 与 `mode=normal|modal|immersive` 会继续接受。推荐新接入使用 `appId` 与 `display`。
+兼容字段 `appid` 与 `mode=normal|modal|immersive` 会继续接受。普通 `url=` 推送默认以常规页面打开；只有明确传入 `mode=immersive` 时才全屏展示。推荐新接入使用 `appId` 与 `display`。
 
 ## 验证码
 

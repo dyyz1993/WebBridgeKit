@@ -256,7 +256,7 @@ WebJavaScriptBridge:
 
 | Channel | 协议 | 方向 | 配置 |
 |---------|------|------|------|
-| **BarkChannel** | HTTPS GET | 出站（App→Server→APNs→设备） | serverURL + key（App 默认 `https://wbk.shanbox.19930810.xyz:8443`；SDK 可配置为官方 Bark 或自建兼容服务） |
+| **BarkChannel** | HTTPS GET | 出站（App→Server→APNs→设备） | serverURL + key（App 默认 `https://api.drel.app`；SDK 可配置为官方 Bark 或自建兼容服务） |
 | **WebhookChannel** | HTTP POST | 入站（外部→App） | port:8765 + /webhook |
 
 ### 3.3 消息处理流程
@@ -265,7 +265,7 @@ WebJavaScriptBridge:
 外部推送到达（Bark）
     │
     ├─ BarkChannel.send(payload)
-    │     └─ HTTPS GET https://wbk.shanbox.19930810.xyz:8443/{key}/{title}/{body}
+    │     └─ HTTPS GET https://api.drel.app/{key}/{title}/{body}
     │
     └─ 消息到达设备（APNs 回调）
           │

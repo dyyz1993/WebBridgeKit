@@ -36,6 +36,9 @@ MARKERS=(
   "Bridge 调试"
   "网页缓存调试"
   "协议跳转工具"
+  "ComponentCatalogViewController"
+  "--show-component-catalog"
+  "webbridgekit://command/<token>"
 )
 
 APP_PATH="${1:-}"
@@ -80,7 +83,7 @@ done
 echo ""
 if [[ "$LEAKED" -gt 0 ]]; then
   echo "FAIL: $LEAKED leaked DEBUG marker(s) in Release binary."
-  echo "      修复方式：给对应视图文件加文件级 #if DEBUG，或检查是否有未门控的引用点。"
+  echo "      修复方式：给对应视图文件加文件级 #if !DREL_CONTAINER_ONLY，或检查是否有未门控的引用点。"
   exit 1
 fi
 echo "PASS: Release binary contains 0 leaked DEBUG markers."

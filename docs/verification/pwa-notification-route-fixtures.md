@@ -41,7 +41,7 @@ approval route's navigation-only payload boundary.
 Do not deploy a local HTTP fixture. After all local checks are green, publish
 the two static PWA directories and their unsigned source manifests to `tx`.
 The public gateway signs the manifests dynamically, while the same HTTPS origin
-serves the PWA files at `https://cloak.xbrowser.dev:5801/fixtures/...`.
+serves the PWA files at `https://ae8fcb.shanbox.19930810.xyz:8443/test_resources/...`.
 Each `startURL`, allowlisted origin, and route must use that exact public
 origin. Verify gateway onboarding before physical-phone testing. APNs delivery
 remains a separate release gate that requires a Push-capable Apple Developer

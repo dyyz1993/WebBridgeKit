@@ -105,6 +105,7 @@ checks = [
     ("Health", "/health", "health"),
     ("Admin console", "/admin", "admin-html"),
     ("Admin push console", "/admin-push", "admin-html"),
+    ("Drel brand asset", "/drel-mark.png", "png"),
     ("Admin stats API", "/admin/api/stats", "stats"),
     ("Admin devices API", "/admin/api/devices", "array"),
     ("Admin commands API", "/admin/api/commands", "array"),
@@ -130,9 +131,13 @@ for name, path, kind in checks:
             assert data.get("status") == "ok", data
             actual = "HTTP 200 JSON status=ok"
         elif kind == "admin-html":
-            assert "WebBridgeKit" in text, "missing WebBridgeKit marker"
+            assert "Drel" in text, "missing Drel marker"
             assert content_type.startswith("text/html"), content_type
-            actual = "HTTP 200 HTML contains WebBridgeKit"
+            actual = "HTTP 200 HTML contains Drel"
+        elif kind == "png":
+            assert content_type.startswith("image/png"), content_type
+            assert len(body) > 0, "empty PNG response"
+            actual = f"HTTP 200 PNG ({len(body)} bytes)"
         elif kind == "stats":
             data = json.loads(text)
             required = {"devices", "commands", "manifests", "wsClients", "uptime", "startTime"}

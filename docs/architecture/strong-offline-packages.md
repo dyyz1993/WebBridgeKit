@@ -46,6 +46,11 @@ pointer and complete directory remain launchable. If an online update fails,
 the loader reports `usingPreviousVersion`; it does not replace the page with a
 blank network error.
 
+An explicit user deletion removes the app's entire package root, including the
+current pointer and inactive versions. It is not part of an update transaction:
+after deletion, the host resolves the app as network/partial mode until the
+user deliberately installs a complete package again.
+
 The pointer is a tiny atomically written file instead of a symlink. Package
 paths cannot create symlinks because all content is written as newly created
 regular files beneath a private staging root.

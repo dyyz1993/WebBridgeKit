@@ -8,7 +8,7 @@
 | --- | --- | --- | --- | --- |
 | `plain` | 无 | 普通正文 | 有 `url`/`appId` 时打开目标 | 始终保留标题和正文 |
 | `markdown` | `markdown` | 宿主内置离线 Markdown 阅读区 | 打开内容中的 HTTPS 链接 | 渲染异常时保留推送摘要 |
-| `image` | HTTPS `image` | 图片预览 | 有路由时打开目标 | 加载失败显示紧凑错误提示，正文仍可读 |
+| `image` | HTTPS `image` | 图片预览 | 一键或长按后保存到系统相册；有路由时打开目标 | 加载失败显示紧凑错误提示，正文仍可读 |
 | `qr` | `qrPayload` | 宿主生成二维码 | 复制二维码原始值 | 空值在接口层拒绝 |
 | `otp` | `verificationCode` | 大字号验证码与有效期 | 复制验证码 | 过期后保留历史并标记过期 |
 | `chat` | `appId`, `route` | 消息摘要 | 打开会话 | PWA 负责登录、消息读取和回复 |
@@ -18,7 +18,11 @@
 
 ## Markdown 渲染边界
 
-`markdown` 只传 Markdown 字符串。宿主把它转为自包含 HTML 后在内置 `WKWebView` 中显示，不下载 CDN 解析器，也不依赖外部 PWA；因此纯文字、表格、任务清单、引用、代码块和安全链接在离线时仍可阅读。原始 HTML 会作为文本转义，链接仅允许 `https`、`http` 或 `mailto`，图片仅允许 HTTPS 地址；远程图片本身仍需要网络可用。
+`markdown` 只传 Markdown 字符串。宿主把它转为自包含 HTML 后在内置 `WKWebView` 中显示，不下载 CDN 解析器，也不依赖外部 PWA；因此阅读样式和核心文本结构在离线时仍可用。
+
+支持 ATX/Setext 标题、分隔线、引用、嵌套有序/无序列表、任务清单、GFM 表格（表格里的竖线可写作 `\|`）、行内/围栏代码、粗体、斜体、删除线、`==高亮==`、Markdown 链接和尖括号自动链接。原始 HTML 会作为文本转义；链接只允许 `https`、`http` 或 `mailto`，图片只允许 HTTPS 地址。远程图片本身仍需要网络可用。
+
+图片消息在图片成功加载后提供“保存到相册”按钮；长按图片也会出现同一操作。相册权限只在用户主动保存时按“仅添加照片”请求，Drel 不读取用户相册。
 
 ## 最小请求示例
 
@@ -29,7 +33,7 @@ curl http://localhost:8080/push \
 
 curl http://localhost:8080/push \
   -H 'Content-Type: application/json' \
-  -d '{"schema":"webbridgekit.message.v1","type":"markdown","deviceKey":"test","title":"部署完成","body":"查看部署摘要","markdown":"## 结果\n\n- 状态：成功"}'
+  -d '{"schema":"webbridgekit.message.v1","type":"markdown","deviceKey":"test","title":"部署完成","body":"查看部署摘要","markdown":"## 结果\n\n- [x] 部署完成\n- [ ] 观察错误率\n\n| 指标 | 当前值 |\n| --- | ---: |\n| 错误率 | 0.02% |"}'
 
 curl http://localhost:8080/push \
   -H 'Content-Type: application/json' \

@@ -1,5 +1,11 @@
 # Module Availability Verification Report
 
+## Release Closeout Update (2026-08-24)
+
+- **Strong offline product journey:** `PWAAppCenterViewController` now prepares a strong-offline-eligible package on first open, using the existing signed-manifest, SHA-256, same-origin, and atomic-current-pointer contract. If preparation fails, it opens through the resolver's non-strong path; an unverified or partial package is never presented as installed. The app detail sheet reports pending, update, or installed version plus actual package disk size.
+- **Local evidence:** `bash tools/verify-strong-offline-package.sh` passed 4/4 (report `build/reports/strong-offline-package-verification.md`); `HTMLAppOfflinePackageInstallerTests` passed 9/9 on iPhone 16 Pro Simulator; `bash tools/run-cache-regression.sh` passed 5/5, including CacheTests 557/557; the final `bash tools/run-release-gate.sh` passed 9/9 on 2026-08-24; `bash tools/verify-deliverable-boundaries.sh` passed 6/6.
+- **Public integration status:** the earlier `cloak.xbrowser.dev:5801` timeout identified a retired test target, while `HTMLAppGatewayDefaults.official` already pointed to shanbox. After aligning the script and UI fixture to `https://wbk.shanbox.19930810.xyz:8443`, `verify-open-gateway.sh` passed 5/5 and `NextPhaseAcceptanceTests.testGatewayImportRequiresValidationBeforeActivation` passed 1/1 on iPhone 16 Pro Simulator. This is public-gateway evidence; it remains distinct from real-device APNs delivery.
+
 ## Next Phase Integration Evidence (2026-08-12)
 
 The combined official-first-run, self-hosted gateway, and strong-offline integration is recorded in `docs/verification/next-phase-acceptance.md`. Core evidence: Server 36/36, message types 15/15, approval 11/11, public gateway 5/5, AppTemplate 5/5, CI lint 17/17, and crash scan `total: 0`. The simulator/open-source verdict is GO-WITH-MANUAL-GATE; real APNs permission, token registration, delivery, background and lock-screen behavior remain physical manual requirements.
@@ -15,7 +21,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | --- | --- | --- |
 | SDK semantics | Available on simulator | Reusable framework behavior remains covered by module schemes (`CacheTests`, `BridgeTests`, `MessageTests`, and related SDK suites); `bash tools/verify-deliverable-boundaries.sh` prevents SDK sources from importing `SuperApp` product code |
 | AppTemplate starter readiness | Available on simulator | `bash tools/run-template-gate.sh` -> 5 passed, 0 failed on 2026-08-12; independently checks 6/6 layer boundaries, AppTemplate SwiftLint, Debug/Release simulator builds, credential scanning, and absence of showcase tabs from the release surface; report: `build/reports/template-gate.md` |
-| SuperApp simulator readiness | Available | `bash tools/run-release-gate.sh` -> 8 passed, 0 failed on 2026-08-12, covering local services, layer boundaries, SwiftLint, design lint, Debug build, crash scan, unsigned Release archive, and release-bundle HTML scan; report: `build/reports/release-gate.md`; this state does not depend on AppTemplate UI snapshots |
+| SuperApp simulator readiness | Available | Latest local verification: `bash tools/run-release-gate.sh` -> 9 passed, 0 failed on 2026-08-24 (pending commit), covering local services, layer boundaries, SwiftLint, design lint, Debug build, crash scan, unsigned Release archive, test-HTML exclusion, and DEBUG-only binary scan. Focused Bark-style developer-home acceptance also passed 5/5 on iPhone 16 Pro simulator: official address/copy state, home entry contract, and all seven API examples. Report: `build/reports/release-gate.md`; this state does not depend on AppTemplate UI snapshots |
 | SuperApp real-device/APNs readiness | Unavailable in current signing environment | `bash tools/run-real-device-smoke.sh` and `bash tools/verify-real-device-push-readiness.sh` remain the separate physical-device gates; current Personal Development Team provisioning does not satisfy Push Notifications capability |
 | Services | Available | `bash scripts/services.sh restart && bash scripts/services.sh verify` passed, ports 8080/8081/8083 healthy; launchctl-backed services remain available across separate shell commands |
 | SwiftLint | Available | `swiftlint --quiet` produced zero output |
@@ -24,7 +30,7 @@ Physical device: `许映洲的iPhone`, iPhone 13, identifier `F38FECA2-2A43-5554
 | Module UI availability | Available | `ModuleAvailabilityTests`: 14 tests, 0 failures on UDID `79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0`; full rerun includes Push/Bark, Bridge Lab, and Deep Link result-panel paths, plus affected focused reruns on the same UDID; latest focused rerun `Test-SuperApp-2026.06.04_03-06-36-+0800.xcresult` proves Debug Center diagnostics export-file action, network clear action, and Manifest smart-load WebView execution |
 | JSBridge real WebView Promise smoke | Available | `testRealWebViewBridgePromiseResolves` opens `bridge-promise-smoke.html`, executes `BarkBridge.callNative('getSystemInfo')`, and waits for DOM text `Bridge Promise OK` |
 | Module availability report guard | Available | `bash tools/verify-module-availability-report.sh`; all `SettingsAction` entries are represented in the report and current unavailable markers plus shanbox command token semantics are enforced |
-| Settings remember-last-app restore | Available | `SettingsPreferenceKeys` now centralizes `settings.rememberLastApp` and `settings.lastOpenedURL`; `TabBarController`, `WebAccessViewController`, and `MainViewController` use the same keys with legacy migration |
+| Settings default startup app | Available | `SettingsPreferenceKeys` stores only `settings.defaultStartupAppID`; `TabBarController` resolves the trusted manifest and opens its start route on cold launch. Legacy last-URL preferences are purged rather than migrated. |
 | Settings Appearance entry | Available | `settings.cell.appearance` now opens `AppearanceSettingsView`; `ThemeMode` selection is persisted to `settings.appearanceMode` and applied through `ThemeManager` |
 | Cache semantics | Available | `CacheTests`: 548 tests, 0 failures |
 | JSBridge semantics | Available | `BridgeTests`: 101 tests, 0 failures |
@@ -396,14 +402,14 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 | Server Ops | shanbox WebBridgeServer process | SSH `shanbox` / public backend | `/root/WebBridgeKit/Server/.build/release/WebBridgeServer`, `tools/verify-shanbox-supervision.sh` | `tools/verify-shanbox-supervision.sh`: process=PASS, supervision=PASS | Available | Process is running, listening, and supervised by supervisord |
 | Settings | Primary tab loads | Bottom tab `设置` | `SettingsView.swift`, `SettingsViewModel.swift` | UI test verifies top rows and all operational rows | Available | |
 | Settings | Server config | `设置` -> `服务器配置` (`settings.cell.serverConfig`) | `ServerConfigViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
-| Settings | Token manager | `设置` -> `口令管理` (`settings.cell.tokenManager`) | `TokenManageViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
+| Settings | Token manager | `设置` -> `口令管理` (`settings.cell.tokenManager`) | `TokenManageViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available in DEBUG | Drel 1.0 Release hides this developer diagnostic surface; Home remains the single public place to copy the personal push address. |
 | Settings | API key manager | `设置` -> `密钥管理` (`settings.cell.apiKeyManage`) | `APIKeyManageViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Push encryption | `设置` -> `通知` -> `推送加密` (`settings.cell.pushEncryption`) | `PushEncryptionView.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Web origin grants | `设置` -> `安全` -> `网页授权管理` (`settings.cell.webGrants`) | `WebOriginGrantsView.swift` | Manual: opens screen listing grants grouped by origin; requires a page grant to be non-empty | Available | |
 | Settings | Cache manager | `设置` -> `缓存管理` (`settings.cell.cacheManager`) | `ManagementViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Favorites | `设置` -> `收藏夹` (`settings.cell.favorites`) | `FavoriteViewController.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
 | Settings | Recent history | `设置` -> `最近访问` (`settings.cell.history`) | `RecentAccessHistoryView.swift` | `ModuleAvailabilityTests.testSettingsCoreRowsAreReachable` opens screen | Available | |
-| Settings | Remember last app toggle and restore | `设置` -> `记住上次打开` (`settings.cell.rememberLastApp`, `settings.toggle.rememberLastApp`) | `SettingsView.swift`, `SettingsPreferenceKeys.swift`, `TabBarController.checkAndRestoreLastApp()` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable`; source uses shared `SettingsPreferenceKeys.rememberLastApp` and `SettingsPreferenceKeys.lastOpenedURL` with legacy migration | Available | Toggle is UI-test reachable; restore reads the same key written by Web open flows |
+| Settings | Default startup app selection and launch | `设置` -> `默认启动应用` (`settings.cell.defaultStartupApp`, `defaultStartupApp.root`) | `SettingsView.swift`, `DefaultStartupAppView.swift`, `SettingsPreferenceKeys.swift`, `TabBarController.openDefaultStartupAppIfNeeded()` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable`; the selector is reachable and startup resolves the selected trusted manifest's start route | Available | Stores only app ID; a push still opens its explicit `appId + route` target |
 | Settings | Appearance | `设置` -> `外观` (`settings.cell.appearance`) | `AppearanceSettingsView.swift`, `TabBarController.handleSettingsNavigation(_:)`, `ThemeManager` | `ModuleAvailabilityTests.testSettingsPreferencesAreUsable` opens `appearance.root`, verifies `appearance.modePicker`, and toggles `浅色/深色/跟随系统` | Available | Selection persists to `settings.appearanceMode` and is re-applied during theme bootstrap |
 | Settings | Debug panel direct entry | `设置` -> `调试面板` (`settings.cell.debugPanel`) | `DebugPanelViewController.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugAndSupportRowsAreReachable` taps direct row; `DebugPanelTests` cover panel tabs | Available in DEBUG | Direct entry is reachable; DEBUG-only surface |
 | Settings | Debug Center | `设置` -> `调试中心` (`settings.cell.debugCenter`) | `DebugCenterHomeView.swift`, `TabBarController.handleSettingsNavigation(_:)` | `ModuleAvailabilityTests.testSettingsDebugCenterAndDeepLinksAreReachable` opens `debugCenter.home` | Available | |
@@ -465,6 +471,45 @@ xcrun simctl openurl 79EA5C9F-C501-47FD-8D1B-2DE497F5CDD0 \
 - Safety regression: `DeepVerificationTests.testInboxPWAApprovalOpensTrustedRouteWithoutApproving` plus `testInboxNativeApprovalShowsActionsAndConfirmation` -> 2 passed, 0 failed. Evidence bundle: `~/Library/Developer/XcodeBuildMCP/workspaces/WebBridgeKit-815a0cec42de/result-bundles/test_sim_2026-08-12T05-17-47-896Z_pid47459_eab838e6.xcresult`.
 - The PWA fixture receives `requestId=approval-42` and `webbridgekitSource=notification`; the test closes the modal and asserts that the native record remains `待确认`, with no `已通过` state. Screenshot: `/tmp/wbk-ui-inbox-pwa-approval.png`.
 - Scope: this proves simulator navigation, trusted launch-context delivery, and non-approval-by-navigation. A PWA remains responsible for its own custom approval UI and callback/state protocol; real APNs delivery and third-party callback availability still require physical/external verification.
+
+## Drel TestFlight Build 42 Foreground Push Evidence (2026-08-27)
+
+- Physical device: paired iPhone 13 (`许映洲的iPhone`), verified with
+  `xcrun devicectl device info apps` as Drel `1.0 (42)`.
+- Public gateway: `curl https://api.drel.app/health` returned the expected
+  server health response before the test.
+- A single foreground `POST /push` request was sent to the device's redacted
+  private key with a unique title (`Drel 42 前台验收`) and `sound=bell.caf`.
+  The phone displayed exactly one notification. No delayed second banner was
+  observed, which is the real-device acceptance evidence for the single-attempt
+  APNs change.
+- Scope: this proves one foreground TestFlight delivery. It does **not** prove
+  background/locked delivery, named-sound SpringBoard resolution, notification
+  tap route, or the Build 43 short-address migration; those remain required on
+  the exact processed Build 43.
+
+## Drel Build 43 Upload Evidence (2026-08-27)
+
+- The signed `1.0 (43)` archive was uploaded once through Xcode's App Store
+  Connect distribution path. The delivery log reports `UPLOAD SUCCEEDED with
+  no errors`, Delivery UUID `c28af043-1f34-4975-baf7-e773f999794e`, followed
+  by App Store Connect state `PROCESSING`.
+- The export pins the same Apple Distribution certificate fingerprint embedded
+  by the matching App Store provisioning profiles. This avoids choosing a
+  second local certificate with the same display name.
+- Scope: upload acceptance only. Apple processing, internal TestFlight-group
+  assignment, and all physical-device Build 43 acceptance items remain open.
+
+## Drel Build 44 Upload Evidence (2026-08-27)
+
+- The signed `1.0 (44)` archive contains the Store feature-list correction and
+  was uploaded once through Xcode's App Store Connect distribution path. The
+  delivery log reports `UPLOAD SUCCEEDED with no errors`, Delivery UUID
+  `ff475d8f-c306-4c2d-ab3c-253af7639482`, followed by App Store Connect state
+  `PROCESSING`.
+- The archive passed `tools/verify-drel-store-archive.sh` and is the only build
+  intended for final internal TestFlight regression. Build 43 remains a
+  superseded pre-release build.
 
 ## Items Requiring Physical Manual Verification
 

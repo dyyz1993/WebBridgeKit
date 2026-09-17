@@ -20,6 +20,7 @@ project_root = Path(sys.argv[1])
 output = Path(sys.argv[2])
 availability = project_root / "docs/verification/module-availability-verification.md"
 settings_vm = project_root / "SuperApp/Sources/ViewModels/SettingsViewModel.swift"
+settings_preferences = project_root / "SuperApp/Sources/Utilities/SettingsPreferenceKeys.swift"
 tab_controller = project_root / "SuperApp/Sources/Controllers/Tab/TabBarController.swift"
 
 rows = []
@@ -50,6 +51,7 @@ def row_containing(marker):
 
 doc = availability.read_text(encoding="utf-8")
 settings_source = settings_vm.read_text(encoding="utf-8")
+preferences_source = settings_preferences.read_text(encoding="utf-8")
 tab_source = tab_controller.read_text(encoding="utf-8")
 
 required_sections = [
@@ -132,23 +134,23 @@ record(
     availability,
 )
 
-settings_key = '"settings.rememberLastApp"' in settings_source
-legacy_key = '"EnableLastAppMemory"' in tab_source
-remember_row = row_containing("settings.cell.rememberLastApp")
-remember_marked_unavailable = "Unavailable" in remember_row
-remember_marked_available = "Available" in remember_row and "Unavailable" not in remember_row
+startup_key = '"settings.defaultStartupAppID"' in preferences_source
+startup_launch = "openDefaultStartupAppIfNeeded" in tab_source
+startup_row = row_containing("settings.cell.defaultStartupApp")
+startup_marked_unavailable = "Unavailable" in startup_row
+startup_marked_available = "Available" in startup_row and "Unavailable" not in startup_row
 record(
-    not (settings_key and legacy_key) or remember_marked_unavailable,
-    "Remember-last-app key mismatch truthfulness",
-    "if keys mismatch, report marks restore unavailable",
-    "mismatch+marked" if settings_key and legacy_key and remember_marked_unavailable else ("consistent" if not (settings_key and legacy_key) else "mismatch+not marked"),
+    (startup_key and startup_launch) or startup_marked_unavailable,
+    "Default-startup-app implementation truthfulness",
+    "if implementation is missing, report marks startup selection unavailable",
+    "missing+marked" if not (startup_key and startup_launch) and startup_marked_unavailable else ("implemented" if startup_key and startup_launch else "missing+not marked"),
     tab_controller,
 )
 record(
-    (settings_key and legacy_key) or remember_marked_available,
-    "Remember-last-app implemented report status",
-    "if keys are aligned, report marks restore available",
-    "mismatch" if settings_key and legacy_key else ("aligned+available" if remember_marked_available else "aligned+not available"),
+    not (startup_key and startup_launch) or startup_marked_available,
+    "Default-startup-app report status",
+    "if implementation exists, report marks startup selection available",
+    "implemented" if startup_key and startup_launch else ("missing+available" if startup_marked_available else "missing"),
     availability,
 )
 

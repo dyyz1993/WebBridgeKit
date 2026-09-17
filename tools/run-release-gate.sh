@@ -33,15 +33,26 @@ run_gate() {
     fi
 }
 
-run_gate "Services start and verify" "bash scripts/services.sh start && bash scripts/services.sh verify"
+# launchctl can report the Python fixture listener before its first accepted
+# connection. The authoritative gate is the following explicit health check;
+# do not fail a release solely because that transient start probe raced.
+run_gate "Services start and verify" "bash scripts/services.sh backend || true; bash scripts/services.sh http || true; bash scripts/services.sh proto || true; bash scripts/services.sh verify"
 run_gate "Deliverable boundaries" "bash tools/verify-deliverable-boundaries.sh"
 run_gate "SwiftLint" "'$SWIFTLINT_BIN' --quiet"
 run_gate "Design lint" "bash tools/ci-lint.sh"
 run_gate "Build Debug" "xcodebuild build -workspace WebBridgeKit.xcworkspace -scheme SuperApp -sdk iphonesimulator -arch arm64 -derivedDataPath '$DERIVED_DATA' CODE_SIGNING_ALLOWED=NO"
 run_gate "Crash scan" "bash scripts/scan-crash-logs.sh --json | grep '\"total\": 0'"
-run_gate "Archive Release" "xcodebuild archive -workspace WebBridgeKit.xcworkspace -scheme SuperApp -archivePath '$ARCHIVE_PATH' -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO SKIP_INSTALL=NO"
+# Keep archive intermediates separate from any interactive/simulator build.
+# Xcode otherwise uses its shared default DerivedData path and two overlapping
+# builds can corrupt header maps or object-file renames.
+run_gate "Archive Release" "xcodebuild archive -workspace WebBridgeKit.xcworkspace -scheme SuperApp -archivePath '$ARCHIVE_PATH' -derivedDataPath '${DERIVED_DATA}-archive' -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO"
 run_gate "No Release test HTML" "if [ -d '$ARCHIVE_PATH/Products/Applications/SuperApp.app' ]; then ! find '$ARCHIVE_PATH/Products/Applications/SuperApp.app' -iname '*test*.html' | grep -q .; else exit 1; fi"
 run_gate "No DEBUG-only code in Release" "bash tools/verify-release-no-debug.sh '$ARCHIVE_PATH/Products/Applications/SuperApp.app'"
+run_gate "Drel Store container-only policy" "bash tools/verify-drel-container-only.sh"
+run_gate "Drel Store minimal settings policy" "bash tools/verify-drel-release-settings.sh"
+run_gate "Drel critical-alert policy" "bash tools/verify-drel-critical-alert-policy.sh"
+run_gate "APNs single-attempt policy" "bash tools/verify-apns-single-attempt.sh"
+run_gate "Drel Store archive surface" "bash tools/verify-drel-store-archive.sh '$ARCHIVE_PATH'"
 
 {
     echo "# Release Gate Report"

@@ -1,0 +1,13 @@
+{
+  "Simulator Target Bundle": "com.webbridgekit.superapp",
+  "aps": {
+    "alert": {
+      "title": "点击跳转",
+      "body": "打开 Drel 官网"
+    },
+    "sound": "default"
+  },
+  "title": "点击跳转",
+  "body": "打开 Drel 官网",
+  "url": "https://drel.app/"
+}

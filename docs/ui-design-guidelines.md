@@ -33,6 +33,11 @@
 
 ## 1. Design Tokens
 
+> **Current source of truth (2026-08):** `docs/design-tokens.json` and the
+> generated `Sources/Theme/ThemeTokens.swift`. This document contains legacy
+> implementation examples below; do not use references to `ThemeManager`,
+> `ThemeColors.current`, or system color defaults for new Drel product UI.
+
 All tokens are defined in `Sources/Theme/ThemeManager.swift`. **Never hardcode visual values** — always reference tokens.
 
 ### 1.1 Color Tokens
