@@ -145,4 +145,13 @@ docs/design-tokens-v2-backup.json
 .data/
 .uploads/
 Server/data/
+Server/secrets/
+Server/pairing-*.png
 !test_resources/push-render-catalog.html
+# Native self-hosted relay output
+Server/native/dist/
+
+# local agent artifacts
+.playwright-cli/
+.zcode/
+tools/__pycache__/
