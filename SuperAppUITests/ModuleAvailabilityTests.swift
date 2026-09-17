@@ -452,6 +452,60 @@ final class ModuleAvailabilityTests: XCTestCase {
         }
     }
 
+    /// Per-message pin: right-swipe reveals the pin action and pinning
+    /// floats the message above newer entries in the latest-mode list.
+    /// The recurring automated pushes bury older messages, so a card must
+    /// be promotable in place. The test pins whatever the second row is at
+    /// runtime — the live gateway delivers real pushes during the run, so
+    /// hard-coded seed ids drift below the fold.
+    func testMessagePinSwipeFloatsMessageToTop() {
+        assertTab("tab.notifications", opens: "InboxViewController")
+        let table = app.tables.firstMatch
+        XCTAssertTrue(table.waitForExistence(timeout: 6), "inbox table should exist")
+        let secondCell = table.cells.element(boundBy: 1)
+        XCTAssertTrue(secondCell.waitForExistence(timeout: 4), "at least two cards expected")
+        let targetId = secondCell.identifier
+        XCTAssertTrue(targetId.hasPrefix("notification.card."), "unexpected cell identity: \(targetId)")
+
+        // Drag the card rightwards past the full-swipe threshold so the
+        // leading pin action executes. If the drag only partially reveals,
+        // fall back to tapping the revealed button.
+        let start = secondCell.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5))
+        let end = secondCell.coordinate(withNormalizedOffset: CGVector(dx: 3.0, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+        saveBorderProofShot("inbox-pin-reveal")
+        let pinButton = app.descendants(matching: .any).matching(identifier: "置顶").firstMatch
+        if pinButton.exists && pinButton.isHittable {
+            pinButton.tap()
+        }
+        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        XCTAssertEqual(
+            table.cells.element(boundBy: 0).identifier,
+            targetId,
+            "pinning must float the message to the top of the latest list"
+        )
+        saveBorderProofShot("inbox-pin-top")
+
+        // Right-swipe the pinned card again to unpin; the list returns to
+        // recency ordering, so the target is no longer first.
+        let pinnedCard = table.cells.element(boundBy: 0)
+        let unpinStart = pinnedCard.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5))
+        let unpinEnd = pinnedCard.coordinate(withNormalizedOffset: CGVector(dx: 3.0, dy: 0.5))
+        unpinStart.press(forDuration: 0.05, thenDragTo: unpinEnd)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+        let unpinButton = app.descendants(matching: .any).matching(identifier: "取消置顶").firstMatch
+        if unpinButton.exists && unpinButton.isHittable {
+            unpinButton.tap()
+        }
+        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        XCTAssertNotEqual(
+            table.cells.element(boundBy: 0).identifier,
+            targetId,
+            "unpinning must restore recency ordering"
+        )
+    }
+
     func testDefaultStartupAppCanSelectTrustedApp() {
         app.terminate()
         app.launchArguments = [

@@ -20,6 +20,14 @@ class InboxMessageCellWrapper: UITableViewCell {
     private let iconImageView = UIImageView()
     private let unreadAccent = UIView()
     private let unreadDot = UIView()
+    private let pinIconView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.pin.templateImage(pointSize: ThemeTokens.Icons.Sizes.xs)
+        iv.tintColor = ThemeTokens.Color.primary
+        iv.contentMode = .scaleAspectFit
+        iv.isHidden = true
+        return iv
+    }()
     private let sourceLabel = UILabel()
     private let timestampLabel = UILabel()
     private let titleLabel = UILabel()
@@ -112,8 +120,8 @@ class InboxMessageCellWrapper: UITableViewCell {
         contentView.addSubview(cardView)
         cardView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            // Top pinned + bottom at priority 999: at the resting 92pt row
-            // this yields the intended 84pt card with 4pt insets (fully
+            // Top pinned + bottom at priority 999: at the resting 80pt row
+            // this yields the intended 72pt card with 4pt insets (fully
             // determined, no ambiguity), while the accordion's height
             // animation to zero can break the bottom edge without conflict —
             // the card then compresses from its top edge, clipped by bounds.
@@ -165,10 +173,14 @@ class InboxMessageCellWrapper: UITableViewCell {
             make.height.equalTo(18)
         }
 
-        let sourceRow = UIStackView(arrangedSubviews: [sourceLabel, stateBadge, UIView(), timestampLabel])
+        let sourceRow = UIStackView(arrangedSubviews: [pinIconView, sourceLabel, stateBadge, UIView(), timestampLabel])
         sourceRow.axis = .horizontal
         sourceRow.alignment = .center
         sourceRow.spacing = ThemeTokens.Spacing.sm
+
+        pinIconView.snp.makeConstraints { make in
+            make.width.height.equalTo(ThemeTokens.Icons.Sizes.xs)
+        }
 
         titleLabel.font = ThemeTokens.Typography.rowTitle
         titleLabel.textColor = ThemeTokens.Color.text
@@ -202,7 +214,10 @@ class InboxMessageCellWrapper: UITableViewCell {
         cardView.addSubview(textStack)
         textStack.snp.makeConstraints { make in
             make.leading.equalTo(iconContainer.snp.trailing).offset(ThemeTokens.Spacing.md)
-            make.top.bottom.equalToSuperview().inset(ThemeTokens.Spacing.md)
+            // Vertical insets of 8pt (not md/12): the 72pt card must clear
+            // its three text rows while keeping the list dense enough for
+            // seven-plus cards per screen.
+            make.top.bottom.equalToSuperview().inset(ThemeTokens.Spacing.sm)
             make.trailing.equalTo(copyButton.snp.leading).offset(-ThemeTokens.Spacing.sm)
         }
 
@@ -231,7 +246,7 @@ class InboxMessageCellWrapper: UITableViewCell {
 
     private var collapsedIdentity: String?
 
-    func configure(with message: StoredMessage) {
+    func configure(with message: StoredMessage, isPinned: Bool = false) {
         iconLoadTask?.cancel()
         iconLoadTask = nil
         representedMessageID = message.id
@@ -246,6 +261,7 @@ class InboxMessageCellWrapper: UITableViewCell {
             .resolvedColor(with: traitCollection)
             .cgColor
         unreadAccent.isHidden = true
+        pinIconView.isHidden = !isPinned
 
         iconContainer.backgroundColor = presentation.tintColor.withAlphaComponent(0.12)
         iconImageView.image = presentation.icon.templateImage(pointSize: ThemeTokens.Icons.Sizes.md)

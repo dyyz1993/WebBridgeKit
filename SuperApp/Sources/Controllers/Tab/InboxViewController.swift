@@ -105,8 +105,8 @@ class InboxViewController: BaseViewController<InboxViewModel> {
         table.register(InboxMessageCellWrapper.self, forCellReuseIdentifier: InboxMessageCellWrapper.identifier)
         table.register(InboxGroupHeaderCell.self, forHeaderFooterViewReuseIdentifier: InboxGroupHeaderCell.identifier)
         // A notification preview has a fixed, scannable shape; details belong in its detail screen.
-        table.rowHeight = 92
-        table.estimatedRowHeight = 92
+        table.rowHeight = Self.rowHeight
+        table.estimatedRowHeight = Self.rowHeight
         table.backgroundColor = ThemeTokens.Color.background
         table.separatorStyle = .none
         table.delegate = self
@@ -539,7 +539,7 @@ extension InboxViewController: UITableViewDataSource {
             withIdentifier: InboxMessageCellWrapper.identifier,
             for: indexPath
         ) as! InboxMessageCellWrapper
-        cell.configure(with: message)
+        cell.configure(with: message, isPinned: viewModel.isMessagePinned(at: indexPath))
         cell.onCopy = { [weak self] in
             guard self != nil else { return }
             let payload = message.payload
@@ -565,8 +565,8 @@ extension InboxViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard viewModel.showsGroupHeaders else { return 92 }
-        return viewModel.isRowRevealed(at: indexPath) ? 92 : 0
+        guard viewModel.showsGroupHeaders else { return Self.rowHeight }
+        return viewModel.isRowRevealed(at: indexPath) ? Self.rowHeight : 0
     }
 
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -692,6 +692,31 @@ private extension String {
 // MARK: - UITableViewDelegate
 
 extension InboxViewController: UITableViewDelegate {
+
+    /// Row height shared by both display modes: 80pt keeps seven-plus cards
+    /// on screen (92pt showed only five) while the 72pt card still clears
+    /// its three text rows.
+    static let rowHeight: CGFloat = 80
+
+    func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        // Right-swipe pin: the recurring automated pushes flood the list and
+        // bury everything else, so a message must be promotable in place.
+        guard viewModel.isRowRevealed(at: indexPath) else { return nil }
+        let isPinned = viewModel.isMessagePinned(at: indexPath)
+        let pinAction = UIContextualAction(
+            style: .normal,
+            title: L10n.tr(isPinned ? "inbox.group.unpin" : "inbox.group.pin")
+        ) { [weak self] _, _, completion in
+            guard let self = self else {
+                completion(false)
+                return
+            }
+            self.viewModel.togglePinMessage(at: indexPath)
+            completion(true)
+        }
+        pinAction.backgroundColor = ThemeTokens.Color.info
+        return UISwipeActionsConfiguration(actions: [pinAction])
+    }
 
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .destructive, title: L10n.tr("common.delete")) { [weak self] _, _, completion in

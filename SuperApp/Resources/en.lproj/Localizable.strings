@@ -92,7 +92,7 @@
 "inbox.test.title" = "Test Notification";
 "inbox.test.body_format" = "This is a test message, sent at %@";
 "inbox.test.group" = "Test Messages";
-"inbox.swipe.hint" = "Tap for details. Swipe left to delete.";
+"inbox.swipe.hint" = "Tap for details. Swipe left to delete, right to pin.";
 
 // Discover
 "discover.title" = "Discover";

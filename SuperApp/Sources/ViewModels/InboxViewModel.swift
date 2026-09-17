@@ -79,12 +79,14 @@ class InboxViewModel: ViewModel {
     private var currentDisplayMode: DisplayMode = .latest
     private var searchDebounceWorkItem: DispatchWorkItem?
     private let pinnedGroupsKey = "inbox.pinnedGroups"
+    private let pinnedMessagesKey = "inbox.pinnedMessages"
 
     override init() {
         // Test-fixture hygiene: pin state persists across launches, which
         // would leak ordering between UI test runs.
         if ProcessInfo.processInfo.isWebBridgeKitUITesting {
             UserDefaults.standard.removeObject(forKey: "inbox.pinnedGroups")
+            UserDefaults.standard.removeObject(forKey: "inbox.pinnedMessages")
         }
     }
 
@@ -127,6 +129,36 @@ class InboxViewModel: ViewModel {
             }
             self?.loadMessages()
         }
+    }
+
+    private var pinnedMessageIdentifiers: Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: pinnedMessagesKey) ?? [])
+    }
+
+    func isMessagePinned(at indexPath: IndexPath) -> Bool {
+        guard indexPath.section < messageGroupsRelay.value.count else { return false }
+        let group = messageGroupsRelay.value[indexPath.section]
+        guard indexPath.row < group.messages.count else { return false }
+        return pinnedMessageIdentifiers.contains(group.messages[indexPath.row].id)
+    }
+
+    /// Pins a single message so it floats to the top of the inbox (latest
+    /// mode) or to the top of its own group (groups mode). Persisted by
+    /// message id; ids of deleted messages are simply ignored at read time.
+    func togglePinMessage(at indexPath: IndexPath) {
+        guard indexPath.section < messageGroupsRelay.value.count else { return }
+        let group = messageGroupsRelay.value[indexPath.section]
+        guard indexPath.row < group.messages.count else { return }
+        let identifier = group.messages[indexPath.row].id
+        var pinned = pinnedMessageIdentifiers
+        if pinned.contains(identifier) {
+            pinned.remove(identifier)
+        } else {
+            pinned.insert(identifier)
+        }
+        UserDefaults.standard.set(Array(pinned), forKey: pinnedMessagesKey)
+        applyFilters()
+        reloadDataRelay.accept(())
     }
 
     func transform(input: Input) -> Output {
@@ -399,11 +431,17 @@ class InboxViewModel: ViewModel {
         }
 
         let sortedMessages = messages.sorted { $0.receivedAt > $1.receivedAt }
+        // Pinned messages float to the top of the flat list (latest mode);
+        // in groups mode Dictionary(grouping:) preserves this relative order,
+        // so pinned entries surface at the top of their own group.
+        let pinnedIDs = pinnedMessageIdentifiers
+        let displayMessages = sortedMessages.filter { pinnedIDs.contains($0.id) }
+            + sortedMessages.filter { !pinnedIDs.contains($0.id) }
         let groups: [MessageGroup]
         if currentDisplayMode == .latest {
-            groups = sortedMessages.isEmpty ? [] : [MessageGroup(name: "", messages: sortedMessages)]
+            groups = displayMessages.isEmpty ? [] : [MessageGroup(name: "", messages: displayMessages)]
         } else {
-            let grouped = Dictionary(grouping: sortedMessages) { $0.notificationGroupName }
+            let grouped = Dictionary(grouping: displayMessages) { $0.notificationGroupName }
             // Rebuilds happen on every refresh; a user's collapse choice must
             // survive them, otherwise background reloads silently re-expand.
             let previousStates = Dictionary(

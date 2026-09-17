@@ -92,7 +92,7 @@
 "inbox.test.title" = "测试通知";
 "inbox.test.body_format" = "这是一条测试消息，发送于 %@";
 "inbox.test.group" = "测试消息";
-"inbox.swipe.hint" = "轻点查看详情，左滑可删除";
+"inbox.swipe.hint" = "轻点查看详情，左滑删除，右滑置顶";
 
 // Discover
 "discover.title" = "发现";
