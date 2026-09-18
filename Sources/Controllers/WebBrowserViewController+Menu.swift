@@ -22,7 +22,10 @@ extension WebBrowserViewController {
             self?.webView.reload()
         })
 
-        if viewModel.managedHTMLAppID != nil {
+        // 容器构建（DREL_CONTAINER_ONLY）下宿主设置 Provider 恒返回 nil，
+        // 菜单里摆「应用设置」只会弹「设置模块不可用」——按构建能力收口，
+        // 桥能力开启时才暴露该入口。
+        if viewModel.managedHTMLAppID != nil, DrelContainerBuildPolicy.nativeBridgeEnabled {
             alertController.addAction(UIAlertAction(title: "应用设置", style: .default) { [weak self] _ in
                 self?.showManagedHTMLAppSettings()
             })
@@ -38,20 +41,17 @@ extension WebBrowserViewController {
             self?.setStatusBarHidden(!(self?.isStatusBarHidden ?? false))
         })
 
-        if let url = webView.url {
+        // 收藏入口与全屏胶囊共用 favoriteEntryURL 语义：managed 应用页面
+        // 渲染自 custom:// scheme，绝不能把原始页面 URL 写进收藏表；托管的
+        // https 入口 / 普通网页才可持久化。动作复用 toggleImmersiveFavorite，
+        // 带收藏 HUD 反馈并同步胶囊收藏态。
+        if let entryURL = favoriteEntryURL {
             let favoriteService = ServiceLocator.favorite
-            let isFavorited = favoriteService.findFavorite(url: url) != nil
+            let isFavorited = favoriteService.findFavorite(url: entryURL) != nil
             let favoriteTitle = isFavorited ? "取消收藏" : "收藏页面"
 
             alertController.addAction(UIAlertAction(title: favoriteTitle, style: .default) { [weak self] _ in
-                guard let self = self else { return }
-                if isFavorited {
-                    favoriteService.deleteFavorite(url: url)
-                } else {
-                    self.fetchFavicon { data in
-                        favoriteService.addFavorite(url: url, title: self.webView.title, favicon: data)
-                    }
-                }
+                self?.toggleImmersiveFavorite()
             })
         }
 

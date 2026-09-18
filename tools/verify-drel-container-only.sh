@@ -34,6 +34,8 @@ check "Store build excludes the Cache debug control" \
     "rg -U -q '#if !DREL_CONTAINER_ONLY[[:space:][:print:]]*setupCacheDebugButton\\(\\)[[:space:][:print:]]*#endif' Sources/Controllers/WebViewController.swift"
 check "Managed launch injection is unavailable in Store builds" \
     "rg -q 'guard DrelContainerBuildPolicy\\.nativeBridgeEnabled else' Sources/Controllers/WebBrowserViewController.swift"
+check "Immersive menu hides app settings in Store builds and favorites share the capsule entry URL" \
+    "rg -q 'managedHTMLAppID != nil, DrelContainerBuildPolicy\\.nativeBridgeEnabled' Sources/Controllers/WebBrowserViewController\\+Menu.swift && rg -q 'toggleImmersiveFavorite' Sources/Controllers/WebBrowserViewController\\+Menu.swift && ! rg -q 'favoriteService\\.addFavorite' Sources/Controllers/WebBrowserViewController\\+Menu.swift"
 check "Push route uses URL context in Store builds" \
     "rg -q 'target\\.containerOnlyURL' SuperApp/Sources/Push/PushRouter.swift"
 check "Push URLs use the shared message presentation policy and bypass the HTML-app manifest loader" \

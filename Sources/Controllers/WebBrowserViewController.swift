@@ -552,7 +552,9 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     /// Managed HTML-app pages render from the custom:// scheme, which must
     /// never be persisted; for those the favorite stores the app's signed
     /// https entry URL so opening it later can route back into the app.
-    private var favoriteEntryURL: URL? {
+    /// Internal so the … menu favorite item shares this exact entry
+    /// semantics instead of persisting the raw page URL.
+    var favoriteEntryURL: URL? {
         guard let url = webView.url else { return nil }
         if url.scheme == "https" || url.scheme == "http" { return url }
         guard let appID = viewModel.managedHTMLAppID,
