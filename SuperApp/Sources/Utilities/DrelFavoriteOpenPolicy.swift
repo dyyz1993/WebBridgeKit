@@ -19,9 +19,12 @@ enum DrelFavoriteOpenPolicy {
             )
             return
         }
+        // 未注册 = 普通 HTTPS 网页：必须显式关掉 manifest loader
+        // （WebBrowserParams 默认 true），否则 loader 的自定义 scheme
+        // 渲染会打挂普通页面的 JS 引导，形态也会从「返回+星标」变成「✕+菜单」。
         WebBrowserManager.shared.openBrowser(
             url: url,
-            params: WebBrowserParams(displayMode: .normal),
+            params: WebBrowserParams(displayMode: .normal, useManifestLoader: false),
             from: viewController
         )
     }

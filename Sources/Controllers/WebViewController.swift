@@ -51,17 +51,17 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
     /// 浏览器配置
     public var browserConfig: WebBrowserParams?
 
-    /// 收藏当前网页（推送链接/普通网页壳的方向 B 最小生产入口）。
-    /// immersive 模式下由 updateImmersiveChrome() 置空隐藏。
-    lazy var favoriteButton: UIBarButtonItem = {
+    /// 右上角 ⋯ 更多菜单入口：收藏等页面操作收进底部弹出菜单，不直露星标。
+    /// immersive 模式下由 updateImmersiveChrome() 置空隐藏（沉浸式有自己的 ⋯ 控件）。
+    lazy var moreButton: UIBarButtonItem = {
         let button = UIBarButtonItem(
-            image: LucideIcon.star.image(),
+            image: LucideIcon.ellipsis.templateImage(pointSize: 20, weight: .semibold),
             style: .plain,
             target: self,
-            action: #selector(toggleFavoriteTapped)
+            action: #selector(showMoreMenuTapped)
         )
-        button.accessibilityIdentifier = "browser.favoriteButton"
-        button.accessibilityLabel = "收藏页面"
+        button.accessibilityIdentifier = "browser.moreButton"
+        button.accessibilityLabel = "更多菜单"
         return button
     }()
 
@@ -570,7 +570,7 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
                 view.bringSubviewToFront(immersiveSettingsButton)
             }
         } else {
-            navigationItem.rightBarButtonItem = favoriteButton
+            navigationItem.rightBarButtonItem = moreButton
             refreshFavoriteButtonState()
         }
     }
@@ -589,11 +589,33 @@ public class WebViewController: UIViewController, UINavigationControllerDelegate
         refreshFavoriteButtonState()
     }
 
+    /// ⋯ 底部弹出菜单（微信式，带图标）：收藏态实时读取并用图标颜色表达——
+    /// 未收藏描边星（正文色）、已收藏实心星（警示色），图标本身就是状态指示。
+    @objc private func showMoreMenuTapped() {
+        guard let url = webView?.url, url.scheme == "https" || url.scheme == "http" else { return }
+        let isFavorited = ServiceLocator.favorite.findFavorite(url: url) != nil
+        let favoriteItem = IconActionItem(
+            icon: isFavorited
+                ? LucideIcon.star.templateImage(pointSize: 22)
+                : LucideIcon.starOutline.templateImage(pointSize: 22),
+            title: isFavorited ? "取消收藏" : "收藏页面",
+            iconTint: isFavorited ? ThemeTokens.Color.warning : nil
+        ) { [weak self] in
+            self?.toggleFavoriteTapped()
+        }
+        let copyItem = IconActionItem(
+            icon: LucideIcon.link.templateImage(pointSize: 22),
+            title: "复制链接"
+        ) {
+            UIPasteboard.general.string = url.absoluteString
+            HUDService.shared.showSuccess(withStatus: "链接已复制")
+        }
+        IconActionSheet.show(in: view, items: [favoriteItem, copyItem])
+    }
+
     func refreshFavoriteButtonState() {
         guard let url = webView?.url else { return }
         let isFavorited = ServiceLocator.favorite.findFavorite(url: url) != nil
-        favoriteButton.tintColor = isFavorited ? ThemeTokens.Color.warning : ThemeTokens.Color.text
-        favoriteButton.accessibilityLabel = isFavorited ? "取消收藏" : "收藏页面"
         immersiveExitControl.isFavorited = isFavorited
     }
 

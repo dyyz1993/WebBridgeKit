@@ -108,7 +108,7 @@ public struct WebBrowserParams {
         showCloseButton: Bool = true,
         hideNavigationBar: Bool = false,
         hideStatusBar: Bool = false,
-        hideTabBar: Bool = false,         // [HOT] 默认显示 Tab Bar
+        hideTabBar: Bool = true,          // 打开网页一律离开主框架（tab 隐藏）；仅显式传 false 回显
         disableSwipeBack: Bool = false,   // [HOT] 默认允许侧滑返回
         orientation: UIInterfaceOrientationMask = .all,
         allowJavaScriptClose: Bool = true,
@@ -148,7 +148,7 @@ public struct WebBrowserParams {
         var showCloseButton: Bool = true
         var hideNavigationBar: Bool = false
         var hideStatusBar: Bool = false
-        var hideTabBar: Bool = false
+        var hideTabBar: Bool = true
         var disableSwipeBack: Bool = false
         var orientation: UIInterfaceOrientationMask = .all
         var allowJavaScriptClose: Bool = true
