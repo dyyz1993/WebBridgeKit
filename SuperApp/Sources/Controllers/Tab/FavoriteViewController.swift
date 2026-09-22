@@ -97,7 +97,12 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
         tableView.dropDelegate = self
         tableView.dragInteractionEnabled = true
 
-        tableView.rx.setDelegate(self).disposed(by: rx)
+        // 直接持有 delegate/dataSource，不走 Rx DelegateProxy：真机 (iOS 18.7,
+        // Release) 上点按收藏会在 RXDelegateProxy forwardInvocation 转发期间
+        // 撞上代理销毁的 SIGTRAP（crash_1790071569 等四份同签名报告），
+        // 这个屏幕不再经过任何 DelegateProxy。
+        tableView.delegate = self
+        tableView.dataSource = self
     }
 
     private func setupGestures() {
@@ -118,15 +123,12 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
             .map { _ in () }
             .asDriver(onErrorJustReturn: ())
 
-        let itemSelect = tableView.rx.itemSelected
-            .asDriver()
-
         let itemDelete = PublishRelay<String>()
             .asDriver(onErrorJustReturn: "")
 
         let input = FavoriteViewModel.Input(
             refresh: refresh,
-            itemSelect: itemSelect,
+            itemSelect: .empty(),
             pinToggle: .empty(),
             cacheModeToggle: .empty(),
             itemDelete: itemDelete
@@ -134,18 +136,13 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
 
         let output = viewModel.transform(input: input)
 
-        // 绑定数据（直接 reactive binding，避免每次 reload 重建 rx.items 导致 DelegateProxy 冲突）
+        // 数据绑定：存 sections 后直接 reloadData（dataSource 为本 VC 直持，
+        // 不经 Rx 代理；点选在 didSelectRowAt 里直调 openURL）。
         output.favorites
             .drive(onNext: { [weak self] sections in
                 self?.currentSections = sections
+                self?.tableView.reloadData()
             })
-            .disposed(by: rx)
-
-        output.favorites
-            .map { $0.flatMap { $0.items } }
-            .drive(tableView.rx.items(cellIdentifier: FavoriteCell.identifier, cellType: FavoriteCell.self)) { [weak self] _, favorite, cell in
-                cell.favorite = favorite
-            }
             .disposed(by: rx)
 
         output.isEmpty
@@ -272,9 +269,41 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
     }
 }
 
+// MARK: - UITableViewDataSource
+
+extension FavoriteViewController: UITableViewDataSource {
+
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return currentSections.flatMap { $0.items }.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: FavoriteCell.identifier, for: indexPath) as! FavoriteCell
+        let allFavorites = currentSections.flatMap { $0.items }
+        if let favorite = allFavorites[safe: indexPath.row] {
+            cell.favorite = favorite
+        }
+        return cell
+    }
+}
+
 // MARK: - UITableViewDelegate
 
 extension FavoriteViewController: UITableViewDelegate {
+
+    /// 点选直调（不经 Rx itemSelected/DelegateProxy，见 setupUI 注释）。
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let allFavorites = currentSections.flatMap { $0.items }
+        guard let favorite = allFavorites[safe: indexPath.row],
+              let url = URL(string: favorite.url) else { return }
+        openURL(url)
+    }
+
     /// 左滑同时露出「删除」与「置顶/取消置顶」；删除排最外层，
     /// 保持既有"全滑即删除"的手势语义不变。
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
