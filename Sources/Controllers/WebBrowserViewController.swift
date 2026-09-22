@@ -142,7 +142,7 @@ public class WebBrowserViewController: BaseViewController<WebBrowserViewModel> {
     }
 
     /// Host-supplied display policy must survive URL parameter parsing.
-    private var configuredHideNavigationBar = false
+    private(set) var configuredHideNavigationBar = false
     private var configuredHideStatusBar = false
 
     /// 当前 URL

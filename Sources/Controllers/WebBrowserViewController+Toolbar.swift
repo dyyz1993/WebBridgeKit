@@ -125,9 +125,19 @@ extension WebBrowserViewController {
     func setupConstraints() {
         let safeAreaLayoutGuide = view.safeAreaLayoutGuide
 
+        // 沉浸式（hideNavigationBar/mode=immersive）时 webView 必须从视图
+        // 顶部 0 起铺满全屏：此时 configure(with:) 已先于视图加载执行，
+        // configuredHideNavigationBar 可靠。此前无条件钉在 safeArea 顶部，
+        // 沉浸页首帧/会话恢复路径会出现 scrollView top≈59pt 的下坠窗口
+        // （用户报告：点应用进去 ScrollView top 不为 0）。
         webView.snp.makeConstraints { make in
-            make.top.equalTo(safeAreaLayoutGuide.snp.top)
-            make.left.right.bottom.equalToSuperview()
+            make.left.right.equalToSuperview()
+            if configuredHideNavigationBar {
+                make.top.bottom.equalToSuperview()
+            } else {
+                make.top.equalTo(safeAreaLayoutGuide.snp.top)
+                make.bottom.equalToSuperview()
+            }
         }
 
         progressView.snp.makeConstraints { make in

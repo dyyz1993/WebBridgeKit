@@ -28,15 +28,29 @@ final class FavoriteOfflinePackageCrashTests: XCTestCase {
         XCTAssertTrue(demoTile.waitForExistence(timeout: 8), "首页没有 Drel Offline Demo")
         demoTile.tap()
 
+        // 详情面板：包未下载时是「下载离线包」；已下载过则是「删除离线包」
+        // （容器状态保留，测试可重复跑），两者都视为包已就位。
         let download = app.buttons["下载离线包"].firstMatch
         let downloadTarget = download.exists ? download : app.sheets.buttons["下载离线包"].firstMatch
-        XCTAssertTrue(downloadTarget.waitForExistence(timeout: 5), "没有下载离线包入口")
-        downloadTarget.tap()
-        captureScreenshot(named: "50-download-tapped")
-
-        // 等下载完成（强离线包准备）：轮询 20s 内「下载完成/已下载」或按钮消失
-        sleep(12)
-        captureScreenshot(named: "51-after-download")
+        let remove = app.buttons["删除离线包"].firstMatch
+        let removeTarget = remove.exists ? remove : app.sheets.buttons["删除离线包"].firstMatch
+        let packageReady = removeTarget.waitForExistence(timeout: 3)
+        if packageReady {
+            captureScreenshot(named: "50-package-already-installed")
+            // 已下载分支没有触发下载动作，面板还开着——点「关闭」收起
+            let close = app.buttons["关闭"].firstMatch
+            let closeTarget = close.exists ? close : app.sheets.buttons["关闭"].firstMatch
+            if closeTarget.waitForExistence(timeout: 3) {
+                closeTarget.tap()
+                sleep(1)
+            }
+        } else {
+            XCTAssertTrue(downloadTarget.waitForExistence(timeout: 5), "没有下载离线包入口")
+            downloadTarget.tap()
+            captureScreenshot(named: "50-download-tapped")
+            sleep(12)
+            captureScreenshot(named: "51-after-download")
+        }
 
         // 收藏夹点开（离线包已就位）
         let settingsTab = app.tabBars.buttons["设置"]
