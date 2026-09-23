@@ -304,8 +304,22 @@ extension FavoriteViewController: UITableViewDelegate {
         openURL(url)
     }
 
-    /// 左滑同时露出「删除」与「置顶/取消置顶」；删除排最外层，
-    /// 保持既有"全滑即删除"的手势语义不变。
+    /// 右滑（leading）= 置顶/取消置顶：与收件箱同一套手势语义
+    /// （右滑置顶、左滑删除），用户不需要为两套列表记两种手势。
+    func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let allFavorites = currentSections.flatMap { $0.items }
+        guard let favorite = allFavorites[safe: indexPath.row] else { return nil }
+
+        let isPinned = favorite.isPinned
+        let pinAction = UIContextualAction(style: .normal, title: isPinned ? "取消置顶" : "置顶") { [weak self] _, _, completion in
+            self?.handlePinToggle(id: favorite.id)
+            completion(true)
+        }
+        pinAction.backgroundColor = ThemeTokens.Color.warning
+        return UISwipeActionsConfiguration(actions: [pinAction])
+    }
+
+    /// 左滑（trailing）= 删除（ destructive 全滑直删语义保持不变）。
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         // Get all favorites flattened from sections
         let allFavorites = currentSections.flatMap { $0.items }
@@ -322,14 +336,7 @@ extension FavoriteViewController: UITableViewDelegate {
         }
         deleteAction.backgroundColor = ThemeTokens.Color.error
 
-        let isPinned = favorite.isPinned
-        let pinAction = UIContextualAction(style: .normal, title: isPinned ? "取消置顶" : "置顶") { [weak self] _, _, completion in
-            self?.handlePinToggle(id: favorite.id)
-            completion(true)
-        }
-        pinAction.backgroundColor = ThemeTokens.Color.warning
-
-        return UISwipeActionsConfiguration(actions: [deleteAction, pinAction])
+        return UISwipeActionsConfiguration(actions: [deleteAction])
     }
 }
 
