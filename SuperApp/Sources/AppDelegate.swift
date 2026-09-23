@@ -52,6 +52,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         CrashLogManager.shared.initialize()
         NetworkMonitor.shared.startMonitoring()
         HTMLAppHostUI.settingsViewControllerProvider = SuperAppHTMLAppSettingsProvider.shared
+        Self.cleanupDeadSeedFavorites()
 
         if let serverURL = ServerConfigManager.shared.getActiveBaseURL() {
             CrashLogManager.shared.serverBaseURL = serverURL
@@ -720,6 +721,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     ?? "https://api.drel.app"
                 PushNotificationManager.shared.activateOfficialPush(serverURL: serverURL, key: identity) { _ in }
             }
+        }
+    }
+
+    /// 一次性清理：legacy 测试种子收藏指向已下线的 ae8fcb.shanbox 静态站
+    /// （9-15 容器重建后恒 502），用户设备残留的这批条目永远打不开。
+    /// 按 host 精确匹配删除，其余收藏一概不动（用户手动收藏的不受影响）。
+    private static func cleanupDeadSeedFavorites() {
+        let key = "AppDelegate_DidCleanupDeadSeedHost_v1"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+
+        Task { @MainActor in
+            let favoriteManager = URLFavoriteManager.shared
+            let allFavorites = (try? await favoriteManager.getAllFavorites()) ?? []
+            var removed = 0
+            for fav in allFavorites {
+                guard let url = URL(string: fav.url),
+                      url.host?.lowercased() == "ae8fcb.shanbox.19930810.xyz" else { continue }
+                try? await favoriteManager.deleteFavorite(url: url)
+                removed += 1
+            }
+            WebBridgeLogger.shared.info("Dead seed favorites cleanup: removed \(removed) entries")
+            UserDefaults.standard.set(true, forKey: key)
         }
     }
 
