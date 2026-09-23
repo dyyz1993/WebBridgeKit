@@ -256,6 +256,21 @@ public class MockFavoriteService: FavoriteServiceProtocol {
         }
     }
 
+    // MARK: - 异步写入（等提交完成再返回；Mock 直接复用同步实现）
+
+    public func deleteFavoriteAsync(id: String) async {
+        deleteFavorite(id: id)
+    }
+
+    @discardableResult
+    public func togglePinAsync(id: String) async -> Bool {
+        togglePin(id: id)
+    }
+
+    public func updateCacheModeAsync(id: String, enabled: Bool) async {
+        updateCacheMode(id: id, enabled: enabled)
+    }
+
     // MARK: - 测试辅助方法
 
     /// 添加 Mock 数据（用于测试）

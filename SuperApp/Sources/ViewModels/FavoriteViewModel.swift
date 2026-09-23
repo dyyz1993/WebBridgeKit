@@ -80,8 +80,12 @@ class FavoriteViewModel: ViewModel {
         // 切换置顶
         input.pinToggle
             .do(onNext: { [weak self] id in
-                self?.favoriteService.togglePin(id: id)
-                self?.loadFavorites()
+                guard let self else { return }
+                // 异步写等提交完成后再重读，否则读到未提交旧数据（要点两次才生效）
+                Task { @MainActor in
+                    await self.favoriteService.togglePinAsync(id: id)
+                    self.loadFavorites()
+                }
             })
             .drive()
             .disposed(by: rx)
@@ -89,9 +93,12 @@ class FavoriteViewModel: ViewModel {
         // 切换缓存模式
         input.cacheModeToggle
             .do(onNext: { [weak self] args in
+                guard let self else { return }
                 let (id, enabled) = args
-                self?.favoriteService.updateCacheMode(id: id, enabled: enabled)
-                self?.loadFavorites()
+                Task { @MainActor in
+                    await self.favoriteService.updateCacheModeAsync(id: id, enabled: enabled)
+                    self.loadFavorites()
+                }
             })
             .drive()
             .disposed(by: rx)
@@ -99,8 +106,11 @@ class FavoriteViewModel: ViewModel {
         // 删除项目
         input.itemDelete
             .do(onNext: { [weak self] id in
-                self?.favoriteService.deleteFavorite(id: id)
-                self?.loadFavorites()
+                guard let self else { return }
+                Task { @MainActor in
+                    await self.favoriteService.deleteFavoriteAsync(id: id)
+                    self.loadFavorites()
+                }
             })
             .drive()
             .disposed(by: rx)

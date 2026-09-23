@@ -94,4 +94,18 @@ public class RealmFavoriteService: FavoriteServiceProtocol {
     public func updateSortOrder(favorites: [URLFavorite]) {
         manager.updateSortOrder(favorites: favorites)
     }
+
+    // MARK: - 异步写入（等提交完成再返回）
+
+    public func deleteFavoriteAsync(id: String) async {
+        try? await manager.deleteFavorite(id: id)
+    }
+
+    public func togglePinAsync(id: String) async -> Bool {
+        return (try? await manager.togglePin(id: id)) ?? false
+    }
+
+    public func updateCacheModeAsync(id: String, enabled: Bool) async {
+        try? await manager.updateCacheMode(id: id, enabled: enabled)
+    }
 }

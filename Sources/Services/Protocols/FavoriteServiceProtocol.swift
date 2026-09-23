@@ -45,4 +45,17 @@ public protocol FavoriteServiceProtocol: AnyObject {
     func updateCacheMode(id: String, enabled: Bool)
 
     func updateSortOrder(favorites: [URLFavorite])
+
+    // MARK: - 异步写入（等提交完成再返回）
+
+    // 同步写入族是 fire-and-forget Task（内部 Task 提交前就返回）；
+    // 「写完立刻重读列表」的调用方必须用这一组，否则会读到未提交的旧数据
+    // （表现为删除/置顶要点两次才生效）。
+
+    func deleteFavoriteAsync(id: String) async
+
+    @discardableResult
+    func togglePinAsync(id: String) async -> Bool
+
+    func updateCacheModeAsync(id: String, enabled: Bool) async
 }
