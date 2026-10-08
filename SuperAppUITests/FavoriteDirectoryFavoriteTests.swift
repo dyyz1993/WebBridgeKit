@@ -72,11 +72,23 @@ final class FavoriteDirectoryFavoriteTests: XCTestCase {
             firstTile.tap()
             sleep(2)
         }
-        guard let target = openMenuAndFindTile() else {
+        // 「已取消收藏」HUD 会吞掉紧随的 ⋯ tap（FavoriteFlowTests 同款坑，
+        // 那边用条件重试兜住）：单次 tap 后没见面板就再点一次；
+        // 不能盲目双击——面板若已开着，第二次 ⋯ 是收起。
+        moreButton.tap()
+        let tilePredicate = NSPredicate(
+            format: "identifier == %@ OR identifier == %@ OR label == %@ OR label == %@",
+            "actionsheet.收藏页面", "actionsheet.取消收藏", "收藏页面", "取消收藏"
+        )
+        let retriedTile = app.buttons.matching(tilePredicate).firstMatch
+        if !retriedTile.waitForExistence(timeout: 4) {
+            moreButton.tap()
+        }
+        guard retriedTile.waitForExistence(timeout: 4) else {
             XCTFail("归一后菜单没有重新弹出")
             return
         }
-        target.tap()
+        retriedTile.tap()
         sleep(2)
 
         // 返回主框架 → 设置 → 收藏夹

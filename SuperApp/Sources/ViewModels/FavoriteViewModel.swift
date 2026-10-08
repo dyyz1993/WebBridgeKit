@@ -136,9 +136,14 @@ class FavoriteViewModel: ViewModel {
         let results = favoriteService.getAllFavorites()
         currentFavorites = Array(results)
 
-        // 分组：置顶的和普通的
-        let pinnedFavorites = currentFavorites.filter { $0.isPinned }
-        let normalFavorites = currentFavorites.filter { !$0.isPinned }
+        // 分组：置顶的浮顶，两组内部都按收藏时间倒序（最新收藏在前）。
+        // 拖拽手动排序已移除，sortOrder 不再参与展示。
+        let pinnedFavorites = currentFavorites
+            .filter { $0.isPinned }
+            .sorted { $0.createdAt > $1.createdAt }
+        let normalFavorites = currentFavorites
+            .filter { !$0.isPinned }
+            .sorted { $0.createdAt > $1.createdAt }
 
         var sections: [URLFavoriteSection] = []
 
@@ -162,27 +167,6 @@ class FavoriteViewModel: ViewModel {
     }
 
     // MARK: - Public Methods
-
-    /// 更新排序
-    func updateSortOrder(sourceIndexPath: IndexPath, destinationIndexPath: IndexPath) {
-        guard sourceIndexPath.section == destinationIndexPath.section else {
-            return // 不支持跨 section 拖拽
-        }
-
-        let sections = favoritesRelay.value
-        var items = sections[sourceIndexPath.section].items
-
-        let movedItem = items.remove(at: sourceIndexPath.item)
-        items.insert(movedItem, at: destinationIndexPath.item)
-
-        // 更新所有项目的 sortOrder
-        for (index, item) in items.enumerated() {
-            item.sortOrder = index
-        }
-
-        favoriteService.updateSortOrder(favorites: items)
-        loadFavorites()
-    }
 }
 
 // MARK: - Section Model

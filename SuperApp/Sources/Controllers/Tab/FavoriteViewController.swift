@@ -92,15 +92,12 @@ class FavoriteViewController: BaseViewController<FavoriteViewModel> {
             actionTitle: nil
         )
 
-        // 配置表格视图
-        tableView.dragDelegate = self
-        tableView.dropDelegate = self
-        tableView.dragInteractionEnabled = true
-
         // 直接持有 delegate/dataSource，不走 Rx DelegateProxy：真机 (iOS 18.7,
         // Release) 上点按收藏会在 RXDelegateProxy forwardInvocation 转发期间
         // 撞上代理销毁的 SIGTRAP（crash_1790071569 等四份同签名报告），
         // 这个屏幕不再经过任何 DelegateProxy。
+        // 列表顺序固定为「置顶浮顶 + 收藏时间倒序」（FavoriteViewModel），
+        // 不再支持拖拽手动排序——时间排序下手拖会被下次刷新覆盖。
         tableView.delegate = self
         tableView.dataSource = self
     }
@@ -306,6 +303,7 @@ extension FavoriteViewController: UITableViewDelegate {
 
     /// 右滑（leading）= 置顶/取消置顶：与收件箱同一套手势语义
     /// （右滑置顶、左滑删除），用户不需要为两套列表记两种手势。
+    /// 整滑直触发：滑过阈值即执行置顶，不需要再点按钮。
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let allFavorites = currentSections.flatMap { $0.items }
         guard let favorite = allFavorites[safe: indexPath.row] else { return nil }
@@ -316,7 +314,9 @@ extension FavoriteViewController: UITableViewDelegate {
             completion(true)
         }
         pinAction.backgroundColor = ThemeTokens.Color.warning
-        return UISwipeActionsConfiguration(actions: [pinAction])
+        let configuration = UISwipeActionsConfiguration(actions: [pinAction])
+        configuration.performsFirstActionWithFullSwipe = true
+        return configuration
     }
 
     /// 左滑（trailing）= 删除（ destructive 全滑直删语义保持不变）。
@@ -337,59 +337,6 @@ extension FavoriteViewController: UITableViewDelegate {
         deleteAction.backgroundColor = ThemeTokens.Color.error
 
         return UISwipeActionsConfiguration(actions: [deleteAction])
-    }
-}
-
-// MARK: - UITableViewDragDelegate
-
-extension FavoriteViewController: UITableViewDragDelegate {
-    func tableView(_ tableView: UITableView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
-        // 只允许在同一个 section 内拖拽
-        guard !currentSections.isEmpty else { return [] }
-
-        let itemProvider = NSItemProvider(object: String(indexPath.section) as NSString)
-        let dragItem = UIDragItem(itemProvider: itemProvider)
-        dragItem.localObject = indexPath
-        return [dragItem]
-    }
-}
-
-// MARK: - UITableViewDropDelegate
-
-extension FavoriteViewController: UITableViewDropDelegate {
-    func tableView(_ tableView: UITableView, performDropWith coordinator: UITableViewDropCoordinator) {
-        guard let destinationIndexPath = coordinator.destinationIndexPath,
-              let dragItem = coordinator.items.first,
-              let sourceIndexPath = dragItem.sourceIndexPath else {
-            return
-        }
-
-        // 只允许在同一 section 内拖拽
-        guard sourceIndexPath.section == destinationIndexPath.section else {
-            return
-        }
-
-        tableView.performBatchUpdates {
-            viewModel.updateSortOrder(
-                sourceIndexPath: sourceIndexPath,
-                destinationIndexPath: destinationIndexPath
-            )
-        } completion: { _ in
-            coordinator.drop(dragItem.dragItem, toRowAt: destinationIndexPath)
-        }
-    }
-
-    func tableView(_ tableView: UITableView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UITableViewDropProposal {
-        // 只允许在同一 section 内拖拽
-        if let destinationIndexPath = destinationIndexPath,
-           let section = currentSections[safe: destinationIndexPath.section] {
-            // 只有普通收藏可以拖拽，置顶的不可以
-            if section.header == L10n.tr("favorite.section_favorites") {
-                return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
-            }
-        }
-
-        return UITableViewDropProposal(operation: .forbidden)
     }
 }
 

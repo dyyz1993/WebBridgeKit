@@ -233,7 +233,12 @@ class MainViewModel: ViewModel {
                     "live": "已收藏"
                 ]
 
-                let allItems = allFavorites.sorted { $0.sortOrder < $1.sortOrder }
+                // 与收藏夹同序：置顶浮顶，组内按收藏时间倒序（最新在前）
+                let allItems = allFavorites
+                    .sorted {
+                        if $0.isPinned != $1.isPinned { return $0.isPinned }
+                        return $0.createdAt > $1.createdAt
+                    }
                     .map { favorite -> WebPageHistorySectionItem in
                         let history = WebPageHistory()
                         history.id = favorite.id

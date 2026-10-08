@@ -11,8 +11,9 @@ import SnapKit
 import WebBridgeKit
 
 /// 收藏列表单元格
-/// S4: single-row card — icon, title (📌 marks legacy pinned items), domain.
-/// The per-item 缓存模式 switch, decorative star, and the pin toggle (置顶 has
+/// S4: single-row card — icon, title, domain; pinned items carry a Lucide
+/// pin glyph before the title (same icon as the inbox cards). The per-item
+/// 缓存模式 switch, decorative star, and the pin toggle (置顶 has
 /// no visible outlet in Drel) were removed; removing a favorite stays
 /// available via the trailing swipe action.
 class FavoriteCell: UITableViewCell {
@@ -40,6 +41,17 @@ class FavoriteCell: UITableViewCell {
         return imageView
     }()
 
+    /// 置顶标记：与收件箱卡片同款 Lucide pin 图标（主题色），
+    /// 非置顶隐藏后标题自然回位。
+    private let pinIconView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = LucideIcon.pin.templateImage(pointSize: ThemeTokens.Icons.Sizes.xs)
+        iv.tintColor = ThemeTokens.Color.primary
+        iv.contentMode = .scaleAspectFit
+        iv.isHidden = true
+        return iv
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = ThemeTokens.Typography.callout
@@ -47,6 +59,14 @@ class FavoriteCell: UITableViewCell {
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
+    }()
+
+    private lazy var titleRowStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [pinIconView, titleLabel])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 4
+        return stack
     }()
 
     private let urlLabel: UILabel = {
@@ -90,7 +110,7 @@ class FavoriteCell: UITableViewCell {
 
         contentView.addSubview(containerView)
         containerView.addSubview(faviconImageView)
-        containerView.addSubview(titleLabel)
+        containerView.addSubview(titleRowStack)
         containerView.addSubview(urlLabel)
 
         containerView.snp.makeConstraints { make in
@@ -106,7 +126,11 @@ class FavoriteCell: UITableViewCell {
             make.width.height.equalTo(44)
         }
 
-        titleLabel.snp.makeConstraints { make in
+        pinIconView.snp.makeConstraints { make in
+            make.width.height.equalTo(ThemeTokens.Icons.Sizes.xs)
+        }
+
+        titleRowStack.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(16)
             make.left.equalTo(faviconImageView.snp.right).offset(12)
             make.right.equalToSuperview().offset(-14)
@@ -131,9 +155,9 @@ class FavoriteCell: UITableViewCell {
             return
         }
 
-        // 设置标题（置顶以📌标注，与列表单行卡片约定一致）
-        let baseTitle = favorite.title ?? L10n.tr("favorite.unknown_page")
-        titleLabel.text = favorite.isPinned ? "📌 " + baseTitle : baseTitle
+        // 标题（置顶以 pin 图标标注，见 pinIconView）
+        titleLabel.text = favorite.title ?? L10n.tr("favorite.unknown_page")
+        pinIconView.isHidden = !favorite.isPinned
 
         // 设置 URL
         if let url = URL(string: favorite.url) {
@@ -151,6 +175,8 @@ class FavoriteCell: UITableViewCell {
             faviconImageView.setLetterIcon(for: favorite.title ?? favorite.url, size: CGSize(width: 40, height: 40))
         }
 
+        // UI 测试用运行时标识：置顶浮顶断言按 id 取行，禁止硬编码位置
+        accessibilityIdentifier = "favorite.card.\(favorite.id)"
     }
 
     // MARK: - Actions
@@ -161,6 +187,7 @@ class FavoriteCell: UITableViewCell {
         super.prepareForReuse()
         currentFavorite = nil
         faviconImageView.image = nil
+        pinIconView.isHidden = true
         // 重置所有 UI 状态
         titleLabel.text = nil
         urlLabel.text = nil
