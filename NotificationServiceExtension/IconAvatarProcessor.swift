@@ -1,8 +1,11 @@
 import CryptoKit
 import Foundation
 import Intents
+import OSLog
 import UIKit
 import UserNotifications
+
+private let avatarLog = Logger(subsystem: "com.webbridgekit.superapp.nse", category: "avatar")
 
 /// Bark IconProcessor pattern: presents a push's custom `icon` as the
 /// notification avatar. iOS renders communication notifications
@@ -26,9 +29,15 @@ enum IconAvatarProcessor {
         guard let iconString = userInfo["icon"] as? String,
               let iconURL = URL(string: iconString),
               iconURL.scheme?.lowercased() == "https",
-              iconURL.host?.isEmpty == false,
-              let imageData = await downloadIconData(from: iconURL)
-        else { return content }
+              iconURL.host?.isEmpty == false
+        else {
+            record("no-icon")
+            return content
+        }
+        guard let imageData = await downloadIconData(from: iconURL) else {
+            record("download-failed \(iconURL.absoluteString)")
+            return content
+        }
 
         let avatar = INImage(imageData: imageData)
         var senderName = PersonNameComponents()
@@ -83,13 +92,44 @@ enum IconAvatarProcessor {
         interaction.direction = .incoming
         do {
             try await interaction.donate()
-            guard let updated = try content.updating(from: intent)
-                as? UNMutableNotificationContent
-            else { return content }
-            return updated
         } catch {
+            avatarLog.error("avatar donate failed: \(error.localizedDescription, privacy: .public)")
+            record("donate-failed \(error.localizedDescription)")
             return content
         }
+        do {
+            guard let updated = try content.updating(from: intent)
+                as? UNMutableNotificationContent
+            else {
+                record("updating-cast-failed")
+                return content
+            }
+            avatarLog.info("avatar intent applied ok")
+            record("ok")
+            return updated
+        } catch {
+            avatarLog.error("avatar updating failed: \(error.localizedDescription, privacy: .public)")
+            record("updating-failed \(error.localizedDescription)")
+            return content
+        }
+    }
+
+    /// Best-effort one-line outcome of the last avatar attempt, dropped at the
+    /// app-group container root so a Wi-Fi-paired `devicectl copy from` can
+    /// read it without USB syslog (NSE processes are invisible to the
+    /// simulator, and device console streams need a cable).
+    private static func record(_ outcome: String) {
+        avatarLog.info("avatar result: \(outcome, privacy: .public)")
+        guard let container = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.webbridgekit.superapp")
+        else { return }
+        let stamp = Int(Date().timeIntervalSince1970)
+        // Diag/ subdirectory: devicectl can only pull directories out of the
+        // app-group container over Wi-Fi (single root files error out).
+        let diag = container.appendingPathComponent("Library/Diag", isDirectory: true)
+        try? FileManager.default.createDirectory(at: diag, withIntermediateDirectories: true)
+        try? Data("\(stamp) \(outcome)\n".utf8)
+            .write(to: diag.appendingPathComponent("nse_avatar_result.txt"), options: .atomic)
     }
 
     // MARK: - Download + app-group disk cache

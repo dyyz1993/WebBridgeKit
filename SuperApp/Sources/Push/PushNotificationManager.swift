@@ -294,6 +294,20 @@ class PushNotificationManager: NSObject {
     #if !DREL_CONTAINER_ONLY
       print("[PushManager] Device token: \(token)")
     #endif
+    #if DEBUG
+    // Dev-build diagnostic: exposes the DEVELOPMENT-environment token so a
+    // local direct-to-APNs sender can reach this install without going
+    // through the production-only server. Never compiled into release.
+    // Lives in a subdirectory because devicectl can only pull directories
+    // from the app-group container.
+    if let container = FileManager.default
+        .containerURL(forSecurityApplicationGroupIdentifier: "group.com.webbridgekit.superapp") {
+      let diag = container.appendingPathComponent("Library/Diag", isDirectory: true)
+      try? FileManager.default.createDirectory(at: diag, withIntermediateDirectories: true)
+      try? token.data(using: .utf8)?
+        .write(to: diag.appendingPathComponent("dev_device_token.txt"), options: .atomic)
+    }
+    #endif
 
     if let pending = pendingOfficialRegistration {
       pendingOfficialRegistration = nil

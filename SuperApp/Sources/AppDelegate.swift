@@ -222,6 +222,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
         #endif
 
+        #if DEBUG
+        // Dev-loop hook: the production launch flow never re-registers an
+        // already-activated install; `-ForceRegisterPush` re-runs APNs
+        // registration so a local development push sender can pick up the
+        // current token (mirrored to the app group by PushNotificationManager).
+        if ProcessInfo.processInfo.arguments.contains("-ForceRegisterPush") {
+            PushNotificationManager.shared.registerForPushNotifications()
+        }
+        #endif
+
         return true
     }
 

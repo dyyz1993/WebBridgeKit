@@ -63,7 +63,9 @@ targets:
     deploymentTarget: "15.0"
     bundleId: com.webbridgekit.superapp
     sources:
-      - SuperApp/Sources
+      - path: SuperApp/Sources
+        excludes:
+          - "Info.plist"
       - SuperApp/Resources
     resources:
       - path: SuperApp/Resources
@@ -89,6 +91,11 @@ targets:
         DEVELOPMENT_TEAM: "B45VZCNYU3"
         CODE_SIGN_ENTITLEMENTS: SuperApp/SuperApp.entitlements
         GENERATE_INFOPLIST_FILE: YES
+        # Merged with the generated content (Xcode 13+). The hand-maintained
+        # Sources/Info.plist carries NSUserActivityTypes for the NSE icon
+        # avatar donation, which the INFOPLIST_KEY_* generated settings
+        # cannot express; generated keys fill in the rest.
+        INFOPLIST_FILE: SuperApp/Sources/Info.plist
         INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
         INFOPLIST_KEY_NSAppTransportSecurity: YES
         # Message attachments can be written only after an explicit "保存到相册"
@@ -215,13 +222,12 @@ targets:
         DEVELOPMENT_TEAM: "B45VZCNYU3"
         CODE_SIGN_ENTITLEMENTS: NotificationServiceExtension/NotificationServiceExtension.entitlements
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleExecutable: $(EXECUTABLE_NAME)
-        INFOPLIST_KEY_CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        INFOPLIST_KEY_CFBundlePackageType: XPC!
-        INFOPLIST_KEY_CFBundleShortVersionString: $(MARKETING_VERSION)
-        INFOPLIST_KEY_CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        INFOPLIST_KEY_NSExtensionPointIdentifier: com.apple.usernotifications.service
-        INFOPLIST_KEY_NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationService
+        # The hand-maintained Info.plist carries the intent declarations
+        # (NSUserActivityTypes + NSExtensionAttributes.IntentsSupported) that
+        # the Bark-style icon avatar requires; the generated-plist machinery
+        # cannot express the NSExtension attributes dict. Version/executable
+        # keys inside still use $(...) build-setting substitution.
+        INFOPLIST_FILE: NotificationServiceExtension/Info.plist
       configs:
         Release:
           DEVELOPMENT_TEAM: B45VZCNYU3
