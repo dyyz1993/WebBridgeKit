@@ -1,13 +1,18 @@
 import AudioToolbox
 import AVFAudio
 import Foundation
+import OSLog
 import UserNotifications
+
+private let nseLog = Logger(subsystem: "com.webbridgekit.superapp.nse", category: "lifecycle")
 
 /// Records incoming push payloads to shared plist files so the main app can
 /// import them into its message store on next foreground — mirroring Bark's
-/// Notification Service Extension approach — and extends `call=1` pushes
+/// Notification Service Extension approach — extends `call=1` pushes
 /// with a synthesized 30-second looping ringtone (Bark CallProcessor pattern)
-/// so they ring like a phone call instead of a single alert chime.
+/// so they ring like a phone call instead of a single alert chime, and
+/// presents a custom `icon` as the notification avatar via an
+/// INSendMessageIntent donation (Bark IconProcessor pattern).
 final class NotificationService: UNNotificationServiceExtension {
 
     private var contentHandler: ((UNNotificationContent) -> Void)?
@@ -17,6 +22,7 @@ final class NotificationService: UNNotificationServiceExtension {
         _ request: UNNotificationRequest,
         withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
     ) {
+        nseLog.info("NSE didReceive: icon=\(request.content.userInfo["icon"] as? String ?? "none", privacy: .public)")
         self.contentHandler = contentHandler
         self.bestAttempt = (request.content.mutableCopy() as? UNMutableNotificationContent)
 
@@ -45,7 +51,18 @@ final class NotificationService: UNNotificationServiceExtension {
         }
         self.bestAttempt = finalContent
 
-        contentHandler(finalContent)
+        // The avatar step is async (icon download + intent donation); the
+        // handler fires from the Task so a slow download never blocks the
+        // synchronous stages. If the system expires us first,
+        // serviceExtensionTimeWillExpire delivers the pre-avatar bestAttempt.
+        Task {
+            let presented = await IconAvatarProcessor.apply(
+                to: finalContent,
+                userInfo: recordedUserInfo
+            )
+            self.bestAttempt = presented
+            self.contentHandler?(presented)
+        }
     }
 
     override func serviceExtensionTimeWillExpire() {
