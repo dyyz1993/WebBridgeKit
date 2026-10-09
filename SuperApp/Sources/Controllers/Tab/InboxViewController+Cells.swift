@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
 import WebBridgeKit
 
 // MARK: - InboxMessageCellWrapper
@@ -34,7 +35,6 @@ class InboxMessageCellWrapper: UITableViewCell {
     private let previewLabel = UILabel()
     private let stateBadge = UILabel()
     private let copyButton = UIButton(type: .system)
-    private var iconLoadTask: URLSessionDataTask?
     private var representedMessageID: String?
     var onCopy: (() -> Void)?
 
@@ -52,8 +52,6 @@ class InboxMessageCellWrapper: UITableViewCell {
     /// row's cached identity must not leak into the next configuration.
     override func prepareForReuse() {
         super.prepareForReuse()
-        iconLoadTask?.cancel()
-        iconLoadTask = nil
         representedMessageID = nil
         contentView.layer.removeAllAnimations()
         contentView.alpha = 1
@@ -247,8 +245,6 @@ class InboxMessageCellWrapper: UITableViewCell {
     private var collapsedIdentity: String?
 
     func configure(with message: StoredMessage, isPinned: Bool = false) {
-        iconLoadTask?.cancel()
-        iconLoadTask = nil
         representedMessageID = message.id
         collapsedIdentity = nil
         let presentation = NotificationPresentation(message: message)
@@ -298,19 +294,20 @@ class InboxMessageCellWrapper: UITableViewCell {
         else { return }
 
         iconImageView.accessibilityIdentifier = "notification.customIcon.\(message.id)"
-        iconLoadTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-            guard let data, let image = UIImage(data: data) else { return }
-            DispatchQueue.main.async {
-                guard let self, self.representedMessageID == message.id else { return }
-                self.iconImageView.image = image
-                self.iconImageView.tintColor = nil
-                self.iconImageView.contentMode = .scaleAspectFill
-                self.iconImageView.snp.updateConstraints { make in
-                    make.width.height.equalTo(40)
-                }
+        // Kingfisher disk cache (30-day expiry, configured in AppDelegate):
+        // the avatar must not re-download on every inbox visit and must
+        // render offline. setImage cancels the cell's previous KF task.
+        iconImageView.kf.setImage(with: url) { [weak self] result in
+            guard let self,
+                  self.representedMessageID == message.id,
+                  case .success = result
+            else { return }
+            self.iconImageView.tintColor = nil
+            self.iconImageView.contentMode = .scaleAspectFill
+            self.iconImageView.snp.updateConstraints { make in
+                make.width.height.equalTo(40)
             }
         }
-        iconLoadTask?.resume()
     }
 
     @objc private func copyTapped() {

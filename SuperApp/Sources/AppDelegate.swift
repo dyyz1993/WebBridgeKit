@@ -9,6 +9,7 @@ import UIKit
 import UserNotifications
 import SwiftUI
 import WebBridgeKit
+import Kingfisher
 #if DEBUG
 import Network
 #endif
@@ -209,6 +210,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 PushRelayManager.shared.connect()
             }
         }
+
+        // Message avatars (push `icon`) cache on disk for 30 days: the inbox
+        // and detail screens must render them offline and never re-download
+        // per visit (plain URLSession fetched fresh every time).
+        ImageCache.default.diskStorage.config.expiration = .days(30)
 
         let duration = Date().timeIntervalSince(start)
         Log.info("App launch took \(String(format: "%.3f", duration))s", category: .performance)

@@ -8,6 +8,7 @@
 
 import UIKit
 import SwiftUI
+import Kingfisher
 import SnapKit
 import WebKit
 import WebBridgeKit
@@ -58,11 +59,6 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
         return view
     }()
 
-    private var iconLoadTask: URLSessionDataTask?
-
-    deinit {
-        iconLoadTask?.cancel()
-    }
 
     private let webView: WKWebView = {
         let config = WKWebViewConfiguration()
@@ -1025,14 +1021,11 @@ class MessageDetailViewController: UIViewController, UIGestureRecognizerDelegate
     }
 
     private func loadIconAvatar(from source: String) {
-        guard let url = URL(string: source) else { return }
-        iconLoadTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-            guard let data, let image = UIImage(data: data) else { return }
-            DispatchQueue.main.async {
-                self?.iconAvatarView.image = image
-            }
-        }
-        iconLoadTask?.resume()
+        // Same 30-day Kingfisher disk cache as the inbox cards (AppDelegate).
+        guard let url = URL(string: source),
+              url.scheme?.lowercased() == "https"
+        else { return }
+        iconAvatarView.kf.setImage(with: url)
     }
 
     private func makeMediaCard() -> UIView {
