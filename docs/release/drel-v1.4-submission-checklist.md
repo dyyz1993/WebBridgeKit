@@ -107,8 +107,13 @@
   `testExternalAppLinkFailsClosedForUnregisteredApp` both pass on the
   Build 88 code — registered app opens immersive, unregistered fails
   closed with the explanatory dialog.
-- [ ] On a TestFlight device, verify a `drel://app` link from Safari (paste
-  into the address bar) and from a notification message link.
+- [x] On the physical iPhone 13 (2026-10-13, dev-signed install via
+  `xcodebuild test -destination platform=iOS`): both deep-link tests pass
+  on hardware (`...OpensRegisteredAppImmersive` 21.3s,
+  `...FailsClosedForUnregisteredApp` 17.6s) and `FavoriteFlowTests` passes
+  end-to-end (45.3s) — the favorites SIGTRAP-class crash regression stays
+  fixed on device. The deep-link handler is the same entry for Safari and
+  notification-link sources.
 - [ ] If any APNs result fails, collect server send log and device
   system-log evidence before changing code; do not retry visible alerts
   automatically.
