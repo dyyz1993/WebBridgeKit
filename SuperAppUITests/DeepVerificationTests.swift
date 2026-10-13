@@ -27,12 +27,16 @@ final class DeepVerificationTests: XCTestCase {
 
     private func saveScreenshot(_ path: String) {
         let screenshot = app.screenshot()
+        // 真机沙盒写不了 /tmp：统一落到 runner 可写的临时目录，仅保留文件名
+        let url = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(URL(fileURLWithPath: path).lastPathComponent)
         if let data = screenshot.image.pngData() {
             do {
-                try data.write(to: URL(fileURLWithPath: path))
-                print("[Screenshot] Saved to \(path) (\(data.count) bytes)")
+                try data.write(to: url)
+                print("[Screenshot] Saved to \(url.path) (\(data.count) bytes)")
             } catch {
-                XCTFail("Failed to save screenshot to \(path): \(error)")
+                // 截图落盘失败不应否定功能断言（真机上尤其如此）
+                print("[Screenshot] Save failed (non-fatal): \(error)")
             }
         }
         let attachment = XCTAttachment(screenshot: screenshot)
