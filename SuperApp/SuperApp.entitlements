@@ -4,6 +4,12 @@
 <dict>
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- Required for the NSE icon avatar: iOS renders a donated
+	     INSendMessageIntent as a communication notification (sender avatar
+	     in the app-icon slot) only when the MAIN APP carries this
+	     entitlement (Bark mirrors it in Bark.entitlements). -->
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.webbridgekit.superapp</string>
