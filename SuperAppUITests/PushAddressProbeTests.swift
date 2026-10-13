@@ -212,4 +212,76 @@ final class PushAddressProbeTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
+
+    /// 逐个应用更新离线包（显式动作），回首页截图确认新独立图标
+    func testUpdateOfflinePackagesAndScreenshot() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        dismissSystemAlerts()
+        let homeTab = app.tabBars.buttons["首页"]
+        if homeTab.waitForExistence(timeout: 8) { homeTab.tap() }
+
+        for appID in ["dev.drel.data-template", "dev.drel.offline-network-demo"] {
+            let tile = app.buttons["pwaHome.app.\(appID)"]
+            var found = tile.waitForExistence(timeout: 15)
+            var scrolls = 0
+            while found && !tile.isHittable && scrolls < 8 {
+                app.swipeUp()
+                scrolls += 1
+                usleep(400_000)
+            }
+            guard found else {
+                print("[OFFLINE-UPDATE] tile missing: \(appID)")
+                continue
+            }
+            tile.tap()
+
+            // ActionSheet：v2 已装、网关是 v3 → 按钮应为「下载离线包」或「更新离线包」
+            let action = app.sheets.buttons.matching(
+                NSPredicate(format: "label CONTAINS '离线包'")
+            ).firstMatch
+            if action.waitForExistence(timeout: 6) {
+                print("[OFFLINE-UPDATE] \(appID) → tap \(action.label)")
+                action.tap()
+                // 等待 HUD（成功=准备完成 / 失败=暂不可用），抓实际文案辅助诊断
+                var hudText = "(no-hud)"
+                for _ in 0..<15 {
+                    usleep(2_000_000)
+                    let huds = app.staticTexts.matching(
+                        NSPredicate(format: "label CONTAINS '离线包'")
+                    ).allElementsBoundByIndex
+                    if let hit = huds.first(where: { $0.label.contains("准备完成") || $0.label.contains("暂不可用") }) {
+                        hudText = hit.label
+                        break
+                    }
+                }
+                print("[OFFLINE-UPDATE-HUD] \(appID): \(hudText)")
+                sleep(2)
+            } else {
+                print("[OFFLINE-UPDATE] \(appID) → 无离线包动作")
+                app.swipeDown()
+            }
+        }
+
+        sleep(3) // 元数据替换 + 图标下载
+        let homeTab2 = app.tabBars.buttons["首页"]
+        if homeTab2.waitForExistence(timeout: 6) { homeTab2.tap() }
+        let tile = app.buttons["pwaHome.app.dev.drel.data-template"]
+        var scrolls = 0
+        while tile.exists && !tile.isHittable && scrolls < 8 {
+            app.swipeUp()
+            scrolls += 1
+            usleep(400_000)
+        }
+        sleep(4)
+        let shot = XCUIScreen.main.screenshot()
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("home-apps-v3-icons.png")
+        try? shot.pngRepresentation.write(to: url)
+        print("[Screenshot] Saved to \(url.path)")
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = "home-apps-v3-icons.png"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
 }

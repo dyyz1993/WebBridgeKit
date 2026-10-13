@@ -6,7 +6,7 @@ SOURCE="$ROOT/test_resources/data-template/v1"
 STAGE="${1:-$ROOT/build/drel-template-staging}"
 PUBLIC_ROOT="https://drel.app/test/template"
 APP_ID="dev.drel.data-template"
-VERSION="2"
+VERSION="3"
 
 case "$STAGE" in
   "$ROOT"/build/*) ;;

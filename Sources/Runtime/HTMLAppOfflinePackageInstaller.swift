@@ -61,6 +61,19 @@ public final class HTMLAppPresentationMetadataStore: @unchecked Sendable {
         storage.set(data, forKey: storageKey)
         metadata = replacement
     }
+
+    /// 更新单个应用的呈现元数据（离线包显式更新后刷新名称/颜色/图标），
+    /// 与 replaceAll 一样即时持久化。
+    public func set(_ metadata: ResolvedHTMLAppWebManifest, for appID: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        var updated = self.metadata
+        updated[appID] = metadata
+        if let data = try? JSONEncoder().encode(updated) {
+            storage.set(data, forKey: storageKey)
+        }
+        self.metadata = updated
+    }
 }
 
 public enum HTMLAppWebManifestAdapterError: Error, Equatable, LocalizedError {

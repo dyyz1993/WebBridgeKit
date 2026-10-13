@@ -493,6 +493,11 @@ final class PWAAppCenterViewController: UIViewController {
             guard let self else { return }
             do {
                 _ = try await self.offlinePackageInstaller.install(appManifest: manifest)
+                // 包更新后重解析绑定的 Web App Manifest，刷新名称/主题/图标元数据，
+                // 否则首页磁贴会一直显示旧图标（离线包 v2→v3 实测发现的缺陷）。
+                let resolved = try await HTMLAppWebManifestAdapter().load(forTrustedParent: manifest)
+                try presentationMetadataStore.set(resolved, for: manifest.appID)
+                updateHomeApps()
                 HUDService.shared.showSuccess(withStatus: "离线包已准备完成")
             } catch {
                 // The installer only switches the current pointer after every

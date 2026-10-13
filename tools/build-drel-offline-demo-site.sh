@@ -6,7 +6,7 @@ SOURCE="$ROOT/test_resources/offline-package/v1"
 STAGE="${1:-$ROOT/build/drel-site-staging}"
 PUBLIC_ROOT="https://drel.app/test/offline"
 APP_ID="dev.drel.offline-demo"
-VERSION="2"
+VERSION="3"
 
 case "$STAGE" in
   "$ROOT"/build/*) ;;
