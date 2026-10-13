@@ -1,0 +1,85 @@
+import XCTest
+
+/// 真机自动化探针：读取首页推送地址并打印到测试日志。
+/// 用途：图标头像推送验证需要 device 的真实推送地址；
+/// 不能带 --UITesting（种子数据会把通道覆盖成假地址）。
+final class PushAddressProbeTests: XCTestCase {
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+    }
+
+    /// SpringBoard 级系统弹窗（通知权限、允许粘贴等）
+    @discardableResult
+    private func dismissSystemAlerts() -> Bool {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        var handled = false
+        for alert in springboard.alerts.allElementsBoundByIndex {
+            for name in ["允许", "好", "OK", "Allow", "确定", "允许粘贴", "允许“SuperApp”粘贴"] {
+                if alert.buttons[name].exists {
+                    alert.buttons[name].tap()
+                    handled = true
+                    break
+                }
+            }
+        }
+        return handled
+    }
+
+    func testPrintDevicePushAddress() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        // 会话恢复可能直接顶出网页壳，先退回主框架
+        if app.buttons["browser.moreButton"].waitForExistence(timeout: 3) {
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+        }
+
+        // 通知权限等系统弹窗（首次启动）
+        dismissSystemAlerts()
+
+        // 确保在首页 tab
+        if let homeTab = app.tabBars.buttons.allElementsBoundByIndex.first(where: { $0.exists }) {
+            _ = homeTab
+        }
+        let homeTab = app.tabBars.buttons["首页"]
+        if homeTab.waitForExistence(timeout: 6) {
+            homeTab.tap()
+        }
+
+        let label = app.staticTexts["home.token_card.token_label"]
+        var found = label.waitForExistence(timeout: 20)
+        if !found {
+            app.swipeDown()
+            found = label.waitForExistence(timeout: 6)
+        }
+
+        if !found {
+            // 诊断：dump 当前可见文本与按钮，帮助定位停在哪个界面
+            let texts = app.staticTexts.allElementsBoundByIndex.prefix(15).map { $0.label }
+            let buttons = app.buttons.allElementsBoundByIndex.prefix(15).map { $0.identifier.isEmpty ? $0.label : $0.identifier }
+            print("[PROBE-DIAG] texts=\(texts)")
+            print("[PROBE-DIAG] buttons=\(buttons)")
+        }
+        XCTAssertTrue(found, "首页地址卡片未出现")
+
+        let address = label.label.trimmingCharacters(in: .whitespacesAndNewlines)
+        print("[PUSH-ADDRESS-BEGIN]\(address)[PUSH-ADDRESS-END]")
+
+        // 备用通道：点复制按钮，从剪贴板兜底（处理“允许粘贴”弹窗）
+        var viaPasteboard = ""
+        let copyButton = app.buttons["home.token_card.copy_button"]
+        if copyButton.waitForExistence(timeout: 5) {
+            copyButton.tap()
+            usleep(800_000)
+            dismissSystemAlerts()
+            usleep(500_000)
+            viaPasteboard = UIPasteboard.general.string ?? ""
+            print("[PUSH-ADDRESS-PB]\(viaPasteboard)[PUSH-ADDRESS-PB-END]")
+        }
+
+        let final = viaPasteboard.isEmpty ? address : viaPasteboard
+        XCTAssertTrue(final.hasPrefix("http"), "地址不是 URL: \(final)")
+        print("[PUSH-ADDRESS-BEGIN]\(final)[PUSH-ADDRESS-END]")
+    }
+}
