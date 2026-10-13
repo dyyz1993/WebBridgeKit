@@ -155,3 +155,7 @@ Server/native/dist/
 .playwright-cli/
 .zcode/
 tools/__pycache__/
+
+# App Store Connect API keys must never enter the repo (they live in ~/.appstoreconnect/)
+*.p8
+*.mobileprovision
