@@ -82,4 +82,134 @@ final class PushAddressProbeTests: XCTestCase {
         XCTAssertTrue(final.hasPrefix("http"), "地址不是 URL: \(final)")
         print("[PUSH-ADDRESS-BEGIN]\(final)[PUSH-ADDRESS-END]")
     }
+
+    /// 首页「我的应用」区块截图：核对离线应用的独立图标是否渲染
+    func testScreenshotHomeAppsSection() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        dismissSystemAlerts()
+        let homeTab = app.tabBars.buttons["首页"]
+        if homeTab.waitForExistence(timeout: 8) {
+            homeTab.tap()
+        }
+
+        // 应用磁贴是按钮（identifier = pwaHome.app.<appId>），直接定位
+        let tile = app.buttons["pwaHome.app.dev.drel.data-template"]
+        var found = tile.waitForExistence(timeout: 15)
+        var scrolls = 0
+        while found && !tile.isHittable && scrolls < 8 {
+            app.swipeUp()
+            scrolls += 1
+            usleep(400_000)
+        }
+        XCTAssertTrue(tile.exists, "首页未找到应用磁贴（pwaHome.app.*）")
+
+        sleep(3) // 给图标异步下载/加载留时间
+        let shot = XCUIScreen.main.screenshot()
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("home-apps-section.png")
+        try? shot.pngRepresentation.write(to: url)
+        print("[Screenshot] Saved to \(url.path)")
+
+        let tiles = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'pwaHome.app.dev'"))
+            .allElementsBoundByIndex.prefix(6).map { $0.label }
+        print("[HOME-APPS]\(tiles)")
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = "home-apps-section.png"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    /// 触发网关重验证（拉新清单+离线包），回首页截图确认独立图标
+    func testRefreshGatewayAndScreenshotApps() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["WBK_GATEWAY_UI_PAYLOAD"] =
+            #"{"id":"drel-gateway","name":"Drel Gateway","baseURL":"https://api.drel.app","healthPath":"/health","manifestPath":"/api/v1/html-apps","publicKeyID":"gw-2026-09-15","publicKey":"M3FVnjzVa8bjFQ-VtDov_mvYrik6c-DGSaRm-wdcLzY"}"#
+        app.launch()
+
+        dismissSystemAlerts()
+
+        // 打开 手册与调试 → 管理自有服务
+        let guide = app.buttons["pwaHome.guideAndDebug"]
+        var prescroll = 0
+        while !guide.exists && prescroll < 8 {
+            app.swipeUp()
+            prescroll += 1
+        }
+        XCTAssertTrue(guide.waitForExistence(timeout: 10), "首页没有 手册与调试")
+        guide.tap()
+
+        let manage = app.sheets.buttons["管理自有服务"].firstMatch
+        if !manage.waitForExistence(timeout: 6) {
+            app.buttons["管理自有服务"].firstMatch.tap()
+        } else {
+            manage.tap()
+        }
+
+        // 验证配置 → 拉取新清单（新 webManifest 摘要）→ 启用
+        let validate = app.buttons["gateway.validate"]
+        XCTAssertTrue(validate.waitForExistence(timeout: 8), "网关导入页应预填")
+        var verified = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS 'verified'")
+        ).firstMatch
+        var attempts = 0
+        while !verified.exists && attempts < 2 {
+            attempts += 1
+            dismissSystemAlerts()
+            var hitScrolls = 0
+            while validate.exists && !validate.isHittable && hitScrolls < 6 {
+                app.swipeUp()
+                hitScrolls += 1
+                usleep(400_000)
+            }
+            if validate.isHittable {
+                validate.tap()
+            } else {
+                validate.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            }
+            if !verified.waitForExistence(timeout: 45) {
+                let texts = app.staticTexts.allElementsBoundByIndex.prefix(15).map { $0.label }
+                print("[REFRESH-DIAG] attempt \(attempts) texts=\(texts)")
+                dismissSystemAlerts()
+            }
+        }
+        XCTAssertTrue(verified.exists, "验证报告未渲染")
+
+        let activate = app.buttons["启用此网关"]
+        var activateScrolls = 0
+        while !activate.exists && activateScrolls < 10 {
+            app.swipeUp()
+            activateScrolls += 1
+            usleep(400_000)
+        }
+        XCTAssertTrue(activate.waitForExistence(timeout: 10), "启用按钮未出现")
+        activate.tap()
+        _ = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "已启用")
+        ).firstMatch.waitForExistence(timeout: 10)
+
+        // 回首页截图
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        sleep(1)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        let homeTab = app.tabBars.buttons["首页"]
+        if homeTab.waitForExistence(timeout: 6) { homeTab.tap() }
+
+        let tile = app.buttons["pwaHome.app.dev.drel.data-template"]
+        var scrolls = 0
+        while tile.exists && !tile.isHittable && scrolls < 8 {
+            app.swipeUp()
+            scrolls += 1
+            usleep(400_000)
+        }
+        sleep(4) // 图标异步下载
+        let shot = XCUIScreen.main.screenshot()
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("home-apps-refreshed.png")
+        try? shot.pngRepresentation.write(to: url)
+        print("[Screenshot] Saved to \(url.path)")
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = "home-apps-refreshed.png"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
 }

@@ -6,7 +6,7 @@ SOURCE="$ROOT/test_resources/data-template/v1"
 STAGE="${1:-$ROOT/build/drel-template-staging}"
 PUBLIC_ROOT="https://drel.app/test/template"
 APP_ID="dev.drel.data-template"
-VERSION="1"
+VERSION="2"
 
 case "$STAGE" in
   "$ROOT"/build/*) ;;
@@ -19,6 +19,9 @@ esac
 bash "$ROOT/tools/build-drel-offline-network-demo-site.sh" "$STAGE"
 mkdir -p "$STAGE/test/template/v1"
 cp -R "$SOURCE/." "$STAGE/test/template/v1/"
+# 每应用独立图标：放在 v1/ 之外，不进入离线包摘要（保持网关签名有效）
+mkdir -p "$STAGE/test/template/assets"
+cp "$ROOT/test_resources/app-icons/data-template.png" "$STAGE/test/template/assets/app-icon.png"
 
 python3 - "$STAGE" "$PUBLIC_ROOT" "$APP_ID" "$VERSION" <<'PY'
 import hashlib
@@ -70,8 +73,8 @@ web_manifest = {
     "theme_color": "#5b5cf0",
     "background_color": "#f7f7fb",
     "icons": [{
-        "src": "https://drel.app/assets/drel-message-avatar.png",
-        "sizes": "1254x1254",
+        "src": "https://drel.app/test/template/assets/app-icon.png",
+        "sizes": "512x512",
         "type": "image/png",
         "purpose": "any"
     }],

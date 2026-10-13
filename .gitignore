@@ -88,6 +88,8 @@ test_resources/*
 !test_resources/pwa-permission/**
 !test_resources/cache-html-validation/
 !test_resources/cache-html-validation/**
+!test_resources/app-icons/
+!test_resources/app-icons/**
 package.json
 package-lock.json
 tsconfig.json
