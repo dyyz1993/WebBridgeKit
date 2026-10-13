@@ -102,8 +102,13 @@
 - [ ] Repeat one result each for foreground, background, locked-screen,
   named sound, and notification tap to an explicit HTTPS destination; no
   delayed duplicate delivery.
-- [ ] Verify a `drel://app` link opens a registered HTML app from both
-  Safari and a notification on device.
+- [x] `drel://app` simulator verification (2026-10-13, UI automation):
+  `testExternalAppLinkOpensRegisteredAppImmersive` and
+  `testExternalAppLinkFailsClosedForUnregisteredApp` both pass on the
+  Build 88 code — registered app opens immersive, unregistered fails
+  closed with the explanatory dialog.
+- [ ] On a TestFlight device, verify a `drel://app` link from Safari (paste
+  into the address bar) and from a notification message link.
 - [ ] If any APNs result fails, collect server send log and device
   system-log evidence before changing code; do not retry visible alerts
   automatically.
