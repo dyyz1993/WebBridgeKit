@@ -12,6 +12,8 @@ final class FavoriteFlowTests: XCTestCase {
 
     func testPushedURLFavoritesFromBrowserStarAndReopens() throws {
         let app = XCUIApplication()
+        // 与其它用例一致：注入 UITesting 参数以触发同步种子数据（收件箱 Pi Chat 消息）
+        app.launchArguments = ["--UITesting", "-UITesting"]
         app.launch()
 
         // 会话恢复可能直接把上次的网页壳顶到最前（tab 处于隐藏态）；先退回主框架
@@ -127,8 +129,9 @@ final class FavoriteFlowTests: XCTestCase {
     }
 
     private func captureScreenshot(named name: String) {
+        let dir = URL(fileURLWithPath: "/tmp/drel-fav-verify")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let shot = XCUIScreen.main.screenshot()
-        let url = URL(fileURLWithPath: "/tmp/drel-fav-verify/\(name).png")
-        try? shot.pngRepresentation.write(to: url)
+        try? shot.pngRepresentation.write(to: dir.appendingPathComponent("\(name).png"))
     }
 }

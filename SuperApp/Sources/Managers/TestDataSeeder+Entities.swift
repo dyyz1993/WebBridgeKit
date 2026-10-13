@@ -103,6 +103,7 @@ extension TestDataSeeder {
         if !forceRefresh, defaults.data(forKey: key) != nil { return }
 
         let now = Date()
+        let halfHourAgo = now.addingTimeInterval(-1800)
         let hour1Ago = now.addingTimeInterval(-3600)
         let hour2Ago = now.addingTimeInterval(-7200)
         let hour3Ago = now.addingTimeInterval(-10800)
@@ -114,6 +115,26 @@ extension TestDataSeeder {
             ?? "approval-native-demo-016"
 
         let messages: [StoredMessage] = [
+            StoredMessage(
+                id: "stored-unread-pichat",
+                payload: MessagePayload(
+                    id: "msg-pichat-000",
+                    title: "Pi Chat",
+                    body: "Pi Chat 已上线，点击打开体验",
+                    subtitle: "Pi Chat",
+                    channel: "apns",
+                    category: "chat",
+                    priority: .normal,
+                    sound: "default",
+                    badge: 1,
+                    group: "chat",
+                    threadId: "pi-chat",
+                    targetURL: "https://pi-chat.shanbox.19930810.xyz:8443/test_resources/bridge-interaction.html",
+                    createdAt: halfHourAgo
+                ),
+                isRead: false,
+                receivedAt: halfHourAgo
+            ),
             StoredMessage(
                 id: "stored-read-001",
                 payload: MessagePayload(
