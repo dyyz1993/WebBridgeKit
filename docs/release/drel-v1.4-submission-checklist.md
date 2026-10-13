@@ -95,10 +95,14 @@
   attached to App Store Version 1.4.0 (`PATCH appStoreVersions` → 200), and
   visible to the internal beta group 内部测试 (internal groups auto-receive
   processed builds; the manual assignment API returns 422 by design).
-- [ ] **Icon avatar verification**: send a push with a custom icon/avatar
-  payload and confirm the sender avatar renders in the app-icon slot on
-  the lock screen. This is the regression the entitlement fix exists for;
-  test on at least one iOS 18 device.
+- [x] **Icon avatar verification** (2026-10-13, physical iPhone 13,
+  iOS 18.7.3): fully automated pipeline — `PushAddressProbeTests` extracted
+  the device push address on the device, push sent via managed ingress
+  (`POST /push` with `icon`), APNs accepted for 2/2 devices, and the owner
+  visually confirmed the avatar rendered correctly in the app-icon slot.
+  This closes the regression the communication entitlement fix
+  (`57ba339c`) exists for. TestFlight Build 88 carries identical code and
+  entitlements; a re-install from TestFlight restores the store build.
 - [ ] Repeat one result each for foreground, background, locked-screen,
   named sound, and notification tap to an explicit HTTPS destination; no
   delayed duplicate delivery.
