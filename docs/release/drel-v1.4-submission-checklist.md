@@ -14,6 +14,17 @@
 > downgrades donated intents to plain notifications. Build 88 is the first
 > build where the icon avatar can actually render.
 
+> 2026-10-13 release-readiness check: `tools/run-release-gate.sh` passes
+> 14/14, `tools/verify-strong-offline-package.sh` passes 4/4 files, and the
+> focused UI suite passes 13/13 after updating two stale assertions that
+> expected the removed inbox filter buttons instead of the current filter
+> menu. The deterministic v4 screenshot set is ready locally under
+> `docs/release/media/drel-app-store-v4/final/zh-Hans/appstore-ready/`;
+> App Store Connect still needs the media upload and owner confirmation
+> before submission. The fourth image's source is a light home screen,
+> despite its `04-home-dark` filename, so replace it first if a dark-screen
+> contrast is mandatory.
+
 ## 0. Signing prerequisite (before archiving Build 88)
 
 - [x] The **Communication Notifications** capability is enabled on the
@@ -52,7 +63,8 @@
 
 ## 2. Code and binary verification
 
-- [ ] `bash tools/run-release-gate.sh` passes for Build 88.
+- [x] `bash tools/run-release-gate.sh` passes for Build 88 (14/14 on
+  2026-10-13).
 - [x] `bash tools/verify-drel-container-only.sh` passes — **40/40**
   (2026-10-13; baseline was 39 in the 1.0.1 round).
 - [x] `bash tools/verify-drel-store-archive.sh /tmp/drel-build88/Drel.xcarchive`
@@ -60,8 +72,8 @@
   `aps-environment=production`, `get-task-allow=false`,
   `com.apple.developer.usernotifications.communication=true`, App Group
   present, NSE embedded.
-- [ ] `bash tools/verify-strong-offline-package.sh` passes for the bundled
-  offline demo package.
+- [x] `bash tools/verify-strong-offline-package.sh` passes for the bundled
+  offline demo package (4 files, 0 failures on 2026-10-13).
 - [ ] Fresh-data signed Release simulator smoke for Build 88: Home reaches
   ready state; favorites list renders (time-desc + pinned floats); no
   notification/camera/photo prompt at first launch.

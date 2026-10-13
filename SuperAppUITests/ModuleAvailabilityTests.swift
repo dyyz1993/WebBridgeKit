@@ -26,15 +26,11 @@ final class ModuleAvailabilityTests: XCTestCase {
 
         assertTab("tab.notifications", opens: "InboxViewController")
         assertExists("wbk_search_field")
-        assertExists("filter_all")
-        assertExists("filter_unread")
-        assertExists("filter_apps")
-        assertExists("filter_action_required")
-        for identifier in ["filter_all", "filter_unread", "filter_apps", "filter_action_required"] {
-            let filter = element(identifier)
-            XCTAssertGreaterThanOrEqual(filter.frame.width, 56, "\(identifier) should have a visible width")
-            XCTAssertGreaterThanOrEqual(filter.frame.height, 34, "\(identifier) should have a visible height")
-        }
+        assertExists("inbox.displayMode")
+        assertExists("inbox.filterMenu")
+        let filterMenu = element("inbox.filterMenu")
+        XCTAssertGreaterThanOrEqual(filterMenu.frame.width, 56, "inbox.filterMenu should have a visible width")
+        XCTAssertGreaterThanOrEqual(filterMenu.frame.height, 34, "inbox.filterMenu should have a visible height")
         XCTAssertTrue(
             app.staticTexts["安全告警"].waitForExistence(timeout: 3)
                 || app.staticTexts["天气预报"].waitForExistence(timeout: 3)
@@ -57,7 +53,8 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertElementValue("notification.preview.stored-markdown-011", contains: "发布任务已完成")
 
         replaceText(in: "wbk_search_field", with: "")
-        tapElement("filter_action_required")
+        tapElement("inbox.filterMenu")
+        app.buttons["需处理"].tap()
         XCTAssertTrue(
             element("notification.card.stored-approval-media-014").waitForExistence(timeout: 4),
             "Action-required filter should retain an explicitly pending request."
