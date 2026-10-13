@@ -19,17 +19,18 @@
 - [x] The **Communication Notifications** capability is enabled on the
   Drel App ID: the Xcode-managed team profile pulled on 2026-10-09
   11:01 embeds `com.apple.developer.usernotifications.communication`.
-- [ ] Regenerate and re-download the `WebBridgeKit App Store`
-  distribution profile. The locally cached copy
-  (`~/Library/MobileDevice/Provisioning Profiles/
-  webbridgekit-appstore-main.mobileprovision`, created 2026-08-19)
-  predates the capability and lacks the entitlement, so archiving
-  Build 88 with it fails codesign or strips the entitlement. The NSE
-  distribution profile is unaffected (the extension does not declare
-  the communication entitlement).
-- [ ] After archiving, inspect the signed binary: the host app must show
-  `com.apple.developer.usernotifications.communication` in its entitlements
-  alongside `aps-environment=production` and `get-task-allow=false`.
+- [x] Distribution signing resolved via **Xcode cloud signing** (no portal
+  login needed): archive with `CODE_SIGN_STYLE=Automatic
+  CODE_SIGN_IDENTITY="Apple Development" PROVISIONING_PROFILE_SPECIFIER=""`,
+  then export with `signingStyle=automatic` and
+  `-allowProvisioningUpdates`. Xcode rebuilt the distribution profile
+  (2026-10-13 08:36) embedding the communication entitlement. The manual
+  `WebBridgeKit App Store` profile on disk remains stale; regenerate it
+  only if the manual-signing pipeline is ever restored.
+- [x] After archiving, inspect the signed binary: the exported
+  `SuperApp.ipa` shows `com.apple.developer.usernotifications.communication`
+  alongside `aps-environment=production` and `get-task-allow=false`
+  (2026-10-13, cloud-signed export).
 
 ## 1. Scope and public claims
 
@@ -52,11 +53,13 @@
 ## 2. Code and binary verification
 
 - [ ] `bash tools/run-release-gate.sh` passes for Build 88.
-- [ ] `bash tools/verify-drel-container-only.sh` passes (39/39 baseline
-  from the 1.0.1 round).
-- [ ] `bash tools/verify-drel-store-archive.sh <Build88.archive>` passes:
-  bundle identity, Drel display name, production APNs, shared App Group,
-  NSE embedded (`tools/fix-nse-embed.sh` if needed), no arbitrary HTTP.
+- [x] `bash tools/verify-drel-container-only.sh` passes — **40/40**
+  (2026-10-13; baseline was 39 in the 1.0.1 round).
+- [x] `bash tools/verify-drel-store-archive.sh /tmp/drel-build88/Drel.xcarchive`
+  passes (2026-10-13). Exported `SuperApp.ipa` inspected: 1.4.0 (88),
+  `aps-environment=production`, `get-task-allow=false`,
+  `com.apple.developer.usernotifications.communication=true`, App Group
+  present, NSE embedded.
 - [ ] `bash tools/verify-strong-offline-package.sh` passes for the bundled
   offline demo package.
 - [ ] Fresh-data signed Release simulator smoke for Build 88: Home reaches
@@ -68,10 +71,14 @@
 
 ## 3. UI review
 
-- [ ] Capture the actual Build 88 simulator flow: Home, Inbox (80pt rows,
-  right-swipe pin), message detail (markdown links), favorites (pin/full
-  swipe/fullscreen reopen), immersive web view first frame, Settings,
-  offline app open.
+- [x] Automated: `FavoriteFlowTests` passes end-to-end on the
+  "iPhone 16 Pro UI Test" simulator (2026-10-13) — inbox Pi Chat →
+  open link → browser shell with hidden tab bar → favorite via ⋯ menu →
+  favorites list → reopen with favorited state echo. Six screenshots in
+  `/tmp/drel-fav-verify/` (web shell, favorites, reopened, menu states).
+- [ ] Capture the remaining Build 88 simulator flow: Home, Inbox (80pt
+  rows, right-swipe pin), message detail (markdown links), immersive web
+  view first frame, Settings, offline app open.
 - [ ] Light and Dark Mode both pass; layer borders re-resolve on trait
   changes (`a6e5d139`).
 - [ ] No text truncation or overlap on the new favorites and inbox cells.
