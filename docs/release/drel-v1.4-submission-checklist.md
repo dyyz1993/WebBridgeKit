@@ -85,7 +85,10 @@
 
 ## 4. TestFlight and APNs (physical phone only)
 
-- [ ] Upload exact signed Build 88 exactly once; record the upload log.
+- [x] Upload exact signed Build 88 exactly once (2026-10-13 08:53,
+  cloud-signed export via `xcodebuild -exportArchive destination=upload
+  -allowProvisioningUpdates`; log: `/tmp/drel88-upload.log` —
+  "Upload succeeded", "Uploaded package is processing"). Do not re-upload.
 - [ ] **Icon avatar verification**: send a push with a custom icon/avatar
   payload and confirm the sender avatar renders in the app-icon slot on
   the lock screen. This is the regression the entitlement fix exists for;
