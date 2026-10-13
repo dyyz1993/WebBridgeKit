@@ -89,6 +89,12 @@
   cloud-signed export via `xcodebuild -exportArchive destination=upload
   -allowProvisioningUpdates`; log: `/tmp/drel88-upload.log` —
   "Upload succeeded", "Uploaded package is processing"). Do not re-upload.
+- [x] ASC state verified via API (2026-10-13, key `4NXJ8HL7K9`, issuer
+  `18f47979-0b65-4045-b969-00ba54177716`): Build 88 `processingState=VALID`,
+  `usesNonExemptEncryption=false` (export compliance auto-declared), build
+  attached to App Store Version 1.4.0 (`PATCH appStoreVersions` → 200), and
+  visible to the internal beta group 内部测试 (internal groups auto-receive
+  processed builds; the manual assignment API returns 422 by design).
 - [ ] **Icon avatar verification**: send a push with a custom icon/avatar
   payload and confirm the sender avatar renders in the app-icon slot on
   the lock screen. This is the regression the entitlement fix exists for;
@@ -116,8 +122,10 @@
 - [ ] Re-check the privacy questionnaire against the deployed service
   (Device ID collection unchanged? Kingfisher avatar cache is on-device
   disk cache, not tracking).
-- [ ] Complete export compliance for the processed Build 88.
-- [ ] Attach only exact processed Build 88 to version 1.4.0 and re-read it.
+- [x] Export compliance for Build 88: auto-declared in the binary
+  (`usesNonExemptEncryption=false`); no manual portal step needed.
+- [x] Attach only exact processed Build 88 to version 1.4.0 and re-read it
+  (done via API on 2026-10-13; attachment verified).
 
 ## 6. Submission
 
