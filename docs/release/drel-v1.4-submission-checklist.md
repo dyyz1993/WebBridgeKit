@@ -16,10 +16,17 @@
 
 ## 0. Signing prerequisite (before archiving Build 88)
 
-- [ ] Enable the **Communication Notifications** capability on the Drel
-  App ID in the Apple Developer portal.
-- [ ] Regenerate the `WebBridgeKit App Store` provisioning profile so it
-  embeds the new entitlement; the NSE profile is unaffected.
+- [x] The **Communication Notifications** capability is enabled on the
+  Drel App ID: the Xcode-managed team profile pulled on 2026-10-09
+  11:01 embeds `com.apple.developer.usernotifications.communication`.
+- [ ] Regenerate and re-download the `WebBridgeKit App Store`
+  distribution profile. The locally cached copy
+  (`~/Library/MobileDevice/Provisioning Profiles/
+  webbridgekit-appstore-main.mobileprovision`, created 2026-08-19)
+  predates the capability and lacks the entitlement, so archiving
+  Build 88 with it fails codesign or strips the entitlement. The NSE
+  distribution profile is unaffected (the extension does not declare
+  the communication entitlement).
 - [ ] After archiving, inspect the signed binary: the host app must show
   `com.apple.developer.usernotifications.communication` in its entitlements
   alongside `aps-environment=production` and `get-task-allow=false`.
