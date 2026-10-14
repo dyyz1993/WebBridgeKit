@@ -79,6 +79,10 @@ class TabBarController: UITabBarController {
     }
 
     private func handlePushJump(_ notification: Notification) {
+        // UI tests require deterministic tab focus. A live gateway push
+        // landing mid-test yanks the selected tab to Notifications and
+        // breaks home-row interactions; real users keep this behavior.
+        guard !ProcessInfo.processInfo.isWebBridgeKitUITesting else { return }
         guard notification.userInfo?["url"] is URL else { return }
         self.selectedIndex = 0
     }

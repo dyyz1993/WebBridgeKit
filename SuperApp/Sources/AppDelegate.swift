@@ -61,6 +61,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
 
         let isUITesting = ProcessInfo.processInfo.isWebBridgeKitUITesting
+        WebBrowserManager.clearLastSessionIfRequested()
         #if DEBUG
         DrelSelfHostedUITestFixture.startIfRequested()
         #endif
@@ -114,6 +115,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         Task {
             await MessageEngine.shared.setStore(messageStore)
         }
+
+        #if !DREL_CONTAINER_ONLY
+        // UI-test reset must run before the root tab bar loads: the tab bar
+        // reads the default startup app in viewDidLoad/viewDidAppear and would
+        // open the stale immersive container before the flag clears below.
+        if ProcessInfo.processInfo.arguments.contains("--reset-default-startup-app") {
+            UserDefaults.standard.removeObject(forKey: SettingsPreferenceKeys.defaultStartupAppID)
+        }
+        #endif
 
         // 创建窗口（支持摇一摇触发调试面板）
         window = DebugWindow(frame: UIScreen.main.bounds)

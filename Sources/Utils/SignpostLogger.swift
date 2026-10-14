@@ -57,6 +57,13 @@ public final class SignpostLogger {
         for category in Category.allCases {
             loggers[category] = OSLog(subsystem: "com.webbridgekit", category: category.rawValue)
         }
+        // The AX query storm during XCUITest already produces heavy system
+        // signpost traffic; app signposts add enough volume for libtrace to
+        // quarantine the client, which can crash the process mid-query.
+        if ["-UITesting", "--UITesting", "--ui-testing"]
+            .contains(where: ProcessInfo.processInfo.arguments.contains) {
+            isEnabledValue = false
+        }
     }
 
     // MARK: - Public Methods - Interval

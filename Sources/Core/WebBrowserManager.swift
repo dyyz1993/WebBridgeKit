@@ -10,6 +10,17 @@ import Foundation
 import UIKit
 import os.log
 
+/// UI tests generate very high log volume; libtrace quarantines the client and
+/// a framework fault callback can crash the process mid-query. Keep error-level
+/// logging always; drop info-level noise under --UITesting.
+private func uiTestQuietLog(_ message: StaticString, type: OSLogType = .info) {
+    let isUITesting = ["-UITesting", "--UITesting", "--ui-testing"]
+        .contains { ProcessInfo.processInfo.arguments.contains($0) }
+    guard !isUITesting || type == .error else { return }
+    os_log(message, log: OSLog.default, type: type)
+}
+
+
 // Framework imports
 
 /// 浏览器管理器 - 支持依赖注入
@@ -96,6 +107,14 @@ public class WebBrowserManager: WebBrowserManaging {
         UserDefaults.standard.removeObject(forKey: Self.lastBrowserAtKey)
     }
 
+    /// UI-test hook: deterministic launches must not inherit the previous
+    /// run's restorable browser URL.
+    public static func clearLastSessionIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--clear-last-session") else { return }
+        UserDefaults.standard.removeObject(forKey: lastBrowserURLKey)
+        UserDefaults.standard.removeObject(forKey: lastBrowserAtKey)
+    }
+
     /// 冷启动时若上次浏览在恢复窗口内，返回其 URL
     public static func restorableLastURL() -> URL? {
         guard let raw = UserDefaults.standard.string(forKey: lastBrowserURLKey),
@@ -123,10 +142,8 @@ public class WebBrowserManager: WebBrowserManaging {
         animated: Bool = true,
         completion: ((Result<Void, any Error>) -> Void)? = nil
     ) {
-        os_log("=== WebBrowserManager.openBrowser ===", log: OSLog.default, type: .info)
-        os_log("URL: %@", log: OSLog.default, type: .info, url.absoluteString)
-        os_log("forceRefresh: %{public}@, animated: %{public}@", log: OSLog.default, type: .info, String(forceRefresh), String(animated))
-
+        uiTestQuietLog("=== WebBrowserManager.openBrowser ===")
+                
         // Ensure all UI operations happen on main thread
         DispatchQueue.main.async { [weak self] in
             guard let self = self else {
@@ -137,7 +154,7 @@ public class WebBrowserManager: WebBrowserManaging {
 
             let effectiveParams = params ?? WebBrowserParams.from(url: url)
             persistLastSession(url: url)
-            os_log("DisplayMode: %ld", log: OSLog.default, type: .info, effectiveParams.displayMode.rawValue)
+            uiTestQuietLog("DisplayMode: %ld")
 
             switch effectiveParams.displayMode {
             case .modal:
@@ -180,7 +197,7 @@ public class WebBrowserManager: WebBrowserManaging {
         forceRefresh: Bool = false,
         animated: Bool = true
     ) {
-        os_log("=== openNormalBrowser ===", log: OSLog.default, type: .info)
+        uiTestQuietLog("=== openNormalBrowser ===")
 
         guard let navController = getNavigationController(from: sourceViewController) else {
             os_log("[FAIL] 找不到 NavigationController", log: OSLog.default, type: .error)
@@ -188,12 +205,11 @@ public class WebBrowserManager: WebBrowserManaging {
 
             // 尝试获取顶层的 view controller
             if let topVC = getTopViewController() {
-                os_log("顶层 VC: %@", log: OSLog.default, type: .info, String(describing: type(of: topVC)))
-            }
+                            }
             return
         }
 
-        os_log("[OK] 找到 NavigationController", log: OSLog.default, type: .info)
+        uiTestQuietLog("[OK] 找到 NavigationController")
 
         // Safari-style reuse: when the user is already inside a browser
         // (e.g. testing the push catalog in the in-app browser and tapping
@@ -201,7 +217,7 @@ public class WebBrowserManager: WebBrowserManaging {
         // second browser layer the user must close twice to leave.
         if let top = navController.topViewController,
            let existing = top as? WebBrowserViewController {
-            os_log("栈顶已是浏览器，原地加载新 URL", log: OSLog.default, type: .info)
+            uiTestQuietLog("栈顶已是浏览器，原地加载新 URL")
             existing.loadURLDirect(url, forceRefresh: forceRefresh)
             currentBrowser = existing
             return
@@ -216,7 +232,7 @@ public class WebBrowserManager: WebBrowserManaging {
         // Installed strong-offline packages use the direct local-file path;
         // standard PWAs keep WKWebView's native storage/service-worker behavior.
         if let browserVC = webVC as? WebBrowserViewController {
-            os_log("PWA loader selected: %{public}@", log: OSLog.default, type: .info, params.useManifestLoader ? "manifest" : "direct")
+            uiTestQuietLog("PWA loader selected: %{public}@")
             if self.shouldUseManifestLoader(for: url, params: params) {
                 browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
             } else {
@@ -228,7 +244,7 @@ public class WebBrowserManager: WebBrowserManaging {
             pwaVC.loadURL(url, preferCachedContent: params.preferCachedContent)
         }
 
-        os_log("[OK] 已推送浏览器到导航栈", log: OSLog.default, type: .info)
+        uiTestQuietLog("[OK] 已推送浏览器到导航栈")
         StructuredLogger.shared.info("[OK] [WebBrowserManager] Pushed normal browser to navigation stack", category: .bridge)
     }
 
@@ -240,7 +256,7 @@ public class WebBrowserManager: WebBrowserManaging {
         forceRefresh: Bool = false,
         animated: Bool = true
     ) {
-        os_log("=== openImmersiveBrowser ===", log: OSLog.default, type: .info)
+        uiTestQuietLog("=== openImmersiveBrowser ===")
 
         guard let navController = getNavigationController(from: sourceViewController) else {
             os_log("[FAIL] 找不到 NavigationController", log: OSLog.default, type: .error)
@@ -248,7 +264,7 @@ public class WebBrowserManager: WebBrowserManaging {
             return
         }
 
-        os_log("[OK] 找到 NavigationController", log: OSLog.default, type: .info)
+        uiTestQuietLog("[OK] 找到 NavigationController")
         let webVC = createWebViewController(for: url, params: params)
         addToNavigationStack(webVC, url: url, params: params)
 
@@ -258,7 +274,7 @@ public class WebBrowserManager: WebBrowserManaging {
         // Installed strong-offline packages use the direct local-file path;
         // standard PWAs keep WKWebView's native storage/service-worker behavior.
         if let browserVC = webVC as? WebBrowserViewController {
-            os_log("PWA loader selected: %{public}@", log: OSLog.default, type: .info, params.useManifestLoader ? "manifest" : "direct")
+            uiTestQuietLog("PWA loader selected: %{public}@")
             if self.shouldUseManifestLoader(for: url, params: params) {
                 browserVC.loadURLWithCache(url, forceRefresh: forceRefresh)
             } else {
@@ -270,7 +286,7 @@ public class WebBrowserManager: WebBrowserManaging {
             pwaVC.loadURL(url, preferCachedContent: params.preferCachedContent)
         }
 
-        os_log("[OK] 已推送沉浸式浏览器到导航栈", log: OSLog.default, type: .info)
+        uiTestQuietLog("[OK] 已推送沉浸式浏览器到导航栈")
         StructuredLogger.shared.info("[OK] [WebBrowserManager] Pushed immersive browser to navigation stack", category: .bridge)
     }
 
@@ -610,7 +626,7 @@ public class WebBrowserManager: WebBrowserManaging {
         var current: UIViewController? = viewController
         while let parent = current?.parent {
             if let navController = parent as? UINavigationController {
-                os_log("[OK] 通过 parent 找到 NavigationController", log: OSLog.default, type: .info)
+                uiTestQuietLog("[OK] 通过 parent 找到 NavigationController")
                 return navController
             }
             current = parent

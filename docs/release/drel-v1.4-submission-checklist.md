@@ -136,15 +136,16 @@
 
 ## 5. App Store Connect material
 
-- [ ] Re-read the live 1.0 record; create the new 1.4.0 version record.
-- [ ] Attach fresh iPhone screenshots from Build 88 — use
-  `docs/release/media/drel-app-store-v3/final/` only if it was re-captured
-  after builds 81–87 (favorites UI changed); otherwise re-capture. No
-  debug copy, test data, address/token, or private content.
-- [ ] Update the review notes from the Build 60 template: keep the
-  physical-device recording approach, add sections for `drel://app`
-  launch and the icon avatar (both are new visible behaviors that App
-  Review has not seen; the 1.0 rejection was Guideline 2.1).
+- [x] Re-read the live 1.0 record; the new 1.4.0 version record exists.
+- [x] Attach the deterministic v4 screenshot set to both iPhone display
+  targets. On 2026-10-13, zh-Hans and en-US each received 4 completed
+  screenshots for Dynamic Island medium (1179×2556) and Face ID large
+  (1242×2688); stale 6.5-inch variants were removed. Compose/update with
+  `docs/release/media/drel-app-store-v4/tools/compose.py` and upload with
+  `tools/asc-upload-screenshots.py`.
+- [x] Update review notes for 1.4.0 (88): physical-device recording,
+  `drel://app`, strong offline, and icon avatar are all covered in the
+  version-level review notes (4000-character ASC limit respected).
 - [ ] Re-check the privacy questionnaire against the deployed service
   (Device ID collection unchanged? Kingfisher avatar cache is on-device
   disk cache, not tracking).
@@ -155,6 +156,8 @@
 
 ## 6. Submission
 
+- [ ] Confirm whether App Review requires a private demo attachment for
+  the 1.4 flows; the current 1.4 review-detail attachment list is empty.
 - [ ] Final release review: all prior checks green; no concurrent upload
   or unresolved App Store Connect validation.
 - [ ] Obtain the owner's confirmation naming exact "Drel 1.4.0 (88)".

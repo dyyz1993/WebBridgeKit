@@ -52,6 +52,21 @@ asc_get() { # $1 = API path
     /usr/bin/curl -sg -H "Authorization: Bearer $(asc_jwt)" "$ASC_API$1"
 }
 
+asc_post() { # $1 = API path, $2 = JSON body (use @file for a file)
+    /usr/bin/curl -sg -X POST -H "Authorization: Bearer $(asc_jwt)" \
+        -H 'Content-Type: application/json' -d "$2" "$ASC_API$1"
+}
+
+asc_delete() { # $1 = API path
+    /usr/bin/curl -sg -X DELETE -H "Authorization: Bearer $(asc_jwt)" "$ASC_API$1" \
+        -w '\nHTTP %{http_code}\n'
+}
+
+asc_patch() { # $1 = API path, $2 = JSON body
+    /usr/bin/curl -sg -X PATCH -H "Authorization: Bearer $(asc_jwt)" \
+        -H 'Content-Type: application/json' -d "$2" "$ASC_API$1"
+}
+
 cmd="${1:-}"
 case "$cmd" in
     build)
@@ -90,6 +105,15 @@ if not d.get("data"):
         ;;
     get)
         asc_get "${2:?usage: asc-api.sh get <api-path>}"
+        ;;
+    post)
+        asc_post "${2:?usage: asc-api.sh post <api-path> <json>}" "${3:?usage: asc-api.sh post <api-path> <json>}"
+        ;;
+    delete)
+        asc_delete "${2:?usage: asc-api.sh delete <api-path>}"
+        ;;
+    patch)
+        asc_patch "${2:?usage: asc-api.sh patch <api-path> <json>}" "${3:?usage: asc-api.sh patch <api-path> <json>}"
         ;;
     *)
         sed -n '2,20p' "$0"

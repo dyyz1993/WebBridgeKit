@@ -18,6 +18,13 @@ public class ConsoleLogOutput: LogOutput {
 
     public func write(_ entry: LogEntry) {
         #if DEBUG
+        // UI tests query the AX tree hundreds of times per run; NSLog here
+        // drives system logging volume high enough that libtrace quarantines
+        // the process and XCT framework faults can crash it. Keep console
+        // output off under --UITesting; memory buffer still records entries.
+        let isUITesting = ["-UITesting", "--UITesting", "--ui-testing"]
+            .contains { ProcessInfo.processInfo.arguments.contains($0) }
+        guard !isUITesting else { return }
         NSLog("%@", entry.consoleString)
         #endif
     }

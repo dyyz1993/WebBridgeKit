@@ -93,7 +93,13 @@ final class ModuleAvailabilityTests: XCTestCase {
     func testPWAAppCenterStartsWithOfficialServiceInsteadOfGatewaySetup() {
         assertTab("tab.apps", opens: "pwaCenter.table")
 
-        let officialApp = element("pwaHome.app.com.webbridgekit.fixture.chat")
+        // Official catalog entries appear only after a trusted push has
+        // activated them on this installation. Accept any trusted-app tile
+        // (current install has an activated official demo) or the explicit
+        // empty/offline state. Gateway setup itself must not be the first-run
+        // surface.
+        let appTilePredicate = NSPredicate(format: "identifier BEGINSWITH 'pwaHome.app.'")
+        let officialApp = app.descendants(matching: .any).matching(appTilePredicate).firstMatch
         let officialStatus = element("pwaHome.emptyApps")
         let officialAppLoaded = officialApp.waitForExistence(timeout: 15)
         XCTAssertTrue(
@@ -123,18 +129,48 @@ final class ModuleAvailabilityTests: XCTestCase {
     }
 
     func testHomePushExamplesExposeSupportedStoreCapabilities() {
+        // A prior test can leave the inbox tab as the restorable last screen;
+        // session restore would land this run on Notifications and make the
+        // home support row untappable. Force a clean home launch.
+        app.terminate()
+        app.launchArguments = ["--UITesting", "-UITesting"]
+        app.launchEnvironment = [
+            "AppleLanguages": "(zh-Hans)",
+            "AppleLocale": "zh_CN"
+        ]
+        app.launch()
         assertTab("tab.apps", opens: "pwaCenter.table")
-        tapElement("pwaHome.apiExamples")
-        assertExists("pushExamples.list")
+        openPushExamplesFromHome()
+        // SwiftUI List does not expose the whole-list identifier as a
+        // queryable element, but the row-level controls do. openPushExamples
+        // FromHome already proves the catalog screen loaded by asserting the
+        // first row control; here verify the Store-promised example types.
         for type in ["plain", "markdown", "otp", "qr", "image"] {
-            assertExists("pushExamples.\(type).send")
-            assertExists("pushExamples.\(type).copy")
+            let sendButton = element("pushExamples.\(type).send")
+            let copyButton = element("pushExamples.\(type).copy")
+            XCTAssertTrue(sendButton.waitForExistence(timeout: 4), "Missing example send control: \(type)")
+            XCTAssertTrue(copyButton.exists, "Missing example copy control: \(type)")
         }
     }
 
     func testHomePlainExampleUsesExternalSafariForARealRequest() {
+        // Same restore guard as the catalog test: the previous run must not
+        // drop this launch on the Notifications tab.
+        app.terminate()
+        app.launchArguments = ["--UITesting", "-UITesting"]
+        app.launchEnvironment = [
+            "AppleLanguages": "(zh-Hans)",
+            "AppleLocale": "zh_CN"
+        ]
+        app.launch()
         assertTab("tab.apps", opens: "pwaCenter.table")
-        tapElement("pwaHome.apiExamples")
+        openPushExamplesFromHome()
+        // Existence first: SwiftUI List rows can exist off-screen; tapping a
+        // matched element lets XCUITest scroll it into view.
+        XCTAssertTrue(
+            element("pushExamples.plain.send").waitForExistence(timeout: 8),
+            "Expected plain push example send control"
+        )
         tapElement("pushExamples.plain.send")
 
         let hostMovedToBackground = XCTNSPredicateExpectation(
@@ -196,7 +232,9 @@ final class ModuleAvailabilityTests: XCTestCase {
         tapButton("tokenPush.copyPushURLButton")
         assertExists("tokenPush.home")
         assertStaticTextContaining("推送地址已复制")
-        assertStaticTextContaining("https://wbk.shanbox.19930810.xyz:8443")
+        // TestDataSeeder pins the deterministic Bark server for UI tests.
+        // Assert the exact server so a silently wrong endpoint can't pass.
+        assertStaticTextContaining("http://localhost:8080")
 
         tapElement("tokenPush.validatePayloadButton")
         assertExists("tokenPush.home")
@@ -365,8 +403,11 @@ final class ModuleAvailabilityTests: XCTestCase {
     }
 
     func testGatewayConfigurationExposesCurrentOnePageImportControls() {
-        assertTab("tab.settings", opens: "SettingsViewController")
-        tapElement("settings.cell.serverConfig")
+        // The one-page gateway import lives behind the App Center's manage
+        // entry. The Settings server-config row opens the legacy server list
+        // and is intentionally not this screen.
+        assertTab("tab.apps", opens: "pwaCenter.table")
+        tapElement("pwaHome.manageApps")
         assertExists("gateway.table")
         assertExists("gateway.current")
         assertExists("gateway.scan")
@@ -519,9 +560,22 @@ final class ModuleAvailabilityTests: XCTestCase {
 
         assertTab("tab.settings", opens: "SettingsViewController")
         tapElement("settings.cell.defaultStartupApp")
-        assertExists("defaultStartupApp.option.com.webbridgekit.fixture.chat")
-        tapElement("defaultStartupApp.option.com.webbridgekit.fixture.chat")
-        assertExists("defaultStartupApp.selected.com.webbridgekit.fixture.chat")
+        // This install's trust registry carries the signed official demo
+        // manifests, so the option list is expected to be populated (the old
+        // fixture.chat is not part of the current official catalog). Assert
+        // any selectable option, select it, and verify cold-launch behavior.
+        assertExists("defaultStartupApp.explanation")
+        let firstOption = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'defaultStartupApp.option.'"))
+            .firstMatch
+        XCTAssertTrue(
+            firstOption.waitForExistence(timeout: 6),
+            "Expected at least one selectable trusted app option"
+        )
+        let selectedAppID = firstOption.identifier
+            .replacingOccurrences(of: "defaultStartupApp.option.", with: "")
+        firstOption.tap()
+        assertExists("defaultStartupApp.selected.\(selectedAppID)")
 
         app.terminate()
         app.launchArguments = ["--UITesting", "-UITesting"]
@@ -549,6 +603,23 @@ final class ModuleAvailabilityTests: XCTestCase {
         XCTAssertFalse(
             app.navigationBars.firstMatch.exists,
             "The duplicate normal-mode restore must not add a navigation bar over the immersive app."
+        )
+
+        // Cleanup: a persisted default startup app would make every later
+        // test's cold launch open the immersive container instead of the tab
+        // bar. Reset it and relaunch so the suite continues from a clean tab
+        // state.
+        app.terminate()
+        app.launchArguments = [
+            "--UITesting",
+            "-UITesting",
+            "--reset-default-startup-app",
+            "--clear-last-session"
+        ]
+        app.launch()
+        XCTAssertTrue(
+            app.tabBars.buttons["tab.apps"].waitForExistence(timeout: 12),
+            "Cleanup relaunch should expose the normal tab bar"
         )
     }
 
@@ -613,6 +684,54 @@ final class ModuleAvailabilityTests: XCTestCase {
             return
         }
         XCTFail("Missing root view: \(rootIdentifier)")
+    }
+
+    /// A live push can land at any moment and handlePushJump flips the tab
+    /// bar to Notifications — the registered official gateway delivers real
+    /// pushes every few minutes. Navigation-push based flows survive that
+    /// flip (the pushed examples screen stays on the Home nav stack), but
+    /// home-row taps do not. So: retry the row tap, and after success verify
+    /// the catalog exists on the pushed screen without depending on which
+    /// tab is selected.
+    private func openPushExamplesFromHome() {
+        for _ in 0..<3 {
+            // A push flip moves the selected tab away, but the examples
+            // screen stays on Home's nav stack. Re-selecting Home makes its
+            // stack queryable again, so check before pushing a duplicate.
+            app.tabBars.buttons["tab.apps"].tap()
+            if element("pushExamples.plain.send").waitForExistence(timeout: 3) {
+                return
+            }
+            // Re-assert the row right before tapping: a push flip between the
+            // two calls silently retargets the tap onto the inbox screen.
+            guard element("pwaCenter.table").waitForExistence(timeout: 3),
+                  element("pwaHome.apiExamples").waitForExistence(timeout: 3) else {
+                continue
+            }
+            // The examples row sits below the fold at launch; a bare .tap()
+            // on a non-hittable element is silently dropped. tapElement walks
+            // the scroll container until the row is hittable.
+            // tapElement→makeVisible treats "center inside window" as visible,
+            // but the row can sit behind the tab bar (still inside the window
+            // frame) where taps land on the TabBar instead. Require real
+            // hittability: swipe the home scroll view until hittable, then tap.
+            let examplesButton = element("pwaHome.apiExamples")
+            var hittable = examplesButton.isHittable
+            var swipes = 0
+            while !hittable, swipes < 4 {
+                element("pwaCenter.table").swipeUp()
+                swipes += 1
+                hittable = examplesButton.exists && examplesButton.isHittable
+            }
+            guard hittable else { continue }
+            examplesButton.tap()
+            // The whole-list identifier is not AX-queryable on SwiftUI List;
+            // the first row's send control is the reliable catalog marker.
+            if element("pushExamples.plain.send").waitForExistence(timeout: 8) {
+                return
+            }
+        }
+        XCTFail("Could not open the push examples catalog from the home tab")
     }
 
     private func assertExists(_ identifier: String, timeout: TimeInterval = 6) {
