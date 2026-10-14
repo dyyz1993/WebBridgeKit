@@ -160,8 +160,10 @@
   the 1.4 flows; the current 1.4 review-detail attachment list is empty.
 - [ ] Final release review: all prior checks green; no concurrent upload
   or unresolved App Store Connect validation.
-- [ ] Obtain the owner's confirmation naming exact "Drel 1.4.0 (88)".
-- [ ] Click **Submit for Review**, then re-read the submission state.
+- [x] Owner confirmed "Drel 1.4.0 (88)" on 2026-10-14.
+- [x] **Submitted for Review** on 2026-10-14 12:23 CST via ASC API
+  (review submission `90bb4573-3d74-4296-b3ae-778e2a50f217`, state
+  WAITING_FOR_REVIEW).
 
 ## Build history notes
 
