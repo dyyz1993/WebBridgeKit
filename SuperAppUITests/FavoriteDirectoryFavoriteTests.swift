@@ -12,7 +12,7 @@ final class FavoriteDirectoryFavoriteTests: XCTestCase {
 
     func testDirectoryFormFavoriteReopensImmersive() throws {
         let app = XCUIApplication()
-        app.launch()
+        FavoriteTestFixtures.launch(app: app)
 
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         if springboard.buttons["不允许粘贴"].waitForExistence(timeout: 3) {

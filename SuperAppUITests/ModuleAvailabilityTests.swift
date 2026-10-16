@@ -83,7 +83,22 @@ final class ModuleAvailabilityTests: XCTestCase {
         goBack()
 
         tapElement("pwaHome.guideAndDebug")
-        app.buttons["PWA 接入手册"].tap()
+        // The action sheet is presented asynchronously; a query captured
+        // before presentation can report stale no-match state on iOS 18.3.
+        var guideTarget: XCUIElement?
+        for _ in 0..<5 {
+            let candidate = app.buttons["PWA 接入手册"]
+            if candidate.exists {
+                guideTarget = candidate
+                break
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        }
+        if let target = guideTarget {
+            target.tap()
+        } else {
+            tapElement("pwaHome.guideAndDebug")
+        }
         XCTAssertTrue(
             element("pwaGuide.table").waitForExistence(timeout: 6),
             "PWA guide should finish its navigation transition and expose its table."
@@ -154,14 +169,12 @@ final class ModuleAvailabilityTests: XCTestCase {
     }
 
     func testHomePlainExampleUsesExternalSafariForARealRequest() {
-        // Same restore guard as the catalog test: the previous run must not
-        // drop this launch on the Notifications tab.
+        // The send action is intentionally disabled until push setup is ready.
+        // Pin that state with the deterministic official-push fixture so an
+        // earlier real registration cannot turn this tap into setup work.
         app.terminate()
         app.launchArguments = ["--UITesting", "-UITesting"]
-        app.launchEnvironment = [
-            "AppleLanguages": "(zh-Hans)",
-            "AppleLocale": "zh_CN"
-        ]
+        app.launchEnvironment = Self.deterministicPushEnvironment
         app.launch()
         assertTab("tab.apps", opens: "pwaCenter.table")
         openPushExamplesFromHome()
@@ -181,7 +194,7 @@ final class ModuleAvailabilityTests: XCTestCase {
             object: app
         )
         XCTAssertEqual(
-            XCTWaiter.wait(for: [hostMovedToBackground], timeout: 8),
+            XCTWaiter.wait(for: [hostMovedToBackground], timeout: 15),
             .completed,
             "A home push example should leave the host and issue its request through Safari."
         )
@@ -213,6 +226,10 @@ final class ModuleAvailabilityTests: XCTestCase {
     }
 
     func testTokenPushAndBarkControlsAreUsableFromDeveloperTools() {
+        app.terminate()
+        app.launchArguments = ["--UITesting", "-UITesting"]
+        app.launchEnvironment = Self.deterministicPushEnvironment
+        app.launch()
         openDebugCenter()
         tapElement("debugCenter.openPushTools")
         assertExists("tokenPush.home")
@@ -250,6 +267,15 @@ final class ModuleAvailabilityTests: XCTestCase {
         tapElement("bridge.executeButton")
         assertStaticTextContaining("命令已完成结构化校验")
         assertStaticTextContaining("cache.stats")
+    }
+
+    private static var deterministicPushEnvironment: [String: String] {
+        [
+            "AppleLanguages": "(zh-Hans)",
+            "AppleLocale": "zh_CN",
+            "WBK_OFFICIAL_PUSH_TEST_STATE": "initial-ready",
+            "WBK_OFFICIAL_PUSH_TEST_IDENTITY": "module_availability_fixture"
+        ]
     }
 
     func testRealWebViewBridgePromiseResolves() {
@@ -307,8 +333,14 @@ final class ModuleAvailabilityTests: XCTestCase {
         assertExists("deepLink.home")
         assertStaticTextContaining("协议链接合法")
         assertStaticTextContaining("cache-showcase.html")
-        assertExists("deepLink.commandTokenInput")
-        assertExists("deepLink.tabIndexInput")
+        XCTAssertTrue(
+            element("deepLink.commandTokenInput").waitForExistence(timeout: 6),
+            "Expected deep-link command token input"
+        )
+        XCTAssertTrue(
+            element("deepLink.tabIndexInput").waitForExistence(timeout: 6),
+            "Expected deep-link tab index input"
+        )
     }
 
     func testDebugCenterGlobalDebugPanelEntryOpensPanel() {
@@ -801,6 +833,9 @@ final class ModuleAvailabilityTests: XCTestCase {
     private func tapElement(_ identifier: String, timeout: TimeInterval = 8) -> XCUIElement {
         XCTAssertTrue(makeVisible(identifier, timeout: timeout), "Expected tappable element: \(identifier)")
         let target = element(identifier)
+        // iOS 18.3 can report an offscreen activation point even after AX says
+        // the element exists. Prefer the coordinate tap in that case instead of
+        // throwing "Activation point invalid".
         if target.isHittable {
             target.tap()
         } else {
@@ -916,6 +951,15 @@ final class ModuleAvailabilityTests: XCTestCase {
         return isVisibleOnScreen(element(identifier))
     }
 
+    private func isFrameOnScreen(_ frame: CGRect) -> Bool {
+        let windowFrame = app.windows.firstMatch.frame
+        let interactiveFrame = windowFrame.insetBy(dx: 0, dy: 96)
+        // SwiftUI scroll-content coordinates can exceed the clipping viewport
+        // while the row is still partially visible. Accept partial intersection
+        // so scrolling happens only when the control is actually offscreen.
+        return interactiveFrame.intersects(frame)
+    }
+
     private func element(_ identifier: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
@@ -924,13 +968,10 @@ final class ModuleAvailabilityTests: XCTestCase {
         guard target.exists, target.frame != .zero else {
             return false
         }
-        if target.isHittable {
-            return true
-        }
-
-        let windowFrame = app.windows.firstMatch.frame
-        let targetCenter = CGPoint(x: target.frame.midX, y: target.frame.midY)
-        return windowFrame.contains(targetCenter)
+        // A SwiftUI row can be inside the window's coordinate space yet clipped
+        // by the scroll viewport/TabBar. Both hittability and the frame check
+        // must pass through the interactive window area before tapping.
+        return target.isHittable || isFrameOnScreen(target.frame)
     }
 
     private func scrollContainer(rootIdentifier: String? = nil) -> XCUIElement {

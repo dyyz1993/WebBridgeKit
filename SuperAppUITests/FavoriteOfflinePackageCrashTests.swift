@@ -11,7 +11,7 @@ final class FavoriteOfflinePackageCrashTests: XCTestCase {
 
     func testDownloadOfflinePackageThenReopenFavoriteDoesNotCrash() throws {
         let app = XCUIApplication()
-        app.launch()
+        FavoriteTestFixtures.launch(app: app)
 
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         if springboard.buttons["不允许粘贴"].waitForExistence(timeout: 3) {
@@ -70,8 +70,13 @@ final class FavoriteOfflinePackageCrashTests: XCTestCase {
         XCTAssertTrue(found, "设置页没有收藏夹入口")
         favoritesRow.tap()
 
+        // FavoriteAppReopenCrashTests may have already favorited the signed app,
+        // in which case its presentation title is the manifest name.
         let demoRow = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", "离线示例", "Drel Offline Demo")
+            NSPredicate(
+                format: "label CONTAINS %@ OR label CONTAINS %@ OR label CONTAINS %@",
+                "离线示例", "Drel Offline Demo", "Drel 数据模板"
+            )
         ).firstMatch
         var rowFound = demoRow.waitForExistence(timeout: 8)
         var swipes = 0

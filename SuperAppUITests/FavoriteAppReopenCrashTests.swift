@@ -10,7 +10,7 @@ final class FavoriteAppReopenCrashTests: XCTestCase {
 
     func testFavoriteRegisteredAppThenReopenFromFavoritesList() throws {
         let app = XCUIApplication()
-        app.launch()
+        FavoriteTestFixtures.launch(app: app)
 
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let deny = springboard.buttons["不允许粘贴"]

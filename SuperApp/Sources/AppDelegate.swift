@@ -231,6 +231,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         #if !DREL_CONTAINER_ONLY
         registerNotificationFixtureIfRequested()
+        registerFavoriteTestFixturesIfRequested()
         registerBridgePermissionFixtureIfRequested()
         showPWAAppCenterIfRequested()
         if ProcessInfo.processInfo.arguments.contains("--reset-default-startup-app") {
@@ -281,6 +282,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             )
         }
     }
+
+    #if !DREL_CONTAINER_ONLY
+    private func registerFavoriteTestFixturesIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--register-favorite-fixtures") else { return }
+
+        HTMLAppPushActivationStore().activate("dev.drel.offline-demo")
+        HTMLAppPushActivationStore().activate("dev.drel.data-template")
+
+        // The directory-form favorites flow starts from an inbox URL message.
+        // Seeding it through the shared engine keeps this setup equivalent to
+        // the historical foreground `simctl push`, without timing dependencies.
+        let payload = MessagePayload(
+            id: "favorite-directory-fixture",
+            title: "数据模板",
+            body: "打开目录形态数据模板",
+            channel: "apns",
+            category: "url",
+            targetURL: "https://drel.app/test/template/v1/"
+        )
+        Task {
+            try? await MessageEngine.shared.receive(payload)
+        }
+    }
+    #endif
 
     private func registerBridgePermissionFixtureIfRequested() {
         let fixtureAppID = "com.webbridgekit.fixture.permissions"
