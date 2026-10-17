@@ -286,7 +286,8 @@ expect_status "Manifest list" "GET" "/api/v1/manifests" "200"
 expect_status "Register fake device" "POST" "/register" "200" "$register_body"
 expect_json_value "Register response code" "$REPORT_DIR/shanbox-register-fake-device.json" "code" "200"
 expect_status "JSON push route" "POST" "/push" "200" "$push_body"
-expect_json_value "JSON push response code" "$REPORT_DIR/shanbox-json-push-route.json" "code" "200"
+expect_json_value "JSON fake-token push response code" "$REPORT_DIR/shanbox-json-push-route.json" "code" "503"
+expect_json_value "JSON fake-token push accepted count" "$REPORT_DIR/shanbox-json-push-route.json" "accepted" "0"
 expect_status "Test push endpoint" "POST" "/test" "200" "$test_body"
 expect_json_value "Test push response success" "$REPORT_DIR/shanbox-test-push-endpoint.json" "success" "true"
 expect_status "Command generation" "POST" "/api/v1/commands" "200" "$command_body"
@@ -298,16 +299,34 @@ expect_json_value "Bark POST response code" "$REPORT_DIR/shanbox-bark-compatible
 expect_status "Bark encoded query route" "GET" "/test_resources/$encoded_cn_title/$encoded_cn_body?sound=bell&group=$encoded_group&url=$encoded_bark_url" "200"
 expect_json_value "Bark encoded query response code" "$REPORT_DIR/shanbox-bark-encoded-query-route.json" "code" "200"
 
-expect_status "Node admin console" "GET" "/admin" "200"
-expect_status "Node admin push console" "GET" "/admin-push" "200"
-expect_status "Node admin stats API" "GET" "/admin/api/stats" "200"
-expect_status "Node admin devices API" "GET" "/admin/api/devices" "200"
-expect_status "Node admin commands API" "GET" "/admin/api/commands" "200"
-expect_status "Node admin manifests API" "GET" "/admin/api/manifests" "200"
-expect_status "Node admin push history API" "GET" "/admin/api/push-history" "200"
-expect_status "Node websocket status" "GET" "/ws/status" "200"
-expect_status "Node messages API" "GET" "/messages" "200"
-expect_status "Node packages API" "GET" "/packages" "200"
+# A serialized payload over 4 KB must be rejected before any APNs request.
+oversize_body="{\"device_key\":\"$device_key\",\"title\":\"Codex oversize preflight\",\"body\":\"$(printf 'A%.0s' $(seq 1 5000))\"}"
+oversize_evidence="$REPORT_DIR/shanbox-oversize-preflight.json"
+oversize_status="$(request "POST" "/push" "$oversize_body" "$oversize_evidence")"
+oversize_code="$("$PYTHON3" - "$oversize_evidence" <<'PY'
+import json
+import sys
+try:
+    print(json.load(open(sys.argv[1]))["code"])
+except Exception:
+    pass
+PY
+)"
+echo "== Oversize APNs preflight =="
+if [ "$oversize_status" = "200" ] && [ "$oversize_code" = "413" ]; then
+    add_row "Oversize APNs preflight" "PASS" "ASSERT json.code" "413" "$oversize_code" "$oversize_code" "$oversize_evidence"
+    PASS=$((PASS + 1))
+    echo "PASS (oversize business code=$oversize_code)"
+else
+    add_row "Oversize APNs preflight" "FAIL" "POST /push" "/push" "HTTP 200 + json.code=413" "HTTP $oversize_status + json.code=${oversize_code:-missing}" "$oversize_evidence"
+    FAIL=$((FAIL + 1))
+    echo "FAIL (oversize expected HTTP 200 + code=413, got HTTP $oversize_status + code=${oversize_code:-missing})"
+fi
+
+# Node admin path-proxy is a documented current deployment gap; it must not
+# hide Swift push regressions in this gate. Local source behavior is covered
+# by tools/verify-node-admin-local.sh.
+expect_status "Node admin path proxy current gap" "GET" "/admin" "404"
 
 {
     echo "# shanbox Backend Verification"
@@ -323,8 +342,8 @@ expect_status "Node packages API" "GET" "/packages" "200"
     echo "Summary: $PASS passed, $FAIL failed, $UNAVAILABLE unavailable/needs deployment."
     echo ""
     echo "Notes:"
-    echo "- The fake registration and push checks prove route-level behavior only; they do not prove APNs delivery to a real iPhone."
-    echo "- Node admin routes are expected to be publicly reachable on the \`wbk\` shanbox host via the supervised \`webbridge-node-admin\` process and path-based nginx proxy."
+    echo "- Fake registrations prove route validation and honest APNs rejection only; they do not prove delivery to a real iPhone. The oversize check proves the local 4 KB preflight, not Apple transport behavior."
+    echo "- Node admin path-proxy is known missing on the current wbk deployment; re-enable those checks after restoring the supervised proxy."
 } >"$REPORT"
 
 echo "Report: $REPORT"

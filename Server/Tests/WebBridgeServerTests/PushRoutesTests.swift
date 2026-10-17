@@ -262,6 +262,14 @@ struct PushRoutesTests {
         #expect(resolved.revision == 18)
     }
 
+  @Test("APNs payload size includes every serialized delivery field")
+  func apnsPayloadSizeIncludesSerializedDeliveryFields() throws {
+    let payload = PushPayload(title: "GitHub 趋势日报", body: String(repeating: "A", count: 5000))
+    let data = try JSONSerialization.data(withJSONObject: APNsService.makeAPNsPayload(payload))
+
+    #expect(data.count > APNsService.maximumAPNsPayloadSize)
+  }
+
     @Test("copy payload registers the Drel notification copy category")
     func copyPayloadUsesNotificationActionCategory() throws {
         let payload = PushPayload(

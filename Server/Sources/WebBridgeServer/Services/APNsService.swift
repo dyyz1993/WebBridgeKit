@@ -96,6 +96,8 @@ actor PushMessageLog {
 }
 
 final class APNsService: Sendable {
+  static let maximumAPNsPayloadSize = 4096
+  static let maximumAPNsExpiration = 30 * 24 * 3600
   let configuration: ServerConfiguration
   private let tokenStore: TokenStore
   private let jwtSigner: APNsJWTSigner?
@@ -141,6 +143,7 @@ final class APNsService: Sendable {
 
     var accepted = 0
     var expired = 0
+    var payloadTooLarge = false
     for device in devices {
       var deliveryPayload: PushPayload
       if let publicKey = device.encryptionPublicKey, !publicKey.isEmpty {
@@ -161,17 +164,22 @@ final class APNsService: Sendable {
         // Remove only this key/token pair so a rotated identity on the same
         // phone is never accidentally revoked.
         _ = try? await tokenStore.unregister(token: device.deviceToken, key: key)
+      case .payloadTooLarge:
+        payloadTooLarge = true
       case .rejected, .unavailable:
         break
       }
     }
 
     return PushResponse(
-      code: accepted > 0 || (devices.isEmpty && (key == "test" || key == "test_resources")) ? 200 : 503,
+      code:
+        accepted > 0 || (devices.isEmpty && (key == "test" || key == "test_resources"))
+        ? 200 : (payloadTooLarge ? 413 : 503),
       message: Self.deliveryMessage(
         attempted: devices.count,
         accepted: accepted,
         expired: expired,
+        payloadTooLarge: payloadTooLarge,
         isTestAcknowledgement: devices.isEmpty && (key == "test" || key == "test_resources")
       ),
       timestamp: Int(Date().timeIntervalSince1970),
@@ -263,12 +271,14 @@ final class APNsService: Sendable {
     case expired
     case rejected
     case unavailable
+    case payloadTooLarge
   }
 
   private static func deliveryMessage(
     attempted: Int,
     accepted: Int,
     expired: Int,
+    payloadTooLarge: Bool,
     isTestAcknowledgement: Bool
   ) -> String {
     if isTestAcknowledgement { return "Test notification acknowledged" }
@@ -276,13 +286,14 @@ final class APNsService: Sendable {
       return "APNs accepted push for \(accepted) of \(attempted) device(s)" +
         (expired > 0 ? "; removed \(expired) expired registration(s)" : "")
     }
+    if payloadTooLarge {
+      return "APNs payload too large: serialized delivery exceeds \(maximumAPNsPayloadSize) bytes"
+    }
     return "No active device accepted the push" +
       (expired > 0 ? "; removed \(expired) expired registration(s)" : "")
   }
 
   private func sendToAPNs(deviceToken: String, payload: PushPayload) async -> APNsDeliveryOutcome {
-    guard let jwtSigner else { return .unavailable }
-
     let apnsPayload = Self.makeAPNsPayload(payload)
 
     // Delivery diagnostics: the route JSON only proves acceptance, not
@@ -312,19 +323,33 @@ final class APNsService: Sendable {
     guard let bodyData = try? JSONSerialization.data(withJSONObject: apnsPayload),
       let body = String(data: bodyData, encoding: .utf8)
     else { return .rejected }
+    // APNs rejects the complete HTTP/2 request body (not the source JSON)
+    // above 4 KB. Rejecting locally gives senders an actionable error before
+    // a provider request can accept or partially process the notification.
+    guard bodyData.count <= Self.maximumAPNsPayloadSize else {
+      FileHandle.standardError.write(
+        Data(
+          "[APNs] payload too large: \(bodyData.count) bytes (limit \(Self.maximumAPNsPayloadSize))\n"
+            .utf8))
+      return .payloadTooLarge
+    }
+
+    guard let jwtSigner else { return .unavailable }
 
     for (index, host) in hosts.enumerated() {
       let urlString = "https://\(host)/3/device/\(deviceToken)"
 
       guard let authorizationToken = try? jwtSigner.token() else { return .unavailable }
-      let status = Self.curlPost(
+      let response = Self.curlPost(
         url: urlString,
         body: body,
         authorizationToken: authorizationToken,
         topic: configuration.apnsTopic,
         priority: payload.level == "passive" ? "5" : "10",
-        collapseID: Self.apnsCollapseID(payload.replacementID)
+        collapseID: Self.apnsCollapseID(payload.replacementID),
+        expiration: Self.apnsExpiration(payload.ttl)
       )
+      let status = response.status
       if status == 200 { return .accepted }
       // 429 TooManyProviderTokenUpdates: Apple is rate-limiting
       // provider-token MINTS. Minting a replacement would deepen the
@@ -348,7 +373,8 @@ final class APNsService: Sendable {
         continue
       }
       if status == 410 { return .expired }
-      FileHandle.standardError.write(Data("[APNs] status=\(status); not retrying alert\n".utf8))
+      FileHandle.standardError.write(
+        Data("[APNs] status=\(status) reason=\(response.reason); not retrying alert\n".utf8))
       return .rejected
     }
     return .rejected
@@ -357,19 +383,25 @@ final class APNsService: Sendable {
   /// APNs only speaks HTTP/2. The pinned AsyncHTTPClient release has no HTTP/2
   /// support and corelibs URLSession hangs against Apple's endpoint, while the
   /// system curl (nghttp2) has been verified stable — so the push rides on it.
+  private struct APNsHTTPResponse {
+    let status: Int
+    let reason: String
+  }
+
   private static func curlPost(
     url: String,
     body: String,
     authorizationToken: String,
     topic: String,
     priority: String,
-    collapseID: String?
-  ) -> Int {
+    collapseID: String?,
+    expiration: Int?
+  ) -> APNsHTTPResponse {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
+    let errorBodyPath = NSTemporaryDirectory() + "drel-apns-error-\(UUID().uuidString).json"
     var arguments = [
       "-s", "--http2", "--max-time", "15",
-      "-o", "/dev/null", "-w", "%{http_code}",
       "-X", "POST", url,
       "-H", "Content-Type: application/json",
       "-H", "Authorization: bearer \(authorizationToken)",
@@ -377,11 +409,19 @@ final class APNsService: Sendable {
       "-H", "apns-push-type: alert",
       "-H", "apns-priority: \(priority)",
       "--data-binary", body,
+      "-o", errorBodyPath,
+      "-w", "%{http_code}",
     ]
     if let collapseID {
       arguments.insert(
         contentsOf: ["-H", "apns-collapse-id: \(collapseID)"], at: arguments.count - 2)
     }
+    if let expiration {
+      arguments.insert(
+        contentsOf: ["-H", "apns-expiration: \(expiration)"], at: arguments.count - 4)
+    }
+    // Keep Apple's diagnostic reason out of the successful-response body while
+    // retaining it for failures. The path is unique and removed immediately.
     process.arguments = arguments
     let pipe = Pipe()
     process.standardOutput = pipe
@@ -391,10 +431,28 @@ final class APNsService: Sendable {
       process.waitUntilExit()
       let data = pipe.fileHandleForReading.readDataToEndOfFile()
       let code = String(data: data, encoding: .utf8) ?? ""
-      return Int(code.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+      let status = Int(code.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+      let reason = Self.apnsReason(at: errorBodyPath, success: status == 200)
+      try? FileManager.default.removeItem(atPath: errorBodyPath)
+      return APNsHTTPResponse(status: status, reason: reason)
     } catch {
-      return 0
+      try? FileManager.default.removeItem(atPath: errorBodyPath)
+      return APNsHTTPResponse(status: 0, reason: "curl-failed")
     }
+  }
+
+  private static func apnsReason(at path: String, success: Bool) -> String {
+    guard !success,
+      let data = FileManager.default.contents(atPath: path),
+      let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let reason = object["reason"] as? String
+    else { return "unavailable" }
+    return reason
+  }
+
+  private static func apnsExpiration(_ ttl: TimeInterval?) -> Int? {
+    guard let ttl, ttl > 0 else { return nil }
+    return Int(Date().timeIntervalSince1970 + min(ttl, TimeInterval(maximumAPNsExpiration)))
   }
 
   /// Builds the exact JSON dictionary sent to APNs. Keeping this deterministic and

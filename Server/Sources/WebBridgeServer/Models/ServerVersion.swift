@@ -11,6 +11,9 @@ enum ServerVersion {
     /// - 2026.09.17-1: seeded the `dev.drel.data-template` offline template
     ///   app (push-data → rendered card; contract in
     ///   docs/api/drel-offline-template.md). No behavioral route change.
+    /// - 2026.10.16-1: APNs requests preflight the 4 KB payload limit, log
+    ///   Apple's rejection reason, and map positive `ttl` values to
+    ///   `apns-expiration` for bounded offline storage.
     /// - 2026.09.15-1: full redeploy after the shanbox container was rebuilt
     ///   and the Swift server (with the gateway Ed25519 key and device
     ///   registrations) was lost. Ships a NEW gateway signing keypair —
@@ -31,5 +34,5 @@ enum ServerVersion {
     ///   keep the cached token and fail fast.
     /// - 2026.08.20-1: empty-body Bark pushes (撤回/清角标), passive pushes
     ///   omit `aps.sound`, `/health` exposes this version.
-    static let current = "2026.09.17-1"
+    static let current = "2026.10.16-1"
 }
